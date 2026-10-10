@@ -1,0 +1,23 @@
+{
+  "source": "arxiv",
+  "query": "id:1809.09930",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/1809.09930v1",
+      "title": "GPU Accelerated Similarity Self-Join for Multi-Dimensional Data",
+      "summary": "The self-join finds all objects in a dataset that are within a search distance, epsilon, of each other; therefore, the self-join is a building block of many algorithms. We advance a GPU-accelerated self-join algorithm targeted towards high dimensional data. The massive parallelism afforded by the GPU and high aggregate memory bandwidth makes the architecture well-suited for data-intensive workloads. We leverage a grid-based, GPU-tailored index to perform range queries. We propose the following optimizations: (i) a trade-off between candidate set filtering and index search overhead by exploiting properties of the index; (ii) reordering the data based on variance in each dimension to improve the filtering power of the index; and (iii) a pruning method for reducing the number of expensive distance calculations. Across most scenarios on real-world and synthetic datasets, our algorithm outperforms the parallel state-of-the-art approach. Exascale systems are converging on heterogeneous distributed-memory architectures. We show that an entity partitioning method can be utilized to achieve a balanced workload, and thus good scalability for multi-GPU or distributed-memory self-joins.",
+      "published": "2018-09-26T12:04:51Z",
+      "updated": "2018-09-26T12:04:51Z",
+      "authors": [
+        "Michael Gowanlock",
+        "Ben Karsin"
+      ],
+      "categories": [
+        "cs.DC"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/1809.09930v1"
+    }
+  ],
+  "downloaded_pdf": "papers/vector-join/1809.09930-gpu-similarity-self-join/paper.pdf"
+}

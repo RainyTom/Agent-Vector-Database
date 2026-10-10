@@ -1,0 +1,771 @@
+# Similarity Join and Similarity Self-Join Size Estimation in a Streaming Environment
+
+Davood Rafiei and Fan Deng
+
+Abstract—We study the problem of similarity self-join and similarity join size estimation in a streaming setting where the goal is to estimate, in one scan of the input and with sublinear space in the input size, the number of record pairs that have a similarity within a given threshold. The problem has many applications in data cleaning and query plan generation, where the cost of a similarity join may be estimated before actually doing the join. On unary input where two records either match or don’t match, the problem becomes join and self-join size estimation for which one-pass algorithms are readily available. Our work addresses the problem for d-ary input, for $d \geq 1$ , where the degree of similarity can vary from 1 to d. We show that our proposed algorithm gives an accurate estimate and scales well with the input size. We provide error bounds and time and space costs, and conduct an extensive experimental evaluation of our algorithm, comparing its estimation accuracy to a few competitors, including some multi-pass algorithms. Our results show that given the same space, the proposed algorithm has an order of magnitude less error for a large range of similarity thresholds.
+
+Index Terms—selectivity estimation, similarity join, size estimation, one pass algorithm, streaming data.
+
+## 1 INTRODUCTION
+
+The problem of near-duplicates or similar record pairs is associated with having multiple representations or records of the same entity or concept in a database. Detecting nearduplicates has been studied in the past under different names such as data deduplication, merge-purge, record linkage, etc. [1].
+
+Analyzing the similarity self-join size provides important insight when the semantics of rows and columns is less-known, and this is a commonly expected case in open data [2]. Consider, for example, an open data of bibliographic records with untagged attributes title, author, journal, volume and year. The similarity self-join size with a match expected in 4 out of 5 columns (i.e. 80% similarity) gives the degree of uniformity under any projection of 4 attributes. It can be noted that the field title is not expected to have many duplicates, whereas the author field may have a limited number of duplicates since two authors can have the same name or an author can have more than one record. More duplicates are expected in columns journal, volume and year. For the same reason, the similarity self-join size under projections of 4 attributes is not expected to be much different than that of 5, but the similarity self-join size for projections of size 3 is expected to be much larger; the same is observed for real DBLP records in our experiments (see Table 3). Such information about columns and their relationships can be obtained by analyzing the sizes of similarity self-joins. In other words, the similarity self-join size describes not only the frequency distribution of the rows but also the soft dependencies and functional relationships between the columns [3].
+
+Many other applications can be listed for similarity join size estimation. The self-join size gives the degree of uniformity or skew, and the similarity self-join size gives the degree of skew under some projections. The degree of skew is an important statistics in parallel and distributed database applications and may determine the choice of data partitioning strategies (e.g. vertical or horizontal) and algorithms being employed [4], [5]. For example, the Hadoopbased algorithm that won the Terasort benchmark in 2008 included a partitioning function that heavily relied on the key distributions present in the 2008 benchmark, which may not be present in other datasets [6]. A more general solution is expected to detect the skew, which often arise in the ‘reduce’ phase, and to balance the load accordingly. In projected clustering [7], one needs to find the set of dimensions such that the spread (or dissimilarity) is the least, and a similarity join size can be an important statistics in detecting those dimensions. In general, estimating the skew can also help with data storage and indexing [8], data cleaning [9] and maybe homogeneity analysis [10]. For example, before running a data deduplication that can take days or even weeks, one may want to quickly find out if there are enough near-duplicates and that running an expensive cleaning operation is justified.
+
+The setting we assume in this paper is that the synopsis of a table must be constructed in one pass. This is desirable for rapidly growing tables where a multi-pass method can be costly. Also the input data to a similarity join sometimes consists of data streams, which may not be fully available when a synopsis is constructed. For example, a similarity join placed in a join tree may take its input from other operators, and while the input to the join is streaming in, estimates of the join size may be sought. It has been noted that cardinality estimation errors in a query cost model can easily be in multiple orders of magnitude and join queries are usually the largest contributors to those misestimates [11]. Morales and Gionis [12] cite trend detection and near-duplicate filtering in a microblogging site as some applications of similarity self-join in a streaming setting.
+
+The problem addressed in this paper can be stated as follows: given a collection of records and a threshold, estimate the number of record pairs that have a Hamming distance equal to or less than the threshold. The Hamming distance function is well-defined on bit strings and binary vectors and naturally extends to more general strings, vectors, multi-field records, etc. For example, the Hamming distance between two records gives the minimum number of substitutions that would transform one record to the other. This quantity can be divided by the number of fields to get the fraction of fields or features in which two records differ. One minus that fraction will give what may be referred to as the Hamming similarity. Also other distance functions may be mapped to the Hamming distance and our method can be used under those mappings. Many applications of Hamming distance are reported in the literature, for example to detect duplicate Web pages [13], duplicate records in academic digital libraries [14], duplicate images [15], etc.
+
+A naive algorithm to estimate the number of nearduplicates is to compare every pair of records, which requires storing the entire dataset and has a quadratic time complexity. However, an exact estimate often is not needed and an algorithm that more efficiently obtains an estimate may be preferred [16], [17], [18]. Also the memory used for computing an estimate is usually limited, and storing the data structures in external memory has additional overhead which grows with the dataset size and should be avoided. To the best of our knowledge, our method is the first that computes an estimate of similarity self-join size within only one scan over such data and with a limited storage. Also our experimental results show that the error of our estimates is often less than or comparable to some of the latest multipass algorithms.
+
+Our contributions can be summarized as follows:
+
+We study and address the problem of similarity selfjoin size estimation in a streaming setting where the input, given one by one, cannot be fully stored. While the problem has been studied for input that consists of 1-dimensional records such as numbers [19], [20], [21], we are not aware of any previous work that addresses the problem on input that has more than one dimension. This paper studies the general problem and presents an efficient and elegant probabilistic algorithm, extending previous techniques to streaming input with more than one dimension. Extending our algorithm to similarity join size estimation is straightforward (as discussed in Section 6).
+
+We analyze the time and space costs of our algorithm, showing that the join size can be accurately estimated in logarithmic space as long as the input dimensionality is kept low (10 or less as shown in our analysis and experiments). More precisely, we prove that our algorithm gives an unbiased accurate estimate with high probability using a set of counters and that the number of those counters is independent of $n ,$ the number of records in the dataset, and only depends on $d ,$ the dimensionality; the space needed for each counter is bounded to ${ \dot { O } } ( \log ( n ) { \bar { ) } }$ bits.
+
+We evaluate the performance of our method in terms of the accuracy of the estimates and the running time. Compared to random sampling which is the only competitor in a streaming setting, our algorithm gives significantly more accurate results and scales better for large input sizes. We also compare the performance of an “offline” version of our algorithm in which the intermediate results are materialized (and not sketched) to two recently proposed nonstreaming algorithms [22], [18]. Our experiments on real data show that the proposed algorithm (under a comparable space requirement) is much more accurate than these alternative algorithms; it has to be pointed out that both these methods, unlike ours, require more than one pass over data.
+
+## 1.1 Definitions and the problem statement
+
+Given a bag of records where n denotes the number of distinct records and $m _ { i }$ denotes the multiplicity of record $i ,$ the self-join size of the bag (also referred to as the second frequency moment) is defined as
+
+$$
+f _ {2} = \sum_ {i = 1} ^ {n} m _ {i} ^ {2}.\tag{1}
+$$
+
+Given a pair of records with the same schema, we call the pair s-similar if the number of attributes where the pair have the same values is $s .$ For examples, records $r _ { 1 }$ and $r _ { 3 }$ in Table 1 are 2-similar, and so are records $r _ { 2 }$ and $r _ { 4 }$ Compared to the Hamming distance which is defined on binary vectors (i.e. vectors with 0/1 values), s-similarity is defined on general records (e.g. of employees or students).
+
+Extending Eq. 1, consider the self-join of a collection of d-dimensional records, and let $x _ { k }$ denote the number of different record pairs that are k-similar. $\mathrm { A s }$ in self-join, ksimilar pairs $( r _ { 1 } , r _ { 2 } )$ contribute twice to $x _ { k } ,$ , but self-pairs $( r _ { 1 } , r _ { 1 } )$ are not counted. Hence, the number of self-pairs is added to s-similarity self-join size, $g _ { s } ,$ , defined as
+
+$$
+g _ {s} = \sum_ {k = s} ^ {d} x _ {k} + n,\tag{2}
+$$
+
+for n records, each of dimensionality d. $g _ { s }$ gives the number of record pairs that are at least s-similar. In a streaming setting, similarity join may be computed at any point while the stream is being received (aka continuous queries).
+
+Problem statement. Given n records each with d attributes and a similarity threshold $s ,$ we want to estimate $g _ { s } ,$ the s-similarity self-join size in one scan of the input with a limited memory smaller than n. We also want to extend our estimation to similarity join sizes.
+
+Organization. The outline of the rest of the paper is as follows: Three baseline algorithms are briefly presented in Section 2, and our similarity self-join size estimation algorithm is discussed in Section 3. We present an analysis of our algorithm in terms of the estimation error and time and space bound in Section 4. Running time is analyzed in Section 5, and an extension of our algorithm for similarity join size estimation is studied in Section 6. Experimental results are reported in Section 7, and related work is reviewed in Section 8. Section 9 concludes the paper.
+
+## 2 BASELINE ALGORITHMS
+
+One widely used baseline is random sampling; it is applied in contexts similar to ours [20], [18] and is very easy to implement. We also present the signature pattern counting [22] and the LSH-based bucketing [18], as two more baselines.
+
+## 2.1 Random sampling
+
+For a set of n records, one can pick R different records uniformly at random (sampling without replacement); then use the straightforward pair-wise comparison between the selected records to find $x _ { k } , k = s , \ldots , d$ for the sample. Next, the estimates can be scaled by the ratio of the size of the population <sup>1</sup> to the size of the sample space, i.e. $\frac { n ( n - 1 ) } { R ( R - 1 ) }$ Finally $g _ { s }$ is estimated as in Eq. 2. For example, suppose random sampling selects rows r1 and r3 from Table 1 with a sampling ratio of 0.5. The selected rows are 2-similar, and the estimates of $x _ { 3 } , x _ { 2 }$ and $x _ { 1 }$ for the sample are respectively $0 ,$ 2 and $0 ,$ and for the population are 0, $\frac { \dot { 2 } * 4 * 3 } { 2 * 1 } = 1 2$ and 0.
+
+## TABLE 1 An example for s-similarity estimation
+
+<table><tr><td>R</td><td>A</td><td>B</td><td>C</td><td></td></tr><tr><td> $r_1$ </td><td> $a_1$ </td><td> $b_1$ </td><td> $c_1$ </td><td>3-similar pairs:  $\{(r_1,r_1),(r_2,r_2),(r_3,r_3),(r_4,r_4)\}$ </td></tr><tr><td> $r_2$ </td><td> $a_2$ </td><td> $b_2$ </td><td> $c_2$ </td><td>2-similar pairs:  $\{(r_1,r_3),(r_3,r_1),(r_2,r_4),(r_4,r_2)\}$ </td></tr><tr><td> $r_3$ </td><td> $a_1$ </td><td> $b_1$ </td><td> $c_3$ </td><td>1-similar pairs:  $\{\}$ </td></tr><tr><td> $r_4$ </td><td> $a_3$ </td><td> $b_2$ </td><td> $c_2$ </td><td></td></tr></table>
+
+Alon et al. [20] used a similar random-sampling technique in their experiments for estimating the self-join sizes of data streams. However, the results show that it is not as accurate as other methods. Random sampling is also used in the literature for similarity join size estimation [18].
+
+Lemma 1. Random-sampling requires a sample of size $\Omega ( { \sqrt { n } } )$ to give an estimate of the similarity self-join size with a relative error less than 100% with high probability.
+
+Proof. See Appendix A.
+
+## 2.2 Signature pattern counting
+
+Lee et al. [22] map the similarity self-join size estimation into the problem of finding a set of frequent signature patterns and estimating the number of records that match each pattern. Each signature pattern is a record with some constants and some wildcard symbols say \*. A data record matches a signature pattern if both have the same constants in respective columns; there is no matching constraint on columns marked with \*. Clearly two records that match a signature pattern with s constants must be k-similar for $k \geq s$ . Having a set of signature patterns each with at least s constants, and the number of records matching each pattern, one can estimate the similarity self-join size for the set of tuples matching each pattern and add up the estimates. For example, this algorithm, applied to Table 1, can produce the patterns [a1,b1,\*] and [\*,b2,c2] both with frequencies 2.
+
+However, this approach has some problems: (1) the estimate does not take into account the overlap between patterns (e.g. [\*,3,5,\*] and [2,\*,5,\*]) which can lead to a doublecounting; (2) the search space for patterns with frequency at least 2 is huge, and the number of such patterns may not be much smaller than the size of the dataset. The authors address the first problem by placing the patterns in a lattice structure and estimating the size of the overlap between patterns for each level of the lattice. The second problem is addressed by modelling the pattern distribution as a power law and estimating (but not actually computing) the number of matches for low-frequency patterns based on the counts obtained for high-frequency ones.
+
+Their algorithm must (1) compute a set of frequent signature patterns and (2) collect the counts of records matching each pattern. A typical frequent counting is expected to make d passes over the data, where d is the record dimensionality, but one may consider either the partitioning scheme of Savasere et al. [23] or the sampling method of Toivonen [24] to cut the number of passes to two. Even Manku and Motwani [25] suggest a one-pass algorithm based on sticky sampling. However, these algorithms are generally useful in detecting very frequent patterns and this is reflected in their error bounds which is relative to the input length; they are likely to miss many less-frequent patterns. Also once the signature patterns are found, one more pass over data is needed to collect the actual counts.
+
+## 2.3 LSH-based bucketing
+
+In this approach, Lee et al. [18] map data records into some buckets using a locality sensitive hashing scheme. Two strata are defined for the sake of self-join sampling: (1) record pairs that are mapped to the same bucket, (2) record pairs that are mapped to two different buckets. Record pairs are sampled from each stratum and their similarities are assessed. Finally, the results are scaled (based on record counts which are kept in each bucket) to derive an estimate for the similarity join size. To construct LSH buckets on disk, the algorithm has to read and write the whole data. One more pass is also needed to sample the record pairs.
+
+## 3 OUR ESTIMATION ALGORITHM
+
+The basic idea behind our estimation algorithm is to map the problem of similarity self-join size estimation into a set of self-join size estimations for which more efficient solutions are available, before putting together the results to obtain an estimate for the similarity self-join size. To illustrate the concept, consider Table R with 3 columns and 4 rows, as shown in Table 1.
+
+The self-join size of R is 4, and so is the number of records, hence R has no 3-similar pairs other than self-pairs (as shown in Table 1). Now consider the projection of R on columns (A,B), (A,C) and (B,C) with duplicates kept. This would yield tables $R _ { 1 } , R _ { 2 }$ and $R _ { 3 } .$ , as shown with their selfjoin sizes.
+
+<table><tr><td> $R_1$ </td><td>A</td><td>B</td><td> $R_2$ </td><td>A</td><td>C</td><td> $R_3$ </td><td>B</td><td>C</td></tr><tr><td></td><td> $a_1$ </td><td> $b_1$ </td><td></td><td> $a_1$ </td><td> $c_1$ </td><td></td><td> $b_1$ </td><td> $c_1$ </td></tr><tr><td></td><td> $a_2$ </td><td> $b_2$ </td><td></td><td> $a_2$ </td><td> $c_2$ </td><td></td><td> $b_2$ </td><td> $c_2$ </td></tr><tr><td></td><td> $a_1$ </td><td> $b_1$ </td><td></td><td> $a_1$ </td><td> $c_3$ </td><td></td><td> $b_1$ </td><td> $c_3$ </td></tr><tr><td></td><td> $a_3$ </td><td> $b_2$ </td><td></td><td> $a_3$ </td><td> $c_2$ </td><td></td><td> $b_2$ </td><td> $c_2$ </td></tr><tr><td colspan="3">s/join size=6</td><td colspan="3">s/join size=4</td><td colspan="3">s/join size=6</td></tr></table>
+
+The self-join size of $R _ { 1 }$ is $^ { 6 , }$ and that of R is 4. Excluding 3-similar pairs, R must have $6 - 4 = 2$ pairs of rows that
+
+are 2-similar on columns $^ { ( \mathrm { A , B } ) }$ . Similarly the self-join size of $R _ { 3 }$ is $^ { 6 , }$ which indicates that R has two pairs of records that are 2-similar on columns (B,C). No pairs of records in R are 2-similar on columns $( \mathsf { A } , \mathsf { C } )$ . Putting the results together, one can conclude that R has $2 + 2 = 4$ pairs of 2-similar records. This is the exact number of 2-similar pairs, calculated solely based on the join sizes and the size of R.
+
+There are three problems associated with this approach: (1) the number of possible projections of a relation with d attributes is $2 ^ { d - 1 }$ and so is the number of self-join size estimates; (2) the join sizes are not independent simply because the projections of two s-similar records are expected to have some $s - 1 , s - 2 , \dotsc .$ , 1-similar pairs; (3) the sum of the number of records in the projected tables can be much larger than the input (or more precisely it can be larger by factor of $2 ^ { d - 1 } )$ and this has implications in the required space usage and per-record processing time.
+
+We address the first problem by reducing the number of self-join size estimations to $d - s + 1$ . This is done by collapsing all projections with k attributes into a single stream. To make distinctions between tuples from different projections though, we attach another column to the stream to indicate the projection from which the tuple is drawn. Otherwise, two tuples that have the same values under different projections can join, leading to wrong join sizes. Applying this to the projections with two attributes in our running example will yield a table with three columns, twelve rows and the self-join size of 16 (as shown in Table $2 )$ of which 12 are self-pairs. This gives 16-12=4 pairs of $2 \AA ^ { - }$ similar records, consistent with our previous results.
+
+The second problem is addressed in the next section by calculating the contributions of an s-similar pair to the projections and incorporating it in our size estimations. We address the third problem through a combination of sampling and sketching, showing that both the space usage and the error can be bounded, and that the proposed algorithm outperforms our competitive baselines by a large margin.
+
+## 3.1 Handling double-counting
+
+Given a table with d attributes, the set of possible groupings of the attributes can be described in a lattice. Suppose the grouping that includes all attributes is at Level d of the lattice; then level $d - 1$ will have all subsets consisting of $d - 1$ attributes, and so on (as shown in Fig. 1 with 4 attributes).
+
+![](images/1d13f9b881d15575a8024d9dd44d914b4b135ace89155f84d79305ea5ff12b0f.jpg)  
+Fig. 1. Attribute groupings for ABCD
+
+To obtain a relationship between the self-join size and the number of similar pairs, let $y _ { k }$ denote the self-join size at level k of the lattice, and $x _ { k }$ be the number of record pairs that are k-similar.
+
+Lemma 2. Given $k \leq d ,$ for a set of n records with no $k + 1 , k +$ $2 , \ldots .$ , d-similar pairs,
+
+$$
+x _ {k} = y _ {k} - \binom{d}{k} n.
+$$
+
+Proof. If two records are k-similar, then there must be a unique projection at level k under which both records produce the same values; hence those values can join and will contribute to $y _ { k }$ . However, $y _ { k }$ also includes self-pairs where a record joins itself. The number of those pairs is the same as the number of records at level $k ,$ which is ${ \binom { d } { k } } n .$ Subtracting the two will give $x _ { k }$ □
+
+Now we consider the scenario where the set can have $k + 1 , k + 2 , \ldots ,$ d-similar pairs. Consider two records $r _ { 1 }$ and $r _ { 2 }$ that join at level $d ,$ meaning they have the same values in all d attributes. All projections of these records will also join, and this introduces double-counting in join-size estimates at levels $d - 1 , d - 2 , \dotsc , 1$ . The size of this projection can be precisely computed with not much effort though.
+
+Lemma 3. For a set of n records and $k \leq d ,$
+
+$$
+x _ {k} = y _ {k} - \binom{d}{k} n - \sum_ {j = k + 1} ^ {d} \binom{j}{k} x _ {j}.\tag{3}
+$$
+
+Proof. Consider two records that are j-similar for $j > k .$ Then there must be a projection at level $j$ under which the two records emit the same values; all projections of those values at level k will be identical. There are $\textstyle { \binom { j } { k } }$ such projections. With $x _ { j }$ giving the number of record pairs that are j-similar, the expression $\textstyle { \binom { j } { k } } x _ { j }$ gives the contribution of all j-similar pairs to $y _ { k }$ . The rest follows from Lemma 2.
+
+Unlike the approach of Lee et al. [22] that computes the overlap between signature patterns, which is an approximation with no clear bound on the error, our method computes the exact size of the overlap between projections.
+
+## 3.2 Sampling from the projections
+
+To calculate the number of pairs that are s-similar, we need the self-join sizes at levels s to d of the lattice. Each level of the lattice emits a stream that includes all record projections at that level. As discussed earlier in Section $^ { 3 , }$ attaching a projection ordering to each row in this stream allows different projections at the same level all be collapsed into a single stream without introducing an estimation error, hence cutting the number of size estimations. However, as shown in Table 2 for our running example, each row in our initial stream is listed under multiple projections and all those projections contribute to our size estimation. Our objective in this section is to cut the size through sampling.
+
+Let $0 < r \leq 1$ be our sampling ratio, meaning each row of an emitted stream is selected uniformly into the sample with probability $r .$ . This is sampling without replacement and is done by uniformly selecting at random $\setminus \rho _ { k } ^ { d } )$ projections of each record at level k. The sampling here is in the form of inclusion-exclusion (unlike the one discussed in Section 2.1) and one does not need to store the sample to estimate the self-join size. For the same reason, the sample size can grow linearly with the input to avoid the estimation problem discussed in Section 2.1.
+
+TABLE 2 Projections at levels 3 and 2
+
+<table><tr><td colspan="4">Level 3</td></tr><tr><td></td><td></td><td></td><td></td></tr><tr><td>Proj</td><td>$1</td><td>$2</td><td>$3</td></tr><tr><td>ABC</td><td> $a_1$ </td><td> $b_1$ </td><td> $c_1$ </td></tr><tr><td>ABC</td><td> $a_2$ </td><td> $b_2$ </td><td> $c_2$ </td></tr><tr><td>ABC</td><td> $a_1$ </td><td> $b_1$ </td><td> $c_3$ </td></tr><tr><td>ABC</td><td> $a_3$ </td><td> $b_2$ </td><td> $c_2$ </td></tr><tr><td colspan="4">s/join size=4</td></tr></table>
+
+Given a sample as discussed above, let random variables $X _ { k }$ and $X _ { k } ^ { \prime }$ be estimates of $x _ { k }$ for the population and the sample respectively. Also let the random variable $Y _ { k }$ be an estimate of $y _ { k }$ for the sample. The relationship between the expected number of k-similar pairs in the population, $X _ { k } ,$ and the self-join size of a sample from a k-value stream, $Y _ { k } ,$ can be expressed as follows.
+
+Lemma 4. For a set of n records, each of arity d, $k \leq d$ and sampling ratio $r ,$
+
+$$
+X _ {k} = (Y _ {k} - r \binom {d} {k} n) / r ^ {2} - \sum_ {j = k + 1} ^ {d} \binom {j} {k} X _ {j}.\tag{4}
+$$
+
+Proof. Let us initially assume that there are no $k + 1 , k +$ $2 , \ldots .$ , d-similar pairs. Given that each record is included with probability $r ,$ giving us a sample of size $r ( \mathbf { \sp { d } } _ { k } ) n ,$ the relationship between $Y _ { k }$ and $X _ { k } ^ { \prime }$ can be expressed as
+
+$$
+Y _ {k} = X _ {k} ^ {\prime} + r \binom{d}{k} n.
+$$
+
+For a pair of k−similar records, the probability that they both make to the sample (and are counted in $X _ { k } ^ { \prime } )$ is $r ^ { \dot { 2 } } ;$ hence $X _ { k } ^ { \prime } = r ^ { 2 } X _ { k }$ . Replacing this in the equation above, we get $\begin{array} { r } { Y _ { k } = r ^ { 2 } X _ { k } + r \binom { d } { k } } \end{array}$ n and this can be rewritten as
+
+$$
+X _ {k} = (Y _ {k} - r \binom {d} {k} n) / r ^ {2}.\tag{5}
+$$
+
+We can now relax our assumption and show by induction on k that the statement of the lemma holds. The basis holds for $X _ { d } .$ . Now suppose the lemma holds for $X _ { k + 1 } , \ldots , X _ { d } ,$ meaning we can drive the values of $X _ { k + 1 } , \ldots , X _ { d }$ using Eq. 4. Then the contributions of $k + 1 , \ldots ,$ d-similar pairs toward $X _ { k }$ can be computed as $\textstyle \sum _ { j = k + 1 } ^ { d } { \binom { j } { k } } X _ { j }$ (see the discussion in the proof of Lemma 3). Subtracting this quantity from our earlier estimate in Eq. 5 will give the final result, and this completes our proof. □
+
+## 3.3 The algorithm
+
+Our one-pass Similarity Self-Join Pair Count (SJPC) method is depicted in Algorithm 1. The algorithm can be broken down into three main steps.
+
+Step 1: Generate projections and construct sketches (lines 1-20). For each record and each $k = s , \ldots , d ,$ the algorithm selects k different attributes uniformly at random, and projects the record under these attributes (with duplicates kept); the projected attribute values are encoded into a string along with the text of the attribute combination. We call this record a k-sub-value, and the set of all k-sub-values at level k a k-sub-value stream. For example, if the selected attributes for a row are $\mathbf { A } ,$ B and C and their respective values are $a _ { 1 } , ~ b _ { 1 }$ and $c _ { 3 } ,$ , then the generated 3-sub-value will be $A B C . a _ { 1 } . b _ { 1 } . c _ { 3 }$ . With this coding, all k-sub-values can be placed on the same stream and no two sub-values from different projections can join. This would reduce the number of self-join size estimations at level k of the lattice from $\textstyle { \binom { d } { k } }$ to one. The process is repeated $l _ { k } = r { \binom { d } { k } }$ times $( 0 < r < 1 )$ .
+
+<div class="mineru-algorithm" style="white-space: pre-wrap; font-family:monospace;">
+input : Similarity threshold s, sampling ratio r, sketch width wd and sketch depth dp
+input : A stream with d columns
+output: Similarity self-join size of the stream
+
+1 Initialize  $(d - s + 1)$  sketches, each of width wd and depth dp;
+2 for k ← s to d do
+3    colComb[k].size =  $\binom{d}{k}$ ;
+4    colComb[k].list = list of all k column combinations of d attributes;
+5 end
+6 for each row in the stream do
+7    for k ← s to d do
+8    sampleSize = colComb[k].size * r;
+9    if sampleSize is not an integer then
+10    round it up with probability
+    sampleSize - truncate(sampleSize) and round it down with the remaining probability;
+11    end
+12    Let C be sampleSize entries from colComb[k].list chosen uniformly at random;
+13    for each c ∈ C do
+14    let p be the projection of the row on column combination c;
+15    p = concat(c,p);
+16    fp = fingerprint(p);
+17    sketch_insert(k, fp);
+18    end
+19    end
+20 end
+21 for k ← s to d do
+22    Y[k] = sketch_estimateF2(k);
+23 end
+24 Let n be the size of the input stream (in terms of the number of rows);
+25 f2toPairCnt(d,s,n,r,X,Y)
+26 estimate = 0;
+27 for k ← s to d do estimate += X[k];
+28 return estimate;
+29 Procedure f2toPairCnt(d,s,n,r,X,Y)
+30 for k ← d downto s do
+31    sampleSize =  $\binom{d}{k} * r * n$ ;
+32    X[k] = Y[k] - sampleSize;
+33    for j ← k + 1 to d do
+34    X[k] -= r²*(j/k) * X[j];
+35    end
+36    X[k] = (X[k] &lt; 0) ? 0 : X[k]; // estimates cannot be negative
+37 end
+38 for k ← s to d do X[k] /= r²;
+Algorithm 1: SJPC algorithm
+</div>
+
+This step will produce $d - s + 1$ sub-value streams, one for each $k = s \ldots d ,$ and the number of k-sub-values in each sub-value stream is controlled by the sampling ratio r. Subvalues may be fingerprinted into more concise fixed length strings [26], and a sketch may be constructed for each subvalue stream instead of directly storing it. There are several sketching algorithms that estimate the self- join size in one pass [19], [21]. We use Fast-AGMS [21], which maintains w counters (sketch width) and map elements in the stream into one of those counters. Two 4-universal hash functions $h _ { 1 }$ and $h _ { 2 }$ are used where $h _ { 1 }$ maps each element into either $- 1$ or 1 and $h _ { 2 }$ maps it into $[ 1 , \ldots , w ]$ , both uniformly at random. For each incoming element $e ,$ the sketch is updated by adding $h _ { 1 } ( e )$ to the counter at index $h _ { 2 } ( e )$ . Once the stream is processed, the self-join size is estimated by adding up the squares of all counter values. In our case, $\bar { d } - s + \bar { 1 }$ sketches are needed to estimate the self-join sizes for that many sub-value streams. To provide a better error bound, the process is often repeated t times (sketch depth) and the median of those t estimates are chosen. The sketch requires tw counters to implement, and we are constructing $d - s + 1$ such sketches for our estimation.
+
+Step 2: Find the self-join sizes (lines 21-23). The algorithm, finds the self-join size of each sub-value stream, using standard self-join size estimation methods [21].
+
+Step 3: Estimate the similarity self-join size (lines 24- 28). With the self-join sizes $Y _ { k }$ computed for $k = s , \ldots , d$ in the previous step, the similarity self-join size can be computed using Equation 4.
+
+As an example, let $d = 6 , s = 4$ and $r = 0 . 5$ and suppose $Y _ { 6 } , Y _ { 5 }$ and $Y _ { 4 }$ are computed; we can compute the similarity self-join size by adding up $X _ { 4 } , X _ { 5 }$ and ${ \bar { X _ { 6 } } } ,$ , where the latter can be obtained by solving the following equation system:
+
+$$
+\left\{ \begin{array}{l} Y _ {6} = 0. 2 5 X _ {6} + 0. 5 n \\ Y _ {5} = 1. 5 X _ {6} + 0. 2 5 X _ {5} + 3 n \\ Y _ {4} = 7. 5 X _ {6} + 1. 2 5 X _ {5} + 0. 2 5 X _ {4} + 7. 5 n. \end{array} \right.\tag{6}
+$$
+
+Step 1 can be done while the input is being read, and Step 3 simply takes $d - s + 1$ self-join size estimates and computes $X _ { k }$ using Eq. 4, which is straightforward. This leaves us with the self-join size estimation in Step 2 for which onepass algorithms are available.
+
+## 4 ANALYSIS
+
+There are two sources of randomness in the proposed algorithm: (1) randomness due to the sampling in Step 1, and (2) randomness due to the self-join size estimation in Step 2. To get a better insight into the algorithm and its steps, we analyze it both without and with the randomness in Step 2. We refer to the case where an exact self-join size is computed in Step 2 as the offline case, and the case where this is estimated using a sketch as the online case.
+
+Theorem 1. (Unbiased estimate and variance - offline case) The SJPC algorithm gives an unbiased estimate of the s-similarity self-join size under the offline scenario, i.e. $E [ G _ { s } ] = g _ { s } $ , and var $\ [ G _ { s } / g _ { s } ]$ is at most
+
+$$
+\binom{d}{s} ^ {2} \frac {1}{r} \binom{2 (d - s)}{d - s} / g _ {s},
+$$
+
+where $G _ { s }$ is the estimate and $g _ { s }$ is the true value.
+
+Proof. See Appendix A.
+
+Remarks. Since the estimate is unbiased, var $\big ( \frac { G _ { s } } { g _ { s } } \big )$ can be considered as a measure of relative error in practice. There are a few observations that can be made. First, this is an upper bound of the error and the actual error is expected to be less. More specifically, when $r = 1$ , the estimate has no error (see Lemma 3) whereas the bound can still be large depending on d and s. Second, the variance increases significantly as the gap between s and $d$ widens. However, in many practical settings such as duplicate detection, often higher similarities (80% or higher) are sought; in those cases, the error is expected to be low, as shown in Figure 2 (left) as well. Third, when other parameters are fixed, the expected relative error decreases when the true similarity self-join size increases. Assuming $g _ { s }$ increases quadratically with n (which is the case in our real dataset), the relative error goes down linearly with n. The results shown in the experiment section confirm this observation.
+
+When the dimensionality d increases, the expected error increases and time and space costs are also affected. Since the algorithm generates $\textstyle r \sum _ { k = s } ^ { d } { \binom { d } { k } }$ sub-values for each record, if the sampling ratio r is chosen such that $\lceil r \binom { d } { k } \rceil < c$ for some constant $c ,$ then both the space and time costs in an offline case is $O ( ( d - s + 1 ) n )$ for processing all records. Also for large $d ,$ it may be possible to select a subset of the columns and gauge the similarity based on the subset.
+
+Next we report the performance of our algorithm under an online scenario where the self-join size in Step 2 is estimated using a sketch.
+
+Theorem 2. (Unbiased estimate and variance) The SJPC algorithm gives an unbiased estimate of the s-similarity self-join size in an online scenario, i.e. $E [ G _ { s } ] \stackrel { \cdot } { = } g _ { s }$ , and the variance of $\frac { G _ { s } } { g _ { s } }$ is at most
+
+$$
+\binom{d}{s} ^ {2} \frac {1}{r} \binom{2 (d - s)}{d - s} ((1 + \frac {2}{w}) / g _ {s} + \frac {2}{w} (1 + \frac {n}{r g _ {s}}) ^ {2}),
+$$
+
+where w is the Fast-AGMS sketch width (depth is 1), d is the number of attributes, s is the given similarity threshold, r is the sampling ratio, $g _ { s }$ is the true value of the similarity self-join size, and $G _ { s }$ is the estimated value.
+
+Proof. See Appendix A.
+
+Remarks. A few observations can be made here. First, as in the offline case, this is an upper bound of the error.
+
+![](images/6951f8b0e067fbf934d75f8b6c52fa6551d7a983749cb092203591add40e62ec.jpg)
+
+![](images/94a16e0dc2363d54aba59731899146766af967c3866f52033ed86ad00f245bf6.jpg)
+
+![](images/6b69709f5bfc468506e14bfaa995493afb9d167214377441cca358893850982d.jpg)  
+Fig. 2. Error upper bound (i.e. the absolute error $v a r ( G _ { s } ) )$ with gs=1 in (left) the offline case for r=1, (middle) the online case for $\mathsf { r } { = } 1 ,$ , w=1000, and (right) the online case for r=0.1, w=1000. Note the term $n / g _ { s }$ in Theorem 2 (which is not larger than 1) is dropped to derive a weaker upper bound.
+
+In particular, when the sampling ratio is close to 1, the offline estimates are expected to be accurate and the only source of error is from $d - s + 1$ sketches. Second, the variance gets a hit as the gap between d and s widens or d becomes large. Again, this is not an issue in many practical settings where a high similarity (80% or higher) is desired. Third, to bound the variance, the space usage (denoted by w) does not have to increase when n increases as long as $g _ { s }$ increases proportionally, which is usually an expected case. Finally, the statement provides a formulation of the interaction between sketching and sampling, and how the variance changes with r (see the right two columns of Figure 2). A similar (but more extensive) study on the interaction between sketching and sampling in a different context is conducted by Rusu and Dobra [27], where they reach the same conclusion that sketching over samples is a viable option, reducing the processing time with not much loss in accuracy.
+
+Theorem 3. (Space and time cost to bound the selectivity estimation error) The SJPC algorithm guarantees that the $e s \textmd { - }$ timated selectivity of the similarity self-join deviates from the true value by at most  with probability at least $1 - \lambda .$ . More precisely, $\begin{array} { r } { P r [ | \hat { \theta } _ { s } - \theta _ { s } | \le \epsilon ] \ge 1 - \lambda , } \end{array}$ where $\hat { \theta } _ { s }$ is the estimated selectivity and $\theta _ { s }$ is the true value. The space cost is $O ( \log ( 1 / \lambda ) ( d - \overset { \cdot } { s } + 1 ) w )$ , and the time cost for processing each record is $\begin{array} { r } { O ( \log ( 1 / \lambda ) { \binom { d } { s } } ^ { 2 } { \binom { 2 ( d - s ) } { d - s } } ( \sum _ { k = s } ^ { d } { \binom { d } { k } } ) / ( \epsilon ^ { 2 } w ) ) } \end{array}$
+
+Proof. See Appendix A.
+
+Remarks. Note that $g _ { s }$ appears neither in the time nor in the space complexity. Although this statement discusses the error of selectivity estimation, which is a relative error based on $n ^ { 2 } .$ , by slightly changing the proof, it is not hard to see the statement also holds for relative errors defined based on $g _ { s }$ . The algorithm constructs $d - s + 1$ sketches each of size $\begin{array} { r } { O \big ( \frac { 1 } { \epsilon ^ { 2 } } \log ( 1 / \delta ) \big ) } \end{array}$ , giving a space cost of $\begin{array} { r } { O ( ( d - s + 1 ) \frac { 1 } { \epsilon ^ { 2 } } \log ( 1 / \bar { \delta } ) ) } \end{array}$ , meaning that using constant time per record and constant number of counters, the algorithm can give accurate estimates of similarity self-join size with high probability. It should be noted though that each counter needs log $\dot { F }$ bits to implement, where $F$ is the maximum frequency of a sub-value. In the extreme case where records all have the same value, F would be $O ( n )$
+
+The statement also shows that both time and space costs will increase when d increases or the gap between d and s widens. There is a clear tradeoff between time and space controlled by w (implicitly by r). If w is large, time cost will be smaller while space cost will be larger. Compared with the offline case, the online case requires much less space and returns a final estimate much faster after scanning the dataset once. Our experiments show that the overall error in the online case is still negligible and much less than the competitors under typical settings of d and s.
+
+## 5 ASYMPTOTIC TIME COMPARED TO RANDOMSAMPLING
+
+In terms of a time comparison, there are two main stages in both SJPC and random sampling: data summarization and size calculation. At the data summarization stage, randomsampling takes $O ( 1 )$ time per record, whereas SJPC has to construct $r \sum _ { k = s } ^ { d } { \binom { d } { k } }$ sub-values for each record, and for each sub-value t counters will be updated, where r is the sampling ratio and t is the sketch depth. Thus SJPC will take $\begin{array} { r } { O ( r t \sum _ { k = s } ^ { d } { \binom { d } { k } } ) } \end{array}$ time per record. Random sampling is clearly faster at the data summarization stage.
+
+At the size calculation stage, having the data summary, SJPC has to compute the mean or median of $( d - s + 1 ) w t$ counters and plug them in Equation 4 to find the estimates. Hence it will take $O ( ( d - s + 1 ) w t )$ time, which basically is the time for scanning the data summary once, while random sampling takes $O ( \bar { R ( R - 1 ) / 2 } )$ time for a sample of size ${ \mathrm { R } } ,$ quadratic in the sample size. Thus, online SJPC is faster at the size calculation stage.
+
+The total time $T ( n )$ for SJPC is $\begin{array} { r } { O ( n r t \sum _ { k = s } ^ { d } { \binom { d } { k } } + ( d - } \end{array}$ $s + 1 ) w t )$ , which can be written as $O ( n \sum _ { k = s } ^ { d } { \binom { d } { k } } )$ , with the sampling ratio r and the sketch depth t treated as constants. Also since $\begin{array} { r } { \sum _ { k = s } ^ { d } { \binom { d } { k } } \leq d ^ { d - s } } \end{array}$ , we can use $O ( n d ^ { d - s } )$ as an upper bound of the running time.
+
+The cost of random sampling depends on the sample size, which is a function of n. We know from Lemma 1 that the size of the sample must be larger than $n ^ { 1 / 2 }$ to obtain an estimate that has an error less than 100%. Let the sample size be $n ^ { \frac { p } { p + 1 } }$ for $p > 1$ . Random sampling needs $T ( n ) = O { \left( n ^ { \frac { 2 p } { p + 1 } } \right) }$ time to obtain an estimate. Figure 3 shows how the two methods cope as the dataset size n and the dimensionality d increase. As expected, random sampling suffers when n increases whereas SJPC suffers when d increases or $d - s$ widens. On the other hand, SJPC scales linearly with n.
+
+![](images/373ca1e07195c1c6760db6efceef8e44f66793bb861898b47b1c9f0967d107e5.jpg)
+
+![](images/af890496f2f72c7611979c7ddb010d706aa96f5ea011bd237392b16f6e4cd4d9.jpg)  
+Fig. 3. Asymptotic time varying n and d, with $p = 2$ and $s = d$ − 1 on the left and $p = 3$ and $s = d$ − 2 on the right
+
+## 6 SIMILARITY JOIN SIZE ESTIMATION
+
+An important problem related to similarity self-join size estimation is estimating similarity join sizes. First we show an estimate that does not hold for similarity join sizes. A simple estimate for join size is based on the self-join sizes. Alon et al. [20] show that for two relations A and B
+
+$$
+| A \bowtie B | \leq \frac {S J (A) + S J (B)}{2}
+$$
+
+where $S J ( A )$ and $S J ( B )$ are self-join sizes of A and B respectively on the joining attributes. This does not hold for similarity join though. Here is a counter example. Let A consists of the row $( a , \dot { b } , c , d )$ and B consists of $( a , b , c x , d x )$ and $( a x , b x , c , d )$ . With the similarity threshold set to 2, rows in A and $B \mathrm { j o i n } ,$ , and the join size is 2; but the similarity selfjoin size of A is 1 and that of $B$ is 2 and the bound on the join size does not hold. The same can be shown for larger thresholds. For example, with a similarity threshold set to 3, let A be the same as above and B be the set of three rows $( a x , b , c , d ) , ( a , b x , c , d )$ , and $( a , b , c x , d )$ . Again the bound does not hold.
+
+A well-known fact in both join and self-join size estimation is that an estimation is generally ineffective when the size to be estimated is small compared to the sizes of the relations being joined, and a sanity check may be performed to avoid such cases [20]. Consider the problem of similarity join size estimation between two relations R and S in the presence of one such sanity check. An estimation algorithm may look like this: (1) project the records of A and B independently into sub-value streams (as discussed in Sec. 3), (2) construct a sketch for each sub-value stream for a total of $2 ( d - s + 1 )$ ) sketches, (3) estimate the join sizes between sub-value streams of A and B at each of the levels $s , \ldots , d ,$ and (4) estimate the join size based on the join sizes of the sub-value streams. As discussed for self-join sizes, the computation in Step 4 is exact meaning given exact join sizes of the sub-value streams, no error can be introduced in Step 4. The only source of error here is (a) error due to sampling from projections in Steps 1-2. and (b) the sketch error in estimating join sizes between sub-value streams.
+
+The join size estimation in Step 3 uses the product of the sketches for sub-value streams; in particular, given (AGMS and Fast-AGMS) sketches $S ( A )$ and $S ( B )$ of two relations A and B respectively, an estimator for A ./ B is $S ( A ) . S ( B )$ . It is easy to show that this estimate is unbiased since the expected contribution of non-matching values to the product is zero when the sketch mapping functions are 2-wise (in case of AGMS) or 4-wise (in case of Fast-AGMS) independent. Alon et al. [20] show that this estimate has a variance which does not exceed two times the product of self-join sizes of A and B.
+
+Let random variables $X _ { k }$ and $Y _ { k }$ denote respectively the similarity join size and the join size both at level k. The relationship between the two variables can be written as
+
+$$
+X _ {k} = Y _ {k} / r ^ {2} - \sum_ {j = k + 1} ^ {d} {\binom {j} {k}} X _ {j},\tag{7}
+$$
+
+where r is the sampling rate, set to the same value for both streams. Note that in case of a similarity join size estimation, there is no self-pair (where a record joins itself) and this gives rise to the slight difference between this estimate and that in Equation 4.
+
+The estimate is unbiased since $Y _ { k }$ is unbiased and has the expectation
+
+$$
+E (X _ {k}) = E (Y _ {k}) / r ^ {2} - \sum_ {j = k + 1} ^ {d} {\binom {j} {k}} E (X _ {j})\tag{8}
+$$
+
+and the variance
+
+$$
+\begin{array}{c} V a r (X _ {k}) = V a r (Y _ {k}) / r ^ {4} + \sum_ {j = k + 1} ^ {d} \binom {j} {k} ^ {2} V a r (X _ {j}) \\ - \sum_ {j = k + 1} ^ {d} (2 / r ^ {2}) \binom {j} {k} C o v (Y _ {k}, X _ {j}) \end{array}
+$$
+
+which can be bounded as
+
+$$
+V a r (X _ {k}) \leq V a r (Y _ {k}) / r ^ {4} + \sum_ {j = k + 1} ^ {d} \binom {j} {k} ^ {2} V a r (X _ {j}).\tag{9}
+$$
+
+## 7 EXPERIMENTS
+
+To verify our analytical findings in more practical settings, and to assess both the robustness and the performance of the SJPC algorithm, we conducted a set of experiments on both real and synthetic data under different settings including different similarity thresholds, dataset sizes, and dimensionalities. When applicable, the performance of our method is compared to that of the competitors including the LSH-based bucketing and random sampling (see Sec. 2 for details of these algorithms).
+
+TABLE 3  
+Accumulative count of s-similar pairs, excluding self-pairs. The count shown at row s = i includes all pairs that have a s-similarity i or larger.
+
+<table><tr><td rowspan="2">ns\n\n</td><td>DBLP5</td><td>DBLP6</td><td>DBLPtitles</td></tr><tr><td>20,000</td><td>2468</td><td>200,000</td></tr><tr><td>6</td><td>na</td><td>0</td><td>19,356</td></tr><tr><td>5</td><td>70</td><td>26</td><td>210,666</td></tr><tr><td>4</td><td>761</td><td>7,984</td><td>1,900,702</td></tr><tr><td>3</td><td>1,827,680</td><td>29,405</td><td>16607104</td></tr><tr><td>2</td><td>2,112,300</td><td>184,287</td><td>103,992,978</td></tr><tr><td>1</td><td>39,556,445</td><td>1,655,537</td><td>521,423,328</td></tr></table>
+
+## 7.1 Experimental Setup
+
+The following three datasets were used in our evaluation (see also Section 7.5 for larger datasets and experiments).
+
+DBLP5. This was a set of records selected from DBLP <sup>2</sup>. The selection criteria was that a record was selected if it had non-empty values in (all of) the following 5 fields: title, author, journal, volume and year. In the first 20,000 records that were qualified, there were 19884 unique titles, 15917 unique authors, 29 unique journals, 125 unique volumes and 49 unique years.
+
+DBLP6. This was similar to DBLP5 except every record here had non-empty values in the following 6 fields: title, author, journal, month, year and volume. The dataset had 2468 records. There were 2456 unique titles, 1601 unique authors, 9 unique journals, 150 unique volumes, 41 unique years and 26 unique months.
+
+DBLPtitles. This was a set of paper titles from DBLP with each title fingerprinted into 6 super-shingles where each super-shingle was a 64 bit fingerprint. This resembled the experimental setting of Henzinger [28] and Broder et al. [29], where their goal was to find near-duplicate Web pages. This resulted in 467,468 records, each with 6 attributes. The number of unique values in each column ranged from 27000 to 30000.
+
+Table 3 gives more stats on these datasets including similarity join sizes for different similarity thresholds. Unless stated otherwise, all experiments are repeated 30 times and either the mean, the standard deviation or both of the relative error is reported.
+
+## 7.2 Offline scenario
+
+In the first set of our experiments, we wanted (1) to evaluate our method without introducing any error due to the sketching and (2) to characterize its performance compared to other baselines. This was possible in the offline scenario (as discussed in Section 4), under which the baseline algorithms introduced in Section 2 could as well be applied. Next we compare the performance of our method to some of these non-streaming solutions under the same or similar space requirements.
+
+A note on the signature pattern counting of Lee et al. [22]. We think there is a mistake in the formulation presented in the paper. In particular, with the formulation of $C _ { l , t }$ in the authors’ Equation 4, the estimates of similarity self-join size can be negative. This is what we observed in our experiments of running this algorithm on DBLP5 and DBLP6. Also the estimates were sometimes off by a factor of 2 or larger. We carefully verified our implementation and it was indeed consistent with the paper. We also noticed that Equation 4 applied to the authors’ own example of LC(2) on Page 6 would give −2 instead of the reported result 6. After communicating this with the authors and given the fact that the same authors show LSH-SS outperforms the signature pattern counting, we decided not to report our results for the latter.
+
+Relative error on DBLP5, DBLP6 and DBLPtitles. In this experiment, we compare the performance of our method to LSH-based bucketing of Lee et al. [18]; the selected algorithm for LSH-based bucketing is referred to as LSH-SS by the authors, which is shown to perform the best in their experiments. The sampling ratio for SJPC was set to 0.5 and $m _ { H }$ and $m _ { L }$ for LSH-SS was set to $n ,$ the size of the dataset, as suggested by the authors.
+
+Figures 4 shows both the mean and the standard deviation (std) of the relative error over 30 runs on DBLP6. In terms of both the mean and the standard deviation of the error, SJPC outperforms LSH-SS and has a standard deviation of the error which is sometimes an order of magnitude smaller than that of LSH-SS. The dataset had no 6-similar pairs, and both algorithms detected that correctly. Similar results are observed on DBLP titles as shown in Figures 5. In another experiment, we evaluated LSH-SS under two different sampling strategies. In the first strategy, referred to LSH-SSv1, the sampling ratio was set as suggested by the authors, i.e. $m _ { H } = m _ { L } = n ,$ and the sample size grew linearly with n. In our second strategy, we set the sampling ratio to a constant (set to 0.005 in our experiments), meaning each pair was sampled with a fixed probability and the sample size grew linearly with the number of pairs. The results on DBLP5 are shown in Figure 6.
+
+Materializing sub-value streams. Limiting our algorithm into the offline case (i.e. without the space and timecost optimization due to the sketching) allowed us to compare its performance to multi-pass algorithms that assume the dataset and/or the intermediate data structures can be materialized. This is not usually feasible in a streaming environment and is not the right setting for our algorithm. That said, the offline case can be executed if the intermediate sub-value streams can be materialized. This is what we did in an implementation of both SJPC-offline and LSH-SS, where the memory usage for each method was tracked at various points during the execution (e.g. when a variable is defined or loaded) by calling a task manager function, before and after, and the largest difference for each method was reported. We verified the accuracy of this method by loading datasets of known sizes and comparing the space usage reported using this method with the actual size, and the method was accurate in the range of Kilobytes especially if the experiment was repeated. As shown in Figure 7, the space needed for materializing sub-value streams, to our surprise, was not much more than that of LSH-SS especially for large similarity thresholds (which is usually the case in similarity estimations), and this makes SJPC-offline a viable option due to its better error bounds.
+
+![](images/9cabc6ccd4abf3011ae23e0c4360b6b808c7a22c491a5143725d0e6afd7b6ca0.jpg)  
+Similarity threshold (s)
+
+![](images/5169274379b0795e0c118ba87cb370182f5176dd70819d839d99747987f91821.jpg)  
+Similarity threshold (s)
+
+![](images/cda5e922dda34e79c414968486d78c1ff93056978ede819fe363d1177c382a57.jpg)  
+Similarity threshold (s)
+
+![](images/836527309353c3daec707594d88172ce67b5d8953f4455bc2a89271c42d0c77f.jpg)  
+Similarity threshold (s)  
+Fig. 4. Relative error comparison on DBLP6 (offline case)
+
+![](images/28147ca6ad2bf90789ac122e2a4175e7edffd5e2abe25a9f7adb11fe4d5c592c.jpg)  
+Similarity threshold (s)  
+Fig. 5. Relative error comparison on DBLPtitles (offline case)
+
+![](images/31d020df0c5fc12be08a573615b6d5e043d6e4f914ad712a23a650b7c53cab42.jpg)  
+Similarity threshold (s)  
+Fig. 6. Relative error comparison on DBLP5 (offline case)
+
+![](images/08e72c792953aa070332330ad71e798db52300b015bb4bada6102fe2868f7ef4.jpg)  
+Fig. 7. Materialization cost on DBLP5
+
+## 7.3 Online scenario
+
+In an online scenario where only one pass can be made over the data, random sampling is the only competitor. In this section, we compare the accuracy of SJPC to random sampling.
+
+Comparison to random sampling. Similar to the offline scenario, we set the sampling ratio to 0.5, and ran our online SJPC on the first 200K rows of DBLPtitles. The sketch width (number of counters) was set to 1000, and the sketch depth was set to 3. SJPC needs one sketch for every sub-value stream, and the number of sub-value streams is $d - s + 1$ where d is the data dimensionally and s is the minimum similarity threshold that is desired. One can cover all useful similarity ranges $( \mathbf { e . g . } \ s = 3 , \ldots , 6 )$ by creating 4 sketches on this particular dataset; this translates to 12,000 counters, each implemented as a 32-bit integer, giving a total space of 48,000 bytes. The same amount of space was allocated to random sampling. Every record of DBLPtitles had 6 fields, and each field was a 64-bit fingerprint, adding up to 48 bytes per record. That meant, random sampling were given space for 1000 records.
+
+Both random sampling and SJPC give unbiased estimates, hence we compare their standard deviations of the estimates. As shown in Figure 8, SJPC outperforms random sampling by a large margin. The standard deviation of the estimates for random sampling is almost an order of magnitude higher. Also it should be noted that this was under the setting that the sketches are maintained for all similarity thresholds $s = 3 , \ldots , 6 .$ . For example, with larger values of s, the space usage of SJPC is reduced (in terms of the number of counters to the number of records) while the accuracy remains the same; this cannot be done in random sampling without affecting its accuracy.
+
+Records in both DBLP5 and DBLP6 were longer and a bigger difference in performance between SJPC and Random sampling was expected. In particular, the same setting of our sketching could be used on DBLP5 and DBLP6 since a 32-bit counter was enough to keep the counts. However, random sampling suffered because of the space limitations. The average length of a record in DBLP5 was 167 characters and in DBLP6 was 121 characters. Under ASCII encoding where each character takes one byte, random sampling would have enough space to store 287 records of DBLP5 and 397 records of DBLP6. For the same reason, the results are not reported on these two datasets.
+
+![](images/72efa55fd6eb37a677904e9b16380042a5dac46953575b144f6f4722c20835ad.jpg)  
+Fig. 8. Relative error on DBLPtitles (online case)
+
+## 7.4 Varying the parameters of SJPC
+
+In this section, we evaluate the performance of the SJPC algorithm under different parameter settings.
+
+Varying the sampling ratio. In all our previous experiments, the sampling ratio was set to 0.5 meaning only half of the sub-values were sampled. The sampling ratio only affects the per-record processing time and not the space usage, hence if the processing time is not a constraint, the sampling ratio should be 1 to obtain a better estimate. To study the relationship between the sampling ratio and the accuracy, we varied the sampling ratio from 0.25 to 1 while keeping everything else the same as before, i.e. 200K records of DBLPtitles with the sketch width and depth set at 1000 and 3 respectively. Figure 9 (left) shows the effect of the sampling ratio on the standard deviation of the error. The error consistently drops as the sampling rate increases with an exception at the similarity threshold 1 where a sampling ratio of 0.5 performs slightly better than the next sampling ratio. We don’t have a good explanation here other than confirming that this is due to the interaction between sketching and sampling and that the sketch in this particular case performed better on the sample. A similar behaviour is observed by Rusu and Dorba [27] in some of their experiments on constructing sketches over samples. The mean error also drops (not shown here) but the drop is not as significant as the drop in the standard deviation. An observation that can be made is that the sampling ratio can vary between sub-value streams, for example, to reduce the error at certain values of k. It is easy to incorporate this in our formulation in Equation 4.
+
+Varying the dimensionality. In another experiment, we used the first 100K records of DBLPtitles but varied the number of columns by generating different number of super-shingles for each text. Other parameters were kept the same (i.e. sampling ratio of 0.5 and sketch width at 1000 and sketch depth at 3). As shown in Figure 9 (middle), the standard deviation of the error takes a hit when the dimensionality increases, which is consistent with our analytical prediction. This is under the condition that all other parameters are kept the same. Clearly one can reduce the error by increasing the sketch width/depth and/or the sampling ratio, as shown in our previous experiments.
+
+Varying dataset size and the number of duplicates. In this set of experiments, we started with 400K records of DBLPtitles and duplicated each record X times with X taking the values 1, 2, 4 and 8. This gave us datasets of sizes 400K, 800K, 1600K and 3200K. This particular setting allowed us to easily compute the true sizes without doing a join on larger files. We also included the first 200K records of DBLPtitles to see if the trend is the same when records are not duplicates. As before, the sampling ratio of our method was set to 0.5, and sketch width and depth to 1000 and 3 respectively. Figure 9 (right) shows that SJPC does not suffer when the dataset size increases while keeping the space usage and the sampling ratio the same; in fact for some similarity thresholds (e.g. 3, 4 and 5), the error drops as the dataset size increases. Compare this to random sampling where the sample size should increase at least as a square root function of the input size to maintain the same error rate. In contrast, having a larger number of records can even be helpful for the sampling part of our algorithm, as hinted in our analytical results and also revealed in Figure 9.
+
+## 7.5 Running time
+
+We conducted experiments to evaluate the running time of SJPC and its scalability with the dataset size, compared to random sampling. The evaluation was conducted on larger datasets (more precisely, orders of magnitude larger than those used in earlier sections), as discussed next. One dataset was real, and three dataset were generated synthetically with varying degrees of skew to show how the skew may affect the scalability. Each records in both real and synthetic data consisted of 5 columns <sup>3</sup>.
+
+Near-uniform 40-60. This is a set of randomly generated 5- fields records with each field formed by concatenating two long integers (making a 64 bits field). 40% of the records are unique, and each of the remaining 60% have one 4-similar pair.
+
+Skewed 20-80. This is a set of randomly generated records with each field formed by concatenating two long integers. 20% of the records are unique and each of the remaining 80% have 15 4-similar pairs. If each set of similar records is treated as an entity, then 20% of the entities make up 80% of the records.
+
+Skewed 10-90. Similar to Skewed 20-80, 10% of the entities (each described by a set of similar records) make up 90% of the records.
+
+YFCC. This is a set of 21 million records from Flickr 100 million photo dataset [30]. Each record in our case includes the following 5 fields: userid, date taken, the capturing device, the latitude and the longitude.
+
+The experiments were conducted on a machine with AMD quad-core 2.3 GHz CPU and 16GB ram running Ubuntu. Both algorithms SJPC and random sampling were implemented in C programming language and were compiled using gcc.
+
+For SJPC, the space usage was fixed for all datasets, with the sketch depth and width respectively set to 1000 and 3 as before and the sampling ratio r = 1. For random sampling, we varied the sample size until random sampling could catch up SJPC in terms of the absolute value of the relative error. That did not happen until the sample size passed $n ^ { 0 . 9 7 } , n ^ { 0 . 9 9 9 5 } { \mathrm { ~ a n d ~ } } n ^ { 0 . 9 9 9 5 }$ respectively for Near-uniform 40- 60, Skewed 20-80 and Skewed 10-90. At those sample sizes, SJPC was always faster in our experiments with any dataset larger than one million records we tried. Figure 10 (left) shows the mean running time of SJPC over 10 runs, on Skewed 20-80 and YFCC, as the dataset size is varied. First, for each method, the running time on YFCC closely matched that of Skewed 20-80, and as a result they are not distinguishable in the figure. Second, as expected, the running time of SJPC grows linearly with the input, whereas the running time for random sampling <sup>4</sup> increases quadratically with the input. Each run of random sampling on 8 million records was taking more than 4 days and we could not run it for larger datasets. The absolute value of the relative error for both methods are also shown in Figure 10 (right). In terms of the space usage, random sampling requires at least an order of magnitude more space than SJPC, and the space usage of random sampling must increase with data skewness for its error rate to keep up with that of SJPC.
+
+![](images/73e98a994b8e73952473784e17088380fb452bb058198bae73f9a80a40e881e8.jpg)  
+Similarity threshold (s)
+
+![](images/2ba441c1c5e9c9b10adccd24bf6d53679aed7e1a1443b152c4e5af944fecf2cf.jpg)  
+Similarity threshold (s)
+
+![](images/96e4b5276a010b70ec91e024450b5a79a15cf47c5f2ff4ff6cb16f4960bd80df.jpg)  
+Fig. 9. Relative error std on DBLPtitles varying the sampling ratio (left), the number of columns (middle), and dataset size (right)
+
+## 7.6 Discussions
+
+The objective of our experimental evaluation was stated as verifying our analytical findings in more practical settings, and assessing both the robustness and the performance of the SJPC algorithm, as compared to competitors (when applicable). We evaluated our method on four real datasets, including DBLP5, DBLP6, DBLPtitles and YFCC and some synthetic data including Near-uniform and Skewed, showing that our algorithm outperforms the state-of-the-art methods from the literature (i.e. LSH-based bucketing in the offline case and random sampling in the online case) in terms of the accuracy of the estimates, the space usage and running time. We experimented with different parameter settings of SJPC, showing that the algorithm is robust and the performance can be managed with different parameters. Our evaluation also confirmed that the SJPC algorithm scales linearly with the input, making it suitable in settings where only one pass over data is feasible. A limitation of the SJPC algorithm is that it does not scale so well to large data dimensionality and this is the price paid for the linear scaling with n, for example compared to random sampling.
+
+## 8 RELATED WORK
+
+Our work relates to the areas of efficient similarity join, selectivity estimation, and sketching techniques .
+
+Efficient similarity join. The problem of similarity join (of tuples) under hamming distance can be mapped to a set similarity join where each tuple becomes a set, for which many algorithms have been developed (e.g., [31], [32]). A general and often efficient algorithm to evaluate set similarity join is index nested loop join, where the inner index returns a set of candidates and the outer loop filters those candidates before performing a pairwise comparison to produce the result. For example, all algorithms recently evaluated by Mann et al. [33] follow this framework and vary in their filtering and candidate generation steps. The time complexity of all these algorithms is quadratic in the input size. To reduce the cost, parallel set similarity is studied using MapReduce [34] and with data represented as arrays [35].
+
+Similarity join is also studied in the context of ddimensional points with d ∈ [2, 32]. A common approach is to associate points to cubes or cells and only join points with overlapping cells [36], [37]. EGO-based approaches use a combination of sort and divide operations to identify sets of points that cannot join [38]. These algorithms are quadratic for typical values of dimensions and similarity thresholds. Selectivity estimation. Selectivity estimation has been an important component of query optimization, and accurate estimates often provide huge savings in cost. Although the problem is widely studied for relational operators with exact predicates (e.g., range predicates [39], substring queries [40], spatio-temporal queries [41], joins [42]) and despite its importance for similarity predicates (e.g. [43]), there has not been much study on estimating the selectivity of similarity predicates. Tata and Patel [44] study the problem in the context of Cosine predicates, discussing some of the difficulties. Hadjieleftheriou et al. [45] study the selectivity estimation for set similarity queries and show that more concise samples can be constructed from the inverted lists of tokens and also report on the performance of different sampling strategies. Lee et al. [22], [18] study the same problem as ours, and Heise et al. [46] use random sampling to estimate the sizes of clusters formed by fuzzy duplicates. We compare our work to both that of Lee et al. and random sampling, when applicable or appropriate.
+
+Sketching techniques. As our work uses sketching to estimate the size of a sub-value stream, there are quite some works on sketching techniques that are applicable. For example, instead of Fast-AGMS [47], [21], which is used in our experiments, Bloom filters may be extended to answer frequency related queries including join and self-join size estimation [48], [49]. Rusu and Dobra [50] review and evaluate some of these sketches for join size estimation. The same authors also study the problem of sketching over samples and show that a speed up in factors of 10 is achievable without much decrease in accuracy [27]. Our sampling is slightly different in that we are sampling from the space of projections of each record.
+
+![](images/6b915a92a96c65438661de980ce364387741d33692ce3c9c3cfa7c8da4a9931e.jpg)  
+Fig. 10. Running time (left) and relative error (right) on Skewed 20-80 and YFCC
+
+Others. Deng et al. [51] study the problem of diversity analysis where similar randomized techniques are used to estimate an average pair-wise similarity. String similarity join [52] may also be mapped to set similarity (for tokenbased) or hamming similarity (for character-based), where join size estimation techniques will be useful. Our work may also be applicable in data cleaning and record deduplication settings (see [1] and Christen [53] for extensive surveys).
+
+## 9 CONCLUSIONS AND FUTURE DIRECTIONS
+
+In this paper, we studied the problem of similarity self-join size estimation and presented a solution for efficiently finding an estimate within one pass over data. We analyzed the accuracy, time and space usage of our algorithm and experimentally evaluated it on both real and synthetic datasets. Our evaluation showed that the proposed algorithm has a relatively high accuracy (often an order of magnitude better than the competitors) and low time and space cost.
+
+Our algorithm scales linearly with the input, and even larger input sizes can help with the accuracy, but it does not scale so well with the dimensionality, which is the price paid for the linear scale up with n. Our method is readily applicable in cases where d, the dimensionality of the data (or the number of columns), is low, or the similarity threshold s is high so that  <sup>d</sup> does not explode to avoid the curse of dimensionality. On the other hand, when the input has a large number of columns, it is often the case that a subset of the columns are selected in queries or analyzed (this has been the premise in some of the work on projected clustering [7] and detecting unique column combinations [54]).
+
+More studies are needed to understand the behaviour of our algorithm, applied to high dimensional data, and the conditions under which more accurate estimates can be obtained. In particular, one area is studying some of the conditions under which our work can be extended to higher dimensions. For example, one may decompose a table into smaller attribute groupings, and compute the similarity self-join size under each grouping before merging the results. Finding decompositions under which the similarity self-join size can be accurately estimated from that of the decomposed table is an interesting future direction. Another area is studying the problem and the proposed solution under some simplifying assumptions (e.g. on the data distribution) that allows tighter bounds to be obtained and/or a better understanding of the problem is gained. One more interesting question is if (the data structure or the estimate of) a similarity join size estimation can be part of a similarity join algorithm, possibly to speed up the join.
+
+![](images/e98038f4f388495f818ab866cd92f29f648f6e22f1fafd0fde3f28e0831b9421.jpg)
+
+## ACKNOWLEDGMENTS
+
+This research is supported by the Natural Sciences and Engineering Research Council of Canada.
+
+## REFERENCES
+
+[1] A. Elmagarmid, P. Ipeirotis, and V. Verykios, “Duplicate record detection: a survey,” IEEE TKDE, vol. 19, no. 1, pp. 1–16, 2007.
+
+[2] R. Miller, “Open data integration,” PVLDB, vol. 11, no. 2, pp. 2130– 2139, 2018.
+
+[3] S. Chaudhuri, V. Ganti, and K. Shriraghav, “Systems and methods for estimating functional relationships in a database,” Jul. 14 2009, uS Patent 7,562,067.
+
+[4] D. Dewitt, J. Naughton, D. Schneider, and S. Seshadri, “Practical skew handling in parallel joins,” in Proc. of the VLDB Conf., 1992, p. 27.
+
+[5] L. Sidirourgos, R. Goncalves, M. Kersten, N. Nes, and S. Manegold, “Column-store support for RDF data management: not all swans are white,” PVLDB, pp. 1553–1563, 2008.
+
+[6] Y. Kwon, K. Ren, M. Balazinska, and B. Howe, “Managing skew in hadoop,” IEEE Data Eng Bulletin, vol. 36, no. 1, pp. 24–33, March 2013.
+
+[7] C. Aggarwal, J. Han, J. Wang, and P. Yu, “On high dimensional projected clustering of data streams,” Data Min. Knowl. Discov., vol. 10, no. 3, pp. 251–273, 2005.
+
+[8] J. Bonwick, “(oracle) zfs deduplication,” http://blogs.oracle.com/ bonwick/zfs dedup-v2, 2009.
+
+[9] S. Jeffery, “Pay-as-you-go data cleaning and integration,” Ph.D. dissertation, University of California, Berkeley, 2008.
+
+[10] I. Good, “Surprise indexes and p-values,” Journal of Statistical Computation and Simula, vol. 32, pp. 90–92, 1989.
+
+[11] V. Leis, A. Gubichev, A. Mirchev, P. Boncz, A. Kemper, and T. Neumann, “How good are query optimizers, really?” Proceedings ofthe VLDB Endowment, vol. 9, no. 3, pp. 204–215, 2015.
+
+[12] G. Morales and A. Gionis, “Streaming similarity self-join,” PVLDB, pp. 792–803, 2016.
+
+[13] G. Manku, A. Jain, and A. Sarma, “Detecting near-duplicates for web crawling,” in Proc. of the WWW Conf., 2007, pp. 141–150.
+
+[14] K. Williams and C. Giles, “Near duplicate detection in an academic digital library,” in Proc. of the Document Eng. Conf., 2013, pp. 91–94.
+
+[15] Y. Ke, R. Sukthankar, and L. Huston, “An efficient part-based nearduplicate and sub-image retrieval system,” in Proc. of the ACM Multimedia Conf., 2004, pp. 869–876.
+
+[16] A. Broder, “On the resemblance and containment of documents,” in Proc. of the Compression and Complexity of Sequences Conf., 1997.
+
+[17] S. Chaudhuri, K. Ganjam, V. Ganti, and R. Motwani, “Robust and efficient fuzzy match for online data cleaning,” in Proc. of the SIGMOD Conf., 2003, pp. 313–324.
+
+[18] H. Lee, R. Ng, and S. Shim, “Similarity join size estimation using locality sensitive hashing,” in Proc. of the VLDB Conf., 2011, pp. 338–349.
+
+[19] N. Alon, Y. Matias, and M. Szegedy, “The space complexity of approximating the frequency moments,” Journal of Computer and System Sciences, vol. 58, no. 1, pp. 137–147, 1999.
+
+[20] N. Alon, P. B. Gibbons, Y. Matias, and M. Szegedy, “Tracking join and self-join sizes in limited storage,” in Proc. of the PODS Conf., 1999, pp. 10–20.
+
+[21] G. Cormode and M. N. Garofalakis, “Sketching streams through the net: distributed approximate query tracking,” in Proc. of the VLDB Conf., 2005, pp. 13–24.
+
+[22] H. Lee, R. Ng, and S. Shim, “Power-law based estimation of set similarity join size,” in Proc. of the VLDB Conf., 2009, pp. 568–669.
+
+[23] A. Savasere, E. Omiecinski, and S. Navathe, “An efficient algorithm for mining association rules in large databases,” in Proc. of the VLDB Conf., 1995, pp. 432–444.
+
+[24] H. Toivonen, “Sampling large databases for association rules,” in Proc. of the VLDB Conf., 1996, pp. 134–145.
+
+[25] G. S. Manku and R. Motwani, “Approximate frequency counts over data streams,” in Proc. of the VLDB Conf., 2002, pp. 346–357.
+
+[26] A. Broder, “Some applications of rabin’s fingerprinting method,” in Sequences II: Methods in Communications, Security, and Computer Science, 1993, pp. 143–152.
+
+[27] F. Rusu and A. Dobra, “Sketching sampled data,” in Proc. of the ICDE Conf., 2009, pp. 381–391.
+
+[28] M. R. Henzinger, “Finding near-duplicate web pages: a large-scale evaluation of algorithms.” in Proc. of the SIGIR Conf., 2006, pp. 284–291.
+
+[29] A. Broder, S. Glassman, M. Manasse, and G. Zweig, “Syntactic clustering of the web,” Computer Networks, vol. 29, no. 8-13, pp. 1157–1166, 1997.
+
+[30] B. Thomee, D. A. Shamma, G. Friedland, B. Elizalde, K. Ni, D. Poland, D. Borth, and L.-J. Li, “Yfcc100m: The new data in multimedia research,” Communications of the ACM, vol. 59, no. 2, pp. 64–73, 2016.
+
+[31] R. Bayardo, Y. Ma, and R. Srikant, “Scaling up all pairs similarity search,” in Proc. of the WWW Conf., 2007, pp. 131–140.
+
+[32] C. Xiao, W. Wang, X. Lin, and J. Yu, “Efficient similarity joins for near-duplicate detection,” ACM Trans. Database Syst., vol. 36, no. 3, p. 15, 2011.
+
+[33] W. Mann, N. Augsten, and P. Bouros, “An empirical evaluation of set similarity join techniques,” Proc. ofthe VLDB Endowment, vol. 9, no. 9, pp. 636–647, 2016.
+
+[34] R. Vernica, M. J. Carey, and C. Li, “Efficient parallel set-similarity joins using mapreduce,” in Proc. of the SIGMOD Conf., 2010, pp. 495–506.
+
+[35] W. Zhao, F. Rusu, B. Dong, and K. Wu, “Similarity join over array data,” in Proc. of the SIGMOD Conf., 2016, pp. 2007–2022.
+
+[36] N. Koudas and K. C. Sevcik, “High dimensional similarity joins: Algorithms and performance evaluation,” IEEE Transactions on Knowledge and Data Engineering, vol. 12, no. 1, pp. 3–18, 2000.
+
+[37] E. H. Jacox and H. Samet, “Spatial join techniques,” ACM Transactions on Database Systems (TODS), vol. 32, no. 1, p. 7, 2007.
+
+[38] D. V. Kalashnikov, “Super-ego: fast multi-dimensional similarity join,” The VLDB Journal, vol. 22, no. 4, pp. 561–585, 2013.
+
+[39] V. Poosala, Y. Ioannidis, P. Haas, and E. Shekita, “Improved histograms for selectivity estimation of range predicates,” in Proc. of the SIGMOD Conf., 1996, pp. 294–305.
+
+[40] Z. Chen, F. Korn, N. Koudas, and S. Muthukrishnan, “Generalized substring selectivity estimation.” Journal of Computer and System Sciences, vol. 66, no. 1, pp. 98–132, 2003.
+
+[41] Y. Choi and C. Chung, “Selectivity estimation for spatio-temporal queries to moving objects,” in Proc. of the SIGMOD Conf., 2002, pp. 440–451.
+
+[42] L. Getoor, B. Taskar, and D. Koller, “Selectivity estimation using probabilistic models.” in Proc. of the SIGMOD Conf., 2001, pp. 461– 472.
+
+[43] Y. Silva, W.G.Aref, and M. Ali, “Similarity group-by,” in Proc. of the ICDE Conf., 2009, pp. 904–915.
+
+[44] S. Tata and J. Patel, “Estimating the selectivity of tf-idf based cosine similarity predicates,” SIGMOD Record, vol. 36, no. 4, pp. 75–80, 2007.
+
+[45] M. Hadjieleftheriou, X. Yu, N. Koudas, and D. Srivastava, “Hashed samples: selectivity estimators for set similarity selection queries,” in Proc. of the VLDB Conf., 2008, pp. 201–212.
+
+[46] A. Heise, G. Kasneci, and F. Naumann, “Estimating the number and sizes of fuzzy duplicate clusters,” in Proc. of the CIKM Conf., 2014, pp. 959–968.
+
+[47] M. Charikar, K. Chen, and M. Farach-Colton, “Finding frequent items in data streams,” Theoretical Computer Science, vol. 312, no. 1, 2004.
+
+[48] G. Cormode and S. Muthukrishnan, “An improved data stream summary: the count-min sketch and its applications,” Journal of Algorithms, vol. 55, no. 1, pp. 58–75, 2005.
+
+[49] F. Deng and D. Rafiei, “New estimation algorithms for streaming data: Count-min can do more,” http://www.cs.ualberta.ca/ <sup>∼</sup>drafiei/papers/cmm.pdf, 2007.
+
+[50] F. Rusu and A. Dobra, “Sketches for size of join estimation,” ACM Trans. Database Syst., vol. 33, no. 3, 2008.
+
+[51] F. Deng, S. Siersdorfer, and S. Zerr, “Efficient jaccard-based diversity analysis of large document collections.” in Proc. of the CIKM Conf., 2011, pp. 1402–1411.
+
+[52] Y. Jiang, G. Li, J. Feng, and W.-S. Li, “String similarity joins: An experimental evaluation,” Proc. of the VLDB Endowment, vol. 7, no. 8, pp. 625–636, 2014.
+
+[53] P. Christen, “A survey of indexing techniques for scalable record linkage and deduplication,” IEEE transactions on knowledge and data engineering, vol. 24, no. 9, pp. 1537–1555, 2012.
+
+[54] Z. Abedjan, J. Quiane-Ruiz, and F. Naumann, “Detecting unique´ column combinations on dynamic data,” in Proc. of the ICDE Conf., 2014, pp. 1036–1047.
+
+[55] E. Weisstein, “Binomial theorem (from mathworld–a wolfram web resource),” http://mathworld.wolfram.com/BinomialTheorem. html, 2015.
+
+[56] N. Weiss, A Course in Probability. Addison Wesley, 2005.
+
+## APPENDIX
+
+Lemma 1 Random-sampling requires a sample of size $\Omega ( { \sqrt { n } } )$ to give an estimate of the similarity self-join size with a relative error less than 100% with high probability.
+
+Proof. This is an adaptation of the proof of Lemma 2.3 in [20]. Let s be an arbitrary similarity threshold. Construct two datasets $D _ { s }$ and $D _ { n s . }$ , each with n records such that no record in $D _ { n s }$ is k-similar to any other record for all values of $k ,$ , but $D _ { s }$ has $n / 2$ s-similar pairs of records and there is no other form of similarity between the records. A samplingbased estimate of the similarity self-join size for $D _ { n s }$ will be $n ,$ , and that for $D _ { s }$ will be also n using samples of size $o ( \sqrt { n } )$ with high probability. This is simply because the chance that a similar pair (not including self-pairs) makes to the sample is $( n / 2 ) / \dot { ( } n ( n - 1 ) / 2 )$ and the expected number of such pairs in a sample of size $o ( { \sqrt { n } } )$ is ${ \dot { O ( n ^ { 3 / 2 } / n ^ { 2 } ) } }$ , which is close to zero for large $n .$ . However, the similarity self-join sizes for $D _ { n s }$ and $D _ { s }$ are n and 2n respectively, and the estimate is off by a factor of 2 with high probability. As another instance, suppose $D _ { s }$ has $\sqrt { n }$ records that are identical on s columns and $D _ { n s }$ is as defined before. The s-similarity self-join sizes of $D _ { n s }$ is n and that of $D _ { s }$ is 2n. However, the chance that one of those s-similar pairs is included in a sample of size $\sqrt { n }$ is ${ \sqrt { n } } / n$ , and the chance that k of them are included in a sample of size $\sqrt { n }$ is
+
+$$
+\frac {\sqrt {n} (\sqrt {n} - 1) \dots (\sqrt {n} - k + 1)}{n (n - 1) \dots (n - k + 1)}.
+$$
+
+This probability is very close to zero for large values of n or $k .$ That means random sampling will report with a high probability an s-similarity self-join size of n for both $D _ { s }$ and $\bar { D } _ { n s }$ □
+
+Theorem 1. The SJPC algorithm gives an unbiased estimate of the s-similarity self-join size under the offline scenario, i.e. $E [ G _ { s } ] = g _ { s } ,$ , and the standard deviation of $\frac { G _ { s } } { g _ { s } }$ is at most
+
+$$
+\binom{d}{s} \sqrt {\frac {1}{r} \binom{2 (d - s)}{d - s} / g _ {s}},
+$$
+
+where $G _ { s }$ is the estimate and $g _ { s }$ is the true value.
+
+Proof. To find the variance of $G _ { s } ,$ we need the variance of $X _ { k } \left( k = s \ldots d \right)$ . Eq. 4 gives a recursive expression of $X _ { k } ,$ , as a function of $X _ { k + 1 } \bar { . . . . } \bar { X } _ { d }$ and $Y _ { k }$ . First, we show that $X _ { k }$ can be represented as a function of $Y _ { k } \ldots Y _ { d }$ with the recursion removed. Second, we prove the unbiased property of $X _ { k }$ Last, we derive an upper bound of the variance of $Y _ { k } ,$ , and this allows us to bound the variance of $G _ { s }$ . The details are as follows.
+
+First, we prove by induction that
+
+$$
+X _ {k} = \frac {1}{r ^ {2}} \sum_ {j = k} ^ {d} (- 1) ^ {j - k} \binom {j} {k} Y _ {j} + C _ {k},\tag{10}
+$$
+
+where $k \in [ 1 , d ] .$ , and $C _ { k }$ is a constant hence not important in the expression of the variance. From $\operatorname { E q . 4 , }$ we can easily verify that Eq. 10 holds for $k = d$ and $d - 1$ . Assuming
+
+Eq. 10 holds for an arbitrary $k \in [ 2 , d ] ,$ , we want to prove that it holds for $k - 1$ as well. From Eq. 4 we have
+
+$$
+X _ {k - 1} = (Y _ {k - 1} - r \binom {d} {k - 1} n) / r ^ {2} - \sum_ {j = k} ^ {d} \binom {j} {k - 1} X _ {j}
+$$
+
+Using the induction hypothesis to replace $X _ { j } ,$ , we have
+
+$$
+\begin{array}{l} X _ {k - 1} = \frac {1}{r ^ {2}} Y _ {k - 1} - \frac {n}{r} \binom {d} {k - 1} \\ \qquad - \sum_ {j = k} ^ {d} \binom {j} {k - 1} (\frac {1}{r ^ {2}} \sum_ {i = j} ^ {d} (- 1) ^ {i - j} \binom {i} {j} Y _ {i} + C _ {j}). \end{array}
+$$
+
+If we change the indexes to the filled part in Figure 11(a) and denote the constants with $C _ { k - 1 }$ , the right side becomes
+
+$$
+\frac {1}{r ^ {2}} Y _ {k - 1} - \frac {1}{r ^ {2}} \sum_ {i = k} ^ {d} \sum_ {j = k} ^ {i} (- 1) ^ {i - j} \binom{j}{k - 1} \binom{i}{j} Y _ {i} + C _ {k - 1}.
+$$
+
+It is easy to verify that $\begin{array} { r } { \left( { \bf \Phi } _ { k - 1 } ^ { j } \right) \binom { i } { j } = \binom { i } { k - 1 } \binom { i - k + 1 } { j - k + 1 } } \end{array}$ . Also $\textstyle \sum _ { j = k } ^ { i } ( - 1 ) ^ { i - j } { \binom { i - k + 1 } { j - k + 1 } } \ = \ { \binom { - 1 } { - 1 } } ^ { i - k }$ for $i ~ = ~ k , \ldots , d$ (see Lemma 5 in the Appendix), hence
+
+$$
+\begin{array}{l} X _ {k - 1} = \frac {1}{r ^ {2}} Y _ {k - 1} - \frac {1}{r ^ {2}} \sum_ {i = k} ^ {d} \binom {i} {k - 1} Y _ {i} (- 1) ^ {i - k} + C _ {k - 1} \\ = \frac {1}{r ^ {2}} \sum_ {i = k - 1} ^ {d} (- 1) ^ {i - k + 1} \binom {i} {k - 1} Y _ {i} + C _ {k - 1}. \end{array}
+$$
+
+Eq. 10 holds for $k - 1$ , thus it holds for all $k \in [ 1 , d ]$ . Now the similarity self-join size, $G _ { s } ,$ can be rewritten as follows (with the replacement of indexes to the filled part of Figure 11(b) in the last step):
+
+$$
+G _ {s} = \sum_ {k = s} ^ {d} X _ {k} = \frac {1}{r ^ {2}} \sum_ {k = s} ^ {d} \sum_ {j = k} ^ {d} (- 1) ^ {j - k} \binom {j} {k} Y _ {j} + \sum_ {k = s} ^ {d} C _ {k} + n
+$$
+
+$$
+G _ {s} = \frac {1}{r ^ {2}} \sum_ {j = s} ^ {d} \sum_ {k = s} ^ {j} (- 1) ^ {j - k} \binom {j} {k} Y _ {j} + \sum_ {k = s} ^ {d} C _ {k} + n.\tag{11}
+$$
+
+![](images/05d970d89cc2a82329ab992b7f1ad14ce355ec6e47d6def4077a7cd80d2c60c0.jpg)  
+(a)
+
+![](images/50ad76c280de818be9238ec56b513f0dfd194edf81a1f1b76a57615018e50d83.jpg)  
+(b)
+
+Fig. 11. Index substitutions
+
+Second, we show that SelfJoinPairCount gives an unbiased estimate. Let $O _ { j }$ be the set of all j-similar record pairs excluding self pairs (i.e. when a record joins itself), and $Z _ { o _ { j } , k }$ be the value that a j-similar record pair, denoted by $o _ { j }$ , contributes to $Y _ { k }$ (the self-join size of the k-sub-value stream); then we have
+
+$$
+Y _ {k} = \sum_ {j = k} ^ {d} \sum_ {\forall o _ {j} \in O _ {j}} Z _ {o _ {j}, k} + n r \binom {d} {k}.\tag{12}
+$$
+
+Note that $X _ { k } , ~ Y _ { k }$ and $Z _ { o _ { j } , k }$ are all random variables. The expected value of $Z _ { o _ { j } , k }$ in the sample is
+
+$$
+\mu_ {j, k} = E [ Z _ {o _ {j}, k} ] = r ^ {2} \binom{j}{k}.
+$$
+
+Therefore
+
+$$
+E [ Y _ {k} ] = r ^ {2} \sum_ {j = k} ^ {d} \binom{j}{k} x _ {j} + n r \binom{d}{k}.\tag{13}
+$$
+
+$\mu _ { j , k }$ is the expected value that a j-similar pair contributes to $Y _ { k }$ and $x _ { j }$ is the true number of j-similar record pairs. From Eq. 4 we can see that SelfJoinPairCount removes the contributions of $\{ k + 1 , k + 2 , \ldots , d \}$ -similar pairs from $Y _ { k } ,$ thus it is not hard to verify that $X _ { k }$ is an unbiased estimate for $x _ { k }$
+
+Last, we derive an upper bound of the variance of $Y _ { k }$ Let $l _ { k }$ denote the expected number of times a record will appear in a sample of level $k ,$ i.e. $l _ { k } = r { \binom { d } { k } }$ , and $p _ { j , k , i }$ be the probability that a j-similar record pair contributes i to $Y _ { k } ,$ then the variance of $Z _ { o _ { j } , k }$ is
+
+$$
+\begin{array}{l} \sigma_ {j, k} ^ {2} = \mathrm{VAR} [ Z _ {o _ {j}, k} ] = E [ Z _ {o _ {j}, k} ^ {2} ] - \mu_ {j, k} ^ {2} = \sum_ {i = 1} ^ {l _ {k}} i ^ {2} p _ {j, k, i} - \mu_ {j, k} ^ {2} \\ \qquad \leq l _ {k} \sum_ {i = 1} ^ {l _ {k}} i p _ {j, k, i} - \mu_ {j, k} ^ {2} = l _ {k} \mu_ {j, k} - \mu_ {j, k} ^ {2} \\ \qquad = r ^ {3} \binom {j} {k} \binom {d} {k} - r ^ {4} \binom {j} {k} ^ {2} \leq r ^ {3} \binom {j} {k} \binom {d} {k}. \end{array}
+$$
+
+The variance of $Y _ { k }$ can be written as
+
+$$
+\operatorname{VAR}[Y_{k}] = \sum_{j = k}^{d}x_{j}\sigma_{j,k}^{2} + 2\sum_{\substack{j1 = k,\ldots ,d\\ j2 = k,\ldots ,d\\ o,o^{\prime}\in O\& o\neq o^{\prime}}}Cov(Z_{o_{j1},k},Z_{o_{j2}^{\prime},k}).
+$$
+
+For two pairs o and ${ o ^ { \prime } , }$ they may or may not have a row in common. When the two pairs have no row in common, the covariance term will be zero. Now suppose there is a row r that is common between the two pairs. Let’s denote the pairs as $( r , r _ { 1 } )$ and $( r , r _ { 2 } )$ . Since the projections of $r _ { 1 }$ and $r _ { 2 }$ are independently chosen uniformly at random, the covariance term is zero even though the projections of r is the same for both pairs. Hence the covariance term can be ignored, and we have
+
+$$
+\operatorname{VAR} [ Y _ {k} ] = \sum_ {j = k} ^ {d} x _ {j} \sigma_ {j, k} ^ {2} \leq r ^ {3} \binom {d} {k} \sum_ {j = k} ^ {d} \binom {j} {k} x _ {j}.
+$$
+
+Using Equation 11, we can bound $\operatorname { V A R } [ G _ { s } ]$ from above to
+
+$$
+\begin{array}{c} \frac {1}{r ^ {4}} \sum_ {k = s} ^ {d} \binom {k} {s} ^ {2} \operatorname{VAR} [ Y _ {k} ] \leq \frac {1}{r} \sum_ {k = s} ^ {d} \binom {k} {s} ^ {2} \sum_ {j = k} ^ {d} x _ {j} \binom {j} {k} \binom {d} {k} \\ = \frac {1}{r} \sum_ {k = s} ^ {d} \sum_ {j = k} ^ {d} x _ {j} \binom {j} {s} \binom {j - s} {k - s} \binom {d} {s} \binom {d - s} {k - s} \end{array}
+$$
+
+$$
+\begin{array}{l} \leq \frac {1}{r} \binom {d} {s} ^ {2} \sum_ {k = s} ^ {d} \binom {d - s} {k - s} ^ {2} \sum_ {j = k} ^ {d} x _ {j} \leq \frac {1}{r} \binom {d} {s} ^ {2} \sum_ {j = s} ^ {d} x _ {j} \sum_ {k = s} ^ {d} \binom {d - s} {k - s} ^ {2} \\ = \frac {1}{r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} g _ {s}. \end{array}
+$$
+
+Thus
+
+$$
+\operatorname{VAR} (G _ {s} / g _ {s}) = \frac {1}{r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} / g _ {s}.
+$$
+
+□
+
+Lemma 5. For $i \geq k ,$
+
+$$
+\sum_ {j = k} ^ {i} (- 1) ^ {i - j} \binom {i - k + 1} {j - k + 1} = (- 1) ^ {i - k}.
+$$
+
+Proof. If we replace the variables $j - k { + 1 }$ with m and $_ { i - k + 1 }$ with $n ,$ the left side becomes
+
+$$
+\begin{array}{l} \sum_ {m = 1} ^ {n} (- 1) ^ {n - m} \binom {n} {m} \\ = - (- 1) ^ {n} + \sum_ {m = 0} ^ {n} (- 1) ^ {n - m} \binom {n} {m} \\ = (- 1) ^ {n - 1} + (- 1) ^ {n} \sum_ {m = 0} ^ {n} (- 1) ^ {m} \binom {n} {m}. \end{array}
+$$
+
+With the Binomial theorem [55] applied to the summation, the second term becomes zero. The proof is complete after replacing $n - 1$ in the first term with $i - k$ □
+
+Theorem 2 (Unbiased estimate and variance) The SJPC algorithm gives an unbiased estimate of the s-similarity self-join size in an online scenario, i.e. $E [ G _ { s } ] = g _ { s } $ , and the variance of $\frac { G _ { s } } { g _ { s } }$ is at most
+
+$$
+\binom{d}{s} ^ {2} \frac {1}{r} \binom{2 (d - s)}{d - s} ((1 + \frac {2}{w}) / g _ {s} + \frac {2}{w} (1 + \frac {n}{r g _ {s}}) ^ {2}),
+$$
+
+where w is the Fast-AGMS sketch width (depth is 1), d is the number of attributes, s is the given similarity threshold, r is the sampling ratio, $g _ { s }$ is the true value of the similarity self-join size, and $G _ { s }$ is the estimated value.
+
+Proof. Since both offline version of SJPC and Fast-AGMS provides unbiased estimates, it is not hard to see the estimates from the online case are also unbiased.
+
+Let $Y _ { k } ^ { \prime }$ denote the self-join size estimate of the sub-value stream using the Fast-AGMS algorithm, and $Y _ { k }$ denote the self-join size estimate using the offline version of our algorithm as before. According to the law of total variance [56],
+
+$$
+\begin{array}{l} \operatorname{VAR} [ Y _ {k} ^ {\prime} ] = E [ \operatorname{VAR} [ Y _ {k} ^ {\prime} | Y _ {k} ] ] + \operatorname{VAR} [ E [ Y _ {k} ^ {\prime} | Y _ {k} ] ] \\ \qquad \leq E [ \frac {2}{w} Y _ {k} ^ {2} ] + \operatorname{VAR} [ Y _ {k} ] \\ \qquad = (1 + \frac {2}{w}) \operatorname{VAR} [ Y _ {k} ] + \frac {2}{w} E [ Y _ {k} ] ^ {2}. \end{array}
+$$
+
+Similar to the proof of Theorem 1, we have
+
+$$
+\begin{array}{c} \operatorname{VAR} [ G _ {s} ] = \operatorname{VAR} [ \sum_ {k = s} ^ {d} X _ {k} ] \leq \frac {1}{r ^ {4}} \sum_ {k = s} ^ {d} \binom {k} {s} ^ {2} \operatorname{VAR} [ Y _ {k} ^ {\prime} ] \\ \leq \frac {1}{r ^ {4}} (1 + \frac {2}{w}) \sum_ {k = s} ^ {d} \binom {k} {s} ^ {2} \operatorname{VAR} [ Y _ {k} ] + \frac {1}{r ^ {4}} \frac {2}{w} \sum_ {k = s} ^ {d} \binom {k} {s} ^ {2} E [ Y _ {k} ] ^ {2} \end{array}
+$$
+
+With $\begin{array} { r } { \frac { 1 } { r ^ { 4 } } \sum _ { k = s } ^ { d } \binom { k } { s } ^ { 2 } \mathrm { V A R } [ Y _ { k } ] \ \leq \ \frac { 1 } { r } \binom { d } { s } ^ { 2 } \binom { 2 ( d - s ) } { d - s } g _ { s } } \end{array}$ as shown above and replacing $E [ Y _ { k } ]$ from $\mathrm { E q . } 1 3 ,$ , we have
+
+$$
+\begin{array}{l} \text {VAR} [ G _ {s} ] \leq (1 + \frac {2}{w}) \frac {1}{r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} g _ {s} \\ \qquad + \frac {1}{r ^ {4}} \frac {2}{w} \sum_ {k = s} ^ {d} \binom {k} {s} ^ {2} (r ^ {2} \sum_ {j = k} ^ {d} \binom {j} {k} x _ {j} + n r \binom {d} {k}) ^ {2} \\ \qquad \leq (1 + \frac {2}{w}) \frac {1}{r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} g _ {s} \\ \qquad + \frac {1}{r ^ {4}} \frac {2}{w} \sum_ {k = s} ^ {d} \binom {k} {s} ^ {2}. (r ^ {2} g _ {s} + n r) ^ {2} \\ = (1 + \frac {2}{w}) \frac {1}{r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} g _ {s} \\ \qquad + \frac {1}{r ^ {2}} \frac {2}{w} \sum_ {k = s} ^ {d} \binom {d} {s} ^ {2} \binom {d - s} {k - s} ^ {2} (r g _ {s} + n) ^ {2} \\ = (1 + \frac {2}{w}) \frac {1}{r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} g _ {s} \\ \qquad + \frac {1}{r ^ {2}} \frac {2}{w} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} (r g _ {s} + n) ^ {2}. \end{array}
+$$
+
+Therefore, the claim on the variance of $\frac { G _ { s } } { g _ { s } }$ holds.
+
+Theorem 3 (Space and time cost to bound the selectivity estimation error) The $\mathrm { S J P C }$ algorithm guarantees that the estimated selectivity of the similarity self-join deviates from the true value by at most  with probability at least $1 - \lambda$ More precisely, $\begin{array} { r } { P r [ | \hat { \theta } _ { s } - \theta _ { s } | \leq \epsilon ] \geq 1 - \lambda } \end{array}$ , where $\hat { \theta } _ { s }$ is the estimated selectivity and $\theta _ { s }$ is the true value. The space cost is $O ( \log ( 1 / \lambda ) ( d - \dot { s } + 1 ) w )$ , and the time cost for processing each record is $\begin{array} { r } { O ( \log ( 1 / \lambda ) { \binom { d } { s } } ^ { 2 } { \binom { 2 ( d - s ) } { d - s } } ( \sum _ { k = s } ^ { d } { \binom { d } { k } } ) ) / ( \epsilon ^ { 2 } w ) ) } \end{array}$
+
+Proof. We have
+
+$$
+\begin{array}{l} P r [ | G _ {s} - g _ {s} | > \epsilon n ^ {2} ] \leq \frac {\text { VAR } [ G _ {s} ]}{\epsilon^ {2} n ^ {4}} \\ \leq \frac {1}{\epsilon^ {2} n ^ {2} r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} ((1 + \frac {2}{w}) + \frac {2}{w} (\frac {g _ {s}}{n} + \frac {1}{r}) ^ {2}) \\ \leq \frac {1}{\epsilon^ {2} r} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} (\frac {1}{n ^ {2}} (1 + \frac {2}{w}) + \frac {2}{w} (1 + \frac {1}{n r}) ^ {2}). \end{array}
+$$
+
+Let the above term be ${ \frac { 1 } { 8 } } ,$ , then we have
+
+$$
+\begin{array}{l} r \geq \frac {8}{\epsilon^ {2}} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s} (\frac {2}{n ^ {2}} (1 + \frac {2}{w}) + \frac {8}{w}) \\ \approx \frac {6 4}{\epsilon^ {2} w} \binom {d} {s} ^ {2} \binom {2 (d - s)} {d - s}, \end{array}
+$$
+
+assuming $n r \geq 1$ . To increase the success probability, we can repeat the same algorithm independently $2 \log ( 1 / \dot { \lambda } )$ times, and take the median of the multiple results. Due to Chernoff bound, we can guarantee the probability that SJPC fails is at most λ. Since SJPC picks $O ( r \sum _ { k = s } ^ { d } { \binom { d } { k } } )$ sub-values for each record, the time and space costs stated in the theorem can give the desired result. □

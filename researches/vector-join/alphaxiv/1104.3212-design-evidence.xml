@@ -1,0 +1,1292 @@
+<paper id="1104.3212v1"><page num="1">Similarity Join Size Estimation using Locality Sensitive
+Hashing
+∗
+Hongrae Lee
+University of British Columbia
+xguy@cs.ubc.ca
+Raymond T. Ng
+University of British Columbia
+rng@cs.ubc.ca
+Kyuseok Shim
+Seoul National University
+shim@ee.snu.ac.kr
+ABSTRACT
+Similarity joins are important operations with a broad range
+of applications. In this paper, we study the problem of vec-
+tor similarity join size estimation (VSJ). It is a generaliza-
+tion of the previously studied set similarity join size estima-
+tion (SSJ) problem and can handle more interesting cases
+such as TF-IDF vectors. One of the key challenges in sim-
+ilarity join size estimation is that the join size can change
+dramatically depending on the input similarity threshold.
+We propose a sampling based algorithm that uses Locality-
+Sensitive-Hashing (LSH). The proposed algorithm LSH-SS
+uses an LSH index to enable effective sampling even at high
+thresholds. We compare the proposed technique with ran-
+dom sampling and the state-of-the-art technique for SSJ
+(adapted to VSJ) and demonstrate LSH-SS offers more ac-
+curate estimates throughout the similarity threshold range
+and small variance using real-world data sets.
+1. INTRODUCTION
+Given a similarity measure and a minimum similarity
+threshold, a similarity join is to find all pairs of objects
+whose similarity is not smaller than the similarity threshold.
+The object in a similarity join is often a vector. For instance,
+a document can be represented by a vector of words in the
+document, or an image can be represented by a vector from
+its color histogram. In this paper, we focus on the vector
+representation of objects and study the following problem.
+Definition 1 (The VSJ Problem). Given a collection
+of real-valued vectors V = {v
+1
+, ..., v
+n
+} and a threshold τ
+on a similarity measure sim, estimate the number of pairs
+J = |{(u, v) : u, v ∈ V, sim(u, v) ≥ τ, u 6 = v}|.
+Similarity joins have a broad range of applications in-
+cluding near duplicate document detection and elimination,
+∗
+This work was supported by the National Research Foun-
+dation of Korea (NRF) grant funded by the Korea govern-
+ment (MEST) (No. 2010-0000793).
+Permission to make digital or hard copies of all or part of this work for
+personal or classroom use is granted without fee provided that copies are
+not made or distributed for profit or commercial advantage and that copies
+bear this notice and the full citation on the first page. To copy otherwise, to
+republish, to post on servers or to redistribute to lists, requires prior specific
+permission and/or a fee. Articles from this volume were invited to present
+their results at The 37th International Conference on Very Large Data Bases,
+August 29th - September 3rd 2011, Seattle, Washington.
+Proceedings of the VLDB Endowment, Vol. 4, No. 6
+Copyright 2011 VLDB Endowment 2150-8097/11/03... $ 10.00.
+query refinement for web search, coalition detection [3], and
+data cleaning processes [17, 2]. Accordingly, similarity joins
+have recently received much attention, e.g. [17, 2, 6, 3, 11].
+Chaudhuri et al. identified a similarity join operation as a
+primitive operator in database systems [6].
+To successfully incorporate similarity join operations in
+database systems, it is imperative that we have reliable size
+estimation technique for them. The query optimizer needs
+accurate size estimations to produce an optimized query
+plan. Thus, in this paper, we focus on the size estimation
+of vector similarity joins.
+In the literature, the similarity join size estimation prob-
+lem has been defined using sets as follows:
+Definition 2 (The SSJ Problem). Given a collection
+of real-valued sets S = {s
+1
+, ..., s
+n
+} and a threshold τ on a
+similarity measure sim, estimate the number of pairs J =
+|{(r, s) : r, s ∈ S, sim(r, s) ≥ τ, r 6 = s}|.
+Note that our formulation of similarity joins with vectors
+is more general and can handle more practical applications.
+For instance, while in the SSJ problem a document is sim-
+ply a set of words in the document, in the VSJ problem a
+document can be modeled with a vector of words with TF-
+IDF weights. It can also deal with multiset semantics with
+occurrences. In fact, most of the studies on similarity joins
+first formulate the problem with sets and then extend it with
+TF-IDF weights, which is indeed a vector similarity join.
+The SSJ problem has been previously studied by Lee et
+al. [14]. A straightforward extension of SSJ techniques for
+the VSJ problem is to embed a vector into a set space. We
+convert a vector into a set by treating a dimension as an
+element and repeating the element as many times as the
+dimension value, using standard rounding techniques if val-
+ues are not integral [2]. In practice, however, this embed-
+ding can have adverse effects on performance, accuracy or
+required resources. Intuitively, a set is a special case of a bi-
+nary vector and is not more difficult to handle than a vector.
+For instance, Bayardo et al. [3] define the vector similarity
+join problem and add special optimizations that are possible
+when vectors are binary vectors (sets).
+In our VSJ problem, we consider cosine similarity as the
+similarity measure sim since it has been successfully used
+across several domains [3]. Let u[i] denote the i-th dimension
+value of vector u. Cosine similarity is defined as cos(u, v) =
+u·v/ ‖u‖ ‖v‖, where u·v = 
+∑
+i 
+u[i]·v[i] and ‖u‖ = 
+√∑
+i 
+u[i]
+2
+.
+We focus on self-joins and discuss extensions to general joins
+in Appendix B.2.
+One of the key challenges in similarity join size estimation
+is that the join size can change dramatically depending on
+338</page><page num="2">the input similarity threshold. While the join size can be
+close to n
+2 
+at low thresholds where n is the database size,
+it can be very small at high thresholds. For instance, in the
+DBLP data set, the join selectivity is only about 0.00001
+% at τ = 0.9. While many sampling algorithms have been
+proposed for the (equi-)join size estimation, their guaran-
+tees fail in such a high selectivity range, e.g. [15, 10, 9].
+Intuitively, it is not practical to apply simple random sam-
+pling when the selectivity is very high. This is problematic
+since similarity thresholds between 0.5 and 0.9 are typically
+used [3]. Note that the join size in that range may be large
+enough to affect query optimization due to the large cross
+product size. Moreover, as observed in [13], join size errors
+propagate. That is, even if the original errors are small,
+their transitive effect can be devastating.
+In this paper, we propose sampling based techniques that
+exploit the Locality Sensitive Hashing (LSH) scheme, which
+has been successfully applied in similarity searches across
+many domains. LSH builds hash tables such that similar ob-
+jects are more likely to be in the same bucket. Our key idea
+is that although sampling a pair satisfying a high threshold
+is very difficult, it is relatively easy to sample the pair using
+the LSH scheme because it groups similar objects together.
+We show that the proposed algorithm LSH-SS gives good
+estimates throughout the similarith threshold range with a
+sample size of Ω(n) pairs of vectors (i.e. Ω(
+√
+n) tuples from
+each join relation in an equi-join) with probabilistic guar-
+antees. The proposed solution only needs minimal addition
+to the existing LSH index and thus is readily applicable
+to many similarity search applications. As a summary, we
+make the following contributions:
+• We present two baseline methods in Section 3. We
+consider random sampling and adapt Lattice Counting
+(LC) [14] which is proposed for the SSJ problem.
+• We extend the LSH index to support similarity join
+size estimation in Section 4. We also propose LSH-S
+which relies on an LSH function analysis.
+• We describe a stratified sampling algorithm LSH-SS
+that exploits the LSH index in Section 5. We apply
+different sampling procedures for the two partitions
+induced by an LSH index: pairs of vectors that are in
+the same bucket and those that are not.
+• We compare the proposed solutions with random sam-
+pling and LC using real-world data sets in Section 6.
+The experimental results show that LSH-SS is the
+most accurate with small variance.
+2. RELATED WORK
+Many algorithms have been proposed on the similarity
+join processing, e.g. [17, 2, 6, 3]. Their focus is not on size
+estimation. In fact, the existence of many join processing
+algorithms motivates the size estimation study for query op-
+timization. Most of them studied set similarity joins with
+complex weights such as TF-IDF or vector similarity joins.
+Lee et al. proposed LC for the SSJ problem [14]. We
+present this technique in more details in the following section
+and compare with the proposed solution in the experiments.
+Hadjieleftheriou et al. studied the problem of selectivity
+estimation for set similarity selection (not join) queries [11].
+There have been many studies using random sampling
+for the (equi-)join size estimation; some examples include
+adaptive sampling [15], cross/index/tuple sampling [10], bi-
+focal sampling [9], and tug-of-war [1]. Some of them can
+be adapted to similarity joins, but their guarantees do not
+hold due to differences in sampling cost models or they re-
+quire impractical sample sizes. Below, we outline two closely
+related sampling algorithms.
+Adaptive sampling is proposed by Lipton et al [15]. Its
+main idea is to terminate sampling process when the query
+size (the accumulated answer size from the sample so far)
+reaches a threshold not when the number of samples reaches
+a threshold. While it does not produce reliable estimates in
+skewed data, we observe that its adaptive nature can still
+be useful for the VSJ problem. It is used as a subroutine in
+our solution in Section 5.
+Bifocal sampling is proposed by Ganguly et al. to cope
+with the skewed data problem [9]. It tackles the problem by
+considering high-frequency values and low-frequency values
+with separate procedures. However, as will be shown shortly,
+it cannot guarantee good estimates at high thresholds when
+applied to the VSJ problem.
+3. BASELINE METHODS
+3.1 Random Sampling
+The first baseline method is uniform random sampling.
+We select m pairs of vectors uniformly at random (with re-
+placement) and count the number of pairs satisfying the
+similarity threshold τ . We return the count scaled up by
+M/m where M denotes the total number of pairs of vectors
+in the database V . We also consider an alternative method
+of first sampling 
+√
+m records and computing similarities of
+all the pairs in the sample (cross sampling [10]).
+Equi-join size estimation techniques mostly do not offer
+clear benefits over the simple random sampling in the VSJ
+problem. We note two challenges in the VSJ problem com-
+pared to the equi-join size estimation. In the equi-join size of
+|R ./ S|, we can focus on frequency distribution on the join
+column of each relation R and S. For instance, if we know a
+value v appears n
+r 
+(v) times in R and n
+s
+(v) times in S, the
+contribution of v in the join size is simply n
+r 
+(v) · n
+s
+(v), i.e.
+multiplication of two frequencies. We do not need to com-
+pare all the n
+r 
+(v) · n
+s
+(v) pairs. In similarity joins, however,
+we need to actually compare the pairs to measure similar-
+ity. This difficulty invalidates the use of popular auxiliary
+structures such as indexes [10, 7] or histograms [7].
+Furthermore, similarity join size at high thresholds can
+be much smaller than the join size assumed in equi-joins.
+For instance, in the DBLP data set (n = 800K), the join
+size of Ω(n log n) assumed in bifocal sampling is more than
+15M pairs and corresponds to the cosine similarity value of
+only about 0.4. In the most cases, users will be interested
+in much smaller join sizes and thus higher thresholds.
+3.2 Adaptation of Lattice Counting
+Lattice Counting (LC) is proposed by Lee et al. [14] to
+estimate SSJ size with Jaccard similarity. Jaccard simi-
+larity between two sets A, B is defined as sim
+J 
+(A, B) =
+|A ∩ B|/|A ∪ B|. LC relies on succinct representation of sets
+using Min-Hashing [4]. A useful property of Min-Hashing is
+that if h is a Min-Hash function then P (h(A) = h(B)) =
+sim
+J 
+(A, B). For each set A, a signature of the set sig(A)
+is constructed by concatenating k Min-Hash functions. Jac-
+card similarity between two sets A, B can be estimated by
+339</page><page num="3">the number of positions of sig(A) and sig(B) which overlap.
+LC performs an analysis on the signatures of all sets. For
+our purposes, LC can be treated as a black box.
+We observe that the analysis of LC is valid as long as
+the number of matching positions in the signatures of two
+objects is proportional to their similarity. Note that this re-
+quirement is exactly the property of the LSH scheme. Thus
+LC can be applied for the VSJ problem with an appropriate
+LSH scheme. In fact, Min-Hashing is the LSH scheme for
+Jaccard similarity. For the VSJ problem, we first build the
+signature database by applying an LSH scheme to the vector
+database and then apply LC.
+4. LSH INDEX FOR THE VSJ PROBLEM
+We first describe how we extend the LSH index and present
+a naive method with a uniformity assumption, and then
+present LSH-S which improves it with random sampling.
+4.1 Preliminary: LSH Indexing
+Let H be a family of hash functions such that h ∈ H :
+R
+d 
+→ U. Consider a function h that is chosen uniformly at
+random from H and a similarity function sim : R
+d 
+× R
+d 
+→
+[0, 1]. The family H is called locality sensitive if it satisfies
+the following property [5].
+Definition 3. [Locality Sensitive Hashing] For any vec-
+tors u, v ∈ R
+d
+,
+P (h(u) = h(v)) = sim(u, v).
+That is, the more similar a pair of vectors is, the higher
+the collision probability is. The LSH scheme works as fol-
+lows [12, 5]: For an integer k, we define a function family G =
+{g : R
+d 
+→ U
+k 
+} such that g(v) = (h
+1
+(v), ..., h
+k 
+(v)), where
+h
+i 
+∈ H, i.e. g is the concatenation of k LSH functions. For
+an integer `, we choose ` functions G = {g
+1
+, ..., g
+`
+} from G
+independently and uniformly at random. Each g
+i
+, 1 ≤ i ≤ `
+effectively constructs a hash table denoted by D
+g
+i 
+. A bucket
+in D
+g
+i 
+stores all v ∈ V that have the same g
+i 
+values. For
+space, only existing buckets are stored using standard hash-
+ing. G defines a collection of ` tables I
+G 
+= {D
+g
+1 
+, ..., D
+g
+` 
+}
+and we call it an LSH index. Table 3 in appendix is a sum-
+mary of notations.
+LSH families have been developed for several (dis)similarity
+measures including Hamming distance, `
+p 
+distance, Jaccard
+similarity, and cosine similarity. We rely on the LSH scheme
+proposed by Charikar [5] that supports cosine similarity.
+The proposed algorithms can easily support other similarity
+measures by using an appropriate LSH family.
+4.1.1 Extending The LSH Scheme with Bucket Counts
+We describe algorithms based on a single LSH table: g =
+(h
+1
+, ..., h
+k 
+) with k hash functions and an LSH table D
+g 
+. Ex-
+tensions with multiple LSH tables are in Appendix B.2. Sup-
+pose that D
+g 
+has n
+g 
+buckets; all vectors in the database are
+hashed into one of the n
+g 
+buckets. We denote a bucket by
+B
+j 
+, 1 ≤ j ≤ n
+g 
+. Given a vector v, B(v) denotes the bucket
+to which v belongs. In the LSH table, each bucket B
+j 
+stores
+the set of vectors that are hashed into B
+j 
+. We extend the
+conventional LSH table by adding a bucket count b
+j 
+for each
+bucket B
+j 
+that is the number of vectors in the database that
+are hashed into B
+j 
+. The overhead of adding a bucket count
+to each bucket is not significant compared to other infor-
+mation such as vectors. Depending on implementation, the
+count may be readily available.
+similarity0 1
+1
+Pr[ g(u) = g(v) ]
+similarity0 1
+1
+Pr[ g(u) ≠ g(v) ]
+(a) PDF for LSH collision
+u &amp; v are in the same bucket
+τ
+P[H∩T] 
+P[L∩T]
+τ
+(b) PDF for LSH non-collision
+u &amp; v are not in the same bucket
+Figure 1: Probability Density Functions of (non-)
+collision in the LSH scheme
+4.2 Estimation with Uniformity Assumption
+Given a collection of vectors V , and a similarity threshold
+τ , let M denote the number of total pairs in V , i.e. M = 
+(
+n
+2
+)
+.
+Consider a random pair (u, v), u, v, ∈ V, u 6 = v. We denote
+the event sim(u, v) ≥ τ by T , and the event sim(u, v) &lt;
+τ by F . We call (u, v) a true pair (resp. f alse pair) if
+sim(u, v) ≥ τ (resp. sim(u, v) &lt; τ ). Depending on whether
+u and v are in the same bucket, we denote the event B(u) =
+B(v) by H and the event B(u) 6 = B(v) by L. With these
+notations, we can define various probabilities. For instance,
+P (T ) is the probability of sampling a true pair. P (H|T )
+is the probability that a true pair is in the same bucket
+and P (T |H) is the probability that a pair of vectors from a
+bucket is a true pair. We use N
+E 
+to denote the cardinality
+of the set of pairs that satisfy the condition of event E. For
+instance, N
+T 
+is the number of true pairs (the VSJ size J)
+and N
+H 
+is the number of pairs in the same bucket. N
+H 
+can
+be computed by N
+H 
+= 
+∑
+n
+g
+j=1
+(
+b
+j
+2
+)
+.
+The key observation is that any pair of vectors from a
+bucket is either a true pair or a false pair. Using Bayes’
+rule [16], we can express this observation as follows: N
+H 
+=
+N
+T 
+· P (H|T ) + N
+F 
+· P (H|F ). That is, the total number of
+pairs of vectors in the same bucket is the sum of the number
+of true pairs that are in the same bucket (N
+T 
+· P (H|T )) and
+the number of false pairs that happened to be in the same
+bucket (N
+F 
+·P (H|F )). Since N
+F 
+= M −N
+T 
+, rearranging the
+terms gives N
+T 
+= (N
+H 
+− M · P (H|F ))/(P (H|T ) − P (H|F )).
+Using ‘ ˆ ’ for an estimated quantity, we have an estimator
+for the join size J(= N
+T 
+) as follows:
+ˆ
+N
+T 
+= 
+ˆ
+J
+U 
+= 
+N
+H 
+− M · 
+ˆ
+P (H|F )
+ˆ
+P (H|T ) − 
+ˆ
+P (H|F ) 
+. (1)
+Note that M and N
+H 
+are constants given V and D
+g 
+. The
+conditional probabilities in Equation (1) need to be esti-
+mated to compute 
+ˆ
+N
+T 
+. We next present our first estimator
+that relies on an LSH function analysis and a uniformity
+assumption to estimate the conditional probabilities.
+Consider a random pair (u, v) such that sim(u, v) is se-
+lected from [0, 1] uniformly at random. Recall that when
+sim(u, v) = s, P (h(u) = h(v)) = s from Definition 3.
+P (g(u) = g(v)) = s
+k 
+since g concatenates k hash values.
+Figure 1(a) shows the collision probability density function
+(PDF) f (s) = s
+k 
+where s = sim(u, v). The vertical dotted
+line represents the similarity threshold τ . The darker area
+on the right side of the τ line is the good collision probabil-
+ity, i.e. the probability that B(u) = B(v) (u and v are in the
+same bucket) and sim(u, v) ≥ τ . Thus the area represents
+P (H ∩ T ). Likewise, the area on the left side of the τ line
+340</page><page num="4">is P (H ∩ F ), which is the probability that sim(u, v) &lt; τ ,
+but B(u) = B(v). Notice that the area below f (s) does not
+equal to 1 since it does not cover the entire event space; u
+and v may not be in the same bucket. Figure 1(b) shows the
+other case where u and v are in different buckets. Its PDF
+is 1 − f (s) as shown as the curve. P (L ∩ T ) and P (L ∩ F )
+are defined similarly as shown in the figure.
+Given g (and thus f ) and τ , P (H ∩F ), P (H ∩T ), P (L∩F )
+and P (L∩T ) can be estimated by computing the correspond-
+ing areas in Figure 1. Based on these areas, we can estimate
+the desired conditional probabilities using the following:
+P (H|T ) = 
+P (H ∩ T )
+P (H ∩ T ) + P (L ∩ T ) 
+(2)
+P (H|F ) = 
+P (H ∩ F )
+P (H ∩ T ) + P (L ∩ F ) 
+. (3)
+Plugging P (H|T ) and P (H|F ) computed as above into Equa-
+tion (1), we have the following estimator for the VSJ size:
+ˆ
+J
+U 
+= 
+(k + 1)N
+H 
+− τ 
+k 
+· M
+∑
+k−1
+i=0 
+τ 
+i 
+. (4)
+We give its derivation in Appendix A.1.
+We note that 
+ˆ
+J
+U 
+implicitly assumes that the similarity of
+pairs is uniformly distributed in [0, 1]. However, this distri-
+bution is generally highly skewed [14]; most of pairs have low
+similarity values and only a small number of pairs have high
+similarity values. We next present LSH-S that removes the
+uniformity assumption with sampling.
+4.3 LSH-S: Removing Uniformity Assumption
+We consider two methods to remove the uniformity as-
+sumption. First, we estimate the conditional probabilities
+by random sampling without resorting to the LSH func-
+tion analysis. For instance, we can estimate P (H|T ) by
+counting the number of pairs in the same bucket among
+the true pairs in the sample. Second, we weight the condi-
+tional probabilities using samples. For example, if all the
+pairs in the sample have a similarity value of 0.3, we can
+only consider similarity s = 0.3 in Figure 1 without consid-
+ering the whole area. We call the second method LSH-S
+and present only LSH-S since it outperformed the first one
+in our experiments. In LSH-S, for each similarity s that
+appears in the sample, the f (s) value is weighted by the
+occurrence of s in the sample. For a sample S, we use the
+following weight: w(s) = |{(u, v) ∈ S : sim(u, v) = s}|/|S|.
+For instance, if similarities in S are {0.1, 0.1, 0.1,0.2, 0.2},
+w(0.1) = 3/5, w(0.2) = 2/5 and w(s) = 0 for s /∈ {0.1, 0.2}.
+Let S
+T 
+denote the subset of true pairs in S and S
+F 
+denote
+S − S
+T 
+. With this weighting scheme, since f (s) = s
+k 
+,
+ˆ
+P (H|T ) = 
+∑
+(u,v)∈S
+T
+(sim(u, v))
+k 
+/|S
+T 
+| (5)
+ˆ
+P (H|F ) = 
+∑
+(u,v)∈S
+F
+(sim(u, v))
+k 
+/|S
+F 
+|. (6)
+LSH-S uses Equations (5) and (6) in Equation (1).
+5. STRATIFIED SAMPLING USING LSH
+A difficulty in LSH-S is that the conditional probabilities,
+e.g. P (H|T ), need to be estimated and it is hard to acquire
+reliable estimates of them. In this section, we present an
+algorithm that overcomes this difficulty by using the LSH
+index in a slightly different way.
+An interesting view of an LSH index is that it partitions
+all pairs of vectors in V into two strata: pairs that are in the
+same bucket and pairs that are not. The pairs in the same
+bucket are likely to be more similar from the property of
+LSH (Def. 3). Recall that the difficulty of sampling at high
+thresholds is that the join size is very small and sampling
+a true pair is hard. Our key intuition is that even at high
+thresholds it is relatively easy to sample a true pair from
+the set of pairs that are in the same bucket.
+We demonstrate our intuition with a real-world example.
+Table 1 shows actual probabilities varying τ in the DBLP
+data set. We observe that other than at low thresholds,
+say 0.1 ∼ 0.3, P (T ) is close to 0, which implies that naive
+random sampling is not going to work well with any reason-
+able sample size. However, note that P (T |H) is consistently
+higher than 0.04 even at high thresholds. That is, it is not
+difficult to sample true pairs among the pairs in the same
+bucket. P (H|T ) is large at high thresholds but very small
+at low thresholds. This means that at high thresholds, a
+sufficient fraction of true pairs are in the same bucket. But
+at low thresholds, most of true pairs are not in the same
+bucket, which implies that the estimate from the pairs in
+the same bucket is not enough. However, at low thresholds,
+P (T |L) becomes larger and thus sampling from the pairs
+that are not in the same bucket becomes feasible.
+τ P (T ) P (T |H) P (H|T ) P (T |L)
+0.1 .082 0.31 0.00001 0.082
+0.3 .00024 0.054 0.00041 0.00024
+0.5 .0000034 0.049 0.0028 0.000032
+0.7 3.9E-7 0.045 0.21 2.8E-7
+0.9 9.1E-8 0.040 0.86 1.3E-8
+Table 1: An example probabilities in DBLP
+For sampling in general, it has been observed that “if
+intelligently used, stratification nearly always results in a
+smaller variance for the estimated mean or total than is
+given by a comparable simple random sampling” [8, p99].
+We propose below one specific scheme for stratified sampling
+using LSH, and show its benefit empirically at Section 6.
+5.1 LSH-SS: Stratified Sampling
+We define two strata of pairs of vectors as follows depend-
+ing on whether two vectors of a pair are in the same bucket.
+• Stratum H (S
+H 
+): {(u, v) : u, v ∈ V, B(u) = B(v)}
+• Stratum L (S
+L
+): {(u, v) : u, v ∈ V, B(u) 6 = B(v)}
+Note that S
+H 
+and S
+L 
+are disjoint and thus we can in-
+dependently estimate the join size from each stratum and
+add the two estimates. S
+H 
+and S
+L 
+are fixed given D
+g 
+. Let
+J
+H 
+= |{(u, v) ∈ S
+H 
+: sim(u, v) ≥ τ }|, J
+L 
+= |{(u, v) ∈ S
+L 
+:
+sim(u, v) ≥ τ }|, and let 
+ˆ
+J
+H 
+and 
+ˆ
+J
+L 
+be their estimates. We
+estimate the join size as follows:
+ˆ
+J
+SS 
+= 
+ˆ
+J
+H 
++ 
+ˆ
+J
+L
+. (7)
+A straightforward implementation would be to perform
+uniform random sampling in S
+H 
+and S
+L
+, and aggregate the
+two estimates. However, this simple approach may not work
+well. The problem is that it can be harder to guarantee
+a small error of 
+ˆ
+J
+L 
+with the same sample size due to very
+small P (T |L) at high thresholds [15]. See the next example.
+Example 1. Assume that N
+L 
+= 1, 000, 000, J
+L 
+= 1 at
+τ = 0.9, and the sample size is 10; only one pair out of
+341</page><page num="5">1, 000, 000 pairs satisfies τ = 0.9 and we sample 10 pairs.
+In most cases, the true pair will not be sampled and 
+ˆ
+J
+L 
+= 0.
+But if the only true pair is sampled, 
+ˆ
+J
+L 
+= 100, 000. The es-
+timate fluctuates between 0 and 100, 000 and is not reliable.
+Our solution for this problem is to use different sampling
+procedures in the two strata. Recall that similarities of the
+pairs in S
+H 
+are higher and P (T |H) is not too small, even
+at high thresholds. Thus, for S
+H 
+, we use uniform random
+sampling. Relatively small sample size will suffice for reli-
+able estimation in S
+H 
+. In S
+L
+, however, P (T |L) varies sig-
+nificantly depending on the threshold. In general, while at
+low thresholds P (T |L) is relatively high and the estimate is
+reliable, P (T |L) becomes very small at high thresholds and
+the resulting estimate is more likely to have a large error and
+is much less reliable. For the same sample size, the variance
+itself decreases as the join size decreases (e.g. Lemma 4.1
+of [1]). However, we may need many more samples at high
+thresholds, where the join size can be very small, to have
+the same error guarantee [15, 9].
+Thus, we use 
+ˆ
+J
+L 
+only when it is expected to be reliable and
+discard 
+ˆ
+J
+L 
+when it is not. Discarding 
+ˆ
+J
+L 
+at high thresholds
+generally does not hurt accuracy much since the contribution
+of J
+L 
+in J is not large. In Table 1, when the similarity
+thresholds is high, P (H|T ) is large, which means that a large
+fraction of true pairs are in S
+H 
+, not in S
+L
+. We use adaptive
+sampling [15] in S
+L 
+since it enables us to detect when the
+estimate is not reliable. A novelty is that we return a safe
+lower bound when we cannot have a good error guarantee
+within the allowable sample size.
+Algorithm 1 describes the proposed stratified sampling al-
+gorithm LSH-SS. It applies a different sampling subroutine
+to each stratum. For S
+H 
+, it runs the random sampling sub-
+routine SampleH. For S
+L
+, it runs the adaptive sampling
+subroutine SampleL. The final estimate is the sum of esti-
+mates from the two Strata as in Equation (7) (line 3).
+5.1.1 Sampling in Stratum H
+SampleH of Algorithm 1 describes the random sampling
+in S
+H 
+. First, a bucket B
+j 
+is randomly sampled weighted by
+the number of pairs in the bucket, weight(B
+j 
+) = 
+(
+b
+j
+2
+) 
+(line
+3). We then select a random pair (u, v) from B
+j 
+(line 4).
+The resulting pair (u, v) is a uniform random sample from
+S
+H 
+. SampleH has one tunable parameter m
+H 
+which is the
+sample size. We count the number of pairs satisfying the
+similarity threshold τ in m
+H 
+sample pairs and return the
+count scaled up by N
+H 
+/m
+H 
+(line 9).
+5.1.2 Sampling in Stratum L
+SampleL of Algorithm 1 employs adaptive sampling [15] in
+S
+L
+. It has two tunable parameters δ and m
+L
+. δ is the answer
+size threshold, the number of true samples to give a reliable
+estimate, and m
+L 
+is the maximum number of samples. We
+sample a pair from S
+L 
+(line 3) and see if it satisfies the
+given threshold (line 4). In case LSH computation for bucket
+checking at line 3 is expensive, we can delay the checking
+till line 5, which in effect results in slightly more samples.
+The while-loop at line 2 can terminate in two ways: (1) by
+acquiring a sufficiently large number of true samples, n
+L 
+≥ δ
+or (2) by reaching the sample size threshold, i ≥ m
+L
+, where
+i is the number of samples taken. In the former case, we
+return the count scaled up by N
+L
+/i (line 12). Theorem 2.1
+and 2.2 of adaptive sampling [15] provide error bounds in
+Algorithm 1 LSH-SS
+Procedure LSH-SS
+Input: similarity threshold τ , sample size for Stratum H m
+H 
+,
+answer size threshold δ, max sample size for Stratum L m
+L
+1: 
+ˆ
+J
+H 
+= SampleH(τ, m
+H 
+)
+2: 
+ˆ
+J
+L 
+= SampleL(τ, δ, m
+L
+)
+3: return 
+ˆ
+J
+SS 
+= 
+ˆ
+J
+H 
++ 
+ˆ
+J
+L
+Procedure SampleH
+Input: τ , m
+H 
+(sample size)
+1: n
+H 
+= 0
+2: for i from 1 to m
+H 
+do
+3: sample a bucket B
+j 
+with weight(B
+j 
+) = 
+(
+b
+j
+2
+)
+4: sample two vectors u, v ∈ B
+j 
+, u 6 = v
+5: if sim(u, v) ≥ τ then
+6: n
+H 
+= n
+H 
++ 1
+7: end if
+8: end for
+9: return 
+ˆ
+J
+H 
+= n
+H 
+· N
+H 
+/m
+H
+Procedure SampleL
+Input: τ , δ (answer size th.), m
+L 
+(sample size th.)
+1: i = 0, n
+L 
+= 0
+2: while n
+L 
+&lt; δ and i &lt; m
+L 
+do
+3: sample a uniform random pair (u, v), B(u) 6 = B(v)
+4: if sim(u, v) ≥ τ then
+5: n
+L 
+= n
+L 
++ 1
+6: end if
+7: i = i + 1
+8: end while
+9: if i ≥ m
+L 
+then
+10: return 
+ˆ
+J
+L 
+= n
+L 
+// or 
+ˆ
+J
+L 
+= n
+L 
+· c
+s
+(N
+L
+/m
+L
+) when a
+dampening factor 0 &lt; c
+s 
+≤ 1 is used.
+11: end if
+12: return 
+ˆ
+J
+L 
+= n
+L 
+· (N
+L
+/i)
+such cases. In the latter case, adaptive sampling returns a
+loose upper bound. We cannot guarantee that the estimate
+is reliable and simply return the number of true pairs found
+in the sample, n
+L
+, as 
+ˆ
+J
+L 
+without scaling it up. Since J
+L 
+is
+at least as large as n
+L
+, we call 
+ˆ
+J
+L 
+= n
+L 
+a safe lower bound.
+This conservative approach does not degrade accuracy
+much since the majority of true pairs are in S
+H 
+at high
+thresholds. It is possible, however, that there can be “grey
+area” of thresholds. While the random sampling does not
+guarantee its accuracy, there are enough true pairs in S
+L 
+to
+make its impact on underestimation significant. Hence, we
+consider the use of a dampened scale-up constant 0 &lt; c
+s 
+≤ 1,
+which is multiplied to the full scaling-up factor at line 10.
+We analyze the impact of this dampened scale-up factor in
+the following section.
+For the tunable parameters, we used m
+H 
+= n and m
+L 
+= n
+and δ = log n
+1 
+where n is the database size, n = |V |. Note
+that the size is expressed in the number of pairs. This corre-
+sponds to sampling 
+√
+n vectors from two collections of vec-
+tors (n = 
+√
+n×
+√
+n) in equi-joins, which is even smaller than
+the sample size 
+√
+n log n in [9]. These parameter values give
+provably good estimates at both high and low thresholds.
+We give the details in the following section.
+5.2 Analysis
+Let α = P (T |H) and β = P (T |L) for the sake of presen-
+tation. In our analysis, a similarity threshold τ is consid-
+ered high when α ≥ log n/n and β &lt; 1/n, and is consid-
+ered low when α ≥ log n/n and β ≥ log n/n. Our model
+1
+All logarithms used are base-2 logarithms.
+342</page><page num="6">is analogous to the classic approach of distinguishing high
+frequency values from low frequency values to meet the chal-
+lenge of skewed data, e.g.[9, 7]. Our distinction effectively
+models different conditional probabilities that are observed
+in different threshold values as in Table 1.
+We first analyze the high threshold case and then the low
+threshold case. This distinction is only for the analysis pur-
+poses. The behavior of Algorithm 1 is adaptive and users
+do not need to distinguish two cases by parameters.
+5.2.1 Guarantees at high thresholds
+Recall that α = P (T |H) is the probability that a pair of
+vectors in a bucket is indeed a true pair and β = P (T |L) is
+the probability that a pair of vectors that are not in the same
+bucket is a true pair. We assume α ≥ log n/n and β &lt; 1/n
+at high thresholds. The condition on α intuitively states
+that even when the join size is small, the fraction of true
+pairs in S
+H 
+is not too small from the property of LSH. Our
+assumption on α is not a stringent condition, i.e. log n/n is
+usually a very small value and will be easily satisfied by any
+reasonably working LSH index. The condition on β states
+that it is hard to sample true pairs in S
+L 
+at high thresholds.
+As a sanity check, consider the example in Table 1. In
+the data set, n = 34, 000 and β ∼ 0.00003 (∼ 1/n) at τ =
+0.5. High thresholds correspond to [0.5, 1.0]. It that range
+α = P (T |H) is consistently higher than 0.04 which is well
+over the assumed value of α which is 0.00046 (∼ log n/n)
+for the data set. β = P (T |L) is also below or very close to
+the calculated 0.00003 in the range. Table 2 in Appendix C
+shows more examples of α and β values in other data sets,
+which again satisfy our assumptions.
+The following theorem states that LSH-SS gives a good
+estimate at high thresholds. See Appendix A.2 for a proof.
+Theorem 1. Let 0 &lt;  &lt; 1 be an arbitrary constant.
+Assume α ≥ log n/n and β &lt; 1/n. Then for sufficiently
+large n with c = 1/(log e · 
+2
+), m
+H 
+= cn and m
+L 
+= cn,
+P r(| 
+ˆ
+J
+SS 
+− J| ≤ (1 + )J) ≥ 1 − 
+2
+n 
+.
+The term 1 in the error bound is from the conservative na-
+ture of the SampleL procedure of not scaling up the result
+when the accuracy is not guaranteed. However, since the
+majority of true pairs are in S
+H 
+at high thresholds, its im-
+pact is rather insignificant. For overestimations, the bound
+is very conservative and our experiments in Section 6 show
+much better results than the theoretical guarantees in The-
+orem 1. For underestimations, the error bound in Theo-
+rem 1 is not meaningful because underestimation is capped
+by −100%. The following theorem, which is based on the
+dampened scale-up factor, has the advantage of providing a
+meaningful bound for underestimations as well.
+In the approach using a dampened scale-up constant 0 &lt;
+c
+s 
+≤ 1, we multiply the full scale-up factor by c
+s
+. The fol-
+lowing theorem quantifies the effect of using the dampened
+scale-up factor. See Appendix A.3 for a proof.
+Theorem 2. For a constant 0 &lt;  &lt; 1, using a dampened
+scale-up factor of 0 &lt; c
+s 
+≤ 1 at line 10 of SampleL in
+Algorithm 1 guarantees
+P r(| 
+ˆ
+J
+L 
+− J
+L
+| ≥ 
+′
+J
+L
+) ≤ 
+−2 
+· 
+1 − β
+m
+L
+β 
+.
+where 
+′ 
+= 1 − (1 − )c
+s
+. When 
+ˆ
+J &gt; J, i.e. overestimation,
+we have a tighter bound 
+′ 
+= c
+s
+(1 + ) − 1.
+Compared with Theorem 1, the guarantee of Theorem 2 is
+weaker in terms of probability, but it provides a tighther
+bound; 1 − c
+s 
+&lt; 
+′ 
+&lt; 1. The dampened scale-up factor c
+s
+represents the trade-offs between the accuracy and the prob-
+abilistic guarantee. Using a smaller c
+s 
+enables a stronger
+guarantee in probability reducing variance by a factor of c
+s
+(see Appendix A.3), but the relative error bound increases.
+We discuss the choice of c
+s 
+in Section 6.
+5.2.2 Guarantees at low thresholds
+At low thresholds, we assume that α ≥ log n/n and β ≥
+log n/n. The rationale is that as the actual join size in-
+creases, more true pairs are in S
+L 
+and sampling true pairs
+in S
+L 
+becomes not so difficult any more. Again these con-
+ditions are usually met when the threshold is low as in the
+example in Table 1. In fact, the contribution from S
+L
+, J
+L
+dominates the join size at low thresholds. The following
+theorem states that LSH-SS gives a reliable estimate even
+when the threshold is low. See Appendix A.4 for a proof.
+Theorem 3. Let 0 &lt;  &lt; 1 be an arbitrary constant.
+Assume α ≥ log n/n and β ≥ log n/n. Then with c =
+4/(log e·
+2
+), c
+′ 
+= max(c, 1/(1−)), m
+H 
+= cn and m
+L 
+= c
+′
+n,
+P r(| 
+ˆ
+J
+SS 
+− J| ≤ J) ≥ 1 − 
+3
+n 
+.
+We demonstrate that our guarantees indeed hold and thus
+LSH-SS provides reliable estimates at both high and low
+thresholds with real-world data sets in the following section.
+6. EXPERIMENTAL EVALUATION
+6.1 Set Up
+Data sets: We have conducted experiments using three
+data sets. The DBLP data set consists of about 800K vec-
+tors. The NYT data set is NYTimes news articles and
+consists of about 150K vectors. The PUBMED data set
+is PubMed abstracts and consists of 400K vectors. We give
+detailed data set descriptions in Appendix C.1. We only re-
+port results of the DBLP and NYT data set; results on the
+PUBMED data set is in Appendix C.4.
+Algorithms compared: We implemented the following
+algorithms for the VSJ problem.
+• LC(ξ) is the Lattice Counting algorithm in [14] with
+a minimum support threshold ξ.
+• LSH-S is the LSH index based algorithm in Section 4.
+• LSH-SS is the LSH index based stratified sampling
+algorithm in Section 5. We used m
+1 
+= n, δ = log n,
+m
+2 
+= n and k = 20 unless specified otherwise. LSH-
+SS(D) is LSH-SS with a dampened scale-up factor.
+We used c
+s 
+= n
+L
+/δ. See Appendix C.3 for a discussion
+on alternative choices.
+• We consider two random sampling methods: RS(pop)
+and RS(cross). In RS(pop), we sample pairs from the
+cross product. RS(cross) is cross sampling [10], where
+we sample d
+√
+m
+R 
+e records and compare all the pairs
+in the sample. m
+R 
+= d · n where d is a constant to
+compare algorithms with roughly the same runtime.
+Evaluation metric: We use average relative error to
+show the accuracy. A relative error is defined as est size
+ /
+true size
+. We show errors of overestimations and underes-
+timations separately to clearly depict the characteristics of
+343</page></paper>

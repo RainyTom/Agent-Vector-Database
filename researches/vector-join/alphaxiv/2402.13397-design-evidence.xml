@@ -1,0 +1,923 @@
+<paper id="2402.13397v1"><page num="1">Xling: A Learned Filter Framework for Accelerating
+High-Dimensional Approximate Similarity Join
+1
+st 
+Yifan Wang
+University of Florida
+wangyifan@ufl.edu
+2
+nd 
+Vyom Pathak
+University of Florida
+v.pathak@ufl.edu
+3
+rd 
+Daisy Zhe Wang
+University of Florida
+daisyw@ufl.edu
+Abstract—Similarity join is a critical and widely used operation
+in multi-dimensional data applications, which finds all pairs of
+close points within a given distance threshold. Being studied for
+decades, many similarity join methods have been proposed, but
+they are usually not efficient on high-dimensional space due to
+the curse of dimensionality and data-unawareness. Inspired by
+the Bloom join in RDBMS, we investigate the possibility of using
+metric space Bloom filter (MSBF), a family of data structures
+checking if a query point has neighbors in a multi-dimensional
+space, to speed up similarity join. However, there are several
+challenges when applying MSBF to similarity join, including
+excessive information loss, data-unawareness and hard constraint
+on the distance metric, because of which few works are designed
+in this way.
+In this paper, we propose Xling, a generic framework to build
+a learning-based metric space filter with any existing regression
+model, aiming at accurately predicting whether a query point
+has enough number of neighbors. The framework provides a
+suite of optimization strategies to further improve the prediction
+quality based on the learning model, which has demonstrated
+significantly higher prediction quality than existing MSBF. We
+also propose XJoin, one of the first filter-based similarity join
+methods, based on Xling. By predicting and skipping those
+queries without enough neighbors, XJoin can effectively reduce
+unnecessary neighbor searching and therefore it achieves a
+remarkable acceleration. Benefiting from the generalization ca-
+pability of deep learning models, XJoin can be easily transferred
+onto new dataset (in similar distribution) without re-training.
+Furthermore, Xling is not limited to being applied in XJoin,
+instead, it acts as a flexible plugin that can be inserted to any
+loop-based similarity join methods for a speedup. Our evaluation
+shows that Xling not only leads to the high performance of XJoin
+(e.g., being up to 17x faster than the baselines while maintaining
+a high quality), but also be able to further speed up many existing
+similarity join methods with quality guarantee.
+Index Terms—similarity join, high-dimensional data manage-
+ment, machine learning
+I. INTRODUCTION
+In multi-dimensional data management, metric space range
+search (shortly called range search) and similarity join are
+critical operators. Given a distance threshold ϵ, the former
+operation finds all points in a dataset D whose distance to
+a given query point is less than ϵ, while the latter operation
+finds all pairs of points between two datasets R and S whose
+distance is less than ϵ. As range search can be seen as a
+special case of similarity join where |R| = 1 or |S| = 1,
+unless it is necessary, we will only discuss similarity join
+in this paper. With the emergence of deep learning, high-
+dimensional neural embedding has been widely adopted as
+the data representation in a wide range of applications, which
+raises the demands for effective and efficient similarity join
+over high-dimensional data. Those applications include near-
+duplicate detection [1], [2], [3], [4], [5], data integration [6],
+[7], [8], data exploration [9], [10], [11], privacy [12], [13] and
+so on. Specifically, distance between embeddings reflects the
+semantic similarity between the data objects, meaning that the
+applications have to frequently search for close points in the
+embedding space, i.e., the similarity join. In many real-world
+use cases, the similarity join is approximate, i.e., they do not
+require 100% accurate results, but do demand high processing
+speed, especially on large-scale data. A typical example is
+near-duplicate video retrieval [3] that identifies online videos
+with identical or almost identical content during the search
+process to diversify the video search results, in which case
+missing a few pairs of similar videos is acceptable, while fast
+response is required.
+Existing work on efficient similarity join mainly includes
+two categories: space-grid [14], [15], [16], [17] and locality-
+sensitive hashing (LSH) based methods [18], [19], [4], [5],
+[12], [13]. The former splits the data space into grids and
+joins the points within the same or neighboring grids, while the
+latter is essentially an adoption of RDBMS hash-join principle
+onto the high-dimensional join, i.e., hashing one dataset by
+LSH and then probing it for the points in another dataset.
+However, the grid-based methods poorly perform in very high-
+dimensional space due to the curse of dimensionality, while the
+unawareness for data distribution usually causes a non-trivial
+performance degradation to LSH-based methods on unevenly
+distributed data [20]. In addition, the grid-based methods are
+usually exact while LSH-based methods are approximate, i.e.,
+their accuracies are respectively 100% and lower than 100%.
+In this paper we focus on approximate similarity join.
+There is one more possible way that speeds up similarity
+join with metric space Bloom filter, inspired by the Bloom join
+in RDBMS (which uses a Bloom filter to prune unnecessary
+probings). Metric space Bloom filter (MSBF) is designed for
+checking whether a query point has neighbors within the
+given distance threshold. Among the various MSBFs [21],
+[22], [23], [24], [25], [26], [27], Locality-Sensitive Bloom
+Filter (LSBF) [21] is the most widely used, based on which a
+substantial number of MSBFs have been developed. Mirroring
+to the hashing functions in Bloom filter, LSBF utilizes LSH
+functions to map a multi-dimensional point to several bits
+arXiv:2402.13397v1 [cs.DB] 20 Feb 2024</page><page num="2">in the bit array, and determines the neighbor existence by
+counting the non-zero bits. Given datasets R and S, an LSBF
+can be built on R and each point s ∈ S will act as a query. By
+skipping the range search for those negative queries (i.e., the
+queries having no neighbors in R), the similarity join can be
+accelerated. Note that unlike Bloom filter, most MSBFs cannot
+guarantee a zero false negative rate since they are based on
+LSH which raises both false positives and negatives.
+According to our evaluation, negative queries usually take
+up a non-trivial portion (20% ∼ 90%), meaning that the fil-
+tering should result in a significant performance improvement.
+But few methods are designed in such a way, due to several
+problems of MSBF: (1) Given the fact that they are built on
+top of LSH, their effectiveness is also limited by the data-
+unawareness. (2) They lose more information compared to
+the original LSH because of further mapping LSH values
+to one-dimension bit array, which additionally lowers their
+effectiveness. (3) They indicate the index of target bit by the
+LSH value, and this disables them to support many popular
+distance metrics, like cosine distance where the LSH values
+are always 0 or 1.
+Inspired by the “learned Bloom filter” [28] that enhances
+Bloom filter with machine learning, we propose a new type
+of MSBF based on machine learning techniques which ad-
+dresses the problems above. Specifically, in this paper, we
+propose Xling, a generic framework for building a MSBF
+with deep learning model. Instead of LSH, Xling relies on
+the learned cardinality estimation techniques which utilize
+regression models to predict the number of neighbors for
+range search before actually executing it. Xling is designed
+to be generic such that any cardinality estimator (or simply,
+regression model) can be encapsulated into an effective MSBF.
+Its core is a cardinality estimator with a Xling decision
+threshold (XDT). For a range query, Xling predicts the result
+cardinality, then determines the query is positive (i.e., having
+enough neighbors) if the prediction exceeds XDT, otherwise
+it is negative (i.e., being without enough neighbors). Note
+that we mention “enough neighbors” instead of “any neigh-
+bors”, which reveals an advanced feature: Xling can determine
+whether the query point has more than τ neighbors, where
+τ is a user-determined number. And Xling downgrades to a
+general MSBF when τ = 0. We call such a feature “filtering-
+by-counting”.
+By learning the data distribution, Xling solves the data-
+unawareness problem, and essentially as a regressor, it is not
+limited to any specific distance metric. Note that we have
+mentioned three thresholds until now, the distance threshold ϵ,
+the Xling decision threshold XDT, and the neighbor threshold
+τ . To make it clearer, we will indicate them respectively
+with “distance threshold”, “decision threshold” and “neighbor
+threshold”, or directly using their symbols.
+Xling deploys novel optimization strategies to further im-
+prove the performance, including strategy to select ϵ values
+for effective training, and strategy to select the best XDT.
+Furthermore, Xling can be applied as a plugin onto many
+existing similarity join methods to significantly enhance their
+efficiency with tiny or no quality loss. We have applied
+Xling to a brute-force nested-loop similarity join, named
+XJoin, which achieves significantly higher efficiency (up to
+14.6x faster) than the existing high-performance similarity
+join methods (some are used in industry), with a guarantee
+of high quality. In these applications, filtering-by-counting
+enables Xling to help the base similarity join method ignore
+the queries having only a trivial number of neighbors (e.g., 3 or
+5, or even 50), which makes the acceleration more significant
+with tiny sacrifice of recall. In addition, we also apply Xling
+onto those prior methods and show that they are substantially
+accelerated with slightly more quality loss. Finally, XJoin and
+Xling are evaluated on their generalization capability, and the
+results prove that they can be transferred to updated or fully
+new dataset without re-training the learning model. To our
+best knowledge, We are the first to propose such a learning-
+based MSBF and XJoin is among the first practical filter-based
+similarity join methods for high-dimensional data.
+The main contributions of this paper are as follows:
+1) We propose XJoin, the first filter-based similarity join
+method for high-dimensional data, which is both effi-
+cient and effective.
+2) We propose Xling, a generic framework for constructing
+learned metric space Bloom filters with general regres-
+sion models.
+3) We design performance optimization strategies in Xling,
+including selection of ϵ values for effective training and
+adaptive computing of XDT.
+4) We conduct extensive evaluation to show the efficiency,
+effectiveness, usefulness and generalization of Xling and
+XJoin, as well as the remarkable performance improve-
+ment by applying Xling to other similarity join methods.
+The rest of this paper is organized as follows: Section II
+introduces the prior works related to the techniques in this
+paper. Section III formally defines the key problems studied by
+this paper and the important notations being used. Section IV
+presents the architecture of Xling and the workflow of applying
+Xling to enhancing similarity join. Section V discusses details
+about the optimization strategies integrated in Xling. And
+Section VI reports and analyzes the evaluation results.
+II. RELATED WORK
+Learned Bloom filter: The learned Bloom filter is first
+proposed by [28] which treats the existence checking in Bloom
+filter as a classification task, thereby replaces the traditional
+Bloom filter with a deep learning based binary classifier
+followed by an overflow Bloom filter (to double check the
+negative outputs of the classifier to guarantee a zero false
+negative rate). And there have been many following works
+that further improve the learned Bloom filter [29], [30], [31]
+by adding auxiliary components or improving the performance
+of the hashing functions being used.
+Learned cardinality estimation: Learning models have
+been widely used to predict the number of neighbors for a
+metric space range search, which is called “learned cardinality
+estimation”. The learned cardinality estimation techniques</page><page num="3">treat the task as a regression problem and solve it using
+regression models. The state-of-the-art methods [32], [33],
+[34], [35] are usually based on deep regression models to
+effectively learn the data distribution and make more accurate
+prediction than the non-deep approaches. Recursive Model
+Index(RMI) [36] is a hierarchical learning model that consists
+of multiple sub-models, where each sub-model is a regression
+model like neural network. CardNet [33] consists of a feature
+extraction model and a regression model. The raw data is
+transformed by the feature extraction model into Hamming
+space, which will then used by the regression model to predict
+its cardinality. SelNet [35] predicts the cardinality by a learned
+query-dependent piece-wise linear function.
+Metric space Bloom filter: DSBF [26] and LSBF [21]
+are two of the representatives for metric space Bloom filter
+(MSBF), and following them many MSBF variants and rel-
+evant applications have been developed. [25] enables LSBF
+to handle multiple Euclidean distance granularity without re-
+building the data structure. [24] extends [25] to Hamming dis-
+tance. [23] proposes a DSBF variant with zero false negative
+rate theoretically. Since most of those works are built on top
+of LSH, their effectiveness is usually limited by unknowing
+of the data distribution.
+Similarity join: This problem can be further classified into
+two sub-types, exact and approximate similarity join, where
+the former is to exactly find all the truly close points while
+the latter allows some errors.
+One family of the state-of-the-art efficient methods for
+exact similarity join is the epsilon-grid-order (EGO) based
+methods, including EGO-join [15], EGO-star-join [16], Super-
+EGO [17], FGF-Hilbert join [14], etc. They work by splitting
+the space into cells and sorting the data points along with those
+cells, which will then help reduce unnecessary computation in
+the similarity join.
+Approximate similarity join methods are usually based on
+LSH [18], [37], [19], [4], [5], [12], [13]. The problem of those
+methods is data unawareness, i.e., the hashing-based space
+partitioning usually does not consider the data distribution,
+which may leads to imbalanced partitions that significantly
+lower the overall search performance [20].
+III. PRELIMINARIES
+Notation Description
+ϵ The distance threshold for range search and
+similarity join
+τ The neighbor threshold, i.e., whether or not a
+query has more than τ neighbors
+XDT The Xling decision threshold to classify the
+prediction as positive or negative
+N Dataset size
+|R|, |S| The sizes of set R and S
+M AE, M SE Mean absolute error and mean squared error
+F P R, F N R False positive rate and false negative rate
+TABLE I: List of notations used in this and following sections
+This section presents the critical notations frequently used
+in this paper and defines the key problems being studied, i.e.,
+range search and similarity join. The notations are listed and
+explained in Table I, and more details of them are introduced
+where they are first referred in this paper.
+In multi-dimensional space, range search is defined as the
+search of all data points whose distance to the query is
+smaller than a given threshold under some distance metric.
+And similarity join is to find all close point pairs whose
+distance is less than a threshold between two datasets. The
+formal definitions are as below:
+Definition 1 (range search): Given a dataset P = {p
+i
+|i =
+1, 2, ..., n}, a distance metric d(·, ·), a query point q and a
+radius/threshold ϵ, range search tries to find a set of data points
+P 
+∗ 
+such that for any p
+∗
+i 
+∈ P 
+∗
+, d(q, p
+∗
+i 
+) ≤ ϵ.
+Definition 2 (similarity join): Given two datasets R and S, a
+distance threshold ϵ, and a distance metric d(·, ·), the similarity
+join between R and S is denoted by R ▷◁
+ϵ 
+S, which combines
+each point r ∈ R with each point s ∈ S that is close/similar
+enough to r (i.e., with distance smaller than or equal to ϵ).
+Formally
+R ▷◁
+ϵ 
+S = {(r, s)|∀r ∈ R, ∀s ∈ S where d(r, s) ≤ ϵ} (1)
+There are three critical “thresholds” in this paper, as listed in
+Table I, the “distance threshold” ϵ, the “neighbor threshold” τ
+and the “Xling decision threshold” XDT. To avoid confusion,
+we further explain them here:
+1) The distance threshold ϵ is part of the range search and
+similarity join operations, which indicates the search
+range as shown in Definition 1 and 2.
+2) τ is a threshold for the groundtruth neighbors. If a query
+truly has more than τ neighbors, we call it a groundtruth
+positive, otherwise it is a groundtruth negative.
+3) The Xling decision threshold (XDT) is the threshold to
+classify the query based on the predicted neighbors. If a
+query is predicted as having more than XDT neighbors,
+we name it as a predicted positive, otherwise it is
+predicted negative.
+Note that we do not directly use τ to threshold the predictions.
+This is because different cardinality estimation models have
+different prediction accuracy, leading to different predicted
+values for the same query. So it is necessary to use an
+adpative threshold driven by both model and data to classify
+the predictions, which is XDT, such that we can control the
+false positive or negative rate. More details are introduced in
+Section V-A.
+IV. ARCHITECTURE AND WORKFLOW
+A. The core and optimization strategies
+Figure 1 illustrates the overall architecture and workflow of
+Xling. The core is the learned cardinality estimator and XDT
+(yellow boxes). The green boxes represent the optimization
+strategies deployed in the training and predicting stages. The
+blue shapes stand for the training data, including the raw
+data (which is input from the external) and the prepared data</page><page num="4">Learned
+cardinality estimator
+XDT
+Training ε selection
+Adaptive XDT
+selection
+Query point + ε
+𝜏 + ε 
+Positive/Negative
+Raw
+training data
+Prepared
+training data 
+Train
+Predict
+Fig. 1: Architecture and workflow of Xling
+(which is generated based on the raw data inside Xling).
+The workflow of Xling mainly relies on the prepared training
+data instead of the raw data. In addition, the pink boxes
+indicate the query-time inputs, including the query point, ϵ
+and τ , where the query point and ϵ are fed into the learned
+cardinality estimator while the ϵ and τ are used to compute
+XDT. The grey box stands for the output, i.e., whether the
+query point is positive (with enough neighbors) or negative
+(having insufficient neighbors). For the workflow, the solid
+arrows present the offline training workflow, while the hollow
+arrows indicate the online workflow for querying and XDT
+computing.
+The overall architecture includes (1) the core learned car-
+dinility estimator and XDT and (2) the surrounding optimiza-
+tion strategy modules. [28] uses a classifier and a decision
+threshold to build a learned Bloom filter, while we use a
+regressor and the XDT to construct Xling, which is similar to
+the learned accelerator framework (LAF) in [38]. Specifically,
+LAF proves that learned cardinality estimator with a proper
+decision threshold can significantly accelerate range-search
+based high-dimensional clustering. As similarity join is also
+based on range search, such a solution works for it too. And
+unlike the case of learned Bloom filter, since filtering-by-
+counting requires estimating the specific number (mentioned
+in Section I), regressor is the best choice rather than classifier.
+But in LAF, the decision threshold has to be determined by
+grid search. To overcome this shortcoming, we design an
+adaptive XDT selection strategy based on the training data
+such that XDT can be efficiently computed. More details are
+introduced in Section V-B.
+To reduce the false results, in addition to adaptively select-
+ing a proper XDT, we also propose an adaptive training ϵ
+selection strategy to sample the most representative ϵ values
+for training the cardinality estimator effectively and thereby
+reducing the prediction error. The existing learned cardinality
+estimation studies (e.g., [39]) usually select the training ϵ val-
+ues uniformly, which is not optimal, and we show in this paper
+that our proposed strategy generates a more representative
+training set and leads to a more effective model training. This
+training ϵ selection strategy is further discussed in Section
+V-A.
+B. Training and querying workflows
+There are two workflows in Xling, the offline training
+workflow and online querying workflow. In Figure 1, the
+solid arrows illustrate the training workflow. As introduced
+in Definition 2 and Section I, the two point sets to be joined
+are denoted by R and S, and without loss of generality, we
+assume that the size of R (|R|) is larger than size of S (|S|).
+Then R is used as the training set (i.e., the “raw training data”
+in Figure 1) to train Xling while S acts as the queries. The raw
+training data includes all points in R without ϵ information.
+1) Training: The first step in the training workflow is
+concatenating the selected ϵ values onto each training point
+r
+i 
+∈ R (where i = 1, 2, ..., |R|), generating the “prepared
+training data” that is a Cartesian product between the point
+set R and ϵ set E, i.e., the prepared training data is the set
+{(r
+i
+, ϵ
+j 
+) | ∀(r
+i
+, ϵ
+j 
+) ∈ R × E}, where r
+i 
+is a multi-dimensional
+vector and ϵ
+j 
+is a real number. Here the set E is generated by
+the training ϵ selection strategy (Section V-A).
+To make it clearer, suppose R is a toy raw training set of 2
+points r
+a 
+and r
+b
+, and E includes two selected values ϵ
+1 
+and ϵ
+2
+.
+Then the prepared training set looks like {(r
+a
+, ϵ
+1
+), (r
+a
+, ϵ
+2
+), (r
+b
+,
+ϵ
+1
+), (r
+b
+, ϵ
+2
+)} associated with their targets (i.e., the groundtruth
+numbers of neighbors). Then the learned cardinality estimator
+is trained with the prepared training data.
+2) Querying: The querying workflow is presented with
+hollow arrows in Figure 1. First, ϵ and τ are input to compute
+the XDT using the adaptive XDT selection strategy based on
+the prepared training data. Second, the query point and the ϵ
+are concatenated and fed to the cardinality estimator to predict
+the number of neighbors. Finally, the prediction is compared
+with XDT and the answer (positive or negative) is determined.
+C. Use in similarity join
+Use of Xling to speed up similarity join is straightforward:
+given ϵ, τ , R and S, supposing |R| &gt; |S|, Xling is first trained
+on R, then for each query point s ∈ S, Xling predicts whether
+s has enough neighbors in R under the ϵ. If yes, the range
+search (either a brute-force search or an indexed search like
+using LSH) will be executed in R for query s, otherwise s
+is predicted as negative and the search for it will be skipped.
+In this way, unnecessary range search is reduced and the join
+efficiency is improved.
+As a generic filter, Xling can be applied onto any nested-
+loop based similarity join algorithms to speed them up. When
+using deep regressor as the core cardinality estimator in Xling,
+its prediction time complexity for each query is constant
+(O(1)) with the data scale, which in practice can be further
+accelerated by GPU. And the training time is not an issue
+due to the generalization capability of the deep models, i.e., a
+trained estimator can be used on any other dataset with similar
+distribution, which is proved by our evaluation in Section VI-F.
+We implement XJoin by applying Xling onto a naive nested-
+loop similarity join method which does a brute-force range</page><page num="11">Dataset ϵ Filter FPR FNR
+#Nbrs
+(×10
+5
+)
+#PPQ
+(×10
+4
+) #ANPQ
+FastText
+0.4 
+LSBF 0.46 0.2908 127.73 2.05 624.58
+Xling(mean) 0.2523 0.1114 142.15 2.46 578.95
+Xling(FPR) 0.0529 0.207 141.90 2.13 664.94
+0.45 
+LSBF 0.5124 0.2471 296.05 2.23 1329.56
+Xling(mean) 0.3469 0.0682 325.25 2.72 1196.82
+Xling(FPR) 0.0948 0.1295 325.07 2.51 1295.92
+0.5 
+LSBF 0.5244 0.2062 708.64 2.37 2987.66
+Xling(mean) 0.3582 0.0376 767.57 2.87 2678.19
+Xling(FPR) 0.0802 0.099 767.23 2.68 2868.68
+Word2vec
+0.4 
+LSBF 0.4952 0.4607 3.49 1.58 22.06
+Xling(mean) 0.374 0.3197 4.63 1.78 26.08
+Xling(FPR) 0.0502 0.7028 4.20 0.68 61.81
+0.45 
+LSBF 0.5516 0.3977 6.77 1.78 37.98
+Xling(mean) 0.4397 0.234 8.86 2.13 41.53
+Xling(FPR) 0.0804 0.5996 8.19 1.04 78.70
+0.5 
+LSBF 0.5943 0.3419 13.04 1.96 66.56
+Xling(mean) 0.3019 0.2725 16.40 2.08 78.83
+Xling(FPR) 0.039 0.5882 15.15 1.15 132.22
+(a) Text datasets
+Dataset ϵ Filter FPR FNR
+#Nbrs
+(×10
+5
+)
+#PPQ
+(×10
+4
+) #ANPQ
+Sift
+0.4 
+LSBF 0.2415 0.6609 4.69 0.85 54.89
+Xling(mean) 0.06 0.6119 7.18 0.62 116.65
+Xling(FPR) 0.0351 0.6771 7.08 0.49 145.37
+0.45 
+LSBF 0.2338 0.6358 13.04 0.96 136.42
+Xling(mean) 0.081 0.4565 19.49 1.15 170.09
+Xling(FPR) 0.0537 0.5064 19.39 1.02 190.19
+0.5 
+LSBF 0.2053 0.6139 35.54 1.08 330.55
+Xling(mean) 0.1798 0.237 52.83 2.02 261.36
+Xling(FPR) 0.0581 0.3678 52.50 1.63 321.55
+NUS-WIDE
+0.4 
+LSBF 0.2492 0.5687 1.39 0.76 18.19
+Xling(mean) 0.3671 0.057 2.14 1.15 18.65
+Xling(FPR) 0.0534 0.0894 2.14 0.23 94.32
+0.45 
+LSBF 0.2498 0.5374 2.82 0.77 36.53
+Xling(mean) 0.3302 0.071 4.06 1.05 38.56
+Xling(FPR) 0.0503 0.1123 4.06 0.24 170.27
+0.5 
+LSBF 0.2469 0.5029 5.15 0.78 66.42
+Xling(mean) 0.2873 0.087 6.98 0.95 73.69
+Xling(FPR) 0.0467 0.1294 6.98 0.25 276.09
+(b) Image datasets
+TABLE VI: The prediction quality of LSBF and Xling (mean-based or FPR-based) on different datasets, where #Nbrs is the
+total number of returned neighbors for all the queries, #PPQ stands for the number of Predicted Positive Queries
+, i.e., the
+query points predicted as positive by the filter, and #ANPQ presents the Average number of Neighbors per predicted Positive
+Query
+ that equals #Nbrs over #PPQ. Due to space limit, the results on Glove and Gist datasets are hidden, which are similar
+to the other four.
+0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1
+0
+100
+200
+300
+400
+500
+600
+0.4 0.45 0.5
+Recall
+Time (s)
+Query ε
+Naive SuperEGO LSH KmeansTree Naive-LSBF XJoin
+Naive(recall) SuperEGO(recall) LSH(recall) KmeansTree(recall) Naive-LSBF(recall) XJoin(recall)
+0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1
+0
+50
+100
+150
+200
+250
+300
+350
+400
+450
+0.4 0.45 0.5
+Recall
+Time
+ 
+(s)
+Query ε
+FastText
+0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1
+0
+50
+100
+150
+200
+250
+300
+350
+400
+450
+0.4 0.45 0.5
+Recall
+Time
+ 
+(s)
+Query ε
+ Glove
+0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1
+0
+100
+200
+300
+400
+500
+600
+0.4 0.45 0.5
+Recall
+Time
+ 
+(s)
+Query ε
+ Word2vec
+0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1
+0
+200
+400
+600
+800
+1000
+1200
+1400
+1600
+0.4 0.45 0.5
+Recall
+Time
+ 
+(s)
+Query ε
+Gist
+0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1
+0
+50
+100
+150
+200
+250
+0.4 0.45 0.5
+Recall
+Time
+ 
+(s)
+Query ε
+ Sift
+0
+0.1
+0.2
+0.3
+0.4
+0.5
+0.6
+0.7
+0.8
+0.9
+1
+0
+100
+200
+300
+400
+500
+600
+700
+800
+900
+0.4 0.45 0.5
+Recall
+Time
+ 
+(s)
+Query ε
+ NUS-WIDE
+Fig. 2: End-to-end query processing time and recall for all the similarity join methods on all datasets, where the figures of
+FastText and NUS-WIDE do not include SuperEGO, as it cannot run on these two datasets.
+our statement in the Introduction that Xling and XJoin have
+great generalization capability thanks to the learning model,
+and therefore it is not necessary to re-train Xling when the
+data is updated or even replaced with a fully new dataset, as
+long as the new data has similar distribution to the old.
+To have a further quantitative view about the generalization,
+we also compare the speed improvement and the recall loss
+made by Xling when attaching it to the base similarity
+join methods. In Figure 5, within each method (marked as
+“IVFPQ”, “LSH”, etc.), the first bar (solid and blue, “1st
+time”) and second bar (solid and orange, “1st Xling time”)
+are the end-to-end running time of the original method and its
+Xling-enhanced version on the first 150k, while the third bar
+(diagonal lines and blue, “2nd time”) and fourth bar (diagonal
+lines and orange, “2nd Xling time”) are the two running time
+on the second 150k. The green and red lines are the percentage
+recall loss respectively on the first and second 150k, i.e., the
+difference between recall of original method and enhanced
+version over original recall on each dataset. The results show
+that neither time improvement nor recall loss has a significant
+difference between first and second 150k, which further prove
+our methods have outstanding generalization, meaning that
+they are practical in real world.
+VII. CONCLUSION
+In this paper we propose Xling, a generic framework of
+learned metric space Bloom filters for speeding up similarity
+join with quality guarantee based on machine learning. Based</page><page num="13">2022. [Online]. Available: https://arxiv.org/abs/2203.04366
+[7] N. Adly, “Efficient record linkage using a double embedding scheme.”
+in DMIN, 2009, pp. 274–281.
+[8] S. Herath, M. Roughan, and G. Glonek, “Em-k indexing for approximate
+query matching in large-scale er,” 2021.
+[9] F. Nargesian, E. Zhu, K. Q. Pu, and R. J. Miller, “Table union search
+on open data,” Proc. VLDB Endow., vol. 11, no. 7, p. 813–825, mar
+2018. [Online]. Available: https://doi.org/10.14778/3192965.3192973
+[10] A. Berenguer, J.-N. Maz´on, and D. Tom´as, “Towards a tabular open data
+search engine for public sector information,” in 2021 IEEE International
+Conference on Big Data (Big Data), 2021, pp. 5851–5853.
+[11] Y. Dong, K. Takeoka, C. Xiao, and M. Oyamada, “Efficient joinable
+table discovery in data lakes: A high-dimensional similarity-based
+approach,” in 2021 IEEE 37th International Conference on Data En-
+gineering (ICDE). IEEE, 2021, pp. 456–467.
+[12] X. Yuan, X. Wang, C. Wang, C. Yu, and S. Nutanong, “Privacy-
+preserving similarity joins over encrypted data,” IEEE Transactions on
+Information Forensics and Security, vol. 12, no. 11, pp. 2763–2775,
+2017.
+[13] J. Yao, X. Meng, Y. Zheng, and C. Wang, “Privacy-preserving content-
+based similarity detection over in-the-cloud middleboxes,” IEEE Trans-
+actions on Cloud Computing, vol. 11, no. 2, pp. 1854–1870, 2023.
+[14] M. Perdacher, C. Plant, and C. B¨ohm, “Cache-oblivious high-
+performance similarity join,” in Proceedings of the 2019 International
+Conference on Management of Data, ser. SIGMOD ’19. New York,
+NY, USA: Association for Computing Machinery, 2019, p. 87–104.
+[Online]. Available: https://doi.org/10.1145/3299869.3319859
+[15] C. B¨ohm, B. Braunm¨uller, F. Krebs, and H.-P. Kriegel, “Epsilon grid
+order: An algorithm for the similarity join on massive high-dimensional
+data,” in Proceedings of the 2001 ACM SIGMOD International
+Conference on Management of Data, ser. SIGMOD ’01. New York,
+NY, USA: Association for Computing Machinery, 2001, p. 379–388.
+[Online]. Available: https://doi.org/10.1145/375663.375714
+[16] D. V. Kalashnikov and S. Prabhakar, “Fast similarity join for
+multi-dimensional data,” Information Systems, vol. 32, no. 1, pp.
+160–177, 2007. [Online]. Available: https://www.sciencedirect.com/
+science/article/pii/S0306437905000761
+[17] D. V. Kalashnikov, “Super-ego: fast multi-dimensional similarity join,”
+The VLDB Journal, vol. 22, no. 4, pp. 561–585, 2013.
+[18] C. Yu, S. Nutanong, H. Li, C. Wang, and X. Yuan, “A generic method for
+accelerating lsh-based similarity join processing (extended abstract),” in
+2017 IEEE 33rd International Conference on Data Engineering (ICDE),
+2017, pp. 29–30.
+[19] H. Li, S. Nutanong, H. Xu, c. YU, and F. Ha, “C2net: A network-efficient
+approach to collision counting lsh similarity join,” IEEE Transactions
+on Knowledge and Data Engineering, vol. 31, no. 3, pp. 423–436, 2019.
+[20] Z. Yang, W. T. Ooi, and Q. Sun, “Hierarchical, non-uniform locality
+sensitive hashing and its application to video identification,” in 2004
+IEEE International Conference on Multimedia and Expo (ICME) (IEEE
+Cat. No.04TH8763), vol. 1, 2004, pp. 743–746 Vol.1.
+[21] Y. Hua, B. Xiao, B. Veeravalli, and D. Feng, “Locality-sensitive bloom
+filter for approximate membership query,” IEEE Transactions on Com-
+puters, vol. 61, no. 6, pp. 817–830, 2012.
+[22] J. Qian, Q. Zhu, and H. Chen, “Integer-granularity locality-sensitive
+bloom filter,” IEEE Communications Letters, vol. 20, no. 11, pp. 2125–
+2128, 2016.
+[23] M. Goswami, R. Pagh, F. Silvestri, and J. Sivertsen, “Distance sensitive
+bloom filters without false negatives,” 2016.
+[24] J. Qian, Z. Huang, Q. Zhu, and H. Chen, “Hamming metric
+multi-granularity locality-sensitive bloom filter,” IEEE/ACM Trans.
+Netw., vol. 26, no. 4, p. 1660–1673, aug 2018. [Online]. Available:
+https://doi.org/10.1109/TNET.2018.2850536
+[25] J. Qian, Q. Zhu, and H. Chen, “Multi-granularity locality-sensitive
+bloom filter,” IEEE Transactions on Computers, vol. 64, no. 12, pp.
+3500–3514, 2015.
+[26] A. Kirsch and M. Mitzenmacher, “Distance-sensitive bloom filters,” in
+2006 Proceedings of the Eighth Workshop on Algorithm Engineering
+and Experiments (ALENEX). SIAM, 2006, pp. 41–50.
+[27] Y. Hua, X. Liu, Y. Hua, and X. Liu, “Locality-sensitive bloom filter for
+approximate membership query,” Searchable Storage in Cloud Comput-
+ing, pp. 99–127, 2019.
+[28] T. Kraska, A. Beutel, E. H. Chi, J. Dean, and N. Polyzotis, “The case
+for learned index structures,” 2018.
+[29] S. Macke, A. Beutel, T. Kraska, M. Sathiamoorthy, D. Z. Cheng, and
+E. H. Chi, “Lifting the curse of multidimensional data with learned
+existence indexes,” in Workshop on ML for Systems at NeurIPS, 2018,
+pp. 1–6.
+[30] M. Mitzenmacher, “A model for learned bloom filters and optimizing
+by sandwiching,” Advances in Neural Information Processing Systems,
+vol. 31, 2018.
+[31] A. Bhattacharya, C. Gudesa, A. Bagchi, and S. Bedathur, “New wine
+in an old bottle: Data-aware hash functions for bloom filters,” Proc.
+VLDB Endow., vol. 15, no. 9, p. 1924–1936, may 2022. [Online].
+Available: https://doi.org/10.14778/3538598.3538613
+[32] J. Sun, G. Li, and N. Tang, “Learned cardinality estimation for similarity
+queries,” in Proceedings of the 2021 International Conference on
+Management of Data, 2021, pp. 1745–1757.
+[33] Y. Wang, C. Xiao, J. Qin, X. Cao, Y. Sun, W. Wang, and M. Onizuka,
+“Monotonic cardinality estimation of similarity selection: A deep learn-
+ing approach,” in Proceedings of the 2020 ACM SIGMOD International
+Conference on Management of Data, 2020, pp. 1197–1212.
+[34] J. Qin, W. Wang, C. Xiao, Y. Zhang, and Y. Wang, “High-dimensional
+similarity query processing for data science,” in Proceedings of
+the 27th ACM SIGKDD Conference on Knowledge Discovery and
+Data Mining, ser. KDD ’21. New York, NY, USA: Association
+for Computing Machinery, 2021, p. 4062–4063. [Online]. Available:
+https://doi.org/10.1145/3447548.3470811
+[35] Y. Wang, C. Xiao, J. Qin, R. Mao, M. Onizuka, W. Wang, R. Zhang,
+and Y. Ishikawa, “Consistent and flexible selectivity estimation for high-
+dimensional data,” in Proceedings of the 2021 International Conference
+on Management of Data, 2021, pp. 2319–2327.
+[36] T. Kraska, A. Beutel, E. H. Chi, J. Dean, and N. Polyzotis, “The case
+for learned index structures,” in Proceedings of the 2018 international
+conference on management of data, 2018, pp. 489–504.
+[37] H. Zhang and Q. Zhang, “Embedjoin: Efficient edit similarity joins via
+embeddings,” in Proceedings of the 23rd ACM SIGKDD International
+Conference on Knowledge Discovery and Data Mining, ser. KDD ’17.
+New York, NY, USA: Association for Computing Machinery, 2017, p.
+585–594. [Online]. Available: https://doi.org/10.1145/3097983.3098003
+[38] Y. Wang and D. Z. Wang, “Learned accelerator framework for angular-
+distance-based high-dimensional dbscan,” 2023.
+[39] Y. Wang, C. Xiao, J. Qin, X. Cao, Y. Sun, W. Wang, and M. Onizuka,
+“Monotonic cardinality estimation of similarity selection: A deep
+learning approach,” in Proceedings of the 2020 ACM SIGMOD
+International Conference on Management of Data, ser. SIGMOD ’20.
+New York, NY, USA: Association for Computing Machinery, 2020,
+p. 1197–1212. [Online]. Available: https://doi.org/10.1145/3318464.
+3380570
+[40] S. Macke, A. Beutel, T. Kraska, M. Sathiamoorthy, D. Z. Cheng, and
+E. H. Chi, “Lifting the curse of multidimensional data with learned
+existence indexes,” 2018.
+[41] Y. Wang, C. Xiao, J. Qin, R. Mao, M. Onizuka, W. Wang, R. Zhang,
+and Y. Ishikawa, “Consistent and flexible selectivity estimation for high-
+dimensional data,” in Proceedings of the 2021 International Conference
+on Management of Data, 2021, pp. 2319–2327.
+[42] A. Andoni, P. Indyk, T. Laarhoven, I. Razenshteyn, and L. Schmidt,
+“Practical and optimal lsh for angular distance,” Advances in neural
+information processing systems, vol. 28, 2015.
+[43] M. Muja and D. G. Lowe, “Fast approximate nearest neighbors with
+automatic algorithm configuration.” VISAPP (1), vol. 2, no. 331-340,
+p. 2, 2009.
+[44] H. Jegou, M. Douze, and C. Schmid, “Product quantization for nearest
+neighbor search,” IEEE transactions on pattern analysis and machine
+intelligence, vol. 33, no. 1, pp. 117–128, 2010.
+[45] J. Johnson, M. Douze, and H. J´egou, “Billion-scale similarity search
+with gpus,” arXiv preprint arXiv:1702.08734, 2017.
+[46] Y. Wang, H. Ma, and D. Z. Wang, “Lider: An efficient high-dimensional
+learned index for large-scale dense passage retrieval,” 2022. [Online].
+Available: https://arxiv.org/abs/2205.00970
+[47] L. V. Nguyen, T.-H. Nguyen, and J. J. Jung, “Content-based
+collaborative filtering using word embedding: A case study on movie
+recommendation,” in Proceedings of the International Conference on
+Research in Adaptive and Convergent Systems, ser. RACS ’20. New
+York, NY, USA: Association for Computing Machinery, 2020, p.
+96–100. [Online]. Available: https://doi.org/10.1145/3400286.3418253</page></paper>

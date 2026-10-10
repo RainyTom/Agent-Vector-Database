@@ -1,0 +1,708 @@
+<paper id="1809.09930v1"><page num="1">GPU Accelerated Similarity Self-Join for Multi-Dimensional Data
+MICHAEL GOWANLOCK, School of Informatics, Computing, &amp; Cyber Systems
+Northern Arizona University
+BEN KARSIN, University of Hawai‘i at M¯anoa
+Department of Information and Computer Sciences
+The self-join finds all objects in a dataset that are within a search distance, ϵ , of each other; therefore, the self-join is a building block of
+many algorithms. We advance a GPU-accelerated self-join algorithm targeted towards high dimensional data. The massive parallelism
+afforded by the GPU and high aggregate memory bandwidth makes the architecture well-suited for data-intensive workloads. We
+leverage a grid-based, GPU-tailored index to perform range queries. We propose the following optimizations: (i) a trade-off between
+candidate set filtering and index search overhead by exploiting properties of the index; (ii) reordering the data based on variance in
+each dimension to improve the filtering power of the index; and (iii) a pruning method for reducing the number of expensive distance
+calculations. Across most scenarios on real-world and synthetic datasets, our algorithm outperforms the parallel state-of-the-art
+approach. Exascale systems are converging on heterogeneous distributed-memory architectures. We show that an entity partitioning
+method can be utilized to achieve a balanced workload, and thus good scalability for multi-GPU or distributed-memory self-joins.
+1 INTRODUCTION
+A fundamental database operation and an intensely studied problem in database research is the similarity self-join.
+Self-similarity joins are often part of existing algorithms [ 1 , 3 , 6, 17, 30 ] and are fundamental to many established
+methods [9, 12 ]. Since the self-join is commonly employed, improving self-join performance has implications for many
+domains. The problem is as follows: given a dataset of objects, find all objects that have common aributes based
+on a similarity metric. This paper focuses on the distance similarity self-join that finds all points that are within the
+Euclidean distance ϵ of each other.
+Research on the self-join typically addresses either low [ 13 ] or high [ 2 , 15 , 32 ] dimensionality. In low dimensionality,
+the data points (or feature vectors) are often more frequently co-located; therefore, there are typically more neighbors
+on average in comparison to high dimensionality [ 26 ]. Therefore, in low dimensionality, filtering the candidate set of
+points becomes a performance boleneck. To reduce the number of comparisons between data points when filtering
+the candidate set, indexes are used. However, in high dimensionality, index searches become increasingly exhaustive
+due to the well-known curse of dimensionality [7, 16, 28, 37 ], where the index needs to search a large fraction of the
+database, potentially degrading the search to the performance level obtained by a brute force search. Thus, searches in
+high dimensionality can be prohibitive. In this work, we focus on optimizing the high dimensionality self-join.
+There have been two recent trends in computer architecture that have been helping to guide the direction of many
+research communities. First, modern graphics processing units (GPUs) are frequently used to aain high computational
+throughput through massive parallelism and high memory bandwidth on a range of problems in the constituent
+fields of computer science. Second, distributed-memory systems that are composed of hundreds or thousands of
+heterogeneous nodes are becoming more commonplace, where nodes are comprised of one or more accelerators. This
+recent development has been motivated by the high performance computing community striving to reach exascale. In
+this context, GPU-efficient algorithms are essential to achieving peak performance on GPUs and heterogeneous systems.
+arXiv:1809.09930v1 [cs.DC] 26 Sep 2018</page><page num="2">Thus, many large-scale data analytics applications will rely on GPU-efficient algorithms, including the distance similarity
+self-join for high dimensional data — the subject of this work. This paper makes the following novel contributions:
+• Leveraging an efficient indexing scheme for the GPU, we exploit the trade-off between index filtering power and
+search cost to improve the overall performance of searching high dimensional feature spaces.
+• We improve the filtering power of the index by reordering the data in each dimension using statistical properties of
+the data distribution. We show that this is particularly important when exploiting the trade-off outlined above.
+• We mitigate the performance cost of reducing index filtering power by proposing a technique that prunes the
+candidate set by comparing points based on an un-indexed dimension.
+• We show that on the worst-case data distribution for our approach, we achieve significantly beer performance than
+the state-of-the-art on the same scenario. This suggests that the performance of the GPU-accelerated self-join is
+resilient to the data distribution, making the approach well-suited for many application scenarios.
+• We evaluate our approach on 5 real-world and 3 synthetic datasets and show that our GPU accelerated self-join
+outperforms the state-of-the-art parallel algorithm in the literature.
+• The self-join is an expensive operation. We show initial insights into the scalability of the self-join on multi-GPU
+and distributed-memory systems, and demonstrate that an entity partitioning strategy can be used to achieve good
+load balancing.
+The paper is outlined as follows: Section 2 provides background material, Section 3 formalizes the problem and
+discusses previous work that we employ, Section 4 presents the novel methods we use to improve high dimensional
+self-join performance, Section 5 illustrates our performance results, Section 6 discusses the scalability of the self-join,
+and we conclude the work in Section 7.
+2 BACKGROUND
+The self-join is conceptualized as a join relationship between a database table and itself. Works that optimize joining
+two different tables are relevant to the self-join. Also, efficient indexing structures for performing neighborhood range
+queries are relevant, as indexes reduce the number of point comparisons. We also review the distributed-memory
+self-join.
+2.1 Similarity-Joins and the State-of-the-art
+The similarity-join is a well-studied algorithm [4, 6, 9 , 11 , 15 , 27 ]. Here, we discuss those works that address high-
+dimensional data. GESS [ 15 ] assigns feature vectors to hypercubes, and then performs an intersection query on these
+hypercubes to compute the similarity join. The method relies on data replication and duplication removal from the
+result set. LSS [32 ] utilizes the GPU, and transforms the similarity join into a sort-and-search problem. Interval searches
+are needed, and the authors use space filling curves to reduce interval size and search overhead. The Super-EGO
+algorithm [ 27] has been shown to be effective for similarity-joins on both low and high-dimensional data. The algorithm
+uses the “epsilon grid order” [10 ] method. It uses a non-materialized grid to find nearby points that may be within
+the search distance. Then, based on a query point’s cell and nearby cells, the algorithm prunes the search for nearby
+points by filtering cells by their n-dimensional coordinates. However, unlike previous work [ 10 ], Super-EGO exploits
+the properties of the data to improve performance. The authors find that Super-EGO [27 ] outperforms both GESS [ 15 ],
+and LSS [32], so we compare our work to Super-EGO.</page><page num="4">3 PROBLEM STATEMENT AND PREVIOUS INSIGHTS
+3.1 Problem Statement
+Let D be a database of points (or feature vectors). Each point in the database is denoted as p
+i 
+, where i = 1, . . . , |D|.
+Each p
+i 
+∈ D has coordinates in n-dimensions, where each coordinate is denoted as x
+j 
+where j = 1, . . . , n, and n is the
+number of dimensions of the point/feature vector. Thus, the coordinates of point p
+i 
+are denoted as: p
+i 
+= (x
+1
+, x
+2
+, . . . , x
+n 
+).
+We refer to the x
+j 
+-coordinate value of point p
+i 
+as p
+i 
+(x
+j 
+). As with prior related work (Section 2), we use the Euclidean
+distance (the L
+2 
+norm). We find all pairs of points that are within ϵ distance of each other. We say that points a ∈ D
+and b ∈ D are within ϵ distance when dist(a, b) ≤ ϵ, where dist(a, b) =
+√
+Õ
+n
+j=1
+(a(x
+j 
+) − b(x
+j 
+))
+2
+. Thus, the result of the
+self-join are tuples (a ∈ D, b ∈ D), where a and b are within ϵ distance of each other.
+The self-join is a special case of the similarity-join. If we let E be a set of entry points in an index (defined similarly to
+the definition above) and Q be a set of query points, the similarity join finds all points in Q within ϵ distance of E, i.e.,
+Q ./
+ϵ 
+E. In contrast, the self-join is simply E ./
+ϵ 
+E. Thus, the self-join is relevant to the similarity-join problem as well.
+By comparing all points to each other, the worst-case complexity is O(|D|
+2
+), which can be simply implemented as a
+nested loop join [25 ]. However, as mentioned above, indexes can be used to reduce the number of comparisons between
+points.
+We perform the self-join entirely in-memory. The dataset, result set, and working memory do not exceed main
+memory on the host. However, the global memory of the GPU is limited, and ensuring that the self-join does not exceed
+global memory capacity would make it intractable for many self-join scenarios. Therefore, while D does not exceed
+global memory capacity, we allow the result set to exceed global memory capacity. The result set is typically much
+larger than D, and this enables a larger number of self-join scenarios (larger result sets, or databases).
+3.2 Leveraging Previous Insights
+In Section 4 we outline our novel methods for performing the self-join in high dimensions. However, we leverage
+several optimizations from the literature that are relevant to the self-join. In particular, we use the grid-based GPU
+index presented by Gowanlock &amp; Karsin [ 22 ], that builds on prior work [ 23]. These papers also advanced a batching
+scheme, which we use to process self-join result sets that may exceed the GPU’s global memory capacity. We briefly
+describe the batching and indexing techniques that we reuse from the literature, and note that we cannot directly use
+the low-dimensional methods [22] for high-dimensional self-joins.
+3.2.1 Grid-Based Indexing on the GPU. We utilize an n-dimensional grid index for computing the self-join. As
+mentioned in Section 2, the state-of-the-art join algorithm for high dimensional data, Super-EGO [27 ], also uses a
+grid-based technique for efficiently computing the self-join. We refer the reader to the work of Gowanlock et al. [ 23]
+for an in-depth description of the index, which the authors used in 2-D for clustering with DBSCAN [ 17 ]. A major
+difference between the indexing scheme used in this work and that of Gowanlock et al. [23 ] is that we do not index
+empty cells, as the space complexity would be intractable for high dimensions (as also discussed by Gowanlock and
+Karsin [22]).
+The GPU grid index from Gowanlock et al. [ 23 ] is constructed as follows. On the host, the data points, D, are sorted
+into unit-length bins in each dimension. This ensures that data points nearby each other in the n-dimensional space
+are nearby each other in memory. Each grid cell is of length ϵ, which ensures that for a given point, only the adjacent
+cells need to be searched to find points that are within the ϵ distance. This bounds the search on the GPU to regularize</page><page num="5">65
+4
+3
+21
+0
+0
+1
+2
+3
+4
+5
+6
+14
+36
+23
+8
+47
+24
+18
+32 34
+2
+ϵ
+Fig. 1. Example of searching the grid index in 2-D. The non-empty cells are shaded. Numbers refer to linearized cell ids.
+the instruction flow. For demonstrative purposes and without loss of generality, we assume a grid with edges starting
+at 0 in each dimension, and assign points to cells by simply computing the cell’s n-dimensional coordinates from the
+point’s (p
+i 
+) coordinates as follows: (x
+1
+/ϵ, x
+2
+/ϵ, . . . , x
+n 
+/ϵ). The points are not stored within the grid structure, rather,
+the points belonging to a grid cell are stored in a lookup array that each grid cell references when finding the points
+contained within. This minimizes the memory needed to store the points within a grid cell. Lastly, since we only store
+non-empty cells, we create a lookup array that stores the linearized ids of the non-empty grid cells. As shown by
+Gowanlock and Karsin [ 22 ], the storage requirements simplify to the size of the dataset, O(|D|). This compact index
+structure allows more space on the GPU to be allocated for larger input and result sets.
+Figure 1 shows an example grid in 2-D. The non-empty gray cells with linearized cell ids are shown. Consider a
+point in cell 24. To find all of its neighbors within ϵ, it needs to search the adjacent cells (and its origin cell), which are
+encompassed by the black dashed line. In n dimensions, there are 3
+n 
+cells to search. However, the points in the cells are
+not guaranteed to be within ϵ; therefore, distance calculations between the query point and all of the points in the cells
+bounded by the dashed outline (cells 18, 23, 24, 32 in the figure) are needed to determine which ones are within the
+search distance ϵ.
+The self-join is executed on the GPU with a kernel that uses |D| threads. Each thread is assigned a point and finds all
+neighbors within the ϵ distance. The threads write the result to a buffer as key/value pairs, where the key is a point and
+the value if a point within ϵ of the key. After all threads have completed finding their respective neighbors within ϵ, the
+key/value pairs are sorted on the GPU, and returned to the host.
+Bounding the search to neighboring cells using the grid reduces thread divergence, which is known to degrade GPU
+performance [ 34 ]. Also, the grid structure improves data locality among threads within a warp, increasing coalesced
+memory accesses and unified cache usage as global memory loads are stored in the L1 cache on NVIDIA Maxwell and
+Pascal architectures [34].
+3.2.2 Batching: Enabling Large Result Sets. A drawback of the GPU is that it has limited global memory. The
+self-join result sets can be much larger than the input dataset size |D|. Thus, an efficient batching scheme is needed to
+incrementally compute the entire self-join result. However, this is typically a bigger problem in low-dimensionality, as
+more points are co-located, due to smaller (hyper)volumes.</page><page num="6">To ensure that the self-join result set does not exceed global memory capacity, we employ the method from Gowanlock
+et al. [ 23 ], and provide a summary of their work as follows. First, a kernel is executed that finds all of the neighbors
+within ϵ for a fraction of the points in the dataset, which is used to estimate the size of the total result set. This kernel
+invocation takes negligible time in comparison to the total time needed to execute the self-join, as only a fraction
+of points are searched, and the kernel only returns an integer (the number of points within ϵ, not the actual result
+as key/value pairs). The number of batches, denoted as n
+b 
+, is computed based on a batch size, denoted b
+s 
+, and the
+estimated total result set size. Even if the result set for a given ϵ would not overflow the global memory capacity of the
+GPU, the batching scheme is still used as it allows for overlap of data transfers to and from the GPU, computation on
+the GPU itself, and host-side operations. It is preferable to overlap these components of the algorithm to maximize
+concurrent use of resources. In all of our experiments, we use a minimum of 3 CUDA streams, and hence batches, i.e.,
+n
+b 
+≥ 3. We allocate 3 pinned memory buffers on the host, as it is needed for overlapping data transfers to and from the
+GPU, and has a higher data transfer rate [34 ]. For result set sizes that exceed 3 × 10
+8
+, we set a batch size of b
+s 
+= 10
+8
+(the total neighbors found within ϵ of each point). Thus, each stream is assigned a buffer of size b
+s 
+= 10
+8
+.
+4 HIGH-DIMENSIONAL SELF-JOIN OPTIMIZATIONS
+As described in Section 1 the performance of algorithms that compute the distance similarity self-join is largely dependent
+on the dimensionality of the input dataset. This section outlines self-join optimizations tailored for high-dimensional
+datasets, particularly in the context of the grid-based indexing scheme presented in Section 3.2.1.
+4.1 Index Selectivity to Target High Dimensionality
+In high dimensionality, there are fewer co-located neighbors because, as the hypervolume increases, the distance
+between objects increases [26 ]. However, with increasing dimension, index filtering power decreases and search
+performance degrades. There is a trade-off between index filtering power and search overhead. The drawback is that an
+index with less filtering power will yield larger candidate set sizes that need to be evaluated by computing the Euclidean
+distance between a query point and all candidate points. The benefit, however, is that the search required to find the
+candidate set will incur less overhead.
+The GPU is a suitable architecture for making a trade-off between less filtering power and more search overhead.
+This is because the GPU is designed to achieve high computational throughput and thus excels at tasks like computing
+the distances between points in parallel. Thus, to avoid the overheads associated with searches in higher dimensions,
+we provide a trade-off using a less rigorous index search for increased filtering overhead. To illustrate why this trade-off
+is important, in the context of the grid indexing scheme, the number of adjacent cells required to check is 3
+n 
+; in 2-D,
+this is only 9 cells, but in 6-D, this is 729 cells. We decrease the filtering power and search overhead by indexing only k
+dimensions of the n-dimensional points, where 2 ≤ k &lt; n, thus projecting the points into k dimensions. To resolve
+whether points are within ϵ of the query point, we compute the Euclidean distance in all n dimensions, and thus obtain
+the correct result. Since we index in fewer than n dimensions, each cell has n − k unconstrained dimensions, resulting
+in less filtering power. The decrease in the number of adjacent cells searched is denoted as l(n, k) = (3
+n 
+− 3
+k 
+)/3
+n 
+. For
+example, if 5-D points are indexed in 3-D, then the loss is: l(n, k) = (3
+5 
+− 3
+3
+)/3
+5
+=88.9%, and the number of searched
+cells decreases by that percentage (assuming the data is uniformly distributed in each dimension).</page><page num="7">(a) 
+65
+4
+3
+21
+3
+142
+65
+Variance Rank (1–highest)
+Dimension
+0
+0.2
+0.4
+0.6
+0.8
+1.0
+(b) 
+65
+4
+3
+21
+Dimension
+65
+4
+3
+21
+Variance Rank (1–highest)
+0
+0.2
+0.4
+0.6
+0.8
+1.0
+Fig. 2. Dimensionality reordering by variance on a 6-D dataset having |D | = 10 indexing k = 3 dimensions. (a) initial input dataset;
+(b) reordering the point coordinates from largest to smallest variance in each dimension. Red points denote those used to index k = 3
+dimensions based on high variance in corresponding dimensions. Shaded cells denote indexed area.
+4.2 Dimensionality Reordering by Variance
+Index searches are increasingly exhaustive and more expensive in higher dimensions. The statistical properties of high
+dimensional feature vectors can be exploited to improve the filtering power of the index to prune the search space and
+eliminate points that are not within ϵ (e.g., see [27] in related work, Section 2). The dimensions of the data that have
+the greatest variance should improve the pruning power of index searches. Since we may not index all dimensions, as
+discussed in Section 4.1, it is important to select dimensions that optimize the ability of the index to prune the search
+and minimize the size of the candidate set. Otherwise, if we simply select the first k dimensions in the dataset, we may
+inadvertently select dimensions to index that yield a minimal degree of pruning power.
+Figure 2 (a) shows an example dataset of 10 points in 6 dimensions generated in the range [0,1]. We can see that the
+first two dimensions have a low degree of variance. Thus, if we index k = 3 dimensions (and not all n = 6), we will
+have a low amount of index filtering power due to the low variance of the first two dimensions. If we assume that the
+grid cells are of length ϵ = 0.2, we find that dimensions 1 and 2 will only produce a single cell in their dimensions
+(denoted by the shaded regions). Thus, when searching the index for points, dimensions 1 and 2 do not reduce the
+number of points that may be within ϵ. However, we can select the dimensions with greater variance to improve
+filtering power. For instance, dimensions 5, 3 and 6 in Figure 2 (a) have the greatest variance. If we reorder the data
+by decreasing variance, then we obtain Figure 2 (b). Now, each of the first 3 dimensions spans 5 grid cells (assuming
+ϵ = 0.2). Consequently, when the index is searched, it will return cells with fewer points on average in comparison
+to the original input distribution in Figure 2 (a). We note that in Figure 2, it seems like the number of cells should be
+maximized and not the variance. While data with high variance will tend to produce more cells, it is possible to have
+many cells in a dimension with low variance (e.g., one point per cell, and the remaining points in a single cell, as in
+dimension 4 in Figure 2 (b)).
+To re-order the dimensions by their variance, we use a sample of 1% of |D| and estimate the variance in each
+dimension. Then, we reorder the coordinate values in each dimension of p
+i 
+∈ D, such that the values are in descending
+order from highest to lowest variance. Thus, when we index the first k dimensions (Section 4.1), they potentially have
+greater filtering power than the initial input dataset. Reordering dimensions does not impact the correctness of the
+result, as we are simply swapping the coordinate values of the points. This requires O(|D|n) work, which is negligible</page><page num="8">p
+q
+7
+q
+6
+q
+5
+q
+3
+q
+2
+C
+a
+C
+b
+q
+1
+q
+1
+q
+2
+q
+3
+q
+4
+q
+5
+q
+6
+p
+r
+s
+q
+7
+q
+4
+
+candidate points
+x
+y
+z
+Fig. 3. Example of the sortidu optimization. We first sort points within each cell by z-coordinate. We then search query point p into
+the list of C
+b 
+to find r and scan and compare points until s is reached.
+when compared to performing the self-join. We denote reordering the data by variance in each dimension as reorder.
+If we index k &lt; n dimensions, but do not use reorder, we simply index the first k dimensions of the input dataset.
+4.3 Searching on an Un-indexed Dimension
+By indexing only k &lt; n dimensions, we reduce the indexing overhead by reducing the number of grid cells, which is
+exponential with k. However, this comes at the cost of reduced filtering power, resulting in more distance calculations.
+In this section we introduce a technique of searching on an un-indexed dimension to further reduce the number of
+necessary distance calculations. Consider an input set with n dimensions that is indexed on k &lt; n dimensions using the
+indexing scheme presented in Section 3.2.1. For a given point p in cell C
+a 
+and neighbor cell C
+b 
+, we compare p to each
+point q ∈ C
+b 
+to determine if p and q are within distance ϵ of each other. Since we have indexed k dimensions, the points
+contained in C
+b 
+are only filtered by these k dimensions. Thus, if we consider dimension u that is not indexed, each point
+in C
+b 
+can have any value in this dimension. Currently, we must perform a distance comparison on all q ∈ C
+b 
+, which
+includes such points that may be very distant from p in dimension u (i.e., |p(u) − q(u)| &gt; ϵ). Therefore, we propose an
+optimization called sortidu to only compare p with q ∈ C
+b 
+if they are within ϵ distance along the u-coordinate. We
+accomplish this by first sorting the points within each cell by increasing u-coordinate. When comparing p with all
+q ∈ C
+b 
+, we first search p(u) into the points in C
+b 
+to find the point r with the smallest u-coordinate that is still within ϵ
+of p (i.e, |p(u) − r (u)| ≤ ϵ). We then scan points in C
+b 
+by increasing u coordinate until we reach point s with more than
+the ϵ distance in the u-coordinate (i.e., |p(u) − s(u)| &gt; ϵ). Figure 3 illustrates an example of the sortidu optimization.
+In this example, the z-axis is not indexed and we use the sortidu to reduce the number of candidate points we have to
+consider, from q
+1
+, q
+2
+, . . . , q
+7 
+(7 points) to q
+2
+, . . . , q
+5 
+(4 points). We note that we only perform this optimization on one
+un-indexed dimension and all other un-indexed dimensions remain unfiltered.
+If every point in C
+b 
+is within ϵ from p, the sortidu optimization provides no performance improvement. However,
+for reasonably small ϵ values, this can significantly reduce the number of candidate points. This comes at the cost of
+sorting and searching. If we consider that cell C
+b 
+has |C
+b 
+| points, we must perform |C
+b 
+| distance calculations without
+the sortidu optimization. However, sortidu reduces this to (log |C
+b 
+| + m) calculations, where m is the number of
+points in C
+b 
+with u-coordinate within ϵ of p(u). While sortidu requires that we sort points within each cell, we only
+have to sort once for all point evaluations. We can apply the sortidu optimization even when we index all dimensions</page><page num="10">Algorithm 1 GPU-Join Algorithm
+1: procedure GPU-Join(D, ϵ , n, k, b
+s 
+)
+2: D ← importData()
+3: D ← reorderVariance(D)
+4: G ← constructIndex(D, k)
+5: n
+b 
+← computeNumBatches(b
+s 
+)
+6: result ← ∅
+7: for i ∈ 1,. . . ,n
+b 
+do
+8: kernelResult[i] ← selfJoinKernel(D, G, n, k, ϵ )
+9: result ← result ∪ constructNeighborTable(kernelResult[i])
+10: return
+11: procedure SelfJoinKernel(D, G, n, k, ϵ )
+12: resultSet ← ∅
+13: gid ← getGlobalId()
+14: point ← getPoint(gid, D)
+15: adjCells ← getAdjCells(G, k, point)
+16: for cell ∈ adjCells.min,. . . ,adjCells.max do
+17: pntResult ← pntResult ∪ calcDistancePts(point, cell, n, ϵ )
+18: resultSet ← resultSet ∪ pntResult
+19: return resultSet
+1
+2
+3
+4
+5
+. . .
+HtoD 
+Kernel 
+DtoH 
+Table
+HtoD 
+Kernel 
+DtoH 
+Table
+HtoD 
+Kernel 
+DtoH 
+Table
+HtoD 
+Kernel 
+DtoH 
+Table
+HtoD 
+Kernel 
+DtoH 
+Table
+Time
+Batch Num.
+Fig. 4. Illustrative example of pipelined operations in GPU-Join. HtoD denotes a host-to-device data transfer, Kernel denotes execution
+of the GPU kernel, DtoH denotes a device-to-host data transfer, and Table denotes constructing the neighbor table on the host.
+5 EXPERIMENTAL EVALUATION
+5.1 Datasets
+We utilize both real and synthetic datasets to evaluate the performance of our algorithm and optimizations, which
+we summarize in Table 1 and describe below. We use some of the real-world datasets to evaluate both LSS [ 32 ] and
+SuperEGO [27 ]. We normalize all datasets in the range [0,1] to conform to the requirements of SuperEGO. Real-world
+datasets were obtained from UCI ML repository [31].
+• Co-occurrence Texture, CoocTexture– 16-D image features, and 68,040 points. Used in LSS and SuperEGO.
+• Color Histogram, ColorHist– 32-D image features, and 68,040 points. Used in LSS and SuperEGO.
+• Layout Histogram, LayoutHist– 32-D image features and 66,616 points. Used in LSS and SuperEGO.
+• 
+Supersymmetry Particles, SuSy 18-D – kinematic properties of 5 million particles from the Large Hadron Collider.
+Used for classification [5].
+• Song Prediction Dataset, Songs 90-D – extracted features of songs, with 415,345 points. Used for classification [8].
+We use real-world datasets to evaluate performance of high dimensional self-joins, as synthetic datasets are not
+representative of real-world data. However, the similarity joins in the literature (and our work) rely on statistical
+techniques for improving index efficacy. The worst case scenario for our algorithm is when there is low variance in
+each dimension, reducing the impact of dimensionality reordering (Section 4.2). To evaluate performance on such</page><page num="11">worst-case inputs, we generate synthetic datasets with an exponential distribution with λ = 40. We generate 16, 32, and
+64-dimensional synthetic datasets, denoted Syn-, with coordinates in [0,1].
+5.2 Experimental Methodology
+The GPU code is wrien in CUDA and executed on an NVIDIA GP100 GPU with 16 GiB of global memory. The
+C/C++ host code is compiled with the GNU compiler (v. 5.4.0) and O3 optimization flag. The platform that executes all
+experiments has 2× E5-2620 v4 2.1 GHz CPUs, with each having 8 cores (16 total cores). Our self-join CUDA kernel
+uses 256 threads per block, and uses 32-bit floats for consistency with SuperEGO. We exclude the time to load the
+dataset and construct the index. We include the time to execute the self-join, store the result set on the host and other
+host-side operations, and perform the dimensionality reordering. Thus, we include the response time of components
+used in other works to make a fair comparison between approaches.
+We perform experiments using a series of datasets and ϵ values such that we do not have too many (e.g., |D|
+2
+) or too
+few (e.g., 0) total results. Thus, the values of ϵ should represent values that are pragmatically useful to a user of the
+self-join algorithm. For instance, when using the self-join for data analysis, it is not useful to return a large fraction of
+the total database, D. We denote the selectivity of the self-join as follows:
+S
+D 
+= 
+|R| − |D|
+|D| 
+, (1)
+where |R| is the total result set size. This yields the average number of points within ϵ, excluding a point, p
+a 
+, finding
+itself (i.e., a result tuple: (p
+a 
+∈ D, p
+a 
+∈ D)). We report the selectivity in our plots so that our results can be reproduced
+by other researchers and to demonstrate that the respective experimental scenario is meaningful. Our experiments
+cover a range of ϵ values that include those used by Kalashnikov [27] to evaluate SuperEGO.
+5.3 State-of-the-art Implementation (SuperEGO)
+Super-EGO [27 ] performs fast self-joins on multidimensional data and has been shown to outperform other algorithms
+on low and high dimensional data. We use a multi-threaded implementation of Super-EGO, using 16 threads on 16
+physical cores (the maximum number of cores on our platform). We normalize the datasets in the range [0,1] in each
+dimension, as needed by the algorithm. We compute the total time using the time to ego-sort and join on 32-bit floats
+and exclude the other components (e.g., loading the dataset and indexing). We ensure self-join correctness by comparing
+the results of GPU-Join and SuperEGO. We are grateful to D. Kalashnikov for making SuperEGO publicly available.
+5.4 Performance on Datasets in the SuperEgo Paper
+As ϵ increases, the workload of the self-join increases for two reasons: (i) index searches are more exhaustive as more
+data overlaps the query point being searched; and (ii) larger candidate sets need to be filtered using Euclidean distance
+Table 1. Dataset, data points, |D |, and dimension, n.
+Dataset |D| n Dataset |D| n
+CoocTexture 68,040 16 Songs 515,345 90
+LayoutHist 66,616 32 Syn16D2M 2 × 10
+6 
+16
+ColorHist 68,040 32 Syn32D2M 2 × 10
+6 
+32
+SuSy 5 × 10
+6 
+18 Syn64D2M 2 × 10
+6 
+64</page><page num="20">Syn16D2M
+0 16 32 48 64 80 96 112128
+GPUs (|p|)
+0.0
+0.1
+0.2
+Time (s)
+(a) Syn16D2M
+SuSy
+0 16 32 48 64 80 96 112128
+GPUs (|p|)
+0.0
+0.1
+0.2
+0.3
+0.4
+0.5
+Time (s)
+ (b) SuSy
+Fig. 12. Communication cost of the entity partitioning strategy on up to |p | = 128 nodes for (a) Syn16D2M; and (b) SuSy.
+excellent dimensionality reordering properties that are able to significantly improve the performance of the algorithm.
+However, if there is very lile variance in the data distribution, then our GPU-Join approach typically yields substantial
+performance gains over SuperEGO. Thus, the performance of GPU-Join may be less sensitive to the data distribution
+than SuperEGO. On datasets that have been used to compare the performance of self-joins in other works (ColorHist,
+LayoutHist, and CoocTexture) GPU-Join outperforms SuperEGO to a larger degree on the larger values of ϵ (Table 3).
+This occurs because on smaller values of ϵ, the GPU’s resources are not saturated, and thus GPU-Join only yields a
+minor performance advantage over SuperEGO.
+The self-join is a widely used operation in many data-intensive algorithms. We show that a grid-based index that is
+suited for the GPU, combined with index dimensionality reduction (indexing k &lt; n), reordering the data by the variance
+in each dimension (reorder), and distance calculation reduction (sortidu and shortc), outperforms the state-of-the-art
+self-join, SuperEGO. We also show initial insights into multi-GPU and distributed-memory implementations that
+are expected to have low communication overheads (over PCIe or between distributed-memory nodes). By utilizing
+an entity partitioning strategy, we are able to balance the workload across many GPUs, which we expect to enable
+near-ideal speedups on up to 128 nodes.
+Future work includes developing a performance model to further investigate the effects of our optimizations, and
+improving the performance of the self-join on small workloads.
+Table 3. Summary of the speedup (or slowdown) of GPU-Join over SuperEGO on all datasets for the smallest and largest values of ϵ
+in the corresponding figures in Section 5.
+Dataset ϵ Speedup ϵ Speedup
+ColorHist 0.05 1.13 0.50 5.79
+LayoutHist 0.05 1.36 0.50 5.49
+CoocTexture 0.05 3.65 0.20 4.13
+SuSy 0.01 1.61 0.02 1.07
+Songs 0.005 1.53 0.01 0.92
+Syn16D2M 0.03 1.84 0.05 5.46
+Syn32D2M 0.08 8.25 0.10 7.50
+Syn64D2M 0.16 7.86 0.18 5.63</page><page num="21">REFERENCES
+[1] 
+Rakesh Agrawal, Christos Faloutsos, and Arun Swami. 1993. Efficient similarity search in sequence databases. Foundations of data organization and
+algorithms (1993), 69–84.
+[2] Alexandr Andoni and Piotr Indyk. 2006. Near-optimal hashing algorithms for approximate nearest neighbor in high dimensions. In IEEE Symposium
+on Foundations of Computer Science. 459–468.
+[3] Mihael Ankerst, Markus M. Breunig, Hans-Peter Kriegel, and J 
+¨
+org Sander. 1999. OPTICS: Ordering Points to Identify the Clustering Structure. In
+Proc. of the ACM SIGMOD Intl. Conf. on Management of Data. 49–60.
+[4] 
+Arvind Arasu, Venkatesh Ganti, and Raghav Kaushik. 2006. Efficient Exact Set-similarity Joins. In Proc. of the 32nd Intl. Conf. on Very Large Data
+Bases. 918–929.
+[5] P. Baldi, P. Sadowski, and D. Whiteson. 2014. Searching for exotic particles in high-energy physics with deep learning. Nature Communications 5,
+Article 4308 (July 2014), 4308 pages. arXiv:hep-ph/1402.4735
+[6] 
+Roberto J. Bayardo, Yiming Ma, and Ramakrishnan Srikant. 2007. Scaling Up All Pairs Similarity Search. In Proc. of the 16th Intl. Conf. on World
+Wide Web. 131–140.
+[7] Richard E Bellman. 1961. Adaptive control processes: a guided tour. Princeton university press.
+[8] Thierry Bertin-Mahieux, Daniel P.W. Ellis, Brian Whitman, and Paul Lamere. 2011. The Million Song Dataset. In Proc. of the 12th Intl. Conf. on Music
+Information Retrieval.
+[9] Christian B 
+¨
+ohm, Bernhard Braunm 
+¨
+uller, Markus Breunig, and Hans-Peter Kriegel. 2000. High Performance Clustering Based on the Similarity Join.
+In Proc. of the Ninth Intl. Conf. on Information and Knowledge Management. 298–305.
+[10] 
+Christian B 
+¨
+ohm, Bernhard Braunm 
+¨
+uller, Florian Krebs, and Hans-Peter Kriegel. 2001. Epsilon grid order: An algorithm for the similarity join on
+massive high-dimensional data. In ACM SIGMOD Record, Vol. 30. 379–388.
+[11] 
+C. Bohm and H. P. Kriegel. 2001. A cost model and index architecture for the similarity join. In Proc. 17th Intl. Conf. on Data Engineering. 411–420.
+[12] Christian B 
+¨
+ohm, Robert Noll, Claudia Plant, and Andrew Zherdin. 2009. Index-supported Similarity Join on Graphics Processors. In BTW. 57–66.
+[13] Brent Bryan, Frederick Eberhardt, and Christos Faloutsos. 2008. Compact similarity joins. In IEEE 24th Intl. Conf. on Data Engineering. 346–355.
+[14] Jeffrey Dean and Sanjay Ghemawat. 2008. MapReduce: simplified data processing on large clusters. Commun. ACM 51, 1 (2008), 107–113.
+[15] 
+Jens-Peter Dirich and Bernhard Seeger. 2001. GESS: A Scalable Similarity-join Algorithm for Mining Large Data Sets in High Dimensional Spaces.
+In Proc. of the ACM Intl. Conf. on Knowledge Discovery and Data Mining. 47–56.
+[16] 
+Robert J. Durrant and Ata Kab 
+´
+an. 2009. When is ‘Nearest Neighbour’ Meaningful: A Converse Theorem and Implications. Journal of Complexity 25,
+4 (2009), 385–397.
+[17] Martin Ester, Hans Kriegel, J 
+¨
+org Sander, and Xiaowei Xu. 1996. A density-based algorithm for discovering clusters in large spatial databases with
+noise. In Proc. of the 2nd KDD. 226–231.
+[18] D. Foley and J. Danskin. 2017. Ultra-Performance Pascal GPU and NVLink Interconnect. IEEE Micro 37, 2 (Mar 2017), 7–17.
+[19] 
+S. Fries, B. Boden, G. Stepien, and T. Seidl. 2014. PHiDJ: Parallel similarity self-join for high-dimensional vector data with MapReduce. In 2014 IEEE
+30th International Conference on Data Engineering. 796–807.
+[20] Michael Gowanlock and Henri Casanova. 2015. Indexing of Spatiotemporal Trajectories for Efficient Distance Threshold Similarity Searches on the
+GPU. In Proc. of the 29th IEEE Intl. Parallel &amp; Distributed Processing Symposium. 387–396.
+[21] 
+Michael Gowanlock and Henri Casanova. 2016. Distance Threshold Similarity Searches: Efficient Trajectory Indexing on the GPU. IEEE Transactions
+on Parallel and Distributed Systems 27, 9 (2016), 2533–2545.
+[22] 
+Michael Gowanlock and Ben Karsin. 2018. GPU Accelerated Self-join for the Distance Similarity Metric. In IEEE Intl. Workshop on High-Performance
+Big Data, Deep Learning, and Cloud Computing, in IEEE IPDPS Workshops, accepted for publication.
+[23] Michael Gowanlock, Cody M Rude, David M Blair, Justin D Li, and Victor Pankratius. 2017. Clustering Throughput Optimization on the GPU. In
+Proc. of the 31st IEEE Intl. Parallel and Distributed Processing Symposium. 832–841.
+[24] 
+Antonin Guman. 1984. R-trees: a dynamic index structure for spatial searching. In Proc. of ACM SIGMOD Intl. Conf. on Management of Data. 47–57.
+[25] Edwin H. Jacox and Hanan Samet. 2007. Spatial Join Techniques. ACM Trans. Database Syst. 32, 1, Article 7 (March 2007).
+[26] Edwin H. Jacox and Hanan Samet. 2008. Metric Space Similarity Joins. ACM Trans. Database Syst. 33, 2, Article 7 (2008), 38 pages.
+[27] Dmitri V Kalashnikov. 2013. Super-EGO: fast multi-dimensional similarity join. The VLDB Journal 22, 4 (2013), 561–585.
+[28] 
+Jinwoong Kim, Won-Ki Jeong, and Beomseok Nam. 2015. Exploiting Massive Parallelism for Indexing Multi-Dimensional Datasets on the GPU.
+IEEE Transactions on Parallel and Distributed Systems 26, 8 (2015), 2258–2271.
+[29] Jinwoong Kim and Beomseok Nam. 2018. Co-processing heterogeneous parallel index for multi-dimensional datasets. J. Parallel and Distrib. Comput.
+113 (2018), 195 – 203.
+[30] 
+Krzysztof Koperski and Jiawei Han. 1995. Discovery of spatial association rules in geographic information databases. In Advances in spatial databases.
+Springer, 47–66.
+[31] M. Lichman. 2013. UCI Machine Learning Repository. (2013).
+[32] Michael D Lieberman, Jagan Sankaranarayanan, and Hanan Samet. 2008. A fast similarity join algorithm using graphics processing units. In IEEE
+24th Intl. Conf. on Data Engineering. 1111–1120.
+[33] Nancy A. Lynch. 1996. Distributed Algorithms. Morgan Kaufmann Publishers Inc., San Francisco, CA, USA.</page></paper>

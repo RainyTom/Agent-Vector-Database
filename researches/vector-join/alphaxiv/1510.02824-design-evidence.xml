@@ -1,0 +1,1455 @@
+<paper id="1510.02824v3"><page num="1">On the Complexity of Inner Product Similarity Join
+∗
+Thomas D. Ahle
+IT University of Copenhagen
+thdy@itu.dk
+Rasmus Pagh
+IT University of Copenhagen
+pagh@itu.dk
+Ilya Razenshteyn
+MIT CSAIL
+ilyaraz@mit.edu
+Francesco Silvestri
+IT University of Copenhagen
+fras@itu.dk
+ABSTRACT
+A number of tasks in classification, information retrieval,
+recommendation systems, and record linkage reduce to the
+core problem of inner product similarity join (IPS join): iden-
+tifying pairs of vectors in a collection that have a sufficiently
+large inner product. IPS join is well understood when vectors
+are normalized and some approximation of inner products is
+allowed. However, the general case where vectors may have
+any length appears much more challenging. Recently, new
+upper bounds based on asymmetric locality-sensitive hashing
+(ALSH) and asymmetric embeddings have emerged, but little
+has been known on the lower bound side. In this paper we
+initiate a systematic study of inner product similarity join,
+showing new lower and upper bounds. Our main results are:
+• Approximation hardness of IPS join in subquadratic
+time, assuming the strong exponential time hypothesis.
+• New upper and lower bounds for (A)LSH-based algo-
+rithms. In particular, we show that asymmetry can be
+avoided by relaxing the LSH definition to only consider
+the collision probability of distinct elements.
+• A new indexing method for IPS based on linear sketches,
+implying that our hardness results are not far from
+being tight.
+Our technical contributions include new asymmetric embed-
+dings that may be of independent interest. At the conceptual
+level we strive to provide greater clarity, for example by dis-
+tinguishing among signed and unsigned variants of IPS join
+and shedding new light on the effect of asymmetry.
+1. INTRODUCTION
+This paper is concerned with inner product similarity
+join (IPS join) where, given two sets P, Q ⊆ R
+d
+, the
+task is to find for each point q ∈ Q at least one pair
+1
+(p, q) ∈ P × Q where the inner product (or its absolute
+value) is larger than a given threshold s. Our results
+apply also to the problem where for each q ∈ Q we seek
+∗
+The research leading to these results has received funding
+from the European Research Council under the European
+Union’s Seventh Framework Programme (FP7/2007-2013) /
+ERC grant agreement no. 614331.
+1
+Since our focus is on lower bounds, we do not consider the
+more general problem of finding all such pairs. Also note
+that from an upper bound side, it is common to limit the
+number of occurrences of each tuple in a join result to a
+given number k.
+the vector p ∈ P that maximizes the inner product, a
+search problem known in literature as maximum inner
+product search (MIPS) [43, 45].
+Motivation
+Similarity joins have been widely studied in the database
+and information retrieval communities as a mechanism
+for linking noisy or incomplete data. Considerable
+progress, in theory and practice, has been made to ad-
+dress metric spaces where the triangle inequality can
+be used to prune the search space (see e.g. [6, 61]). In
+particular, it is now known that in many cases it is
+possible to improve upon the quadratic time complexity
+of a naive algorithm that explicitly considers all pairs of
+tuples. The most prominent technique used to achieve
+provably subquadratic running time is locality-sensitive
+hashing (LSH) [25, 24]. In the database community
+the similarity join problem was originally motivated by
+applications in data cleaning [17, 10]. However, since
+then it has become clear that similarity join is relevant
+for a range of other data processing applications such as
+clustering, semi-supervised learning, query refinement,
+and collaborative filtering (see e.g. [44] for references
+and further examples). We refer to the recent book
+by Augsten and B¨ohlen [11] for more background on
+similarity join algorithms in database systems.
+Inner product is an important measure of similarity be-
+tween real vectors, particularly in information retrieval
+and machine learning contexts [31, 48], but not captured
+by techniques for metric similarity joins such as [26, 61].
+Teflioudi et al. [50] studied the IPS join problem moti-
+vated by applications in recommender systems based on
+latent-factor models. In this setting, a user and the avail-
+able items are represented as vectors and the preference
+of a user for an item is given by the inner product of the
+two associated vectors. Other examples of applications
+for IPS join are object detection [23] and multi-class
+prediction [22, 28]. IPS join also captures the so-called
+maximum kernel search, a general machine learning ap-
+proach with applications such as image matching and
+finding similar protein/DNA sequences [20].
+Challenges of IPS join
+Large inner products do not correspond to close vectors
+in any metric on the vector space, so metric space tech-
+niques cannot directly be used. In fact, there are reasons
+arXiv:1510.02824v3 [cs.DS] 7 Apr 2016</page><page num="2">to believe that inner product similarity may be inher-
+ently more difficult than other kinds of similarity search:
+Williams [56, 4] has shown that a truly subquadratic
+exact algorithm for IPS join would contradict the Strong
+Exponential Time Hypothesis, an important conjecture
+in computational complexity. On the upper bound side
+new reductions of (special cases of) approximate IPS
+join to fast matrix multiplication have appeared [51, 29],
+resulting in truly subquadratic algorithms even with ap-
+proximation factors asymptotically close to 1. However,
+the approach of reducing to fast matrix multiplication
+does not seem to lead to practical algorithms, since
+fast matrix multiplication algorithms are currently not
+competitive on realistic input sizes. From a theoretical
+viewpoint it is of interest to determine how far this kind
+of technique might take us by extending lower bounds
+for exact IPS join to the approximate case.
+Another approach to IPS join would be to use LSH,
+which has shown its utility in practice. The difficulty
+is that inner products do not admit locality-sensitive
+hashing as defined by Indyk and Motwani [45, Theorem
+1]. Recently there has been progress on asymmetric LSH
+methods for inner products, resulting in subquadratic
+IPS join algorithms in many settings. The idea is to
+consider collisions between two different hash functions,
+using one hash function for query vectors and another
+hash function for data vectors [45, 46, 39]. However,
+existing ALSH methods give very weak guarantees in
+situations where inner products are small relative to
+the lengths of vectors. It is therefore highly relevant
+to determine the possibilities and limitations of this
+approach.
+Problem definitions
+We are interested in two variants of IPS join that slightly
+differ in the formulation of the objective function. For
+notational simplicity, we omit the term IPS and we
+simply refer to IPS join as join. Let s &gt; 0 be a given
+value. The first variant is the signed join, where the
+goal is to find at least one pair (p, q) ∈ P × Q for each
+point q ∈ Q with p
+T 
+q ≥ s. The second variant is the
+unsigned join which finds, for each point q ∈ Q, at least
+one pair (p, q) ∈ P ×Q where |p
+T 
+q| ≥ s. We observe that
+the unsigned version can be solved with the signed one
+by computing the join between P and Q and between
+P and −Q, and then returning only pairs where the
+absolute inner products are larger than s. Signed join is
+of interest when searching for similar or preferred items
+with a positive correlation, like in recommender systems.
+On the other hand, unsigned join can be used when
+studying relations among phenomena where even a large
+negative correlation is of interest. We note that previous
+works do not make the distinction between the signed
+and unsigned versions since they focus on settings where
+there are no negative dot products.
+Our focus is on approximate algorithms for signed
+and unsigned joins. Indeed, approximate algorithms
+allow us to overcome, at least in some cases, the curse of
+dimensionality without significantly affecting the final
+results. Approximate signed joins are defined as follows.
+Definition 1 (Approximate signed join). Given
+two point sets P , Q and values 0 &lt; c &lt; 1 and s &gt; 0, the
+signed (cs, s) join returns, for each q ∈ Q, at least one
+pair (p, q) ∈ P × Q with p
+T 
+q ≥ cs if there exists p
+′ 
+∈ P
+such that p
+′T 
+q ≥ s. No guarantee is provided for q ∈ Q
+where there is no p
+′ 
+∈ P with p
+′T 
+q ≥ s.
+The unsigned (cs, s) join is defined analogously by taking
+the absolute value of dot products. Indexing versions of
+signed/unsigned exact/approximate joins can be defined
+in a similar way. For example, the signed (cs, s) search
+is defined as follows: given a set P ⊂ R
+d 
+of n vectors,
+construct a data structure that efficiently returns a vec-
+tor p ∈ P such that p
+T 
+q &gt; cs for any given query vector
+q ∈ R
+d
+, under the promise that there is a point p
+′ 
+∈ P
+such that p
+T 
+q ≥ s (a similar definition holds for the
+unsigned case).
+As already mentioned, LSH is often used for solving
+similarity joins. In this paper, we use the following
+definition of asymmetric LSH based on the definition
+in [45].
+Definition 2 (Asymmetric LSH). Let U
+p 
+denote
+the data domain and U
+q 
+the query domain. Consider a
+family H of pairs of hash functions h = (h
+p
+(·), h
+q 
+(·)).
+Then H is said (s, cs, P
+1
+, P
+2
+)-asymmetric LSH for a sim-
+ilarity function sim if for any p ∈ U
+p 
+and q ∈ U
+q 
+we
+have:
+1. if sim(p, q) ≥ s then Pr
+H
+[h
+p
+(p) = h
+q 
+(q)] ≥ P
+1
+;
+2. if sim(p, q) &lt; cs then Pr
+H
+[h
+p
+(p) = h
+q 
+(q)] ≤ P
+2
+.
+When h
+p
+(·) = h
+q 
+(·), we get the traditional (symmetric)
+LSH definition. The ρ value of an (asymmetric) LSH is
+defined as usual with ρ = log P
+1
+/ log P
+2 
+[6]. Two vectors
+p ∈ U
+p 
+and q ∈ U
+q 
+are said to collide under a hash
+function from H if h
+p
+(p) = h
+q 
+(q).
+1.1 Overview of results
+Hardness results
+The first results of the paper are conditional lower
+bounds for approximate signed and unsigned IPS join
+that rely on a conjecture about the Orthogonal Vectors
+Problem (OVP). This problem consists in determining if
+two sets A, B ⊆ {0, 1}
+d
+, each one with n vectors, contain
+x ∈ A and y ∈ B such that x
+T 
+y = 0. It is conjectured
+that there cannot exist an algorithm that solves OVP
+in O 
+(
+n
+2−
+) 
+time as soon as d = ω (log n), for any given
+constant  &gt; 0. Indeed, such an algorithm would imply
+that the Strong Exponential Time Hypothesis (SETH)
+is true [56].
+Many recent interesting hardness results rely on re-
+ductions from OVP, however we believe ours is the first
+example of using the conjecture to show the conditional
+hardness for an approximate problem. In particular we
+show the following result:
+Theorem 1. Let α &gt; 0 be given and consider sets
+of vectors P, Q with |Q| = n, |P | = n
+α
+. Suppose there</page><page num="4">Problem Hard approx. Permissible approx. Hard approx. Permissible approx.
+Signed (cs, s) over {−1, 1}
+d 
+c &gt; 0 - 
+log(s/d)
+log(cs/d) 
+&gt; 0 -
+Unsigned (cs, s) over {−1, 1}
+d 
+c ≥ e
+−o(
+√
+log n
+log log n 
+) 
+c &lt; n
+− 
+[29] 
+log(s/d)
+log(cs/d) 
+≥ 1 − o( 
+1
+log n 
+) [29] 
+log(s/d)
+log(cs/d) 
+= 1 −  [29]
+c &lt; n
+− 
+log(s/d)
+log(cs/d) 
+≥ 1 − o( 
+1
+√
+log n 
+) 
+log s/d
+log cs/d 
+= 1/2 − 
+Unsigned (cs, s) over {0, 1}
+d 
+c ≥ 1 − o(1) c &lt; n
+− 
+log s/d
+log cs/d 
+≥ 1 − o( 
+1
+log n 
+) 
+log s/d
+log cs/d 
+= 1 − 
+Table 1: The table describes the ranges of approximations that are hard, when parametrized in terms of c (second and third
+column) or log (s/d)/ log (cs/d) ratio (fourth and fifth column). Any algorithm for subquadratic join, which overlap with these
+ranges, would contradict the OVP. The permissible approximations are those ranges for which truly subquadratic algorithms
+are known. The upper bounds cited to [29] use fast matrix multiplication, whereas the rest don’t and are usable as data
+structures. The bounds not cited elsewhere are new in this paper, though we are aware that other people have noted the
+hardness of signed {−1, 1} join and the data structure for {0, 1} join.
+1. if d ≥ 1 and s ≤ min{cU, U/(4
+√
+d}, we have
+P
+1 
+− P
+2 
+= O
+(
+1/log(d log
+1/c
+(U/s))
+)
+for signed and
+unsigned IPS;
+2. 
+if d ≥ 2 and s ≤ U/(2d), we have P
+1 
+− P
+2 
+=
+O (1/log(dU/(s(1 − c)))) for signed IPS;
+3. if d &gt; Θ 
+(
+U 
+5
+/(c
+2
+s
+5
+)
+) 
+and s ≤ U/8, we have P
+1 
+−
+P
+2 
+= O
+(
+√
+s/U
+)
+for signed and unsigned IPS.
+It follows that, for any given dimension d, there cannot
+exist an asymmetric LSH when the query domain is
+unbounded.
+Discussion. The upper bounds for P
+1 
+− P
+2 
+translate
+into lower bounds for the ρ factor, as soon as P
+2 
+is fixed.
+To the best of our knowledge, this is the first lower
+bound on ρ that holds for asymmetric LSH. Indeed,
+previous results [37, 40] have investigated lower bounds
+for symmetric LSH and it is not clear if they can be
+extended to the asymmetric case.
+Techniques. The starting point of our proof is the
+same as in [39]: Use a collision matrix given by two
+sequences of data and query vectors that force the gap
+to be small. The proof in [39] then applies an asymptotic
+analysis of the margin complexity of this matrix [49],
+and it shows that for any given value of P
+1 
+− P
+2 
+there
+are sufficiently large data and query domains for which
+the gap must be smaller. Unfortunately, due to their
+analysis, an upper bound on the gap for a given radius
+U of the query domain is not possible, and so the result
+does not rule out very large gaps for small domains. Our
+method also highlights a dependency of the gap on the
+dimension, which is missing in [39]. In addition, our
+proof holds for d = 1 and only uses purely combinatorial
+arguments.
+IPS upper bounds
+In the third part we provide some insights on the upper
+bound side. We first show that it is possible to improve
+the asymmetric LSH in [39, 46] by just plugging the best
+known data structure for Approximate Near Neighbor
+for `
+2 
+on a sphere [9] into the reduction in [39, 12]. With
+data/query points in the unit ball, this LSH reaches
+ρ = (1 − s)/(1 + (1 − 2c)s). In the {0, 1} domain, this
+LSH improves upon the state of the art [46] for some
+ranges of c and s.
+Then we show how to circumvent the impossibility
+results in [39, 45] by showing that there exists a sym-
+metric LSH when the data and query space coincide by
+allowing the bounds on collision probability to not hold
+when the data and query vectors are identical.
+We conclude by describing a data structure based on
+the linear sketches for `
+p 
+in [5] for unsigned (cs, s) search:
+for any given 0 &lt; κ ≤ 1/2, the data structure yields a
+c = 1/n
+κ 
+approximation with 
+˜
+O 
+(
+dn
+2−2/κ
+) 
+construction
+time and 
+˜
+O 
+(
+dn
+1−2/κ
+) 
+query time. Theorem 1 suggests
+that we cannot substantially improve the approximation
+with similar performance.
+The last data structure allows us to reach truly sub-
+quadratic time for c = 1/n
+κ 
+for the unsigned version in
+the {0, 1} and {−1, 1} domains for all value s. We note
+that the result in [29] also reaches subquadtratic time
+for the {−1, 1} case. However, it exploits fast matrix
+multiplication, whereas our data structure does not.
+1.2 Previous work
+Similarity join
+Similarity join problems have been extensively studied in
+the database literature (e.g. [17, 18, 19, 26, 27, 34, 36, 47,
+52, 53, 58]), as well as in information retrieval (e.g. [14,
+21, 59]), and knowledge discovery (e.g. [3, 13, 54, 60, 62]).
+Most of the literature considers algorithms for particular
+metrics (where the task is to join tuples that are near
+according to the metric), or particular application areas
+(e.g. near-duplicate detection). A distinction is made
+between methods that approximate distances in the
+sense that we only care about distances up to some
+factor c &gt; 1, and methods that consider exact distances.
+Known exact methods do not guarantee subquadratic
+running time. It was recently shown how approximate
+LSH-based similarity join can be made I/O-efficient [41].</page><page num="7">is a function of the original inner product:
+f
+0
+(x)
+T 
+g
+0
+(y) = 1
+f
+1
+(x)
+T 
+g
+1
+(y) = x
+T 
+y
+f
+q 
+(x)
+T 
+g
+q 
+(y) = 2x
+T 
+y f
+q−1
+(x)
+T 
+g
+q−1
+(y)
+− (2d)
+2
+f
+q−2
+(x)
+T 
+g
+q−2
+(y)
+Indeed it may be verified from the recursive defini-
+tion of T
+q 
+that f
+q 
+(x)
+T 
+g
+q 
+(y) = (2d)
+n
+T
+q 
+(x
+T 
+y/2d) as
+wanted.
+• 
+Let d
+q 
+be the dimension of f
+q 
+(x) and g
+q 
+(y). Then
+we have:
+d
+0 
+= 1
+d
+1 
+= 4d − 4
+d
+q 
+= 2(4d − 4)d
+q−1 
++ (2d)
+2
+d
+q−2
+It can be verified that d
+q 
+≤ (9d)
+q 
+for any q ≥ 0
+and d ≥ 8. Interestingly the (2d)
+2 
+concatenations
+don’t increase d
+q 
+significantly, while d
+2+ 
+for any
+ &gt; 0 would have killed the simple exponential
+dependency.
+• 
+Finally, with dynamic programming, we can com-
+pute the embeddings in linear time in the output
+dimension. This follows from induction over q.
+Putting the above observations together, we have for
+any integer q ≥ 0 a (d, (9d)
+q 
+, (2d)
+q 
+, (2d)
+q 
+T
+q 
+(1 + 1/d))
+embedding. By the aforementioned properties of the
+Chebyshev polynomials, we have the desired embedding.
+We note that the Chebyshev embedding proposed by
+Valiant [51] can provide similar results; however, our
+construction is deterministic, while Valiant’s is random-
+ized.
+(Embedding 3) The third embedding maps into {0, 1}.
+The difficulty here is that without −1, we cannot express
+subtraction as in the previous argument. It turns out
+however, that we can construct the following polynomial:
+(1 − x
+1
+y
+1
+)(1 − x
+2
+y
+2
+) · · · (1 − x
+d
+y
+d
+)
+since {0, 1} is closed under tensoring and
+1 − x
+i
+y
+i 
+= (1 − x
+i
+, 1)
+T 
+(y
+i
+, 1 − y
+i
+)
+where 1 − x
+i
+, y
+i 
+and 1 − y
+i 
+are both in {0, 1}. The
+polynomial has the property of being 1 exactly when
+the two vectors are orthogonal and 0 otherwise.
+However we cannot use it directly with Lemma 2, as
+it blows up the dimension too much, d
+2 
+= 2
+d
+1 
+. Instead
+we “chop up” the polynomial in k chunks and take their
+sum:
+k−1
+∑
+i=0
+d/k
+∏
+j=1
+(1 − x
+ik/d+j 
+y
+ik/d+j 
+)
+This uses just d
+2 
+= k2
+d/k 
+dimensions, which is more
+manageble. If k does not divide d, we can let the last
+“chop” of the polynomial be shorter than d/k, which only
+has the effect of making the output dimension slightly
+smaller.
+Finally we get the gap s = k and cs = k − 1. The later
+follows because for non orthogonal vectors, at least one
+chunk has a (1 − x
+i
+y
+i
+) terms which evaluates to zero.
+We thus have a (d, k2
+d/k
+, k − 1, k)-embedding into {0, 1}.
+The explicit construction is thus:
+f (x) :=
+k−1
+
+i=0
+d/k
+
+j=1
+(1 − x
+ik/d+j 
+, 1)
+g(x) :=
+k−1
+
+i=0
+d/k
+
+j=1
+(y
+ik/d+j 
+, 1 − y
+ik/d+j 
+)
+And the running time is linear in the output dimen-
+sion.
+Finally we parametize and prove Theorem 1.
+Proof. 
+(Theorem 1) We first prove the bounds parametrized
+by c. To get the strongest possible results, we want to
+get c as small as possible, while keeping the dimension
+bounded by n
+δ 
+for some δ &gt; 0.
+1. The first embedding is already on the form (d, 2
+o(d)
+, 0, 4),
+showing theorem 1 for signed (0, 4) join, and thus
+any c &gt; 0.
+2. In the second embedding we can take q to be any
+function in o
+( 
+d
+log d
+)
+, giving us a family of (d, 2
+o(d)
+,
+2
+o(d)
+, 2
+o(d)
+e
+o
+( 
+√
+d
+log d
+)
+). Thus by lemma 2, and for a
+small enough d = ω( log n) in OVP, we get that
+even c ≤ e
+−o
+( 
+√
+log n
+log log n
+)
+≤ 1/polylog(n) is hard.
+3. 
+Finally for the third embedding, we can pick any
+k = ω(1) and less than d, to get a family of
+(d, 2
+o(d)
+, k − 1, k) embeddings. Again picking d =
+ω(log n) small enough in OVP, we have by lemma 2
+that c ≤ (k − 1)/k = 1 − 1/k = 1 − o(1) is hard.
+Notice that this means any c not bounded away
+from 1 is hard.
+For the bounds parametrized by log (s)/ log (cs), we
+need to tweak our families slightly differently. This in
+turn allows for hardness for shorter vectors than used
+in the previous results.
+Proof. (Theorem 2)
+For embedding 1 the result follows directly as log (s/d)/ log (cs/d) →
+0 as c → 0.
+We have to remember that the results in theorem 1
+are stated in terms of normalized s. For embedding 2
+we calculate:
+log(s/d
+2
+)
+log(cs/d
+2
+) 
+= 
+q log(2/9) + q/
+√
+d − log 2
+q log(2/9)
+= 1 − 
+1
+log(9/2)
+√
+d 
++ 
+log 2
+q log(9/2)
+= 1 − o
+(
+1/
+√
+log n
+)</page><page num="8">Where in the last step we have taken q = 
+√
+d and
+d = ω(log n) as by the OVP conjecture.
+It is important to notice that we could have taken
+q much larger, and still satisfied lemma 2. However
+that wouldn’t have improved the result, except by more
+quickly vanishing second order asymptitic terms. What
+we instead gain from having d
+2 
+= (9d)
+√
+d 
+is that, as one
+can verify going through the lemma, we show hardness
+for any join algorithm running in time d
+o( 
+log d
+log log
+2 
+d 
+)
+n
+1+α−
+.
+That is, the hardness holds even for algorithms with a
+much higher dependency on the dimension than polyno-
+mial.
+Similarly, we calculate for embedding 3:
+log(s/d
+2
+)
+log(cs/d
+2
+) 
+= 
+log 
+k
+k2
+d/k
+log 
+k−1
+k2
+d/k
+= 1 − 
+k log(1 + 1/(k − 1))
+d + k log(1 + 1/(k − 1))
+= 1 − 1/d + O(1/(kd))
+= 1 − o(1/ log n)
+Where we have taken k = d and d = ω(log n) as by the
+OVP conjecture.
+Taking k = d means that d
+2 
+is only 2d.
+3. LIMITATIONS OF LSH FOR IPS
+We provide an upper bound on the gap between
+P
+1 
+and P
+2 
+for an (s, cs, P
+1
+, P
+2
+)-asymmetric LSH for
+signed/unsigned IPS. For the sake of simplicity we as-
+sume the data and query domains to be the d-dimensional
+balls of radius 1 and U ≥ 1, respectively. The bound
+holds for a fixed set of data vectors, so it applies also to
+data dependent LSH [9]. A consequence of our result
+is that there cannot exist an asymmetric LSH for any
+dimension d ≥ 1 when the set of query vectors is un-
+bounded, getting a result similar to that of [39], which
+however requires even the data space to be unbounded
+and d ≥ 2.
+We firsts show in Lemma 4 that the gap P
+1 
+−P
+2 
+can be
+expressed as a function of the length h of two sequences
+of query and data vectors with suitable collision proper-
+ties. Then we provide the proof of the aforementioned
+Theorem 3, where we derive some of such sequences and
+then apply the lemma.
+Lemma 4. Suppose that there exists a sequence of
+data vectors P = {p
+0
+, . . . , p
+n−1
+} and a sequence of query
+vectors Q = {q
+0
+, . . . , q
+n−1
+} such that q
+T
+i 
+p
+j 
+≥ s if j ≥ i
+and q
+T
+i 
+p
+j 
+≤ cs otherwise (resp., |q
+T
+i 
+p
+j 
+| ≥ s if j ≥ i
+and |q
+T
+i 
+p
+j 
+| ≤ cs otherwise) . Then any (s, cs, P
+1
+, P
+2
+)-
+asymmetric LSH for signed IPS (resp., unsigned IPS)
+must satisfy P
+1 
+− P
+2 
+≤ 1/(8 log n).
+Proof. 
+For the sake of simplicity we assume that
+n = 2
+` 
+− 1 for some ` ≥ 1; the assumption can be
+removed by introducing floor and ceiling operations in
+the proof. Let H denote an (s, cs, P
+1
+, P
+2
+)-asymmetric
+LSH family of hash functions, and let h be a function
+in H. The following argument works for signed and
+unsigned IPS.
+Consider the n × n grid representing the collisions
+between Q × P , that is, a node (i, j) denotes the query-
+data vectors q
+i 
+and p
+j 
+. We say that a node (i, j), with
+0 ≤ i, j &lt; n, collides under h if vectors q
+i 
+and p
+j 
+collide
+under h. By definition of asymmetric LSH, all nodes
+with j ≥ i must collide with probability at least P
+1
+,
+while the remaining nodes collide with probability at
+most P
+2
+. We use lower triangle to refer to the part of
+the grid with j ≥ i and P
+1
+-nodes to refer to the nodes
+within it; we refer to the remaining nodes as P
+2
+-nodes.
+We partition the lower triangle into squares of expo-
+nentially increasing side as shown in Figure 1. Specif-
+ically, we split the lower triangle into squares G
+r,s 
+for
+every r and s with 0 ≤ r &lt; log (n + 1) = ` and 0 ≤
+s &lt; (n + 1)/2
+r+1 
+= 2
+`−r−1
+, where G
+r,s 
+includes all
+nodes in the square of side 2
+r 
+and top-left node ((2s +
+1)2
+r 
+− 1, (2s + 1)2
+r 
+− 1). For a given square G
+r,s
+, we
+define the left squares (resp., top squares) to be the
+set of squares that are on the left (resp., top) of G
+r,s
+.
+We note that the left squares (resp., top squares) con-
+tain 2
+r−i−1 
+squares of side 2
+i 
+for any 0 ≤ i &lt; r and
+all P
+1
+-nodes with s2
+r+1 
+≤ i, j &lt; (2s + 1)2
+r 
+− 1 (resp.,
+(2s + 1)2
+r 
+− 1 &lt; i, j ≤ (s + 1)2
+r+1 
+− 2) .
+We define the mass m
+i,j 
+of a node (i, j) to be the
+collision probability, under H, of q
+i 
+and p
+j 
+. We split
+the mass of a P
+1
+-node into three contributions called
+shared mass, partially shared mass, and proper mass,
+all defined below. Consider each P
+1
+-node (i, j) and each
+function h ∈ H where (i, j) collides. Let G
+r,s 
+be the
+square containing (i, j) and let K
+h,i,j 
+denote the set of
+P
+1
+-nodes (i
+′
+, j
+′
+) on the left side of the same row or on the
+top of the same column of (i, j) (i.e., i
+′ 
+= i and i ≤ j
+′ 
+&lt; j,
+or j
+′ 
+= j and i &lt; i
+′ 
+≤ j) and with the same hash value
+of (i, j) under h (i.e., h(i) = h(j) = h(i
+′
+) = h(j
+′
+)).
+Clearly all nodes in K
+h,i,j 
+collide under h. For the given
+node (i, j), we classify h as follows (see Figure 1 for an
+example):
+• 
+(i, j)-shared function. K
+h,i,j 
+contains at least a
+node (i, j
+′
+) in a left square, and at least a node
+(i
+′
+, j) in a top square.
+• (i, j)-partially shared function. Function h is not
+in case 1 and K
+h,i,j 
+contains at least a node node
+(i, j
+′
+) with j
+′ 
+&lt; j, and at least a node (i
+′
+, j) with
+i
+′ 
+&gt; i. That is, K
+h,i,j 
+contains only nodes in G
+r,s
+and in the left blocks, or only nodes in G
+r,s 
+and in
+the top blocks.
+• 
+(i, j)-proper function. K
+h,i,j 
+contains no points
+(i, j
+′
+) for any i ≤ j
+′ 
+&lt; j or contains no points (i
+′
+, j)
+for any i &lt; i
+′ 
+≤ j. That is, K
+h,i,j 
+cannot contain
+at the same time a point in a left square and a
+point in a top square. Function h is said row (resp.,
+column) proper if there are no nodes in the same
+row (resp., column). We break ties arbitrary but
+consistently if K
+h,i,j 
+is empty.
+The shared mass m
+s
+i,j 
+is the sum of probabilities of all</page><page num="11">log n vectors whose norm is not larger than 
+√
+2sU (1 + )
+(resp., 
+√
+2s/U (1 + )); being n = 2
+√
+U/(8s) 
+the claim
+follows.
+4. UPPER BOUNDS
+This section contains three observations with impli-
+cations for IPS join and its indexing version. We first
+notice in Section 4.1 that by plugging the best known
+LSH for `
+2 
+distance on a sphere [9] into a reduction
+presented in [12, 39], we get a data structure based
+on LSH for signed MIPS with search time exponent
+ρ = (1 − s)/(1 + (1 − 2c)s).
+Then, in Section 4.2, we show how to circumvent the
+results in [39, 45] showing that symmetric LSH is not pos-
+sible when the data and query domains coincide (while
+an asymmetric LSH does exist). We use an slightly
+modified definition of LSH that disregards the collision
+probability of 1 for pairs of identical vectors, and as-
+sume that vectors are represented with finite precision.
+The LSH construction uses explicit incoherent matrices
+built using Reed-Solomon codes [38] to implement a
+symmetric version of the reduction in [12, 39].
+Finally, in Section 4.3 we solve unsigned (cs, s) join
+using linear sketches for `
+p 
+norms from [5]. Given κ ≥ 2
+we obtain a approximation factor c ≥ 1/n
+1/κ 
+using
+˜
+O 
+(
+dn
+2−2/κ
+) 
+time. Although this trade-off is not that
+strong, it is not far from the conditional lower bound in
+Theorem 1.
+4.1 Asymmetric LSH for signed IPS
+We assume the data and query domains to be d-
+dimensional balls with respective radius 1 and U . Vec-
+tors are embedded into a (d + 2)-dimensional unit sphere
+using the asymmetric map as in [39]: a data vector p is
+mapped to (p, 
+√
+1 − ||p||
+2
+, 0), while a query q is mapped
+to (q/U, 0, 
+√
+1 − ||q||
+2
+/U 
+2
+). This transformation just
+scales the inner product by a factor U , and hence signed
+inner product search can be seen as an instance of ANN
+in `
+2 
+with distance threshold r = 
+√
+2(1 − s/U ) and ap-
+proximation c
+′ 
+= 
+√
+(1 − cs/U )/(1 − s/U ). The latter
+can be solved in space O(n
+1+ρ 
++ dn) and query time
+O(n
+ρ
+) using the LSH construction of [9]. We get the
+following ρ value (for the LSH gap as well as for the
+exponent of the running time):
+ρ = 
+1
+2c
+′2 
+− 1 
+= 
+1 − s/U
+1 + (1 − 2c)s/U 
+. (3)
+In Figure 2, we plot the ρ values of three LSH con-
+structions: the one proposed here (with U = 1), the
+one from [39], and the one from [46]. The latter works
+only for binary vectors. We point out that our bound is
+always stronger than the one from [39] and sometimes
+stronger than the one from [46], despite that the latter
+is tailored for binary vectors. The latter conclusion is
+somewhat surprising, since the data structure we obtain
+works for non-binary vectors as well.
+We point out that in practice one may want to use a
+recent LSH family from [7] that—both in theory and in
+practice—is superior to the hyperplane LSH from [16]
+used in [39].
+4.2 Symmetric LSH for almost all vectors
+Neyshabur and Srebro [39] show that an asymmetric
+view on LSH for signed IPS is required. Indeed they
+show that a symmetric LSH for signed IPS does not
+exist when data and query domains are balls of the same
+radius, while an asymmetric LSH does exist. (On the
+other hand, when the data domain is a ball of given
+radius U and the query domain is a sphere of same
+radius, a symmetric LSH does exist.) In this section we
+show that even when data and query spaces coincide a
+nontrivial symmetric LSH does exist if we disregard the
+trivial collision probability of 1 when data and query
+vectors are identical.
+We first show how to reduce signed IPS to the case
+where data and query vectors lie on a unit sphere. The
+reduction is deterministic and maintains inner products
+up to an additive error ε for all vectors x, y with x 6 = y.
+We then plug in any Euclidean LSH for ANN on the
+sphere, for example the one from [9]. This reduction
+treats data and query vectors identically, unlike the one
+from [39], and thus we are able to obtain a symmetric
+LSH.
+Assume that all the coordinates of all the data and
+queries are encoded as k-bit numbers and that the data
+and query vectors are in the unit ball. The idea is the
+following. There are at most N = 2
+O(dk) 
+possible data
+vectors and queries. Imagine a collection of N unit
+vectors v
+1
+, . . . , v
+N 
+such that for every i 6 = j one has
+|v
+T
+i 
+v
+j 
+| ≤ ε. Then, it is easy to check that a map of a
+vector p to f (p) = (p, 
+√
+1 − ‖p‖
+2 
+·v
+p
+) maps a vector from
+a unit ball to a unit sphere and, moreover, for p 6 = q one
+has |f (p)
+T 
+f (q) − p
+T 
+q| ≤ ε.
+What remains is to construct such a collection of vec-
+tors v
+i
+. Moreover, our collection of vectors must be
+explicit in a strong sense: we should be able to com-
+pute v
+u 
+given a vector u (after interpreting it as an
+dk-bit string). Such a constructions are well known,
+e.g., in [38] it is shown how to build such vectors us-
+ing Reed-Solomon codes. The resulting dimension is
+O 
+(
+ε
+−2 
+log N 
+) 
+= O 
+(
+kd/ε
+2
+) 
+[32, 38].
+After performing such a reduction we can apply any
+state-of-the-art LSH (or data structure for ANN) for `
+2
+norm on a sphere, e.g. from [9, 7], with distance threshold
+r
+2 
+= 2(1−s+), approximation factor c
+′2 
+= (1−cs−)/r
+2
+.
+If ε is sufficiently small we get a ρ value close to the
+one in (3). The final result is therefore a symmetric
+LSH for symmetric domains that does not provide any
+collision bound for all pairs (q, p) with q = p since the
+guarantees on the inner product fail for these pairs.
+This LSH can used for solving signed (cs, s) IPS as a
+traditional LSH [6], although it is required an initial
+step that verifies whether a query vector is in the input
+set and, if this is the case, returns the vector q itself if
+q
+T 
+q ≥ s.
+4.3 Unsigned IPS via linear sketches
+In this section we propose a linear sketch for unsigned</page><page num="13">stronger assumption is required on the approximation
+factor. In this case, the conditional lower bound holds
+for c = 1 − o(1) and hence it does not rule out an algo-
+rithm running in n
+2− 
+time for a constant approximation
+factor. We believe that a different approach is required
+to show the hardness of IPS for constant approximation:
+indeed, the proposed reduction from OVP to IPS in the
+{0, 1}
+d 
+domain strongly relies on the ability to distin-
+guish inner products smaller than k − 1 and larger than
+k for some k = ω(1), implying c ≥ 1 − o(1). From an
+upper bound point of view, the LSH proposed in sec-
+tion 4.1 improves upon the state of the art [46] based on
+minwise hashing for different values (e.g., when s ≥ d/3
+and c ≥ 0.83); however, it still gives weak subquadratic
+algorithm for signed/unsigned IPS with constant c. An
+interesting open question is therefore to assess if strongly
+subquadratic time is possible when the approximation
+is constant (or smaller) in the {0, 1}
+d 
+domain.
+6. REFERENCES
+[1] A. Abboud, R. Williams, and H. Yu. More
+applications of the polynomial method to
+algorithm design. In Proc. 26th ACM-SIAM
+Symposium on Discrete Algorithms (SODA), pages
+218–230, 2015.
+[2] M. Abramowitz and I. A. Stegun. Handbook of
+mathematical functions: with formulas, graphs, and
+mathematical tables. Courier Corporation, 1964.
+[3] P. Achlioptas, B. Sch¨olkopf, and K. Borgwardt.
+Two-locus association mapping in subquadratic
+time. In Proc. 17th ACM SIGKDD International
+Conference on Knowledge Discovery and Data
+Mining (KDD), pages 726–734. ACM, 2011.
+[4] J. Alman and R. Williams. Probabilistic
+polynomials and hamming nearest neighbors. In
+Proc. 56th IEEE Symposium on Foundations of
+Computer Science (FOCS), 2015.
+[5] A. Andoni. High frequency moments via
+max-stability. Unpublished manuscript, 2012.
+[6] A. Andoni and P. Indyk. Near-optimal hashing
+algorithms for approximate nearest neighbor in
+high dimensions. Commun. ACM, 51(1):117–122,
+2008.
+[7] A. Andoni, P. Indyk, M. Kapralov, T. Laarhoven,
+I. Razenshteyn, and L. Schmidt. Practical and
+optimal LSH for angular distance. In Proc. 28th
+Conference on Neural Information Processing
+Systems (NIPS), 2015.
+[8] A. Andoni, R. Krauthgamer, and I. P.
+Razenshteyn. Sketching and embedding are
+equivalent for norms. In Proc. 47th ACM on
+Symposium on Theory of Computing, (STOC),
+pages 479–488, 2015.
+[9] A. Andoni and I. Razenshteyn. Optimal
+data-dependent hashing for approximate near
+neighbors. In Proc. 47th Symposium on Theory of
+Computing (STOC), pages 793–801, 2015.
+[10] A. Arasu, V. Ganti, and R. Kaushik. Efficient
+exact set-similarity joins. In Proc. International
+Conference on Very Large Data Bases (VLDB),
+pages 918–929, 2006.
+[11] N. Augsten and M. H. B¨ohlen. Similarity joins in
+relational database systems. Synthesis Lectures on
+Data Management, 5(5):1–124, 2013.
+[12] Y. Bachrach, Y. Finkelstein, R. Gilad-Bachrach,
+L. Katzir, N. Koenigstein, N. Nice, and U. Paquet.
+Speeding up the xbox recommender system using a
+euclidean transformation for inner-product spaces.
+In Proc. 8th ACM Conference on Recommender
+Systems, pages 257–264, 2014.
+[13] B. Bahmani, A. Goel, and R. Shinde. Efficient
+distributed locality sensitive hashing. In Proc.
+ACM International Conference on Information and
+Knowledge Management (CIKM), pages 2174–2178,
+2012.
+[14] R. J. Bayardo, Y. Ma, and R. Srikant. Scaling up
+all pairs similarity search. In Proc. International
+Conference on World Wide Web (WWW), pages
+131–140, 2007.
+[15] M. S. Charikar. Similarity estimation techniques
+from rounding algorithms. In Proc. 34 ACM
+Symposium on Theory of computing (STOC),
+pages 380–388. ACM, 2002.
+[16] M. S. Charikar. Similarity estimation techniques
+from rounding algorithms. In Proc. 34th ACM
+Symposium on Theory of Computing (STOC),
+pages 380–388, 2002.
+[17] S. Chaudhuri, V. Ganti, and R. Kaushik. A
+primitive operator for similarity joins in data
+cleaning. In Proc.22nd International Conference on
+Data Engineering (ICDE), page 5, 2006.
+[18] Y. Chen and J. M. Patel. Efficient evaluation of
+all-nearest-neighbor queries. In Proc. International
+Conference on Data Engineering (ICDE), pages
+1056–1065, 2007.
+[19] E. Cohen, M. Datar, S. Fujiwara, A. Gionis,
+P. Indyk, R. Motwani, J. D. Ullman, and C. Yang.
+Finding interesting associations without support
+pruning. IEEE Trans. Knowl. Data Eng.,
+13(1):64–78, 2001.
+[20] R. R. Curtin, A. G. Gray, and P. Ram. Fast exact
+max-kernel search. In Proc. 13th SIAM
+International Conference on Data Mining (SDM),
+pages 1–9, 2013.
+[21] A. Das, M. Datar, A. Garg, and S. Rajaram.
+Google news personalization: scalable online
+collaborative filtering. In Proc. International
+Conference on World Wide Web (WWW), pages
+271–280, 2007.
+[22] T. Dean, M. Ruzon, M. Segal, J. Shlens,
+S. Vijayanarasimhan, and J. Yagnik. Fast, accurate
+detection of 100,000 object classes on a single
+machine. In Proc. IEEE Conference on Computer
+Vision and Pattern Recognition, Washington, DC,
+USA, 2013.
+[23] P. Felzenszwalb, R. Girshick, D. McAllester, and
+D. Ramanan. Object detection with
+discriminatively trained part-based models. IEEE</page></paper>

@@ -1,0 +1,25 @@
+{
+  "source": "arxiv",
+  "query": "id:2603.16360",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/2603.16360v2",
+      "title": "Fast Approximate Vector Joins via Offline-Online Co-Design",
+      "summary": "Vector joins - finding all vector pairs between a set of query and data vectors whose distances are below a given threshold - are fundamental to modern vector and vector-relational database systems that power multimodal retrieval and semantic analytics. Existing state-of-the-art approach exploits work sharing among similar queries but still suffers from redundant index traversals and excessive distance computations. We propose a unified framework for efficient approximate vector joins that (1) introduces soft work sharing to reuse traversal results beyond the join results of previous queries, (2) builds a merged index over both query and data vectors to further speedup graph explorations, (3) improves robustness for out-of-distribution queries through an adaptive hybrid search strategy, and (4) further optimizes all these as offloading only the necessary online overhead to offline while minimizing maintenance cost. Experiments on eight datasets demonstrate substantial improvements in efficiency-recall trade-off over the state of the art.",
+      "published": "2026-03-17T10:47:35Z",
+      "updated": "2026-07-23T01:55:36Z",
+      "authors": [
+        "Kyoungmin Kim",
+        "Lennart Roth",
+        "Liang Liang",
+        "Anastasia Ailamaki"
+      ],
+      "categories": [
+        "cs.DB"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/2603.16360v2"
+    }
+  ],
+  "downloaded_pdf": "papers/vector-join/2603.16360-fast-approximate-vector-joins/paper.pdf"
+}

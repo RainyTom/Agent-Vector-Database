@@ -1,0 +1,25 @@
+{
+  "source": "arxiv",
+  "query": "id:1104.3212",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/1104.3212v1",
+      "title": "Similarity Join Size Estimation using Locality Sensitive Hashing",
+      "summary": "Similarity joins are important operations with a broad range of applications. In this paper, we study the problem of vector similarity join size estimation (VSJ). It is a generalization of the previously studied set similarity join size estimation (SSJ) problem and can handle more interesting cases such as TF-IDF vectors. One of the key challenges in similarity join size estimation is that the join size can change dramatically depending on the input similarity threshold.   We propose a sampling based algorithm that uses the Locality-Sensitive-Hashing (LSH) scheme. The proposed algorithm LSH-SS uses an LSH index to enable effective sampling even at high thresholds. We compare the proposed technique with random sampling and the state-of-the-art technique for SSJ (adapted to VSJ) and demonstrate LSH-SS offers more accurate estimates at both high and low similarity thresholds and small variance using real-world data sets.",
+      "published": "2011-04-16T08:44:29Z",
+      "updated": "2011-04-16T08:44:29Z",
+      "authors": [
+        "Hongrae Lee",
+        "Raymond T. Ng",
+        "Kyuseok Shim"
+      ],
+      "categories": [
+        "cs.DB",
+        "cs.DS"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/1104.3212v1"
+    }
+  ],
+  "downloaded_pdf": "papers/vector-join/1104.3212-lsh-join-size-estimation/paper.pdf"
+}

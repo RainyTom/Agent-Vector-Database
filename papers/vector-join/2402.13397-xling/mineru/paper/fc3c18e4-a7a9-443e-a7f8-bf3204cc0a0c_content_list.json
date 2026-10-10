@@ -1,0 +1,2620 @@
+[
+    {
+        "type": "text",
+        "text": "Xling: A Learned Filter Framework for Accelerating High-Dimensional Approximate Similarity Join",
+        "text_level": 1,
+        "bbox": [
+            73,
+            63,
+            921,
+            132
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "1<sup>st</sup> Yifan Wang",
+        "bbox": [
+            192,
+            151,
+            313,
+            167
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "University of Florida",
+        "bbox": [
+            181,
+            167,
+            328,
+            183
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "2<sup>nd</sup> Vyom Pathak",
+        "bbox": [
+            429,
+            150,
+            566,
+            167
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "wangyifan@ufl.edu",
+        "bbox": [
+            183,
+            184,
+            320,
+            199
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "University of Florida",
+        "bbox": [
+            426,
+            167,
+            573,
+            183
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "3<sup>rd</sup> Daisy Zhe Wang",
+        "bbox": [
+            666,
+            150,
+            823,
+            167
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "v.pathak@ufl.edu",
+        "bbox": [
+            436,
+            184,
+            558,
+            199
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "University of Florida",
+        "bbox": [
+            673,
+            167,
+            823,
+            184
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "daisyw@ufl.edu",
+        "bbox": [
+            687,
+            184,
+            803,
+            199
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Abstract—Similarity join is a critical and widely used operation in multi-dimensional data applications, which finds all pairs of close points within a given distance threshold. Being studied for decades, many similarity join methods have been proposed, but they are usually not efficient on high-dimensional space due to the curse of dimensionality and data-unawareness. Inspired by the Bloom join in RDBMS, we investigate the possibility of using metric space Bloom filter (MSBF), a family of data structures checking if a query point has neighbors in a multi-dimensional space, to speed up similarity join. However, there are several challenges when applying MSBF to similarity join, including excessive information loss, data-unawareness and hard constraint on the distance metric, because of which few works are designed in this way.",
+        "bbox": [
+            73,
+            244,
+            493,
+            421
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "In this paper, we propose Xling, a generic framework to build a learning-based metric space filter with any existing regression model, aiming at accurately predicting whether a query point has enough number of neighbors. The framework provides a suite of optimization strategies to further improve the prediction quality based on the learning model, which has demonstrated significantly higher prediction quality than existing MSBF. We also propose XJoin, one of the first filter-based similarity join methods, based on Xling. By predicting and skipping those queries without enough neighbors, XJoin can effectively reduce unnecessary neighbor searching and therefore it achieves a remarkable acceleration. Benefiting from the generalization capability of deep learning models, XJoin can be easily transferred onto new dataset (in similar distribution) without re-training. Furthermore, Xling is not limited to being applied in XJoin, instead, it acts as a flexible plugin that can be inserted to any loop-based similarity join methods for a speedup. Our evaluation shows that Xling not only leads to the high performance of XJoin (e.g., being up to 17x faster than the baselines while maintaining a high quality), but also be able to further speed up many existing similarity join methods with quality guarantee.",
+        "bbox": [
+            73,
+            419,
+            493,
+            686
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Index Terms—similarity join, high-dimensional data management, machine learning",
+        "bbox": [
+            73,
+            684,
+            491,
+            712
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "I. INTRODUCTION",
+        "text_level": 2,
+        "bbox": [
+            215,
+            723,
+            351,
+            736
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "In multi-dimensional data management, metric space range search (shortly called range search) and similarity join are critical operators. Given a distance threshold ϵ, the former operation finds all points in a dataset D whose distance to a given query point is less than $\\epsilon ,$ while the latter operation finds all pairs of points between two datasets R and S whose distance is less than ϵ. As range search can be seen as a special case of similarity join where $| R | = 1 \\mathrm { o r } | S | = 1$ unless it is necessary, we will only discuss similarity join in this paper. With the emergence of deep learning, highdimensional neural embedding has been widely adopted as the data representation in a wide range of applications, which raises the demands for effective and efficient similarity join over high-dimensional data. Those applications include nearduplicate detection [1], [2], [3], [4], [5], data integration [6], [7], [8], data exploration [9], [10], [11], privacy [12], [13] and so on. Specifically, distance between embeddings reflects the semantic similarity between the data objects, meaning that the applications have to frequently search for close points in the embedding space, i.e., the similarity join. In many real-world use cases, the similarity join is approximate, i.e., they do not require 100% accurate results, but do demand high processing speed, especially on large-scale data. A typical example is near-duplicate video retrieval [3] that identifies online videos with identical or almost identical content during the search process to diversify the video search results, in which case missing a few pairs of similar videos is acceptable, while fast response is required.",
+        "bbox": [
+            73,
+            741,
+            493,
+            909
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            501,
+            243,
+            924,
+            500
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Existing work on efficient similarity join mainly includes two categories: space-grid [14], [15], [16], [17] and localitysensitive hashing (LSH) based methods [18], [19], [4], [5], [12], [13]. The former splits the data space into grids and joins the points within the same or neighboring grids, while the latter is essentially an adoption of RDBMS hash-join principle onto the high-dimensional join, i.e., hashing one dataset by LSH and then probing it for the points in another dataset. However, the grid-based methods poorly perform in very highdimensional space due to the curse of dimensionality, while the unawareness for data distribution usually causes a non-trivial performance degradation to LSH-based methods on unevenly distributed data [20]. In addition, the grid-based methods are usually exact while LSH-based methods are approximate, i.e., their accuracies are respectively 100% and lower than 100%. In this paper we focus on approximate similarity join.",
+        "bbox": [
+            503,
+            500,
+            924,
+            742
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "There is one more possible way that speeds up similarity join with metric space Bloom filter, inspired by the Bloom join in RDBMS (which uses a Bloom filter to prune unnecessary probings). Metric space Bloom filter (MSBF) is designed for checking whether a query point has neighbors within the given distance threshold. Among the various MSBFs [21], [22], [23], [24], [25], [26], [27], Locality-Sensitive Bloom Filter (LSBF) [21] is the most widely used, based on which a substantial number of MSBFs have been developed. Mirroring to the hashing functions in Bloom filter, LSBF utilizes LSH functions to map a multi-dimensional point to several bits in the bit array, and determines the neighbor existence by counting the non-zero bits. Given datasets R and S, an LSBF can be built on R and each point s ∈ S will act as a query. By skipping the range search for those negative queries (i.e., the queries having no neighbors in R), the similarity join can be accelerated. Note that unlike Bloom filter, most MSBFs cannot guarantee a zero false negative rate since they are based on LSH which raises both false positives and negatives.",
+        "bbox": [
+            501,
+            741,
+            924,
+            909
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "aside_text",
+        "text": "arXiv:2402.13397v1 [cs.DB] 20 Feb 2024",
+        "bbox": [
+            22,
+            263,
+            57,
+            705
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            61,
+            493,
+            183
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "According to our evaluation, negative queries usually take up a non-trivial portion (20% ∼ 90%), meaning that the filtering should result in a significant performance improvement. But few methods are designed in such a way, due to several problems of MSBF: (1) Given the fact that they are built on top of LSH, their effectiveness is also limited by the dataunawareness. (2) They lose more information compared to the original LSH because of further mapping LSH values to one-dimension bit array, which additionally lowers their effectiveness. (3) They indicate the index of target bit by the LSH value, and this disables them to support many popular distance metrics, like cosine distance where the LSH values are always 0 or 1.",
+        "bbox": [
+            73,
+            183,
+            493,
+            378
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Inspired by the “learned Bloom filter” [28] that enhances Bloom filter with machine learning, we propose a new type of MSBF based on machine learning techniques which addresses the problems above. Specifically, in this paper, we propose Xling, a generic framework for building a MSBF with deep learning model. Instead of LSH, Xling relies on the learned cardinality estimation techniques which utilize regression models to predict the number of neighbors for range search before actually executing it. Xling is designed to be generic such that any cardinality estimator (or simply, regression model) can be encapsulated into an effective MSBF. Its core is a cardinality estimator with a Xling decision threshold (XDT). For a range query, Xling predicts the result cardinality, then determines the query is positive (i.e., having enough neighbors) if the prediction exceeds XDT, otherwise it is negative (i.e., being without enough neighbors). Note that we mention “enough neighbors” instead of “any neighbors”, which reveals an advanced feature: Xling can determine whether the query point has more than τ neighbors, where τ is a user-determined number. And Xling downgrades to a general MSBF when τ = 0. We call such a feature “filteringby-counting”.",
+        "bbox": [
+            73,
+            378,
+            493,
+            712
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "By learning the data distribution, Xling solves the dataunawareness problem, and essentially as a regressor, it is not limited to any specific distance metric. Note that we have mentioned three thresholds until now, the distance threshold ϵ, the Xling decision threshold XDT, and the neighbor threshold τ . To make it clearer, we will indicate them respectively with “distance threshold”, “decision threshold” and “neighbor threshold”, or directly using their symbols.",
+        "bbox": [
+            73,
+            710,
+            493,
+            832
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Xling deploys novel optimization strategies to further improve the performance, including strategy to select ϵ values for effective training, and strategy to select the best XDT. Furthermore, Xling can be applied as a plugin onto many existing similarity join methods to significantly enhance their efficiency with tiny or no quality loss. We have applied Xling to a brute-force nested-loop similarity join, named XJoin, which achieves significantly higher efficiency (up to 14.6x faster) than the existing high-performance similarity join methods (some are used in industry), with a guarantee of high quality. In these applications, filtering-by-counting enables Xling to help the base similarity join method ignore the queries having only a trivial number of neighbors (e.g., 3 or 5, or even 50), which makes the acceleration more significant with tiny sacrifice of recall. In addition, we also apply Xling onto those prior methods and show that they are substantially accelerated with slightly more quality loss. Finally, XJoin and Xling are evaluated on their generalization capability, and the results prove that they can be transferred to updated or fully new dataset without re-training the learning model. To our best knowledge, We are the first to propose such a learningbased MSBF and XJoin is among the first practical filter-based similarity join methods for high-dimensional data.",
+        "bbox": [
+            73,
+            832,
+            493,
+            909
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            501,
+            61,
+            924,
+            334
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "The main contributions of this paper are as follows:",
+        "bbox": [
+            521,
+            334,
+            877,
+            349
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "1) We propose XJoin, the first filter-based similarity join method for high-dimensional data, which is both efficient and effective.",
+        "bbox": [
+            519,
+            351,
+            923,
+            395
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "2) We propose Xling, a generic framework for constructing learned metric space Bloom filters with general regression models.",
+        "bbox": [
+            519,
+            396,
+            923,
+            441
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "3) We design performance optimization strategies in Xling, including selection of ϵ values for effective training and adaptive computing of XDT.",
+        "bbox": [
+            519,
+            441,
+            921,
+            486
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "4) We conduct extensive evaluation to show the efficiency, effectiveness, usefulness and generalization of Xling and XJoin, as well as the remarkable performance improvement by applying Xling to other similarity join methods.",
+        "bbox": [
+            519,
+            487,
+            923,
+            547
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "The rest of this paper is organized as follows: Section II introduces the prior works related to the techniques in this paper. Section III formally defines the key problems studied by this paper and the important notations being used. Section IV presents the architecture of Xling and the workflow of applying Xling to enhancing similarity join. Section V discusses details about the optimization strategies integrated in Xling. And Section VI reports and analyzes the evaluation results.",
+        "bbox": [
+            503,
+            547,
+            924,
+            671
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "II. RELATED WORK",
+        "text_level": 2,
+        "bbox": [
+            640,
+            678,
+            787,
+            691
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Learned Bloom filter: The learned Bloom filter is first proposed by [28] which treats the existence checking in Bloom filter as a classification task, thereby replaces the traditional Bloom filter with a deep learning based binary classifier followed by an overflow Bloom filter (to double check the negative outputs of the classifier to guarantee a zero false negative rate). And there have been many following works that further improve the learned Bloom filter [29], [30], [31] by adding auxiliary components or improving the performance of the hashing functions being used.",
+        "bbox": [
+            503,
+            696,
+            924,
+            847
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "Learned cardinality estimation: Learning models have been widely used to predict the number of neighbors for a metric space range search, which is called “learned cardinality estimation”. The learned cardinality estimation techniques treat the task as a regression problem and solve it using regression models. The state-of-the-art methods [32], [33], [34], [35] are usually based on deep regression models to effectively learn the data distribution and make more accurate prediction than the non-deep approaches. Recursive Model Index(RMI) [36] is a hierarchical learning model that consists of multiple sub-models, where each sub-model is a regression model like neural network. CardNet [33] consists of a feature extraction model and a regression model. The raw data is transformed by the feature extraction model into Hamming space, which will then used by the regression model to predict its cardinality. SelNet [35] predicts the cardinality by a learned query-dependent piece-wise linear function.",
+        "bbox": [
+            501,
+            847,
+            924,
+            909
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            63,
+            493,
+            258
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Metric space Bloom filter: DSBF [26] and LSBF [21] are two of the representatives for metric space Bloom filter (MSBF), and following them many MSBF variants and relevant applications have been developed. [25] enables LSBF to handle multiple Euclidean distance granularity without rebuilding the data structure. [24] extends [25] to Hamming distance. [23] proposes a DSBF variant with zero false negative rate theoretically. Since most of those works are built on top of LSH, their effectiveness is usually limited by unknowing of the data distribution.",
+        "bbox": [
+            73,
+            258,
+            493,
+            410
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Similarity join: This problem can be further classified into two sub-types, exact and approximate similarity join, where the former is to exactly find all the truly close points while the latter allows some errors.",
+        "bbox": [
+            73,
+            410,
+            491,
+            470
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "One family of the state-of-the-art efficient methods for exact similarity join is the epsilon-grid-order (EGO) based methods, including EGO-join [15], EGO-star-join [16], Super-EGO [17], FGF-Hilbert join [14], etc. They work by splitting the space into cells and sorting the data points along with those cells, which will then help reduce unnecessary computation in the similarity join.",
+        "bbox": [
+            73,
+            470,
+            493,
+            578
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Approximate similarity join methods are usually based on LSH [18], [37], [19], [4], [5], [12], [13]. The problem of those methods is data unawareness, i.e., the hashing-based space partitioning usually does not consider the data distribution, which may leads to imbalanced partitions that significantly lower the overall search performance [20].",
+        "bbox": [
+            73,
+            579,
+            493,
+            670
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "III. PRELIMINARIES",
+        "text_level": 2,
+        "bbox": [
+            209,
+            684,
+            357,
+            699
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "table",
+        "img_path": "images/a6efaf929abe1bc8654616798a17ea802bcdac41788849a0e29871d5bc1dff5a.jpg",
+        "table_caption": [
+            "TABLE I: List of notations used in this and following sections"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Notation</td><td>Description</td></tr><tr><td> $\\epsilon$ </td><td>The distance threshold for range search and similarity join</td></tr><tr><td> $\\tau$ </td><td>The neighbor threshold, i.e., whether or not a query has more than  $\\tau$  neighbors</td></tr><tr><td>XDT</td><td>The Xling decision threshold to classify the prediction as positive or negative</td></tr><tr><td>N</td><td>Dataset size</td></tr><tr><td>|R|, |S|</td><td>The sizes of set R and S</td></tr><tr><td>MAE, MSE</td><td>Mean absolute error and mean squared error</td></tr><tr><td>FPR, FNR</td><td>False positive rate and false negative rate</td></tr></table>",
+        "bbox": [
+            76,
+            715,
+            490,
+            893
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "This section presents the critical notations frequently used in this paper and defines the key problems being studied, i.e., range search and similarity join. The notations are listed and explained in Table I, and more details of them are introduced where they are first referred in this paper.",
+        "bbox": [
+            503,
+            61,
+            923,
+            138
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "In multi-dimensional space, range search is defined as the search of all data points whose distance to the query is smaller than a given threshold under some distance metric. And similarity join is to find all close point pairs whose distance is less than a threshold between two datasets. The formal definitions are as below:",
+        "bbox": [
+            503,
+            138,
+            923,
+            227
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Definition 1 (range search): Given a dataset $P = \\{ p _ { i } | i =$ $1 , 2 , . . . , n \\}$ , a distance metric $d ( \\cdot , \\cdot )$ , a query point q and a radius/threshold $\\epsilon ,$ range search tries to find a set of data points $P ^ { * }$ such that for any $p _ { i } ^ { * } \\in P ^ { * } , d ( q , p _ { i } ^ { * } ) \\leq \\epsilon .$",
+        "bbox": [
+            504,
+            228,
+            921,
+            289
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Definition 2 (similarity join): Given two datasets R and S, a distance threshold $\\epsilon ,$ and a distance metric $d ( \\cdot , \\cdot )$ , the similarity join between R and S is denoted by $R \\bowtie _ { \\epsilon } S ,$ , which combines each point $r \\in R$ with each point $s \\in S$ that is close/similar enough to $r \\ ( \\mathrm { i . e . }$ , with distance smaller than or equal to ϵ). Formally",
+        "bbox": [
+            503,
+            289,
+            923,
+            380
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "equation",
+        "text": "$$\nR \\bowtie_ {\\epsilon} S = \\{(r, s) | \\forall r \\in R, \\forall s \\in S w h e r e d (r, s) \\leq \\epsilon \\}\\tag{1}\n$$",
+        "text_format": "latex",
+        "bbox": [
+            517,
+            387,
+            888,
+            404
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "There are three critical “thresholds” in this paper, as listed in Table I, the “distance threshold” ϵ, the “neighbor threshold” τ and the “Xling decision threshold” XDT. To avoid confusion, we further explain them here:",
+        "bbox": [
+            503,
+            412,
+            923,
+            473
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "1) The distance threshold ϵ is part of the range search and similarity join operations, which indicates the search range as shown in Definition 1 and 2.",
+        "bbox": [
+            519,
+            474,
+            923,
+            521
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2) τ is a threshold for the groundtruth neighbors. If a query truly has more than τ neighbors, we call it a groundtruth positive, otherwise it is a groundtruth negative.",
+        "bbox": [
+            519,
+            521,
+            921,
+            566
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "3) The Xling decision threshold (XDT) is the threshold to classify the query based on the predicted neighbors. If a query is predicted as having more than XDT neighbors, we name it as a predicted positive, otherwise it is predicted negative.",
+        "bbox": [
+            519,
+            566,
+            923,
+            642
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Note that we do not directly use τ to threshold the predictions. This is because different cardinality estimation models have different prediction accuracy, leading to different predicted values for the same query. So it is necessary to use an adpative threshold driven by both model and data to classify the predictions, which is XDT, such that we can control the false positive or negative rate. More details are introduced in Section V-A.",
+        "bbox": [
+            503,
+            643,
+            924,
+            765
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "IV. ARCHITECTURE AND WORKFLOW",
+        "text_level": 2,
+        "bbox": [
+            578,
+            776,
+            846,
+            791
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "A. The core and optimization strategies",
+        "text_level": 2,
+        "bbox": [
+            504,
+            797,
+            777,
+            811
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Figure 1 illustrates the overall architecture and workflow of Xling. The core is the learned cardinality estimator and XDT (yellow boxes). The green boxes represent the optimization strategies deployed in the training and predicting stages. The blue shapes stand for the training data, including the raw data (which is input from the external) and the prepared data (which is generated based on the raw data inside Xling). The workflow of Xling mainly relies on the prepared training data instead of the raw data. In addition, the pink boxes indicate the query-time inputs, including the query point, ϵ and τ , where the query point and ϵ are fed into the learned cardinality estimator while the ϵ and τ are used to compute XDT. The grey box stands for the output, i.e., whether the query point is positive (with enough neighbors) or negative (having insufficient neighbors). For the workflow, the solid arrows present the offline training workflow, while the hollow arrows indicate the online workflow for querying and XDT computing.",
+        "bbox": [
+            503,
+            816,
+            924,
+            909
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "image",
+        "img_path": "images/331a3fab2bc1ac3beede674ed3b62c63240458cd34c4aec5b37b229c526e7d54.jpg",
+        "image_caption": [
+            "Fig. 1: Architecture and workflow of Xling"
+        ],
+        "image_footnote": [],
+        "content": "",
+        "bbox": [
+            137,
+            60,
+            431,
+            282
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            318,
+            493,
+            500
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "The overall architecture includes (1) the core learned cardinility estimator and XDT and (2) the surrounding optimization strategy modules. [28] uses a classifier and a decision threshold to build a learned Bloom filter, while we use a regressor and the XDT to construct Xling, which is similar to the learned accelerator framework (LAF) in [38]. Specifically, LAF proves that learned cardinality estimator with a proper decision threshold can significantly accelerate range-search based high-dimensional clustering. As similarity join is also based on range search, such a solution works for it too. And unlike the case of learned Bloom filter, since filtering-bycounting requires estimating the specific number (mentioned in Section I), regressor is the best choice rather than classifier. But in LAF, the decision threshold has to be determined by grid search. To overcome this shortcoming, we design an adaptive XDT selection strategy based on the training data such that XDT can be efficiently computed. More details are introduced in Section V-B.",
+        "bbox": [
+            73,
+            500,
+            493,
+            771
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "To reduce the false results, in addition to adaptively selecting a proper XDT, we also propose an adaptive training ϵ selection strategy to sample the most representative ϵ values for training the cardinality estimator effectively and thereby reducing the prediction error. The existing learned cardinality estimation studies (e.g., [39]) usually select the training ϵ values uniformly, which is not optimal, and we show in this paper that our proposed strategy generates a more representative training set and leads to a more effective model training. This training ϵ selection strategy is further discussed in Section $\\mathrm { V } { \\cdot } \\mathrm { A }$",
+        "bbox": [
+            73,
+            771,
+            493,
+            909
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            503,
+            61,
+            921,
+            92
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "B. Training and querying workflows",
+        "text_level": 2,
+        "bbox": [
+            504,
+            102,
+            756,
+            118
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "There are two workflows in Xling, the offline training workflow and online querying workflow. In Figure 1, the solid arrows illustrate the training workflow. As introduced in Definition 2 and Section I, the two point sets to be joined are denoted by R and S, and without loss of generality, we assume that the size of R (|R|) is larger than size of S (|S|). Then R is used as the training set (i.e., the “raw training data” in Figure 1) to train Xling while S acts as the queries. The raw training data includes all points in R without ϵ information.",
+        "bbox": [
+            503,
+            121,
+            923,
+            258
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "1) Training: The first step in the training workflow is concatenating the selected ϵ values onto each training point $r _ { i } ~ \\in ~ R$ (where $i = 1 , 2 , . . . , | R | )$ , generating the “prepared training data” that is a Cartesian product between the point set R and ϵ set E, i.e., the prepared training data is the set $\\{ ( \\boldsymbol { r } _ { i } , \\epsilon _ { j } ) \\ | \\ \\forall ( \\boldsymbol { r } _ { i } , \\epsilon _ { j } ) \\in R \\times \\mathcal { E } \\}$ , where $r _ { i }$ is a multi-dimensional vector and $\\epsilon _ { j }$ is a real number. Here the set E is generated by the training ϵ selection strategy (Section V-A).",
+        "bbox": [
+            503,
+            258,
+            923,
+            378
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "To make it clearer, suppose R is a toy raw training set of 2 points $r _ { a }$ and $r _ { b } ,$ and E includes two selected values $\\epsilon _ { 1 }$ and $\\epsilon _ { 2 } .$ Then the prepared training set looks like $\\{ ( r _ { a } , \\epsilon _ { 1 } ) , ( r _ { a } , \\epsilon _ { 2 } ) , ( r _ { b } ,$ $\\epsilon _ { 1 } ) , ( r _ { b } , \\epsilon _ { 2 } ) \\}$ associated with their targets (i.e., the groundtruth numbers of neighbors). Then the learned cardinality estimator is trained with the prepared training data.",
+        "bbox": [
+            503,
+            378,
+            923,
+            470
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "2) Querying: The querying workflow is presented with hollow arrows in Figure 1. First, ϵ and τ are input to compute the XDT using the adaptive XDT selection strategy based on the prepared training data. Second, the query point and the ϵ are concatenated and fed to the cardinality estimator to predict the number of neighbors. Finally, the prediction is compared with XDT and the answer (positive or negative) is determined.",
+        "bbox": [
+            503,
+            470,
+            924,
+            575
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "C. Use in similarity join",
+        "text_level": 2,
+        "bbox": [
+            504,
+            585,
+            679,
+            599
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Use of Xling to speed up similarity join is straightforward: given ϵ, τ , R and S, supposing $| R | > | S |$ , Xling is first trained on R, then for each query point $s \\in S$ , Xling predicts whether s has enough neighbors in R under the ϵ. If yes, the range search (either a brute-force search or an indexed search like using LSH) will be executed in R for query s, otherwise s is predicted as negative and the search for it will be skipped. In this way, unnecessary range search is reduced and the join efficiency is improved.",
+        "bbox": [
+            503,
+            604,
+            923,
+            741
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "As a generic filter, Xling can be applied onto any nested loop based similarity join algorithms to speed them up. When using deep regressor as the core cardinality estimator in Xling, its prediction time complexity for each query is constant (O(1)) with the data scale, which in practice can be further accelerated by GPU. And the training time is not an issue due to the generalization capability of the deep models, i.e., a trained estimator can be used on any other dataset with similar distribution, which is proved by our evaluation in Section VI-F.",
+        "bbox": [
+            503,
+            742,
+            924,
+            877
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "We implement XJoin by applying Xling onto a naive nestedloop similarity join method which does a brute-force range search for each query. Our evaluation presents that XJoin outperforms the state-of-the-art similarity join baselines. We also apply Xling to some approximate similarity join methods, which shows Xling successfully improves their speed-quality trade-off capability.",
+        "bbox": [
+            503,
+            877,
+            923,
+            909
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            61,
+            491,
+            138
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "V. OPTIMIZATION STRATEGIES",
+        "text_level": 2,
+        "bbox": [
+            171,
+            151,
+            395,
+            166
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "In this section we introduce the details for the optimization strategies we propose in Xling.",
+        "bbox": [
+            73,
+            174,
+            491,
+            205
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "A. Training ϵ selection",
+        "text_level": 2,
+        "bbox": [
+            73,
+            219,
+            236,
+            233
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "[39] uniformly samples the training ϵ from range $[ 0 , \\theta _ { m a x } ] ,$ where $\\theta _ { m a x }$ is a user-determined upper limit for the distances. However, such a selection strategy is not optimal. We show in this section that the cardinality estimation models can be trained more effectively by using our data-aware threshold selection strategy. Furthermore, our strategy can be generalized to better solve a family of regression problems.",
+        "bbox": [
+            73,
+            239,
+            491,
+            345
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "The specific family of regression problems is named Condition-based Regression (shortly denoted by CR) and defined as follows:",
+        "bbox": [
+            73,
+            345,
+            491,
+            391
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Definition 3 (Condition-based Regression problem): Given a dataset D, a condition c associated with each data point $p \\in \\mathcal D$ , and a target t corresponding to each $( p , c )$ pairs, the CR problem is to learn the relationship between the presented $( p , c )$ and t, then predict the corresponding t for any given $( p , c )$",
+        "bbox": [
+            73,
+            391,
+            491,
+            483
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "In the context of learned cardinality estimation, the condition is the ϵ while the target is the number of neighbors.",
+        "bbox": [
+            73,
+            482,
+            491,
+            513
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "In most Condition-based Regression problems, the condition is usually a continuous variable (like distance) whose values cannot be fully enumerated, therefore it is worth studying how to sample the conditions for better training the regression model in order to lower prediction error, which is formally defined as such:",
+        "bbox": [
+            73,
+            513,
+            491,
+            604
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Definition 4 (Training condition selection for $C R ) .$ Given a dataset D of size n, a set of $m$ candidate values $\\{ c _ { i 1 } , c _ { i 2 } , . . . , c _ { i m } \\}$ of the condition $c _ { i }$ for each data point $p _ { i } \\in \\mathcal { D } , 1 \\le i \\le n$ , the corresponding target $t _ { i j }$ for each $( p _ { i } , c _ { i j } ) , 1 \\leq j \\leq m .$ and a sampling number $s ,$ the training condition selection task is to select s pairs from the m $( c _ { i j } , t _ { i j } )$ pairs to form s training tuples for each point $p _ { i } ,$ , which results in totally sn training tuples for the whole dataset D, such that the mean regression error is minimized.",
+        "bbox": [
+            73,
+            604,
+            491,
+            739
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Note that our discussion starts from a discrete candidate set, instead of directly beginning from the continuous range (like $[ 0 , \\theta _ { m a x } ] )$ . This is just to unify the discussion between continuous-range uniform sampling and our sampling method which requires preprocessing to discretize the range, which will not lose generality. m is usually large (such that the values are dense enough) to approximate the case of the continuous condition values, so we do not use all the m candidate values to generate mn training tuples, as the memory space is limited. For example, in our evaluation, $m = 1 0 0$ , in which case mn tuples require more memory space than that of our evaluation machine. Therefore only the s sampled conditions are used to form the training tuples.",
+        "bbox": [
+            73,
+            741,
+            493,
+            909
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            503,
+            61,
+            921,
+            93
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Uniformly sampling training conditions cannot reflect the unevenly data distribution in real-world datasets. Therefore, we design a generic adaptive strategy to further fine-tune the initial uniformly sampling conditions for CR problem based on the density of the targets, such that the resulting training tuples are more representative for the data distribution of the whole dataset. Our adaptive training condition selection (ATCS) strategy (Algorithm 1) follows the steps below for each data point p in the training set:",
+        "bbox": [
+            503,
+            93,
+            923,
+            229
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "1) Given the uniformly sampled candidate conditions $\\mathcal { C } _ { p }$ and the corresponding targets $\\mathcal { T } _ { p }$ for point $p \\ ( { \\mathrm { i . e . } }$ ., when condition $c _ { i } \\in \\mathcal { C } _ { p }$ is applied to point $p ,$ the target is correspondingly $t _ { i } \\in \\mathcal { T } _ { p } )$ , the minimum and maximum targets are found $( t _ { m i n }$ and $t _ { m a x } .$ , line 5) and the interval $[ t _ { m i n } , t _ { m a x } ]$ is then partitioned into s bins evenly (line 6).",
+        "bbox": [
+            521,
+            232,
+            921,
+            338
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "2) Then each candidate condition is mapped into one bin based on its paired target (line 7-8).",
+        "bbox": [
+            519,
+            338,
+            921,
+            368
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "3) Finally the specific number of condition-target pairs are sampled from each bin (line 10-11) according to the fraction of the bin size $( | B _ { i } | )$ over total number of the conditions $( | { \\mathcal { C } } _ { p } | )$ , where bin size is the number of pairs in that specific bin.",
+        "bbox": [
+            519,
+            369,
+            923,
+            444
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "4) Since some bins may generate zero samples (i.e., when $s | B _ { i } | < | C _ { p } | )$ , the final sampled condition-target pairs may be not enough given the required s. In such a case, the rest<sup>1</sup> of the pairs will be randomly chosen from the unselected ones that are not yet included in the samples above (line 12-13).",
+        "bbox": [
+            519,
+            444,
+            921,
+            535
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "The final training set for the whole D is the collection of the training tuples $( p , c , t )$ generated by the strategy for each $p \\in { \\mathcal { D } } , { \\mathrm { i . e . } }$ ., the final training set includes $s | \\mathcal D |$ tuples.",
+        "bbox": [
+            503,
+            537,
+            923,
+            584
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Unlike uniformly sampling, ATCS is data-aware by binning the condition-target pairs to estimate the density of the targets and then sampling the final conditions based on the density, which generates more representative training conditions and targets. For example, let $m = 1 0 0 , s = 5 , \\mathrm { i . e . }$ , the interval of targets $[ t _ { m i n } , t _ { m a x } ]$ is split into 5 bins evenly and their corresponding condition values are placed into the bins accordingly. Supposing the numbers of conditions from $\\boldsymbol { B } _ { 1 }$ to $B _ { 5 }$ are 59, 1, 19, 1, 20, the uniformly sampling will select 2, 1, 0, 1, 1 conditions from them (i.e., selecting one per 20), while ATCS will first select 2, 0, 0, 0, 1 from them (Algorithm 1 Line 11) then probably select the rest 2 conditions from $\\boldsymbol { B } _ { 1 }$ $B _ { 3 }$ and $B _ { 5 }$ which are the most dense areas (Algorithm 1 Line 13). In this example, the uniformly sampling gets 2 out of the 5 sampled conditions from very sparse areas $( \\boldsymbol { B } _ { 2 }$ and $B _ { 4 } )$ in the distribution of targets, which cannot well reflect the overall distribution, while ATCS probably selects all the 5 from dense areas and results in more representative training samples, by which the model can be trained more effectively. Our evaluation in Section VI-B shows that ATCS helps reduce 50% ∼ 98% of the prediction error (MAE and MSE).",
+        "bbox": [
+            503,
+            584,
+            923,
+            858
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "page_footnote",
+        "text": "<sup>1</sup>In our evaluation, the rest of the pairs (which are randomly chosen) usually occupy 10% ∼ 20% in the final training set for the whole D, i.e., 0.1s|D| ∼ 0.2s|D|",
+        "bbox": [
+            504,
+            869,
+            921,
+            907
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [],
+        "code_body": "```txt\nAlgorithm 1 Adaptive training condition selection (ATCS) strategy\nInput: Dataset D, map from each data point to its uniformly sampled candidate condition list C, map from each point to its target list T, sampling number s\nOutput: set of resulting training tuples R\n1: R := ∅\n2: for each point p in D do\n3:    Cp := C(p) ▷ the condition list for p\n4:    Tp := T(p) ▷ the target list for p, one-to-one corresponding to Cp\n5:    tmin, tmax := min(Tp), max(Tp)\n6:    Split interval [tmin, tmax] into s bins evenly\n7:    for each c in Cp and corresponding t in Tp do\n8:    Place (c, t) into a bin bounded by [ta, tb) such that t ∈ [ta, tb)\n9:    S := ∅ ▷ the selected (c, t) collection for p\n10:    for each bin Bi do\n11:    S := S ∪ { [s|Bi]/[Cp] ] randomly sampled (c, t) pairs from Bi}\n12:    if |S| < s then\n13:    Fill with random samples from unselected (c, t) until |S| = s\n14:    R := R ∪ {(p, cs, ts)|(cs, ts) ∈ S} ▷ combine all pairs in S with p\n15: return R\n```",
+        "bbox": [
+            75,
+            56,
+            491,
+            375
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            400,
+            491,
+            446
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "B. Xling decision threshold (XDT) selection",
+        "text_level": 2,
+        "bbox": [
+            73,
+            457,
+            377,
+            473
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Xling decision threshold (XDT) determines whether the prediction means positive. Its value is influenced by τ , the way it is computed, and the way to identify the groundtruth negative training samples, which will be introduced in this section. Note that XDT is determined purely based on the training set offline, regardless of the online queries, i.e., the computation of XDT does not raise overhead on the online querying.",
+        "bbox": [
+            73,
+            477,
+            493,
+            599
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Basically, XDT is computed using the groundtruth negative training samples (i.e., the training points with no more than τ neighbors). We propose two ways to compute XDT: false positive rate (FPR) based and mean based.",
+        "bbox": [
+            73,
+            599,
+            491,
+            660
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "1) FPR-based XDT selection: similarly to [36], [40], [30], given a FPR tolerance value $t _ { f p r } \\left( \\mathbf { e . g . , 5 \\% } \\right)$ , this method lets the estimator make predictions for the training points and sets XDT such that the resulting filter FPR on training set is lower than $t _ { f p r }$",
+        "bbox": [
+            91,
+            662,
+            491,
+            738
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "2) mean-based XDT selection: this method sets XDT to be the mean predicted value for all the groundtruth negative training samples.",
+        "bbox": [
+            89,
+            738,
+            493,
+            784
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "In our evaluation (Section VI-B2), FPR-based method usually results in a higher XDT, leading to more speedup and lower quality in end-to-end similarity join, so we design the meanbased method to provide the second option which results in a lower XDT and leads to higher quality and less speedup. They are useful in different situations as shown in our evaluation. In addition, no matter using FPR-based or mean-based selection, there is a trend that a larger τ will result in a higher XDT, which is straightforward to understand: a larger τ causes training samples with more neighbors to be negative, therefore cardinalities of the negative samples increase overall, making the computed XDT increased.",
+        "bbox": [
+            73,
+            786,
+            493,
+            909
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            503,
+            61,
+            923,
+            123
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "But both methods have a problem: we have to first identify the groundtruth negative samples in the training set, which is costly in the high-dimensional cases. Since the negative samples depend on ϵ, and the training set only include a tiny portion of all possible $\\epsilon ,$ the queried ϵ will probably not exist in training set (named “out-of-domain $\\epsilon ^ { \\mathfrak { s } } )$ , in which case intensive range search has to be executed to compute the negative samples from scratch.",
+        "bbox": [
+            503,
+            123,
+            923,
+            244
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Therefore, it is non-trivial to study how to easily get the training targets (i.e., groundtruth cardinalities) under the outof-domain ϵ such that the groundtruth negative samples can be identified without doing range search for each training point. We propose an interpolation-based strategy to generate the approximate targets. Specifically, given a point, its ϵ-cardinality curve is monotonically non-decreasing, i.e., with ϵ increasing, the cardinality will never decrease. So we can approximate the curve segment between two neighboring training ϵ values (denoted by $\\epsilon _ { 1 }$ and $\\epsilon _ { 2 } )$ as linear, and use linear-interpolation to estimate the groundtruth cardinality for any training point under a out-of-domain $\\epsilon _ { 3 }$ between $\\epsilon _ { 1 }$ and $\\epsilon _ { 2 } ,$ , as shown in Equation 2.",
+        "bbox": [
+            501,
+            244,
+            924,
+            441
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "equation",
+        "text": "$$\nt _ {3} = t _ {1} + \\frac {t _ {2} - t _ {1}}{\\epsilon_ {2} - \\epsilon_ {1}} (\\epsilon_ {3} - \\epsilon_ {1})\\tag{2}\n$$",
+        "text_format": "latex",
+        "bbox": [
+            617,
+            459,
+            805,
+            489
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "where $t _ { i }$ is the target of the current training point under $\\epsilon _ { i }$ $( i = 1 , 2 )$ $t _ { 3 }$ is the approximate target under out-of-domain $\\epsilon _ { 3 } ,$ , and $\\epsilon _ { 1 } < \\epsilon _ { 2 }$ . The approximate targets are then used to find all groundtruth negative training samples under $\\epsilon _ { 3 }$ based on which XDT is computed.",
+        "bbox": [
+            504,
+            494,
+            923,
+            570
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Our evaluation shows that in most cases, Xling deploying the interpolation-based method has a competitive prediction quality to that using the naive solution. Furthermore, there are two advantages of the proposed method over the naive way: (1) it is significantly faster since no range search is executed, and (2) as in Section VI-B2, interpolation-based method tends to result in no higher false negative rate (FNR) than the naive method, which is better for the effectiveness (e.g., the recall) of Xling.",
+        "bbox": [
+            501,
+            571,
+            923,
+            708
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "VI. EXPERIMENTS",
+        "text_level": 2,
+        "bbox": [
+            643,
+            722,
+            782,
+            736
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "A. Experiment settings",
+        "text_level": 2,
+        "bbox": [
+            503,
+            744,
+            665,
+            761
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Environment: All the experiments are executed on a Lambda Quad workstation with 28 3.30GHz Intel Core i9-9940X $\\mathrm { C P U s , }$ 4 RTX 2080 Ti GPUs and 128 GB RAM.",
+        "bbox": [
+            503,
+            766,
+            921,
+            811
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Datasets: Table II provides an overview for our evaluation datasets, reporting their sizes, data dimensions and data types. We introduce more details here:",
+        "bbox": [
+            503,
+            813,
+            921,
+            859
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "1) FastText: 1M word embeddings (300-dimensional) generated by fastText model pre-trained on Wikipedia 2017, UMBC webbase corpus and statmt.org news dataset.",
+        "bbox": [
+            519,
+            862,
+            923,
+            909
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "table",
+        "img_path": "images/eb5b4841f2586702c202bf362737e2ab75ae2eb5a7f5af4abda41b274d549ab8.jpg",
+        "table_caption": [
+            "TABLE II: Evaluation dataset information, including the number of total points in the whole dataset (#Points), the number of sampled points for evaluation (#Sampled), data dimension (Dim), and the raw data type (Type)."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Dataset</td><td>#Points</td><td>#Sampled</td><td>Dim</td><td>Type</td></tr><tr><td>FastText</td><td>1M</td><td>150k</td><td>300</td><td>Text</td></tr><tr><td>Glove</td><td>1.2M</td><td>150k</td><td>200</td><td>Text</td></tr><tr><td>Word2vec</td><td>3M</td><td>150k</td><td>300</td><td>Text</td></tr><tr><td>Gist</td><td>1M</td><td>150k</td><td>960</td><td>Image</td></tr><tr><td>Sift</td><td>1M</td><td>150k</td><td>128</td><td>Image</td></tr><tr><td>NUS-WIDE</td><td>270k</td><td>150k</td><td>500</td><td>Image</td></tr></table>",
+        "bbox": [
+            119,
+            58,
+            455,
+            143
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "2) Glove: 1.2M word vectors (200-dimensional) pre-trained on tweets.",
+        "bbox": [
+            89,
+            234,
+            491,
+            265
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "3) Word2vec: 3M word embeddings (300-dimensional) pretrained on Google News dataset.",
+        "bbox": [
+            89,
+            266,
+            491,
+            296
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "4) Gist: 1M GIST image descriptors (960-dimensional).",
+        "bbox": [
+            89,
+            295,
+            473,
+            311
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "5) Sift: 1M SIFT image descriptors (128-dimensional).",
+        "bbox": [
+            89,
+            311,
+            470,
+            325
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "6) NUS-WIDE: 270k bag-of-visual-words vectors (500- dimensional) learned on a web image dataset created by NUS’s Lab for Media Search.",
+        "bbox": [
+            89,
+            325,
+            493,
+            372
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Due to computing resource limitation, we randomly sample 150k vectors from each of them for the evaluation. In the rest of this paper, any mentioned dataset name is by default meaning the 150k subset of the corresponding dataset.",
+        "bbox": [
+            73,
+            376,
+            493,
+            436
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "We then normalize the sampled vectors to unit length because (1) this makes the distances bounded, i.e., both cosine and Euclidean distance are within [0, 2] on unit vectors, making it easier to determine ϵ, and (2) some baseline methods do not support cosine distance, in which case we have to convert the cosine ϵ into equivalent Euclidean ϵ for them on unit vectors, as in our previous work [38]. We then split each dataset into training and testing sets by a ratio of 8:2, where the training set acts as R while the testing set is S. Xling is trained on the training set, then all the methods are evaluated using the corresponding testing set as queries.",
+        "bbox": [
+            73,
+            436,
+            493,
+            604
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Learning models: we use several learning models to evaluate the performance of the optimization strategies in Xling. They are introduced as follows. For the deep models, we use the recommended configurations in prior works, while for non-deep models a grid search is executed to find the best parameters. Specifically, (1) RMI [28]: We use the same configuration in [38], i.e., three stages, respectively including 1, 2, 4 fully-connected neural networks. Each neural network has 4 hidden layers with width 512, 512, 256, and 128. The RMI is trained for 200 epochs with batch size 512. (2) NN: We also evaluate the neural network (NN), which is simply a single sub-model extracted from the RMI above. So all the parameters (including the training configuration) are same as that in RMI. (3) SelNet [41]: We use the the same model configuration as in the paper. (4) XGBoost Regressor (XGB), LightGBM Regressor (LGBM) and Support Vector Regressor (SVR): These are all non-deep regressors, we do a grid search to determine their best parameters.",
+        "bbox": [
+            73,
+            604,
+            493,
+            877
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Similarity join baselines: The evaluation baselines include both exact and approximate methods, where the latter are the",
+        "bbox": [
+            73,
+            877,
+            493,
+            909
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "major baselines.",
+        "bbox": [
+            504,
+            61,
+            617,
+            78
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "1) Naive: This is a brute-force based nested-loop similarity join, i.e., for each query point in S, do a brute-force range search for it in R. Its results act as the groundtruth for measuring the result quality of all other methods.",
+        "bbox": [
+            521,
+            79,
+            923,
+            140
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "2) SuperEGO<sup>2</sup> [17]: This is an exact method based on Epsilon Grid Ordering (EGO) that sorts the data by a specific order to facilitate the join.",
+        "bbox": [
+            519,
+            140,
+            923,
+            186
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "3) LSH: This is an approximate method using LSH. First the points in R are mapped into buckets by LSH, then each query is mapped to some buckets by the same LSH. The points in those buckets and nearby buckets will then be retrieved as candidates and verified. This method is implemented using FALCONN [42], the state-of-the-art LSH library.",
+        "bbox": [
+            519,
+            186,
+            924,
+            291
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "4) KmeansTree: This is an approximate method using Kmeans tree, where the tree is built on R and the space is partitioned and represented by sub-trees. Then each query is passed into the tree and a specific sub-tree (which represents a sub-space of R) will be inspected to find neighbors within the range. We use FLANN [43], a widely used high-performance library for tree-based search, to implement this method.",
+        "bbox": [
+            519,
+            291,
+            924,
+            412
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "5) Naive-LSBF: This is an approximate filter-based method that simply applies LSBF <sup>3</sup> onto the Naive method, in the same way as the use of Xling in similarity join (Section IV-C). We use LSBF instead of the following MSBF variants because those variants raise unnecessary overhead to support specific extra features.",
+        "bbox": [
+            519,
+            412,
+            924,
+            503
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "6) IVFPQ: we also select an approximate nearest neighbor (ANN) index as part of the baselines, which is the IVFPQ index [44] in FAISS [45], one of the industrial ANN search libraries. Since IVFPQ does not support range search natively, we evaluate it by first searching for a larger number of nearest candidates, then verifying which candidates are the true neighbors given ϵ. And as IVFPQ tends to achieve a high search speed with relatively lower quality (as discussed in our previous work [46]), this baseline does not make much sense in the fixed-parameter end-to-end evaluation (Section VI-D). Therefore, we only evaluate it in the tradeoff (Section VI-E) and generalization (Section VI-F) experiments.",
+        "bbox": [
+            519,
+            503,
+            924,
+            714
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Our proposed methods: Following the way described in Section IV-C, we apply Xling to several base similarity join methods mentioned above. The resulting methods are named as: (1) XJoin (2) LSH-Xling (3) KmeansTree-Xling (4) IVFPQ-Xling. The XJoin is our major proposed method that is evaluated in all the similarity join experiments, while the other proposed methods here are only compared with the corresponding baseline methods to show the enhancement brought by Xling to them. The learned cardinality estimator used by Xling in all these methods is an RMI. Note that the goal of this paper is to reveal the potential of such a new framework on speeding up similarity join generically, so selecting the best estimation model is out of scope. Given that RMI has been used as a strong baseline for learned cardinality estimation in [39] and it is not the most state-of-the-art, it is a fair choice for Xling in the evaluation, especially when we can show that RMI is already good enough to outperform the other baselines. We will evaluate Xling with other estimators in the future work.",
+        "bbox": [
+            501,
+            717,
+            924,
+            869
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "page_footnote",
+        "text": "<sup>2</sup>code available at https://www.ics.uci.edu/<sup>∼</sup>dvk/code/SuperEGO.html <sup>3</sup>code available at https://github.com/csunyy/LSBF",
+        "bbox": [
+            514,
+            880,
+            897,
+            907
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            61,
+            493,
+            198
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "In XJoin, the XDT is computed by FPR-based selection (introduced in Section V-B) with 5% FPR tolerance, and $\\tau = 5 0$ , while in LSH-Xling, KmeansTree-Xling and IVFPQ-Xling, XDT is computed by mean-based selection with $\\tau = 0$ As discussed in Section ${ \\mathrm { V } } { \\mathrm { - } } { \\mathrm { B } } ,$ “mean-based XDT selection + smaller $\\tau ^ { \\ast }$ leads to higher quality while “FPR-based selection + larger $\\tau ^ { \\ast }$ results in more acceleration. Since LSH, KmeansTree and IVFPQ are approximate methods that sacrifice quality for efficiency, mean-based XDT with lowest $\\tau$ can accelerate them while minimizing the further quality loss. For Naive, the bottleneck is the efficiency, so we choose the other configuration for Xling in order to achieve a non-trivial speedup.",
+        "bbox": [
+            73,
+            199,
+            493,
+            395
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Metrics: The distance metric for text data is cosine distance while that for image data is Euclidean distance. For the baselines which do not support cosine distance, we follow [38] to equivalently convert cosine distance to Euclidean distance. The evaluation metrics include (1) end-to-end join time for measuring the efficiency of similarity join methods, (2) recall (i.e., the ratio of the returned positive results over all the groundtruth positive results) for measuring the similarity join result quality, (3) mean absolute error (MAE) and mean squared error (MSE) for measuring prediction quality of the learned cardinality estimator, and (4) false positive rate (FPR) and false negative rate (FNR) for measuring prediction quality of Xling.",
+        "bbox": [
+            73,
+            396,
+            493,
+            593
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Evaluation ϵ: As we have normalized all the vectors, the distances between them are bounded, i.e., [0, 2] for both cosine and Euclidean distances. Since many use cases of similarity join usually choose ϵ from the range [0.2, 0.5] [9], [10], [3], [47], we do a grid search in this range and determine the representative evaluation ϵ values: 0.4, 0.45 and 0.5, based on the portion of negative queries (i.e., the queries having no neighbor in R) in S. We set the upper limit for the portion as 90% as too many negative queries will make the evaluation unconvincing. Under the selected ϵ values, most of the datasets (except NUS-WIDE) have a proper portion that is no more than 90%. Table III reports the portion of negative queries for each dataset under each ϵ.",
+        "bbox": [
+            73,
+            594,
+            493,
+            791
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "B. Optimization strategy evaluation",
+        "text_level": 2,
+        "bbox": [
+            73,
+            806,
+            321,
+            824
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "In this section we report and analyze the evaluation results of the optimization strategies.",
+        "bbox": [
+            73,
+            830,
+            491,
+            861
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "1) Training ϵ selection: The results of the training ϵ selection strategy is reported in Table IV. Due to the space limit, we only present the results for 4 out of 6 datasets.",
+        "bbox": [
+            73,
+            862,
+            491,
+            909
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "table",
+        "img_path": "images/c7f77137c575016aa8682a3d0a65d6e21d6df4b18c3cdaaba90bbbe01ef6eb4c.jpg",
+        "table_caption": [
+            "TABLE III: The portion of negative queries for each dataset under each ϵ"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Dataset</td><td>Portion (ε = 0.4)</td><td>Portion (ε = 0.45)</td><td>Portion (ε = 0.5)</td></tr><tr><td>FastText</td><td>0.1103</td><td>0.0443</td><td>0.0116</td></tr><tr><td>Glove</td><td>0.8668</td><td>0.7851</td><td>0.6637</td></tr><tr><td>Word2vec</td><td>0.2875</td><td>0.1675</td><td>0.0803</td></tr><tr><td>Gist</td><td>0.8442</td><td>0.3939</td><td>0.1027</td></tr><tr><td>Sift</td><td>0.5578</td><td>0.3494</td><td>0.1531</td></tr><tr><td>NUS-WIDE</td><td>0.9743</td><td>0.9653</td><td>0.9544</td></tr></table>",
+        "bbox": [
+            550,
+            56,
+            877,
+            188
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "Following Definition 4, to make it simple, we have the set of candidate condition values shared by all the training points, i.e., the set $\\{ c _ { i 1 } , c _ { i 2 } , . . . , c _ { i m } \\}$ is same for any training point $p _ { i } .$ . We let $m ~ = ~ 1 0 0$ and construct such a set by evenly sampling 100 values from a range $[ c _ { m i n } , c _ { m a x } ] _ { : }$ , where we set $c _ { m i n } ~ = ~ 0 . 4 , c _ { m a x } ~ = ~ 0 . 9$ for cosine distance while $c _ { m i n } = 0 . 5 , c _ { m a x } = 2 . 0$ for Euclidean distance. These $c _ { m i n }$ and $c _ { m a x }$ values are selected based on a grid search given the evaluation experience from our previous work [38]. Then we set the sampling number $s \\ = \\ 6$ , i.e., for each training point, 6 distinct condition values will be sampled from the 100 candidate values and become the final training ϵ values to be paired with the point in the prepared training data. Two sampling strategies are deployed to select the 6 values: (1) uniform sampling, e.g., selecting the 1st, 20th, 40th, 60th, 80th and 100th values (2) our ATCS strategy (Algorithm1). The former is presented as “fixed” while the latter is marked as “auto” in the Strategy columns of Table IV.",
+        "bbox": [
+            501,
+            226,
+            923,
+            500
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "The regression models (i.e., the learning models listed in Section VI-A) will first be trained respectively using the two prepared training sets from different strategies, then they will do inference on some prepared testing sets and the inference quality is measured by MAE and MSE, which can reflect the training effectiveness. For a fair testing, we generate two kinds of prepared testing sets: (1) the testing points with randomly selected ϵ values from the 100 candidates mentioned above, and (2) the same testing points with uniformly selected ϵ values from the candidates. The inference quality on the former set is reported in the Random Testing ϵ columns while that on the latter is reported in the Uniform Testing ϵ columns of Table IV. And for each learning model, the Strategy which results in better inference quality (i.e., lower MAE and MSE) is highlighted by bold text.",
+        "bbox": [
+            501,
+            500,
+            924,
+            726
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "In most cases, the “auto” strategy (i.e., our ATCS strategy) achieves a better inference quality (e.g., reducing up to 98% of the MSE on NUS-WIDE dataset) than uniform training ϵ, meaning that ATCS strategy is generic to facilitate various kinds of regression models and highly effective to raise a significant improvement on the prediction quality. Therefore, for all the following experiments in this paper, the training sets are prepared by ATCS.",
+        "bbox": [
+            501,
+            726,
+            924,
+            845
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "2) XDT selection: As mentioned in Section V-B, XDT is influenced by three factors: (1) τ, (2) the XDT selection method (mean-based or FPR-based), and (3) the way to get training targets for out-of-domain ϵ (interpolation-based approximate targets or naively computed exact targets). In this section we evaluate the last two factors due to page limit. Specifically, here we fix τ = 0. For each dataset, the learned cardinality estimator of Xling is first trained using the training set, then we vary the setting for the two factors, compute XDT under each setting, and measure the FPR and FNR of Xling on the testing set of the current dataset, as well as the time for computing the training targets.",
+        "bbox": [
+            501,
+            845,
+            924,
+            909
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "table",
+        "img_path": "images/a30e1024d2a63c46464e39d6a9cd0d5e09718918abfb8fac95ee622f28273fca.jpg",
+        "table_caption": [],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"2\">Random Testing ε</td><td colspan=\"2\">Uniform Testing ε</td><td rowspan=\"2\">Model</td><td rowspan=\"2\">Strategy</td></tr><tr><td>MAE</td><td>MSE</td><td>MAE</td><td>MSE</td></tr><tr><td>4.04</td><td>6.69</td><td>2.57</td><td>2.68</td><td>XGB</td><td>fixed</td></tr><tr><td>2.54</td><td>1.32</td><td>2.54</td><td>1.26</td><td>XGB</td><td>auto</td></tr><tr><td>3.66</td><td>6.65</td><td>2.14</td><td>2.57</td><td>LGBM</td><td>fixed</td></tr><tr><td>1.8</td><td>0.83</td><td>1.79</td><td>0.81</td><td>LGBM</td><td>auto</td></tr><tr><td>23.79</td><td>97.16</td><td>27.55</td><td>127.15</td><td>SVR</td><td>fixed</td></tr><tr><td>22.26</td><td>81.06</td><td>25.34</td><td>106.22</td><td>SVR</td><td>auto</td></tr><tr><td>96.13</td><td>24711.7</td><td>96.44</td><td>28299.85</td><td>SelNet</td><td>fixed</td></tr><tr><td>93.8</td><td>22228.79</td><td>94.39</td><td>25737.67</td><td>SelNet</td><td>auto</td></tr><tr><td>2.08</td><td>1.39</td><td>1.69</td><td>1.00</td><td>NN</td><td>fixed</td></tr><tr><td>0.39</td><td>0.03</td><td>0.44</td><td>0.05</td><td>NN</td><td>auto</td></tr><tr><td>2.55</td><td>5.72</td><td>1.52</td><td>2.18</td><td>RMI</td><td>fixed</td></tr><tr><td>0.20</td><td>0.01</td><td>0.19</td><td>0.01</td><td>RMI</td><td>auto</td></tr></table>",
+        "bbox": [
+            76,
+            55,
+            465,
+            178
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "table",
+        "img_path": "images/46e038f7d3f35cb323ed3025ba3011110f3faa7f1a492e33e08f184ce55875f2.jpg",
+        "table_caption": [
+            "(a) Sift",
+            "(c) FastText"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"2\">Random Testing ε</td><td colspan=\"2\">Uniform Testing ε</td><td rowspan=\"2\">Model</td><td rowspan=\"2\">Strategy</td></tr><tr><td>MAE</td><td>MSE</td><td>MAE</td><td>MSE</td></tr><tr><td>4.69</td><td>5.49</td><td>5.02</td><td>5.36</td><td>XGB</td><td>fixed</td></tr><tr><td>2.53</td><td>1.43</td><td>2.55</td><td>1.49</td><td>XGB</td><td>auto</td></tr><tr><td>4.7</td><td>5.49</td><td>4.76</td><td>4.94</td><td>LGBM</td><td>fixed</td></tr><tr><td>2.45</td><td>1.28</td><td>2.47</td><td>1.33</td><td>LGBM</td><td>auto</td></tr><tr><td>27.61</td><td>141.55</td><td>29.89</td><td>169.73</td><td>SVR</td><td>fixed</td></tr><tr><td>23.45</td><td>81.06</td><td>24.5</td><td>94.06</td><td>SVR</td><td>auto</td></tr><tr><td>36.19</td><td>357.57</td><td>38.14</td><td>387.45</td><td>SelNet</td><td>fixed</td></tr><tr><td>36.19</td><td>357.52</td><td>38.14</td><td>387.39</td><td>SelNet</td><td>auto</td></tr><tr><td>0.54</td><td>0.14</td><td>0.79</td><td>0.36</td><td>NN</td><td>fixed</td></tr><tr><td>0.32</td><td>0.03</td><td>0.38</td><td>0.05</td><td>NN</td><td>auto</td></tr><tr><td>2.09</td><td>2.23</td><td>2.80</td><td>4.49</td><td>RMI</td><td>fixed</td></tr><tr><td>0.67</td><td>0.18</td><td>0.77</td><td>0.24</td><td>RMI</td><td>auto</td></tr></table>",
+        "bbox": [
+            76,
+            194,
+            465,
+            318
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "table",
+        "img_path": "images/f258b15299a2b5b73781f16b9abf44222952ae5de6a1f102837703a64cef7cfb.jpg",
+        "table_caption": [],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"2\">Random Testing ε</td><td colspan=\"2\">Uniform Testing ε</td><td rowspan=\"2\">Model</td><td rowspan=\"2\">Strategy</td></tr><tr><td>MAE</td><td>MSE</td><td>MAE</td><td>MSE</td></tr><tr><td>5.32</td><td>22.84</td><td>7.81</td><td>48.16</td><td>XGB</td><td>fixed</td></tr><tr><td>5.02</td><td>24.09</td><td>7.89</td><td>50.7</td><td>XGB</td><td>auto</td></tr><tr><td>5.29</td><td>20.46</td><td>7.45</td><td>43.82</td><td>LGBM</td><td>fixed</td></tr><tr><td>4.49</td><td>19.61</td><td>7.1</td><td>43.52</td><td>LGBM</td><td>auto</td></tr><tr><td>9.01</td><td>46.41</td><td>12.6</td><td>84.58</td><td>SVR</td><td>fixed</td></tr><tr><td>8.7</td><td>50.18</td><td>12.32</td><td>90.46</td><td>SVR</td><td>auto</td></tr><tr><td>8.91</td><td>54.69</td><td>12.57</td><td>97.23</td><td>SelNet</td><td>fixed</td></tr><tr><td>8.91</td><td>54.7</td><td>12.57</td><td>97.24</td><td>SelNet</td><td>auto</td></tr><tr><td>4.38</td><td>18.87</td><td>6.78</td><td>41.95</td><td>NN</td><td>fixed</td></tr><tr><td>3.33</td><td>11.85</td><td>5.09</td><td>23.19</td><td>NN</td><td>auto</td></tr><tr><td>4.52</td><td>19.44</td><td>6.85</td><td>42.57</td><td>RMI</td><td>fixed</td></tr><tr><td>3.43</td><td>13.84</td><td>5.35</td><td>27.51</td><td>RMI</td><td>auto</td></tr></table>",
+        "bbox": [
+            537,
+            56,
+            926,
+            178
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "table",
+        "img_path": "images/e84843c880f5596491271cc49b2defae707a6757499f7fff2e59f7718c25849c.jpg",
+        "table_caption": [
+            "(b) Word2Vec",
+            "(d) NUS-WIDE"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td colspan=\"2\">Random Testing ε</td><td colspan=\"2\">Uniform Testing ε</td><td rowspan=\"2\">Model</td><td rowspan=\"2\">Strategy</td></tr><tr><td>MAE</td><td>MSE</td><td>MAE</td><td>MSE</td></tr><tr><td>4.74</td><td>14.99</td><td>3.4</td><td>6.35</td><td>XGB</td><td>fixed</td></tr><tr><td>3.36</td><td>2.62</td><td>3.37</td><td>2.69</td><td>XGB</td><td>auto</td></tr><tr><td>4.23</td><td>15.29</td><td>2.89</td><td>6.4</td><td>LGBM</td><td>fixed</td></tr><tr><td>2.4</td><td>2.6</td><td>2.36</td><td>2.46</td><td>LGBM</td><td>auto</td></tr><tr><td>22.81</td><td>70.71</td><td>24.6</td><td>80.33</td><td>SVR</td><td>fixed</td></tr><tr><td>25.22</td><td>99.4</td><td>25.06</td><td>97.04</td><td>SVR</td><td>auto</td></tr><tr><td>82.26</td><td>8655.88</td><td>82.62</td><td>9886.03</td><td>SelNet</td><td>fixed</td></tr><tr><td>75.96</td><td>6560.3</td><td>75.93</td><td>7490.16</td><td>SelNet</td><td>auto</td></tr><tr><td>3.39</td><td>10.56</td><td>2.51</td><td>5.01</td><td>NN</td><td>fixed</td></tr><tr><td>0.83</td><td>0.20</td><td>1.04</td><td>0.33</td><td>NN</td><td>auto</td></tr><tr><td>4.24</td><td>19.66</td><td>2.49</td><td>6.60</td><td>RMI</td><td>fixed</td></tr><tr><td>0.48</td><td>0.27</td><td>0.39</td><td>0.13</td><td>RMI</td><td>auto</td></tr></table>",
+        "bbox": [
+            537,
+            194,
+            926,
+            316
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "table",
+        "img_path": "images/338b4dce0c2c33137f9d4ce6f4fb43c5357fdbd4277b11dcd9b58654a3582991.jpg",
+        "table_caption": [
+            "TABLE IV: Effectiveness of the two training ϵ selection strategies for different regressors trained on different datasets, where MAE columns show the original numbers multiplied by $1 0 ^ { - 3 }$ and MSE columns show the original numbers multiplied by $1 0 ^ { - 7 }$",
+            "TABLE V: Prediction quality (FPR and FNR) of Xling when XDT is computed in different ways (while fixing $\\tau = 0 )$ There are two dimensions for a way to compute XDT: (1) using mean-based or FPR-based XDT selection method (2) using interpolation-based method to approximate the targets or naive method to compute the exact targets. The time to compute the targets is also presented (Time). Results on other datasets are similar to Glove and NUS-WIDE. Note that we allow XDT to be less than zero."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=\"2\">Dataset</td><td rowspan=\"2\">Model</td><td rowspan=\"2\"> $\\epsilon$ </td><td rowspan=\"2\">XDT Selection</td><td colspan=\"4\">Approximate Targets</td><td colspan=\"4\">Exact Targets</td></tr><tr><td>FPR</td><td>FNR</td><td>Time(s)</td><td>XDT</td><td>FPR</td><td>FNR</td><td>Time(s)</td><td>XDT</td></tr><tr><td rowspan=\"12\">Glove</td><td rowspan=\"6\">XGB</td><td rowspan=\"2\">0.4</td><td>mean</td><td>0.4948</td><td>0.3982</td><td>1.3618</td><td>-8.45</td><td>0.4948</td><td>0.3982</td><td>1037.9202</td><td>-8.45</td></tr><tr><td>FPR</td><td>0.0562</td><td>0.8578</td><td>1.3859</td><td>406.83</td><td>0.0562</td><td>0.8578</td><td>1037.9278</td><td>406.83</td></tr><tr><td rowspan=\"2\">0.45</td><td>mean</td><td>0.5019</td><td>0.4247</td><td>2.5836</td><td>-10.66</td><td>0.4996</td><td>0.4259</td><td>1038.6554</td><td>-9.28</td></tr><tr><td>FPR</td><td>0.0608</td><td>0.8737</td><td>2.5499</td><td>392.43</td><td>0.0548</td><td>0.882</td><td>1038.6161</td><td>405.70</td></tr><tr><td rowspan=\"2\">0.5</td><td>mean</td><td>0.4989</td><td>0.4373</td><td>2.51</td><td>-12.56</td><td>0.5004</td><td>0.4358</td><td>1038.3489</td><td>-13.50</td></tr><tr><td>FPR</td><td>0.0602</td><td>0.8903</td><td>2.8515</td><td>387.51</td><td>0.0566</td><td>0.8946</td><td>1038.379</td><td>396.47</td></tr><tr><td rowspan=\"6\">RMI</td><td rowspan=\"2\">0.4</td><td>mean</td><td>0.4071</td><td>0.2306</td><td>10.0679</td><td>4.38</td><td>0.4071</td><td>0.2506</td><td>1046.1883</td><td>4.38</td></tr><tr><td>FPR</td><td>0.0501</td><td>0.5049</td><td>9.9112</td><td>6.46</td><td>0.0501</td><td>0.5049</td><td>1046.1892</td><td>6.46</td></tr><tr><td rowspan=\"2\">0.45</td><td>mean</td><td>0.4496</td><td>0.2308</td><td>10.9286</td><td>4.57</td><td>0.3537</td><td>0.2702</td><td>1046.9525</td><td>4.76</td></tr><tr><td>FPR</td><td>0.0808</td><td>0.4902</td><td>11.1269</td><td>6.48</td><td>0.0506</td><td>0.5385</td><td>1047.0098</td><td>7.37</td></tr><tr><td rowspan=\"2\">0.5</td><td>mean</td><td>0.3613</td><td>0.2546</td><td>10.8683</td><td>5.13</td><td>0.3043</td><td>0.284</td><td>1046.6399</td><td>5.34</td></tr><tr><td>FPR</td><td>0.0709</td><td>0.5041</td><td>11.1455</td><td>7.99</td><td>0.0518</td><td>0.5424</td><td>1046.5916</td><td>8.82</td></tr><tr><td rowspan=\"12\">NUS-WIDE</td><td rowspan=\"6\">XGB</td><td rowspan=\"2\">0.4</td><td>mean</td><td>0.5041</td><td>0.2202</td><td>1.4501</td><td>-3.31</td><td>0.5011</td><td>0.2215</td><td>2638.2846</td><td>15.41</td></tr><tr><td>FPR</td><td>0.0555</td><td>0.6554</td><td>1.5899</td><td>3424.20</td><td>0.0524</td><td>0.6645</td><td>2638.2916</td><td>3499.68</td></tr><tr><td rowspan=\"2\">0.45</td><td>mean</td><td>0.5024</td><td>0.2428</td><td>1.4116</td><td>-3.31</td><td>0.5008</td><td>0.2428</td><td>2655.1167</td><td>5.55</td></tr><tr><td>FPR</td><td>0.0535</td><td>0.6727</td><td>1.4341</td><td>3424.20</td><td>0.0519</td><td>0.6756</td><td>2655.1188</td><td>3463.20</td></tr><tr><td rowspan=\"2\">0.5</td><td>mean</td><td>0.5009</td><td>0.2719</td><td>1.8672</td><td>-3.31</td><td>0.5009</td><td>0.2719</td><td>2651.2069</td><td>-3.31</td></tr><tr><td>FPR</td><td>0.0516</td><td>0.6981</td><td>2.0873</td><td>3424.20</td><td>0.0516</td><td>0.6981</td><td>2651.1754</td><td>3424.20</td></tr><tr><td rowspan=\"6\">RMI</td><td rowspan=\"2\">0.4</td><td>mean</td><td>0.3672</td><td>0.057</td><td>10.6236</td><td>2.86</td><td>0.3537</td><td>0.0596</td><td>2647.5025</td><td>2.99</td></tr><tr><td>FPR</td><td>0.0534</td><td>0.0894</td><td>11.0576</td><td>9.87</td><td>0.048</td><td>0.092</td><td>2647.5929</td><td>10.45</td></tr><tr><td rowspan=\"2\">0.45</td><td>mean</td><td>0.3301</td><td>0.071</td><td>10.4377</td><td>2.43</td><td>0.3216</td><td>0.071</td><td>2664.379</td><td>2.52</td></tr><tr><td>FPR</td><td>0.0504</td><td>0.1123</td><td>10.8119</td><td>9.55</td><td>0.0463</td><td>0.1161</td><td>2664.2925</td><td>9.95</td></tr><tr><td rowspan=\"2\">0.5</td><td>mean</td><td>0.2872</td><td>0.087</td><td>11.3239</td><td>2.18</td><td>0.2872</td><td>0.087</td><td>2660.6731</td><td>2.18</td></tr><tr><td>FPR</td><td>0.0467</td><td>0.1294</td><td>11.3493</td><td>9.54</td><td>0.0467</td><td>0.1294</td><td>2660.3748</td><td>9.54</td></tr></table>",
+        "bbox": [
+            207,
+            383,
+            787,
+            549
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            661,
+            493,
+            782
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Due to space limit, Table V reports the results for two representative models (i.e., XGB for non-deep and RMI for deep model) on two datasets Glove (text) and NUS-WIDE (image). For the factor of target computing, the results show that the two target computing methods usually lead to similar FPR and FNR, while our proposed interpolation-based target approximation is around 100x ∼ 2000x faster than the naive target computing, meaning that interpolation-based target approximation is both effective and highly efficient. For the factor of XDT selection, as mentioned in Section V-B, the results present that FPR-based XDT selection usually generates a higher XDT than mean-based, thereby the former tends to determine more queries as negative and causes lower FPR and higher FNR than the latter. So in the end-to-end similarity join, using FPR-based XDT selection will lead to higher speedup but lower quality than mean-based, which supports the statements in Section V-B.",
+        "bbox": [
+            73,
+            786,
+            493,
+            909
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            501,
+            661,
+            924,
+            797
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "C. Filter effectiveness evaluation",
+        "text_level": 2,
+        "bbox": [
+            504,
+            821,
+            733,
+            837
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "In this section we evaluate the prediction quality between Xling and LSBF, reported by FPR and FNR of their predictions for the testing sets. We fix $\\tau = 0$ as LSBF does not support the cases where $\\tau > 0$",
+        "bbox": [
+            501,
+            845,
+            923,
+            907
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "The results are included in Table VI. In addition to FPR and FNR, the table also includes the total number of true neighbors found for all the testing queries (#Nbrs) by Naive-LSBF and XJoin, the number of predicted positive queries (#PPQ) which are the query points predicted as positive by the filter, and the average number of neighbors per predicted positive query (#ANPQ), i.e., #ANPQ = #Nbrs/#PPQ. We have the following observations: (1) In most cases, Xling with mean-based XDT has both lower FPR and FNR than LSBF, meaning it is more effective than LSBF. (2) In many cases, Xling with FPR-based XDT performs similarly to the observation above, while in some other cases, it has higher FNR than LSBF. However, even with a higher FNR, it still finds more true neighbors in those cases than LSBF, e.g., the case of Word2vec under $\\epsilon = 0 . 5$ The reason is that the queries predicted as positive by Xling overall have more neighbors than those by LSBF (reflected by #ANPQ), due to which Xling can find more true results with less range search (i.e., the #PPQ of FPR-based Xling is usually less than LSBF). In short, Xling learns the data distribution and makes predictions based on the data density, such that it can maximize the recall with minimized number of search, which is a huge advantage over the data-unaware LSBF.",
+        "bbox": [
+            73,
+            61,
+            493,
+            395
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "D. End-to-end evaluation",
+        "text_level": 2,
+        "bbox": [
+            75,
+            404,
+            254,
+            419
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "In end-to-end evaluation, the key parameters for the methods are fixed as such: (1) Naive and SuperEGO have no userspecific parameters. (2) In LSH, the number of hash tables l = 10, number of has functions $k = 1 8 ,$ , the number of hash buckets to be inspected in each table $n _ { p } = 4 0$ for text datasets while $n _ { p } \\ = \\ 2$ for image datasets. (3) In KmeansTree, the branching factor is fixed to be 3, the portion of leaves to be inspected $\\rho = 0 . 0 2$ for text datasets while $\\rho = 0 . 0 1 2$ for image datasets. (4) For Naive-LSBF, its LSH-related parameters k and l are the same as the method LSH, length of the bit array in LSBF is fixed to be 2,160,000 (i.e., $| R | \\times k )$ , the parameter W in the p-stable LSH functions is set to be 2.5 for text datasets while $W = 2$ for image datasets. (5) For IVFPQ, the parameters for building the index are $C = 3 0 0$ $m = 3 2$ or m = 25 when the data dimension is not an integer multiple of 32, b = 8, p = 50, where C is the number of clusters, m is the number of segments into which each data vector will be split, b is the number of bits used to encode the clsuter centroids, and p is the number of nearest clusters to be inspected during search. In our implementation, this baseline first uses the IVFPQ index to select 1000 nearest neighbors then verifies them given ϵ. The number 1000 is determined since for all datasets, at least 50% testing queries have less than 1000 neighbors within ϵ, and in most datasets 1000 candidates are enough to find all correct neighbors for 70% ∼ 90% testing queries. (6) The configuration of Xling is introduced in Section VI-A, while the base methods in SuperEGO-Xling, LSH-Xling and KmeansTree-Xling use the same parameters as above.",
+        "bbox": [
+            73,
+            424,
+            493,
+            862
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "The results are illustrated in Figure 2. SuperEGO has unknown bugs that prevent it from running on FastText and NUS-WIDE datasets, so Figure 2 does not include SuperEGO for these two datasets. SuperEGO relies on multi-threading for acceleration, so on some datasets its running time is even longer than the Naive method since we only use one thread to evaluate all the methods. The results show that our method XJoin has a higher speed (presented by the red bar) than all the baseline methods, as well as higher quality (reported by the red line) than the other approximate methods (i.e., LSH, KmeansTree and Naive-LSBF) in most cases. The recall of Naive and SuperEGO is always 1 as they are exact methods. Specifically, XJoin achieves up to 17x and 14.6x speedup respectively compared to the exact methods and approximate methods while guaranteeing a high quality. The results prove the high efficiency and effectiveness of our proposed method.",
+        "bbox": [
+            73,
+            862,
+            493,
+            907
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            501,
+            61,
+            924,
+            260
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "E. Speed-quality trade-off evaluation",
+        "text_level": 2,
+        "bbox": [
+            504,
+            268,
+            761,
+            284
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "In this evaluation, We fix the dataset and $\\epsilon ,$ then vary some key parameters of the approximate baselines and XJoin, i.e., $n _ { p }$ in LSH, the branching factor and the ratio ρ in KmeansTree, W and bit array length in Naive-LSBF, C and p in IVFPQ, and the XDT selection mode (mean or FPR based) and τ in XJoin. For LSH and KmeansTree, we always set the parameters of their Xling-enhanced versions the same as the original version, in order to make the comparison between them fair. The varied parameters result in varied end-to-end similarity join time and quality, based on which we get the speed-quality trade-off curves, as illustrated in Figure 3.",
+        "bbox": [
+            503,
+            287,
+            924,
+            454
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "We select three cases to present in Figure 3: the datasets Glove, Word2vec and Gist with ϵ = 0.45, and other cases are similar to them. According to the results, we conclude that (1) XJoin has better trade-off capability than the original version of the approximate baselines, i.e., LSH, IVFPQ, KmeansTree and Naive-LSBF, meaning that XJoin can achieve high quality with minimum processing time, or sacrifice tiny quality for significant efficiency gain. (2) The Xling-enhanced versions of the approximate baselines (i.e., LSH-Xling, IVFPQ-Xling and KmeansTree-Xling) have significant better trade-off capability than the original versions, which also means Xling successfully accelerates the original versions with a relatively negligible quality loss. This demonstrates the generality and usefulness of Xling to further enhance the existing similarity join methods and make them more practical.",
+        "bbox": [
+            503,
+            454,
+            924,
+            683
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "F. Generalization evaluation",
+        "text_level": 2,
+        "bbox": [
+            504,
+            691,
+            704,
+            707
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "In this section we evaluate the generalization capability of Xling and XJoin. Another 150k dataset is sampled for each original dataset. We call the first 150k datasets used in previous experiments “the first 150k” or add “-1st” after the dataset name, while call the new dataset “the second 150k” or add “-2nd” after the name. The first and second 150k have no overlap, except NUS-WIDE.",
+        "bbox": [
+            503,
+            710,
+            924,
+            816
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "We first evaluate the trade-off capabilities of XJoin and Xling-enhanced methods again on the second 150k. All Xlings are those trained on the first 150k and used in the previous experiments. We do not re-train them anymore for the second 150k. As shown in Figure 4, all those methods present a similar performance and trends as in Figure 3, which prove our statement in the Introduction that Xling and XJoin have great generalization capability thanks to the learning model, and therefore it is not necessary to re-train Xling when the data is updated or even replaced with a fully new dataset, as long as the new data has similar distribution to the old.",
+        "bbox": [
+            503,
+            816,
+            924,
+            909
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "chart",
+        "img_path": "images/853bf07169b57f14d33f702667bea3f22ae3f30ecf8af2256bc86d12b6b4ba36.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            84,
+            301,
+            926,
+            627
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "table",
+        "img_path": "images/6adc4c9d3e0cf7580aadd27809d2bda0943bb7712f12baeb63dc8b1cb0d54227.jpg",
+        "table_caption": [
+            "(a) Text datasets"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Dataset</td><td> $\\epsilon$ </td><td>Filter</td><td>FPR</td><td>FNR</td><td>#Nbrs $(\\times 10^{5})$ </td><td>#PPQ $(\\times 10^{4})$ </td><td>#ANPQ</td></tr><tr><td rowspan=\"9\">FastText</td><td rowspan=\"3\">0.4</td><td>LSBF</td><td>0.46</td><td>0.2908</td><td>127.73</td><td>2.05</td><td>624.58</td></tr><tr><td>Xling(mean)</td><td>0.2523</td><td>0.1114</td><td>142.15</td><td>2.46</td><td>578.95</td></tr><tr><td>Xling(FPR)</td><td>0.0529</td><td>0.207</td><td>141.90</td><td>2.13</td><td>664.94</td></tr><tr><td rowspan=\"3\">0.45</td><td>LSBF</td><td>0.5124</td><td>0.2471</td><td>296.05</td><td>2.23</td><td>1329.56</td></tr><tr><td>Xling(mean)</td><td>0.3469</td><td>0.0682</td><td>325.25</td><td>2.72</td><td>1196.82</td></tr><tr><td>Xling(FPR)</td><td>0.0948</td><td>0.1295</td><td>325.07</td><td>2.51</td><td>1295.92</td></tr><tr><td rowspan=\"3\">0.5</td><td>LSBF</td><td>0.5244</td><td>0.2062</td><td>708.64</td><td>2.37</td><td>2987.66</td></tr><tr><td>Xling(mean)</td><td>0.3582</td><td>0.0376</td><td>767.57</td><td>2.87</td><td>2678.19</td></tr><tr><td>Xling(FPR)</td><td>0.0802</td><td>0.099</td><td>767.23</td><td>2.68</td><td>2868.68</td></tr><tr><td rowspan=\"9\">Word2vec</td><td rowspan=\"3\">0.4</td><td>LSBF</td><td>0.4952</td><td>0.4607</td><td>3.49</td><td>1.58</td><td>22.06</td></tr><tr><td>Xling(mean)</td><td>0.374</td><td>0.3197</td><td>4.63</td><td>1.78</td><td>26.08</td></tr><tr><td>Xling(FPR)</td><td>0.0502</td><td>0.7028</td><td>4.20</td><td>0.68</td><td>61.81</td></tr><tr><td rowspan=\"3\">0.45</td><td>LSBF</td><td>0.5516</td><td>0.3977</td><td>6.77</td><td>1.78</td><td>37.98</td></tr><tr><td>Xling(mean)</td><td>0.4397</td><td>0.234</td><td>8.86</td><td>2.13</td><td>41.53</td></tr><tr><td>Xling(FPR)</td><td>0.0804</td><td>0.5996</td><td>8.19</td><td>1.04</td><td>78.70</td></tr><tr><td rowspan=\"3\">0.5</td><td>LSBF</td><td>0.5943</td><td>0.3419</td><td>13.04</td><td>1.96</td><td>66.56</td></tr><tr><td>Xling(mean)</td><td>0.3019</td><td>0.2725</td><td>16.40</td><td>2.08</td><td>78.83</td></tr><tr><td>Xling(FPR)</td><td>0.039</td><td>0.5882</td><td>15.15</td><td>1.15</td><td>132.22</td></tr></table>",
+        "bbox": [
+            76,
+            56,
+            498,
+            202
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "table",
+        "img_path": "images/b478945874b8631c8edf94ceb8af03ffacbf7fc2ecf87f5ede62550a86865b3f.jpg",
+        "table_caption": [
+            "(b) Image datasets",
+            "TABLE VI: The prediction quality of LSBF and Xling (mean-based or FPR-based) on different datasets, where #Nbrs is the total number of returned neighbors for all the queries, #PPQ stands for the number of Predicted Positive Queries, i.e., the query points predicted as positive by the filter, and #ANPQ presents the Average number of Neighbors per predicted Positive Query that equals #Nbrs over #PPQ. Due to space limit, the results on Glove and Gist datasets are hidden, which are similar to the other four.",
+            "Fig. 2: End-to-end query processing time and recall for all the similarity join methods on all datasets, where the figures of FastText and NUS-WIDE do not include SuperEGO, as it cannot run on these two datasets."
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Dataset</td><td> $\\epsilon$ </td><td>Filter</td><td>FPR</td><td>FNR</td><td> $\\#Nbrs$  $(\\times 10^{5})$ </td><td> $\\#PPQ$  $(\\times 10^{4})$ </td><td> $\\#ANPQ$ </td></tr><tr><td rowspan=\"9\">Sift</td><td rowspan=\"3\">0.4</td><td>LSBF</td><td>0.2415</td><td>0.6609</td><td>4.69</td><td>0.85</td><td>54.89</td></tr><tr><td>Xling(mean)</td><td>0.06</td><td>0.6119</td><td>7.18</td><td>0.62</td><td>116.65</td></tr><tr><td>Xling(FPR)</td><td>0.0351</td><td>0.6771</td><td>7.08</td><td>0.49</td><td>145.37</td></tr><tr><td rowspan=\"3\">0.45</td><td>LSBF</td><td>0.2338</td><td>0.6358</td><td>13.04</td><td>0.96</td><td>136.42</td></tr><tr><td>Xling(mean)</td><td>0.081</td><td>0.4565</td><td>19.49</td><td>1.15</td><td>170.09</td></tr><tr><td>Xling(FPR)</td><td>0.0537</td><td>0.5064</td><td>19.39</td><td>1.02</td><td>190.19</td></tr><tr><td rowspan=\"3\">0.5</td><td>LSBF</td><td>0.2033</td><td>0.6139</td><td>35.34</td><td>1.08</td><td>330.35</td></tr><tr><td>Xling(mean)</td><td>0.1798</td><td>0.237</td><td>52.83</td><td>2.02</td><td>261.36</td></tr><tr><td>Xling(FPR)</td><td>0.0581</td><td>0.3678</td><td>52.50</td><td>1.63</td><td>321.55</td></tr><tr><td rowspan=\"9\">NUS-WIDE</td><td rowspan=\"3\">0.4</td><td>LSBF</td><td>0.2492</td><td>0.5687</td><td>1.39</td><td>0.76</td><td>18.19</td></tr><tr><td>Xling(mean)</td><td>0.3671</td><td>0.057</td><td>2.14</td><td>1.15</td><td>18.65</td></tr><tr><td>Xling(FPR)</td><td>0.0534</td><td>0.0894</td><td>2.14</td><td>0.23</td><td>94.32</td></tr><tr><td rowspan=\"3\">0.45</td><td>LSBF</td><td>0.2498</td><td>0.5374</td><td>2.82</td><td>0.77</td><td>36.53</td></tr><tr><td>Xling(mean)</td><td>0.3302</td><td>0.071</td><td>4.06</td><td>1.05</td><td>38.56</td></tr><tr><td>Xling(FPR)</td><td>0.0503</td><td>0.1123</td><td>4.06</td><td>0.24</td><td>170.27</td></tr><tr><td rowspan=\"3\">0.5</td><td>LSBF</td><td>0.2469</td><td>0.5029</td><td>5.15</td><td>0.78</td><td>66.42</td></tr><tr><td>Xling(mean)</td><td>0.2873</td><td>0.087</td><td>6.98</td><td>0.95</td><td>73.69</td></tr><tr><td>Xling(FPR)</td><td>0.0467</td><td>0.1294</td><td>6.98</td><td>0.25</td><td>276.09</td></tr></table>",
+        "bbox": [
+            519,
+            56,
+            939,
+            202
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            691,
+            493,
+            768
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "To have a further quantitative view about the generalization, we also compare the speed improvement and the recall loss made by Xling when attaching it to the base similarity join methods. In Figure 5, within each method (marked as “IVFPQ”, “LSH”, etc.), the first bar (solid and blue, “1st time”) and second bar (solid and orange, “1st Xling time”) are the end-to-end running time of the original method and its Xling-enhanced version on the first 150k, while the third bar (diagonal lines and blue, “2nd time”) and fourth bar (diagonal lines and orange, “2nd Xling time”) are the two running time on the second 150k. The green and red lines are the percentage recall loss respectively on the first and second 150k, i.e., the difference between recall of original method and enhanced version over original recall on each dataset. The results show that neither time improvement nor recall loss has a significant difference between first and second 150k, which further prove our methods have outstanding generalization, meaning that they are practical in real world.",
+        "bbox": [
+            73,
+            771,
+            493,
+            909
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            501,
+            691,
+            924,
+            830
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "VII. CONCLUSION",
+        "text_level": 2,
+        "bbox": [
+            643,
+            840,
+            784,
+            854
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "In this paper we propose Xling, a generic framework of learned metric space Bloom filters for speeding up similarity join with quality guarantee based on machine learning. Based on Xling we develop an efficient and effective similarity join method that outperforms the state-of-the-art methods on both Recspeed and quality, as well as having a better speed-quality trade-off capability and generalization capability. We also apply Xling onto those state-of-the-art methods to significantly further enhance them. Xling has shown the great potential in effectively speeding up a wide range of existing similarity join methods.",
+        "bbox": [
+            501,
+            862,
+            924,
+            909
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "chart",
+        "img_path": "images/ce456393589f3ea66bc89fd69b9ead92f1fd85041e281fb67d0f8e5199ff8301.jpg",
+        "content": "",
+        "chart_caption": [
+            "Glove"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            102,
+            64,
+            357,
+            202
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/2ec6dd295bd5e5b1b827d1c2def01f6dbca3c7877b8f04a22fbb5e80a0d8308f.jpg",
+        "content": "",
+        "chart_caption": [
+            "Word2vec"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            370,
+            63,
+            614,
+            200
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/3a00fa1060bf692c401e5c62e2bcfc358304bd0f651b54cfc6b17362de4b9f58.jpg",
+        "content": "",
+        "chart_caption": [
+            "Gist"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            632,
+            64,
+            918,
+            202
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/2eaea237d0d47d20497bb0ba4c5a98c28a9f69975648e781d7ba6805773482f4.jpg",
+        "content": "",
+        "chart_caption": [
+            "Fig. 3: Speed-quality trade-off curves for XJoin, the approximate methods and their Xling-enhanced versions on the selected datasets and ϵ, and other cases are also similar.",
+            "Glove-2nd"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            99,
+            273,
+            357,
+            411
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/54fe45bda33d85ab997fb2f0aea5ae3af0213f90d7e696457e241c3612801dad.jpg",
+        "content": "",
+        "chart_caption": [
+            "Word2vec-2nd"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            370,
+            273,
+            614,
+            409
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/92d451984d0cc75716f2289e90ae42880686eb0d485fa078a41beded301ac55a.jpg",
+        "content": "",
+        "chart_caption": [
+            "Gist-2nd"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            629,
+            273,
+            919,
+            414
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/d9c48037e7bdc82cc0a536741f2bdc7f290b0d5c80ae63fe026fe3dc86177771.jpg",
+        "content": "",
+        "chart_caption": [
+            "Fig. 4: Speed-quality trade-off curves for XJoin, the approximate methods and their Xling-enhanced versions on the second 150k datasets, where all Xlings are pre-trained on the original 150k dataset without re-training for the second",
+            "Glove 1st vs 2nd"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            117,
+            472,
+            354,
+            614
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/c4e4c474c7d79591cbd5af1c0c291bf0691b9ef940c9f5708d4abc8641c16d89.jpg",
+        "content": "",
+        "chart_caption": [
+            "Word2vec 1st vs 2nd"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            364,
+            472,
+            614,
+            614
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "chart",
+        "img_path": "images/555fede57d3ebdd31226e4289aebdcad73a161b292a393b7bfc0925935a3fce0.jpg",
+        "content": "",
+        "chart_caption": [
+            "1st recall loss (%) 2nd recall loss (%)",
+            "Gist 1st vs 2nd",
+            "Fig. 5: The differences of acceleration and recall loss resulting from Xling on the first and second 150k datasets"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            653,
+            489,
+            872,
+            614
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            73,
+            680,
+            493,
+            801
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "REFERENCES",
+        "text_level": 2,
+        "bbox": [
+            235,
+            814,
+            333,
+            828
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "ref_text",
+        "text": "[1] B. Gyawali, L. Anastasiou, and P. Knoth, “Deduplication of scholarly documents using locality sensitive hashing and word embeddings,” in Proceedings of the Twelfth Language Resources and Evaluation Conference. Marseille, France: European Language Resources Association, May 2020, pp. 901–910. [Online]. Available: https://aclanthology.org/2020.lrec-1.113",
+        "bbox": [
+            81,
+            837,
+            491,
+            906
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "ref_text",
+        "text": "<sup>(</sup>[2] C. Yang, D. H. Hoang, T. Mikolov, and J. Han, “Place deduplication e<sub>with embeddings,” in The World Wide Web Conference, 2019, pp. 3420–</sub> 3426.",
+        "bbox": [
+            513,
+            683,
+            921,
+            715
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "ref_text",
+        "text": "I [3] H. B. da Silva, Z. K. do Patroc´ınio, G. Gravier, L. Amsaleg, A. d. A. T<sub>Araujo, and S. J. F. Guimaraes, “Near-duplicate video detection based on´</sub> an approximate similarity self-join strategy,” in 2016 14th International Workshop on Content-Based Multimedia Indexing (CBMI). IEEE, 2016, pp. 1–6.",
+        "bbox": [
+            513,
+            718,
+            921,
+            775
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "ref_text",
+        "text": "[4] L. Zhou, J. Chen, A. Das, H. Min, L. Yu, M. Zhao, and J. Zou, “Serving deep learning models with deduplication from relational databases,” Proceedings of the VLDB Endowment, vol. 15, no. 10, p. 2230–2243, Jun. 2022. [Online]. Available: http://dx.doi.org/10.14778/ 3547305.3547325",
+        "bbox": [
+            513,
+            777,
+            921,
+            834
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "ref_text",
+        "text": "[5] R. Sarwar, C. Yu, N. Tungare, K. Chitavisutthivong, S. Sriratanawilai, Y. Xu, D. Chow, T. Rakthanmanon, and S. Nutanong, “An effective and scalable framework for authorship attribution query processing,” IEEE Access, vol. 6, pp. 50 030–50 048, 2018.",
+        "bbox": [
+            513,
+            835,
+            921,
+            881
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "ref_text",
+        "text": "[6] B. Hattasch, M. Truong-Ngoc, A. Schmidt, and C. Binnig, “It’s ai¨ match: A two-step approach for schema matching using embeddings,”",
+        "bbox": [
+            513,
+            883,
+            921,
+            907
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "ref_text",
+        "text": "2022. [Online]. Available: https://arxiv.org/abs/2203.04366",
+        "bbox": [
+            104,
+            64,
+            424,
+            75
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[7] N. Adly, “Efficient record linkage using a double embedding scheme.” in DMIN, 2009, pp. 274–281.",
+        "bbox": [
+            83,
+            75,
+            491,
+            99
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[8] S. Herath, M. Roughan, and G. Glonek, “Em-k indexing for approximate query matching in large-scale er,” 2021.",
+        "bbox": [
+            83,
+            99,
+            491,
+            123
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[9] F. Nargesian, E. Zhu, K. Q. Pu, and R. J. Miller, “Table union search on open data,” Proc. VLDB Endow., vol. 11, no. 7, p. 813–825, mar 2018. [Online]. Available: https://doi.org/10.14778/3192965.3192973",
+        "bbox": [
+            83,
+            123,
+            491,
+            157
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[10] A. Berenguer, J.-N. Mazon, and D. Tom´ as, “Towards a tabular open data´ search engine for public sector information,” in 2021 IEEE International Conference on Big Data (Big Data), 2021, pp. 5851–5853.",
+        "bbox": [
+            76,
+            157,
+            491,
+            191
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[11] Y. Dong, K. Takeoka, C. Xiao, and M. Oyamada, “Efficient joinable table discovery in data lakes: A high-dimensional similarity-based approach,” in 2021 IEEE 37th International Conference on Data Engineering (ICDE). IEEE, 2021, pp. 456–467.",
+        "bbox": [
+            76,
+            191,
+            491,
+            238
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[12] X. Yuan, X. Wang, C. Wang, C. Yu, and S. Nutanong, “Privacypreserving similarity joins over encrypted data,” IEEE Transactions on Information Forensics and Security, vol. 12, no. 11, pp. 2763–2775, 2017.",
+        "bbox": [
+            76,
+            238,
+            491,
+            282
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[13] J. Yao, X. Meng, Y. Zheng, and C. Wang, “Privacy-preserving contentbased similarity detection over in-the-cloud middleboxes,” IEEE Transactions on Cloud Computing, vol. 11, no. 2, pp. 1854–1870, 2023.",
+        "bbox": [
+            76,
+            284,
+            491,
+            319
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[14] M. Perdacher, C. Plant, and C. Bohm, “Cache-oblivious high-¨ performance similarity join,” in Proceedings of the 2019 International Conference on Management of Data, ser. SIGMOD ’19. New York, NY, USA: Association for Computing Machinery, 2019, p. 87–104. [Online]. Available: https://doi.org/10.1145/3299869.3319859",
+        "bbox": [
+            76,
+            319,
+            491,
+            375
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[15] C. Bohm, B. Braunm¨ uller, F. Krebs, and H.-P. Kriegel, “Epsilon grid¨ order: An algorithm for the similarity join on massive high-dimensional data,” in Proceedings of the 2001 ACM SIGMOD International Conference on Management of Data, ser. SIGMOD ’01. New York, NY, USA: Association for Computing Machinery, 2001, p. 379–388. [Online]. Available: https://doi.org/10.1145/375663.375714",
+        "bbox": [
+            76,
+            376,
+            491,
+            444
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[16] D. V. Kalashnikov and S. Prabhakar, “Fast similarity join for multi-dimensional data,” Information Systems, vol. 32, no. 1, pp. 160–177, 2007. [Online]. Available: https://www.sciencedirect.com/ science/article/pii/S0306437905000761",
+        "bbox": [
+            76,
+            445,
+            491,
+            489
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[17] D. V. Kalashnikov, “Super-ego: fast multi-dimensional similarity join,” The VLDB Journal, vol. 22, no. 4, pp. 561–585, 2013.",
+        "bbox": [
+            76,
+            489,
+            491,
+            513
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[18] C. Yu, S. Nutanong, H. Li, C. Wang, and X. Yuan, “A generic method for accelerating lsh-based similarity join processing (extended abstract),” in 2017 IEEE 33rd International Conference on Data Engineering (ICDE), 2017, pp. 29–30.",
+        "bbox": [
+            76,
+            513,
+            491,
+            559
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[19] H. Li, S. Nutanong, H. Xu, c. YU, and F. Ha, “C2net: A network-efficient approach to collision counting lsh similarity join,” IEEE Transactions on Knowledge and Data Engineering, vol. 31, no. 3, pp. 423–436, 2019.",
+        "bbox": [
+            76,
+            559,
+            491,
+            594
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[20] Z. Yang, W. T. Ooi, and Q. Sun, “Hierarchical, non-uniform locality sensitive hashing and its application to video identification,” in 2004 IEEE International Conference on Multimedia and Expo (ICME) (IEEE Cat. No.04TH8763), vol. 1, 2004, pp. 743–746 Vol.1.",
+        "bbox": [
+            76,
+            594,
+            491,
+            640
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[21] Y. Hua, B. Xiao, B. Veeravalli, and D. Feng, “Locality-sensitive bloom filter for approximate membership query,” IEEE Transactions on Computers, vol. 61, no. 6, pp. 817–830, 2012.",
+        "bbox": [
+            76,
+            640,
+            491,
+            675
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[22] J. Qian, Q. Zhu, and H. Chen, “Integer-granularity locality-sensitive bloom filter,” IEEE Communications Letters, vol. 20, no. 11, pp. 2125– 2128, 2016.",
+        "bbox": [
+            76,
+            675,
+            491,
+            709
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[23] M. Goswami, R. Pagh, F. Silvestri, and J. Sivertsen, “Distance sensitive bloom filters without false negatives,” 2016.",
+        "bbox": [
+            76,
+            710,
+            491,
+            733
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[24] J. Qian, Z. Huang, Q. Zhu, and H. Chen, “Hamming metric multi-granularity locality-sensitive bloom filter,” IEEE/ACM Trans. Netw., vol. 26, no. 4, p. 1660–1673, aug 2018. [Online]. Available: https://doi.org/10.1109/TNET.2018.2850536",
+        "bbox": [
+            76,
+            733,
+            491,
+            779
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[25] J. Qian, Q. Zhu, and H. Chen, “Multi-granularity locality-sensitive bloom filter,” IEEE Transactions on Computers, vol. 64, no. 12, pp. 3500–3514, 2015.",
+        "bbox": [
+            76,
+            779,
+            491,
+            813
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[26] A. Kirsch and M. Mitzenmacher, “Distance-sensitive bloom filters,” in 2006 Proceedings of the Eighth Workshop on Algorithm Engineering and Experiments (ALENEX). SIAM, 2006, pp. 41–50.",
+        "bbox": [
+            76,
+            814,
+            491,
+            849
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[27] Y. Hua, X. Liu, Y. Hua, and X. Liu, “Locality-sensitive bloom filter for approximate membership query,” Searchable Storage in Cloud Computing, pp. 99–127, 2019.",
+        "bbox": [
+            76,
+            849,
+            491,
+            883
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[28] T. Kraska, A. Beutel, E. H. Chi, J. Dean, and N. Polyzotis, “The case for learned index structures,” 2018.",
+        "bbox": [
+            76,
+            883,
+            491,
+            906
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[29] S. Macke, A. Beutel, T. Kraska, M. Sathiamoorthy, D. Z. Cheng, and E. H. Chi, “Lifting the curse of multidimensional data with learned existence indexes,” in Workshop on ML for Systems at NeurIPS, 2018, pp. 1–6.",
+        "bbox": [
+            506,
+            64,
+            921,
+            109
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[30] M. Mitzenmacher, “A model for learned bloom filters and optimizing by sandwiching,” Advances in Neural Information Processing Systems, vol. 31, 2018.",
+        "bbox": [
+            506,
+            109,
+            921,
+            143
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[31] A. Bhattacharya, C. Gudesa, A. Bagchi, and S. Bedathur, “New wine in an old bottle: Data-aware hash functions for bloom filters,” Proc. VLDB Endow., vol. 15, no. 9, p. 1924–1936, may 2022. [Online]. Available: https://doi.org/10.14778/3538598.3538613",
+        "bbox": [
+            504,
+            143,
+            921,
+            189
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[32] J. Sun, G. Li, and N. Tang, “Learned cardinality estimation for similarity queries,” in Proceedings of the 2021 International Conference on Management of Data, 2021, pp. 1745–1757.",
+        "bbox": [
+            504,
+            189,
+            921,
+            223
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[33] Y. Wang, C. Xiao, J. Qin, X. Cao, Y. Sun, W. Wang, and M. Onizuka, “Monotonic cardinality estimation of similarity selection: A deep learning approach,” in Proceedings of the 2020 ACM SIGMOD International Conference on Management of Data, 2020, pp. 1197–1212.",
+        "bbox": [
+            504,
+            223,
+            921,
+            268
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[34] J. Qin, W. Wang, C. Xiao, Y. Zhang, and Y. Wang, “High-dimensional similarity query processing for data science,” in Proceedings of the 27th ACM SIGKDD Conference on Knowledge Discovery and Data Mining, ser. KDD ’21. New York, NY, USA: Association for Computing Machinery, 2021, p. 4062–4063. [Online]. Available: https://doi.org/10.1145/3447548.3470811",
+        "bbox": [
+            504,
+            268,
+            923,
+            335
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[35] Y. Wang, C. Xiao, J. Qin, R. Mao, M. Onizuka, W. Wang, R. Zhang, and Y. Ishikawa, “Consistent and flexible selectivity estimation for highdimensional data,” in Proceedings of the 2021 International Conference on Management of Data, 2021, pp. 2319–2327.",
+        "bbox": [
+            504,
+            335,
+            921,
+            382
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[36] T. Kraska, A. Beutel, E. H. Chi, J. Dean, and N. Polyzotis, “The case for learned index structures,” in Proceedings of the 2018 international conference on management of data, 2018, pp. 489–504.",
+        "bbox": [
+            506,
+            381,
+            921,
+            416
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[37] H. Zhang and Q. Zhang, “Embedjoin: Efficient edit similarity joins via embeddings,” in Proceedings of the 23rd ACM SIGKDD International Conference on Knowledge Discovery and Data Mining, ser. KDD ’17. New York, NY, USA: Association for Computing Machinery, 2017, p. 585–594. [Online]. Available: https://doi.org/10.1145/3097983.3098003",
+        "bbox": [
+            506,
+            415,
+            921,
+            472
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[38] Y. Wang and D. Z. Wang, “Learned accelerator framework for angulardistance-based high-dimensional dbscan,” 2023.",
+        "bbox": [
+            506,
+            470,
+            921,
+            494
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[39] Y. Wang, C. Xiao, J. Qin, X. Cao, Y. Sun, W. Wang, and M. Onizuka, “Monotonic cardinality estimation of similarity selection: A deep learning approach,” in Proceedings of the 2020 ACM SIGMOD International Conference on Management of Data, ser. SIGMOD ’20. New York, NY, USA: Association for Computing Machinery, 2020, p. 1197–1212. [Online]. Available: https://doi.org/10.1145/3318464. 3380570",
+        "bbox": [
+            506,
+            494,
+            921,
+            574
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[40] S. Macke, A. Beutel, T. Kraska, M. Sathiamoorthy, D. Z. Cheng, and E. H. Chi, “Lifting the curse of multidimensional data with learned existence indexes,” 2018.",
+        "bbox": [
+            504,
+            573,
+            921,
+            608
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[41] Y. Wang, C. Xiao, J. Qin, R. Mao, M. Onizuka, W. Wang, R. Zhang, and Y. Ishikawa, “Consistent and flexible selectivity estimation for highdimensional data,” in Proceedings of the 2021 International Conference on Management of Data, 2021, pp. 2319–2327.",
+        "bbox": [
+            504,
+            608,
+            921,
+            654
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[42] A. Andoni, P. Indyk, T. Laarhoven, I. Razenshteyn, and L. Schmidt, “Practical and optimal lsh for angular distance,” Advances in neural information processing systems, vol. 28, 2015.",
+        "bbox": [
+            504,
+            652,
+            921,
+            688
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[43] M. Muja and D. G. Lowe, “Fast approximate nearest neighbors with automatic algorithm configuration.” VISAPP (1), vol. 2, no. 331-340, p. 2, 2009.",
+        "bbox": [
+            506,
+            686,
+            921,
+            720
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[44] H. Jegou, M. Douze, and C. Schmid, “Product quantization for nearest neighbor search,” IEEE transactions on pattern analysis and machine intelligence, vol. 33, no. 1, pp. 117–128, 2010.",
+        "bbox": [
+            506,
+            720,
+            921,
+            755
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[45] J. Johnson, M. Douze, and H. Jegou, “Billion-scale similarity search´ with gpus,” arXiv preprint arXiv:1702.08734, 2017.",
+        "bbox": [
+            506,
+            755,
+            921,
+            777
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[46] Y. Wang, H. Ma, and D. Z. Wang, “Lider: An efficient high-dimensional learned index for large-scale dense passage retrieval,” 2022. [Online]. Available: https://arxiv.org/abs/2205.00970",
+        "bbox": [
+            506,
+            777,
+            921,
+            811
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "ref_text",
+        "text": "[47] L. V. Nguyen, T.-H. Nguyen, and J. J. Jung, “Content-based collaborative filtering using word embedding: A case study on movie recommendation,” in Proceedings of the International Conference on Research in Adaptive and Convergent Systems, ser. RACS ’20. New York, NY, USA: Association for Computing Machinery, 2020, p. 96–100. [Online]. Available: https://doi.org/10.1145/3400286.3418253",
+        "bbox": [
+            506,
+            811,
+            921,
+            880
+        ],
+        "page_idx": 12
+    }
+]

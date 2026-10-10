@@ -1,0 +1,33 @@
+{
+  "source": "doi",
+  "query": "10.1145/3725403",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "https://doi.org/10.1145/3725403",
+      "doi": "10.1145/3725403",
+      "title": "Fast Approximate Similarity Join in Vector Databases",
+      "authors": [
+        "Jiadong Xie",
+        "Jeffrey Xu Yu",
+        "Yingfan Liu"
+      ],
+      "published": "2025-06-18",
+      "venue": "Proceedings of the ACM on Management of Data",
+      "volume": "3",
+      "issue": "3",
+      "article_number": "158",
+      "pages": "1-26",
+      "publisher": "Association for Computing Machinery",
+      "main_tag": "vector-join",
+      "tags": [
+        "approximate similarity join",
+        "vector databases",
+        "high-dimensional vectors",
+        "SimJoin"
+      ],
+      "url": "https://doi.org/10.1145/3725403",
+      "pdf_url": "https://xiejiadong.github.io/files/paper/%5Bsigmod25%5Dvector_join.pdf"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+ "source_hdf5": "/home/daihua/data/fvs/sift-128-euclidean.hdf5",
+ "hdf5_keys": [
+  "distances",
+  "neighbors",
+  "test",
+  "train"
+ ],
+ "N": 100000,
+ "dim": 128,
+ "nq": 10000,
+ "dtype": "float32",
+ "distance": "squared_l2",
+ "hdf5_distance_attr": "None",
+ "derived_from": "sift1m/base.f32 first 100000 rows (small-dataset constraint on this server)"
+}

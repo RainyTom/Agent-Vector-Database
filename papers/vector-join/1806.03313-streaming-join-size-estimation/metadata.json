@@ -1,0 +1,23 @@
+{
+  "source": "arxiv",
+  "query": "id:1806.03313",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/1806.03313v3",
+      "title": "Similarity Join and Similarity Self-Join Size Estimation in a Streaming Environment",
+      "summary": "We study the problem of similarity self-join and similarity join size estimation in a streaming setting where the goal is to estimate, in one scan of the input and with sublinear space in the input size, the number of record pairs that have a similarity within a given threshold. The problem has many applications in data cleaning and query plan generation, where the cost of a similarity join may be estimated before actually doing the join. On unary input where two records either match or don't match, the problem becomes join and self-join size estimation for which one-pass algorithms are readily available. Our work addresses the problem for d-ary input, for d >= 1, where the degree of similarity can vary from 1 to d. We show that our proposed algorithm gives an accurate estimate and scales well with the input size. We provide error bounds and time and space costs, and conduct an extensive experimental evaluation of our algorithm, comparing its estimation accuracy to a few competitors, including some multi-pass algorithms. Our results show that given the same space, the proposed algorithm has an order of magnitude less error for a large range of similarity thresholds.",
+      "published": "2018-06-08T18:18:18Z",
+      "updated": "2019-02-02T02:07:48Z",
+      "authors": [
+        "Davood Rafiei",
+        "Fan Deng"
+      ],
+      "categories": [
+        "cs.DB"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/1806.03313v3"
+    }
+  ],
+  "downloaded_pdf": "papers/vector-join/1806.03313-streaming-join-size-estimation/paper.pdf"
+}

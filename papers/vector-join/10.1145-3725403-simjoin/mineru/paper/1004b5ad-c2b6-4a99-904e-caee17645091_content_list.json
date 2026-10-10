@@ -1,0 +1,4075 @@
+[
+    {
+        "type": "text",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "text_level": 1,
+        "bbox": [
+            88,
+            113,
+            806,
+            136
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "JIADONG XIE, The Chinese University of Hong Kong, China JEFFREY XU YU, The Chinese University of Hong Kong, China YINGFAN LIU<sup>∗</sup>, Xidian University, China",
+        "bbox": [
+            86,
+            150,
+            598,
+            202
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Recent advancements in deep learning, particularly in embedding models, have enabled the efective represen tation of various data types such as text, images, and audio as vectors, thereby facilitating semantic analysis. A large number of massive vector datasets are maintained in vector databases. Approximate similarity join is a core operation in vector database systems that joins two datasets, and outputs all pairs of vectors from the two datasets, if the distance between such a pair of two vectors is no more than a specified value. Existing state-of-the-art approaches for approximate similarity join are selection-based such that they treat each data point in a dataset as an individual query point to search data points by an approximate range query in another dataset. Such methods do not fully capitalize on the inherent properties of the join operation itself. In this paper, we propose a new join algorithm, SimJoin. Our join algorithm aims to boost join processing eficiency by leveraging relationships between partial join results (e.g., join windows). In brief, our join algorithm accelerates the join processing to process a join window by utilizing the join windows from the processed data points. Then, we discuss optimizing join window order to minimize join costs. In addition, we discuss how to support �-similarity join, and how to maintain proximity graph index based on �-similarity join. Extensive experiments on real-world and synthetic datasets demonstrate the significant performance superiority of our proposed algorithms over existing state-of-the-art methods.",
+        "bbox": [
+            86,
+            211,
+            909,
+            441
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "CCS Concepts: • Information systems → Information retrieval query processing.",
+        "bbox": [
+            88,
+            445,
+            757,
+            462
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Additional Key Words and Phrases: Approximate Similarity Join, High-Dimensional Vector",
+        "bbox": [
+            86,
+            466,
+            781,
+            483
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "ACM Reference Format:",
+        "bbox": [
+            88,
+            488,
+            298,
+            502
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu. 2025. Fast Approximate Similarity Join in Vector Databases. Proc. ACM Manag. Data 3, 3 (SIGMOD), Article 158 (June 2025), 26 pages. https://doi.org/10.1145/3725403",
+        "bbox": [
+            86,
+            502,
+            909,
+            534
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "1 Introduction",
+        "text_level": 2,
+        "bbox": [
+            90,
+            547,
+            244,
+            563
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Recent advances in deep learning, particularly embedding models, have revolutionized the representation of various data types such as text [32], images [33], audio [6] and graphs [17]. These models encode data as vectors, capturing crucial information in a high-dimensional space for analysis. And many large datasets of vectors need to be maintained in the vector databases. Similarity join is one of the fundamental operations in vector database systems that join two datasets, � and �, and output all pairs of vectors of � and �, if they are similar, e.g., the distance between their vectors is no more than a specified threshold. As an example, auto-tagging [11, 43] is a real-world application that needs similarity join. Here, auto-tagging is to label a large number of documents unlabeled based on certain documents labeled. And an unlabeled document can be labeled by the",
+        "bbox": [
+            86,
+            568,
+            911,
+            719
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "Authors’ Contact Information: Jiadong Xie, The Chinese University of Hong Kong, China, jdxie@se.cuhk.edu.hk; Jefrey Xu Yu, The Chinese University of Hong Kong, China, yu@se.cuhk.edu.hk; Yingfan Liu, Xidian University, China, liuyingfan@ xidian.edu.cn.",
+        "bbox": [
+            86,
+            750,
+            909,
+            793
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "footer",
+        "text": "Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires prior specific permission and/or a fee. Request permissions from permissions@acm.org.",
+        "bbox": [
+            86,
+            801,
+            909,
+            875
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_footnote",
+        "text": "<sup>∗</sup>Yingfan Liu is the corresponding author.",
+        "bbox": [
+            88,
+            725,
+            372,
+            741
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "page_footnote",
+        "text": "© 2025 Copyright held by the owner/author(s). Publication rights licensed to ACM.",
+        "bbox": [
+            86,
+            872,
+            652,
+            887
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 0
+    },
+    {
+        "type": "text",
+        "text": "label of another labeled document, if the corresponding two document embeddings (vectors) are suficiently similar.",
+        "bbox": [
+            86,
+            116,
+            909,
+            151
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "In this paper, we study �-similarity join for two �-dimensional datasets, � and �, denoted as $X \\bowtie _ { \\epsilon } Y ,$ for $d \\ > \\ 0$ . The �-similarity join finds all pairs of vectors $( x _ { i } , y _ { j } )$ from $X \\times Y ,$ , if the distance $\\delta ( x _ { i } , y _ { j } )$ , for $x _ { i } \\in X$ and $y _ { j } \\in Y _ { \\cdot }$ , is no more than the given parameter �. Due to the curse of dimensionality [21], the exact �-similarity join is computationally intensive [23, 24, 36]. We focus on the approximate �-similarity join in this paper, which has not been well studied, whereas the �-NN (nearest neighbor) search and �-ANN (approximate �-NN) search have been extensively studied. In general, �-similarity join, $X \\bowtie _ { \\epsilon } Y ,$ , can be done by �-NN/�-ANN search if it takes every vector $x _ { i } \\in X$ as a query vector to search its nearest neighbors in the dataset �, as a �-range query. We call them a selection-based approach for �-similarity join. The existing state-of-the-art approaches for approximate �-similarity join are all selection-based methods [44, 46, 51]. Such existing approaches focus on optimizing the join processing time by refining the selection operations, like skipping tuples with zero or fewer join results [46], bypassing the limitations of a top �-only interface to support �-range search [51]. However, these approaches do not fully leverage the inherent property of the �-similarity join. That is, they do not utilize the join results from processed data points to accelerate the processing time of other data points that have not been processed, which is the focus we study in this paper.",
+        "bbox": [
+            86,
+            151,
+            911,
+            416
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "The main contributions of this work are summarized below. ➊ We propose a new �-similarity join algorithm for $X \\bowtie _ { \\epsilon }$ � based on two key issues in join processing, which are join window sliding and join window order selection. Here, a join window is the join results in � that are �-similar to a data point � in �. Join window sliding is to leverage the join window results of some processed data points to accelerate the join results for other data points. And join window order selection is to determine the processing order of join windows to slide, in order to minimize the overall join processing time. ➋ To allow join window sliding, we discuss the continuous sliding from a data point to another adjacent data point in �-dimensional space. Such adjacent data points are dificult to handle in �-dimensional space, as there are $2 ^ { d }$ directions to slide and there is no easy way to slide in order. We discuss how to capture such adjacent data points in �-dimensional space, and how to maintain such adjacent data points in an adjacent graph to be constructed. Furthermore, we discuss the diferences between the adjacency issue and �-NN based similarity, and we show that the probability of using a proximity graph (e.g., �-NN based graph) as an approximate adjacent graph in practice. ➌ We give the optimal solution to determine the join window order selection, for $X \\bowtie _ { \\epsilon } Y .$ . To find such optimal join window order, we show how to estimate the join window sliding cost on � based on the information we have on �. We give our eficient approach to find the optimal solution. ➍ Based on our �-similarity join algorithm, SimJoin, we further discuss how we support �-similarity join, and how we maintain a proximity graph index based on the �-similarity join algorithm we present. ➎ We report on extensive experiments on both real-world and synthetic datasets. (a) In general, SimJoin demonstrates significant performance improvements, achieving reductions in join time of over 1 order of magnitude compared to state-of-the-art methods for approximate similarity joins, along with superior join result quality. Moreover, it achieves more than 2 orders of magnitude reduction in join time compared to the state-of-the-art approach for exact similarity joins with less than 1% loss in join results. (b) Regarding index maintenance, our approach accelerates index maintenance significantly, consuming less peak memory, and enhancing index quality for �-approximate nearest neighbor search, compared to the state-of-the-art methods.",
+        "bbox": [
+            84,
+            416,
+            911,
+            850
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "The paper is organized as follows. We discuss �-similarity join and its key issues in Section 2. In Section 3, we discuss the main dificulties for selection-based approaches to support �-similarity join by finding nearest neighbors in one dataset for any point in another dataset. In Section 4, we propose a new approximate �-similarity join algorithm that is based on join window sliding and join window order selection. Sections 5 and 6 delve into the specifics of addressing the two issues, join window sliding and join window order selection, respectively. In Section 7, we show that our techniques can be used to support �-similarity join, and to support maintenance of �-ANN based proximity graph indices. We conduct extensive experiments to confirm the efectiveness and eficiency of our approach in Section 8. We discuss the related works in Section 9, and conclude our work in Section 10.",
+        "bbox": [
+            86,
+            850,
+            911,
+            900
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "page_number",
+        "text": "158:2",
+        "bbox": [
+            90,
+            83,
+            129,
+            95
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            81,
+            907,
+            98
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 1
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            118,
+            909,
+            234
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "2 The �-Similarity Join",
+        "text_level": 2,
+        "bbox": [
+            88,
+            247,
+            320,
+            263
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Given two sets of points, $X = \\{ x _ { 1 } , x _ { 2 } , \\cdots , x _ { n } \\}$ and $Y = \\{ y _ { 1 } , y _ { 2 } , \\cdot \\cdot \\cdot , y _ { m } \\}$ , in Euclidean �-dimensional space, denoted as $\\mathbb { R } ^ { d }$ , for $d > 0$ , the �-similarity join � $\\bowtie _ { \\epsilon } Y$ is defined as $X \\bowtie _ { \\epsilon } Y = \\{ ( x _ { k } , y _ { l } ) \\in$ $X \\times Y | \\delta ( x _ { k } , y _ { l } ) \\leq \\epsilon \\}$ , where $\\delta ( x _ { k } , y _ { l } )$ is $L _ { 2 }$ norm (i.e., Euclidean distance) between $x _ { k } \\in X$ and $y _ { l } \\in Y$ and � is a user-given threshold where $\\epsilon > 0$ . The �-similarity join, $X \\bowtie _ { \\epsilon } Y$ , can also be formalized based on join windows. Let $J _ { i }$ be the join window for $x _ { i } \\in X$ such that $J _ { i } = \\{ y _ { l } \\in Y \\mid \\delta ( x _ { i } , y _ { l } ) \\leq \\epsilon \\}$ � $\\begin{array} { r } { \\bowtie _ { \\epsilon } \\ Y = \\bigcup _ { x _ { i } \\in X } \\bigl ( \\{ x _ { i } \\} \\times J _ { i } \\bigr ) } \\end{array}$ . We also refer the �-similarity join, as �-similarity self-join, if the two given datasets are identical.",
+        "bbox": [
+            86,
+            266,
+            909,
+            383
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "As the exact �-similarity join is time-consuming [23, 24, 36] due to the curse of dimensionality [21], in this paper, we study an approximate �-similarity join algorithm, and its quality is measured by the average recall and average precision. Here, let ${ \\tilde { J } } _ { i }$ be the results from an approximate �-similarity join algorithm and $J _ { i } = \\{ y _ { l } \\in Y \\mid \\delta ( x _ { i } , y _ { l } ) \\leq \\epsilon \\}$ , the average recall is defined as $\\begin{array} { r } { \\frac { 1 } { \\left| X \\right| } \\cdot \\sum _ { x _ { i } \\in X } { \\frac { | \\tilde { J } _ { i } \\cap J _ { i } | } { \\left| J _ { i } \\right| } } } \\end{array}$ and the average precision is defined as $\\begin{array} { r } { \\frac { 1 } { | X | } \\cdot \\sum _ { x _ { i } \\in X } \\frac { | \\tilde { J } _ { i } \\cap J _ { i } | } { | \\tilde { J } _ { i } | } } \\end{array}$",
+        "bbox": [
+            86,
+            384,
+            907,
+            481
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "In the design of an approximate �-similarity join algorithm, in this work, we focus on two key issues, namely, join window sliding and join window order selection. The join window, $J _ { i } \\subseteq Y$ of $x _ { i } \\in X$ is a �-ball centered at $x _ { i }$ with a radius of $\\epsilon$ in the �-dimensional space. Suppose $J _ { i }$ has been processed for a given $x _ { i } .$ . Join window sliding refers to the process of sliding the join window $J _ { i }$ to the join window $J _ { j }$ to be processed next for $x _ { j }$ . And join window order selection is how to select such $x _ { j }$ among the points in � that have not yet been processed, in order to minimize the join processing cost.",
+        "bbox": [
+            86,
+            481,
+            909,
+            600
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "Here, we discuss the join cost of $X \\bowtie _ { \\epsilon } Y .$ . Let ℵ be the join window order over � such that $\\aleph = \\langle ( \\kappa _ { 1 } , x _ { 1 } ) , ( \\kappa _ { 2 } , x _ { 2 } ) , \\cdot \\cdot \\cdot , ( \\kappa _ { n } , x _ { n } ) \\rangle$ , where a pair of $( \\kappa _ { i } , \\boldsymbol { x } _ { i } )$ indicates that the join window, $J _ { i : }$ , to be processed next for $x _ { i }$ is slide from the join window represented by $\\kappa _ { i } \\in X$ . Regarding $\\kappa _ { i }$ , there are two cases. One is that $\\kappa _ { i }$ represents $x _ { j }$ for $1 \\le j < i$ in $\\aleph ,$ and the other is $\\kappa _ { i } = \\varnothing$ as it is possible that the cost of finding $J _ { i }$ for $x _ { i }$ by an individual �-range search is smaller if it does not slide from any join window found already. Note that $\\kappa _ { 1 } = \\varnothing$ . The total join cost for $X \\bowtie _ { \\epsilon } Y$ is defined as follows given a join window order ℵ:",
+        "bbox": [
+            86,
+            600,
+            909,
+            716
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "equation",
+        "text": "$$\nC (X \\bowtie_ {\\epsilon} Y) = \\sum_ {x _ {i} \\in X} \\left\\{ \\begin{array}{l l} c _ {\\epsilon} (x _ {i}) & (\\emptyset , x _ {i}) \\in \\aleph \\\\ c _ {\\kappa} (\\kappa_ {i}, x _ {i}) & \\text {otherwise} \\end{array} \\right.\\tag{1}\n$$",
+        "text_format": "latex",
+        "bbox": [
+            318,
+            720,
+            674,
+            759
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "where $c _ { \\epsilon } ( x _ { i } )$ is the cost of processing an �-range search to find $J _ { i }$ for $x _ { i } ,$ , and $c _ { \\kappa } { ( \\kappa _ { i } , x _ { i } ) }$ is the cost of finding $J _ { i }$ by sliding from the join window represented by $\\kappa _ { i } .$ The problem to be studied is how to reduce such join processing cost.",
+        "bbox": [
+            86,
+            765,
+            909,
+            815
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "text",
+        "text": "The two issues can be easily handled for $X \\bowtie _ { \\epsilon } Y$ when � and � are in �-dimensional space for $d = 1$ . We show its join algorithm in Algorithm 1. In Algorithm 1, both � and � are sorted in ascending order. For $x _ { i }$ in the ascending order, it finds $J _ { i }$ by finding the leftmost and rightmost boundary point in $J _ { i } ,$ , denoted as $l ( J _ { i } )$ and $r ( J _ { i } )$ , following the linear order of �. The join window $J _ { i }$ forms a continuous interval in 1-dimensional space. The continuous interval is formed by sliding in � from a point $y _ { p }$ to another point $y _ { q }$ on the condition that $y _ { p }$ and $y _ { q }$ are adjacent points such that there is no $y _ { w }$ between $y _ { p }$ and $y _ { q }$ . The following is obvious. That is, $x _ { i } \\leq x _ { i + 1 }$ implies $l ( J _ { i } ) \\leq l ( J _ { i + 1 } )$ and $r ( J _ { i } ) \\leq r ( J _ { i + 1 } )$ . The best to slide join window is to slide from the join window $J _ { i }$ to the join window $J _ { i + 1 }$ , and the join window order is to select $x _ { i + 1 }$ from $x _ { i }$ . The time complexity of Algorithm 1 is in $O ( n + m )$",
+        "bbox": [
+            86,
+            815,
+            909,
+            916
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            81,
+            454,
+            97
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "header",
+        "text": "158:3",
+        "bbox": [
+            868,
+            83,
+            907,
+            95
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 2
+    },
+    {
+        "type": "code",
+        "sub_type": "algorithm",
+        "code_caption": [],
+        "code_body": "<div class=\"mineru-algorithm\" style=\"white-space: pre-wrap; font-family:monospace;\">\nAlgorithm 1: Join1D (X, Y, ε)\n\nInput : two 1-dimensional datasets  $X = \\{x_{1}, \\cdots, x_{n}\\}$  and  $Y = \\{y_{1}, \\cdots, y_{m}\\}$  in ascending order and a parameter ε\n\nOutput : the result of  $X \\bowtie_{\\epsilon} Y$ \n\n1  $XY \\leftarrow \\emptyset; l \\leftarrow 1; r \\leftarrow 0;$ \n\n2 for each  $x_{i}$  from 1 to n in the ascending order do\n\n3 while  $l \\leq m$  and  $y_{l} &lt; x_{i} - \\epsilon$  do  $l \\leftarrow l + 1;$ \n\n4 while  $r + 1 \\leq m$  and  $y_{r+1} \\leq x_{i} + \\epsilon$  do  $r \\leftarrow r + 1;$ \n\n5  $J_{i} \\leftarrow \\{y_{l}, \\cdots, y_{r}\\};$ \n\n6 if  $l \\leq r$  then  $XY \\leftarrow XY \\cup (\\{x_{i}\\} \\times J_{i});$ \n\n7 return XY\n</div>",
+        "bbox": [
+            88,
+            118,
+            905,
+            306
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            334,
+            907,
+            402
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "The issue of join window sliding is that the continuous in join window sliding in �-dimensional space for $d > 1$ becomes challenging. First, there are $2 ^ { d }$ directions to slide from a join window $J _ { i }$ to another join window $J _ { j }$ . In other words, two join windows, $J _ { i }$ and $J _ { j } { _ { \\mathrm { : } } }$ , or the two �-balls, may overlap in any of $2 ^ { d }$ ways. Second, the adjacent points, $y _ { p }$ and $y _ { q }$ in $Y _ { i }$ , are arbitrary as there are $2 ^ { d }$ directions to slide, and there is no easy way to slide in order. In this paper, we propose a new eficient approximate �-similarity join algorithm with high quality of the join results.",
+        "bbox": [
+            86,
+            401,
+            909,
+            505
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "3 Selection-based Approaches",
+        "text_level": 2,
+        "bbox": [
+            88,
+            516,
+            390,
+            533
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "The �-similarity join, � Z<sub>�</sub> �, can be processed using the state-of-the-art �-ANN (Approximate Nearest Neighbor) search. That is, for every point $x _ { i } ~ \\in ~ X$ , it issues an approximate �-range query [46, 51] to find its join window $J _ { i }$ in �. In [51], it presents a method to deal with � as a filter on $k { \\mathrm { - } } \\mathrm { A N N }$ search. In [46], it utilizes learning techniques to predict the number of join results for each data point, enabling the skipping of those with zero or fewer results. By such a selection-based approach, there are no issues on join window sliding and join window selection, because each of join window is treated individually. We discuss its main problem to slide exact/approximate join window, $J _ { i } \\subseteq Y ,$ , for $x _ { i } \\in X ,$ , below using an example.",
+        "bbox": [
+            86,
+            537,
+            909,
+            672
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "Example 3.1: Let $X = \\{ x _ { 1 } , x _ { 2 } , x _ { 3 } \\}$ and $Y = \\{ y _ { 1 } , y _ { 2 } , \\cdots , y _ { 1 0 } \\}$ . Fig. 1 shows a �-NN graph over � for $k = 2 ,$ , where a point is connected to its 1-NN and 2-NN, as indicated by blue solid/dashed edges. The � points are not explicitly shown in Fig. 1. Instead, we show every join window $J _ { i }$ for $x _ { i }$ in $X ,$ where $x _ { i }$ is the center of the corresponding �-ball, illustrated by a circle in 2-dimensional space. Here, $J _ { 1 } = \\{ y _ { 8 } , y _ { 9 } , y _ { 1 0 } \\} , J _ { 2 } = \\{ y _ { 2 } , y _ { 3 } \\}$ , and ${ { J } _ { 3 } } = \\left\\{ { { y } _ { 3 } } , { { y } _ { 4 } } , { { y } _ { 5 } } \\right\\}$ . As shown in Fig. 1, the two clusters of $Y$ points, namely, $\\{ y _ { 1 } , \\cdots , y _ { 7 } \\}$ and $\\{ y _ { 8 } , y _ { 9 } , y _ { 1 0 } \\}$ , are not connected over the �-NN graph. To enforce all points connected in a graph, in �-ANN graph $\\left( k = 2 \\right)$ , it adds some red edges to make it connected and prunes some dashed blue edges to make the graph small for eficiency.",
+        "bbox": [
+            86,
+            676,
+            911,
+            811
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "text",
+        "text": "As shown in Example 3.1 with Fig. 1, first, on the �-NN graph, the join window $J _ { 1 }$ cannot slide to the join window $J _ { 2 }$ , as there is no point in $J _ { 1 }$ that has an blue edge to a point in $J _ { 2 }$ . Suppose that there is $x _ { 4 }$ in $X ,$ and its join window ${ { J } _ { 4 } } = \\left\\{ { { y } _ { 8 } } , { { y } _ { 1 } } \\right\\}$ , where $y _ { 1 }$ and $y _ { 8 }$ are not connected in the �-NN graph. The selection-based approaches start the search from a single entry point, which results in the inability to simultaneously locate both $y _ { 1 }$ and $y _ { 8 }$ , since they belong to separate connected components. Second, on the $k { \\mathrm { - } } \\mathrm { A N N }$ graph with red/blue solid edges, consider finding $J _ { 2 }$ for $x _ { 2 }$ from $J _ { 3 }$ . Staring from $y _ { 2 }$ and $y _ { 3 }$ , it finds $y _ { 4 }$ included in $J _ { 2 } ,$ then it finds that $y _ { 6 }$ cannot be in $J _ { 2 } ,$ and accordingly, it stops search and misses � which should be in $J _ { 2 }$ . In short, it is dificult for a selection-based �-NN or �-ANN approach to ensure high recall for �-similarity join.",
+        "bbox": [
+            86,
+            815,
+            909,
+            916
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "header",
+        "text": "158:4",
+        "bbox": [
+            90,
+            84,
+            129,
+            95
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            81,
+            907,
+            98
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            86,
+            931,
+            697,
+            950
+        ],
+        "page_idx": 3
+    },
+    {
+        "type": "image",
+        "img_path": "images/9c1a0c662168f0d40a0c9c8f85dfa681e02024a589015665ef58e039b5940726.jpg",
+        "image_caption": [],
+        "image_footnote": [],
+        "content": "",
+        "bbox": [
+            150,
+            115,
+            475,
+            245
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "image",
+        "img_path": "images/652d25dec1d3a3cb3518e9692e788f9a55e1f13af3c3f31d1ef6335bdb2a3890.jpg",
+        "image_caption": [
+            "Fig. 1. �-NN/�-ANN graph",
+            "Fig. 2. An adjacent graph"
+        ],
+        "image_footnote": [],
+        "content": "",
+        "bbox": [
+            506,
+            113,
+            841,
+            245
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            284,
+            909,
+            336
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "4 A New �-Similarity Join Algorithm",
+        "text_level": 2,
+        "bbox": [
+            88,
+            347,
+            448,
+            363
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "In this section, we address the two key issues: join window sliding (Section 4.1) and join window order selection (Section 4.2). Subsequently, we integrate the techniques proposed to present our similarity join algorithm, SimJoin (Section 4.3).",
+        "bbox": [
+            86,
+            368,
+            909,
+            419
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "4.1 Join Window Sliding",
+        "text_level": 2,
+        "bbox": [
+            88,
+            431,
+            339,
+            448
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "First, we define adjacent points, � and $y ^ { \\prime }$ , in a �-dimensional dataset �. The definition applies to any �-dimensional spaces.",
+        "bbox": [
+            86,
+            452,
+            907,
+            486
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Definition 4.1: [Adjacent points] For any point set � in a �-dimensional space for $d > 0 ;$ , two points � and $y ^ { \\prime }$ in � are adjacent if there exists a �-ball such that � and $y ^ { \\prime }$ are two points on the boundary of�-ball and there is no any point $y ^ { \\prime \\prime }$ in � inside �-ball.",
+        "bbox": [
+            86,
+            490,
+            909,
+            541
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "A point � in � may have multiple adjacent points, for instance, as illustrated in Fig. 2, �<sub>2</sub> is adjacent to �<sub>1</sub>, �<sub>3</sub> and �<sub>5</sub>.",
+        "bbox": [
+            86,
+            547,
+            907,
+            581
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Definition 4.2: [Continuous Window] A join window � is a continuous window if any two points, $y _ { p }$ and $y _ { q }$ , in � are connected by a sequence of pairs of adjacent points.",
+        "bbox": [
+            86,
+            586,
+            907,
+            622
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Definition 4.3: [Continous Sliding] A join window $J _ { i }$ slides to a join window $J _ { j }$ in a continuous manner, if there are two adjacent points, $y _ { p }$ and $y _ { q }$ , for $y _ { p } \\in J _ { i }$ and $y _ { q } \\in J _ { j }$",
+        "bbox": [
+            86,
+            630,
+            907,
+            666
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "From a diferent view, a point $y _ { p }$ sliding to its adjacent point $y _ { q }$ may cause a join window slides to a new join window. Note that the �-ball in Definition 4.1 is used to define two adjacent points in a �-dimensional space, and is diferent from the �-ball that corresponds to a join window or a continuous join window. It is important to note that the continous sliding ensures that we do not miss any points in � for $X \\bowtie _ { \\epsilon } Y$",
+        "bbox": [
+            86,
+            670,
+            909,
+            754
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Example 4.1: Reconsider Example 3.1. Fig. 2 shows points in �, where there is a line between two adjacent points. With the adjacent points in Fig. 2, the join window $J _ { 1 }$ can slide to $J _ { 3 }$ as $y _ { 8 } \\in J _ { 1 }$ and $y _ { 1 } \\in J _ { 3 }$ are adjacent points, and the join window $J _ { 3 }$ can slide to $J _ { 2 }$ . All the three join windows are continuous windows. There are no missing points in any join windows.",
+        "bbox": [
+            86,
+            759,
+            907,
+            827
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "Similarity vs Adjacency: First, regarding the �-NN based similarity and adjacency in one $d -$ dimensional space (e.g., �), the adjacency defined is diferent from the �-NN based similarity. It does not necessarily mean that two adjacent points are similar, and it does not necessarily mean two similar points are adjacent. Consider Example 4.1 and its Fig. 2. for $y _ { 1 }$ , its 1-NN, 2-NN, and 3-NN are $y _ { 2 } , y _ { 3 }$ , and $y _ { 5 }$ , respectively. $y _ { 3 }$ is more similar to $y _ { 1 }$ than $y _ { 5 }$ . But, $y _ { 3 }$ is not adjacent point of $y _ { 1 }$ but $y _ { 5 }$ is. This is because $y _ { 1 }$ can slide to $y _ { 5 }$ directly, but $y _ { 1 }$ cannot slide to $y _ { 3 }$ without passing through $y _ { 2 } .$ . Second, regarding $X \\bowtie _ { \\epsilon }$ � in two �-dimensional spaces, if $y _ { p }$ and $y _ { q }$ are adjacent in $Y ,$ it means that it is possible that there exists a point $x _ { i }$ in $X ,$ which takes $y _ { p }$ and $y _ { q }$ as its 1-NN and 2-NN to join. In general, if $x _ { i }$ can �-similarity join $y _ { p }$ but cannot �-similarity join its adjacent point $y _ { q } ,$ , it does not necessarily to explore �-similarity join between $x _ { i }$ and any other adjacent points of $y _ { q }$ in $Y .$ In other words, if $y _ { p }$ is in the join window $J _ { i }$ for $x _ { i }$ , but its adjacent point $y _ { q }$ not, then it does not need to slide from $y _ { q }$ to any other adjacent points of $y _ { q }$ in $Y _ { \\ast }$",
+        "bbox": [
+            86,
+            831,
+            911,
+            916
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "page_number",
+        "text": "158:5",
+        "bbox": [
+            868,
+            84,
+            907,
+            95
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 4
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            116,
+            909,
+            234
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Next, we show that a join window, $J _ { i : }$ , for arbitary data point $x _ { i }$ is continuous window (Defini tion 4.2).",
+        "bbox": [
+            88,
+            234,
+            909,
+            266
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "First, for an arbitrary $y _ { x }$ , its 1-NN $y _ { p }$ and 2-NN $y _ { q }$ are adjacent since the �-ball centered at $y _ { x }$ contains only $y _ { p }$ and $y _ { q }$ in it. However, in general, for an arbitrary $y _ { x }$ , it does not necessarily mean that $( k { - } 1 ) { \\ - } \\mathrm { { N N } } y _ { p }$ and �-NN $y _ { q }$ are adjacent from the viewpoint of $y _ { x }$ . In Fig. 3, suppose $y _ { x }$ is the large circle center, the distance between $y _ { i }$ and $y _ { x }$ is smaller than the distance between $y _ { j }$ and $y _ { x }$ if $i < j$ , and the adjacent points are connected by blue lines. Here, $y _ { 1 }$ and $y _ { 2 }$ are adjacent, and are 1-NN and 2-NN of $y _ { x }$ , whereas $y _ { 5 }$ and $y _ { 6 }$ are 5-NN and 6-NN of $y _ { x } ,$ , but $y _ { 5 }$ and $y _ { 6 }$ are not adjacent.",
+        "bbox": [
+            86,
+            268,
+            909,
+            368
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "For easy discussion, in the following, we use $y _ { p }$ to show that $y _ { p }$ is $\\scriptstyle { p \\mathrm { - N N } }$ of $y _ { x }$ . To show that a join window, $J _ { i }$ is continuous, we show that $y _ { k }$ is adjacent to one of $y _ { j }$ , for $1 \\leq j < k$ . Consider a �-ball centered at the segment from $y _ { k }$ to $y _ { x }$ , passing through $y _ { k }$ . By sliding the �-ball center along the segment from $y _ { k }$ towards $y _ { x } , y _ { j }$ is the adjacent to $y _ { k }$ if $y _ { j }$ is the first on such a �-ball. Note that $y _ { j }$ must be closer to $y _ { x }$ . This is because the sliding �-ball remains within the large �-ball centered at $y _ { x }$ and passing through $y _ { k }$ , and $y _ { j }$ is on the sliding �-ball. We explain it using Fig. 3. Consider �<sub>8</sub> in Fig. 3. We show that $y _ { 8 }$ must be adjacent to $y _ { 5 }$ . The segment is depicted as a yellow line between $y _ { 8 }$ and $y _ { x }$ . By sliding a �-ball (depicted as a red circle), it encounters $y _ { 5 } ,$ , and $y _ { 5 }$ and $y _ { 8 }$ are adjacent. And $y _ { 5 }$ must be closer to $y _ { x }$ than $y _ { 8 }$ . This is because the red �-ball remains within the large �-ball centered at $y _ { x }$ and passing through $y _ { 8 }$ , and $y _ { 5 }$ is on the red �-ball. This fact implies that the join window of an arbitrary data point $y _ { x }$ is continuous.",
+        "bbox": [
+            86,
+            368,
+            909,
+            550
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Lemma 4.1: Given a dataset �, regarding an arbitrary data point $y _ { x }$ , its $k { \\mathrm { - } } N N y _ { k }$ in � are adjacent with at least one ofthe $j { - } N N o f y _ { x }$ in $Y , f o r 1 \\leq j < k$",
+        "bbox": [
+            88,
+            555,
+            907,
+            590
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "We omit the proof as it can be done as discussed above.",
+        "bbox": [
+            106,
+            594,
+            578,
+            611
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "To handle the adjacent points in a �-dimensional space �, we define an adjacent graph, $\\mathcal { G } =$ (V, E).",
+        "bbox": [
+            88,
+            611,
+            905,
+            645
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Definition 4.4: [Adjacent Graph] An adjacent graph, $\\mathcal { G } = ( \\mathcal { V } , \\mathcal { E } )$ is for a given �-dimensional dataset �. Here, $_ \\mathrm { ~  ~ }$ is a set of points in $Y ,$ , and E is a set of edges where $( y _ { p } , y _ { q } ) \\in \\mathcal { E } \\mathrm { ~ i f ~ } y _ { p }$ and $y _ { q }$ are adjacent points by Definition 4.1.",
+        "bbox": [
+            86,
+            650,
+            907,
+            701
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Based on Lemma 4.1, we further show that a join window forms a connected subgraph $\\mathcal { G } _ { i }$ in $\\mathcal { G }$ for �, i.e., it is continous window.",
+        "bbox": [
+            86,
+            706,
+            905,
+            740
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Corollary 4.1: For an adjacent graph G ofdataset �, for an arbitrary data point $y _ { x } ,$ the nodes within its join window form a connected subgraph in $\\mathcal { G }$",
+        "bbox": [
+            86,
+            745,
+            907,
+            779
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "text",
+        "text": "Proof Sketch: It is evident that the join window of $y _ { x }$ contains its top-� nearest data points, $\\{ y _ { 1 } , y _ { 2 } , \\cdots , y _ { k } \\}$ , in �, if $\\delta ( y _ { i } , y _ { x } ) \\leq \\epsilon$ for $1 \\leq i \\leq k$ and $\\delta ( y _ { k + 1 } , y _ { x } ) > \\epsilon$ . We prove that its top-� data points in � form a connected subgraph by induction. For the base case where � = 2, 1-NN and 2-NN of $y _ { x }$ are adjacent, hence there is an edge to connect both in $\\mathcal { G }$ . Suppose that the subgraph for top-(�-1) nearest data points, $\\{ y _ { 1 } , y _ { 2 } , \\cdot \\cdot \\cdot , y _ { k - 1 } \\}$ are connected in $\\mathcal { G } .$ . Based on Lemma 4.1, we have the �-NN $y _ { k }$ is connected to one of its ${ j \\mathrm { - N N } y _ { j } }$ , where $1 \\leq j < k$ . This implies that the sugraph for the top-� data points are connected. □",
+        "bbox": [
+            86,
+            784,
+            909,
+            870
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "header",
+        "text": "158:6",
+        "bbox": [
+            90,
+            83,
+            129,
+            95
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            81,
+            907,
+            98
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            931,
+            697,
+            948
+        ],
+        "page_idx": 5
+    },
+    {
+        "type": "image",
+        "img_path": "images/bd6b0658c072c75a60d83ff237c09590f7257e1718a78259955952fb60d5acb0.jpg",
+        "image_caption": [
+            "Fig. 3. Example for adjacency",
+            "Fig. 4. Example for similarity join window order"
+        ],
+        "image_footnote": [],
+        "content": "",
+        "bbox": [
+            158,
+            118,
+            839,
+            263
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            88,
+            329,
+            909,
+            362
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "As a join window, $J _ { i } ,$ is a connected subgraph, $\\mathcal { G } _ { i } ,$ in $\\mathcal { G } _ { : }$ , we can slide a join window $J _ { i }$ to another join window $J _ { j }$ over $\\mathcal { G }$ by continous sliding (Definition 4.3).",
+        "bbox": [
+            86,
+            368,
+            907,
+            402
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Adjacent Graph Construction: To construct an adjacent graph, $\\mathcal { G }$ , for a �-dimensional dataset, $Y ,$ , it needs to check if two points, $y _ { p }$ and $y _ { q } .$ , in $Y$ are adjacent. In doing so, it needs to check if there exists a �-ball, $B _ { p q } ,$ where $y _ { p }$ and $y _ { q }$ are on its boundary and no any points are in the ball. Let the center of the �-ball, $B _ { p q }$ , be $y _ { c }$ , which is located at the bisector hyperplane between $y _ { p }$ and $y _ { q } .$ . As shown in Fig. 2, $y _ { 1 }$ and $y _ { 2 }$ are adjacent, because there is a circle (i.e., 2-ball) whose center is on the perpendicular bisector (the red line between $y _ { 1 }$ and $y _ { 2 } )$ of $y _ { 1 }$ and $y _ { 2 }$ , only $y _ { 1 }$ and $y _ { 2 }$ are on the boundary of such circle, and no other points are in the circle. On the other hand, $y _ { 1 }$ and $y _ { 3 }$ are not adjacent, because it is impossible to find a circle that does not have $y _ { 2 }$ inside the circle. The cost of checking the existence of a �-ball for every pair of points is too high.",
+        "bbox": [
+            86,
+            402,
+            909,
+            551
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "Here, we construct $\\mathcal { G }$ by space partitioning. We partition the �-dimensional space, �, into $| Y |$ subspaces, where each subspace, $S _ { p }$ , contains only one point, $y _ { p }$ , in $Y _ { i }$ , which implies that any $x _ { i } \\in X$ point in the subpace, $S _ { p }$ , will take $y _ { p }$ as its 1-NN. Such space partitioning is illustrated in Fig. 2 by the red lines. With such space partitioning, $y _ { p }$ and $y _ { q }$ are adjacent points if their subspaces share at least one point (note that the point mentioned here is an arbitrary data point in the space, which may not appear in the dataset �). In other words, there must exist a �-ball centered at the boundary of the two subspaces for $y _ { p }$ and $y _ { q }$ . Such space partitioniong is equivalent to the Voronoi diagram in the hyperspace [13]. Note that a Voronoi diagram partitions space into subspaces that are closer to each of a specified set of data points. Its dual graph, Delaunay triangulations (DT) [12, 26] can be identified. For example, In Fig. 2, the DT is shown by the black lines to connect two adjacent points if their subspaces share at least one point. In this work, we construct $\\mathcal { G }$ for $Y$ by constructing DT over �.",
+        "bbox": [
+            86,
+            551,
+            909,
+            750
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "4.2 Join Window Order Selection",
+        "text_level": 2,
+        "bbox": [
+            88,
+            765,
+            419,
+            781
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "We have discussed join window sliding in Section 4.1, and give a join cost function $\\left( \\operatorname { E q . } \\left( 1 \\right) \\right)$ for � Z<sub>�</sub> � which we need to minimize. In this section, we delve into the discussion of the join cost and strategies for minimizing it.",
+        "bbox": [
+            86,
+            786,
+            909,
+            836
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "text",
+        "text": "In processing � $\\bowtie _ { \\epsilon } Y$ , suppose that we have processed some points, $\\overrightarrow { X } = \\{ x _ { p } , \\cdot \\cdot \\cdot , x _ { i } , \\cdot \\cdot \\cdot , x _ { q } \\}$ in $X ,$ , and the join windows processed are $\\overrightarrow { J } = \\{ J _ { P } , \\cdot \\cdot \\cdot , J _ { i } , \\cdot \\cdot \\cdot , J _ { q } \\}$ . To minimize the total join cost is to minimize the cost of processing a new join window. And the join window order selection is to select a $x _ { i } \\in { \\overrightarrow { X } }$ to process $x _ { j } \\in ( X \\backslash { \\overrightarrow { X } } )$ such that the cost to process the next join window $J _ { j }$ is minimized. It is important to note that a join window is a continuous window. In general, the cost of sliding from a join window $J _ { i }$ to a join window $J _ { j }$ to be processed next is small, i $\\ i J _ { i } \\cap J _ { j } |$ is large, because we can process a part of $J _ { j }$ while sliding from $J _ { i }$ to $J _ { j }$ . The dificulty is that we do not know $J _ { j }$ , and we do not know $| J _ { i } \\cap J _ { j } |$ before processing $J _ { j }$ . Hence, we solve this selection problem by selecting $x _ { i } \\in { \\overrightarrow { X } }$ to process $x _ { j } \\in ( X \\backslash { \\overrightarrow { X } } )$ instead. It is important to note that if $\\delta ( x _ { i } , x _ { j } )$ is smaller than $\\delta ( x _ { l } , x _ { j } )$ , it implies that cost of sliding from $x _ { i }$ to $x _ { j }$ is smaller than the sliding from $x _ { l }$ . In other words, here, we use $J _ { i }$ for $x _ { i }$ to process $J _ { j }$ for $x _ { j }$ if $\\delta ( x _ { i } , x _ { j } )$ is the smallest among all points in $\\vec { X }$ . It is easy to check whether $| J _ { i } \\cap J _ { j } |$ is empty or not. When $\\vert J _ { i } \\cap J _ { j } \\vert \\neq \\varnothing$ , we continuously slide from $J _ { i }$ to $J _ { j }$ . When $| J _ { i } \\cap J _ { j } | = \\emptyset$ , we have two choices to slide to $J _ { j }$ . One is to continuously slide from a point in $J _ { i }$ towards $J _ { j }$ , and the other is to slide from the entry point in the adjacent graph $\\mathcal { G }$ for $Y _ { i }$ i.e., seen finding $J _ { j }$ as an individual �-range query. We take the smaller one when $| J _ { i } \\cap J _ { j } | = \\emptyset$",
+        "bbox": [
+            88,
+            838,
+            909,
+            915
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "page_number",
+        "text": "158:7",
+        "bbox": [
+            868,
+            84,
+            907,
+            95
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 6
+    },
+    {
+        "type": "code",
+        "sub_type": "algorithm",
+        "code_caption": [],
+        "code_body": "<div class=\"mineru-algorithm\" style=\"white-space: pre-wrap; font-family:monospace;\">\nAlgorithm 2: SimJoin (X, Y, ε)\n\nInput : two d-dimensional datasets X and Y, and a parameter ε\nOutput : The ε-similarity join results\n\n1  $G_{C} \\leftarrow$  the complete weighted graph of X;  $G \\leftarrow$  the adjacent graph of Y;  $y_{0} \\leftarrow$  the entry point of G; initialize w to control the sliding size;\n\n2  $\\aleph \\leftarrow$  WindowOrder ( $G_{C}, y_{0}$ );\n\n3  $XY \\leftarrow \\emptyset$ ;\n\n4 for each ( $\\kappa_{i}, x_{i}$ ) ∈  $\\aleph$  do\n\n5 if  $\\kappa_{i} = y_{0}$  then\n\n6  $J_{i} \\leftarrow$  JoinSlide ( $G, y_{0}, x_{i}, \\{y_{0}\\}, \\epsilon, w$ );\n\n7 else\n\n8  $J_{i} \\leftarrow$  JoinSlide ( $G, \\kappa_{i}, x_{i}, J_{\\kappa_{i}}, \\epsilon, w$ );\n\n9  $XY \\leftarrow XY \\cup J_{i}$ ;\n\n10 return XY;\n</div>",
+        "bbox": [
+            88,
+            119,
+            903,
+            361
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            387,
+            909,
+            579
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "As an example, consider � $\\bowtie _ { \\epsilon }$ � for $X = \\{ x _ { 1 } , \\cdots , x _ { 5 } \\}$ and $Y = \\{ y _ { 1 } , \\cdots , y _ { 9 } \\}$ as shown in Fig. 4. In Fig. 4, we show the adjacent graph $\\mathcal { G }$ on $Y _ { \\ast }$ , and �-balls for the join windows, $\\{ J _ { 1 } , \\cdots , J _ { 5 } \\}$ . Assume that we have processed ${ { J } _ { 4 } } = \\{ y _ { 2 } , y _ { 3 } , y _ { 4 } , y _ { 7 } \\}$ for $x _ { 4 }$ . Suppose $x _ { 1 }$ is 1-NN of $x _ { 4 } ,$ , and we know $J _ { 1 } \\cap J _ { 4 } \\neq \\emptyset$ Then we continuously slide from $y _ { 2 }$ towards $y _ { 1 }$ to process $J _ { 1 }$ where ${ { J } _ { 1 } } = \\left\\{ { { y } _ { 1 } } , { { y } _ { 2 } } , { { y } _ { 3 } } \\right\\}$ . Next, suppose $x _ { 5 }$ is 1-NN of $x _ { 1 }$ , and we will select $J _ { 1 }$ to process $J _ { 5 }$ for $x _ { 5 }$ . By checking points in $J _ { 1 }$ , we know that $J _ { 1 } \\cap J _ { 5 } = \\emptyset$ . Next, we compare $\\delta ( x _ { 1 } , x _ { 5 } )$ with $\\delta ( y _ { 0 } , x _ { 5 } )$ , where $y _ { 0 }$ is a fixed entry point in $\\mathcal { G }$ . If $\\delta ( x _ { 1 } , x _ { 5 } ) < \\delta ( y _ { 0 } , x _ { 5 } )$ , we continuously slide from $y _ { 1 }$ towards $J _ { 5 }$ for $x _ { 5 }$ . Otherwise, we slide from the fixed $y _ { 0 }$ towards $J _ { 5 }$",
+        "bbox": [
+            86,
+            579,
+            909,
+            711
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "We give details of the cost function for $C ( X \\bowtie _ { \\epsilon } Y )$ (Eq. (1)). Suppose $x _ { j }$ is the next point to process, and $x _ { i }$ is the point closest to $x _ { j }$ among the processed data points, i.e., in $\\vec { X }$ . When $J _ { i } \\cap J _ { j } = \\emptyset$ we estimate the cost by $c _ { \\epsilon } ( x _ { j } ) = \\operatorname* { m i n } \\{ \\delta ( x _ { i } , x _ { j } ) , \\delta ( y _ { 0 } , x _ { j } ) \\}$ where $y _ { 0 }$ is a fixed point in $\\mathcal { G }$ for �. When $J _ { i } \\cap J _ { j } \\neq \\emptyset$ , we estimate its cost by $c ( x _ { i } , x _ { j } ) = \\delta ( x _ { i } , x _ { j } )$",
+        "bbox": [
+            86,
+            711,
+            907,
+            783
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "To solve the join window selection problem, we construct a weighted graph $G _ { C } = \\left( V _ { C } , E _ { C } \\right)$ . Here, $V _ { C } = X \\cup \\{ y _ { 0 } \\}$ , and for every edge $( u , v ) \\in E _ { C } $ , its weight is $\\delta ( u , v )$ . The minimum cost of $C ( X \\bowtie _ { \\epsilon } Y )$ is the cost of the minimum spanning tree (MST) of the weight graph, $G _ { C }$ , rooted at $y _ { 0 }$ .",
+        "bbox": [
+            88,
+            781,
+            907,
+            833
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "4.3 The Join Algorithm",
+        "text_level": 2,
+        "bbox": [
+            88,
+            845,
+            323,
+            862
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "The �-similarity join algorithm is given in Algorithm 2, which takes �, �, and $\\epsilon$ as its inputs. Here, $\\mathcal { G }$ is the adjacent graph constructed over $Y _ { i }$ , and $G _ { C }$ is the weighted graph for join window selection over � together with a fixed point $y _ { 0 } \\in \\mathcal { G }$ . To control the size of the sliding window, a parameter � is given. A higher value of� will enhance the quality ofjoin results but at the expense of eficiency. In Algorithm 2, we identify a join window order, $\\aleph ,$ by calling WindowOrder (line 2), and we process � $\\bowtie _ { \\epsilon }$ � by sliding join windows following the order given in ℵ (lines 4-9).",
+        "bbox": [
+            86,
+            865,
+            909,
+            916
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "header",
+        "text": "158:8",
+        "bbox": [
+            90,
+            84,
+            129,
+            95
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            81,
+            907,
+            98
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 7
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            118,
+            909,
+            168
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Note that our join algorithm can be extended to support parallelism. In brief, the join order ℵ we use for approximate similarity join forms a tree, as discussed in the preceding subsection, where for every $( \\kappa _ { i } , x _ { i } ) \\in \\aleph , \\kappa _ { i }$ is the parent node of $x _ { i }$ within the tree. Here, a child node can process the join window sliding, when its parent node completes its join processing. And all the child nodes o the same parent can be processed in parallel. Based on this, diferent strategies can be employed for parallel processing in SimJoin. For example, we can utilize the idea of parallel breadth-first search to parallelly process the join window sliding within the same layer and subsequently process them in a layer-wise fashion.",
+        "bbox": [
+            86,
+            168,
+            909,
+            301
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "5 Join Window Sliding",
+        "text_level": 2,
+        "bbox": [
+            88,
+            325,
+            320,
+            341
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "We give an adjacent graph $\\mathcal { G }$ where the edges in $\\mathcal { G }$ connecting adjacent points in �. However, in a high dimensional space, $\\mathcal { G }$ becomes a complete graph [19, 26, 38], which implies that all points can possibly be adjacent in a $d \\cdot$ -dimensional space when � becomes larger $( \\mathrm { e . g . , } d > 1 0 0 )$ . Thus, it becomes impractical for $\\mathcal { G }$ to be used to slide over the join windows. As a result, we need to construct an approximate adjacent graph that can be used in practice.",
+        "bbox": [
+            86,
+            343,
+            909,
+            427
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "For an approximate adjacent graph to be constructed, we consider that it is impractical in a system to maintain two large graph indices. One is based on �-ANN for �-ANN search or approximate �-range query, and the other one is based on adjacency for �-similarity join. We explore if we can use one graph to serve all the purposes. In other words, we explore if a proximity graph constructed for �-ANN search can be used as an approximate adjacent graph $\\mathcal { G }$ . The question here is how likely a pair of near neighbors become adjacent. To answer this question, we consider the adjacency in � from the angle of an arbitrary point in $X$ . To be more precise, consider the adjacency for 3 data points, $y _ { u } , y _ { v } ,$ and $y _ { w }$ in $Y ,$ for an arbitrary data point $x _ { q }$ in $X .$ . Here, $x _ { q }$ is a point to join with points in �. Suppose $y _ { u }$ is the nearest point to $x _ { q } ,$ , and $y _ { v }$ has a smaller distance to $y _ { u }$ in comparison with the distance between $y _ { w }$ and $y _ { u }$ . How likely is it for $y _ { u }$ and $y _ { v }$ to be adjacent?",
+        "bbox": [
+            86,
+            427,
+            909,
+            595
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Theorem 5.1: Assume that the data points are uniformly distributed in an infinite �-dimensional space. Suppose that there are three data points, $y _ { u } \\ y _ { v } ,$ and $y _ { w }$ in $Y _ { i }$ and suppose $y _ { u }$ is the nearest data point to a given data point $x _ { q }$ , and $\\delta ( y _ { u } , y _ { v } ) < \\delta ( y _ { u } , y _ { w } )$ . Then, $y _ { v }$ has a higher probability to have a smaller distance to $x _ { q }$ compared to the distance from $y _ { w }$ to �<sub>�</sub>.",
+        "bbox": [
+            86,
+            600,
+            909,
+            666
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Proof Sketch: Given that $y _ { u }$ is the nearest data point to $x _ { q } , x _ { q }$ resides within the region delineated by the two perpendicular hyperplanes between $y _ { u }$ and $y _ { v }$ and between $y _ { u }$ and $y _ { w } ,$ , regarding $y _ { u }$ This region can be further segmented by the perpendicular hyperplane of $y _ { v }$ and $y _ { w } . \\mathrm { H } y _ { v }$ is closer to $x _ { q }$ than $y _ { w } ,$ , then $x _ { q }$ lies between the perpendicular hyperplanes of $y _ { u }$ and $y _ { v } .$ , and $y _ { v }$ and $y _ { w }$ . The probability of $x _ { q }$ being in this region is given as ∠���/(∠��� + ∠���), where ∠��� is the angle centered at �. As ${ \\delta ( u , v ) < \\delta ( u , w ) }$ , we have ∠��� > ∠���, which implies that $y _ { v }$ is more likely to be closer to $x _ { q }$ than the distance from $y _ { w }$ to $x _ { q }$ □",
+        "bbox": [
+            86,
+            670,
+            909,
+            788
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "text",
+        "text": "Based on Theorem 5.1, because $y _ { u }$ is the 1-NN to $x _ { q }$ , the data points which have a smaller distance to $y _ { u }$ have a higher probability to have a smaller distance to $x _ { q }$ , and in other words, have a higher probability to become the 2-NN to $x _ { q } .$ . Hence, there is a �-ball centered at $x _ { q }$ that contain only $y _ { u }$ and $y _ { v } .$ , indicating that $y _ { v }$ has higher probability to be adjacent with $y _ { u }$ in the �-dimensional space, from the angle of such $x _ { q }$ . Recall that we have shown that for two adjacent points, $y _ { u }$ and $y _ { v }$ in $Y$ , there exists an data point that take $y _ { u }$ and $y _ { v }$ as their 1-NN and 2-NN. Here, we show that if $y _ { u }$ and $y _ { v }$ are 1-NN and 2-NN of a data point in $X _ { i }$ , then it is likely that $y _ { u }$ and $y _ { v }$ are adjacent.",
+        "bbox": [
+            86,
+            794,
+            909,
+            911
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "header",
+        "text": "158:9",
+        "bbox": [
+            868,
+            83,
+            907,
+            95
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 8
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [],
+        "code_body": "```txt\nAlgorithm 3: JoinSlide (G, xi, xj, Ji, ε, w)\n\nInput : an adjacent graph G of dataset Y, two data points xi, xj in dataset X, the join window Ji of xi and two parameters ε, w\n\nOutput : the join window Jj of xj in Y\n\n1 Q ← Ji is a priority queue, sorted in ascending order based on δ(yp, xj) for every yp ∈ Q;\n\n2 if δ(Q.top(), xj) > ε then\n\n3 Visit ← Ji;\n\n4 while Q is not empty do\n\n5 if δ(Q.top(), xj) ≤ ε then break;\n\n6 u ← Q.pop();\n\n7 for each v ∈ NG(u) \\ Visit do\n\n8 if δ(v, xj) < δ(u, xj) then\n\n9 Q.push(v); Visit ← Visit ∪ {v};\n\n10 while Q.size() > w do\n\n11 remove the last element from Q;\n\n12 if Q is empty then return Jj = Ø;\n\n13 Jj ← {yp|yp ∈ Q ∧ δ(yp, xj) ≤ ε};\n\n14 push all elements in Jj into an empty queue Q;\n\n15 while Q is not empty do\n\n16 yp ← Q.pop();\n\n17 for each yq ∈ NG(yp) do\n\n18 if yq∉Jj and δ(yq, xj) ≤ ε then\n\n19 Q.push(v); Jj ← Jj ∪ {yq};\n\n20 return Jj;\n```",
+        "bbox": [
+            86,
+            118,
+            903,
+            551
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "Based on our analysis, we show that a single proximity graph designed for �-ANN search can be utilized for the purpose of �-similarity join. Suppose there is a �-ANN graph with $k = 2 0$ , where $y _ { v }$ is the 20-NN of $y _ { u }$ . This implies that, from the angle of data points in dataset �, there might exist a data point $x _ { q }$ to join, which takes $y _ { u }$ and $y _ { v }$ as its 1-NN and 2-NN.",
+        "bbox": [
+            86,
+            579,
+            907,
+            645
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "In the following, the adjacent graph $\\mathcal { G } = ( \\mathcal { V } , \\mathcal { E } )$ is constructed as a proximity graph $( \\mathrm { e . g . , } k \\mathrm { - } \\mathrm { A N N }$ graph). We use $N _ { G } ( y _ { u } )$ to indicate the neighbor list of node $y _ { u }$ in $\\mathcal { G }$ , i.e., $N _ { \\mathcal { G } } ( y _ { u } ) = \\{ y _ { v } | ( y _ { u } , y _ { v } ) \\in \\mathcal { E } \\}$ In a proximity graph, a degree constraint of � is enforsed to limit the maximum of � out-neighbors for each node in �� [14, 28, 30, 34] such that $| \\mathcal { E } | = O ( n m )$ , where � is the size of dataset $Y .$",
+        "bbox": [
+            86,
+            645,
+            907,
+            712
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "The join window sliding algorithm, named JoinSlide is given in Algorithm 3. It takes 5 inputs, namely, the adjacent graph $\\mathcal { G }$ over $Y ,$ , two points, $x _ { i } , x _ { j }$ in $X _ { i }$ , the join window $J _ { i }$ for $x _ { i } ,$ together with two parameters, � and $\\boldsymbol { w } .$ . The algorithm ouputs the join window $J _ { j }$ for $x _ { j }$ . We discuss two cases, namely, $J _ { i } \\cap J _ { j } = \\emptyset$ and $J _ { i } \\cap J _ { j } \\neq \\emptyset$",
+        "bbox": [
+            86,
+            711,
+            909,
+            779
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "(i) $J _ { i } \\cap J _ { j } = \\emptyset \\colon$ : Furthermore, there are two cases, $\\bullet$ to slide towards $J _ { j }$ from $J _ { i : }$ , or $\\pmb { \\varrho }$ to slide towards $J _ { j }$ from $y _ { 0 } .$",
+        "bbox": [
+            88,
+            781,
+            907,
+            815
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "➊ We slide the join window from the nodes in the join window $J _ { i }$ towards their neighbors, in order to ultimately locate at least one data point contained in the join window $J _ { j }$ . Specifically, we populate the priority queue by adding data points from $J _ { i } ,$ , where the priority queue is sorted according to the ascending order of distance to $x _ { j }$ (line 1). For each point at the top of the queue (lines 4-11), we explore its neighbors in $\\mathcal { G }$ to find data points to the sliding direction, i.e., closer to $x _ { j }$ (lines 7-9). If closer data points are found, they are added to the queue (lines 8-9). This exploration process continues until a data point within a distance no greater than $\\epsilon$ from $x _ { j }$ is identified (line 5), or the search terminates when there are no closer data points to $x _ { j }$ (lines 4, 12). Note that a parameter $\\boldsymbol { w }$ is utilized to cap the size of priority queue $Q$ size (lines 10-11), thereby enhance the eficiency of join window sliding algorithms by reducing distance computations in practice. After this process, if there exists at least one data point within a distance not exceeding � from $x _ { j } ,$ , we then turn to process to the case (ii) (lines 13-19).",
+        "bbox": [
+            86,
+            813,
+            909,
+            916
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "header",
+        "text": "158:10",
+        "bbox": [
+            90,
+            83,
+            137,
+            95
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            81,
+            907,
+            98
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 9
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            118,
+            909,
+            218
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "➋ This is a case of an approximate �-range query. We slide from an entry point $y _ { 0 }$ in $\\mathcal { G }$ towards their neighbors, in order to locate at least one data point contained in the join window $J _ { j }$ in a similar way as discussed for $\\pmb { \\ 6 } .$ . This case can be achieved by invoking JoinSlide $( \\mathcal { G } , p _ { 0 } , x _ { j } , \\{ p _ { 0 } \\} , \\epsilon , w )$",
+        "bbox": [
+            86,
+            218,
+            909,
+            270
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "Example 5.1: As illustrated in Fig. 4, the blue lines are edges in an approximate adjacent graph of $Y = \\{ y _ { 1 } , \\cdots , y _ { 9 } \\}$ , with $y _ { 2 }$ is the entry point of the graph. Considering the join windows $J _ { 1 }$ for $x _ { 1 }$ and $J _ { 5 }$ for $x _ { 5 }$ , where $J _ { 1 } \\cap J _ { 5 } = \\emptyset$ , our initial step involves acquiring at least one data point contained in $J _ { 5 }$ by sliding the graph. This step entails two strategies: $\\bullet$ Starting from nodes $y _ { 1 } , y _ { 2 } ,$ , and $y _ { 3 }$ , we discover that $y _ { 1 } \\mathit { \\dot { s } }$ neighbor $y _ { 8 }$ is included in $J _ { 5 } ;$ ➋ Starting from node $y _ { 2 } ,$ , we find that its neighbor $y _ { 1 }$ is closer to $x _ { 5 }$ , next identifying that $y _ { 1 }$ ’s neighbor $y _ { 8 }$ is included in $J _ { 5 }$",
+        "bbox": [
+            86,
+            275,
+            909,
+            376
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "(ii) $J _ { i } \\cap J _ { j } \\neq \\emptyset$ : In this case, acquiring the join window $J _ { j }$ is straightforward, given that we are already aware of at least one data point, $y _ { P }$ , contained in the join window $J _ { j }$ . We begin exploration from $y _ { p }$ This is because the join windows of any data points in $\\mathcal { G }$ are continuous windows (Corollary 4.1). To elaborate, we search from any $y _ { p }$ in $J _ { i } \\cap J _ { j }$ and add it to the queue (line 13-14). Then, we expand nodes in the queue (line 16) by exploring their neighbors within a distance no greater than � from $y _ { p }$ (lines 17-19). We continue the search process until no more neighbors can be added to the queue (line 15) and finally return $J _ { j }$ (line 20).",
+        "bbox": [
+            86,
+            379,
+            909,
+            497
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "Example 5.2: Reconsider Example 5.1, we aim to slide the join window from $J _ { 1 }$ to $J _ { 5 }$ , where we have found $y _ { 8 }$ in $J _ { 5 } .$ . Next, in the second step, we start from $y _ { 8 }$ , and explore its neighbors, which results in the discovery of $y _ { 8 }$ and $y _ { 9 }$ within $J _ { 5 }$ . For another instance, when sliding the join window from $J _ { 1 }$ to $J _ { 4 }$ , upon finding that ${ \\cal J } _ { 1 } \\cap { \\cal J } _ { 4 } = \\left\\{ y _ { 2 } , y _ { 3 } \\right\\}$ as outlined in line 13 of Algorithm 3. Hence we proceed to explore starting from these two data points, and find that $y _ { 4 }$ and $y _ { 7 }$ are also in $J _ { 4 }$ . Then the explore terminates as no additional neighbors are in $J _ { 4 }$",
+        "bbox": [
+            86,
+            501,
+            909,
+            602
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "The Cost of Join Window Sliding: Recall that we give the join cost function for $C ( X \\bowtie _ { \\epsilon } Y )$ (Eq. (1)), and discuss how to use distance function, $\\delta ( , )$ , to estimate the join costs in Section 4.2. A question that is unanswered is whether such cost estimation is feasible given the �-similarity join algorithm, Algorithm $^ { 2 , }$ and in particular the JoinSlide algorithm (Algorithm 3). It is important to mention that, on the one hand, as shown in Algorithm 3, the part of the join cost of JoinSlide is the number of distance computations (NDC) while sliding over $\\mathcal { G }$ within the join window $J _ { j }$ (case (ii)). On the other hand, the cost from sliding from $J _ { i }$ to $J _ { j }$ (case(i)), which can be estimated by $\\delta ( x _ { i } , x _ { j } )$ and it is the only cost related to the join window order.",
+        "bbox": [
+            86,
+            606,
+            909,
+            740
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "text",
+        "text": "We conduct some experimental studies using Msong dataset. Here, we randomly divide Msong into two sets in the same size, denoted as � and �, and conduct the �-similarity join on such � and �. In particular, we select 1,000 pairs of $( x _ { i } , x _ { j } ) \\in X \\times X$ where $x _ { i } \\neq x _ { j }$ , and obtain NDC during lines 1-12 using the JoinSlide algorithm (Algorithm 3) by sliding from the join window $J _ { i }$ of $x _ { i }$ to the join window $J _ { j }$ of $x _ { j }$ on the adjacent graph $\\mathcal { G }$ , which is constructed by NSG [14] of �. The results are presented in Fig. 5. As shown in Fig. 5, the further apart $x _ { i }$ and $x _ { j }$ are, the more sliding is required, which leads to a larger NDC. The results indicate that the NDC increases as the distances between the two points increase, and it is almost linear when the distance is under 0.9.",
+        "bbox": [
+            86,
+            740,
+            909,
+            875
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            81,
+            454,
+            98
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "header",
+        "text": "158:11",
+        "bbox": [
+            860,
+            83,
+            907,
+            95
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 10
+    },
+    {
+        "type": "chart",
+        "img_path": "images/bfd22433d870fa5cec75b9c1e62f8f4036f1ab4cd441c0109a680bbbe3d33415.jpg",
+        "content": "",
+        "chart_caption": [
+            "Fig. 5. NDC v.s. $\\delta ( x _ { i } , x _ { j } )$ on Msong dataset"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            218,
+            118,
+            471,
+            241
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "table",
+        "img_path": "images/b9e657ba28b07857730b4ce9c7914b773e7a1cfa1b4fd390cce1e8876c64231a.jpg",
+        "table_caption": [
+            "Table 1. �NG graphs"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Dataset</td><td>$ \\epsilon $</td><td>$ d_{avg} $</td></tr><tr><td>Rand</td><td>0.57690</td><td>50.966</td></tr><tr><td>Gauss</td><td>0.85741</td><td>11.201</td></tr><tr><td>Msong</td><td>0.70702</td><td>17.277</td></tr><tr><td>GIST</td><td>0.80105</td><td>17.026</td></tr><tr><td>GloVe</td><td>0.71288</td><td>45.205</td></tr><tr><td>Crawl</td><td>0.56437</td><td>27.796</td></tr><tr><td>SIFT</td><td>0.69817</td><td>27.769</td></tr><tr><td>Higgs</td><td>0.55096</td><td>28.755</td></tr></table>",
+        "bbox": [
+            569,
+            137,
+            775,
+            268
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "6 Join Window Order Selection",
+        "text_level": 2,
+        "bbox": [
+            88,
+            293,
+            401,
+            309
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "In this section, we discuss join window order selection for � $\\bowtie _ { \\epsilon }$ �. Here we assume the set of � is smaller than that of � in size.",
+        "bbox": [
+            86,
+            313,
+            909,
+            347
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "6.1 The Weighted Graph $G _ { C }$",
+        "text_level": 2,
+        "bbox": [
+            88,
+            359,
+            366,
+            377
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "To determine the join window order, we discuss a weighted graph $G _ { C } = \\left( V _ { C } , E _ { C } \\right)$ where $V _ { C } =$ $X \\cup \\{ y _ { 0 } \\}$ in Section 4.2 with which the optimal join window order can be determined by an MST on $G _ { C }$ . Such $G _ { C }$ constructed is a complete weight graph, and needs to construct online because it needs dataset � and an entry point of $y _ { 0 }$ taken from $\\mathcal { G }$ of � for $X \\bowtie _ { \\epsilon } Y .$ . Therefore, the $G _ { C }$ construction time is a part of �-similarity join. Therefore, it is impractical to construct $G _ { C }$ as it takes $O ( d n ^ { 2 } )$ for a �-dimensional dataset � where $n = | X |$ . This construction cost can be even larger than the join processing time given $G _ { C }$ is constructed.",
+        "bbox": [
+            86,
+            381,
+            909,
+            498
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Instead of constructing a completed weighted graph, $G _ { C } = \\left( V _ { C } , E _ { C } \\right)$ , we construct a �-neighbor proximity graph (�NG), and denote it as $G _ { \\epsilon } = ( V _ { \\epsilon } , E _ { \\epsilon } )$ , where $V _ { \\epsilon } = X \\cup \\{ y _ { 0 } \\}$ . In $G _ { \\epsilon }$ , a data point is connected to the nodes in $V _ { \\epsilon }$ which distance between them is no greater than �. The weight of an edge, $( u , v )$ , in $E _ { \\epsilon }$ is the distance $\\delta ( u , v )$ . The following lemma establishes that the total weight of the MST on a connected �NG is equal to the minimum join cost.",
+        "bbox": [
+            86,
+            498,
+            909,
+            581
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Lemma 6.1: The minimum join cost of � $\\bowtie _ { \\epsilon } Y$ is equal to the total MST weight of $\\mathrm { ~ \\it ~ G ~ } _ { \\epsilon } \\mathrm { ~ \\it ~ i f G _ { \\epsilon } ~ }$ is connected.",
+        "bbox": [
+            88,
+            587,
+            909,
+            604
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Proof Sketch: Since the $G _ { \\epsilon } = ( V _ { \\epsilon } , E _ { \\epsilon } )$ is the subgraph of the complete graph $G _ { C } = \\left( V _ { C } , E _ { C } \\right)$ , where $V _ { C } = V _ { \\epsilon } = X \\cup \\{ y _ { 0 } \\}$ and $E _ { \\epsilon } \\subseteq E _ { C } )$ . The total MST weight over $G _ { \\epsilon }$ , denoted as $w ( G _ { \\epsilon } )$ , is no less than the total MST weight over $G _ { C } { \\mathrm { : } }$ , denoted as $w ( G _ { C } )$ . Assume that $w ( G _ { \\epsilon } ) > w ( G _ { C } )$ , there must exist an edge $( u , v )$ such that $( u , v ) \\notin G _ { \\epsilon }$ and $\\delta ( u , v ) < w _ { \\mathrm { m a x } } ( u  v )$ , where $w _ { \\mathrm { m a x } } ( u  v )$ is the maximum edge weight along the path from � to � in the MST of $G _ { \\epsilon }$ . However, it becomes evident that for $\\epsilon { \\mathsf { N G } }$ , the value of � must satisfy $\\epsilon > w _ { \\mathrm { m a x } } ( u  v )$ , whereas $\\delta ( u , v ) < w _ { \\mathrm { m a x } } ( u  v )$ . This implies that $( u , v )$ must be included in such �NG, leading to a contradiction. Therefore, we conclude that $w ( G _ { \\epsilon } ) = w ( G _ { C } )$ □",
+        "bbox": [
+            86,
+            625,
+            909,
+            759
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "Lemma 6.1 states that $\\epsilon { \\mathsf { N G } }$ we require is a graph with a suficiently large � value to guarantee connectivity. In Table 1, we show �NG with the smallest � value that guarantees $G _ { \\epsilon }$ connected, where $d _ { a v g }$ represents the average node degree in this minimal connected �NG. The results indicate that the graph size needed remains consistently small across all evaluated datasets.",
+        "bbox": [
+            86,
+            765,
+            909,
+            831
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "text",
+        "text": "In practice, constructing an exact �NG, $G _ { \\epsilon } = ( V _ { \\epsilon } , E _ { \\epsilon } )$ for $V _ { \\epsilon } = X \\cup \\{ y _ { 0 } \\}$ is still time-intensive. We do as follows. First, we construct an approximate $\\epsilon \\mathsf { N G } , \\tilde { G } _ { \\epsilon } = ( \\tilde { V } _ { \\epsilon } , \\tilde { E } _ { \\epsilon } )$ , over �, which can be done ofline. Here, an approximate �NG can be constructed based on the proximity graphs by considering both in-neighbors and out-neighbors for each node to identify its neighbors for �NG. It is because many state-of-the-art approaches for proximity graphs rely on an approximate �-NN graph and incorporate diverse pruning strategies [14, 34, 47]. These strategies preserve most short-distance edges within approximate �-NN graph and further add edges to ensure graph connectivity. Next, based on $\\tilde { G } _ { \\epsilon }$ constructed over �, we construct $G _ { \\epsilon } = ( V _ { \\epsilon } , E _ { \\epsilon } )$ by adding a new node, $y _ { 0 } ,$ , taken from $\\mathcal { G }$ of �, and add an edge between $x _ { i }$ and $y _ { 0 }$ , for every $x _ { i } \\in \\tilde { V } _ { \\epsilon }$ with the edge-weight of $\\delta ( x _ { i } , y _ { 0 } )$ and satisfies $\\delta ( x _ { i } , y _ { 0 } ) \\leq \\epsilon$",
+        "bbox": [
+            86,
+            831,
+            909,
+            916
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "header",
+        "text": "158:12",
+        "bbox": [
+            90,
+            83,
+            137,
+            95
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            83,
+            907,
+            98
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 11
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [],
+        "code_body": "```txt\nAlgorithm 4: MST (G)\n\nInput : a proximity graph G = (V, E) with each node u ∈ V having neighbors sorted in ascending order by their distances to u\n\nOutput : the MST of proximity graph G\n\n1 T ← ∅; l[u] ← 1 for each u ∈ V;\n\n2 assign u ∈ V to the set only contains itself;\n\n3 while T contains less than |V| - 1 edges do\n\n4    E_min[s] ← ∅ for each set s that contains any data point u ∈ V;\n\n5    for each u ∈ V do\n\n6    v ← the l[u]-th node in NG(u);\n\n7    while l[u] ≤ |NG(u)| and u, v are in the same set do\n\n8    l[u] ← l[u] + 1; v ← the l[u]-th node in NG(u);\n\n9    if l[u] ≤ |NG(u)| then\n\n10    s ← the set contains data point u;\n\n11    if E_min[s] = ∅ or δ(u, v) < weight of E_min[s] then\n\n12    E_min[s] ← (u, v);\n\n13    for each set s contains any data point u ∈ V do\n\n14    (u, v) ← E_min[s];\n\n15    if u and v are in different sets then\n\n16    merge the sets containing u and v;\n\n17    add edge (u, v) into T with weight δ(u, v);\n\n18 return T;\n```",
+        "bbox": [
+            84,
+            119,
+            905,
+            509
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            555,
+            909,
+            640
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "6.2 The Algorithm for Order Selection",
+        "text_level": 2,
+        "bbox": [
+            88,
+            656,
+            465,
+            673
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "The MST can be computed for $G _ { \\epsilon } = ( V _ { \\epsilon } , E _ { \\epsilon } )$ using the Kruskal’s algorithm eficiently if $E _ { \\epsilon }$ has been sorted. We can sort edges in $\\tilde { G } _ { \\epsilon }$ constructed for � ofline before any $X \\bowtie _ { \\epsilon }$ �. But, we have to sort all edges in $E _ { \\epsilon }$ when �<sub>0</sub> is added together with new edges between every $x _ { i }$ and �<sub>0</sub> online, in order to process $X \\bowtie _ { \\epsilon }$ �. Therefore, the time complexity to find MST using the Kruskal’s algorithm becomes $O ( m \\vert V _ { \\epsilon } \\vert \\log ( m \\vert V _ { \\epsilon } \\vert ) )$ , where � is the degree limit of $G _ { \\epsilon }$ . We call it as baseline algorithm. Such a baseline algorithm is time-consuming as illustrated in Exp. 4 in Section 8, where it consumes over 20% of the total time to determine join window selection GloVe dataset.",
+        "bbox": [
+            86,
+            676,
+            909,
+            794
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "Thus, we need a new algorithm for MST. At a high level, in the first phase, we find MST for $\\tilde { G } _ { \\epsilon }$ over �, which can be done ofline. In the second phase, for MST to be found over $G _ { \\epsilon }$ with a new node �<sub>0</sub> and |� | edges added, we insert |� | edges into the MST of $\\tilde { G } _ { \\epsilon }$ to substitute certain existing edges. We give the details as follows.",
+        "bbox": [
+            86,
+            794,
+            909,
+            862
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "The first phase: It finds MST of the proximity graph $\\tilde { G } _ { \\epsilon } = ( \\tilde { V } _ { \\epsilon } , \\tilde { E } _ { \\epsilon } )$ , using the Kruskal’s algorithm in $O ( m | X | \\log ( m | X | ) )$ ). We give a more eficient algorithm in Algorithm 4, which finds MST, under the assumption that the neighbors of each node $u \\in \\tilde { V } _ { \\epsilon }$ are sorted in ascending order based on their distance to �, which can be seamlessly integrated during the proximity graph $( \\tilde { G } _ { \\epsilon } )$ construction without requiring additional storage for such information.",
+        "bbox": [
+            86,
+            861,
+            909,
+            913
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "header",
+        "text": "158:13",
+        "bbox": [
+            860,
+            84,
+            907,
+            95
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 12
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            116,
+            907,
+            151
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Initially, each data point is allocated to an individual set containing only itself (line 2). Then, in each iteration, we identify the edge with the minimum weight from each set to others (lines 5-12) by exploring unvisited edges from each data point (lines 6-8). When we have found such edges across sets, we add them into the MST if the two nodes of the edges are not already connected (lines 13-17). The construction process concludes when the MST contains $| X | - 1$ edges (Line 5). To store the MST in the proximity graph, we can assign a label to the edges within the MST (line 18).",
+        "bbox": [
+            86,
+            151,
+            909,
+            252
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Checking whether two elements are in the same set (lines 7, 15) and merging the set operation (line 16) can be accomplished using the techniques proposed in [15]. Each operation requires $O ( \\alpha ( N ) )$ time in total, where � is the total number of elements, and $\\alpha ( \\cdot )$ denotes the inverse function of Ackermann’s function, which is less than 5 for any practical input, can be seen as a constant [3]. Additionally, in each iteration, if there are |� | distinct sets containing any data point $x \\in X$ , at least $\\lfloor \\left. S \\right. / 2 \\rfloor$ edges will be added into the MST at this iteration. Hence, the algorithm comprises a maximum of log |� | rounds. Therefore, this phase runs in $O ( m | X | + | X | \\log | X | )$ time. In practice, log |� | is lesser or comparable to $m ,$ hence the time complexity aligns with the size of the proximity graph $G .$",
+        "bbox": [
+            86,
+            252,
+            909,
+            401
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Then, we provide the subsequent theorem to prove the correctness of this phase for constructing MST of proximity graph of �.",
+        "bbox": [
+            86,
+            400,
+            907,
+            434
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Theorem 6.1: Given a proximity graph � of dataset �, Algorithm 4 obtains the MST of graph �.",
+        "bbox": [
+            86,
+            440,
+            886,
+            456
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Proof Sketch: In Algorithm 4, each added edge connects two previously unconnected sets, culminating in a connected graph with $| V ( G ) | - 1$ edges, satisfying the tree property. To establish that the resultant tree is MST of �, we prove that the minimum-weight edge bridging any two disjoint subgraphs $G _ { 1 }$ and $G _ { 2 } \\left( V ( G _ { 1 } ) \\cap V ( G _ { 2 } ) = 0 \\right)$ in � is indeed part of the MST. We prove it by contradiction. Assume the edge $( u , v )$ with the least weight crossing $G _ { 1 }$ and $G _ { 2 }$ is absent from MST of �. It implies $\\delta ( u , v ) > w _ { \\mathrm { m a x } } ( u  v )$ , where $w _ { \\mathrm { m a x } } ( u  v )$ denotes the highest edge weight along the path from � to � within the MST of �. This contradicts the initial premise that $( u , v )$ is the minimum-weight edge spanning $G _ { 1 }$ and $G _ { 2 }$ , since one of the edges along the path from � to � is crossing $G _ { 1 } , G _ { 2 }$ □",
+        "bbox": [
+            86,
+            462,
+            911,
+            613
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "The second phase: Let $y _ { 0 }$ denote the entry point of proximity graph of �. The second phase involves adding |�| edges $( x _ { i } , y _ { 0 } )$ for each $x _ { i } \\in X$ with weights $\\delta ( x _ { i } , y _ { 0 } )$ to MST of $\\tilde { G } _ { \\epsilon } ,$ resulting in the final MST of $G _ { \\epsilon }$ . We denote the new |�| edges into a sorted list $e _ { 1 } , \\cdots , e _ { | X | }$ (line 1). Then, we traverse the edges in the MST of the proximity graph � based on ascending edge weights (line 4). Before inserting each edge, we check the sorted list $e _ { 1 } , \\cdots , e _ { | X | }$ by considering edges with weights falling within the range of the previously traversed edge and the current edge (line 5-9). During both the insertion process of edges in the sorted list and MST, we verify that the two nodes of an edge if they do not belong to the same connected components (lines 6-8, 10-12). Following this, a Depth-First Search (DFS) is executed on the MST to obtain the window order list (lines 13-14).",
+        "bbox": [
+            86,
+            616,
+            909,
+            766
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "text",
+        "text": "Note that, at line 1, the edge from $y _ { 0 }$ to $x _ { i } \\in X$ that is larger than max<sub>�</sub> should not be included in the MST unless it is the shortest edges from $y _ { 0 }$ to all data points in $x _ { i } \\in X$ , where max<sub>�</sub> is the maximum weight of edges in MST of $\\tilde { G } _ { \\epsilon }$ . To expedite the sorting process, a max<sub>�</sub>-range search can be conducted on $\\tilde { G } _ { \\epsilon }$ , with the query point set as $y _ { 0 }$ . We can find that the value of max<sub>�</sub> needed is equal to the minimal value of � for a connected $\\epsilon { \\mathsf { N G } }$ , as depicted in Table 1, the value of max<sub>���</sub> is typically small. Hence, the time complexity of this approach is similar to a �-nearest neighbor search in practice, approximately �(log |�|) [34]. Thereby, since lines 2-14 require $O ( | X | )$ time, the overall time for the second phase is $O ( | X | )$",
+        "bbox": [
+            86,
+            766,
+            909,
+            902
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "header",
+        "text": "158:14",
+        "bbox": [
+            90,
+            83,
+            137,
+            95
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            81,
+            907,
+            98
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 13
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [],
+        "code_body": "```txt\nAlgorithm 5: WindowOrder (G, y0)\n\nInput : a proximity graph G = (V, E) of X and the entry point y0 of the proximity graph of Y\nOutput : the window order list\n\n1 sort edges (xi, y0) with ascending order of δ(xi, y0) for each xi ∈ V, and denote them as e1, e2, · · · , e|X|;\n2 i ← 1; T ← ∅;\n3 assign each data point u ∈ V ∪ {y0} to the set only contains itself;\n4 for each edge (p, q) in G's MST in ascending order of δ(p, q) do\n5    while i ≤ |V| and weight of edge ei = (u, v) ≤ δ(p, q) do\n6    if u and v are in different sets then\n7    merge the sets containing u and v;\n8    add edge (u, v) into T;\n9    i ← i + 1;\n10    if p and q are in different sets then\n11    merge the sets containing p and q;\n12    add edge (p, q) into T;\n13 use DFS to derive parent node p[xi] for each xi ∈ V in T rooted at y0;\n14 return (p[xi], xi) for each xi ∈ X according to the DFS order;\n```",
+        "bbox": [
+            86,
+            118,
+            903,
+            418
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "The following theorem proves the correctness of this algorithm for obtaining the optimal join window order list.",
+        "bbox": [
+            86,
+            456,
+            907,
+            490
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Theorem 6.2: Given the entry point �<sub>0</sub> of the proximity graph of �, Algorithm 5 returns the optimal window order list with the minimum join cost when the given proximity graph � of� is a connected �NG.",
+        "bbox": [
+            86,
+            495,
+            909,
+            545
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "Proof Sketch: We need to prove that the � acquired in Algorithm 5 is the MST of the �NG of dataset $| X | \\cup y _ { 0 }$ , then we can utilize Lemma 6.1 to establish that the weight of the ��� is equivalent to the minimum join cost. Since lines 4-5 guarantee the traversal of edges in $\\{ e _ { 1 } , e _ { 2 } , \\cdots , e _ { | X | } \\}$ and the MST of � in ascending order, � is MST among these edges. Assuming that � is not MST of the connected �NG of dataset $\\left| X \\right| \\cup \\left\\{ y _ { 0 } \\right\\}$ , there must be at least one edge $( u , v )$ in the �NG that is not in the MST of� but is included in the MST of the $\\epsilon { \\mathsf { N G } }$ . This implies $\\delta ( u , v ) < w _ { \\mathrm { m a x } } ( u  v )$ where $w _ { \\mathrm { m a x } } ( u  v )$ is the maximum edge weight along the path from � to � in �. Since the edge $( u , v )$ is absent in �, the path from � to � in $T$ must involve two edges from $y _ { 0 } ,$ , denoted as $( y _ { 0 } , p )$ and $( y _ { 0 } , q )$ , where $\\delta ( y _ { 0 } , p ) \\le \\delta ( y _ { 0 } , q )$ . Hence, we have $\\delta ( u , v ) < \\delta ( y _ { 0 } , q )$ . However, because $( u , v )$ is not part of the MST of $G ,$ and $( y _ { 0 } , q )$ must replace one of the edges from $\\boldsymbol { p }$ to $q$ in the MST of� to be present in � , we have $\\delta ( y _ { 0 } , q ) < w _ { \\mathrm { m a x } } ^ { \\prime } ( p  q ) \\le \\delta ( u , v )$ , where $w _ { \\mathrm { m a x } } ^ { \\prime } ( p  q )$ is the maximum edge weight along the path from $\\boldsymbol { p }$ to � in the MST of �. This leads to a contradiction. □",
+        "bbox": [
+            86,
+            551,
+            909,
+            752
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "7 �-similarity Join",
+        "text_level": 2,
+        "bbox": [
+            88,
+            773,
+            277,
+            790
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "In this section, we discuss how our �-similarity join algorithm supports �-similarity join. Then, we discuss how our �-similarity join addresses maintenance issue for the proximity graph index.",
+        "bbox": [
+            86,
+            793,
+            907,
+            827
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "7.1 �-similarity Join Algorithm",
+        "text_level": 2,
+        "bbox": [
+            88,
+            843,
+            395,
+            859
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "text",
+        "text": "The �-similarity join $X \\bowtie _ { k }$ � between two �-dimensional dataset � and � is defined as $X \\bowtie _ { k } Y =$ $\\{ ( x _ { i } , y _ { j } ) \\in X \\times Y \\mid y _ { j } \\in T o p K ( x _ { i } ) \\}$ , where $T o p K ( x _ { i } )$ is the set of top-� nearest data points of $x _ { i }$ in �.",
+        "bbox": [
+            88,
+            863,
+            907,
+            911
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            81,
+            454,
+            98
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "page_number",
+        "text": "158:15",
+        "bbox": [
+            860,
+            84,
+            907,
+            95
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 14
+    },
+    {
+        "type": "code",
+        "sub_type": "code",
+        "code_caption": [],
+        "code_body": "```txt\nAlgorithm 6: kJoinSlide (G, xi, xj, Ji, k, w)\n\nInput : an adjacent graph G of dataset Y, two data points xi, xj, the join result Ji of xi and two parameters k, w\n\nOutput : the k-join result Jj of xj in Y\n\n1 Q ← Ji is a priority queue, sorted in ascending order based on δ(yp, xj) for every yp ∈ Q;\n\n2 Visit ← Ji; mark each u ∈ Q unexplored;\n\n3 while at least one of the elements in Q is unexplored do\n\n4    u ← the first unexplored element in Q; mark u explored;\n\n5    for each v ∈ NG(u) \\ Visit do\n\n6    push v into priority queue Q;\n\n7    Visit ← Visit ∪ {v}; mark v unexplored;\n\n8    while Q.size() > w do\n\n9    remove the last element from Q;\n\n10 return the first k elements in Q;\n```",
+        "bbox": [
+            86,
+            118,
+            905,
+            366
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "The main ideas used in our �-similarity join algorithm, SimJoin, can be utilized to support $k \\mathrm { - }$ similarity join, based on join window sliding and join window order selection. We discuss the key diference between �-similarity join and �-similarity join. For �-similarity join, � Z $Y ,$ a continuous join window, $J _ { i } ,$ for $x _ { i }$ , is bounded while sliding. In other words, suppose it slides to $y _ { p } ,$ for $\\delta ( y _ { p } , x _ { i } ) \\leq \\epsilon$ , then it does not need to slide further from $y _ { p }$ to $y _ { q }$ and beyond if for $\\delta ( y _ { q } , x _ { i } ) > \\epsilon .$ For �-similarity join, � Z<sub>�</sub> �, it is dificult to determine whether the data points are included in the join window or not, i.e., it is a challenge for the sliding to ensure that no additional points in � can be included in $T o p K ( x _ { i } )$ before terminating. Hence, we propose to explore all adjacent points of a join window $J _ { i }$ to ensure the points in $J _ { i }$ are top-� nearest data points by there are no closer neighbors to $x _ { i }$ . Based on this, for �-similarity join, the strategies used for join window sliding and join window order selection can be used efectively.",
+        "bbox": [
+            86,
+            443,
+            911,
+            626
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "We give the join window sliding algorithm for �-similarity join in Algorithm $^ { 6 , }$ which is the only part we need to modify to support for �-similarity join based on our �-similarity join algorithm, SimJoin. It starts by enqueuing all data points from the join window of $J _ { i }$ into the priority queue, $Q$ (line 1). Next, it traverses each node in $Q$ to explore closer data points to $x _ { j }$ by examining its neighbors (lines 5-9). The size of � is restricted to a maximum of � (lines 8-9), and the iteration concludes when no nodes in the queue have closer neighbors to $x _ { j }$ (line 3).",
+        "bbox": [
+            86,
+            626,
+            909,
+            727
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "�-similarity join vs �-similarity join: The main diference between � and � is that the former indicates the number of nearest neighbors whereas the latter indicates the nearest neighbors in a range. The two serve a similar purpose but are diferent. From the viewpoint of �, the values of � can vary from one dataset to another. Consider � as nSelectivity given in Exp. 3 in Section 8. As illustrated in Fig. 7, to have nSelectivity = 10, � needs to be greater than 0.5 in Crawl, and needs to be less than 0.4 in Higgs.",
+        "bbox": [
+            86,
+            726,
+            909,
+            826
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "Determining the value of � for the join may be straightforward as it limits the number of results. For selecting the value of $\\epsilon ,$ one way is to explore the average distance in a known dataset. For example, in the application of auto-tagging discussed in our introduction, the � value can be obtained by the average distance among the documents that have the same labels. Another way to select � for joins is to explore its relationship with nSelectivity $( \\mathrm { e . g . , } k )$",
+        "bbox": [
+            86,
+            826,
+            909,
+            909
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "header",
+        "text": "158:16",
+        "bbox": [
+            90,
+            84,
+            137,
+            95
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            83,
+            907,
+            98
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 15
+    },
+    {
+        "type": "text",
+        "text": "7.2 Maintenance of Proximity Graph Index",
+        "text_level": 2,
+        "bbox": [
+            88,
+            118,
+            506,
+            134
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "Proximity graphs are one of the state-of-the-art approaches for approximate nearest neighbor search in vector databases, which ofers a multitude of applications including information retrieval and recommendations. And there is a significant demand for updating these indices due to the continuous influx of large volumes of vector data across diferent platforms, e.g., over 500 hours of content are uploaded to YouTube every minute [41]. Thus, the maintenance of proximity graphs has emerged as an important issue.",
+        "bbox": [
+            86,
+            138,
+            909,
+            238
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "The maintenance issue for a proximity graph index, $G _ { Y } = \\left( V _ { Y } , E _ { Y } \\right)$ , for a dataset � is to deal with data insertion/deletion [40, 42, 44]. To deal with new data point insertion, the existing approaches will maintain it in a dataset �, and build a diferent small delta proximity graph index, $G _ { X } = \\left( V _ { X } , E _ { X } \\right)$ to maintain such new points; and to deal with data point deletion from $Y ,$ the existing approaches, for each deleted $y _ { p }$ from �, will connect all its in-neighbors to its out-neighbors in $G _ { Y }$ . It is important to note that periodic global rebuilding of the entire $G _ { Y }$ is necessary and is triggered (1) when the cumulative number of data points in $G _ { X }$ surpasses a specific threshold (e.g., 1-10% of the total index size) and (2) the number of deleted data points in $G _ { Y }$ exceeds a substantial threshold. Such global rebuildings are resource-intensive and time-consuming. As shown in Table 4, global rebuilding of an index for Higgs dataset peaked at 22.4 GB memory and required 2,962 seconds when it is executed using 32 threads, despite the original size of Higgs is 3.8 GB. And the main cost is to rebuild $G _ { Y }$ with $G _ { X }$",
+        "bbox": [
+            86,
+            238,
+            909,
+            438
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "To deal with data insertions: To rebuild a new proximity index $\\mathbb { G } _ { Y }$ for $Y \\cup X$ for data points insertion, first, we conduct �-similarity join, $X \\bowtie _ { k } Y$ , where $G _ { X }$ has been built for � and $G _ { Y }$ has been built for �. The �-similarity join results are the potential out-neighbors of each node across � and �. Second, together with $G _ { X }$ , �<sub>�</sub> and the �-similarity resultss, we can build a new $\\mathbb { G } _ { Y }$ easily, without rebuilding $\\mathbb { G } _ { Y }$ from scratch for $Y \\cup X$ . Third, we can apply various pruning techniques by diferent approaches to obtain the final index.",
+        "bbox": [
+            86,
+            438,
+            909,
+            537
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "To deal with data deletions: When a data point is deleted, we mark it on the proximity graph, $G _ { Y }$ , to ensure its exclusion from �-ANN searches, but do not remove it from $G _ { Y }$ . Upon reaching a specified threshold of deletions, we perform batch updates on $G _ { Y }$ . For batch updates, it is to deal with those data points, $y _ { q } ,$ , in $G _ { Y }$ marked deleted, because the out-degree of the in-neighbors of $y _ { q }$ can drop below a threshold, e.g., �. The impacts on the out-neighbors of $y _ { q }$ are minor, as their �-ANN on $G _ { Y }$ remains unafected. To swiftly address the decrease in the out-degree of the in-neighbors of such deleted nodes in $G _ { Y }$ , we employ the join window sliding algorithm instead of adding new edges from the in-neighbors of $y _ { q }$ to out-neighbors of $y _ { q }$ . Specifically, for each in-neighbor $y _ { x }$ of a deleted data point, $y _ { q } ,$ on $G _ { Y }$ , we slide the join window $J _ { x } = N _ { G _ { Y } } ( y _ { x } ) \\backslash Y _ { D }$ to the �-similarity join window $J _ { x }$ of $y _ { x }$ , where $Y _ { D }$ is the set of data points deleted from �, which $J _ { x }$ should exclude. This process can be accomplished by invoking kJoinSlide $( \\mathcal G , y _ { x } , y _ { x } , N _ { G _ { Y } } ( y _ { x } ) \\backslash Y _ { D } , k , w )$ for $k > m$ . We can easily do it by modifying line 8 to“while $| Q \\backslash Y _ { D } | >$ � do” and line 10 to “return the first � elements in $Q \\backslash { Y _ { D } } ^ { * }$ . Next, various pruning techniques, relying on those proposed in diferent proximity graph methods, can be employed on $J _ { x }$ for each in-neighbor $y _ { x }$ . For instance, when maintaining NSG [14], an edge $( u , v )$ exists only if there is no edge $( u , w )$ such that $\\delta ( u , w ) < \\delta ( u , v )$ and ${ \\delta ( v , w ) < \\delta ( u , v ) }$",
+        "bbox": [
+            86,
+            537,
+            909,
+            804
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "8 Experiments",
+        "text_level": 2,
+        "bbox": [
+            88,
+            825,
+            246,
+            840
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "In this section, we conduct extensive experiments on both real-world and synthetic datasets and report our findings.",
+        "bbox": [
+            86,
+            845,
+            907,
+            877
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "text",
+        "text": "Datasets: We employ 6 real-world and 2 synthetic datasets with diferent numbers of dimensions/- points, the real-world datasets are from diverse applications including image (SIFT [1], GIST [1]), audio (Msong [6]), text (GloVe [35], Crawl [2]) and high-energy physics (Higgs [5]). The summary can be found in Table 2, with the number of dimensions (dim.) and the number of data points (# of points). To evaluate the algorithms, the datasets are randomly divided into two parts of equal size. Self-similarity joins are evaluated on one of the split datasets, while similarity joins are assessed on both datasets.",
+        "bbox": [
+            86,
+            877,
+            909,
+            911
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "header",
+        "text": "158:17",
+        "bbox": [
+            860,
+            83,
+            907,
+            95
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 16
+    },
+    {
+        "type": "table",
+        "img_path": "images/2ef44262627f8163dbec254e30462f109177b89593f223a654bf71ec5a0f6693.jpg",
+        "table_caption": [
+            "Table 2. Statistics of Datasets"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td>Dataset</td><td>dim.</td><td># of points</td><td>Type</td><td>Source</td><td>Dataset</td><td>dim.</td><td># of points</td><td>Type</td><td>Source</td></tr><tr><td>Rand</td><td>64</td><td>100,000</td><td>Synthetic</td><td>U(0,1)</td><td>GloVe</td><td>100</td><td>1,183,514</td><td>Text</td><td>[35]</td></tr><tr><td>Gauss</td><td>64</td><td>100,000</td><td>Synthetic</td><td>N(0,1)</td><td>Crawl</td><td>300</td><td>1,989,995</td><td>Text</td><td>[2]</td></tr><tr><td>Msong</td><td>420</td><td>992,272</td><td>Audio</td><td>[6]</td><td>SIFT</td><td>128</td><td>10,000,000</td><td>Image</td><td>[1]</td></tr><tr><td>GIST</td><td>960</td><td>1,000,000</td><td>Image</td><td>[1]</td><td>Higgs</td><td>29</td><td>11,000,000</td><td>Particles</td><td>[5]</td></tr></table>",
+        "bbox": [
+            152,
+            145,
+            843,
+            216
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "table",
+        "img_path": "images/c7896e446b254aec683622940e04924724c976283acc45c08162afa48aef7977.jpg",
+        "table_caption": [
+            "Table 3. Runtime and average recall of four algorithms on diferent datasets (Exp. 2)"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=\"3\">Dataset</td><td colspan=\"8\">ε-self similarity join (ε=0.4)</td><td colspan=\"9\">ε-similarity join (ε=0.4)</td></tr><tr><td colspan=\"2\">XJoin</td><td colspan=\"2\">VBASE</td><td colspan=\"2\">FGF-Hilbert</td><td colspan=\"2\">SimJoin</td><td colspan=\"2\">XJoin</td><td colspan=\"2\">VBASE</td><td colspan=\"2\">FGF-Hilbert</td><td colspan=\"3\">SimJoin</td></tr><tr><td>recall</td><td>time (s)</td><td>recall</td><td>time (s)</td><td>recall</td><td>time (s)</td><td>recall</td><td>time (s)</td><td>recall</td><td>time (s)</td><td>recall</td><td>time (s)</td><td>recall</td><td>time (s)</td><td>recall</td><td>time (s)</td><td>pre-ratio</td></tr><tr><td>Rand</td><td>0.95688</td><td>19.368</td><td>0.99233</td><td>16.343</td><td>1</td><td>48.989</td><td>1</td><td>1.8626</td><td>0.95752</td><td>19.536</td><td>0.99126</td><td>16.293</td><td>1</td><td>49.035</td><td>0.99298</td><td>6.3837</td><td>0.00623%</td></tr><tr><td>Gauss</td><td>0.95763</td><td>15.788</td><td>0.99583</td><td>13.272</td><td>1</td><td>18.234</td><td>1</td><td>1.1332</td><td>0.95727</td><td>16.418</td><td>0.99583</td><td>13.394</td><td>1</td><td>18.011</td><td>1.0000</td><td>1.0223</td><td>0.03870%</td></tr><tr><td>Msong</td><td>0.97613</td><td>765.82</td><td>0.99055</td><td>528.57</td><td>1</td><td>4904.1</td><td>0.99368</td><td>135.89</td><td>0.97541</td><td>783.35</td><td>0.99035</td><td>528.54</td><td>1</td><td>4912.7</td><td>0.99052</td><td>178.20</td><td>0.00066%</td></tr><tr><td>GIST</td><td>0.97308</td><td>2097.1</td><td>0.98825</td><td>1827.8</td><td>1</td><td>10911</td><td>0.99091</td><td>120.62</td><td>0.97739</td><td>2196.7</td><td>0.99135</td><td>1775.7</td><td>1</td><td>11295</td><td>0.99256</td><td>355.38</td><td>0.00032%</td></tr><tr><td>GloVe</td><td>0.96599</td><td>280.70</td><td>0.99264</td><td>225.13</td><td>1</td><td>882.29</td><td>1</td><td>18.158</td><td>0.96586</td><td>287.76</td><td>0.99261</td><td>222.77</td><td>1</td><td>897.89</td><td>0.99788</td><td>15.203</td><td>0.01474%</td></tr><tr><td>Crawl</td><td>0.97304</td><td>1063.1</td><td>0.98753</td><td>838.91</td><td>1</td><td>6072.2</td><td>0.99998</td><td>47.114</td><td>0.97321</td><td>1048.7</td><td>0.98659</td><td>842.63</td><td>1</td><td>6138.9</td><td>0.99084</td><td>202.72</td><td>0.00201%</td></tr><tr><td>SIFT</td><td>0.98138</td><td>14819</td><td>0.99251</td><td>7679.5</td><td>1</td><td>166050</td><td>0.99564</td><td>5232.8</td><td>0.98023</td><td>15479</td><td>0.99222</td><td>9418.4</td><td>1</td><td>166931</td><td>0.99344</td><td>5532.6</td><td>0.00023%</td></tr><tr><td>Higgs</td><td>0.98659</td><td>8258.2</td><td>0.99031</td><td>4553.2</td><td>1</td><td>38724</td><td>0.99014</td><td>2044.6</td><td>0.98659</td><td>10948</td><td>0.99031</td><td>6339.2</td><td>1</td><td>38778</td><td>0.99067</td><td>2020.3</td><td>0.00109%</td></tr></table>",
+        "bbox": [
+            94,
+            255,
+            903,
+            359
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            384,
+            911,
+            466
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "Algorithms: We conduct comparisons between our approaches, named as SimJoin, and three state of-the-art methods, including approximate similarity join methods (VBase [51] and XJoin [46]), and exact similarity join method (FGF-Hilbert [36]). (1) VBase [51] is the state-of-the-art in approximate similarity join approaches. It executes the join algorithm by treating each data point in one dataset as an individual range query and implements an eficient range filter by integrating it with an index scan operator. (2) XJoin [46] is the latest approach for approximate similarity join. It employs a learning-based technique to predict whether a data point possesses a suficient number of join results. Specifically, for $X \\bowtie _ { \\epsilon } Y$ , where � is the larger dataset and � is the smaller dataset to join. First, XJoin is trained to predict if a query vector $y _ { i } \\in Y$ contains suficient neighbors within the � range in �. Second, the query vectors identified as having adequate neighbors are formed as a new dataset �<sup>′</sup>. Finally, the LSH-based join algorithm is performed between � and �<sup>′</sup>. As demonstrated in [46], XJoin outperforms various LSH-based approaches. (3) FGF-Hilbert [36] is the state-of-the-art method of exact similarity join, relying on the Epsilon Grid Order technique and enhancing runtime eficiency by improving data locality, thereby rendering the algorithms cache-oblivious. (4) SimJoin: our join algorithm contains Algorithm 2 for two distinct datasets and a self-join algorithm. In the self-join algorithm, each data point inherently includes itself in the results due to zero distance. Hence, for every data point in �, we can initiate the sliding of the join window starting with itself. In other words, for each data point $x _ { i } \\in X$ , we can invoke Algorithm 3 via JoinSlide $( G , x _ { i } , x _ { i } , \\{ x _ { i } \\} , \\epsilon , w )$ , where � is proximity graph of �. For VBase and our approach, we use the same proximity graph, NSG [14], for comparisons in each dataset.",
+        "bbox": [
+            86,
+            466,
+            911,
+            800
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "In the comparisons of join time, we exclude the index construction time for VBase, XJoin and our approach as the index constructed is independent of the � value selected. The index can be constructed ofline. We include the index construction time for FGF-Hilbert, because FGF-Hilbert requires preprocessing and cannot reuse the same index constructed for diferent � values.",
+        "bbox": [
+            86,
+            800,
+            909,
+            865
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "We evaluate the performance of the similarity join algorithms using a single thread, and all results are averaged over 5 runs.",
+        "bbox": [
+            86,
+            866,
+            909,
+            897
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "text",
+        "text": "Performance metrics: We focus on two metrics for evaluating the join results: average recall and average precision, as detailed in Section 2. Given that the join results produced by the four algorithms compared in our experiments are all based on exact distance comparisons, their average precision are all 1. Therefore, our comparisons focus solely on the average recall of these algorithms. Experimental environments: The experiments are conducted on a CentOS Linux server with Intel(R) Xeon(R) Silver 4215 CPU @ 2.50GHz with 128GB memory. All algorithms are implemented in C++11. The code is compiled with g++ 11.4.1 under O3 optimization.",
+        "bbox": [
+            88,
+            898,
+            909,
+            913
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "header",
+        "text": "158:18",
+        "bbox": [
+            90,
+            84,
+            137,
+            95
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            83,
+            907,
+            97
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 17
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0bcf3c2a32b36031188d9d4b5429eb261b28fd45ab791b06d910d3b4af8db58d.jpg",
+        "content": "",
+        "chart_caption": [
+            "VBASE XJoin FGF-Hilbert SimJoin",
+            "(a) Rand (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            98,
+            136,
+            286,
+            263
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/2e68d941f8bac15bb3043354d0c89ae0ea5690acec7f407db2d654f140fb2886.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Gauss (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            302,
+            136,
+            491,
+            263
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/311ad57c90dfd5cb5a63aededbc79fe7e2986b3f6a77c3b0030ad57bc3dfd534.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Msong (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            508,
+            136,
+            697,
+            263
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/d2ae60bc1bd907eb1292cbc3adf341f56df8d06076c4942bcf56514f18fdf3cf.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) GIST (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            711,
+            136,
+            899,
+            263
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/3f42aadfb516e6ae965831f394e4f86a2dc1f722e2dcb6355210c806e5307ff7.jpg",
+        "content": "",
+        "chart_caption": [
+            "(e) GloVe (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            98,
+            293,
+            286,
+            419
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/43df75f364793fa8b2d2d3908140ac9355ebc4c3d326d0a17fbeccf535a0aa48.jpg",
+        "content": "",
+        "chart_caption": [
+            "(f) Crawl (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            302,
+            293,
+            491,
+            419
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/3807aa14357c79206b6cb052535cd7cb2caa9aaa421d1d5fda7d084acab36598.jpg",
+        "content": "",
+        "chart_caption": [
+            "(g) SIFT (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            506,
+            294,
+            695,
+            419
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/183977407b3843f6ba5939f044a5d06f87fd3ff8f21e446bc6fda71d4c12e972.jpg",
+        "content": "",
+        "chart_caption": [
+            "(h) Higgs (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            713,
+            293,
+            899,
+            418
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/899ae7d95755f78e21c69bd368723bc336665aed822b44e5d30331c5618a3a56.jpg",
+        "content": "",
+        "chart_caption": [
+            "(i) Rand (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            98,
+            450,
+            286,
+            576
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/207e3cc6e3855471451ed7ecba1a60ebaf79e2e7d26246d737e0a93d4d6614bd.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            302,
+            450,
+            491,
+            576
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/20763e1af6fef1459db4d2e6483a87d42e5c8a62ba0edc9e481736d7fc7d053e.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            506,
+            450,
+            697,
+            576
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/b32daa93e600ac4c7fcab783a14a096bc051e9761c4ec6f6adeff09ac594f2a0.jpg",
+        "content": "",
+        "chart_caption": [
+            "(k) Msong (join)",
+            "(l) GIST (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            713,
+            450,
+            899,
+            576
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/872f2feb819736c3c9ae333e1d6e297d43d83f524e508aed9cd513dbb6fc85fe.jpg",
+        "content": "",
+        "chart_caption": [
+            "(j) Gauss (join)",
+            "(m) GloVe (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            98,
+            606,
+            286,
+            733
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/86c080ce460d0fd4a8e5f20310fd459f9843a17c7dec567ceea4517beeae187a.jpg",
+        "content": "",
+        "chart_caption": [
+            "(n) Crawl (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            302,
+            606,
+            493,
+            733
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/d6ea5def0145bcc5f9706ad51584c86a4248f7ab56ad1dcf2a2dd5b9ea9e2ac4.jpg",
+        "content": "",
+        "chart_caption": [
+            "(o) SIFT (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            506,
+            608,
+            697,
+            733
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/e0d39bce0c44d0d3399b3f53d1c58d84c4555fa3021d8034b397f52b542dc128.jpg",
+        "content": "",
+        "chart_caption": [
+            "(p) Higgs (join)",
+            "Fig. 6. �-join comparisons with current three join algorithms (Runtime v.s. Recall) when � = 0.4 (Exp. 1)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            713,
+            606,
+            899,
+            731
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            84,
+            813,
+            911,
+            913
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            81,
+            456,
+            97
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "page_number",
+        "text": "158:19",
+        "bbox": [
+            860,
+            83,
+            907,
+            95
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            907,
+            948
+        ],
+        "page_idx": 18
+    },
+    {
+        "type": "chart",
+        "img_path": "images/8b2df3febaaf7a9bb35abe6064b8ac32014042b098c2bd46d597d4fd60fc21b1.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Crawl (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            96,
+            134,
+            286,
+            209
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "chart",
+        "img_path": "images/6b0237c468636095a6a7a9361c9f04434fe67aac4744dc668143835cdff0f306.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Higgs (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            298,
+            116,
+            491,
+            209
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "chart",
+        "img_path": "images/04e84795115fbe9a756a53cd7640d6ef1b0f14e0eb303f9c5b34a1e659a0e60c.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Crawl (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            500,
+            116,
+            697,
+            209
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "chart",
+        "img_path": "images/88bd30056dd6d93207d24136077f325f337cb49a0c1cb2c33267500b06fe8b34.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Higgs (join)",
+            "Fig. 7. Runtime at 0.99 average recall when vary � (Exp. 3)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            705,
+            134,
+            893,
+            209
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "Exp. 1. Efects of the parameters in join algorithms: In this evaluation, we keep the dataset and � fixed at 0.4, and then adjust various parameters in diferent algorithms. In our join algorithms, we modify the parameter �. In VBASE, their search algorithms are based on beam search, so we adjust the beam width in their algorithms. For XJoin, we vary the value of � in their algorithm, a parameter used to identify ground-truth negative training samples, where a higher � value can enhance eficiency at the loss of quality. FGF-Hilbert does not have adjustable parameters and is represented as a single point in the figures. The results are shown in Fig. 6, where lower and further to right curves indicate better performance.",
+        "bbox": [
+            86,
+            288,
+            909,
+            422
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "The results reveal that our algorithms outperform the three approaches significantly, achieving higher average recall with much-reduced runtime. Moreover, the initial points of the curves for our algorithms are notably to the right compared to the other approximate similarity join algorithms, showcasing that our algorithms can eficiently identify nearly all join results without heavy time cost on searches. The results further indicate that our algorithms show reduced dependency on parameters, as evidenced by the narrower range of average recall values of our algorithms’ curves.",
+        "bbox": [
+            86,
+            422,
+            911,
+            522
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "Exp. 2. Overall performance of �-similarity join: As shown in Table 3, our join algorithms, denoted as SimJoin, including the �-self similarity join algorithm and the � similarity join algorithm, is compared to three state-of-the-art approaches when we set � equals 0.4. Compared to VBASE, our approach demonstrates up to 1 order of magnitude speedups in runtime with superior quality. Specifically, SimJoin achieves speedups of 8.8x, 11.7x, 3.9x, 15.2x, 12.4x, 17.8x, 1.5x, 2.2x in self similarity join, and 2.6x, 13.1x, 3.0x, 5.0x, 14.7x, 4.2x, 1.7x, 3.1x in similarity join on the Rand, Gauss, Msong, GIST, GloVe, Crawl, SIFT, Higgs datasets respectively. Compared to the state-of-the-art method in exact similarity join, our algorithm achieves up to speedups of over 2 orders of magnitude in runtime while maintaining an average loss of less than 1% in join results. We further present the ratio of the runtime of the join window order selection to the total runtime of SimJoin on �-similarity join, denoted as “pre-ratio” in Table 3, to provide the time breakdown of our algorithm. The time of our join window order selection for many datasets, such as Rand in the first row, is notably less than 1ms. To ensure precise reporting of such times, we conducted the join window selection algorithm 100 times, and reported the average time. The results indicate that the order selection phase constitutes a negligible portion of the total time of our SimJoin.",
+        "bbox": [
+            86,
+            525,
+            911,
+            776
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "Exp. 3. Vary the value of �: In this experiment, we vary the value of � to compare the runtime of diferent algorithms when achieving an average recall of 0.99. The results are shown in Fig. 7, which does not include XJoin, as it cannot achieve 0.99 recall in either the Crawl or Higgs datasets. We use nSelectivity to denote the average number of join results for each data point in a dataset, defined as the value of |� | multiplied by the selectivity of the join operation, i.e., the nSelectivity of the join operation � Z � is given by $| X | \\cdot { \\frac { | X \\bowtie Y | } { | X \\times Y | } }$",
+        "bbox": [
+            86,
+            777,
+            911,
+            881
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "text",
+        "text": "The results in the figures indicate that the runtime of our algorithms increases linearly with the value of nSelectivity, demonstrating good scalability as the number of join results increases.",
+        "bbox": [
+            86,
+            880,
+            911,
+            915
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "page_number",
+        "text": "158:20",
+        "bbox": [
+            90,
+            84,
+            137,
+            95
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            83,
+            907,
+            98
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 19
+    },
+    {
+        "type": "chart",
+        "img_path": "images/6b0d0cc7a4a29f9ae969e068b6a835b2f98f87ca867fcf69a362fc91b85d1880.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Crawl (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            98,
+            136,
+            277,
+            225
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/438773e0415c87a512eb3c982f89d0b0c56ea66b8b54769b6d7e9f9578e0d3e0.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Higgs (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            302,
+            116,
+            485,
+            225
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/ae3deda9e795eac717133d70f3a403dba785e3db4270695781d9277315601f9c.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Crawl (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            508,
+            116,
+            691,
+            225
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/e7ad4b02883165585fd8cb6dfce16f7ff5824045ac9b93dba9e12e731bca831b.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Higgs (join)",
+            "Fig. 8. NDC v.s. Recall when � = 0.4 (Exp. 4)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            713,
+            134,
+            893,
+            225
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/7cad2f80c80ca9a3deb8d46895e738ee0d41294f79bfc1f366daf7417f6dbabe.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) GIST"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            100,
+            305,
+            275,
+            397
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/39d857aaa3251a4b9ffbd914862d4d0975e49ab7b59bdc70c362218f62ac9f66.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) SIFT"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            288,
+            291,
+            465,
+            397
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/368ba4847d055fa694cc1f74db355a2dbd8714922d61eb737e200ced048d0f87.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) self join"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            477,
+            316,
+            609,
+            398
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0cd1c8685b5ec9a364f459d1038ba6c3002ce0938bdfa4e231307ea5474ac4d1.jpg",
+        "content": "",
+        "chart_caption": [],
+        "chart_footnote": [],
+        "bbox": [
+            615,
+            300,
+            757,
+            397
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/42de343312cd34b0d3b52935d2b4b22c87959067e8282f5f0885ce7c18e70866.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) join at |� | = 500 (c) join at |� | = 500, 000",
+            "Fig. 10. Varying dataset size (0.99 average recall) (Exp. 6)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            763,
+            320,
+            890,
+            397
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/81df6e81439857fc260f357afc61e26eb9bc21f60651af249b3b6f7c8e76ae80.jpg",
+        "content": "",
+        "chart_caption": [
+            "Fig. 9. base and query data join (Exp. 5)",
+            "(a) Crawl (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            100,
+            493,
+            279,
+            613
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/33026a7069ee9cdd609e5c4e29aff6aace360ecf149fe4526b9e4c96435f26b8.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) GIST (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            308,
+            491,
+            491,
+            615
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/5f35359149d842db8595f7ce396043e5479922f93fff0a7758bba7de0507b7c2.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Crawl (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            506,
+            493,
+            687,
+            615
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/16c8103501cefa755738994d30c09eb21a1c4a5bbcd0a61b171745c1ea4870e2.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) GIST (join)",
+            "Fig. 11. �-join by diferent proximity graphs (Exp. 7)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            718,
+            493,
+            895,
+            602
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Besides, our join algorithms consistently remain much shorter than that of VBASE and FGF-Hilbert across diferent values of �.",
+        "bbox": [
+            86,
+            677,
+            907,
+            711
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Exp. 4. Number of distance computations during join: In this part, we conduct experiments to compare our approach with others based on a new metric, the number of distance computations (NDC), using Crawl and Higgs datasets. As shown in Fig. 8, our approach has a notable enhancement in terms of NDC over the existing state-of-the-art approaches, consistent with the results of Exp. 2.",
+        "bbox": [
+            86,
+            715,
+            909,
+            781
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Exp. 5. Join between base and query data: In this part, we use the base data and query data as two separate datasets for join. We evaluate our approach against three other approaches using SIFT and GIST datasets sourced from the ANN benchmark<sup>1</sup>. The results, shown in Fig. 9, demonstrate that, akin to the findings in Exp. 2, our approach significantly outperforms the existing methods.",
+        "bbox": [
+            86,
+            784,
+            909,
+            852
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "text",
+        "text": "Exp. 6. Vary the size of datasets for join: To evaluate the scalability of our proposed SimJoin method, we conduct experiments on SIFT and GIST datasets by (i) varying the size of dataset (|� |)",
+        "bbox": [
+            86,
+            855,
+            909,
+            888
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            905,
+            948
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "page_number",
+        "text": "158:21",
+        "bbox": [
+            860,
+            83,
+            905,
+            95
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "page_footnote",
+        "text": "<sup>1</sup>https://ann-benchmarks.com/",
+        "bbox": [
+            88,
+            900,
+            302,
+            913
+        ],
+        "page_idx": 20
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0b0fa95de9355636a087392a140323115a370f67073a75cf63a1538c6ddcd6b3.jpg",
+        "content": "",
+        "chart_caption": [
+            "Fig. 12. Runtime of join window order algorithms (Exp. 8)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            277,
+            115,
+            711,
+            227
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "from 500 to 500, 000 in self join, (ii) varying the size of base data (|�|) from 500 to 500, 000 while keeping the size of the query data (|� |) as 500, and (iii) varying the size of the query data (|� |) from 500 to 500, 000 while keeping the size of the base data (|� |) constant as 500, 000. The results of runtime at 0.99 average recall are shown in Fig. 10. Notably, the runtime shows a linear increase or a slower rate of growth in comparison to the expansion of the dataset size, which validates that our method exhibits strong scalability when either the base data or query data size expands.",
+        "bbox": [
+            86,
+            281,
+            909,
+            384
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Exp. 7. Comparisons using diferent proximity graphs: Existing proximity graph indexes for �-ANN searches can seamlessly integrate with our join algorithm. Here, we compare three state-of-the-art proximity graph index methods for �-similarity joins on Crawl and GIST datasets when $\\epsilon = 0 . 4$ . As shown in Fig. 11, HNSW does not perform well due to higher edge distances, which impacts adjacency quality according to the analysis in Theorem 5.1. The higher edge distances in HNSW are because it is built via incremental insertion, which means candidate neighbors are only selected among previously inserted nodes. Vamana and NSG exhibit similar performance, since they difer mainly in pruning strategies that afect a small edge subset in the graph.",
+        "bbox": [
+            86,
+            387,
+            909,
+            520
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Exp. 8. Comparisons among join window order determination algorithms: We compare our two advanced join window order determination algorithms: MST + WindowOrder-Sort (Algorithms 4+5) and WindowOrder-� (Algorithms 4+5, with line 2 in Algorithm 5 replaced by an approximate max<sub>�</sub>-range query), against the baseline algorithm BaseMST. The details of all these algorithms are provided in Section 6.2.",
+        "bbox": [
+            86,
+            525,
+            909,
+            606
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "The runtime of the three algorithms is shown in Fig. 12. We can find that it is essential to accelerate the running time of the baseline approach, as it consumes a significant portion of the total runtime. For example, in GloVe dataset, the runtime of the baseline approach for determining the join window order is 4.4s, which accounts for over 20% of the total join processing time. For the two advanced algorithms, MST step can be completed ofline before the join operation. Even with this preprocessing, the advanced algorithms outperform the baseline by more than 1 order of magnitude in runtime. Moreover, WindowOrder-Sort and WindowOrder-� are faster than the baseline by over 2 and 3 orders of magnitude, respectively. The join costs for BaseMST and MST + WindowOrder-Sort are the same, while the diference in join costs between MST + WindowOrder-� and the others are less than 0.01% across all datasets.",
+        "bbox": [
+            86,
+            606,
+            911,
+            775
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Exp. 9. Comparisons in �-similarity join: We evaluate our �-similarity join algorithm by comparing it to VBase. Although VBase does not directly support �-similarity join, we utilized their �-nearest neighbor search to facilitate the join by treating each data point in the smaller dataset as a query point, following a similar method to their �-similarity join. The results on Crawl and Higgs datasets are depicted in Fig. 13, showcasing that the runtime of our algorithm is significantly lower than VBase’s while achieving similar or even better average recall.",
+        "bbox": [
+            86,
+            776,
+            911,
+            877
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "text",
+        "text": "Exp. 10. Index maintenance comparisons: We follow the experimental setup ofFreshDiskANN [40] to evaluate our algorithms for index maintenance on Crawl and Higgs datasets. For insertion, we",
+        "bbox": [
+            86,
+            880,
+            923,
+            913
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "page_number",
+        "text": "158:22",
+        "bbox": [
+            90,
+            83,
+            137,
+            95
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            83,
+            907,
+            98
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 21
+    },
+    {
+        "type": "chart",
+        "img_path": "images/d462512a7f594275ce890e02dc454ed8ea3e661b09602d0fec008afa7870df84.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Crawl (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            98,
+            134,
+            279,
+            256
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "chart",
+        "img_path": "images/0bacbdbf00fc1575a7916254591f8c856b0aeb179580973809a079207464381b.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Higgs (self join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            308,
+            116,
+            495,
+            256
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "chart",
+        "img_path": "images/750baff05cfe29f994558568c073cde273570ec2124d20645182191b7c5f6064.jpg",
+        "content": "",
+        "chart_caption": [
+            "(c) Crawl (join)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            506,
+            118,
+            687,
+            256
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "chart",
+        "img_path": "images/f75f9c02ebd2f1201626cb46879048fcee9ff71b5da70e80bded0459fdfb286b.jpg",
+        "content": "",
+        "chart_caption": [
+            "(d) Higgs (join)",
+            "Fig. 13. �-similarity join comparisons when � = 10 (Exp. 9)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            716,
+            136,
+            897,
+            256
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "table",
+        "img_path": "images/98d2e179b1608436de4d1ba4153017ec1323cb6fbab8e3b4d947244ba92438c7.jpg",
+        "table_caption": [
+            "Table 4. NSG index maintenance comparisons (Exp. 10)"
+        ],
+        "table_footnote": [],
+        "table_body": "<table><tr><td rowspan=\"2\">Dataset</td><td colspan=\"2\">global rebuilding</td><td colspan=\"2\">FreshDiskANN</td><td colspan=\"2\">k-similarity join</td></tr><tr><td>peak memory</td><td>time (s)</td><td>peak memory</td><td>time (s)</td><td>peak memory</td><td>time (s)</td></tr><tr><td>Rand</td><td>430.72 MB</td><td>129.624</td><td>274.64 MB</td><td>37.3372</td><td>249.95 MB</td><td>33.3368</td></tr><tr><td>Gauss</td><td>419.21 MB</td><td>131.991</td><td>166.51 MB</td><td>29.9972</td><td>167.75 MB</td><td>29.2273</td></tr><tr><td>Msong</td><td>3.9465 GB</td><td>2632.23</td><td>1.6452 GB</td><td>343.617</td><td>1.6432 GB</td><td>327.254</td></tr><tr><td>GIST</td><td>9.0220 GB</td><td>6632.01</td><td>5.5203 GB</td><td>960.500</td><td>5.5196 GB</td><td>906.157</td></tr><tr><td>GloVe</td><td>4.2359 GB</td><td>958.089</td><td>1.1092 GB</td><td>875.349</td><td>1.0849 GB</td><td>864.672</td></tr><tr><td>Crawl</td><td>7.3334 GB</td><td>1963.67</td><td>2.4671 GB</td><td>674.069</td><td>2.4202 GB</td><td>585.061</td></tr><tr><td>SIFT</td><td>17.257 GB</td><td>3269.74</td><td>8.1037 GB</td><td>1989.38</td><td>8.0456 GB</td><td>1825.94</td></tr><tr><td>Higgs</td><td>22.394 GB</td><td>2961.66</td><td>4.7927 GB</td><td>769.701</td><td>4.7922 GB</td><td>744.140</td></tr></table>",
+        "bbox": [
+            174,
+            354,
+            818,
+            504
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "divide the original dataset into two parts with equal size. One part is used for the initial index construction, and the other part is used for insertion; for deletion, we randomly select points for removal following FreshDiskANN. Specifically, we randomly remove 10% of data points from one part of the dataset and then insert the same number of data points from the other part. Our algo rithm is compared to (i) an approach based on global rebuilding, where the index is rebuilt globally after the complete deletion and insertion process; and (ii) FreshDiskANN [40], the state-of-the-art graph-based index maintenance approach. Our algorithm and FreshDiskANN utilize only one thread for supporting maintenance, while global rebuilding employs all available threads in the servers for processing. The comparisons are based on the NSG graph index, where the reported times include the index rebuilding time for global rebuilding and the total time taken for index merging during data point insertion and batch updates for data point deletion in FreshDiskANN and our algorithms.",
+        "bbox": [
+            86,
+            531,
+            911,
+            730
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "Regarding the global rebuilding, the results, as depicted in Table 4, show that our maintenance algorithms achieve significantly higher eficiency and smaller peak memory. And Fig. 14 shows that our final graph index is even better than that of global rebuilding, attributed to the higher quality of the k-nearest neighbors of each data point in our algorithms compared to NN-descent.",
+        "bbox": [
+            86,
+            731,
+            909,
+            797
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "For FreshDiskANN, although it has comparable memory usage and processing time to ours, in terms of the quality of the index maintained, our approach outperforms FreshDiskANN, as shown in Fig. 14, because FreshDiskANN focuses on delta changes within the index to be maintained.",
+        "bbox": [
+            86,
+            797,
+            909,
+            848
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "9 Related Work",
+        "text_level": 2,
+        "bbox": [
+            88,
+            861,
+            257,
+            876
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "text",
+        "text": "Many works focus on exact high-dimensional similarity joins, including �-similarity join [7, 9, 25, 36, 39] and �-NN join [8, 48]. However, the so-called high dimension may be diferent from time to time. Most of these works [8, 25, 39, 48] consider dimensions around 40 as high, whereas current vector databases often feature significantly more dimensions, e.g., the number ofdimensions in GIST is 960. Among them, the state-of-the-art methods for exact high-dimensional similarity join [22, 23, 29, 31, 36] involve two steps: filtering and refinement. In the filtering step, candidate pairs of vectors that might be part of the final join results are selected through indexing or sorting. In the refinement step, the exact distance between candidate pairs of two vectors is computed. Filtering using index structures, such as R-trees [9], to support the join predicate can be costly in index construction. Therefore, these approaches opt to sort the dataset based on a function that supports the join predicate, for example, Epsilon Grid Order [7].",
+        "bbox": [
+            86,
+            881,
+            909,
+            915
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "page_number",
+        "text": "158:23",
+        "bbox": [
+            860,
+            84,
+            907,
+            95
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            907,
+            948
+        ],
+        "page_idx": 22
+    },
+    {
+        "type": "chart",
+        "img_path": "images/d12f8d64ba9d39312966a844bb0dad4307cdec4b034edc27644d2c1632a8850f.jpg",
+        "content": "",
+        "chart_caption": [
+            "(a) Crawl"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            189,
+            116,
+            485,
+            251
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "chart",
+        "img_path": "images/26af534c3308b8633373bfc6fdbccc0bb6fa66146bf784e247849479fdc40dd2.jpg",
+        "content": "",
+        "chart_caption": [
+            "(b) Higgs",
+            "Fig. 14. ANNS performance on final NSG (Exp. 10)"
+        ],
+        "chart_footnote": [],
+        "bbox": [
+            516,
+            116,
+            808,
+            251
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "",
+        "bbox": [
+            86,
+            329,
+            911,
+            479
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "In the realm of approximate high-dimensional similarity search, existing approaches treat each data point in a dataset as an individual approximate �-range query. These queries are then supported by a locality-sensitive hashing (LSH) based index [4, 20, 27, 37, 46, 49, 50] or a proximity graph index [44, 51]. At a high level, LSH-based approaches support approximate similarity joins by following three steps: (i) first projecting each vector into a hash value; (ii) next executing an equi-join on the pairs that collide under the same hash value to establish candidate join results; (iii) finally, exact distance computations are conducted to derive the final join results. Therefore, the efectiveness of these approaches heavily relies on the hash functions in step (i), i.e., mapping similar vectors to the same hash value, which is also the key factor that highly impacts the performance in LSH-based methods for approximate nearest neighbor search. However, diferent to recent graph [34, 47] and partition [10, 16, 18] based approaches, LSH-based approaches do not take data distribution into consideration, which often leads to a significant performance decline in real-world datasets [45], where data is unevenly distributed data.",
+        "bbox": [
+            86,
+            479,
+            911,
+            697
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "10 Conclusion",
+        "text_level": 2,
+        "bbox": [
+            88,
+            709,
+            244,
+            725
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "In this paper, we introduce a novel join algorithm designed to support approximate similarity joins in high-dimensional spaces. Our approach leverages the intrinsic properties of the join operation, utilizing results from processed data points to expedite the entire join process. Our extensive experiments demonstrate that our proposed join algorithm outperforms all existing state-of-the-art methods for approximate similarity joins by up to one order of magnitude with superior quality of join results. Our future work will focus on developing a distributed algorithm based on our current approach to ofer a more scalable approximate similarity join method.",
+        "bbox": [
+            86,
+            730,
+            911,
+            848
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "Acknowledgements",
+        "text_level": 2,
+        "bbox": [
+            88,
+            859,
+            281,
+            877
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "This work was supported by the Research Grants Council of Hong Kong, China, No.14205520, and the National Natural Science Foundation of China, No.62002274.",
+        "bbox": [
+            86,
+            880,
+            907,
+            913
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "page_number",
+        "text": "158:24",
+        "bbox": [
+            90,
+            84,
+            137,
+            95
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            83,
+            907,
+            98
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 23
+    },
+    {
+        "type": "text",
+        "text": "References",
+        "text_level": 2,
+        "bbox": [
+            88,
+            118,
+            199,
+            134
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[1] 2010. Datasets for approximate nearest neighbor search. http://corpus-texmex.irisa.fr/.",
+        "bbox": [
+            98,
+            138,
+            711,
+            152
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[2] 2023. Common Crawl. https://commoncrawl.org/.",
+        "bbox": [
+            98,
+            152,
+            467,
+            166
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[3] W. Ackermann. 1928. Zum Hilbertschen Aufbau der reellen Zahlen. Math. Ann. 99 (1928), 118–133.",
+        "bbox": [
+            98,
+            166,
+            794,
+            179
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[4] Martin Aumüller and Matteo Ceccarello. 2022. Implementing Distributed Similarity Joins using Locality Sensitive Hashing. In EDBT 2022. OpenProceedings.org, 1:78–1:90.",
+        "bbox": [
+            98,
+            179,
+            907,
+            206
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[5] Pierre Baldi, Peter Sadowski, and Daniel Whiteson. 2014. Searching for exotic particles in high-energy physics with deep learning. Nature communications 5, 1 (2014), 4308.",
+        "bbox": [
+            98,
+            206,
+            907,
+            234
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[6] Thierry Bertin-Mahieux, Daniel P. W. Ellis, Brian Whitman, and Paul Lamere. 2011. The Million Song Dataset. In Proceedings ofthe 12th International Society for Music Information Retrieval Conference, ISMIR 2011. University of Miami, 591–596.",
+        "bbox": [
+            98,
+            234,
+            909,
+            275
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[7] Christian Böhm, Bernhard Braunmüller, Florian Krebs, and Hans-Peter Kriegel. 2001. Epsilon Grid Order: An Algorithm for the Similarity Join on Massive High-Dimensional Data. In Proceedings ofthe 2001 ACM SIGMOD international conference on Management of data. ACM, 379–388.",
+        "bbox": [
+            98,
+            277,
+            909,
+            318
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[8] Christian Böhm and Florian Krebs. 2004. The k-Nearest Neighbour Join: Turbo Charging the KDD Process. Knowl. Inf. Syst. 6, 6 (2004), 728–749.",
+        "bbox": [
+            98,
+            318,
+            909,
+            345
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[9] Thomas Brinkhof, Hans-Peter Kriegel, and Bernhard Seeger. 1993. Eficient Processing of Spatial Joins Using R-Trees. In Proceedings of the 1993 ACM SIGMOD International Conference on Management of Data, Washington, DC, USA, May 26-28, 1993. ACM Press, 237–246.",
+        "bbox": [
+            98,
+            345,
+            909,
+            387
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[10] Qi Chen, Bing Zhao, Haidong Wang, Mingqin Li, Chuanjie Liu, Zengzhong Li, Mao Yang, and Jingdong Wang. 2021. SPANN: Highly-eficient Billion-scale Approximate Nearest Neighborhood Search. In NeurIPS 2021. 5199–5212.",
+        "bbox": [
+            90,
+            387,
+            909,
+            413
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[11] Sheng Chen, Akshay Soni, Aasish Pappu, and Yashar Mehdad. 2017. DocTag2Vec: An Embedding Based Multilabel Learning Approach for Document Tagging. In Rep4NLP@ACL 2017. Association for Computational Linguistics, 111–120.",
+        "bbox": [
+            90,
+            413,
+            909,
+            455
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[12] B. Delaunay. 1934. Sur la sphère vide. Bull. Acad. Sci. URSS 1934, 6 (1934), 793–800.",
+        "bbox": [
+            90,
+            456,
+            685,
+            470
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[13] Rex A Dwyer. 1989. Higher-dimensional Voronoi diagrams in linear expected time. In Proceedings ofthe fifth annual symposium on Computational geometry. 326–333.",
+        "bbox": [
+            90,
+            470,
+            909,
+            497
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[14] Cong Fu, Chao Xiang, Changxu Wang, and Deng Cai. 2019. Fast Approximate Nearest Neighbor Search With The Navigating Spreading-out Graph. Proc. VLDB Endow. 12, 5 (2019), 461–474.",
+        "bbox": [
+            90,
+            497,
+            907,
+            525
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[15] Harold N. Gabow and Robert Endre Tarjan. 1983. A Linear-Time Algorithm for a Special Case of Disjoint Set Union. In Proceedings of the 15th Annual ACM Symposium on Theory of Computing. ACM, 246–251.",
+        "bbox": [
+            90,
+            525,
+            907,
+            552
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[16] Jianyang Gao and Cheng Long. 2024. RaBitQ: Quantizing High-Dimensional Vectors with a Theoretical Error Bound for Approximate Nearest Neighbor Search. Proc. ACM Manag. Data 2, 3 (2024), 167.",
+        "bbox": [
+            90,
+            552,
+            907,
+            581
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[17] Aditya Grover and Jure Leskovec. 2016. node2vec: Scalable Feature Learning for Networks. In SIGKDD International Conference on Knowledge Discovery and Data Mining. ACM, 855–864.",
+        "bbox": [
+            90,
+            581,
+            909,
+            609
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[18] Ruiqi Guo, Philip Sun, Erik Lindgren, Quan Geng, David Simcha, Felix Chern, and Sanjiv Kumar. 2020. Accelerating Large-Scale Inference with Anisotropic Vector Quantization. In Proceedings ofthe 37th International Conference on Machine Learning, ICML 2020 (Proceedings of Machine Learning Research, Vol. 119). PMLR, 3887–3896.",
+        "bbox": [
+            90,
+            609,
+            907,
+            650
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[19] Ben Harwood and Tom Drummond. 2016. FANNG: Fast Approximate Nearest Neighbour Graphs. In 2016 IEEE Conference on Computer Vision and Pattern Recognition, CVPR 2016. IEEE Computer Society, 5713–5722.",
+        "bbox": [
+            90,
+            650,
+            909,
+            677
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[20] Xiao Hu, Ke Yi, and Yufei Tao. 2019. Output-Optimal Massively Parallel Algorithms for Similarity Joins. ACM Trans. Database Syst. 44, 2 (2019), 6:1–6:36",
+        "bbox": [
+            90,
+            677,
+            909,
+            706
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[21] Piotr Indyk and Rajeev Motwani. 1998. Approximate Nearest Neighbors: Towards Removing the Curse of Dimension ality. In Proceedings ofthe Thirtieth Annual ACM Symposium on the Theory ofComputing. ACM, 604–613.",
+        "bbox": [
+            90,
+            706,
+            909,
+            733
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[22] Edwin H. Jacox and Hanan Samet. 2008. Metric space similarity joins. ACM Trans. Database Syst. 33, 2 (2008), 7:1–7:38",
+        "bbox": [
+            90,
+            733,
+            903,
+            747
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[23] Dmitri V. Kalashnikov. 2013. Super-EGO: fast multi-dimensional similarity join. VLDB J. 22, 4 (2013), 561–585",
+        "bbox": [
+            90,
+            748,
+            868,
+            759
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[24] Dmitri V. Kalashnikov and Sunil Prabhakar. 2007. Fast similarity join for multi-dimensional data. Inf. Syst. 32, 1 (2007), 160–177.",
+        "bbox": [
+            92,
+            759,
+            909,
+            787
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[25] Nick Koudas and Kenneth C. Sevcik. 2000. High Dimensional Similarity Joins: Algorithms and Performance Evaluation. IEEE Trans. Knowl. Data Eng. 12, 1 (2000), 3–18.",
+        "bbox": [
+            90,
+            788,
+            909,
+            816
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[26] D. T. Lee and Bruce J. Schachter. 1980. Two algorithms for constructing a Delaunay triangulation. Int. J. Parallel Program. 9, 3 (1980), 219–242.",
+        "bbox": [
+            90,
+            816,
+            909,
+            844
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[27] Hangyu Li, Sarana Nutanong, Hong Xu, Chenyun Yu, and Foryu Ha. 2019. C2Net: A Network-Eficient Approach to Collision Counting LSH Similarity Join. IEEE Trans. Knowl. Data Eng. 31, 3 (2019), 423–436.",
+        "bbox": [
+            90,
+            844,
+            907,
+            870
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[28] Wen Li, Ying Zhang, Yifang Sun, Wei Wang, Mingjie Li, Wenjie Zhang, and Xuemin Lin. 2020. Approximate Nearest Neighbor Search on High Dimensional Data - Experiments, Analyses, and Improvement. IEEE Trans. Knowl. Data Eng. 32, 8 (2020), 1475–1488.",
+        "bbox": [
+            92,
+            872,
+            909,
+            911
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "header",
+        "text": "Fast Approximate Similarity Join in Vector Databases",
+        "bbox": [
+            88,
+            83,
+            454,
+            97
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "header",
+        "text": "158:25",
+        "bbox": [
+            860,
+            84,
+            907,
+            95
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            298,
+            933,
+            907,
+            948
+        ],
+        "page_idx": 24
+    },
+    {
+        "type": "ref_text",
+        "text": "[29] Youzhong Ma, Shijie Jia, and Yongxin Zhang. 2017. A novel approach for high-dimensional vector similarity join query. Concurr. Comput. Pract. Exp. 29, 5 (2017).",
+        "bbox": [
+            90,
+            120,
+            909,
+            147
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[30] Yury A. Malkov and Dmitry A. Yashunin. 2020. Eficient and Robust Approximate Nearest Neighbor Search Using Hierarchical Navigable Small World Graphs. IEEE Trans. Pattern Anal. Mach. Intell. 42, 4 (2020), 824–836.",
+        "bbox": [
+            90,
+            147,
+            907,
+            175
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[31] Ahmed Metwally and Christos Faloutsos. 2012. V-SMART-Join: A Scalable MapReduce Framework for All-Pair Similarity Joins of Multisets and Vectors. Proc. VLDB Endow. 5, 8 (2012), 704–715.",
+        "bbox": [
+            90,
+            175,
+            907,
+            202
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[32] Tomás Mikolov, Ilya Sutskever, Kai Chen, Gregory S. Corrado, and Jefrey Dean. 2013. Distributed Representations of Words and Phrases and their Compositionality. In 27th Annual Conference on Neural Information Processing Systems 2013. 3111–3119.",
+        "bbox": [
+            90,
+            202,
+            909,
+            244
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[33] Nasser M Nasrabadi and Robert A King. 1988. Image coding using vector quantization: A review. IEEE Transactions on communications 36, 8 (1988), 957–971.",
+        "bbox": [
+            90,
+            244,
+            907,
+            272
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[34] Yun Peng, Byron Choi, Tsz Nam Chan, Jianye Yang, and Jianliang Xu. 2023. Eficient Approximate Nearest Neighbor Search in Multi-dimensional Databases. Proc. ACM Manag. Data 1, 1 (2023), 54:1–54:27.",
+        "bbox": [
+            90,
+            272,
+            907,
+            300
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[35] Jefrey Pennington, Richard Socher, and Christopher D. Manning. 2014. Glove: Global Vectors for Word Representation. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing, EMNLP 2014, A meeting of SIGDAT, a Special Interest Group ofthe ACL. ACL, 1532–1543.",
+        "bbox": [
+            90,
+            300,
+            911,
+            341
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[36] Martin Perdacher, Claudia Plant, and Christian Böhm. 2019. Cache-oblivious High-performance Similarity Join. In Proceedings ofthe 2019 International Conference on Management ofData, SIGMOD Conference 2019. ACM, 87–104.",
+        "bbox": [
+            90,
+            341,
+            907,
+            369
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[37] Sébastien Rivault, Mostafa Bamha, Sébastien Limet, and Sophie Robert. 2022. A Scalable Similarity Join Algorithm Based on MapReduce and LSH. Int. J. Parallel Program. 50, 3-4 (2022), 360–380.",
+        "bbox": [
+            90,
+            369,
+            907,
+            397
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[38] Raimund Seidel. 1995. The Upper Bound Theorem for Polytopes: an Easy Proof of Its Asymptotic Version. Comput. Geom. 5 (1995), 115–116.",
+        "bbox": [
+            90,
+            397,
+            909,
+            425
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[39] Kyuseok Shim, Ramakrishnan Srikant, and Rakesh Agrawal. 1997. High-Dimensional Similarity Joins. In ICDE. IEEE Computer Society, 301–311.",
+        "bbox": [
+            90,
+            425,
+            907,
+            452
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[40] Aditi Singh, Suhas Jayaram Subramanya, Ravishankar Krishnaswamy, and Harsha Vardhan Simhadri. 2021. FreshDiskANN: A Fast and Accurate Graph-Based ANN Index for Streaming Similarity Search. CoRR abs/2105.09613 (2021).",
+        "bbox": [
+            90,
+            452,
+            909,
+            493
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[41] SOAX. 2024. How many hours of video are uploaded to YouTube each minute? https://soax.com/research/how-manyhours-of-video-are-uploaded-to-youtube-every-minute",
+        "bbox": [
+            90,
+            493,
+            909,
+            520
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[42] Narayanan Sundaram, Aizana Turmukhametova, Nadathur Satish, Todd Mostak, Piotr Indyk, Samuel Madden, and Pradeep Dubey. 2013. Streaming Similarity Search over one Billion Tweets using Parallel Locality-Sensitive Hashing. Proc. VLDB Endow. 6, 14 (2013), 1930–1941.",
+        "bbox": [
+            90,
+            520,
+            909,
+            563
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[43] Yukihiro Tagami. 2017. AnnexML: Approximate Nearest Neighbor Search for Extreme Multi-label Classification. In SIGKDD. ACM, 455–464",
+        "bbox": [
+            90,
+            563,
+            907,
+            590
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[44] Jianguo Wang, Xiaomeng Yi, Rentong Guo, Hai Jin, Peng Xu, Shengjun Li, Xiangyu Wang, Xiangzhou Guo, Chengming Li, Xiaohai Xu, Kun Yu, Yuxing Yuan, Yinghao Zou, Jiquan Long, Yudong Cai, Zhenxiang Li, Zhifeng Zhang, Yihua Mo, Jun Gu, Ruiyi Jiang, Yi Wei, and Charles Xie. 2021. Milvus: A Purpose-Built Vector Data Management System. In SIGMOD ’21. ACM, 2614–2627.",
+        "bbox": [
+            90,
+            591,
+            909,
+            645
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[45] Mengzhao Wang, Xiaoliang Xu, Qiang Yue, and Yuxiang Wang. 2021. A Comprehensive Survey and Experimenta Comparison of Graph-Based Approximate Nearest Neighbor Search. Proc. VLDB Endow. 14, 11 (2021), 1964–1978.",
+        "bbox": [
+            90,
+            645,
+            907,
+            673
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[46] Yifan Wang, Vyom Pathak, and Daisy Zhe Wang. 2024. Xling: A Learned Filter Framework for Accelerating High Dimensional Approximate Similarity Join. CoRR abs/2402.13397 (2024).",
+        "bbox": [
+            90,
+            675,
+            909,
+            701
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[47] Shuo Yang, Jiadong Xie, Yingfan Liu, Jefrey Xu Yu, Xiyue Gao, Qianru Wang, Yanguo Peng, and Jiangtao Cui. 2024. Revisiting the Index Construction of Proximity Graph-Based Approximate Nearest Neighbor Search. CoRR abs/2410.01231 (2024).",
+        "bbox": [
+            90,
+            701,
+            909,
+            741
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[48] Cui Yu, Bin Cui, Shuguang Wang, andJianwen Su. 2007. Eficient index-based KNN join processing for high-dimensiona data. Inf. Softw. Technol. 49, 4 (2007), 332–344.",
+        "bbox": [
+            90,
+            743,
+            907,
+            770
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[49] Chenyun Yu, Sarana Nutanong, Hangyu Li, Cong Wang, and Xingliang Yuan. 2017. A Generic Method for Accelerating LSH-Based Similarity Join Processing. IEEE Trans. Knowl. Data Eng. 29, 4 (2017), 712–726.",
+        "bbox": [
+            90,
+            770,
+            907,
+            798
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[50] Xingliang Yuan, Xinyu Wang, Cong Wang, Chenyun Yu, and Sarana Nutanong. 2017. Privacy-Preserving Similarity Joins Over Encrypted Data. IEEE Trans. Inf. Forensics Secur. 12, 11 (2017), 2763–2775.",
+        "bbox": [
+            90,
+            798,
+            907,
+            826
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "ref_text",
+        "text": "[51] Qianxi Zhang, Shuotao Xu, Qi Chen, Guoxin Sui, Jiadong Xie, Zhizhen Cai, Yaoqi Chen, Yinxuan He, Yuqing Yang, Fan Yang, Mao Yang, and Lidong Zhou. 2023. VBASE: Unifying Online Vector Similarity Search and Relational Queries via Relaxed Monotonicity. In 17th USENIX Symposium on Operating Systems Design and Implementation, OSDI 2023. USENIX Association, 377–395.",
+        "bbox": [
+            90,
+            826,
+            909,
+            880
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "page_number",
+        "text": "158:26",
+        "bbox": [
+            90,
+            84,
+            137,
+            95
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "header",
+        "text": "Jiadong Xie, Jefrey Xu Yu, and Yingfan Liu",
+        "bbox": [
+            611,
+            83,
+            907,
+            98
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "footer",
+        "text": "Received October 2024; revised January 2025; accepted February 2025",
+        "bbox": [
+            88,
+            893,
+            619,
+            908
+        ],
+        "page_idx": 25
+    },
+    {
+        "type": "footer",
+        "text": "Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.",
+        "bbox": [
+            88,
+            933,
+            697,
+            948
+        ],
+        "page_idx": 25
+    }
+]

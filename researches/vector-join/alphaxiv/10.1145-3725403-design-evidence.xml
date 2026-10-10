@@ -1,0 +1,1026 @@
+<paper id="https://xiejiadong.github.io/files/paper/%5Bsigmod25%5Dvector_join.pdf"><page num="1">Fast Approximate Similarity Join in Vector Databases
+JIADONG XIE, The Chinese University of Hong Kong, China
+JEFFREY XU YU, The Chinese University of Hong Kong, China
+YINGFAN LIU
+∗
+, Xidian University, China
+Recent advancements in deep learning, particularly in embedding models, have enabled the effective represen-
+tation of various data types such as text, images, and audio as vectors, thereby facilitating semantic analysis.
+A large number of massive vector datasets are maintained in vector databases. Approximate similarity join is
+a core operation in vector database systems that joins two datasets, and outputs all pairs of vectors from the
+two datasets, if the distance between such a pair of two vectors is no more than a specified value. Existing
+state-of-the-art approaches for approximate similarity join are selection-based such that they treat each data
+point in a dataset as an individual query point to search data points by an approximate range query in another
+dataset. Such methods do not fully capitalize on the inherent properties of the join operation itself. In this
+paper, we propose a new join algorithm, SimJoin. Our join algorithm aims to boost join processing efficiency
+by leveraging relationships between partial join results (e.g., join windows). In brief, our join algorithm
+accelerates the join processing to process a join window by utilizing the join windows from the processed data
+points. Then, we discuss optimizing join window order to minimize join costs. In addition, we discuss how to
+support 𝑘-similarity join, and how to maintain proximity graph index based on 𝑘-similarity join. Extensive
+experiments on real-world and synthetic datasets demonstrate the significant performance superiority of our
+proposed algorithms over existing state-of-the-art methods.
+CCS Concepts: • Information systems → Information retrieval query processing.
+Additional Key Words and Phrases: Approximate Similarity Join, High-Dimensional Vector
+ACM Reference Format:
+Jiadong Xie, Jeffrey Xu Yu, and Yingfan Liu. 2025. Fast Approximate Similarity Join in Vector Databases. Proc.
+ACM Manag. Data 3, 3 (SIGMOD), Article 158 (June 2025), 26 pages. https://doi.org/10.1145/3725403
+1 Introduction
+Recent advances in deep learning, particularly embedding models, have revolutionized the represen-
+tation of various data types such as text [32], images [33], audio [6] and graphs [17]. These models
+encode data as vectors, capturing crucial information in a high-dimensional space for analysis.
+And many large datasets of vectors need to be maintained in the vector databases. Similarity join
+is one of the fundamental operations in vector database systems that join two datasets, 𝑋 and
+𝑌 , and output all pairs of vectors of 𝑋 and 𝑌 , if they are similar, e.g., the distance between their
+vectors is no more than a specified threshold. As an example, auto-tagging [11, 43] is a real-world
+application that needs similarity join. Here, auto-tagging is to label a large number of documents
+unlabeled based on certain documents labeled. And an unlabeled document can be labeled by the
+∗
+Yingfan Liu is the corresponding author.
+Authors’ Contact Information: Jiadong Xie, The Chinese University of Hong Kong, China, jdxie@se.cuhk.edu.hk; Jeffrey Xu
+Yu, The Chinese University of Hong Kong, China, yu@se.cuhk.edu.hk; Yingfan Liu, Xidian University, China, liuyingfan@
+xidian.edu.cn.
+Permission to make digital or hard copies of all or part of this work for personal or classroom use is granted without fee
+provided that copies are not made or distributed for profit or commercial advantage and that copies bear this notice and the
+full citation on the first page. Copyrights for components of this work owned by others than the author(s) must be honored.
+Abstracting with credit is permitted. To copy otherwise, or republish, to post on servers or to redistribute to lists, requires
+prior specific permission and/or a fee. Request permissions from permissions@acm.org.
+© 2025 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM 2836-6573/2025/6-ART158
+https://doi.org/10.1145/3725403
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="2">158:2 Jiadong Xie, Jeffrey Xu Yu, and Yingfan Liu
+label of another labeled document, if the corresponding two document embeddings (vectors) are
+sufficiently similar.
+In this paper, we study 𝜖-similarity join for two 𝑑-dimensional datasets, 𝑋 and 𝑌 , denoted as
+𝑋 Z
+𝜖 
+𝑌 , for 𝑑 &gt; 0. The 𝜖-similarity join finds all pairs of vectors (𝑥
+𝑖
+, 𝑦
+𝑗 
+) from 𝑋 × 𝑌 , if the
+distance 𝛿 (𝑥
+𝑖
+, 𝑦
+𝑗 
+), for 𝑥
+𝑖 
+∈ 𝑋 and 𝑦
+𝑗 
+∈ 𝑌 , is no more than the given parameter 𝜖. Due to the curse of
+dimensionality [21], the exact 𝜖-similarity join is computationally intensive [23, 24, 36]. We focus on
+the approximate 𝜖-similarity join in this paper, which has not been well studied, whereas the 𝑘-NN
+(nearest neighbor) search and 𝑘-ANN (approximate 𝑘-NN) search have been extensively studied.
+In general, 𝜖-similarity join, 𝑋 Z
+𝜖 
+𝑌 , can be done by 𝑘-NN/𝑘-ANN search if it takes every vector
+𝑥
+𝑖 
+∈ 𝑋 as a query vector to search its nearest neighbors in the dataset 𝑌 , as a 𝜖-range query. We call
+them a selection-based approach for 𝜖-similarity join. The existing state-of-the-art approaches for
+approximate 𝜖-similarity join are all selection-based methods [44, 46, 51]. Such existing approaches
+focus on optimizing the join processing time by refining the selection operations, like skipping
+tuples with zero or fewer join results [46], bypassing the limitations of a top 𝑘-only interface to
+support 𝜖-range search [51]. However, these approaches do not fully leverage the inherent property
+of the 𝜖-similarity join. That is, they do not utilize the join results from processed data points to
+accelerate the processing time of other data points that have not been processed, which is the focus
+we study in this paper.
+The main contributions of this work are summarized below. ➊ We propose a new 𝜖-similarity
+join algorithm for 𝑋 Z
+𝜖 
+𝑌 based on two key issues in join processing, which are join window sliding
+and join window order selection. Here, a join window is the join results in 𝑌 that are 𝜖-similar to a
+data point 𝑥 in 𝑋 . Join window sliding is to leverage the join window results of some processed
+data points to accelerate the join results for other data points. And join window order selection is
+to determine the processing order of join windows to slide, in order to minimize the overall join
+processing time. ➋ To allow join window sliding, we discuss the continuous sliding from a data
+point to another adjacent data point in 𝑑-dimensional space. Such adjacent data points are difficult
+to handle in 𝑑-dimensional space, as there are 2
+𝑑 
+directions to slide and there is no easy way to
+slide in order. We discuss how to capture such adjacent data points in 𝑑-dimensional space, and
+how to maintain such adjacent data points in an adjacent graph to be constructed. Furthermore, we
+discuss the differences between the adjacency issue and 𝑘-NN based similarity, and we show that
+the probability of using a proximity graph (e.g., 𝑘-NN based graph) as an approximate adjacent
+graph in practice. ➌ We give the optimal solution to determine the join window order selection,
+for 𝑋 Z
+𝜖 
+𝑌 . To find such optimal join window order, we show how to estimate the join window
+sliding cost on 𝑌 based on the information we have on 𝑋 . We give our efficient approach to find the
+optimal solution. ➍ Based on our 𝜖-similarity join algorithm, SimJoin, we further discuss how we
+support 𝑘-similarity join, and how we maintain a proximity graph index based on the 𝑘-similarity
+join algorithm we present. ➎ We report on extensive experiments on both real-world and synthetic
+datasets. (a) In general, SimJoin demonstrates significant performance improvements, achieving
+reductions in join time of over 1 order of magnitude compared to state-of-the-art methods for
+approximate similarity joins, along with superior join result quality. Moreover, it achieves more
+than 2 orders of magnitude reduction in join time compared to the state-of-the-art approach for
+exact similarity joins with less than 1% loss in join results. (b) Regarding index maintenance, our
+approach accelerates index maintenance significantly, consuming less peak memory, and enhancing
+index quality for 𝑘-approximate nearest neighbor search, compared to the state-of-the-art methods.
+The paper is organized as follows. We discuss 𝜖-similarity join and its key issues in Section 2. In
+Section 3, we discuss the main difficulties for selection-based approaches to support 𝜖-similarity
+join by finding nearest neighbors in one dataset for any point in another dataset. In Section 4,
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="3">Fast Approximate Similarity Join in Vector Databases 158:3
+we propose a new approximate 𝜖-similarity join algorithm that is based on join window sliding
+and join window order selection. Sections 5 and 6 delve into the specifics of addressing the two
+issues, join window sliding and join window order selection, respectively. In Section 7, we show
+that our techniques can be used to support 𝑘-similarity join, and to support maintenance of 𝑘-ANN
+based proximity graph indices. We conduct extensive experiments to confirm the effectiveness and
+efficiency of our approach in Section 8. We discuss the related works in Section 9, and conclude
+our work in Section 10.
+2 The 𝜖-Similarity Join
+Given two sets of points, 𝑋 = {𝑥
+1
+, 𝑥
+2
+, · · · , 𝑥
+𝑛 
+} and 𝑌 = {𝑦
+1
+, 𝑦
+2
+, · · · , 𝑦
+𝑚 
+}, in Euclidean 𝑑-dimensional
+space, denoted as R
+𝑑 
+, for 𝑑 &gt; 0, the 𝜖-similarity join 𝑋 Z
+𝜖 
+𝑌 is defined as 𝑋 Z
+𝜖 
+𝑌 = {(𝑥
+𝑘 
+, 𝑦
+𝑙 
+) ∈
+𝑋 ×𝑌 | 𝛿 (𝑥
+𝑘 
+, 𝑦
+𝑙 
+) ≤ 𝜖}, where 𝛿 (𝑥
+𝑘 
+, 𝑦
+𝑙 
+) is 𝐿
+2 
+norm (i.e., Euclidean distance) between 𝑥
+𝑘 
+∈ 𝑋 and 𝑦
+𝑙 
+∈ 𝑌 ,
+and 𝜖 is a user-given threshold where 𝜖 &gt; 0. The 𝜖-similarity join, 𝑋 Z
+𝜖 
+𝑌 , can also be formalized
+based on join windows. Let 𝐽
+𝑖 
+be the join window for 𝑥
+𝑖 
+∈ 𝑋 such that 𝐽
+𝑖 
+= {𝑦
+𝑙 
+∈ 𝑌 | 𝛿 (𝑥
+𝑖
+, 𝑦
+𝑙 
+) ≤ 𝜖}.
+𝑋 Z
+𝜖 
+𝑌 = 
+Ð
+𝑥
+𝑖 
+∈𝑋 
+({𝑥
+𝑖 
+} × 𝐽
+𝑖 
+). We also refer the 𝜖-similarity join, as 𝜖-similarity self-join, if the
+two given datasets are identical.
+As the exact 𝜖-similarity join is time-consuming [23, 24, 36] due to the curse of dimensionality [21],
+in this paper, we study an approximate 𝜖-similarity join algorithm, and its quality is measured by
+the average recall and average precision. Here, let 
+˜
+𝐽
+𝑖 
+be the results from an approximate 𝜖-similarity
+join algorithm and 𝐽
+𝑖 
+= {𝑦
+𝑙 
+∈ 𝑌 | 𝛿 (𝑥
+𝑖
+, 𝑦
+𝑙 
+) ≤ 𝜖} , the average recall is defined as 
+1
+|𝑋 | 
+· 
+Í
+𝑥
+𝑖 
+∈𝑋 
+| 
+˜
+𝐽
+𝑖 
+∩𝐽
+𝑖 
+|
+| 𝐽
+𝑖 
+|
+and the average precision is defined as 
+1
+|𝑋 | 
+· 
+Í
+𝑥
+𝑖 
+∈𝑋 
+| 
+˜
+𝐽
+𝑖 
+∩𝐽
+𝑖 
+|
+| 
+˜
+𝐽
+𝑖 
+| 
+.
+In the design of an approximate 𝜖-similarity join algorithm, in this work, we focus on two key
+issues, namely, join window sliding and join window order selection. The join window, 𝐽
+𝑖 
+⊆ 𝑌
+of 𝑥
+𝑖 
+∈ 𝑋 is a 𝑑-ball centered at 𝑥
+𝑖 
+with a radius of 𝜖 in the 𝑑-dimensional space. Suppose 𝐽
+𝑖 
+has
+been processed for a given 𝑥
+𝑖 
+. Join window sliding refers to the process of sliding the join window
+𝐽
+𝑖 
+to the join window 𝐽
+𝑗 
+to be processed next for 𝑥 
+𝑗 
+. And join window order selection is how to
+select such 𝑥 
+𝑗 
+among the points in 𝑋 that have not yet been processed, in order to minimize the
+join processing cost.
+Here, we discuss the join cost of 𝑋 Z
+𝜖 
+𝑌 . Let ℵ be the join window order over 𝑋 such that
+ℵ = ⟨(𝜅
+1
+, 𝑥
+1
+), (𝜅
+2
+, 𝑥
+2
+), · · · , (𝜅
+𝑛
+, 𝑥
+𝑛 
+)⟩, where a pair of (𝜅
+𝑖
+, 𝑥
+𝑖 
+) indicates that the join window, 𝐽
+𝑖 
+, to be
+processed next for 𝑥
+𝑖 
+is slide from the join window represented by 𝜅
+𝑖 
+∈ 𝑋 . Regarding 𝜅
+𝑖 
+, there are
+two cases. One is that 𝜅
+𝑖 
+represents 𝑥 
+𝑗 
+for 1 ≤ 𝑗 &lt; 𝑖 in ℵ, and the other is 𝜅
+𝑖 
+= ∅ as it is possible that
+the cost of finding 𝐽
+𝑖 
+for 𝑥
+𝑖 
+by an individual 𝜖-range search is smaller if it does not slide from any
+join window found already. Note that 𝜅
+1 
+= ∅. The total join cost for 𝑋 Z
+𝜖 
+𝑌 is defined as follows
+given a join window order ℵ:
+𝐶 (𝑋 Z
+𝜖 
+𝑌 ) =
+∑︁
+𝑥
+𝑖 
+∈𝑋
+ 
+𝑐
+𝜖 
+(𝑥
+𝑖 
+) (∅, 𝑥
+𝑖 
+) ∈ ℵ
+𝑐
+𝜅 
+(𝜅
+𝑖
+, 𝑥
+𝑖 
+) otherwise 
+(1)
+where 𝑐
+𝜖 
+(𝑥
+𝑖 
+) is the cost of processing an 𝜖-range search to find 𝐽
+𝑖 
+for 𝑥
+𝑖 
+, and 𝑐
+𝜅 
+(𝜅
+𝑖
+, 𝑥
+𝑖 
+) is the cost of
+finding 𝐽
+𝑖 
+by sliding from the join window represented by 𝜅
+𝑖 
+. The problem to be studied is how to
+reduce such join processing cost.
+The two issues can be easily handled for 𝑋 Z
+𝜖 
+𝑌 when 𝑋 and 𝑌 are in 𝑑-dimensional space
+for 𝑑 = 1. We show its join algorithm in Algorithm 1. In Algorithm 1, both 𝑋 and 𝑌 are sorted in
+ascending order. For 𝑥
+𝑖 
+in the ascending order, it finds 𝐽
+𝑖 
+by finding the leftmost and rightmost
+boundary point in 𝐽
+𝑖 
+, denoted as 𝑙 (𝐽
+𝑖 
+) and 𝑟 (𝐽
+𝑖 
+), following the linear order of 𝑌 . The join window 𝐽
+𝑖
+forms a continuous interval in 1-dimensional space. The continuous interval is formed by sliding in
+𝑌 from a point 𝑦
+𝑝 
+to another point 𝑦
+𝑞 
+on the condition that 𝑦
+𝑝 
+and 𝑦
+𝑞 
+are adjacent points such that
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="4">158:4 Jiadong Xie, Jeffrey Xu Yu, and Yingfan Liu
+Algorithm 1: Join1D (𝑋, 𝑌, 𝜖)
+Input : two 1-dimensional datasets 𝑋 = {𝑥
+1
+, · · · , 𝑥
+𝑛 
+} and 𝑌 = {𝑦
+1
+, · · · , 𝑦
+𝑚 
+} in ascending order and a
+parameter 𝜖
+Output : the result of 𝑋 Z
+𝜖 
+𝑌
+𝑋𝑌 ← ∅; 𝑙 ← 1; 𝑟 ← 0;1
+for each 𝑥
+𝑖 
+from 1 to 𝑛 in the ascending order do2
+while 𝑙 ≤ 𝑚 and 𝑦
+𝑙 
+&lt; 𝑥
+𝑖 
+− 𝜖 do 𝑙 ← 𝑙 + 1;3
+while 𝑟 + 1 ≤ 𝑚 and 𝑦
+𝑟 +1 
+≤ 𝑥
+𝑖 
++ 𝜖 do 𝑟 ← 𝑟 + 1;4
+𝐽
+𝑖 
+← {𝑦
+𝑙 
+, · · · , 𝑦
+𝑟 
+};5
+if 𝑙 ≤ 𝑟 then 𝑋𝑌 ← 𝑋𝑌 ∪ ({𝑥
+𝑖 
+} × 𝐽
+𝑖 
+);6
+return 𝑋𝑌7
+there is no 𝑦
+𝑤 
+between 𝑦
+𝑝 
+and 𝑦
+𝑞 
+. The following is obvious. That is, 𝑥
+𝑖 
+≤ 𝑥
+𝑖+1 
+implies 𝑙 (𝐽
+𝑖 
+) ≤ 𝑙 (𝐽
+𝑖+1
+)
+and 𝑟 (𝐽
+𝑖 
+) ≤ 𝑟 (𝐽
+𝑖+1
+). The best to slide join window is to slide from the join window 𝐽
+𝑖 
+to the join
+window 𝐽
+𝑖+1
+, and the join window order is to select 𝑥
+𝑖+1 
+from 𝑥
+𝑖 
+. The time complexity of Algorithm 1
+is in 𝑂 (𝑛 + 𝑚).
+The issue of join window sliding is that the continuous in join window sliding in 𝑑-dimensional
+space for 𝑑 &gt; 1 becomes challenging. First, there are 2
+𝑑 
+directions to slide from a join window 𝐽
+𝑖
+to another join window 𝐽
+𝑗 
+. In other words, two join windows, 𝐽
+𝑖 
+and 𝐽
+𝑗 
+, or the two 𝑑-balls, may
+overlap in any of 2
+𝑑 
+ways. Second, the adjacent points, 𝑦
+𝑝 
+and 𝑦
+𝑞 
+in 𝑌 , are arbitrary as there are
+2
+𝑑 
+directions to slide, and there is no easy way to slide in order. In this paper, we propose a new
+efficient approximate 𝜖-similarity join algorithm with high quality of the join results.
+3 Selection-based Approaches
+The 𝜖-similarity join, 𝑋 Z
+𝜖 
+𝑌 , can be processed using the state-of-the-art 𝑘-ANN (Approximate
+Nearest Neighbor) search. That is, for every point 𝑥
+𝑖 
+∈ 𝑋 , it issues an approximate 𝜖-range
+query [46, 51] to find its join window 𝐽
+𝑖 
+in 𝑌 . In [51], it presents a method to deal with 𝜖 as a filter
+on 𝑘-ANN search. In [46], it utilizes learning techniques to predict the number of join results for
+each data point, enabling the skipping of those with zero or fewer results. By such a selection-based
+approach, there are no issues on join window sliding and join window selection, because each of
+join window is treated individually. We discuss its main problem to slide exact/approximate join
+window, 𝐽
+𝑖 
+⊆ 𝑌 , for 𝑥
+𝑖 
+∈ 𝑋 , below using an example.
+Example 3.1: Let 𝑋 = {𝑥
+1
+, 𝑥
+2
+, 𝑥
+3 
+} and 𝑌 = {𝑦
+1
+, 𝑦
+2
+, · · · , 𝑦
+10 
+}. Fig. 1 shows a 𝑘-NN graph over 𝑌 for
+𝑘 = 2, where a point is connected to its 1-NN and 2-NN, as indicated by blue solid/dashed edges.
+The 𝑋 points are not explicitly shown in Fig. 1. Instead, we show every join window 𝐽
+𝑖 
+for 𝑥
+𝑖 
+in 𝑋 ,
+where 𝑥
+𝑖 
+is the center of the corresponding 𝑑-ball, illustrated by a circle in 2-dimensional space.
+Here, 𝐽
+1 
+= {𝑦
+8
+, 𝑦
+9
+, 𝑦
+10 
+}, 𝐽
+2 
+= {𝑦
+2
+, 𝑦
+3 
+}, and 𝐽
+3 
+= {𝑦
+3
+, 𝑦
+4
+, 𝑦
+5 
+}. As shown in Fig. 1, the two clusters of 𝑌
+points, namely, {𝑦
+1
+, · · · , 𝑦
+7 
+} and {𝑦
+8
+, 𝑦
+9
+, 𝑦
+10 
+}, are not connected over the 𝑘-NN graph. To enforce all
+points connected in a graph, in 𝑘-ANN graph (𝑘 = 2), it adds some red edges to make it connected
+and prunes some dashed blue edges to make the graph small for efficiency.
+As shown in Example 3.1 with Fig. 1, first, on the 𝑘-NN graph, the join window 𝐽
+1 
+cannot slide
+to the join window 𝐽
+2
+, as there is no point in 𝐽
+1 
+that has an blue edge to a point in 𝐽
+2
+. Suppose that
+there is 𝑥
+4 
+in 𝑋 , and its join window 𝐽
+4 
+= {𝑦
+8
+, 𝑦
+1 
+}, where 𝑦
+1 
+and 𝑦
+8 
+are not connected in the 𝑘-NN
+graph. The selection-based approaches start the search from a single entry point, which results
+in the inability to simultaneously locate both 𝑦
+1 
+and 𝑦
+8
+, since they belong to separate connected
+components. Second, on the 𝑘-ANN graph with red/blue solid edges, consider finding 𝐽
+2 
+for 𝑥
+2
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="5">Fast Approximate Similarity Join in Vector Databases 158:5
+!
+! 
+!
+&quot;
+!
+#
+!
+$
+!
+%
+&quot;
+!
+&quot;
+&quot;
+!
+&amp;
+!
+'
+!
+$(
+!
+)
+!
+*
+&quot;
+$
+Fig. 1. 𝑘-NN/𝑘-ANN graph
+!
+!
+!
+&quot;
+&quot;
+! 
+&quot;
+&quot;
+&quot;
+#
+!
+#
+&quot;
+$
+&quot;
+%
+&quot;
+&amp;
+&quot;
+#'
+&quot;
+(
+&quot;
+) 
+&quot;
+*
+ Fig. 2. An adjacent graph
+from 𝐽
+3
+. Staring from 𝑦
+2 
+and 𝑦
+3
+, it finds 𝑦
+4 
+included in 𝐽
+2
+, then it finds that 𝑦
+6 
+cannot be in 𝐽
+2
+,
+and accordingly, it stops search and misses 𝑦
+5 
+which should be in 𝐽
+2
+. In short, it is difficult for a
+selection-based 𝑘-NN or 𝑘-ANN approach to ensure high recall for 𝜖-similarity join.
+4 A New 𝜖-Similarity Join Algorithm
+In this section, we address the two key issues: join window sliding (Section 4.1) and join window
+order selection (Section 4.2). Subsequently, we integrate the techniques proposed to present our
+similarity join algorithm, SimJoin (Section 4.3).
+4.1 Join Window Sliding
+First, we define adjacent points, 𝑦 and 𝑦
+′
+, in a 𝑑-dimensional dataset 𝑌 . The definition applies to
+any 𝑑-dimensional spaces.
+Definition 4.1: [Adjacent points] For any point set 𝑌 in a 𝑑-dimensional space for 𝑑 &gt; 0, two
+points 𝑦 and 𝑦
+′ 
+in 𝑌 are adjacent if there exists a 𝑑-ball such that 𝑦 and 𝑦
+′ 
+are two points on the
+boundary of 𝑑-ball and there is no any point 𝑦
+′′ 
+in 𝑌 inside 𝑑-ball.
+A point 𝑦 in 𝑌 may have multiple adjacent points, for instance, as illustrated in Fig. 2, 𝑦
+2 
+is
+adjacent to 𝑦
+1
+, 𝑦
+3 
+and 𝑦
+5
+.
+Definition 4.2: [Continuous Window] A join window 𝐽 is a continuous window if any two
+points, 𝑦
+𝑝 
+and 𝑦
+𝑞 
+, in 𝐽 are connected by a sequence of pairs of adjacent points.
+Definition 4.3: [Continous Sliding] A join window 𝐽
+𝑖 
+slides to a join window 𝐽
+𝑗 
+in a continuous
+manner, if there are two adjacent points, 𝑦
+𝑝 
+and 𝑦
+𝑞 
+, for 𝑦
+𝑝 
+∈ 𝐽
+𝑖 
+and 𝑦
+𝑞 
+∈ 𝐽
+𝑗 
+.
+From a different view, a point 𝑦
+𝑝 
+sliding to its adjacent point 𝑦
+𝑞 
+may cause a join window slides
+to a new join window. Note that the 𝑑-ball in Definition 4.1 is used to define two adjacent points
+in a 𝑑-dimensional space, and is different from the 𝑑-ball that corresponds to a join window or a
+continuous join window. It is important to note that the continous sliding ensures that we do not
+miss any points in 𝑌 for 𝑋 Z
+𝜖 
+𝑌 .
+Example 4.1: Reconsider Example 3.1. Fig. 2 shows points in 𝑌 , where there is a line between two
+adjacent points. With the adjacent points in Fig. 2, the join window 𝐽
+1 
+can slide to 𝐽
+3 
+as 𝑦
+8 
+∈ 𝐽
+1 
+and
+𝑦
+1 
+∈ 𝐽
+3 
+are adjacent points, and the join window 𝐽
+3 
+can slide to 𝐽
+2
+. All the three join windows are
+continuous windows. There are no missing points in any join windows.
+Similarity vs Adjacency: First, regarding the 𝑘-NN based similarity and adjacency in one 𝑑-
+dimensional space (e.g., 𝑌 ), the adjacency defined is different from the 𝑘-NN based similarity. It
+does not necessarily mean that two adjacent points are similar, and it does not necessarily mean
+two similar points are adjacent. Consider Example 4.1 and its Fig. 2. for 𝑦
+1
+, its 1-NN, 2-NN, and
+3-NN are 𝑦
+2
+, 𝑦
+3
+, and 𝑦
+5
+, respectively. 𝑦
+3 
+is more similar to 𝑦
+1 
+than 𝑦
+5
+. But, 𝑦
+3 
+is not adjacent point
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="18">158:18 Jiadong Xie, Jeffrey Xu Yu, and Yingfan Liu
+Table 2. Statistics of Datasets
+Dataset dim. # of points Type Source Dataset dim. # of points Type Source
+Rand 64 100,000 Synthetic U(0,1) GloVe 100 1,183,514 Text [35]
+Gauss 64 100,000 Synthetic N(0,1) Crawl 300 1,989,995 Text [2]
+Msong 420 992,272 Audio [6] SIFT 128 10,000,000 Image [1]
+GIST 960 1,000,000 Image [1] Higgs 29 11,000,000 Particles [5]
+Table 3. Runtime and average recall of four algorithms on different datasets (Exp. 2)
+Dataset
+𝜖-self similarity join (𝜖=0.4) 𝜖-similarity join (𝜖=0.4)
+XJoin VBASE FGF-Hilbert SimJoin XJoin VBASE FGF-Hilbert SimJoin
+recall time (s) recall time (s) recall time (s) recall time (s) recall time (s) recall time (s) recall time (s) recall time (s) pre-ratio
+Rand 0.95688 19.368 0.99233 16.343 1 48.989 1 1.8626 0.95752 19.536 0.99126 16.293 1 49.035 0.99298 6.3837 0.00623%
+Gauss 0.95763 15.788 0.99583 13.272 1 18.234 1 1.1332 0.95727 16.418 0.99583 13.394 1 18.011 1.0000 1.0223 0.03870%
+Msong 0.97613 765.82 0.99055 528.57 1 4904.1 0.99368 135.89 0.97541 783.35 0.99035 528.54 1 4912.7 0.99052 178.20 0.00066%
+GIST 0.97308 2097.1 0.98825 1827.8 1 10911 0.99091 120.62 0.97739 2196.7 0.99135 1775.7 1 11295 0.99256 355.38 0.00032%
+GloVe 0.96599 280.70 0.99264 225.13 1 882.29 1 18.158 0.96586 287.76 0.99261 222.77 1 897.89 0.99788 15.203 0.01474%
+Crawl 0.97304 1063.1 0.98753 838.91 1 6072.2 0.99998 47.114 0.97321 1048.7 0.98659 842.63 1 6138.9 0.99084 202.72 0.00201%
+SIFT 0.98138 14819 0.99251 7679.5 1 166050 0.99564 5232.8 0.98023 15479 0.99222 9418.4 1 166931 0.99344 5532.6 0.00023%
+Higgs 0.98659 8258.2 0.99031 4553.2 1 38724 0.99014 2044.6 0.98659 10948 0.99031 6339.2 1 38778 0.99067 2020.3 0.00109%
+audio (Msong [6]), text (GloVe [35], Crawl [2]) and high-energy physics (Higgs [5]). The summary
+can be found in Table 2, with the number of dimensions (dim.) and the number of data points (# of
+points). To evaluate the algorithms, the datasets are randomly divided into two parts of equal size.
+Self-similarity joins are evaluated on one of the split datasets, while similarity joins are assessed on
+both datasets.
+Algorithms: We conduct comparisons between our approaches, named as SimJoin, and three state-
+of-the-art methods, including approximate similarity join methods (VBase [51] and XJoin [46]), and
+exact similarity join method (FGF-Hilbert [36]). (1) VBase [51] is the state-of-the-art in approximate
+similarity join approaches. It executes the join algorithm by treating each data point in one dataset
+as an individual range query and implements an efficient range filter by integrating it with an index
+scan operator. (2) XJoin [46] is the latest approach for approximate similarity join. It employs a
+learning-based technique to predict whether a data point possesses a sufficient number of join
+results. Specifically, for 𝑋 Z
+𝜖 
+𝑌 , where 𝑋 is the larger dataset and 𝑌 is the smaller dataset to
+join. First, XJoin is trained to predict if a query vector 𝑦
+𝑖 
+∈ 𝑌 contains sufficient neighbors within
+the 𝜖 range in 𝑋 . Second, the query vectors identified as having adequate neighbors are formed
+as a new dataset 𝑌 
+′
+. Finally, the LSH-based join algorithm is performed between 𝑋 and 𝑌 
+′
+. As
+demonstrated in [46], XJoin outperforms various LSH-based approaches. (3) FGF-Hilbert [36] is
+the state-of-the-art method of exact similarity join, relying on the Epsilon Grid Order technique
+and enhancing runtime efficiency by improving data locality, thereby rendering the algorithms
+cache-oblivious. (4) SimJoin: our join algorithm contains Algorithm 2 for two distinct datasets and
+a self-join algorithm. In the self-join algorithm, each data point inherently includes itself in the
+results due to zero distance. Hence, for every data point in 𝑋 , we can initiate the sliding of the join
+window starting with itself. In other words, for each data point 𝑥
+𝑖 
+∈ 𝑋 , we can invoke Algorithm 3
+via JoinSlide (𝐺, 𝑥
+𝑖
+, 𝑥
+𝑖
+, {𝑥
+𝑖 
+}, 𝜖, 𝑤), where 𝐺 is proximity graph of 𝑋 . For VBase and our approach,
+we use the same proximity graph, NSG [14], for comparisons in each dataset.
+In the comparisons of join time, we exclude the index construction time for VBase, XJoin and
+our approach as the index constructed is independent of the 𝜖 value selected. The index can be
+constructed offline. We include the index construction time for FGF-Hilbert, because FGF-Hilbert
+requires preprocessing and cannot reuse the same index constructed for different 𝜖 values.
+We evaluate the performance of the similarity join algorithms using a single thread, and all
+results are averaged over 5 runs.
+Performance metrics: We focus on two metrics for evaluating the join results: average recall
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="24">158:24 Jiadong Xie, Jeffrey Xu Yu, and Yingfan Liu
+global rebuilding FreshDiskANN 
+k-similarity join
+0.9 0.95 1
+Recall@10
+10
+2
+10
+3
+10
+4
+QPS
+(a) Crawl
+0.9 0.95 1
+Recall@10
+10
+2
+10
+3
+10
+4
+QPS
+ (b) Higgs
+Fig. 14. ANNS performance on final NSG (Exp. 10)
+time to time. Most of these works [8, 25, 39, 48] consider dimensions around 40 as high, whereas
+current vector databases often feature significantly more dimensions, e.g., the number of dimensions
+in GIST is 960. Among them, the state-of-the-art methods for exact high-dimensional similarity
+join [22, 23, 29, 31, 36] involve two steps: filtering and refinement. In the filtering step, candidate
+pairs of vectors that might be part of the final join results are selected through indexing or sorting.
+In the refinement step, the exact distance between candidate pairs of two vectors is computed.
+Filtering using index structures, such as R-trees [9], to support the join predicate can be costly in
+index construction. Therefore, these approaches opt to sort the dataset based on a function that
+supports the join predicate, for example, Epsilon Grid Order [7].
+In the realm of approximate high-dimensional similarity search, existing approaches treat each
+data point in a dataset as an individual approximate 𝜖-range query. These queries are then supported
+by a locality-sensitive hashing (LSH) based index [4, 20, 27, 37, 46, 49, 50] or a proximity graph
+index [44, 51]. At a high level, LSH-based approaches support approximate similarity joins by
+following three steps: (i) first projecting each vector into a hash value; (ii) next executing an
+equi-join on the pairs that collide under the same hash value to establish candidate join results; (iii)
+finally, exact distance computations are conducted to derive the final join results. Therefore, the
+effectiveness of these approaches heavily relies on the hash functions in step (i), i.e., mapping similar
+vectors to the same hash value, which is also the key factor that highly impacts the performance
+in LSH-based methods for approximate nearest neighbor search. However, different to recent
+graph [34, 47] and partition [10, 16, 18] based approaches, LSH-based approaches do not take data
+distribution into consideration, which often leads to a significant performance decline in real-world
+datasets [45], where data is unevenly distributed data.
+10 Conclusion
+In this paper, we introduce a novel join algorithm designed to support approximate similarity joins
+in high-dimensional spaces. Our approach leverages the intrinsic properties of the join operation,
+utilizing results from processed data points to expedite the entire join process. Our extensive
+experiments demonstrate that our proposed join algorithm outperforms all existing state-of-the-art
+methods for approximate similarity joins by up to one order of magnitude with superior quality of
+join results. Our future work will focus on developing a distributed algorithm based on our current
+approach to offer a more scalable approximate similarity join method.
+Acknowledgements
+This work was supported by the Research Grants Council of Hong Kong, China, No.14205520, and
+the National Natural Science Foundation of China, No.62002274.
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="25">Fast Approximate Similarity Join in Vector Databases 158:25
+References
+[1] 2010. Datasets for approximate nearest neighbor search. http://corpus-texmex.irisa.fr/.
+[2] 2023. Common Crawl. https://commoncrawl.org/.
+[3] W. Ackermann. 1928. Zum Hilbertschen Aufbau der reellen Zahlen. Math. Ann. 99 (1928), 118–133.
+[4] Martin Aumüller and Matteo Ceccarello. 2022. Implementing Distributed Similarity Joins using Locality Sensitive
+Hashing. In EDBT 2022. OpenProceedings.org, 1:78–1:90.
+[5] Pierre Baldi, Peter Sadowski, and Daniel Whiteson. 2014. Searching for exotic particles in high-energy physics with
+deep learning. Nature communications 5, 1 (2014), 4308.
+[6] Thierry Bertin-Mahieux, Daniel P. W. Ellis, Brian Whitman, and Paul Lamere. 2011. The Million Song Dataset. In
+Proceedings of the 12th International Society for Music Information Retrieval Conference, ISMIR 2011. University of Miami,
+591–596.
+[7] Christian Böhm, Bernhard Braunmüller, Florian Krebs, and Hans-Peter Kriegel. 2001. Epsilon Grid Order: An Algorithm
+for the Similarity Join on Massive High-Dimensional Data. In Proceedings of the 2001 ACM SIGMOD international
+conference on Management of data. ACM, 379–388.
+[8] Christian Böhm and Florian Krebs. 2004. The
+ k-Nearest Neighbour Join: Turbo Charging the KDD Process. Knowl. Inf.
+Syst. 6, 6 (2004), 728–749.
+[9] Thomas Brinkhoff, Hans-Peter Kriegel, and Bernhard Seeger. 1993. Efficient Processing of Spatial Joins Using R-Trees.
+In Proceedings of the 1993 ACM SIGMOD International Conference on Management of Data, Washington, DC, USA, May
+26-28, 1993. ACM Press, 237–246.
+[10] Qi Chen, Bing Zhao, Haidong Wang, Mingqin Li, Chuanjie Liu, Zengzhong Li, Mao Yang, and Jingdong Wang. 2021.
+SPANN: Highly-efficient Billion-scale Approximate Nearest Neighborhood Search. In NeurIPS 2021. 5199–5212.
+[11] Sheng Chen, Akshay Soni, Aasish Pappu, and Yashar Mehdad. 2017. DocTag2Vec: An Embedding Based Multi-
+label Learning Approach for Document Tagging. In Rep4NLP@ACL 2017. Association for Computational Linguistics,
+111–120.
+[12] B. Delaunay. 1934. Sur la sphère vide. Bull. Acad. Sci. URSS 1934, 6 (1934), 793–800.
+[13] Rex A Dwyer. 1989. Higher-dimensional Voronoi diagrams in linear expected time. In Proceedings of the fifth annual
+symposium on Computational geometry. 326–333.
+[14] Cong Fu, Chao Xiang, Changxu Wang, and Deng Cai. 2019. Fast Approximate Nearest Neighbor Search With The
+Navigating Spreading-out Graph. Proc. VLDB Endow. 12, 5 (2019), 461–474.
+[15] Harold N. Gabow and Robert Endre Tarjan. 1983. A Linear-Time Algorithm for a Special Case of Disjoint Set Union. In
+Proceedings of the 15th Annual ACM Symposium on Theory of Computing. ACM, 246–251.
+[16] Jianyang Gao and Cheng Long. 2024. RaBitQ: Quantizing High-Dimensional Vectors with a Theoretical Error Bound
+for Approximate Nearest Neighbor Search. Proc. ACM Manag. Data 2, 3 (2024), 167.
+[17] Aditya Grover and Jure Leskovec. 2016. node2vec: Scalable Feature Learning for Networks. In SIGKDD International
+Conference on Knowledge Discovery and Data Mining. ACM, 855–864.
+[18] Ruiqi Guo, Philip Sun, Erik Lindgren, Quan Geng, David Simcha, Felix Chern, and Sanjiv Kumar. 2020. Accelerating
+Large-Scale Inference with Anisotropic Vector Quantization. In Proceedings of the 37th International Conference on
+Machine Learning, ICML 2020 (Proceedings of Machine Learning Research, Vol. 119). PMLR, 3887–3896.
+[19] Ben Harwood and Tom Drummond. 2016. FANNG: Fast Approximate Nearest Neighbour Graphs. In 2016 IEEE
+Conference on Computer Vision and Pattern Recognition, CVPR 2016. IEEE Computer Society, 5713–5722.
+[20] Xiao Hu, Ke Yi, and Yufei Tao. 2019. Output-Optimal Massively Parallel Algorithms for Similarity Joins.
+ ACM Trans.
+Database Syst. 44, 2 (2019), 6:1–6:36.
+[21] Piotr Indyk and Rajeev Motwani. 1998. Approximate Nearest Neighbors: Towards Removing the Curse of Dimension-
+ality. In Proceedings of the Thirtieth Annual ACM Symposium on the Theory of Computing. ACM, 604–613.
+[22] Edwin H. Jacox and Hanan Samet. 2008. Metric space similarity joins.
+ ACM Trans. Database Syst. 33, 2 (2008), 7:1–7:38.
+[23] Dmitri V. Kalashnikov. 2013. Super-EGO: fast multi-dimensional similarity join. VLDB J. 22, 4 (2013), 561–585.
+[24] Dmitri V. Kalashnikov and Sunil Prabhakar. 2007. Fast similarity join for multi-dimensional data. Inf. Syst. 32, 1 (2007),
+160–177.
+[25] Nick Koudas and Kenneth C. Sevcik. 2000. High Dimensional Similarity Joins: Algorithms and Performance Evaluation.
+IEEE Trans. Knowl. Data Eng. 12, 1 (2000), 3–18.
+[26] D. T. Lee and Bruce J. Schachter. 1980. Two algorithms for constructing a Delaunay triangulation.
+ Int. J. Parallel
+Program. 9, 3 (1980), 219–242.
+[27] Hangyu Li, Sarana Nutanong, Hong Xu, Chenyun Yu, and Foryu Ha. 2019. C2Net: A Network-Efficient Approach to
+Collision Counting LSH Similarity Join. IEEE Trans. Knowl. Data Eng. 31, 3 (2019), 423–436.
+[28] Wen Li, Ying Zhang, Yifang Sun, Wei Wang, Mingjie Li, Wenjie Zhang, and Xuemin Lin. 2020. Approximate Nearest
+Neighbor Search on High Dimensional Data - Experiments, Analyses, and Improvement. IEEE Trans. Knowl. Data Eng.
+32, 8 (2020), 1475–1488.
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page><page num="26">158:26 Jiadong Xie, Jeffrey Xu Yu, and Yingfan Liu
+[29] Youzhong Ma, Shijie Jia, and Yongxin Zhang. 2017. A novel approach for high-dimensional vector similarity join query.
+Concurr. Comput. Pract. Exp. 29, 5 (2017).
+[30] Yury A. Malkov and Dmitry A. Yashunin. 2020. Efficient and Robust Approximate Nearest Neighbor Search Using
+Hierarchical Navigable Small World Graphs. IEEE Trans. Pattern Anal. Mach. Intell. 42, 4 (2020), 824–836.
+[31] Ahmed Metwally and Christos Faloutsos. 2012. V-SMART-Join: A Scalable MapReduce Framework for All-Pair
+Similarity Joins of Multisets and Vectors. Proc. VLDB Endow. 5, 8 (2012), 704–715.
+[32] Tomás Mikolov, Ilya Sutskever, Kai Chen, Gregory S. Corrado, and Jeffrey Dean. 2013. Distributed Representations of
+Words and Phrases and their Compositionality. In 27th Annual Conference on Neural Information Processing Systems
+2013. 3111–3119.
+[33] Nasser M Nasrabadi and Robert A King. 1988. Image coding using vector quantization: A review. IEEE Transactions on
+communications 36, 8 (1988), 957–971.
+[34] Yun Peng, Byron Choi, Tsz Nam Chan, Jianye Yang, and Jianliang Xu. 2023. Efficient Approximate Nearest Neighbor
+Search in Multi-dimensional Databases. Proc. ACM Manag. Data 1, 1 (2023), 54:1–54:27.
+[35] Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. Glove: Global Vectors for Word Representation.
+In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing, EMNLP 2014, A meeting of
+SIGDAT, a Special Interest Group of the ACL. ACL, 1532–1543.
+[36] Martin Perdacher, Claudia Plant, and Christian Böhm. 2019. Cache-oblivious High-performance Similarity Join. In
+Proceedings of the 2019 International Conference on Management of Data, SIGMOD Conference 2019. ACM, 87–104.
+[37] Sébastien Rivault, Mostafa Bamha, Sébastien Limet, and Sophie Robert. 2022. A Scalable Similarity Join Algorithm
+Based on MapReduce and LSH. Int. J. Parallel Program. 50, 3-4 (2022), 360–380.
+[38] Raimund Seidel. 1995. The Upper Bound Theorem for Polytopes: an Easy Proof of Its Asymptotic Version. Comput.
+Geom. 5 (1995), 115–116.
+[39] Kyuseok Shim, Ramakrishnan Srikant, and Rakesh Agrawal. 1997. High-Dimensional Similarity Joins. In ICDE. IEEE
+Computer Society, 301–311.
+[40] Aditi Singh, Suhas Jayaram Subramanya, Ravishankar Krishnaswamy, and Harsha Vardhan Simhadri. 2021.
+FreshDiskANN: A Fast and Accurate Graph-Based ANN Index for Streaming Similarity Search. CoRR abs/2105.09613
+(2021).
+[41] SOAX. 2024.
+ How many hours of video are uploaded to YouTube each minute? https://soax.com/research/how-many-
+hours-of-video-are-uploaded-to-youtube-every-minute
+[42] Narayanan Sundaram, Aizana Turmukhametova, Nadathur Satish, Todd Mostak, Piotr Indyk, Samuel Madden, and
+Pradeep Dubey. 2013. Streaming Similarity Search over one Billion Tweets using Parallel Locality-Sensitive Hashing.
+Proc. VLDB Endow. 6, 14 (2013), 1930–1941.
+[43] Yukihiro Tagami. 2017. AnnexML: Approximate Nearest Neighbor Search for Extreme Multi-label Classification. In
+SIGKDD. ACM, 455–464.
+[44] Jianguo Wang, Xiaomeng Yi, Rentong Guo, Hai Jin, Peng Xu, Shengjun Li, Xiangyu Wang, Xiangzhou Guo, Chengming
+Li, Xiaohai Xu, Kun Yu, Yuxing Yuan, Yinghao Zou, Jiquan Long, Yudong Cai, Zhenxiang Li, Zhifeng Zhang, Yihua
+Mo, Jun Gu, Ruiyi Jiang, Yi Wei, and Charles Xie. 2021. Milvus: A Purpose-Built Vector Data Management System. In
+SIGMOD ’21. ACM, 2614–2627.
+[45] Mengzhao Wang, Xiaoliang Xu, Qiang Yue, and Yuxiang Wang. 2021. A Comprehensive Survey and Experimental
+Comparison of Graph-Based Approximate Nearest Neighbor Search. Proc. VLDB Endow. 14, 11 (2021), 1964–1978.
+[46] Yifan Wang, Vyom Pathak, and Daisy Zhe Wang. 2024. Xling: A Learned Filter Framework for Accelerating High-
+Dimensional Approximate Similarity Join. CoRR abs/2402.13397 (2024).
+[47] Shuo Yang, Jiadong Xie, Yingfan Liu, Jeffrey Xu Yu, Xiyue Gao, Qianru Wang, Yanguo Peng, and Jiangtao Cui.
+2024. Revisiting the Index Construction of Proximity Graph-Based Approximate Nearest Neighbor Search. CoRR
+abs/2410.01231 (2024).
+[48] Cui Yu, Bin Cui, Shuguang Wang, and Jianwen Su. 2007. Efficient index-based KNN join processing for high-dimensional
+data. Inf. Softw. Technol. 49, 4 (2007), 332–344.
+[49] Chenyun Yu, Sarana Nutanong, Hangyu Li, Cong Wang, and Xingliang Yuan. 2017. A Generic Method for Accelerating
+LSH-Based Similarity Join Processing. IEEE Trans. Knowl. Data Eng. 29, 4 (2017), 712–726.
+[50] Xingliang Yuan, Xinyu Wang, Cong Wang, Chenyun Yu, and Sarana Nutanong. 2017. Privacy-Preserving Similarity
+Joins Over Encrypted Data. IEEE Trans. Inf. Forensics Secur. 12, 11 (2017), 2763–2775.
+[51] Qianxi Zhang, Shuotao Xu, Qi Chen, Guoxin Sui, Jiadong Xie, Zhizhen Cai, Yaoqi Chen, Yinxuan He, Yuqing Yang, Fan
+Yang, Mao Yang, and Lidong Zhou. 2023. VBASE: Unifying Online Vector Similarity Search and Relational Queries
+via Relaxed Monotonicity. In 17th USENIX Symposium on Operating Systems Design and Implementation, OSDI 2023.
+USENIX Association, 377–395.
+Received October 2024; revised January 2025; accepted February 2025
+Proc. ACM Manag. Data, Vol. 3, No. 3 (SIGMOD), Article 158. Publication date: June 2025.</page></paper>

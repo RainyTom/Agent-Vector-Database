@@ -1,0 +1,816 @@
+<paper id="2508.18494v2"><page num="1">DiskJoin: Large-scale Vector Similarity Join with SSD
+Yanqi Chen
+University of Massachusetts Amherst
+yanqichen@cs.umass.edu
+Xiao Yan
+Centre for Perceptual and Interactive Intelligence
+yanxiaosunny@gmail.com
+Alexandra Meliou
+University of Massachusetts Amherst
+ameli@cs.umass.edu
+Eric Lo
+Chinese University of Hong Kong
+ericlo@cse.cuhk.edu.hk
+Abstract
+Similarity join—a widely used operation in data science—finds all
+pairs of items that have distance smaller than a threshold. Prior
+work has explored distributed computation methods to scale simi-
+larity join to large data volumes but these methods require a cluster
+deployment, and efficiency suffers from expensive inter-machine
+communication. On the other hand, disk-based solutions are more
+cost-effective by using a single machine and storing the large dataset
+on high-performance external storage, such as NVMe SSDs, but
+in these methods the disk I/O time is a serious bottleneck. In this
+paper, we propose DiskJoin, the first disk-based similarity join algo-
+rithm that can process billion-scale vector datasets efficiently on a
+single machine. DiskJoin improves disk I/O by tailoring the data ac-
+cess patterns to avoid repetitive accesses and read amplification. It
+also uses main memory as a dynamic cache and carefully manages
+cache eviction to improve cache hit rate and reduce disk retrieval
+time. For further acceleration, we adopt a probabilistic pruning tech-
+nique that can effectively prune a large number of vector pairs from
+computation. Our evaluation on real-world, large-scale datasets
+shows that DiskJoin significantly outperforms alternatives, achiev-
+ing speedups from 50× to 1000×.
+Keywords
+Vector, Similarity join, Disk-based processing
+ACM Reference Format:
+Yanqi Chen, Xiao Yan, Alexandra Meliou, and Eric Lo. 2025. DiskJoin: Large-
+scale Vector Similarity Join with SSD. Proc. ACM Manag. Data 3, 6 (SIGMOD),
+Article 315 (December 2025), 15 pages. https://doi.org/10.1145/3769780
+1 Introduction
+In machine learning workflows, it is common practice to use models
+to map objects with complex semantics (e.g., text, images, videos,
+Authors’ Contact Information: Yanqi Chen, University of Massachusetts Amherst, ,
+yanqichen@cs.umass.edu; Xiao Yan, Centre for Perceptual and Interactive Intelligence,
+, yanxiaosunny@gmail.com; Alexandra Meliou, University of Massachusetts Amherst,
+, ameli@cs.umass.edu; Eric Lo, Chinese University of Hong Kong, , ericlo@cse.cuhk.
+edu.hk.
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+© 2025 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM 2836-6573/2025/12-ART315
+https://doi.org/10.1145/3769780
+Metric DiskANN [48] DiskJoin [this paper]
+Total time (sec) 130, 107 1,185
+Disk time (sec) 93, 417 198
+Disk traffic (GB) 115, 854 265
+Figure 1: Profiling results for a baseline solution—using the
+state-of-the-art SSD-based vector index DiskANN [48 ] to
+perform vector similarity join—and our DiskJoin on the Bi-
+gANN100M dataset at 90% recall. Both methods use a memory
+size that is 10% of the dataset size.
+proteins) to vector embeddings and manage these objects via em-
+beddings [ 35 , 42 , 51 ]. For instance, convolution neural networks
+(CNNs) map images to embeddings [ 35 ], transformer-based large
+language models (LLMs) map text segments to embeddings [42 ],
+and recommendation models map users and products to embed-
+dings [51]. On these vector embeddings, similarity—e.g., measured
+via Euclidean distance or cosine similarity—is a crucial notion. For
+example, close similarity of two vector embeddings is used to in-
+dicate that two images are similar, that two text segments have
+similar meanings, or that a user may like a product.
+Vector similarity join. Similarity self-join (SSJ), which seeks all
+pairs of similar data points, is a well-established problem that has
+been extensively studied in the literature. SSJ for vector data lies
+at the core of many applications like near-duplicate detection [1,
+17 , 27 ], outlier detection [ 10 ], and more. We give three practical
+examples and then provide a formal problem definition.
+Video deduplication [16 ]: A video website maintains a large number
+of videos, but many are similar to each other [ 52, 58]. For example,
+the same clip may be uploaded by different users or encoded in
+different formats; highly-overlapping segments may be cropped
+from one video. Identifying and removing these duplicates can
+save resources [59] and avoid repetitive content recommendations.
+Similar videos (as well as other formats like images or text) can
+be identified by performing SSJ over their vector embeddings.
+Training data deduplication [ 1]: Dataset deduplication is a crucial
+step in machine learning pipelines, especially when training large
+language models (LLMs), where the training datasets often contain
+billions of examples. In particular, semantic deduplication—which
+identifies pairs of data that are semantically similar but not exactly
+identical—has been shown to significantly reduce dataset size,
+while maintaining, or even improving, model performance. A
+practical approach to enabling semantic deduplication at scale is
+to apply similarity self-join over vector embeddings of the data.
+arXiv:2508.18494v2 [cs.DB] 10 Oct 2025</page><page num="2">Conference’17, July 2017, Washington, DC, USA Yanqi Chen, Xiao Yan, Alexandra Meliou, and Eric Lo
+Outlier detection [11 ]: An object is considered an outlier if it signifi-
+cantly deviates from other objects. With the embedding vectors,
+the deviation can be quantified using the number of neighbors
+that are within a distance threshold from a vector [ 39]. If a vector
+has only a few similar neighbors, we can conclude that its cor-
+responding object is an outlier, which requires special attention
+(e.g., a fraudulent transaction or abnormal training sample).
+Definition 1 (Similarity self-join (SSJ) for vector dataset). Given a
+vector dataset X = {𝑥
+1
+, 𝑥
+2
+, · · · , 𝑥
+𝑁 
+}, where each 𝑥
+𝑛 
+∈ X (1 ≤𝑛 ≤ 𝑁 )
+is a 𝑑-dimensional vector, and a threshold 𝜖 &gt; 0, find all vector pairs
+(𝑥
+𝑛
+, 𝑥
+𝑛
+′ 
+) with ∥𝑥
+𝑛 
+− 𝑥
+𝑛
+′ 
+∥ ≤ 𝜖 and 1 ≤ 𝑛 ≠ 𝑛
+′ 
+≤ 𝑁 .
+In this paper (including Definition 1), we use the L-2 norm (Eu-
+clidean distance) as the similarity measure, but other similarity
+measures are also possible. The similarity-based self-join (SSJ) prob-
+lem may be extended to cross-join if we consider similar vector
+pairs (𝑥
+𝑛
+, 𝑦
+𝑚 
+) from two vector datasets X and Y. We assume that
+the vector dimension 𝑑 is high (e.g., &gt; 100), which is the common
+case for embedding models. Note that solving the SSJ problem ex-
+actly (i.e., finding all qualifying vector pairs with ∥𝑥
+𝑛 
+− 𝑥
+𝑛
+′ 
+∥ ≤ 𝜖
+) is
+prohibitively expensive. This is because traditional distance-based
+pruning techniques (e.g., using triangle inequality) are not effective
+in high dimensions [29 ], and thus the problem almost degrades
+to a linear scan over the dataset X to find all 𝜖-neighbors of each
+vector 𝑥
+𝑛 
+. As such, we solve SSJ approximately to trade accuracy
+for efficiency. We can gain efficiency by reducing the number of
+candidate vector pairs that are checked for 𝜖-neighbors; this reduc-
+tion may miss some vector pairs that should have been returned,
+thus hurting recall. We use the standard definition for recall: If R
+is the set of all vector pairs whose distance is less than 𝜖, then the
+recall of an approximate result set R
+′ 
+of vector pairs is: 𝑟 = 
+| R∩R
+′ 
+|
+| R | 
+.
+Existing literature (see Section 2 for a detailed discussion), treats
+SSJ as an end-to-end task over a static dataset executed exclusively
+by a dedicated server or system, with the goal of minimizing the
+overall execution time. For example, RSHJ [61] conducts approx-
+imate similarity join using LSH-based probing, where the entire
+join pipeline—from hashing to candidate generation to filtering—is
+optimized for overall performance. Similarly, distributed similarity
+join solutions like MAPSS [56 ], ClusterJoin [ 18], and C2Net [38 ]
+partition and process data in a way that tightly integrates filtering
+and verification stages, focusing on reducing total job runtime.
+Our work is aligned with this line of research: we also treat SSJ as
+a unified, end-to-end task over a static dataset. Thus, our objective is
+to gain efficiency (measured by end-to-end execution time), while
+maintaining high recall. We do not need to separately consider
+precision, as incorrect candidate pairs with distances larger than 𝜖
+will be simply removed by checking their distances. Therefore, an
+approximate solution to SSJ would always achieve perfect precision.
+Scaling to large data sizes. In many applications, SSJ often in-
+volves large datasets. For example, a public multi-modal dataset can
+provide billions of images and their text descriptions [46], a video
+website such as YouTube can also host billions of videos [ 4 ], and an
+e-commerce platform can have hundreds of millions of users [ 30 ].
+Moreover, each individual vector may also be large due to the high
+dimensionality 𝑑. As a result, vector datasets can take up TBs of
+storage and do not fit in the memory of a server. A way to scale up
+SSJ is to use distributed methods that involve multiple machines.
+However, distributed solutions are expensive to deploy and usually
+suffer from costly inter-machine communication [18, 56].
+SSD-based alternative and challenges. SSDs can offer a practical
+and cost-effective alternative to distributed SSJ: they are cheap
+(1TB currently costs ∼$60), capacious (10+ TBs are common), and
+reasonably fast (reaching 1.4M random IOPS and 7 GB/s bandwidth).
+An alternative storage option is persistent memory (PM), which is
+byte-addressable, persistent, and offers SSD-like capacity at a lower
+cost than DRAM. However, PM is significantly more expensive
+($12/GB) while delivering comparable read bandwidth (9 GB/s vs
+7.4 GB/s) but lower write bandwidth (2.8 GB/s vs 6.9 GB/s). Although
+PM offers much lower latency (300ns vs 40μs), this advantage has
+minimal impact on end-to-end applications like similarity join.
+Thus, we study the case where the vector dataset is stored on SSD,
+while the memory is only a small fraction (e.g., &lt; 20%) of the data.
+A baseline disk-based SSJ approach is to use disk-oriented vector
+indexes (e.g., DiskANN [48 ]), which target top-𝑘 nearest neighbor
+queries: we first build an index on the data and then use each vector
+as a query to search the index. We gradually increase 𝑘 until the
+distances of the identified neighbors exceed 𝜖. Figure 1 shows that
+this approach is slow and disk access dominates the overall time,
+due to the large volume of disk traffic. Our analysis suggests that
+the poor performance boils down to two reasons: read amplification
+and repetitive access. In particular, disk-oriented indexes access an
+individual vector each time but a vector is usually smaller than the
+4KB disk page size (e.g., a 128-dimension float vector takes up 512B),
+which is the minimum granularity of disk read.
+1 
+Thus, disk band-
+width is wasted on reading irrelevant data. Critically, this approach
+treats the vectors as independent queries and misses the opportu-
+nities to share and reuse the data fetched from disk. For example,
+vectors 𝑥
+𝑎 
+and 𝑥
+𝑏 
+may both need to check if 𝑥
+𝑐 
+is their 𝜖-neighbor.
+If 𝑥
+𝑏 
+is processed right after 𝑥
+𝑎 
+, 𝑥
+𝑐 
+will reside in memory and can
+be reused, leading to smaller disk traffic and shorter runtime.
+Our solution: DiskJoin. Motivated by this profiling analysis, we
+design a novel disk-based SSJ method, DiskJoin, that effectively
+reduces disk access time and, in turn, significantly improves the
+efficiency of SSJ processing. DiskJoin achieves this with two key
+designs: access batching and task orchestration.
+Access batching addresses read amplification by reading sets of
+vectors (buckets), instead of one vector at a time. At a high level,
+DiskJoin organizes vectors in the dataset into buckets; each bucket
+is represented by a center vector and holds the vectors that are
+similar to the center vector. Using the bucket centers, DiskJoin then
+constructs a bucket graph, where each bucket is a node, and an edge
+connects two buckets if vectors in one bucket may have 𝜖-neighbors
+in the other bucket. Our method evaluates SSJs by processing one
+bucket at a time, retrieving all neighbors of that bucket in the bucket
+graph. By reading data at bucket granularity, instead of individual
+vectors, DiskJoin largely eliminates read amplification, as each
+bucket contains multiple vectors and typically has size larger than
+the page size. It is also conducive to sharing disk access, as vectors in
+1
+While some more recent embeddings have high dimensionality (e.g., 1536 for OpenAI’s
+text embedding), dimensionality reduction techniques like the Matryoshka Represen-
+tation Learning (MRL) [ 37] and vector quantization methods [ 2 , 23] can be used to
+compress the vector size to well below a page size without loss of accuracy.</page><page num="4">Conference’17, July 2017, Washington, DC, USA Yanqi Chen, Xiao Yan, Alexandra Meliou, and Eric Lo
+Some algorithms use the 𝜖-grid (e.g., EGO [7 ], EGO-star [ 33 ], Su-
+perEGO [32]), which splits the space into 𝜖-sized grids and sorts the
+vectors by the lexicographical order of their grid coordinates. Then,
+the vectors are grouped into parts, and two parts are checked if
+their 𝜖-margin bounding boxes intersect. Space-partitioning indices
+do not work for high-dimensional vectors (e.g., 𝑑 &gt; 100) produced
+by machine learning models, as the pruning power of the triangle
+inequality and bounding boxes diminishes in high dimensions [ 29].
+Similarity join for high-dimensional vectors. RSHJ [61 ] con-
+ducts similarity cross-join for two vector datasets X and Y and
+uses locality-sensitive hashing (LSH) [28 ], a popular technique for
+vector similarity search in high dimensions. It assumes that X and
+Y reside in memory and produces an approximation (i.e., identifies
+most, instead of all similar pairs) like we do. LSH uses tailored hash
+functions to map vectors to buckets ensuring that similar vectors
+are more likely to be mapped to the same bucket. RSHJ builds hash
+tables for both datasets and generates candidate pairs by querying
+the hash table of Y using vectors in X. To reduce lookup cost, it only
+uses a representative subset of X for lookups. However, state-of-the-
+art vector indices, such as proximity graphs [ 40 , 41 , 48 ] and inverted
+file (IVF) [ 31 ], perform much better than LSH for similarity search.
+Distributed similarity join. Some prior work scales up similarity
+join with distributed frameworks like MapReduce [ 19 ]. MAPSS [56 ]
+first selects a set of centroids and then partitions the dataset ac-
+cording to the centroids. The mappers use the triangle inequality to
+filter the candidate objects for each partition, and each reducer ver-
+ifies the candidate pairs for a partition. ClusterJoin [ 18 ] improves
+MAPSS by pruning the candidate pairs with a bisector-based filter
+in general metric spaces, as well as a set of filters specific to different
+distance functions. It achieves load balancing by re-partitioning the
+datasets over the machines. Chen et al. [ 13] further enhance candi-
+date filtering using pivot filtering and plane sweeping techniques
+and propose two partitioning methods based on space-filling curve
+and KD-tree to avoid re-partitioning. More recently, C2Net [38 ]
+applies an LSH variant, C2LSH [ 22], to conduct similarity-based
+vector cross-join by hashing both datasets to buckets. The mappers
+enumerate the vector pairs mapped to the same bucket, and the
+reducers aggregate the pairs to calculate their collision counts. A
+vector pair is regarded as a candidate if their collision count ex-
+ceeds a threshold. These distributed solutions generally suffer from
+a high inter-machine communication cost because similar object
+pairs need to be sent to the same machine for verification.
+To the best of our knowledge, DiskJoin is the first to conduct
+similarity join for high-dimensional vectors on disk. Compared
+with existing vector similarity join work (e.g., EGO, RSHJ, C2Net)
+that use tree, grid, or LSH, DiskJoin leverages state-of-the-art vector
+indices (i.e., proximity graph and IVF), which are more efficient
+for high-dimensional vectors. Compared with distributed solutions,
+DiskJoin is easier to deploy (as it does not require a cluster) and does
+not suffer from high inter-machine communication cost. DiskJoin
+also follows the general filter-verify procedure for similarity join
+but the main challenge is to reduce the disk access cost, which has
+not been explored by existing work.
+Disk-based Similarity Search. Prior work has explored disk -based
+vector similarity search systems to support billion - scale vector re-
+trieval with low memory footprints and high throughput. GRIP [63 ]
+pioneered memory-SSD hybrid similarity search by introducing
+a multi-store IVF-based framework, where the in-memory index
+quickly routes queries to nearby clusters and completes valida-
+tion by accessing the SSD store. SPANN [14 ] adopts similar design
+but optimizes the IVF index construction to better suit the disk
+scenario. DiskANN [48] proposes a graph-based approach, using
+compressed vectors for in-memory graph traversal and refining
+results with full-precision vectors stored on SSDs. Other systems,
+such as SmartANNS [ 50] and ES4D [ 36 ], also explore the opportu-
+nity for near-data processing, which offloads the query processing
+to SSDs equipped with computational capabilities.
+Batch Processing. DiskJoin leverages batch processing, which is
+a widely-used concept in database research. SharedDB [24] first
+introduced the design of batching queries in RDBMSs to share
+data access and computation. This concept was later extended to
+vector similarity search in [ 45 ]. Query batching is especially com-
+mon in GPU-based similarity search systems—such as GGNN [26 ],
+SONG [65 ], and BANG [34]—to fully exploit the massive paral-
+lelism of GPUs. Other systems, including FreshDiskANN [ 47 ] and
+IP-DiskANN [ 62 ], also employ batch processing for index updates
+to amortize operational overhead.
+3 DiskJoin Overview
+In this section, we provide an overview of DiskJoin’s workflow,
+depicted in Figure 2. DiskJoin takes as input the vector dataset X,
+the memory budget 𝐶, the distance threshold 𝜖 for similar vector
+pairs, and a target recall 𝜆. Under the assumption that X resides on
+local disk, DiskJoin will identify and write a set of similar vector
+pairs R
+′ 
+to disk, such that the expected recall of R
+′ 
+is 𝜆 and memory
+usage is bounded by 𝐶. The core of DiskJoin is the bucket-wise
+processing of SSJ. It first groups X into buckets, such that each
+bucket contains similar vectors. Then, it identifies candidate bucket
+pairs that may contain neighboring vectors. Finally, for each candi-
+date bucket pair, it performs pairwise vector comparisons across
+the buckets to produce the final results. For this approach to be
+effective, the algorithm needs to be smart about the bucketization,
+the identification of likely dependencies across buckets, and the pro-
+cessing order of buckets. This provides three benefits: (1) it avoids
+read amplification, as the vectors are read from disk at bucket gran-
+ularity; (2) data access is shared among the vectors in the same
+bucket because they are similar and hence are likely to have high
+overlap in their 𝜖-neighbors; (3) understanding the dependencies
+across buckets (i.e., which buckets are likely to contain 𝜖-neighbors)
+allows for advanced memory cache management. We provide here
+an overview of these key components in DiskJoin, and describe
+them in detail in subsequent sections.
+Vector bucketization. DiskJoin partitions X into buckets, with
+each bucket 𝑏 represented by a center vector 𝑐
+𝑏 
+and containing
+similar vectors. Traditional clustering methods, such as k-means,
+are not suitable for this task, due to high memory requirements—
+often, they need the entire dataset to fit in memory, but, in practical
+settings, the memory size 𝐶 is much smaller than the dataset size.
+DiskJoin implements an efficient bucketization procedure (detailed
+in Section 5.1). At a high level, it starts with a random selection of
+vectors to serve as the bucket centers, and then assigns each vector</page><page num="9">DiskJoin: Large-scale Vector Similarity Join with SSD Conference’17, July 2017, Washington, DC, USA
+Algorithm 3 Probabilistic Pruning for Candidate Buckets
+Input: Target recall 𝜆, candidate bucket list 𝐿 for bucket 𝑏
+Output: Pruned candidate bucket list 𝐿
+′
+1: 𝐿
+′ 
+← 𝐿, sum ← 0
+2: 
+for 𝑏
+𝑖 
+∈ 𝐿 in descending order of distance to 𝑏 do
+3: sum ← sum + arccos(min{𝑥
+𝑖 
+, 1} )
+4: if sum ≥ 1 − 𝜆 then ⊲ Stop when error exceeds 1 − 𝜆
+5: break
+6: 𝐿
+′ 
+← 𝐿
+′
+\{𝑏
+𝑖 
+}
+7: return 𝐿
+′
+Our vector bucketing procedure is time-efficient because it only
+involves sequential disk accesses and requires minimal number
+of disk dataset scans—one for centroids sampling, one for bucket
+assignment and one for writing buckets back to disk. It is also
+memory-efficient since the minimum memory requirement is only
+2‰ of the dataset size, which can fit within any reasonable memory
+constraint. When it finishes, the vectors of X are stored as buckets
+on disk. We note that the disk organization and the HNSW index
+on bucket centers are independent of the distance threshold 𝜖 and
+recall target 𝜆. They can be built once and reused across queries with
+varying distance thresholds and recall requirements. The HNSW
+index for the centers is also used to build the dependency graph
+𝐺 (𝑉 , 𝐸) for the buckets. In particular, for each bucket 𝑏 with center
+𝑐, we use 𝑐 as a query to search the HNSW and identify a set
+B
+𝑐 
+= {𝑏
+1
+, 𝑏
+2
+, · · · , 𝑏
+𝐿 
+} of nearest centers (i.e., buckets). Then, we
+use a probabilistic pruning rule (discussed next) to determine the
+buckets that should be checked by 𝑏 for 𝜖-neighbors.
+5.2 Probabilistic Pruning for Candidate Buckets
+Using the triangle inequality in Eq. (1) to decide the candidate
+buckets for each bucket 𝑏 will produce many candidate buckets.
+This will result in high disk access and computation costs as each
+bucket reads and checks many buckets. Inspired by [ 64 ], we use
+a probabilistic candidate bucket pruning method to reduce the
+number of candidate buckets while meeting the recall target 𝜆.
+Figure 5(d) illustrates the idea with a toy example. We are con-
+sidering bucket 𝑏 and have identified all the candidate buckets
+for verification, i.e., {𝑏
+1
+, 𝑏
+2
+, 𝑏
+3
+}, whose centers are plotted as black
+points. We also plot a ball with center 𝑐
+𝑏 
+and radius 𝑟 , which repre-
+sents the 𝜖-neighborhood of bucket 𝑏. For each candidate bucket
+(e.g., 𝑏
+1
+), we plot its boundary region with the 𝜖-neighborhood of
+bucket 𝑏, which is a mid-vertical hyperplane as we assign each
+vector to its nearest center. We prune the candidate buckets in de-
+scending order of their distances to 𝑐
+𝑏 
+. As shown in the example,
+if bucket 𝑏
+3 
+is pruned, any 𝜖-neighbors in the white arc will be
+missed. We assume that the vectors are uniformly distributed in
+the hypersphere 𝐵(𝑐
+𝑏
+, 𝑟 ), and estimate the percentage of missed
+neighbors based on relative volume. We can keep pruning candidate
+buckets until the estimate of missed neighbors reaches 1 − 𝜆.
+More generally, assume that a bucket 𝑏 has 𝑙 candidate buckets,
+and we prune the 𝑗 furthest buckets from 𝑏. The percentage of
+missed neighbors can be expressed as
+𝛽 ( 𝑗) =
+𝑉 (
+Ð
+𝑙
+𝑖=𝑙 − 𝑗 
+𝐴(𝑖))
+𝑉 (𝐵(𝑐
+𝑏
+, 𝑟 )) 
+≤
+Í
+𝑙
+𝑖=𝑙 − 𝑗 
+𝑉 (𝐴(𝑖))
+𝑉 (𝐵(𝑐
+𝑏
+, 𝑟 )) 
+(3)
+Name Vectors Dimensions Size (GB)
+Deep100M 100,000,000 96 36
+BigANN100M 100,000,000 128 48
+SPACEV1B 1,402,202,072 100 523
+Figure 6: Summary statistics of the experiment datasets
+100K 1M 10M
+Dataset size
+1
+10
+10
+2
+10
+3
+10
+4
+10
+5
+10
+6
+Time(s)
+N/A N/A
+9 9
+66
+2168
+239
+45304
+DiskJoin ClusterJoin RSHJ DiskJoin(DC) ClusterJoin(DC) RSHJ(DC)
+719
+10
+8
+10
+9
+10
+10
+10
+11
+10
+12
+10
+13
+10
+14
+Distance computation
+Figure 7: Despite being a disk-based method, DiskJoin is order
+of magnitudes faster than Clusterjoin and RSHJ—the latter
+failing to execute in larger data sizes. This is because DiskJoin
+performs orders-of-magnitude fewer distance computations.
+where 𝑉 (·) is the volume of a high-dimension shape, 𝐴(𝑖) is the
+arc between bucket 𝑏 and bucket 𝑏
+𝑖 
+. It has been shown by [ 64 ] that
+𝛽 ( 𝑗) can be bounded by
+𝛽 ( 𝑗 ) ≤ 𝜋 
+− 
+1
+2 
+Γ ( 
+𝑑 −1
+2 
+)
+Γ ( 
+𝑑
+2 
+)
+𝑙
+∑︁
+𝑖=𝑙 − 𝑗
+arccos(min{𝑥
+𝑖 
+, 1} ) = 𝜇
+𝑙
+∑︁
+𝑖=𝑙 − 𝑗
+arccos(min{𝑥
+𝑖 
+, 1} )
+where 𝜇 = 𝜋 
+− 
+1
+2 
+Γ ( 
+𝑑 −1
+2 
+)
+Γ ( 
+𝑑
+2 
+) 
+is a constant related to the dimension 𝑑,
+and Γ· is the gamma function. 𝑥
+𝑖 
+= 
+𝑑𝑏
+𝑖
+𝑟 
+, where 𝑑𝑏
+𝑖 
+is the distance
+from point 𝑐
+𝑏 
+to the line the boundary of 𝑏, 𝑏
+𝑖 
+. When 𝑥
+𝑖 
+&gt; 1, 𝑏 and
+𝑏
+𝑖 
+have no intersection, and thus does not contribute to the sum.
+Algorithm 3 shows how to use Eq. (3) to prune the candidate
+buckets. Given a desired recall 𝜆, for each bucket 𝑏, we sort its
+candidate buckets in decreasing order of their distances to 𝑏, and
+take the sum of 𝑎𝑟𝑐𝑐𝑜𝑠 (𝑥) starting from the most distant bucket
+until the sum reaches the error bound 1 − 𝜆. We stop and prune the
+buckets encountered so far.
+6 Experimental Evaluation
+In this section, we present an extensive evaluation of DiskJoin,
+using three large vector datasets and three alternative baseline
+methods based on prior art. Our evaluation aims to answer the
+following questions:
+• 
+How efficient is DiskJoin compared to related prior art, when the
+memory is small with respect to the dataset?
+• How do the task configurations (i.e., target recall, distance threshold,
+and memory budget) affect the performance of DiskJoin?
+• How effective are our designs (i.e., Belady’s algorithm, task reorder-
+ing, and pruning) in improving the efficiency of DiskJoin?
+6.1 Experimental Settings
+Datasets. We use 3 datasets of varied characteristics. Deep100M (a
+subset of Deep1B [ 5]) is a vector dataset of image embeddings pro-
+duced by the last fully connected layer of the GoogLeNet model [ 49];</page><page num="14">Conference’17, July 2017, Washington, DC, USA Yanqi Chen, Xiao Yan, Alexandra Meliou, and Eric Lo
+Dataset 
+Threshold
+(# neighbors)
+No. of candidates Execution time (s)
+w/o pruning w/ pruning w/o pruning w/ pruning
+Deep100M
+0.04 (50) 
+4.19 × 10
+12 
+1.12 × 10
+11 
+4,204 416
+0.05 (100) 
+5.59 × 10
+12 
+1.81 × 10
+11 
+5,188 475
+0.065 (200) 
+7.31 × 10
+12 
+3.93 × 10
+11 
+7,671 620
+0.09 (500) 
+9.66 × 10
+12 
+1.14 × 10
+12 
+10,696 1,222
+BigANN100M
+8000 (50) 
+5.89 × 10
+12 
+4.60 × 10
+11 
+8,235 861
+10000 (100) 
+7.76 × 10
+12 
+7.78 × 10
+11 
+9,930 1,185
+12000 (200) 
+9.52 × 10
+12 
+1.26 × 10
+12 
+14,793 1,805
+16000 (500) 
+1.28 × 10
+13 
+2.57 × 10
+12 
+20,813 3,654
+Figure 18: Impact of candidate bucket pruning on candidate
+count and execution time. Pruning yields significant perfor-
+mance gains across all thresholds.
+7 Conclusion
+In this paper, we study the problem of similarity-based self-join over
+high-dimensional, large vector datasets. We focus on disk-based
+solutions and observe that disk access dominates the execution time
+of disk-based vector similarity join due to read amplification and
+repetitive data access. We propose DiskJoin, which relies on smart
+bucket-wise processing of SSJs to reduce disk IO. DiskJoin carefully
+manages the in-memory data cache to improve cache hit rate, which
+is achieved by ordering the tasks for temporal locality and using
+a cache eviction policy that fully utilizes data access information.
+Through extensive experiments, we show that DiskJoin achieves
+consistently 2-3 orders-of-magnitude improvement in execution
+time and all but eliminates read amplification. Remarkably, DiskJoin
+removes disk access as a bottleneck in vector similarity self-join.
+References
+[1] Amro Abbas, Kushal Tirumala, Dániel Simig, Surya Ganguli, and Ari S Mor-
+cos. 2023. Semdedup: Data-efficient learning at web-scale through semantic
+deduplication. arXiv preprint arXiv:2303.09540 (2023).
+[2] 
+Cecilia Aguerrebere, Ishwar Singh Bhati, Mark Hildebrand, Mariano Tepper, and
+Theodore Willke. 2023. Similarity Search in the Blink of an Eye with Compressed
+Indices. Proceedings of the VLDB Endowment 16, 11 (2023), 3433–3446.
+[3] Arvind Arasu, Venkatesh Ganti, and Raghav Kaushik. 2006. Efficient exact set-
+similarity joins. In Proceedings of the 32nd international conference on Very large
+data bases. 918–929.
+[4] Jane Arthurs, Sophia Drakopoulou, and Alessandro Gandini. 2018. Researching
+youtube. Convergence 24, 1 (2018), 3–15.
+[5] Artem Babenko and Victor Lempitsky. 2016. Efficient indexing of billion-scale
+datasets of deep descriptors. In Proceedings of the IEEE Conference on Computer
+Vision and Pattern Recognition. 2055–2063.
+[6] Laszlo A. Belady. 1966. A Study of Replacement Algorithms for Virtual-Storage
+Computer. IBM Syst. J. 5, 2 (1966), 78–101.
+[7] Christian Böhm, Bernhard Braunmüller, Florian Krebs, and Hans-Peter Kriegel.
+2001. Epsilon grid order: An algorithm for the similarity join on massive high-
+dimensional data. ACM SIGMOD Record 30, 2 (2001), 379–388.
+[8] Panagiotis Bouros, Shen Ge, and Nikos Mamoulis. 2012. Spatio-textual similarity
+joins. Proceedings of the VLDB Endowment 6, 1 (2012), 1–12.
+[9] Thomas Brinkhoff, Hans-Peter Kriegel, and Bernhard Seeger. 1993. Efficient
+processing of spatial joins using R-trees. ACM SIGMOD Record 22, 2 (1993),
+237–246.
+[10] Varun Chandola, Arindam Banerjee, and Vipin Kumar. 2009. Anomaly detection:
+A survey. ACM computing surveys (CSUR) 41, 3 (2009), 1–58.
+[11] Varun Chandola, Arindam Banerjee, and Vipin Kumar. 2009. Anomaly detection:
+A survey. ACM computing surveys 41, 3 (2009), 1–58.
+[12] 
+Surajit Chaudhuri, Venkatesh Ganti, and Raghav Kaushik. 2006. A primitive
+operator for similarity joins in data cleaning. In 22nd International Conference on
+Data Engineering. 5–5.
+[13] Gang Chen, Keyu Yang, Lu Chen, Yunjun Gao, Baihua Zheng, and Chun Chen.
+2016. Metric similarity joins using MapReduce. IEEE Transactions on Knowledge
+and Data Engineering 29, 3 (2016), 656–669.
+[14] Qi Chen, Bing Zhao, Haidong Wang, Mingqin Li, Chuanjie Liu, Zengzhong
+Li, Mao Yang, and Jingdong Wang. 2021. Spann: Highly-efficient billion-scale
+approximate nearest neighborhood search. Advances in Neural Information
+Processing Systems 34 (2021), 5199–5212.
+[15] Paolo Ciaccia, Marco Patella, Pavel Zezula, et al. 1997. M-tree: An efficient access
+method for similarity search in metric spaces. In Vldb, Vol. 97. 426–435.
+[16] Henrique B da Silva, Zenilton KG do Patrocínio, Guillaume Gravier, Laurent
+Amsaleg, Arnaldo de A Araújo, and Silvio Jamil F Guimaraes. 2016. Near-duplicate
+video detection based on an approximate similarity self-join strategy. In 14th
+International Workshop on Content-Based Multimedia Indexing. 1–6.
+[17] 
+Henrique B. da Silva, Zenilton K. G. do Patrocínio, Guillaume Gravier, Laurent
+Amsaleg, Arnaldo de A. Araújo, and Silvio Jamil F. Guimarães. 2016. Near-
+duplicate video detection based on an approximate similarity self-join strategy.
+In CBMI. 1–6.
+[18] Akash Das Sarma, Yeye He, and Surajit Chaudhuri. 2014. Clusterjoin: A similarity
+joins framework using map-reduce. Proceedings of the VLDB Endowment 7, 12
+(2014), 1059–1070.
+[19] Jeffrey Dean and Sanjay Ghemawat. 2008. MapReduce: simplified data processing
+on large clusters. Commun. ACM 51, 1 (2008), 107–113.
+[20] Vlastislav Dohnal, Claudio Gennaro, and Pavel Zezula. 2003. Similarity join in
+metric spaces using ed-index. In Database and Expert Systems Applications: 14th
+International Conference. 484–493.
+[21] Cong Fu, Chao Xiang, Changxu Wang, and Deng Cai. [n.d.]. Fast Approximate
+Nearest Neighbor Search With The Navigating Spreading-out Graph. Proceedings
+of the VLDB Endowment 12, 5 ([n. d.]).
+[22] 
+Junhao Gan, Jianlin Feng, Qiong Fang, and Wilfred Ng. 2012. Locality-sensitive
+hashing scheme based on dynamic collision counting. In Proceedings of 2012
+International Conference on Management of Data. 541–552.
+[23] Jianyang Gao, Yutong Gou, Yuexuan Xu, Yongyi Yang, Cheng Long, and Raymond
+Chi-Wing Wong. 2024. Practical and Asymptotically Optimal Quantization of
+High-Dimensional Vectors in Euclidean Space for Approximate Nearest Neighbor
+Search. arXiv preprint arXiv:2409.09913 (2024).
+[24] Georgios Giannikis, Gustavo Alonso, and Donald Kossmann. 2012. SharedDB:
+killing one thousand queries with one stone. Proc. VLDB Endow. 5, 6 (Feb. 2012),
+526–537. https://doi.org/10.14778/2168651.2168654
+[25] 
+Siddharth Gollapudi, Neel Karia, Varun Sivashankar, Ravishankar Krishnaswamy,
+Nikit Begwani, Swapnil Raz, Yiyong Lin, Yin Zhang, Neelam Mahapatro, Premku-
+mar Srinivasan, et al. 2023. Filtered-diskann: Graph algorithms for approximate
+nearest neighbor search with filters. In Proceedings of the ACM Web Conference
+2023. 3406–3416.
+[26] 
+Fabian Groh, Lukas Ruppert, Patrick Wieschollek, and Hendrik PA Lensch. 2022.
+Ggnn: Graph-based gpu nearest neighbor search. IEEE Transactions on Big Data
+9, 1 (2022), 267–279.
+[27] Bikash Gyawali, Lucas Anastasiou, and Petr Knoth. 2020. Deduplication of
+Scholarly Documents using Locality Sensitive Hashing and Word Embeddings.
+In Proceedings of the Twelfth Language Resources and Evaluation Conference.
+Marseille, France, 901–910.
+[28] 
+Qiang Huang, Jianlin Feng, Yikai Zhang, Qiong Fang, and Wilfred Ng. 2015.
+Query-aware locality-sensitive hashing for approximate nearest neighbor search.
+Proceedings of the VLDB Endowment 9, 1 (2015), 1–12.
+[29] Piotr Indyk and Rajeev Motwani. 1998. Approximate nearest neighbors: towards
+removing the curse of dimensionality. In Proceedings of the thirtieth annual ACM
+symposium on Theory of computing. 604–613.
+[30] Vipin Jain, BINDOO Malviya, and SATYENDRA Arya. 2021. An overview of
+electronic commerce (e-Commerce). The journal of contemporary issues in business
+and government 27, 3 (2021), 665–670.
+[31] Herve Jegou, Matthijs Douze, and Cordelia Schmid. 2010. Product quantization
+for nearest neighbor search. IEEE transactions on pattern analysis and machine
+intelligence 33, 1 (2010), 117–128.
+[32] 
+Dmitri V Kalashnikov. 2013. Super-EGO: fast multi-dimensional similarity join.
+The VLDB Journal 22, 4 (2013), 561–585.
+[33] Dmitri V Kalashnikov and Sunil Prabhakar. 2007. Fast similarity join for multi-
+dimensional data. Information Systems 32, 1 (2007), 160–177.
+[34] Saim Khan, Somesh Singh, Harsha Vardhan Simhadri, Jyothi Vedurada, et al.
+2024. Bang: Billion-scale approximate nearest neighbor search using a single
+gpu. arXiv preprint arXiv:2401.11324 (2024).
+[35] Douwe Kiela and Léon Bottou. 2014. Learning image embeddings using convolu-
+tional neural networks for improved multi-modal semantics. In Proceedings of
+the 2014 Conference on empirical methods in natural language processing. 36–45.
+[36] Juhwan Kim, Jongseon Seo, Jonghyeok Park, Sang-Won Lee, Hongchan Roh,
+and Hyungmin Cho. 2022. ES4D: Accelerating Exact Similarity Search for High-
+Dimensional Vectors via Vector Slicing and In-SSD Computation. In 2022 IEEE
+40th International Conference on Computer Design (ICCD). 298–306. https://doi.
+org/10.1109/ICCD56317.2022.00051
+[37] Aditya Kusupati, Gantavya Bhatt, Aniket Rege, Matthew Wallingford, Aditya
+Sinha, Vivek Ramanujan, William Howard-Snyder, Kaifeng Chen, Sham Kakade,
+Prateek Jain, et al . 2022. Matryoshka representation learning. Advances in Neural
+Information Processing Systems 35 (2022), 30233–30249.
+[38] Hangyu Li, Sarana Nutanong, Hong Xu, Foryu Ha, et al . 2018. C2Net: A network-
+efficient approach to collision counting LSH similarity join. IEEE Transactions on
+Knowledge and Data Engineering 31, 3 (2018), 423–436.</page></paper>
