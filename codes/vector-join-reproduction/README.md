@@ -19,26 +19,88 @@ It is a clean-room research implementation over the public hnswlib graph substra
 
 All emitted pairs are verified with exact squared-L2 distance, so precision should be 1. Recall remains approximate because the proximity graph can disconnect an in-range region.
 
+## Source layout
+
+The reproduction is split at the algorithm boundary rather than selected by a
+large conditional in one translation unit:
+
+| Source file | Bound Python entry point | Runner |
+|---|---|---|
+| `src/algorithms/independent.cpp` | `run_independent` | `scripts/run_independent.py` |
+| `src/algorithms/simjoin_hard.cpp` | `run_simjoin_hard` | `scripts/run_simjoin_hard.py` |
+| `src/algorithms/fast_avj_soft.cpp` | `run_fast_avj_soft` | `scripts/run_fast_avj_soft.py` |
+| `src/algorithms/fast_avj_merged.cpp` | `run_fast_avj_merged` | `scripts/run_fast_avj_merged.py` |
+| `src/algorithms/fast_avj_adaptive.cpp` | `run_fast_avj_adaptive` | `scripts/run_fast_avj_adaptive.py` |
+
+`src/vector_join.cpp` now contains only the shared graph/search engine,
+`src/dispatch.cpp` preserves the old generic C++ API, and
+`src/python_bindings.cpp` is the pybind11 boundary. A scheme-specific entry
+point overrides `Config.method`, preventing a runner from silently selecting a
+different implementation. Each listed runner is self-contained, accepts its
+parameters directly on the command line, and invokes exactly one bound scheme;
+there is no shared controller, sweep script, or run-all wrapper.
+
+## Fair-comparison contract
+
+All reported comparisons use the same execution substrate. This is enforced by
+the shared library rather than left to the individual runner scripts:
+
+- Every algorithm is implemented and timed in C++20. Python only parses CLI
+  arguments, calls pybind11, and prints the returned metrics; it does not
+  implement search or join logic.
+- Every proximity graph is built by the same `build_graph()` function using
+  hnswlib `L2Space` and `HierarchicalNSW`. No method may substitute FAISS, a
+  Python ANN implementation, or another graph library.
+- `graph_m`, `ef_construction`, beam sizes, convergence threshold, random seed,
+  squared-L2 definition, exact pair verification, and timing boundaries all
+  come from the same `Config` and shared engine.
+- The only permitted differences are mechanisms intrinsic to the reproduced
+  method: which vectors are indexed, query ordering, cache/reuse policy, merged
+  indexing, and adaptive expansion.
+
+Each JSON result records `graph_backend`, `implementation_language`,
+`distance_metric`, and all search/index parameters. The C++ and Python tests
+assert these fields for every method so mixed-backend or mixed-language results
+are visible immediately.
+
 ## Dependencies
 
 - CMake 3.20+
 - C++20 compiler
 - Ninja (optional)
+- Python 3.9+ and pybind11 3.0.1
 - [hnswlib](https://github.com/nmslib/hnswlib), pinned for FetchContent to commit `ca426729609b3221563047ceb269cc1213e0d376`
 
 The local research checkout is expected at `codes/upstream/hnswlib` and is ignored by Git. Alternatively configure with `-DVJ_FETCH_HNSWLIB=ON`.
 
 ```bash
+python3 -m pip install -r codes/vector-join-reproduction/requirements-build.txt
 cmake -S codes/vector-join-reproduction \
       -B codes/vector-join-reproduction/build \
-      -G Ninja -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_BUILD_TYPE=Release
 cmake --build codes/vector-join-reproduction/build
 ctest --test-dir codes/vector-join-reproduction/build --output-on-failure
 ```
 
+For a C++-only build, pass `-DVJ_BUILD_PYTHON=OFF`.
+
 ## Run on the local SIFT data
 
-The repository's SIFT metadata defines distance as **squared L2**; thresholds passed to this program use the same unit.
+The repository's SIFT metadata defines distance as **squared L2**; thresholds
+passed to every runner use the same unit. Run one scheme directly through its
+Python/pybind11 entry point:
+
+```bash
+PYTHONPATH=codes/vector-join-reproduction/build \
+python3 codes/vector-join-reproduction/scripts/run_simjoin_hard.py \
+  --base datasets/sift25k/base.f32 \
+  --queries datasets/sift25k/queries.f32 \
+  --dim 128 --threshold 90000 \
+  --base-limit 25000 --query-limit 1000 \
+  --ground-truth-limit 100
+```
+
+The original C++ compatibility CLI remains available:
 
 ```bash
 codes/vector-join-reproduction/build/vector_join_bench \
@@ -47,13 +109,6 @@ codes/vector-join-reproduction/build/vector_join_bench \
   --dim 128 --threshold 90000 \
   --base-limit 25000 --query-limit 1000 \
   --ground-truth-limit 100 --method hard
-```
-
-Or run all five variants:
-
-```bash
-QUERY_LIMIT=1000 GROUND_TRUTH_LIMIT=100 \
-  codes/vector-join-reproduction/scripts/run_sift25k.sh
 ```
 
 The executable writes one JSON object containing separate offline build, ordering and online join time; greedy/expansion distance computations; pair counts; macro recall, global pair recall and precision.

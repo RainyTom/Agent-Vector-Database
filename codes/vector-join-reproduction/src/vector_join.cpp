@@ -1,4 +1,5 @@
 #include "vector_join/vector_join.hpp"
+#include "detail/algorithm.hpp"
 
 #include <hnswlib/hnswlib.h>
 
@@ -395,14 +396,16 @@ const char* method_name(Method method) {
   return "unknown";
 }
 
-RunOutput run(const Matrix& queries, const Matrix& base, const Config& config,
-              std::size_t ground_truth_limit) {
+RunOutput detail::run_plan(const Matrix& queries, const Matrix& base,
+                           const Config& supplied_config,
+                           std::size_t ground_truth_limit,
+                           const AlgorithmPlan& plan) {
+  Config config = supplied_config;
+  config.method = plan.method;
   if (queries.dim != base.dim) throw std::invalid_argument("dimension mismatch");
   if (queries.rows == 0 || base.rows == 0) throw std::invalid_argument("empty input");
-  const bool merged_mode = config.method == Method::kMergedIndex ||
-                           config.method == Method::kMergedAdaptive;
-  const bool sharing = config.method == Method::kHardSharing ||
-                       config.method == Method::kSoftSharing;
+  const bool merged_mode = plan.merged_index;
+  const bool sharing = plan.build_query_order;
 
   const auto build_start = Clock::now();
   Graph query_graph;
@@ -449,8 +452,7 @@ RunOutput run(const Matrix& queries, const Matrix& base, const Config& config,
       }
     }
     SearchState state = greedy_phase(query_id, seeds, context);
-    const bool hybrid = config.method == Method::kMergedAdaptive &&
-                        predict_ood(query_id, context);
+    const bool hybrid = plan.adaptive_expansion && predict_ood(query_id, context);
     expansion_phase(query_id, hybrid, context, state);
 
     QueryResult& query_result = output.queries[query_id];
@@ -465,9 +467,10 @@ RunOutput run(const Matrix& queries, const Matrix& base, const Config& config,
     query_result.distance_computations = state.greedy_computations + state.expansion_computations;
     query_result.hybrid_used = hybrid;
 
-    if (config.method == Method::kHardSharing) {
+    if (plan.cache_policy == CachePolicy::kJoinWindow) {
       cache[query_id] = state.in_range;
-    } else if (config.method == Method::kSoftSharing && state.closest_data != kNoNode) {
+    } else if (plan.cache_policy == CachePolicy::kClosestPoint &&
+               state.closest_data != kNoNode) {
       cache[query_id] = {state.closest_data};
     }
   }
@@ -475,10 +478,20 @@ RunOutput run(const Matrix& queries, const Matrix& base, const Config& config,
 
   Metrics& metrics = output.metrics;
   metrics.method = method_name(config.method);
+  metrics.graph_backend = "hnswlib";
+  metrics.implementation_language = "C++20";
+  metrics.distance_metric = "squared_l2";
   metrics.base_rows = base.rows;
   metrics.query_rows = queries.rows;
   metrics.dimensions = base.dim;
   metrics.threshold = config.threshold;
+  metrics.graph_m = config.graph_m;
+  metrics.ef_construction = config.ef_construction;
+  metrics.greedy_beam = config.greedy_beam;
+  metrics.hybrid_beam = config.hybrid_beam;
+  metrics.convergence_threshold = config.convergence_threshold;
+  metrics.ood_ratio_threshold = config.ood_ratio_threshold;
+  metrics.seed = config.seed;
   metrics.build_ms = elapsed_ms(build_start, build_end);
   metrics.order_ms = elapsed_ms(order_start, order_end);
   metrics.join_ms = elapsed_ms(join_start, join_end);
@@ -523,10 +536,20 @@ std::string metrics_json(const Metrics& m) {
   out << std::fixed << std::setprecision(6)
       << "{\n"
       << "  \"method\": \"" << m.method << "\",\n"
+      << "  \"graph_backend\": \"" << m.graph_backend << "\",\n"
+      << "  \"implementation_language\": \"" << m.implementation_language << "\",\n"
+      << "  \"distance_metric\": \"" << m.distance_metric << "\",\n"
       << "  \"base_rows\": " << m.base_rows << ",\n"
       << "  \"query_rows\": " << m.query_rows << ",\n"
       << "  \"dimensions\": " << m.dimensions << ",\n"
       << "  \"threshold_squared_l2\": " << m.threshold << ",\n"
+      << "  \"graph_m\": " << m.graph_m << ",\n"
+      << "  \"ef_construction\": " << m.ef_construction << ",\n"
+      << "  \"greedy_beam\": " << m.greedy_beam << ",\n"
+      << "  \"hybrid_beam\": " << m.hybrid_beam << ",\n"
+      << "  \"convergence_threshold\": " << m.convergence_threshold << ",\n"
+      << "  \"ood_ratio_threshold\": " << m.ood_ratio_threshold << ",\n"
+      << "  \"seed\": " << m.seed << ",\n"
       << "  \"build_ms\": " << m.build_ms << ",\n"
       << "  \"order_ms\": " << m.order_ms << ",\n"
       << "  \"join_ms\": " << m.join_ms << ",\n"

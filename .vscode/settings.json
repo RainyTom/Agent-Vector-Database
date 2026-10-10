@@ -1,0 +1,58 @@
+{
+    "cmake.sourceDirectory": "/home/stu/2026040404-yiming/Agent-Vector-Database/codes/vector-join-reproduction",
+    "cmake.buildDirectory": "${workspaceFolder}/codes/vector-join-reproduction/build",
+    "cmake.configureSettings": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "VJ_FETCH_HNSWLIB": "ON",
+        "VJ_FETCH_PYBIND11": "ON"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/codes/vector-join-reproduction/build/compile_commands.json",
+    "C_Cpp.default.cppStandard": "c++20",
+    "C_Cpp.default.compilerPath": "/usr/bin/c++",
+    "C_Cpp.default.browse.limitSymbolsToIncludedHeaders": true,
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/codes/vector-join-reproduction/build"
+    ],
+    "python.analysis.exclude": [
+        "datasets/**",
+        "paper-production/**",
+        "papers/**",
+        "researches/**"
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/__pycache__": true,
+        "**/build*": true,
+        "papers/**/images": true,
+        "papers/**/mineru": true
+    },
+    "search.exclude": {
+        "**/build*/**": true,
+        "datasets/**": true,
+        "paper-production/**": true,
+        "papers/**": true,
+        "researches/**": true
+    },
+    "files.watcherExclude": {
+        "**/.git/**": true,
+        "**/__pycache__/**": true,
+        "**/build*/**": true,
+        "datasets/**": true,
+        "paper-production/**": true,
+        "papers/**": true,
+        "researches/**": true
+    },
+    "C_Cpp.files.exclude": {
+        "**/.git/**": true,
+        "**/__pycache__/**": true,
+        "**/build*/CMakeFiles/**": true,
+        "**/build*/Testing/**": true,
+        "**/build*/_deps/*-build/**": true,
+        "**/build*/_deps/*-subbuild/**": true,
+        "datasets/**": true,
+        "paper-production/**": true,
+        "papers/**": true,
+        "researches/**": true
+    }
+}

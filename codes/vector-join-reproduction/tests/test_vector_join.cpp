@@ -33,6 +33,12 @@ int main() {
     config.hybrid_beam = 16;
     config.convergence_threshold = 20;
     const auto output = vjoin::run(queries, base, config, queries.rows);
+    assert(output.metrics.graph_backend == "hnswlib");
+    assert(output.metrics.implementation_language == "C++20");
+    assert(output.metrics.distance_metric == "squared_l2");
+    assert(output.metrics.graph_m == config.graph_m);
+    assert(output.metrics.ef_construction == config.ef_construction);
+    assert(output.metrics.seed == config.seed);
     assert(output.metrics.precision == 1.0);
     assert(output.metrics.macro_recall >= 0.5);
     assert(output.queries.size() == queries.rows);

@@ -52,10 +52,20 @@ struct QueryResult {
 
 struct Metrics {
   std::string method;
+  std::string graph_backend;
+  std::string implementation_language;
+  std::string distance_metric;
   std::size_t base_rows{};
   std::size_t query_rows{};
   std::size_t dimensions{};
   float threshold{};
+  std::size_t graph_m{};
+  std::size_t ef_construction{};
+  std::size_t greedy_beam{};
+  std::size_t hybrid_beam{};
+  std::size_t convergence_threshold{};
+  float ood_ratio_threshold{};
+  std::uint32_t seed{};
   double build_ms{};
   double order_ms{};
   double join_ms{};
@@ -77,6 +87,24 @@ struct RunOutput {
 
 RunOutput run(const Matrix& queries, const Matrix& base, const Config& config,
               std::size_t ground_truth_limit = 0);
+
+// Paper/baseline-specific entry points.  These intentionally ignore
+// config.method so callers cannot accidentally run a different scheme.
+RunOutput run_independent(const Matrix& queries, const Matrix& base,
+                          const Config& config,
+                          std::size_t ground_truth_limit = 0);
+RunOutput run_simjoin_hard(const Matrix& queries, const Matrix& base,
+                          const Config& config,
+                          std::size_t ground_truth_limit = 0);
+RunOutput run_fast_avj_soft(const Matrix& queries, const Matrix& base,
+                           const Config& config,
+                           std::size_t ground_truth_limit = 0);
+RunOutput run_fast_avj_merged(const Matrix& queries, const Matrix& base,
+                             const Config& config,
+                             std::size_t ground_truth_limit = 0);
+RunOutput run_fast_avj_adaptive(const Matrix& queries, const Matrix& base,
+                               const Config& config,
+                               std::size_t ground_truth_limit = 0);
 
 [[nodiscard]] std::string metrics_json(const Metrics& metrics);
 

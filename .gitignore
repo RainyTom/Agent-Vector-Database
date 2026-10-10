@@ -5,7 +5,9 @@ Desktop.ini
 
 # Editors and IDEs
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
+!.vscode/c_cpp_properties.json
 *.code-workspace
 *.swp
 *.swo
