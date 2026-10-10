@@ -1,0 +1,32 @@
+# Vector Database Research Workspace
+
+本项目用于探索向量数据库研究问题。当前主线是 **vector join**，重点关注高维向量集合之间的阈值连接、近似执行、外存执行、过滤与基数估计。
+
+## 目录约定
+
+```text
+.
+├── papers/                  # 统一论文库
+│   └── vector-join/
+│       └── <arxiv-id>-<slug>/
+│           ├── paper.pdf   # 原始论文
+│           ├── paper.md    # MinerU 转换正文
+│           ├── images/     # MinerU 提取图片
+│           ├── metadata.json
+│           └── mineru/     # MinerU 原始解析产物与日志
+├── researches/             # 探索性笔记、调研报告、实验草稿
+│   └── vector-join/
+├── codes/                  # 论文实现和实验代码
+├── datasets/               # 数据集与数据审计信息
+└── paper-production/       # 论文写作工程
+```
+
+新增论文时应先查重，再按 `<arxiv-id>-<short-slug>` 建立独立目录。论文正文统一使用 `paper.pdf`、`paper.md` 和 `images/`，以便笔记和后续论文写作稳定引用。
+
+## 当前入口
+
+- [Vector Join 论文目录](papers/vector-join/README.md)
+- [Vector Join 研究综述](researches/vector-join/survey.md)
+- [Vector Join 学习与实验路线](researches/vector-join/roadmap.md)
+
+# Agent-Vector-Database
