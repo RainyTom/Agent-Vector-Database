@@ -1,5 +1,5 @@
 {
-    "cmake.sourceDirectory": "/home/stu/2026040404-yiming/Agent-Vector-Database/codes/vector-join-reproduction",
+    "cmake.sourceDirectory": "${workspaceFolder}/codes/vector-join-reproduction",
     "cmake.buildDirectory": "${workspaceFolder}/codes/vector-join-reproduction/build",
     "cmake.configureSettings": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
@@ -14,6 +14,7 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/codes/vector-join-reproduction/build"
     ],
+    "python.analysis.stubPath": "${workspaceFolder}/codes/vector-join-reproduction/typings",
     "python.analysis.exclude": [
         "datasets/**",
         "paper-production/**",

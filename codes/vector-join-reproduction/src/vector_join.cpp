@@ -1,4 +1,8 @@
 #include "vector_join/vector_join.hpp"
+#include "vector_join/runtime.hpp"
+#include "vector_join/build_info.hpp"
+#include <set>
+#include <unordered_map>
 #include "detail/algorithm.hpp"
 
 #include <hnswlib/hnswlib.h>
@@ -109,6 +113,7 @@ struct DisjointSet {
 struct QueryOrder {
   std::vector<Node> order;
   std::vector<Node> parent;
+  std::uint64_t ndc{};
 };
 
 QueryOrder mst_order(const Matrix& queries, const Graph& graph) {
@@ -126,6 +131,7 @@ QueryOrder mst_order(const Matrix& queries, const Graph& graph) {
       const std::uint64_t key = (static_cast<std::uint64_t>(a) << 32U) | b;
       if (!seen.insert(key).second) continue;
       candidates.push_back({a, b, squared_l2(queries.row(a), queries.row(b), queries.dim)});
+      ++result.ndc;
     }
   }
   std::sort(candidates.begin(), candidates.end(),
@@ -177,6 +183,7 @@ void trim_min_heap(std::priority_queue<std::pair<float, Node>,
 }
 
 struct SearchState {
+  std::unordered_map<Node, float> distances;
   std::vector<Node> in_range;
   std::vector<Node> visited;
   Node closest_data{kNoNode};
@@ -211,7 +218,7 @@ void consider_data(Node node, float distance, const SearchContext& context,
     state.closest_distance = distance;
     state.closest_data = node;
   }
-  if (distance <= context.config.threshold) state.in_range.push_back(node);
+  if (distance < context.config.threshold) state.in_range.push_back(node);
 }
 
 SearchState greedy_phase(Node query_id, const std::vector<Node>& seeds,
@@ -228,6 +235,7 @@ SearchState greedy_phase(Node query_id, const std::vector<Node>& seeds,
     seen[seed] = true;
     const float distance = squared_l2(query, context.vector(seed), context.query_matrix.dim);
     ++state.greedy_computations;
+    state.distances.emplace(seed, distance);
     queue.emplace(distance, seed);
     state.visited.push_back(seed);
     consider_data(seed, distance, context, state);
@@ -237,8 +245,9 @@ SearchState greedy_phase(Node query_id, const std::vector<Node>& seeds,
   std::size_t stale = 0;
   while (!queue.empty()) {
     const auto [distance, current] = queue.top();
-    if (context.is_data(current) && distance <= context.config.threshold) break;
-    if (distance + 1e-6F < best) {
+    if (context.is_data(current) && distance < context.config.threshold) break;
+    if (context.merged && current != query_id) break;
+    if (distance < best) {
       best = distance;
       stale = 0;
     } else if (++stale >= context.config.convergence_threshold) {
@@ -251,14 +260,12 @@ SearchState greedy_phase(Node query_id, const std::vector<Node>& seeds,
       const float candidate_distance =
           squared_l2(query, context.vector(neighbor), context.query_matrix.dim);
       ++state.greedy_computations;
+      state.distances.emplace(neighbor, candidate_distance);
       queue.emplace(candidate_distance, neighbor);
       state.visited.push_back(neighbor);
       consider_data(neighbor, candidate_distance, context, state);
     }
     trim_min_heap(queue, context.config.greedy_beam);
-    // In a merged index, probing the query node's neighborhood is the offline
-    // lookup described by StopGreedy in the paper.
-    if (context.merged && current == query_id) break;
   }
   return state;
 }
@@ -268,45 +275,48 @@ void expansion_phase(Node query_id, bool hybrid, const SearchContext& context,
   const float* query = context.query_matrix.row(query_id);
   std::vector<bool> seen(context.graph.edges.size(), false);
   for (Node node : state.visited) seen[node] = true;
-
-  std::deque<Node> in_range_queue;
-  for (Node node : state.in_range) in_range_queue.push_back(node);
-  using Heap = std::priority_queue<std::pair<float, Node>,
-                                   std::vector<std::pair<float, Node>>,
-                                   std::greater<>>;
-  Heap bridge_queue;
-  std::size_t expanded_bridges = 0;
-
-  while (!in_range_queue.empty() || (hybrid && !bridge_queue.empty() &&
-                                     expanded_bridges < context.config.hybrid_beam)) {
+  std::deque<Node> fifo;
+  std::set<std::pair<float, Node>> priority;
+  const auto enqueue = [&](Node node, float distance) {
+    if (context.merged) priority.emplace(distance, node);
+    else fifo.push_back(node);
+  };
+  for (Node node : state.in_range) {
+    // Keys were computed in the greedy stage; no additional distances.
+    enqueue(node, state.distances.at(node));
+  }
+  while (context.merged ? !priority.empty() : !fifo.empty()) {
     Node current;
-    if (!in_range_queue.empty()) {
-      current = in_range_queue.front();
-      in_range_queue.pop_front();
+    if (context.merged) {
+      current = priority.begin()->second;
+      priority.erase(priority.begin());
     } else {
-      current = bridge_queue.top().second;
-      bridge_queue.pop();
-      ++expanded_bridges;
+      current = fifo.front();
+      fifo.pop_front();
     }
     for (Node neighbor : context.graph.edges[current]) {
       if (seen[neighbor]) continue;
-      seen[neighbor] = true;
-      // Expansion in the merged index does not traverse query nodes.
       if (context.merged && !context.is_data(neighbor)) continue;
+      seen[neighbor] = true;
       const float distance =
           squared_l2(query, context.vector(neighbor), context.query_matrix.dim);
       ++state.expansion_computations;
       state.visited.push_back(neighbor);
+      state.distances.emplace(neighbor, distance);
       if (distance < state.closest_distance) {
         state.closest_distance = distance;
         state.closest_data = neighbor;
       }
-      if (distance <= context.config.threshold) {
+      if (distance < context.config.threshold) {
         state.in_range.push_back(neighbor);
-        in_range_queue.push_back(neighbor);
+        enqueue(neighbor, distance);
       } else if (hybrid) {
-        bridge_queue.emplace(distance, neighbor);
-        trim_min_heap(bridge_queue, context.config.hybrid_beam);
+        enqueue(neighbor, distance);
+        // Algorithm 7: cap queue occupancy, never the number of expansions.
+        // In-range keys precede this out-of-range key and cannot be discarded.
+        if (priority.size() > context.config.hybrid_beam) {
+          priority.erase(std::prev(priority.end()));
+        }
       }
     }
   }
@@ -315,7 +325,7 @@ void expansion_phase(Node query_id, bool hybrid, const SearchContext& context,
                        state.in_range.end());
 }
 
-bool predict_ood(Node query_id, const SearchContext& context) {
+bool predict_ood(Node query_id, const SearchContext& context, std::uint64_t& ndc) {
   if (!context.merged || query_id >= context.graph.edges.size()) return false;
   const float* query = context.query_matrix.row(query_id);
   double d1 = 0.0;
@@ -325,11 +335,13 @@ bool predict_ood(Node query_id, const SearchContext& context) {
   for (Node neighbor : context.graph.edges[query_id]) {
     if (!context.is_data(neighbor)) continue;
     d1 += std::sqrt(squared_l2(query, context.vector(neighbor), context.query_matrix.dim));
+    ++ndc;
     ++n1;
     const float* data = context.vector(neighbor);
     for (Node two_hop : context.graph.edges[neighbor]) {
       if (!context.is_data(two_hop)) continue;
       d2 += std::sqrt(squared_l2(data, context.vector(two_hop), context.query_matrix.dim));
+      ++ndc;
       ++n2;
     }
   }
@@ -342,7 +354,7 @@ std::vector<Node> ground_truth(const Matrix& queries, const Matrix& base,
                                Node query_id, float threshold) {
   std::vector<Node> result;
   for (Node data_id = 0; data_id < base.rows; ++data_id) {
-    if (squared_l2(queries.row(query_id), base.row(data_id), base.dim) <= threshold) {
+    if (squared_l2(queries.row(query_id), base.row(data_id), base.dim) < threshold) {
       result.push_back(data_id);
     }
   }
@@ -354,8 +366,25 @@ std::vector<Node> ground_truth(const Matrix& queries, const Matrix& base,
 const float* Matrix::row(std::size_t i) const { return values.data() + i * dim; }
 float* Matrix::row(std::size_t i) { return values.data() + i * dim; }
 
+void validate_matrix(const Matrix& matrix) {
+  if (matrix.rows == 0 || matrix.dim == 0 ||
+      matrix.rows >= std::numeric_limits<Node>::max() ||
+      matrix.dim > static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
+      matrix.rows > std::numeric_limits<std::size_t>::max() / matrix.dim ||
+      matrix.values.size() != matrix.rows * matrix.dim) {
+    throw std::invalid_argument("invalid matrix shape or unsupported size");
+  }
+  for (float value : matrix.values) {
+    if (!std::isfinite(value)) throw std::invalid_argument("nonfinite vector value");
+  }
+}
+
 Matrix Matrix::load_raw(const std::string& path, std::size_t dimensions,
                         std::size_t max_rows) {
+  enforce_process_limit();
+  if (dimensions > std::numeric_limits<std::size_t>::max() / sizeof(float)) {
+    throw std::invalid_argument("dimension overflow");
+  }
   if (dimensions == 0) throw std::invalid_argument("dimension must be positive");
   std::ifstream input(path, std::ios::binary | std::ios::ate);
   if (!input) throw std::runtime_error("cannot open vector file: " + path);
@@ -368,11 +397,17 @@ Matrix Matrix::load_raw(const std::string& path, std::size_t dimensions,
   matrix.dim = dimensions;
   matrix.rows = bytes / row_bytes;
   if (max_rows != 0) matrix.rows = std::min(matrix.rows, max_rows);
+  if (matrix.rows > memory_limit_bytes / row_bytes) {
+    throw std::runtime_error("vector allocation exceeds process memory limit");
+  }
   matrix.values.resize(matrix.rows * dimensions);
   input.seekg(0);
   input.read(reinterpret_cast<char*>(matrix.values.data()),
              static_cast<std::streamsize>(matrix.values.size() * sizeof(float)));
   if (!input) throw std::runtime_error("failed to read vector file: " + path);
+  for (float value : matrix.values) {
+    if (!std::isfinite(value)) throw std::invalid_argument("nonfinite vector value");
+  }
   return matrix;
 }
 
@@ -400,10 +435,18 @@ RunOutput detail::run_plan(const Matrix& queries, const Matrix& base,
                            const Config& supplied_config,
                            std::size_t ground_truth_limit,
                            const AlgorithmPlan& plan) {
+  enforce_process_limit();
   Config config = supplied_config;
   config.method = plan.method;
+  validate_matrix(queries);
+  validate_matrix(base);
   if (queries.dim != base.dim) throw std::invalid_argument("dimension mismatch");
   if (queries.rows == 0 || base.rows == 0) throw std::invalid_argument("empty input");
+  if (!std::isfinite(config.threshold) || config.threshold <= 0 || config.graph_m < 2 ||
+      config.ef_construction == 0 || config.greedy_beam == 0 || config.hybrid_beam == 0 ||
+      config.convergence_threshold == 0 || !std::isfinite(config.ood_ratio_threshold)) {
+    throw std::invalid_argument("invalid search/index parameters");
+  }
   const bool merged_mode = plan.merged_index;
   const bool sharing = plan.build_query_order;
 
@@ -443,6 +486,7 @@ RunOutput detail::run_plan(const Matrix& queries, const Matrix& base,
   for (Node query_id : ordering.order) {
     std::vector<Node> seeds;
     if (merged_mode) {
+      seeds.push_back(search_graph.entry);
       seeds.push_back(query_id);
     } else {
       seeds.push_back(search_graph.entry);
@@ -452,7 +496,8 @@ RunOutput detail::run_plan(const Matrix& queries, const Matrix& base,
       }
     }
     SearchState state = greedy_phase(query_id, seeds, context);
-    const bool hybrid = plan.adaptive_expansion && predict_ood(query_id, context);
+    std::uint64_t ood_ndc = 0;
+    const bool hybrid = plan.adaptive_expansion && predict_ood(query_id, context, ood_ndc);
     expansion_phase(query_id, hybrid, context, state);
 
     QueryResult& query_result = output.queries[query_id];
@@ -465,6 +510,7 @@ RunOutput detail::run_plan(const Matrix& queries, const Matrix& base,
     query_result.greedy_distance_computations = state.greedy_computations;
     query_result.expansion_distance_computations = state.expansion_computations;
     query_result.distance_computations = state.greedy_computations + state.expansion_computations;
+    query_result.ood_distance_computations = ood_ndc;
     query_result.hybrid_used = hybrid;
 
     if (plan.cache_policy == CachePolicy::kJoinWindow) {
@@ -495,12 +541,14 @@ RunOutput detail::run_plan(const Matrix& queries, const Matrix& base,
   metrics.build_ms = elapsed_ms(build_start, build_end);
   metrics.order_ms = elapsed_ms(order_start, order_end);
   metrics.join_ms = elapsed_ms(join_start, join_end);
+  metrics.order_distance_computations = ordering.ndc;
   for (const QueryResult& result : output.queries) {
     metrics.result_pairs += result.matches.size();
     metrics.distance_computations += result.distance_computations;
     metrics.greedy_distance_computations += result.greedy_distance_computations;
     metrics.expansion_distance_computations += result.expansion_distance_computations;
     metrics.hybrid_queries += result.hybrid_used ? 1U : 0U;
+    metrics.ood_distance_computations += result.ood_distance_computations;
   }
 
   const std::size_t eval_count = std::min(ground_truth_limit, queries.rows);
@@ -525,9 +573,10 @@ RunOutput detail::run_plan(const Matrix& queries, const Matrix& base,
   if (eval_count != 0) {
     metrics.macro_recall = macro / eval_count;
     metrics.pair_recall = all_true == 0 ? 1.0 : static_cast<double>(all_found) / all_true;
-    metrics.precision = all_returned == 0 ? (all_true == 0 ? 1.0 : 0.0)
+    metrics.precision = all_returned == 0 ? 1.0
                                           : static_cast<double>(all_found) / all_returned;
   }
+  metrics.process_peak_rss_bytes = peak_rss_bytes();
   return output;
 }
 
@@ -535,6 +584,9 @@ std::string metrics_json(const Metrics& m) {
   std::ostringstream out;
   out << std::fixed << std::setprecision(6)
       << "{\n"
+      << build_metadata_json() << ",\n"
+      << "  \"implementation_status\": \"paper-derived-graph-backend-deviation\",\n"
+      << "  \"threshold_comparison\": \"strict-less-than\",\n"
       << "  \"method\": \"" << m.method << "\",\n"
       << "  \"graph_backend\": \"" << m.graph_backend << "\",\n"
       << "  \"implementation_language\": \"" << m.implementation_language << "\",\n"
@@ -553,15 +605,22 @@ std::string metrics_json(const Metrics& m) {
       << "  \"build_ms\": " << m.build_ms << ",\n"
       << "  \"order_ms\": " << m.order_ms << ",\n"
       << "  \"join_ms\": " << m.join_ms << ",\n"
+      << "  \"total_online_ms\": " << m.join_ms + m.order_ms << ",\n"
+      << "  \"online_order_ndc\": " << m.order_distance_computations << ",\n"
+      << "  \"ood_ndc\": " << m.ood_distance_computations << ",\n"
+      << "  \"total_online_ndc\": " << m.distance_computations + m.ood_distance_computations + m.order_distance_computations << ",\n"
+      << "  \"process_lifetime_peak_rss_bytes\": " << m.process_peak_rss_bytes << ",\n"
       << "  \"result_pairs\": " << m.result_pairs << ",\n"
       << "  \"distance_computations\": " << m.distance_computations << ",\n"
       << "  \"greedy_distance_computations\": " << m.greedy_distance_computations << ",\n"
       << "  \"expansion_distance_computations\": " << m.expansion_distance_computations << ",\n"
       << "  \"hybrid_queries\": " << m.hybrid_queries << ",\n"
       << "  \"ground_truth_queries\": " << m.evaluated_ground_truth_queries << ",\n"
-      << "  \"macro_recall\": " << m.macro_recall << ",\n"
-      << "  \"pair_recall\": " << m.pair_recall << ",\n"
-      << "  \"precision\": " << m.precision << "\n"
+      << "  \"quality_status\": " << json_string(m.evaluated_ground_truth_queries == 0 ? "not-evaluated" :
+            (m.evaluated_ground_truth_queries == m.query_rows ? "full" : "prefix-sample")) << ",\n"
+      << "  \"macro_recall\": " << json_number(m.macro_recall) << ",\n"
+      << "  \"pair_recall\": " << json_number(m.pair_recall) << ",\n"
+      << "  \"precision\": " << json_number(m.precision) << "\n"
       << "}";
   return out.str();
 }

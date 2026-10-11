@@ -1,129 +1,111 @@
-# SimJoin / Fast AVJ reproduction
+# Similarity-join paper reproductions
 
-This project reproduces the central mechanisms of:
+This project contains a paper-derived implementation of Xie, Yu, and Liu,
+**Fast Approximate Similarity Join in Vector Databases** (PACMMOD/SIGMOD 2025,
+DOI `10.1145/3725403`). It follows published Algorithms 2--6 but is not the
+authors' artifact: no author implementation or complete parameter manifest was
+found. Read [the reproduction contract](docs/simjoin-reproduction-plan.md)
+before interpreting results.
 
-- Xie, Yu, Liu, **Fast Approximate Similarity Join in Vector Databases** (PACMMOD 2025, DOI `10.1145/3725403`).
-- Kim et al., **Fast Approximate Vector Joins via Offline-Online Co-Design** (arXiv `2603.16360v2`, 2026).
+## What is implemented
 
-It is a clean-room research implementation over the public hnswlib graph substrate. It is not an author artifact and must not be used to claim exact reproduction of reported paper numbers.
+- Algorithm 3 JoinSlide with explicit sliding bound `w` and exact L2 checks.
+- Algorithms 4--5 ordering variants: BaseMST, MST + WindowOrder-Sort, and a
+  WindowOrder-epsilon using an explicitly labelled, locally chosen approximate
+  JoinSlide root search (the paper does not specify its complete search policy).
+- Algorithm 6 kJoinSlide with explicit `k` and `w`.
+- Average recall, average precision, NDC, two interpretations of nSelectivity,
+  graph/order/join timing, raw parameter provenance, and optional pair output.
+- HNSW graph construction for the paper's graph-comparison experiment, plus a
+  generic adjacency-file adapter for externally built NSG/Vamana graphs.
+- A process-wide Linux address-space ceiling of 2,000,000,000 bytes by default.
 
-## Implemented methods
+The HNSW path is always reported as
+`paper-derived-graph-backend-deviation`, because the paper uses NSG by default.
+An imported graph is reported as external and does not become a verified NSG or
+Vamana result merely because it is given that label.
 
-| CLI method | Paper role | Mechanism |
-|---|---|---|
-| `independent` | INLJ baseline | Fixed-entry greedy graph search followed by in-range expansion |
-| `hard` | SimJoin / HWS | HNSW query graph, approximate MST order, reuse of the parent's final join window |
-| `soft` | Fast AVJ / SWS | Same order, but cache only the closest visited data point, including out-of-range points |
-| `mi` | Fast AVJ / MI | Joint query–data HNSW graph; query-node neighborhood serves as the offline cross-set entry map |
-| `mi-adapt` | Fast AVJ / MI+Adapt | Merged index plus OOD-triggered traversal through bounded out-of-range bridges |
+VBASE, XJoin, FGF-Hilbert, NSG/Vamana builders, and FreshDiskANN are not silently
+reimplemented. Their experiments remain blocked until a verifiable artifact
+revision and the paper's missing build/search parameters are supplied. Public
+MSVBASE and DiskANN repositories were identified, but they are not assumed to
+be the exact revisions/configurations used by the SimJoin paper.
 
-All emitted pairs are verified with exact squared-L2 distance, so precision should be 1. Recall remains approximate because the proximity graph can disconnect an in-range region.
-
-## Source layout
-
-The reproduction is split at the algorithm boundary rather than selected by a
-large conditional in one translation unit:
-
-| Source file | Bound Python entry point | Runner |
-|---|---|---|
-| `src/algorithms/independent.cpp` | `run_independent` | `scripts/run_independent.py` |
-| `src/algorithms/simjoin_hard.cpp` | `run_simjoin_hard` | `scripts/run_simjoin_hard.py` |
-| `src/algorithms/fast_avj_soft.cpp` | `run_fast_avj_soft` | `scripts/run_fast_avj_soft.py` |
-| `src/algorithms/fast_avj_merged.cpp` | `run_fast_avj_merged` | `scripts/run_fast_avj_merged.py` |
-| `src/algorithms/fast_avj_adaptive.cpp` | `run_fast_avj_adaptive` | `scripts/run_fast_avj_adaptive.py` |
-
-`src/vector_join.cpp` now contains only the shared graph/search engine,
-`src/dispatch.cpp` preserves the old generic C++ API, and
-`src/python_bindings.cpp` is the pybind11 boundary. A scheme-specific entry
-point overrides `Config.method`, preventing a runner from silently selecting a
-different implementation. Each listed runner is self-contained, accepts its
-parameters directly on the command line, and invokes exactly one bound scheme;
-there is no shared controller, sweep script, or run-all wrapper.
-
-## Fair-comparison contract
-
-All reported comparisons use the same execution substrate. This is enforced by
-the shared library rather than left to the individual runner scripts:
-
-- Every algorithm is implemented and timed in C++20. Python only parses CLI
-  arguments, calls pybind11, and prints the returned metrics; it does not
-  implement search or join logic.
-- Every proximity graph is built by the same `build_graph()` function using
-  hnswlib `L2Space` and `HierarchicalNSW`. No method may substitute FAISS, a
-  Python ANN implementation, or another graph library.
-- `graph_m`, `ef_construction`, beam sizes, convergence threshold, random seed,
-  squared-L2 definition, exact pair verification, and timing boundaries all
-  come from the same `Config` and shared engine.
-- The only permitted differences are mechanisms intrinsic to the reproduced
-  method: which vectors are indexed, query ordering, cache/reuse policy, merged
-  indexing, and adaptive expansion.
-
-Each JSON result records `graph_backend`, `implementation_language`,
-`distance_metric`, and all search/index parameters. The C++ and Python tests
-assert these fields for every method so mixed-backend or mixed-language results
-are visible immediately.
-
-## Dependencies
-
-- CMake 3.20+
-- C++20 compiler
-- Ninja (optional)
-- Python 3.9+ and pybind11 3.0.1
-- [hnswlib](https://github.com/nmslib/hnswlib), pinned for FetchContent to commit `ca426729609b3221563047ceb269cc1213e0d376`
-
-The local research checkout is expected at `codes/upstream/hnswlib` and is ignored by Git. Alternatively configure with `-DVJ_FETCH_HNSWLIB=ON`.
+## Build
 
 ```bash
-python3 -m pip install -r codes/vector-join-reproduction/requirements-build.txt
 cmake -S codes/vector-join-reproduction \
       -B codes/vector-join-reproduction/build \
-      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_BUILD_TYPE=Release \
+      -DVJ_FETCH_HNSWLIB=ON \
+      -DVJ_FETCH_PYBIND11=ON
 cmake --build codes/vector-join-reproduction/build
 ctest --test-dir codes/vector-join-reproduction/build --output-on-failure
 ```
 
-For a C++-only build, pass `-DVJ_BUILD_PYTHON=OFF`.
+The Python runners only parse arguments and call the C++ pybind11 module. Put
+the build directory on `PYTHONPATH`; no runner mutates `sys.path`.
 
-## Run on the local SIFT data
+## Dataset input
 
-The repository's SIFT metadata defines distance as **squared L2**; thresholds
-passed to every runner use the same unit. Run one scheme directly through its
-Python/pybind11 entry point:
+Datasets are not allow-listed. `run_simjoin.py` and `run_kjoinslide.py` each
+accept any row-major float32 matrix with an explicit dimension. For an ordinary join, provide separate X
+(`--queries`) and Y (`--base`) files. For a self join, pass `--self-join` and
+only Y. Record the dataset name, preprocessing and split in every run.
+
+To reproduce the paper's common split, randomly partition the original vectors
+into equal halves and record the seed; use one half for self join and the two
+halves for ordinary join. The paper does not disclose that seed or whether
+vectors were normalized, so neither choice is inferred by this code. Other
+datasets and existing base/query splits are valid, but the recorded split and
+preprocessing make their deviation explicit.
+
+Example of a small HNSW-backed validation run (not the paper-default NSG run):
 
 ```bash
 PYTHONPATH=codes/vector-join-reproduction/build \
-python3 codes/vector-join-reproduction/scripts/run_simjoin_hard.py \
-  --base datasets/sift25k/base.f32 \
-  --queries datasets/sift25k/queries.f32 \
-  --dim 128 --threshold 90000 \
-  --base-limit 25000 --query-limit 1000 \
-  --ground-truth-limit 100
+python3 codes/vector-join-reproduction/scripts/run_simjoin.py \
+  --base /data/Y.f32 --queries /data/X.f32 --dim 128 \
+  --epsilon 0.4 --w 64 \
+  --order window-order-sort \
+  --graph-source hnswlib --graph-m 20 --ef-construction 200 --seed 1234 \
+  --dataset-name my-data --preprocessing none \
+  --split-description 'user-provided X/Y split' \
+  --ground-truth-limit 100 --repeat 5 \
+  --output experiment-results/my-data/simjoin.jsonl
 ```
 
-The original C++ compatibility CLI remains available:
+`w`, HNSW parameters, and the seed above are examples, not paper settings. The
+paper does not report their concrete values. Use `run_kjoinslide.py` with
+`--k 10 --w ...` for k-join; it has a separate entry point and does not expose
+an epsilon mode.
 
-```bash
-codes/vector-join-reproduction/build/vector_join_bench \
-  --base datasets/sift25k/base.f32 \
-  --queries datasets/sift25k/queries.f32 \
-  --dim 128 --threshold 90000 \
-  --base-limit 25000 --query-limit 1000 \
-  --ground-truth-limit 100 --method hard
-```
+For an external graph, use `--graph-source external`, `--base-graph`, and (for
+ordinary joins) `--query-graph`. The UTF-8 adjacency format has one node per
+line: the source ID followed by zero or more neighbor IDs separated by spaces.
+IDs are zero-based. Also provide `--graph-label`, `--graph-provenance`, entry
+IDs, and `--ef-construction 0`. Provenance should contain the repository URL,
+immutable commit, build flags, and every graph parameter.
 
-The executable writes one JSON object containing separate offline build, ordering and online join time; greedy/expansion distance computations; pair counts; macro recall, global pair recall and precision.
+## Server limit and execution status
 
-For intuition, squared-L2 `90000` corresponds to an L2 radius of `300`. The ANN-Benchmarks distance samples stored in `sift1m/meta.json` are displayed in the unsquared unit even though hnswlib's `L2Space` and this implementation compute squared L2.
+This host must not run experiments exceeding 2 GB. All entry points enforce a
+hard address-space limit of 2,000,000,000 bytes, preserving stricter inherited
+limits. Planning estimates are not measured memory: epsilon output size depends
+on the data, and the OS ceiling governs actual allocations. Reported peak RSS is
+process-lifetime, not an isolated per-repetition peak. Full paper-scale workloads
+remain `not-run/resource-policy` here. Unit and tiny synthetic executions validate
+correctness and plumbing only; they are never reported as paper performance.
 
-## Faithfulness and known deviations
+See [remote experiment handoff](docs/remote-experiments.md) for commands, metric
+boundaries, required return files, and the distinction between validation and
+paper reproduction. Results are never overwritten. Missing quality evaluation
+is represented by `null`, and full nSelectivity requires full ground truth.
 
-- The papers use NSG as their primary backend and also evaluate HNSW. This reproduction uses HNSW because it has a small auditable public implementation.
-- SimJoin's exact code was not public. The 2026 paper also states that it reimplemented SimJoin and added visited-node tracking. This implementation likewise computes each query–node distance once per search.
-- The query order is a minimum spanning **forest** over the undirected level-0 HNSW query graph. Disconnected components receive independent roots.
-- `mi` uses the merged HNSW neighborhood directly. It captures the paper's encoder-centric merged-index mechanism but does not reproduce the NSG-specific RNG behavior.
-- The OOD feature implements the paper's $d_1/d_2>1.5$ rule. The exact local neighborhood differs with the HNSW backend.
-- Index build time is reported separately and is never hidden inside online latency.
+## Other exploratory code
 
-## BriskFlow relationship
-
-BriskFlow commit `89d4aa5b387fc603346a7ce3f349fc9cc393ce26` was audited as a potential runtime. Its current `HNSWJoinMethod` performs independent per-record `query_for_join`, so it is an appropriate future INLJ integration point but does not yet expose cross-query batch order or search-state caches. See [BriskFlow integration notes](docs/briskflow-integration.md).
+The `independent`, `hard`, `soft`, `mi`, and `mi-adapt` C++ API is retained for
+the separate Fast AVJ exploration. Its `hard` branch is now named
+`run_hard_window_cache` in the binding and source to prevent it from being
+misreported as SimJoin. Those methods use squared L2 and are not part of this
+paper reproduction.

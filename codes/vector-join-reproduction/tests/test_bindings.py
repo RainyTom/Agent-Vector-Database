@@ -3,12 +3,7 @@
 
 from __future__ import annotations
 
-import pathlib
-import sys
-
-
-sys.path.insert(0, str(pathlib.Path(sys.argv[1]).resolve()))
-import vector_join_py as vj  # noqa: E402
+import vector_join_py as vj
 
 
 base = vj.Matrix([[0.0, 0.0], [0.1, 0.0], [5.0, 5.0], [5.1, 5.0]])
@@ -21,7 +16,7 @@ config.convergence_threshold = 20
 
 expected_methods = {
     "run_independent": "independent",
-    "run_simjoin_hard": "hard",
+    "run_hard_window_cache": "hard",
     "run_fast_avj_soft": "soft",
     "run_fast_avj_merged": "mi",
     "run_fast_avj_adaptive": "mi-adapt",

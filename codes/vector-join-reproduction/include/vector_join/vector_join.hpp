@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -18,6 +19,8 @@ struct Matrix {
   static Matrix load_raw(const std::string& path, std::size_t dim,
                          std::size_t max_rows = 0);
 };
+
+void validate_matrix(const Matrix& matrix);
 
 enum class Method {
   kIndependent,
@@ -47,6 +50,7 @@ struct QueryResult {
   std::uint64_t distance_computations{};
   std::uint64_t greedy_distance_computations{};
   std::uint64_t expansion_distance_computations{};
+  std::uint64_t ood_distance_computations{};
   bool hybrid_used{};
 };
 
@@ -74,10 +78,13 @@ struct Metrics {
   std::uint64_t greedy_distance_computations{};
   std::uint64_t expansion_distance_computations{};
   std::uint64_t hybrid_queries{};
+  std::uint64_t ood_distance_computations{};
+  std::uint64_t order_distance_computations{};
+  std::uint64_t process_peak_rss_bytes{};
   std::size_t evaluated_ground_truth_queries{};
-  double macro_recall{};
-  double pair_recall{};
-  double precision{};
+  double macro_recall{std::numeric_limits<double>::quiet_NaN()};
+  double pair_recall{std::numeric_limits<double>::quiet_NaN()};
+  double precision{std::numeric_limits<double>::quiet_NaN()};
 };
 
 struct RunOutput {
@@ -93,9 +100,9 @@ RunOutput run(const Matrix& queries, const Matrix& base, const Config& config,
 RunOutput run_independent(const Matrix& queries, const Matrix& base,
                           const Config& config,
                           std::size_t ground_truth_limit = 0);
-RunOutput run_simjoin_hard(const Matrix& queries, const Matrix& base,
-                          const Config& config,
-                          std::size_t ground_truth_limit = 0);
+RunOutput run_hard_window_cache(const Matrix& queries, const Matrix& base,
+                                const Config& config,
+                                std::size_t ground_truth_limit = 0);
 RunOutput run_fast_avj_soft(const Matrix& queries, const Matrix& base,
                            const Config& config,
                            std::size_t ground_truth_limit = 0);

@@ -1,0 +1,13 @@
+#pragma once
+#include "vector_join/runtime.hpp"
+namespace vjoin {
+inline std::string build_metadata_json() {
+  return "\"build_type\":" + json_string(R"vj(@CMAKE_BUILD_TYPE@)vj") +
+         ",\"compile_flags\":" + json_string(R"vj(@VJ_BUILD_FLAGS@)vj") +
+         ",\"compiler_version\":" + json_string(R"vj(@CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@)vj") +
+         ",\"source_revision\":\"@VJ_SOURCE_REVISION@\"" +
+         ",\"source_dirty_at_configure\":@VJ_SOURCE_DIRTY@" +
+         ",\"hnswlib_revision\":\"@VJ_HNSW_REVISION@\"" +
+         ",\"threads\":1,\"process_memory_limit_bytes\":" + std::to_string(memory_limit_bytes);
+}
+}

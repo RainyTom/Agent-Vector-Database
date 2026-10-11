@@ -10,7 +10,7 @@ RunOutput run(const Matrix& queries, const Matrix& base, const Config& config,
     case Method::kIndependent:
       return run_independent(queries, base, config, ground_truth_limit);
     case Method::kHardSharing:
-      return run_simjoin_hard(queries, base, config, ground_truth_limit);
+      return run_hard_window_cache(queries, base, config, ground_truth_limit);
     case Method::kSoftSharing:
       return run_fast_avj_soft(queries, base, config, ground_truth_limit);
     case Method::kMergedIndex:
