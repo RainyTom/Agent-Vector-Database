@@ -26,7 +26,17 @@
 ## 当前入口
 
 - [Vector Join 论文目录](papers/vector-join/README.md)
+- [可检索论文索引](papers/vector-join/papers.jsonl)、[论文关系](papers/vector-join/relations.jsonl)、[更新记录](papers/vector-join/changelog.md)
+- [检索覆盖与补查队列](researches/vector-join/search-log.md)、[待验证研究问题](researches/vector-join/research-questions.md)
 - [Vector Join 研究综述](researches/vector-join/survey.md)
 - [Vector Join 学习与实验路线](researches/vector-join/roadmap.md)
 
 # Agent-Vector-Database
+
+研究助理的长期工作规则保存在 [AGENTS.md](AGENTS.md)。索引维护在每次研究任务中执行；当前没有定时抓取任务。
+
+```bash
+python tools/research_index.py search 'NN-Map' --level A
+python tools/research_index.py search 'cardinality' --json
+python tools/research_index.py validate
+```

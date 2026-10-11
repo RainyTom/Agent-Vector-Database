@@ -1,5 +1,7 @@
 # Vector Join 八篇论文深度综合：方案来源、演化、展望与缺陷
 
+> 2026-10-11 版本审计：当前结构化索引见 [论文目录](../../papers/vector-join/README.md)。本报告其余历史展望/数值仍须按记录的正文版本核对；尤其不能把 NN-Map 已讨论的维护、统计与多集合 map 选择当成未研究方向。
+
 ## 1. 先给结论
 
 这八篇工作并不在解决同一个局部瓶颈。把 vector threshold join 的端到端成本写成
@@ -24,7 +26,7 @@ flowchart LR
 
 图 1：研究演化不是单线替换，而是逐项压缩成本函数。
 
-当前最有价值的研究缺口，是一个带不确定性的 cost-based vector join optimizer：同时预测输出、候选、图距离计算、SSD 读量与物化量，再根据 recall SLA 组合上述模块。
+本项目候选研究假设是带不确定性的成本/质量联合计划选择：预测输出、候选、图距离计算、SSD 读量与物化量。新颖性尚未充分排查：LSH-SS 已研究向量基数，Fast AVJ v2 §6 已含 NN-Map 维护、map selection/composition 和 join statistics；早期高维连接也有 cost models。具体差异与可证伪实验见 [research-questions.md](research-questions.md)。
 
 ## 2. 八篇论文的方案与思想来源
 
