@@ -198,10 +198,14 @@ template <typename T>
 void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
                         uint32_t M, uint32_t dim, const std::string& path) {
   InlineGraph<T> g;
-  g.m = m; g.M = M; g.dim = dim;
+  // Store only the M nearest of the 2M level-0 links: the extra slots were
+  // mostly empty (mean degree 21) and the farthest links add little.
+  const size_t cap = M;
+  const bool nearest = true;
+  g.m = m; g.M = uint32_t(cap); g.dim = dim;
   g.maxlevel = uint32_t(idx.maxlevel_ < 0 ? 0 : idx.maxlevel_);
   g.enter = uint32_t(idx.enterpoint_node_ < 0 ? 0 : idx.enterpoint_node_);
-  g.stride = inline_vec_off<T>(M) + dim;
+  g.stride = sizeof(T) + cap * sizeof(T) + dim;
   g.gid.resize(m);
   g.lv.resize(m);
   g.upper_off.assign(m, 0);
@@ -213,10 +217,22 @@ void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
     auto* lk = idx.get_linklist_at_level(t, 0);
     uint32_t cnt = *lk;
     auto* ids = reinterpret_cast<uint32_t*>(lk + 1);
-    std::memcpy(blk, idx.getDataByInternalId(t), dim);
+    const uint8_t* self = reinterpret_cast<const uint8_t*>(idx.getDataByInternalId(t));
+    uint32_t keep = cnt < cap ? cnt : uint32_t(cap);
+    std::memcpy(blk, self, dim);
     T* slot = reinterpret_cast<T*>(blk + dim);
-    slot[0] = T(cnt);
-    for (uint32_t j = 0; j < cnt; ++j) slot[1 + j] = T(ids[j]);
+    slot[0] = T(keep);
+    if (nearest && cnt > 1) {
+      std::vector<std::pair<float, uint32_t>> ord(cnt);
+      for (uint32_t j = 0; j < cnt; ++j) {
+        const uint8_t* nb = reinterpret_cast<const uint8_t*>(idx.getDataByInternalId(ids[j]));
+        ord[j] = {u8_l2(self, nb, dim), ids[j]};
+      }
+      std::sort(ord.begin(), ord.end());
+      for (uint32_t j = 0; j < keep; ++j) slot[1 + j] = T(ord[j].second);
+    } else {
+      for (uint32_t j = 0; j < keep; ++j) slot[1 + j] = T(ids[j]);
+    }
     if (g.lv[t] > 0) {
       g.upper_off[t] = uint32_t(g.up_adj.size());
       for (int level = 1; level <= int(g.lv[t]); ++level) {
@@ -229,7 +245,7 @@ void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
     }
   }
   std::ofstream out(path, std::ios::binary);
-  uint32_t hdr[7] = {m, g.maxlevel, g.enter, M, dim, uint32_t(g.stride), uint32_t(sizeof(T))};
+  uint32_t hdr[7] = {m, g.maxlevel, g.enter, uint32_t(cap), dim, uint32_t(g.stride), uint32_t(sizeof(T))};
   out.write(reinterpret_cast<char*>(hdr), sizeof(hdr));
   out.write(reinterpret_cast<char*>(g.gid.data()), g.gid.size() * 4);
   out.write(reinterpret_cast<char*>(g.lv.data()), g.lv.size());
@@ -382,7 +398,7 @@ int main(int argc, char** argv) {
   Args args = parse(argc, argv);
   // Search breadth for each per-node ANN search. Local indexes contain only
   // feasible points, so no filter is involved.
-  size_t EF = 20;
+  size_t EF = 22;
   if (const char* e = std::getenv("GRAPH_EF")) EF = std::strtoull(e, nullptr, 10);
 
   if (args.mode == "build") {
