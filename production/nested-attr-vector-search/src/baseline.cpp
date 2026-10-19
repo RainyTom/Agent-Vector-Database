@@ -292,7 +292,6 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
   // Its adjacency (count + ids) lives in the next two lines; fetch them while
   // the candidate is still in the heap.
   constexpr int pop_prefetch = 2;
-  static const bool prefetch_unvisited = std::getenv("GRAPH_PREFETCH_UNVISITED") != nullptr;
   auto dist = [&](uint32_t id) {
     return u8_l2(q, &g.blocks[size_t(id) * g.stride], g.dim);
   };
@@ -349,7 +348,6 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
     if (prefetch) {
       for (uint32_t j = 0; j < cnt; ++j) {
         uint32_t nb = slot[1 + j];
-        if (prefetch_unvisited && g.visited[nb] == gen) continue;
         const uint8_t* bp = &g.blocks[size_t(nb) * g.stride];
         __builtin_prefetch(bp, 0, 1);
         __builtin_prefetch(bp + 64, 0, 1);
