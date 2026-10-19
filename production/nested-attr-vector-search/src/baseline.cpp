@@ -206,12 +206,64 @@ int main(int argc, char** argv) {
     size_t M_OVERRIDE = 16, EFC_OVERRIDE = 0;
     if (const char* e = std::getenv("GRAPH_M")) M_OVERRIDE = std::strtoull(e, nullptr, 10);
     if (const char* e = std::getenv("GRAPH_EFC")) EFC_OVERRIDE = std::strtoull(e, nullptr, 10);
+    // Optional locality ordering: project all objects on the first principal
+    // component once, then insert each node's members in projection order so
+    // graph neighbours occupy nearby addresses.
+    // Locality ordering: project objects on the first principal component
+    // (power iteration on the centred uint8 data), then insert each node's
+    // members in projection order so graph neighbours sit in nearby addresses.
+    std::vector<uint32_t> order_key(m.n, 0);
+    {
+      std::vector<double> mean(m.dim, 0.0);
+      for (int i = 0; i < m.n; ++i)
+        for (int j = 0; j < m.dim; ++j) mean[j] += base[size_t(i) * m.dim + j];
+      for (int j = 0; j < m.dim; ++j) mean[j] /= m.n;
+      std::vector<double> v(m.dim, 1.0 / std::sqrt(double(m.dim)));
+      for (int it = 0; it < 12; ++it) {
+        std::vector<double> w(m.dim, 0.0);
+        for (int i = 0; i < m.n; ++i) {
+          double dot = 0.0;
+          for (int j = 0; j < m.dim; ++j)
+            dot += (base[size_t(i) * m.dim + j] - mean[j]) * v[j];
+          for (int j = 0; j < m.dim; ++j)
+            w[j] += dot * (base[size_t(i) * m.dim + j] - mean[j]);
+        }
+        double nrm = 0.0;
+        for (int j = 0; j < m.dim; ++j) nrm += w[j] * w[j];
+        nrm = std::sqrt(nrm);
+        if (nrm == 0.0) break;
+        for (int j = 0; j < m.dim; ++j) v[j] = w[j] / nrm;
+      }
+      std::vector<float> p1(m.n, 0.f);
+      float lo = 1e30f, hi = -1e30f;
+      for (int i = 0; i < m.n; ++i) {
+        double dot = 0.0;
+        for (int j = 0; j < m.dim; ++j)
+          dot += (base[size_t(i) * m.dim + j] - mean[j]) * v[j];
+        p1[i] = float(dot);
+        lo = std::min(lo, p1[i]);
+        hi = std::max(hi, p1[i]);
+      }
+      float span = std::max(1e-9f, hi - lo);
+      for (int i = 0; i < m.n; ++i)
+        order_key[i] = uint32_t((p1[i] - lo) / span * 1e6f);
+      std::vector<float> pc1_out;
+      pc1_out.reserve(2 * size_t(m.dim));
+      for (int j = 0; j < m.dim; ++j) pc1_out.push_back(float(mean[j]));
+      for (int j = 0; j < m.dim; ++j) pc1_out.push_back(float(v[j]));
+      write_bin(args.index_dir + "/pc1.bin", pc1_out);
+    }
+
     U8L2Space space(m.dim);
     for (int v = 0; v < m.nodes; ++v) {
       auto& mem = members[v];
       if (mem.empty()) continue;
       std::sort(mem.begin(), mem.end());
       mem.erase(std::unique(mem.begin(), mem.end()), mem.end());
+      std::sort(mem.begin(), mem.end(), [&](uint32_t a, uint32_t b) {
+        if (order_key[a] != order_key[b]) return order_key[a] < order_key[b];
+        return a < b;
+      });
       size_t M = M_OVERRIDE;
       size_t ef_construction = EFC_OVERRIDE ? EFC_OVERRIDE
                                             : (mem.size() > 40000 ? 200 : 100);
@@ -259,6 +311,20 @@ int main(int argc, char** argv) {
       indexes[v]->setEf(std::max<size_t>(ef_v, k));
     }
 
+    // Order each node's queries by the same PC1 projection used for id
+    // layout, so consecutive searches on a graph visit nearby regions.
+    std::vector<float> qproj(nq, 0.f);
+    {
+      std::vector<float> pc1 = read_bin<float>(args.index_dir + "/pc1.bin",
+                                               size_t(2 * m.dim));
+      for (int qi = 0; qi < nq; ++qi) {
+        double dot = 0.0;
+        for (int j = 0; j < m.dim; ++j)
+          dot += (double(queries[size_t(qi) * m.dim + j]) - pc1[j]) * pc1[m.dim + j];
+        qproj[qi] = float(dot);
+      }
+    }
+
     // Scope-grouped scheduling: all queries that touch node v run back to
     // back while v's graph is hot. Results are buffered per query and merged
     // afterwards, preserving the original output order.
@@ -267,6 +333,12 @@ int main(int argc, char** argv) {
       for (int slot = 0; slot < int(qnodes[qi].size()); ++slot) {
         node_qs[qnodes[qi][slot]].push_back({qi, slot});
       }
+    }
+    for (auto& lst : node_qs) {
+      std::sort(lst.begin(), lst.end(), [&](const auto& a, const auto& b) {
+        if (qproj[a.first] != qproj[b.first]) return qproj[a.first] < qproj[b.first];
+        return a.first < b.first;
+      });
     }
     std::vector<std::vector<Cand>> parts(nq);
     for (int qi = 0; qi < nq; ++qi) parts[qi].reserve(qnodes[qi].size() * k);
