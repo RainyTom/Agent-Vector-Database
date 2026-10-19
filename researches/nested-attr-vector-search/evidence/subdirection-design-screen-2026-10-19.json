@@ -1,0 +1,160 @@
+{
+  "date": "2026-10-19",
+  "timezone": "Asia/Shanghai",
+  "purpose": "六个子方向的具体机制与新颖性初筛，不是已实现或已证明新颖的算法",
+  "scope": {
+    "classification": "D0/D1/D2/D4/D5为B类ANN/向量数据库可迁移借鉴；D3几何版本为B，RAG扩展为C；均非直接vector join",
+    "existing_index": "papers/papers.jsonl; papers/relations.jsonl",
+    "paper_records_added": 0,
+    "experiments_run": false
+  },
+  "queries_in_order": [
+    "\"vector similarity join\" \"hierarchical\" filter",
+    "(\"vector join\" OR \"similarity self-join\" OR \"high-dimensional similarity join\" OR \"inner-product similarity join\") (\"prefix\" OR \"hierarchical\")",
+    "\"incremental\" \"DAG\" reachability bitmap deletion index",
+    "\"filtered\" \"ANN\" \"hierarchical\" graph prefix",
+    "\"hierarchical retrieval\" \"certified\" pruning summary bounds",
+    "\"DRed\" \"counting\" recursive view maintenance deletion",
+    "\"vector\" \"snapshot\" \"branch\" index MVCC",
+    "\"Zanzibar\" \"vector\" search authorization revocation",
+    "\"nearest neighbor\" \"hierarchical\" \"ball\" lower bound tree",
+    "site.arxiv.org \"branch\" \"vector\" \"snapshot\" index",
+    "site.usenix.org Zanzibar consistent global authorization system 2019",
+    "site.arxiv.org \"hierarchical\" \"retrieval\" \"bounds\" RAG",
+    "\"Roaring\" \"lazy\" \"bitmap\" operation containers"
+  ],
+  "query_order_note": "先核心vector similarity join查询，随后部分扩展检索；第二次补齐其余核心同义词。核心扩展词查询结果噪声较多，未作为算法事实。",
+  "sources": [
+    {
+      "id": "arxiv:2606.16903",
+      "url": "https://arxiv.org/pdf/2606.16903v1",
+      "local_path": "papers/prefix-vector-search/2606.16903-directory-aware/paper.md",
+      "reading": "既有原文§II–V；本轮沿用并交叉查笔记",
+      "use": "D0范围执行、D2导航和D4更新的直接前序"
+    },
+    {
+      "id": "doi:10.1609/aaai.v32i1.11554",
+      "title": "Optimised Maintenance of Datalog Materialisations",
+      "authors": [
+        "Pan Hu",
+        "Boris Motik",
+        "Ian Horrocks"
+      ],
+      "year": 2018,
+      "venue": "AAAI 32(1)",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/11554",
+      "reading": "官方摘要与书目，未精读PDF",
+      "use": "Counting/DRed已有，D1不能声称支持计数新颖"
+    },
+    {
+      "title": "Materialisation Maintenance Revisited",
+      "url": "https://www.cs.ox.ac.uk/people/boris.motik/pubs/mnph19maintenance-revisited.pdf",
+      "authors": null,
+      "year": null,
+      "venue": null,
+      "bibliography_status": "完整作者/版本/venue未核实",
+      "reading": "作者PDF摘要/related work检索线索，未精读",
+      "use": "后续递归计数存在，避免泛化Counting局限"
+    },
+    {
+      "id": "arxiv:2606.18520",
+      "title": "Compact Geometric Representations of Hierarchies",
+      "authors": [
+        "Prashant Gokhale",
+        "Piotr Indyk",
+        "Yuhao Liu",
+        "Sandeep Silwal",
+        "Tony Chang Wang",
+        "Haike Xu"
+      ],
+      "year": 2026,
+      "venue": "正式venue未核实",
+      "url": "https://arxiv.org/abs/2606.18520",
+      "reading": "官方摘要与作者序，未精读",
+      "use": "DAG可达嵌入相邻候选，不等同语义ANN"
+    },
+    {
+      "title": "ChronoVec",
+      "kind": "software",
+      "url": "https://github.com/mchl-labs/chronovec",
+      "commit": null,
+      "version_status": "仅核本轮网页README，未冻结commit、未运行或验证实现",
+      "reading": "README branch/MVCC描述",
+      "use": "分支化向量索引已有公开实现，D4区别须落在目录/覆盖协议"
+    },
+    {
+      "id": "arxiv:2511.16681v3",
+      "title": "SPI: Query-Depth-Adaptive Indexing for Streaming RAG in Vector Databases",
+      "authors": [
+        "Dong Liu",
+        "Yanxuan Yu"
+      ],
+      "preprint_year": 2025,
+      "revision_date": "2026-06-14",
+      "venue": "正式venue未核实",
+      "url": "https://arxiv.org/abs/2511.16681v3",
+      "reading": "官方v3摘要和版本页，未精读PDF",
+      "use": "D3自适应分辨率已有直接相邻前序",
+      "version_caution": "搜索摘要仍显示旧题与旧结果，本轮不混入v3；不引用旧摘要加速比"
+    },
+    {
+      "id": "arxiv:2401.18059",
+      "title": "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval",
+      "url": "https://proceedings.iclr.cc/paper_files/paper/2024/hash/8a2acd174940dbca361a6398a4f9df91-Abstract-Conference.html",
+      "reading": "官方ICLR2024摘要，完整书目见上一轮context-db证据；算法待精读",
+      "use": "递归摘要树与多层检索不是新意"
+    },
+    {
+      "title": "Zanzibar: Google’s Consistent, Global Authorization System",
+      "year": 2019,
+      "venue": "USENIX ATC",
+      "url": "https://www.usenix.org/system/files/atc19-pang.pdf",
+      "reading": "本轮相关正文§2.2、§2.4、§3.2.4，PDF pp.3–5,7–8；非全篇精读",
+      "use": "新鲜度token及Leopard快照/增量集合索引已有，D5不能仅主张权限bitmap与版本缓存",
+      "local_fulltext_downloaded": false
+    },
+    {
+      "title": "CRoaring",
+      "kind": "software",
+      "url": "https://github.com/RoaringBitmap/CRoaring",
+      "reading": "官方README；未核其完整lazy/fused API",
+      "use": "D0必须对照现成容器/融合集合运算，具体API待实现时冻结版本"
+    },
+    {
+      "title": "Qdrant Multitenancy",
+      "url": "https://qdrant.tech/documentation/manage-data/multitenancy/",
+      "reading": "沿用上一轮官方文档，未核原生继承ACL",
+      "use": "现有系统并非只能后过滤"
+    }
+  ],
+  "outputs": [
+    "researches/nested-attr-vector-search/directions.md",
+    "researches/nested-attr-vector-search/01-directory-aware-acceleration/README.md",
+    "researches/nested-attr-vector-search/02-dag-incremental-scope/README.md",
+    "researches/nested-attr-vector-search/03-prefix-coupled-index/README.md",
+    "researches/nested-attr-vector-search/04-certified-progressive-routing/README.md",
+    "researches/nested-attr-vector-search/05-versioned-directory-search/README.md",
+    "researches/nested-attr-vector-search/06-inherited-acl-search/README.md"
+  ],
+  "limitations": [
+    "未完成每项前后向引用闭包，所有方案新颖性尚未充分排查",
+    "未实现原型，没有性能或端到端召回结果",
+    "新候选未达到全文精读记录门槛，保持21条论文/22条关系",
+    "软链接循环、任意DAG ACL、自动三方合并和多写者协议不在各MVP中",
+    "无新ANN复杂度或无条件召回保证"
+  ],
+  "validation": {
+    "research_index": "PASS: 21 papers, 22 relations",
+    "local_links": "PASS: six proposal READMEs and overview",
+    "math_delimiters": "PASS: dollar delimiters",
+    "katex": {
+      "version": "0.16.22",
+      "formulas": 65,
+      "documents": 7,
+      "result": "PASS: renderToString with throwOnError, strict ignore, trust false",
+      "installation": "temporary directory outside repository, removed after validation",
+      "limitation": "syntax/HTML generation checked; host Markdown renderer visual preview not checked"
+    },
+    "algorithm_experiments": false
+  }
+}

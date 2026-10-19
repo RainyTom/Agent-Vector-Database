@@ -31,6 +31,8 @@
 - [可检索论文索引](papers/papers.jsonl)、[论文关系](papers/relations.jsonl)、[更新记录](papers/changelog.md)
 - [检索覆盖与补查队列](researches/vector-join/search-log.md)、[待验证研究问题](researches/vector-join/research-questions.md)
 - 前缀属性向量检索：[问题定义](researches/containment-filtered-vector-search/problem-definition.md)、[创新性复核](researches/containment-filtered-vector-search/novelty-analysis.md)、[逐篇证据](researches/containment-filtered-vector-search/index.md)
+- [前缀与Context Database六个子方向方案](researches/nested-attr-vector-search/directions.md)：Directory-Aware加速、DAG、联合索引、渐进导航、版本、权限。
+- [六方向alphaXiv查重决定](researches/nested-attr-vector-search/alphaxiv-novelty-audit.md)：四项停止独立立项，两项暂停；原方案均未进入实现。
 - [Vector Join 研究综述](researches/vector-join/survey.md)
 - [Vector Join 学习与实验路线](researches/vector-join/roadmap.md)
 

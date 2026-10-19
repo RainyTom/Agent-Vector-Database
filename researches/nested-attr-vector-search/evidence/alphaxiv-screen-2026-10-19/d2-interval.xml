@@ -1,0 +1,1111 @@
+<paper id="2606.11789v1"><page num="1">Efficient Graph Indexing for Interval-Aware Vector Search
+Siyuan Liang
+Beijing Institute of
+Technology
+Beijing, China
+lsy2004bit@126.com
+Ziqi Yin
+Nanyang Technological
+University
+Singapore, Singapore
+ziqi003@e.ntu.edu.sg
+Qi Zhang
+University of Science and
+Technology Beijing
+Beijing, China
+qizhangcs@ustb.edu.cn
+Ronghua Li
+Beijing Institute of
+Technology
+Beijing, China
+lironghuabit@126.com
+Guoren Wang
+Beijing Institute of
+Technology
+Beijing, China
+wanggrbit@126.com
+Kaiwen Xue
+Huawei Technologies Co.,
+Ltd.
+Beijing, China
+xuekaiwen6@huawei.com
+Daiyin Wang
+Huawei Technologies Co.,
+Ltd.
+Beijing, China
+wangdaiyin@huawei.com
+Xubin Li
+Huawei Technologies Co.,
+Ltd.
+Beijing, China
+lixubin@huawei.com
+Abstract
+Interval-aware Approximate Nearest Neighbor (ANN) search arises
+in applications where each object is associated with a numeric
+value or interval, and queries must satisfy both vector-similarity
+and interval constraints. Existing methods are typically tailored to
+a single query semantics, such as interval-filtered ANN search, and
+therefore require multiple specialized indexes to support diverse
+workloads, leading to substantial indexing and memory overhead.
+To address this limitation, we propose the Unified Interval-aware
+Relative Neighborhood Graph (URNG), a unified graph framework
+for interval-aware ANN search. URNG preserves the monotonic
+searchability of relative-neighborhood-graph based ANN indexes
+while additionally ensuring structural heredity over query-induced
+subgraphs, enabling a single index to support multiple interval-
+aware query semantics. Building on this framework, we develop UG,
+a practical graph index that efficiently approximates URNG through
+unified interval-aware pruning and iterative repair, together with a
+query algorithm for interval-aware ANN search. Extensive experi-
+ments on 5 datasets show that UG consistently achieves a strong
+accuracy-efficiency trade-off across diverse interval-aware work-
+loads while maintaining competitive index construction cost and
+memory usage.
+1 Introduction
+Driven by advances in deep learning and large language mod-
+els [7, 27, 44], vector search has become a core component in many
+real-world applications, including recommendation systems [9,
+45], information retrieval [33], data mining [6, 13], and retrieval-
+augmented generation (RAG) [63]. However, due to the curse of
+dimensionality [4, 23, 53], exact nearest neighbor (NN) search in
+high-dimensional spaces is often too expensive to satisfy practical
+latency requirements. Approximate nearest neighbor (ANN) search
+addresses this challenge by substantially improving efficiency with
+only limited loss in accuracy.
+Over the past few decades, a wide range of ANN indexes have
+been proposed, including tree-based, hashing-based, quantization-
+based, and graph-based methods [1, 5, 15–18, 48, 50, 58, 60]. Among
+them, graph-based methods consistently achieve a strong trade-off
+between query accuracy and efficiency [3, 51]. Their effectiveness
+Preprint,
+2026.
+fundamentally relies on graph navigability: well-connected routing
+structures enable the search to approach high-quality neighbors
+while examining only a small fraction of the dataset. In particular,
+graph indexes that approximate the Relative Neighborhood Graph
+(RNG) are especially appealing, as they often examine fewer objects
+while maintaining high recall [46].
+However, many real-world similarity search tasks are not purely
+vector-based. In addition to vector similarity, retrieved objects are
+often required to satisfy interval constraints associated with nu-
+meric attributes such as time, price, or validity ranges. A representa-
+tive example arises in video surveillance and object tracking, where
+each detected object is associated not only with an embedding vec-
+tor, but also with a temporal interval indicating when it appears
+in the camera’s field of view. Depending on the application, the
+system may need to support different interval-aware ANN query,
+as illustrated below.
+(1) Given a query vector 𝑣 and a time window 𝑞.𝐼 , one may want
+to retrieve visually similar objects whose visible durations are
+fully contained by the query range, which is referred to as
+Interval-Filtering ANN (IFANN) query [57].
+(2) Conversely, given a query vector 𝑣 and a time interval 𝑞.𝐼 , one
+may want to retrieve visually similar objects whose visible
+durations cover the entire query interval, which is referred to
+as Interval-Stabbing ANN (ISANN) queries. When the query
+interval degenerates to a single timestamp 𝑡, ISANN reduces
+to Range-Stabbing ANN (RSANN) queries, also known as the
+timestamp ANN query [52], which retrieve nearest neighbors
+that remain active at the specific time 𝑡.
+A natural question is whether a single graph index can support
+these diverse interval-aware ANN queries efficiently. Unfortunately,
+this is non-trivial. The key challenge is structural: under interval
+constraints, search is effectively restricted to the query-valid ob-
+jects, inducing a query-dependent subgraph of the original graph.
+Even if the original graph is highly navigable, the induced sub-
+graph may lose critical routing nodes and edges, thereby severely
+degrading search quality. Moreover, different query semantics, such
+as interval containment and timestamp stabbing, can induce dif-
+ferent subgraphs under the same range condition. As a result, a
+graph index that performs well for standard ANN search does not
+necessarily remain effective for interval-aware ANN retrieval.
+Partly due to this challenge, existing interval-aware ANN meth-
+ods are typically specialized to a single query semantics rather
+arXiv:2606.11789v1 [cs.DB] 10 Jun 2026</page><page num="3">Efficient Graph Indexing for Interval-Aware Vector Search Preprint, 2026,
+IFANN query
+RNG subgraph
+Q=[(25,75),G]
+ISANN query
+RNG subgraph
+Q=[(25,75),G]
+Figure 1: Interval constraints induce query-dependent search-
+able subgraphs. Starting from the same RNG, IFANN and
+ISANN retain different valid objects and edges, potentially
+invalidating critical routing structures.
+2.2 Search Strategies and Graph Backbone
+Existing solutions to interval-aware ANN search can be understood
+from two complementary perspectives: how interval constraints
+are enforced, and what ANN backbone is used for similarity search.
+These two perspectives are orthogonal: interval constraints may be
+handled in different ways, while the underlying ANN search can
+still be built on a graph-based backbone.
+From the perspective of constraint handling, existing methods
+typically fall into three categories. Pre-filtering first identifies all
+objects satisfying the interval predicate and then performs ANN
+search over the valid subset [49, 54]. Post-filtering first retrieves
+candidates according to vector similarity and then discards those
+violating the predicate [28]. Specialized indexing designs dedicated
+structures for particular query semantics to support more efficient
+constrained retrieval [56, 57].
+From the perspective of ANN search, graph-based indexes have
+become one of the most effective backbones for modern vector
+retrieval. They organize objects into proximity graphs and answer
+queries through greedy graph traversal, achieving a strong balance
+between search accuracy and efficiency in high-dimensional spaces.
+This makes graph-based ANN a natural foundation for interval-
+aware retrieval.
+2.3 Challenges under Interval Constraints
+Despite this common design space, existing methods remain insuf-
+ficient for supporting diverse interval-aware workloads within a
+unified graph index. In practice, many solutions are still tailored
+to individual query semantics rather than designed as a shared
+framework across IFANN, ISANN, RFANN, and RSANN.
+A natural baseline is to combine interval filtering with ANN
+search in a loosely coupled manner. Pre-filtering first materializes
+the valid subset and then performs ANN search on it, which is
+effective for low-selectivity queries [19, 21], but can be prohibitively
+expensive when the valid subset remains large. Post-filtering first
+retrieves candidates by vector similarity and then removes invalid
+ones — this approach suits high-selectivity queries [49, 54] — but
+often wastes substantial search effort and requires considerable
+oversampling before enough valid results are found. As a result,
+loosely coupled strategies are generally inadequate for efficient
+interval-aware ANN search.
+More fundamentally, interval-aware constraints alter the effec-
+tive search space in a query-dependent manner, posing a structural
+challenge to graph-based ANN search. The effectiveness of graph
+ANN indexes relies on good navigability in the searchable graph.
+Under interval-aware queries, however, search is effectively con-
+fined to the valid objects determined by the query interval, yielding
+a query-induced subgraph of the original graph. This subgraph
+may differ significantly from the full graph in both connectivity
+and routing structure: nodes or edges that are critical to greedy
+navigation in the original graph may no longer remain available
+after applying the interval constraint. Consequently, a graph that is
+highly navigable on the full dataset may become poorly connected,
+or even disconnected, under interval-aware queries. Figure 1 illus-
+trates this effect using an RNG-style graph
+1
+: under the same query
+interval, IFANN and ISANN induce different valid subgraphs, and
+routing structures available in the original graph may disappear
+after filtering.
+Some specialized graph indexes partially alleviate this issue for
+their target query semantics. For example, strong IFANN solutions
+often rely on partitioned or multi-structure designs, such as hierar-
+chical interval partitioning [57], to achieve high query efficiency.
+However, these approaches incur additional indexing and mem-
+ory overhead, complicate updates and maintenance, and do not
+naturally generalize to other interval-aware query types. More
+broadly, existing specialized methods remain tightly coupled to
+specific predicates and therefore do not generalize naturally across
+interval-aware query types.
+These observations suggest that the key challenge is not merely
+to optimize search for one particular interval predicate, but to design
+a unified graph framework whose search effectiveness is preserved
+under diverse query-dependent filtering conditions. This challenge
+motivates the framework developed in the next section.
+3 Unified Interval-aware RNG
+In this section, we establish the theoretical foundation of the Unified
+Interval-aware Relative Neighborhood Graph (URNG). We proceed to
+formally define the URNG structure and provide a rigorous analysis
+of its graph-theoretic properties, including monotonic searchability,
+structural heredity, and asymptotic complexity bounds.
+Definition 3.1 (URNG). Let 𝐷 be a dataset in a metric space with
+distance function 𝛿, where each object is associated with an interval
+attribute 𝐼 . The Unified Interval-aware Relative Neighborhood Graph
+(URNG) on 𝐷 is defined as a graph 𝐺 = (𝑉 , 𝐸, st), where each
+node in 𝑉 corresponds to an object in 𝐷, and each edge (𝑢, 𝑣) ∈ 𝐸 is
+associated with a semantic bitmask st(𝑢, 𝑣) = 
+
+𝑏
+IF 
+(𝑢, 𝑣), 𝑏
+IS 
+(𝑢, 𝑣)
+ 
+∈
+{0, 1}
+2
+. For any two distinct nodes 𝑢, 𝑣 ∈ 𝑉 , the IF bit 𝑏
+IF 
+(𝑢, 𝑣) is set
+to 1 if and only if there does not exist a witness node 𝑤 ∈ 𝑉 \ {𝑢, 𝑣 }
+such that all of the following conditions hold
+2
+:
+𝛿 (𝑢, 𝑤) &lt; 𝛿 (𝑢, 𝑣), 𝛿 (𝑣, 𝑤) &lt; 𝛿 (𝑢, 𝑣), 𝐼
+𝑤 
+⊆ 𝐼
+𝑢 
+∪ 𝐼
+𝑣
+, and 𝑏
+IF 
+(𝑢, 𝑤) = 1
+1
+[16] refers to the graph constructed based on the RNG’s pruning strategy as the
+Monotonic Relative Neighborhood Graph (MRNG). For simplicity, we use the term
+RNG throughout this paper.
+2
+Here, the union symbol for two intervals, 𝐼
+𝐴 
+∪ 𝐼
+𝐵 
+, denotes the interval
+min(𝐼
+𝐴 
+.𝑙, 𝐼
+𝐵 
+.𝑙 ), max(𝐼
+𝐴 
+.𝑟, 𝐼
+𝐵 
+.𝑟 ). For convenience, throughout the subsequent de-
+scription of the pruning conditions, ∪ is used with this meaning.</page><page num="4">Preprint, 2026, Liang et al.
+(a) Edge kept by URNG-IF
+A
+[20, 80] 
+B 
+[30, 70]
+C
+[25, 75]
+D
+[30, 85]
+E
+[30, 100]
+F
+[0, 70]
+G
+[25, 75]
+H
+[40, 60]
+(b) Edge kept by URNG-IS
+A
+[20, 80] 
+B 
+[30, 70]
+C
+[25, 75]
+D
+[30, 85]
+E
+[30, 100]
+F
+[0, 70]
+G
+[25, 75]
+H
+[40, 60]
+(c) Edge kept by URNG
+A
+[20, 80] 
+B 
+[30, 70]
+C
+[25, 75]
+D
+[30, 85]
+E
+[30, 100]
+F
+[0, 70]
+G
+[25, 75]
+H
+[40, 60]
+(d) Edge pruned by URNG
+A
+[20, 80] 
+B 
+[30, 70]
+C
+[25, 75]
+D
+[30, 85]
+E
+[30, 100]
+F
+[0, 70]
+G
+[25, 75]
+H
+[40, 60]
+Figure 2: Illustration of the URNG pruning strategy
+Similarly, the IS bit 𝑏
+IS 
+(𝑢, 𝑣) is set to 1 if and only if there does
+not exist a witness node 𝑤 ∈ 𝑉 \ {𝑢, 𝑣 } such that all of the following
+conditions hold:
+𝛿 (𝑢, 𝑤) &lt; 𝛿 (𝑢, 𝑣), 𝛿 (𝑣, 𝑤) &lt; 𝛿 (𝑢, 𝑣), 𝐼
+𝑢 
+∩ 𝐼
+𝑣 
+⊆ 𝐼
+𝑤
+, and 𝑏
+IS 
+(𝑢, 𝑤) = 1
+Accordingly, an edge (𝑢, 𝑣) is active for IFANN queries when
+𝑏
+IF 
+(𝑢, 𝑣) = 1, active for ISANN queries when 𝑏
+IS 
+(𝑢, 𝑣) = 1, and
+active for both query types when st(𝑢, 𝑣) = (1, 1).
+Example 1. Figure 2 presents four representative cases that illus-
+trate how edges are retained or pruned in URNG under different
+interval semantics.
+(1) The edge (𝐵, 𝐶) is the longest edge in triangle (𝐵, 𝐶, 𝐹 ), and
+would therefore be pruned in a classical RNG. Under interval-
+aware semantics, however, only the IS constraint [30, 70] ⊆
+[0, 70] is satisfied. As a result, the IS functionality of (𝐵, 𝐶) is
+pruned, while its IF functionality is preserved.
+(2) The edge (𝐵, 𝐷) is the longest edge in triangle (𝐵, 𝐷, 𝐻 ), and
+would also be removed in a classical RNG. Under interval-aware
+semantics, only the IF constraint [40, 60] ⊆ [30, 85] is satisfied.
+Hence, the IF functionality of (𝐵, 𝐷) is pruned, while its IS
+functionality remains active.
+(3) For the edge (𝐷, 𝐺), there exists no triangle in which it becomes
+the longest edge. Therefore, this edge cannot be pruned by any
+valid witness node and remains active under both semantics.
+(4) The edge (𝐴, 𝐵) is the longest edge in triangle (𝐴, 𝐵, 𝐶), and
+since [25, 75] ⊆ [20, 80], its IF functionality is pruned by edge
+(𝐴, 𝐶). The same edge (𝐴, 𝐵) is also the longest edge in triangle
+(𝐴, 𝐵, 𝐷), and since [30, 70] ⊆ [30, 85], its IS functionality is
+pruned by edge (𝐴, 𝐷). Since both semantic bits are removed,
+the edge is completely discarded from the graph.
+The above definition unifies the two interval semantics into a
+single theoretical graph. Compared with defining two indepen-
+dent proximity graphs, URNG offers two advantages: (1) reduced
+memory cost, as nodes and many edges are shared across the two
+graphs; and (2) efficient construction and query processing due to
+the bitmask-based representation, as detailed in Section 4.
+Difference from the classical RNG. There is no direct inclusion
+relationship between RNG and URNG. The reason is fundamental:
+in URNG, pruning depends not only on the geometric condition
+that an edge is the longest edge of a triangle, but also on whether
+the witness node remains valid under the corresponding interval
+(a) URNG-IF Path (A-&gt;C-&gt;B)
+A
+[20, 80] 
+B 
+[30, 70]
+C
+[25, 75]
+E
+[30, 100]
+F
+[0, 70]
+(b) RNG Path (A-&gt;B)
+A
+[20, 80] 
+B 
+[30, 70]
+C
+[25, 75]
+E
+[30, 100]
+F
+[0, 70]
+(c) URNG-IS Path (A-&gt;D-&gt;B)
+A
+[20, 80] 
+B 
+[30, 70]
+D
+[30, 85]
+G
+[25, 75]
+H
+[40, 60]
+(d) RNG Path (A-&gt;B)
+A
+[20, 80] 
+B 
+[30, 70]
+D
+[30, 85]
+G
+[25, 75]
+H
+[40, 60]
+Figure 3: Differences between RNG and URNG.
+semantics. Consequently, some edges that would be removed in
+a classical RNG may be retained in URNG due to the lack of a
+semantically valid witness. Conversely, such retained edges may
+later act as new semantic witnesses and prune other edges that
+would otherwise survive in the classical RNG, as illustrated in
+Figure 1 and 2.
+However, it is precisely URNG’s awareness of interval that allows
+it to maintain connectivity and high performance across different
+queries. As illustrated in Figure 3, navigation from 𝐴 to 𝐵 in URNG
+does not necessarily rely on the direct edge (𝐴, 𝐵). In the IF-induced
+subgraph, the path (𝐴, 𝐶), (𝐶, 𝐵) shown in Figure (a) can replace
+the direct edge. In the IS-induced subgraph, the path (𝐴, 𝐷), (𝐷, 𝐵)
+shown in Figure (b) plays an analogous role. This witness-mediated
+routing mechanism is precisely what prevents the filtered subgraph
+from becoming disconnected under interval constraints, and it
+forms the structural basis for the advantage of URNG in interval-
+aware search.
+3.1 Theoretical Properties
+In this subsection, we introduce two key properties of URNG that
+enable it to support various interval-aware ANN queries within a
+single graph structure.
+Definition 3.2 (Monotonic path). Given a graph 𝐺 = (𝑉 , 𝐸) and a
+distance metric 𝛿, a path = 𝑣
+0 
+→ 𝑣
+1 
+→ 𝑣
+2 
+→ · · · → 𝑣
+𝑘 
+= 𝑡 is called
+a monotonic path with respect to the target node 𝑡 if 𝛿 (𝑣
+𝑖+1
+, 𝑡) &lt;
+𝛿 (𝑣
+𝑖 
+, 𝑡), ∀ 0 ≤ 𝑖 &lt; 𝑘. That is, the distance to the target strictly
+decreases at every step along the path.
+We now prove the existence of a monotonic path in each semantic
+projection of URNG.
+Theorem 3.3 (Monotonic Searchability). For any dataset 𝐷
+and a URNG graph 𝐺 constructed over 𝐷, fix one semantic projection
+𝐺
+𝜎 
+, where 𝜎 ∈ {IF, IS}. For any two nodes 𝑠, 𝑡 ∈ 𝑉 , a monotonic path
+from 𝑠 to 𝑡 exists in 𝐺
+𝜎 
+.
+Proof. Without loss of generality, consider the current node
+𝑢 ≠ 𝑡. If (𝑢, 𝑡) ∈ 𝐸
+𝜎 
+, the condition is satisfied directly. Otherwise, if
+(𝑢, 𝑡) ∉ 𝐸
+𝜎 
+, then by Definition 3.1 under the fixed semantics 𝜎, there
+exists a witness node 𝑤 such that (𝑢, 𝑤) ∈ 𝐸
+𝜎 
+and 𝛿 (𝑤, 𝑡) &lt; 𝛿 (𝑢, 𝑡).
+The search can thus safely proceed from 𝑢 to 𝑤. Repeating the
+same argument, the distance to 𝑡 strictly decreases at every step.
+Since the dataset is finite, this process must terminate, and the only
+possible terminal node is 𝑡. Therefore, a monotonic path from 𝑠 to
+𝑡 exists in 𝐺
+𝜎 
+. □</page><page num="6">Preprint, 2026, Liang et al.
+Algorithm 1: UG Initial Candidate Generation
+Input: Dataset 𝑉 , spatial budget 𝑒 𝑓
+𝑠𝑝𝑎𝑡𝑖𝑎𝑙 
+, attribute budget
+𝑒 𝑓
+𝑎𝑡𝑡𝑟𝑖𝑏𝑢𝑡𝑒
+Output: Initial candidate sets C for all nodes
+1 Function GenerateCandidates(𝑉 , 𝑒 𝑓
+𝑠𝑝𝑎𝑡𝑖𝑎𝑙 
+, 𝑒 𝑓
+𝑎𝑡𝑡𝑟𝑖𝑏𝑢𝑡𝑒 
+)
+2 C
+𝑠𝑝𝑎 
+← NNDescent(𝑉 , 𝑒 𝑓
+𝑠𝑝𝑎𝑡𝑖𝑎𝑙 
+);
+3 foreach 𝑢 ∈ 𝑉 do
+4 C
+𝑎𝑡𝑡𝑟 
+(𝑢) ← ∅;
+5 𝐾𝑒𝑦𝑠 ← {𝑙, 𝑟, 𝑚𝑖𝑑, 𝑙𝑒𝑛};
+6 foreach 𝑘 ∈ 𝐾𝑒𝑦𝑠 do
+7 𝑉
+𝑘 
+← sort 𝑉 in ascending order of attribute 𝑘;
+8 foreach 𝑢 ∈ 𝑉
+𝑘 
+do
+9 N
+𝑘 
+(𝑢) ← fetch 
+𝑒 𝑓
+𝑎𝑡𝑡𝑟𝑖𝑏𝑢𝑡𝑒
+8 
+adjacent nodes from
+both sides of 𝑢 in 𝑉
+𝑘 
+;
+10 C
+𝑎𝑡𝑡𝑟 
+(𝑢) ← C
+𝑎𝑡𝑡𝑟 
+(𝑢) ∪ N
+𝑘 
+(𝑢);
+11 foreach 𝑢 ∈ 𝑉 do
+12 C(𝑢) ← C
+𝑠𝑝𝑎 
+(𝑢) ∪ C
+𝑎𝑡𝑡𝑟 
+(𝑢);
+13 C(𝑢) ← Unique(C(𝑢)) \ {𝑢};
+14 return C;
+This 𝑂 (𝑛
+3
+) exact-construction cost further motivates the practi-
+cal UG index introduced in Section 4.
+Difference from the (RRNG) [64]. The proposed URNG is closely
+related to the Range-aware Relative Neighborhood Graph (RRNG) [64],
+which was originally developed for RFANN search, since both aim
+to preserve monotonic searchability and structural heredity under
+attribute-induced filtering. However, URNG substantially gener-
+alizes RRNG in both the data model and query semantics: while
+RRNG assumes scalar attributes and RFANN queries, URNG han-
+dles interval attributes and supports multiple interval-inclusion
+semantics, including ISANN, IFANN, RSANN and RFANN search.
+Indeed, RRNG can be viewed as a special case of URNG when each
+object interval degenerates to a point, i.e., 𝐼
+𝑜 
+= [𝑜.𝑎, 𝑜.𝑎], and only
+the IF projection is considered.
+4 The Unified Interval-aware Graph-based
+Index
+In Section 3, we introduced the unified theory of the Unified Interval-
+aware Relative Neighborhood Graph (URNG). However, constructing
+an exact URNG requires explicitly evaluating witness relationships
+on the complete graph, where results in an 𝑂 (𝑛
+3
+) construction cost
+and prevents URNG from being applied in practice. To address this
+issue, we propose the Unified Interval-aware Graph-based index
+(UG), a practical graph index that approximates URNG effectively
+while preserving its structural advantages.
+In particular, UG is built in two stages. We first generate a high-
+quality candidate set for each node, and then apply an iterative
+unified pruning strategy to derive the final graph. In addition, we
+design an interval-aware beam search algorithm over UG to support
+efficient navigation for both IFANN queries and ISANN queries.
+4.1 Candidate Generation
+The computational bottleneck of exact URNG construction lies in
+the size of the candidate set. In principle, exact pruning would re-
+quire considering all nodes as potential neighbors. However, the
+analysis in Section 3 suggests that the edges that ultimately sur-
+vive pruning are highly selective: an edge is retained not merely
+because of geometric proximity, but rather due to the absence of
+any semantically valid witness that can eliminate it under the query
+semantics. This observation motivates us to replace the complete
+candidate set with a high-quality approximate candidate pool.
+Algorithm 1 constructs the initial candidate pool for each node by
+combining spatial proximity and interval proximity. It first applies
+NNDescent to the whole dataset with budget 𝑒 𝑓
+𝑠𝑝𝑎𝑡𝑖𝑎𝑙 
+, obtaining
+a spatial candidate set C
+𝑠𝑝𝑎 
+that captures the local neighborhood
+structure in the vector space (line 2). To further introduce interval-
+relevant candidates, the algorithm initializes an empty attribute-
+aware candidate set for each node (lines 3–4), and then examines
+four interval-derived keys, including the left endpoint 𝑙, the right
+endpoint 𝑟 , the midpoint mid, and the interval length len (line 5).
+For each key, all nodes are sorted according to the corresponding
+interval attribute (line 7). The algorithm then scans the sorted order
+and collects nearby nodes around each node 𝑢 as attribute-aware
+candidates (lines 8–10). In particular, it fetches up to ⌊𝑒 𝑓
+𝑎𝑡𝑡𝑟𝑖𝑏𝑢𝑡𝑒 
+/8⌋
+adjacent nodes from each side of 𝑢 under the current ordering, so
+that the overall number of interval-based candidates is controlled
+by 𝑒 𝑓
+𝑎𝑡𝑡𝑟𝑖𝑏𝑢𝑡𝑒 
+across the four keys and two directions (line 9). These
+candidates are useful because nodes close in such interval-derived
+orders are more likely to survive the same interval constraint or
+serve as semantic witnesses in later pruning. Finally, UG merges
+the spatial and attribute-aware candidates, removes duplicates and
+the node itself, and returns the initial candidate sets for all nodes
+(lines 11–14).
+Candidate generation in UG is motivated by the observation in
+Section 3 that URNG edges are determined by both spatial proximity
+and semantically valid witnesses. Accordingly, UG constructs the
+candidate pool from two complementary sources: spatial neighbors,
+which provide the basic navigational backbone, and interval-aware
+neighbors, which increase the chance of covering useful IF/IS wit-
+nesses. Since exact URNG construction would require considering
+all nodes, this stage only provides a bounded candidate space rather
+than enforcing URNG properties by itself. The URNG-like structure
+is further approximated in the subsequent stages: unified pruning
+applies the interval-aware witness conditions within the candidate
+pool, while iterative repair compensates for missing continuation
+paths caused by the bounded candidate set. Empirically, this design
+provides sufficient candidate coverage for high-recall search, as
+shown in Section 5.
+4.2 Pruning Strategy
+After obtaining the candidate graph, UG constructs the final index
+by pruning redundant edges while preserving, as much as possible,
+the structural behavior of URNG. The goal of this stage is to approx-
+imate the unified pruning semantics of URNG within a bounded
+candidate pool, while keeping the graph sparse enough for efficient
+search. To support both IFANN queries and ISANN queries within
+a single graph, UG associates each retained edge with a semantic</page><page num="12">Preprint, 2026, Liang et al.
+0.80 0.85 0.90 0.95 1.00
+Recall@10
+10²
+10³
+10
+QPS
+(a) ef_attribute
+ef_attribute
+100
+250
+500
+1000
+1500
+0.80 0.85 0.90 0.95 1.00
+Recall@10
+10²
+10³
+10
+(b) ef_spatial
+ef_spatial
+50
+100
+150
+200
+250
+0.80 0.85 0.90 0.95 1.00
+Recall@10
+10²
+10³
+10
+QPS
+(c) iteration
+iteration
+1
+2
+3
+4
+5
+0.80 0.85 0.90 0.95 1.00
+Recall@10
+10²
+10³
+10
+(d) max_edges
+max_edges
+75
+150
+250
+350
+450
+Figure 11: Parameter sensitivity
+0.80 0.85 0.90 0.95 1.00
+Recall@k
+10²
+10³
+10
+QPS
+(a) IFANN
+k=10
+k=20
+k=40
+k=70
+k=100
+0.80 0.85 0.90 0.95 1.00
+Recall@k
+10²
+10³
+10
+(b) RSANN
+k=10
+k=20
+k=40
+k=70
+k=100
+Figure 12: Querying performance with different 𝑘.
+6 Related Work
+Approximate Nearest Neighbor Search. Existing ANN indexes
+can be broadly categorized into four categories: graph-based [3,
+16, 22, 34, 35, 51], quantization-based [17, 18, 20, 25, 36], hashing-
+based [42, 48, 50], and tree-based [5, 43]. A more overview is
+provided in recent surveys [37, 38]. Extensive empirical evalua-
+tions [2, 3, 30, 50] have consistently shown that graph-based meth-
+ods achieve state-of-the-art performance. This superiority stems
+from the graph’s ability to encode proximity relationships, allowing
+query processing to converge rapidly by evaluating only a small
+fraction of the dataset [10]. Most graph-based indexes [51] are built
+upon four fundamental graph types: the Delaunay Graph (DG) [14],
+Relative Neighborhood Graph (RNG) [46], K-Nearest Neighbor
+Graph (KNNG) [39], and Minimum Spanning Tree (MST) [26].
+Among these, RNG-based indexes achieve particularly strong per-
+formance due to their effective pruning strategy [51]. Building on
+RNG, we propose a novel ANN index to support efficient Interval-aware
+ANN search.
+Attribute-filtered ANN Search. Existing attribute-filtered ANN
+queries typically involve two types of attributes: keyword and
+numerical. Keyword attributes are unordered, whereas numerical
+attributes are inherently ordered. Consequently, different meth-
+ods have been proposed to handle different types of attributes [40,
+59, 65]. For numerical attributes, several specialized queries have
+been proposed [57, 65], including RFANN and IFANN queries, as
+described in Section 2. To support these queries, various indexes
+have been introduced [49, 56, 57]. Early studies [11, 49, 61] follow
+a two-stage paradigm, constructing separate indexes for vector
+and attribute retrieval before merging the results. For example,
+ADBV [54] employs a B-Tree and a PQ index independently, se-
+lecting a retrieval strategy via a cost model. A key limitation of
+10M 20M 30M 40M
+Dataset size
+1.0
+1.5
+2.0
+2.5
+3.0
+Latency (ms)
+(a) Latency at recall@10 = 90%
+10M 20M 30M 40M
+Dataset size
+350
+750
+1150
+1550
+Build time (s)
+(b) Build time
+Figure 13: Scalability with increasing dataset size.
+such approaches is that they do not co-optimize the index struc-
+ture, resulting in sub-optimal performance compared with hybrid
+indexes [8, 12, 29, 31, 56, 65]. Recently, many hybrid indexes have
+been proposed, such as iRangeGraph [56], which integrates graph
+and attribute indexes more directly by constructing a graph for
+each segment of a partitioned attribute range. While this design
+achieves high performance, it incurs substantial indexing over-
+head and exhibits limited adaptability to different query types. For
+keyword attributes, similar techniques and strategies have been
+proposed, such as Faiss [11], Milvus [49], VBASE [62], ACORN [40],
+Filtered-DiskANN [19] (microsoft). However, they also suffer from
+either low query performance or high indexing time and limited
+adaptability to different query types. Recently, several efforts have
+aimed to design a unified index to support different query types.
+For example, [55] supports both conventional ANN queries and
+ANN queries with keyword predicates within a single index. How-
+ever, designing one index to support for diverse numerical-attribute
+queries remains underexplored.
+7 Conclusion and Future Work
+In this paper, we propose an efficient graph index, UG, to handle
+various interval-aware ANN queries within a single index. We first
+introduce the Unified Interval-aware Relative Neighborhood Graph
+(URNG), which establishes the theoretical foundation for interval-
+aware ANN search. We then present UG, an efficient and practical
+approximation of URNG. Experimental results show that, for vari-
+ous interval-aware ANN queries, UG significantly outperforms the
+baselines in search efficiency, while incurring no additional index
+construction time or storage overhead.
+One direction for future work is to extend our theoretical graph
+and index beyond numerical attributes to support more diverse
+filtered search scenarios, such as keyword filtering. Building upon
+this, we aim to investigate and develop a unified theoretical frame-
+work capable of seamlessly accommodating arbitrary predicate
+filtering conditions, ultimately providing a generalized index for
+complex hybrid queries.
+References
+[1] Akhil Arora, Sakshi Sinha, Piyush Kumar, and Arnab Bhattacharya. 2018. Hd-
+index: Pushing the scalability-accuracy boundary for approximate knn search in
+high-dimensional spaces. arXiv preprint arXiv:1804.06829 (2018).
+[2] Martin Aumüller, Erik Bernhardsson, and Alexander Faithfull. 2020. ANN-
+Benchmarks: A benchmarking tool for approximate nearest neighbor algorithms.
+Information Systems 87 (2020), 101374.
+[3] Ilias Azizi, Karima Echihabi, and Themis Palpanas. 2025. Graph-based vector
+search: An experimental evaluation of the state-of-the-art. Proceedings of the
+ACM on Management of Data 3, 1 (2025), 1–31.
+[4] Kevin Beyer, Jonathan Goldstein, Raghu Ramakrishnan, and Uri Shaft. 1999.
+When is “nearest neighbor” meaningful?. In International Conference on Database
+Theory. Springer, 217–235.
+[5] Alina Beygelzimer, Sham Kakade, and John Langford. 2006. Cover trees for
+nearest neighbor. In Proceedings of the 23rd International Conference on Machine</page><page num="14">Preprint, 2026, Liang et al.
+[54] Chuangxian Wei, Bin Wu, Sheng Wang, Renjie Lou, Chaoqun Zhan, Feifei Li,
+and Yuanzhe Cai. 2020. AnalyticDB-V: A Hybrid Analytical Engine Towards
+Query Fusion for Structured and Unstructured Data. Proceedings of the VLDB
+Endowment 13, 12 (2020), 3152–3165.
+[55] Jiadong Xie, Jeffrey Xu Yu, Siyi Teng, and Yingfan Liu. 2025. Beyond Vector
+Search: Querying With and Without Predicates. Proceedings of the ACM on
+Management of Data 3, 6 (2025), 1–26.
+[56] Yuexuan Xu, Jianyang Gao, Yutong Gou, Cheng Long, and Christian S Jensen.
+2024. irangegraph: Improvising range-dedicated graphs for range-filtering nearest
+neighbor search. Proceedings of the ACM on Management of Data 2, 6 (2024),
+1–26.
+[57] Ming Yang, Yuzheng Cai, and Weiguo Zheng. 2025. Hi-PNG: Efficient Interval-
+Filtering ANNS via Hierarchical Interval Partition Navigating Graph. In Proceed-
+ings of the 31st ACM SIGKDD Conference on Knowledge Discovery and Data Mining
+V. 2. 3518–3529.
+[58] Ziqi Yin, Gao Cong, Kai Zeng, Jinwei Zhu, and Bin Cui. 2026. BBC: Improv-
+ing Large-k Approximate Nearest Neighbor Search with a Bucket-based Result
+Collector. arXiv:2604.01960 [cs.DB] https://arxiv.org/abs/2604.01960
+[59] Ziqi Yin, Shanshan Feng, Shang Liu, Gao Cong, Yew Soon Ong, and Bin Cui.
+2024. LIST: Learning to Index Spatio-Textual Data for Embedding based Spatial
+Keyword Queries. arXiv:2403.07331 [cs.IR] https://arxiv.org/abs/2403.07331
+[60] Ziqi Yin, Jianyang Gao, Pasquale Balsebre, Gao Cong, and Cheng Long. 2025.
+DEG: Efficient Hybrid Vector Search Using the Dynamic Edge Navigation Graph.
+Proc. ACM Manag. Data 3, 1, Article 29 (Feb. 2025), 28 pages. doi:10.1145/3709679
+[61] Fangyuan Zhang, Mengxu Jiang, Guanhao Hou, Jieming Shi, Hua Fan, Wenchao
+Zhou, Feifei Li, and Sibo Wang. 2025. Efficient Dynamic Indexing for Range
+Filtered Approximate Nearest Neighbor Search. Proceedings of the ACM on
+Management of Data 3, 3 (2025), 1–26.
+[62] Qianxi Zhang, Shuotao Xu, Qi Chen, Guoxin Sui, Jiadong Xie, Zhizhen Cai, Yaoqi
+Chen, Yinxuan He, Yuqing Yang, Fan Yang, Mao Yang, and Lidong Zhou. 2023.
+VBASE: Unifying Online Vector Similarity Search and Relational Queries via
+Relaxed Monotonicity. In 17th USENIX Symposium on Operating Systems Design
+and Implementation (OSDI 23). USENIX Association, Boston, MA, 377–395.
+[63] Penghao Zhao, Hailin Zhang, Qinhan Yu, Zhengren Wang, Yunteng Geng,
+Fangcheng Fu, Ling Yang, Wentao Zhang, Jie Jiang, and Bin Cui. 2026. Retrieval-
+augmented generation for ai-generated content: A survey. Data Science and
+Engineering (2026), 1–29.
+[64] Zhiqiu Zou, Ziqi Yin, Rong-Hua Li, Hongchao Qin, Qiangqiang Dai, and Guoren
+Wang. 2026. RNSG: A Range-Aware Graph Index for Efficient Range-Filtered
+Approximate Nearest Neighbor Search. arXiv:2603.12913 [cs.DB] https://arxiv.
+org/abs/2603.12913
+[65] Chaoji Zuo, Miao Qiao, Wenchao Zhou, Feifei Li, and Dong Deng. 2024. Serf: Seg-
+ment graph for range-filtering approximate nearest neighbor search. Proceedings
+of the ACM on Management of Data 2, 1 (2024), 1–26.
+A Proofs for the Complexity Analysis
+Lemma A.1 (Expected length of a monotonic path). For any
+starting node 𝑥 ∈ 𝑉 and the interval-aware nearest neighbor 𝑦 ∈ 𝑉
+of a query 𝑞, the expected number of steps of a greedy monotonic
+walk from 𝑥 to 𝑦 on 𝐺 is 𝑂 (𝑛
+1/𝑑 
+log 𝑛/Δ𝑟 ), where 𝑛 := |𝑉 | and
+Δ𝑟 denotes the minimum gap between edge lengths among all non-
+isosceles triangles in the metric space.
+Proof. Since URNG satisfies monotonic searchability, it belongs
+to the class of monotonic search networks (MSNETs) in the NSG
+literature. Therefore, the expected greedy path length on URNG
+is upper bounded by the corresponding MSNET bound, namely
+𝑂 (𝑛
+1/𝑑 
+log(𝑛
+1/𝑑 
+)/Δ𝑟 ), which is 𝑂 (𝑛
+1/𝑑 
+log 𝑛/Δ𝑟 ). □
+Lemma A.2 (Average degree bound). Let 𝐷
+𝑟 
+denote the average
+degree of RNG. Then the average degree of URNG is bounded by
+𝑂 (𝐶
+urng
+𝐷
+𝑟 
+). Under the uniform interval model, 𝐶
+urng 
+is a constant
+independent of 𝑛 and may take 𝐶
+urng 
+= 6 + 
+13
+3 
+= 
+31
+3 
+.
+Proof. Fix a node 𝑢 ∈ 𝑉 , and partition the unit sphere centered
+at 𝑢 into 𝑁
+𝑑 
+cones of half-angle 30
+◦
+. For a fixed cone, order the
+candidate points by distance to 𝑢, let 𝑌
+𝑡 
+indicate whether the 𝑡-th
+point is retained, and let 𝐾 = 
+Í
+𝑡 
+𝑌
+𝑡 
+. Then E[𝐾] = 
+Í
+𝑡 
+Pr(𝑌
+𝑡 
+= 1).
+For IF semantics, let 𝐽
+𝑡 
+= 𝐼
+𝑢 
+∪ 𝐼
+𝑡 
+and let 𝐷 = |𝐽
+𝑡 
+|. Conditioned on
+𝐷 = 𝑝, a random interval is fully contained in 𝐽
+𝑡 
+with probability
+𝑝
+2
+, so Pr(𝑌
+𝑡 
+= 1 | 𝐷 = 𝑝) = (1 − 𝑝
+2
+)
+𝑡 −1
+. Since 𝐷 is the range of four
+i.i.d. uniform variables, its density is 𝑓
+𝐷 
+(𝑝) = 12𝑝
+2 
+(1 − 𝑝) on (0, 1).
+Hence E[𝐾] = 
+∫ 
+1
+0
+1− (1−𝑝
+2 
+)
+𝑚
+𝑝
+2 
+12𝑝
+2 
+(1 − 𝑝) 𝑑𝑝 = 12 
+∫ 
+1
+0 
+(1 − 𝑝)(1 − (1 −
+𝑝
+2
+)
+𝑚 
+) 𝑑𝑝, which converges to 6 as 𝑚 → ∞.
+For IS semantics, let 𝐽
+𝑡 
+= 𝐼
+𝑢 
+∩ 𝐼
+𝑡 
+= [𝐿, 𝑅], which may be empty.
+Conditioned on 𝐽
+𝑡 
+= [𝐿, 𝑅] ≠ ∅, a random interval covers it with
+probability 2𝐿(1−𝑅), so Pr(𝑌
+𝑡 
+= 1 | 𝐽
+𝑡 
+= [𝐿, 𝑅]) = (1−2𝐿(1−𝑅))
+𝑡 −1
+.
+Moreover, Pr(𝐽
+𝑡 
+= ∅) = 1/3, and when 𝐽
+𝑡 
+≠ ∅, its density is
+𝑓
+𝐽 
+(𝐿, 𝑅) = 16𝐿(1 − 𝑅) on 0 &lt; 𝐿 &lt; 𝑅 &lt; 1. Therefore, E[𝐾] = 
+1
+3 
++
+∫
+0&lt;𝐿&lt;𝑅&lt;1 
+16𝐿(1 − 𝑅) 
+Í
+𝑚
+𝑡 =1 
+(1 − 2𝐿(1 − 𝑅))
+𝑡 −1 
+𝑑𝐿 𝑑𝑅, which simplifies
+to 
+1
+3 
++ 
+8 
+∫
+0&lt;𝐿&lt;𝑅&lt;1 
+(1 − (1 − 2𝐿(1 − 𝑅))
+𝑚 
+) 𝑑𝐿 𝑑𝑅, and converges to 
+13
+3
+as 𝑚 → ∞.
+Thus the expected number of retained neighbors per cone is
+bounded by 𝐶
+urng 
+= 6 + 
+13
+3 
+. Summing over all cones shows that the
+average degree of URNG is bounded by a constant factor times that
+of RNG, namely 𝑂 (𝐶
+urng
+𝐷
+𝑟 
+). □
+Proof of Theorem 3.6. By Lemma A.1, the expected number of
+expansion steps is 𝑂 (𝑛
+1/𝑑 
+log 𝑛/Δ𝑟 ). By Lemma A.2, each expansion
+examines 𝑂 (𝐶
+urng
+𝐷
+𝑟 
+) neighbors in expectation. Therefore, the total
+expected search complexity is 𝑂 (𝐶
+urng
+𝐷
+𝑟 
+𝑛
+1/𝑑 
+log 𝑛/Δ𝑟 ). Since 𝐶
+urng
+is constant and 𝐷
+𝑟 
+is bounded independently of 𝑛, this reduces to
+𝑂 (𝑛
+1/𝑑 
+log 𝑛/Δ𝑟 ). Under the spacing assumption Δ𝑟 ≈ 𝑂 (𝑛
+−𝜖/𝑑 
+)
+with 0 &lt; 𝜖 &lt; 𝑑, the bound becomes 𝑂 (𝑛
+(1+𝜖 )/𝑑 
+log 𝑛), which is well
+approximated by 𝑂 (𝑛
+1/𝑑 
+log 𝑛) when 𝜖 ≪ 𝑑. □
+Proof of Theorem 3.7. 
+The total index size consists of the stor-
+age for nodes and edges. The number of nodes is 𝑂 (𝑛). By Lemma A.2,
+the expected degree upper bound of URNG is 𝑂 (𝐶
+urng
+𝐷
+𝑟 
+), where
+𝐷
+𝑟 
+is the average bound of RNG. Since the total number of edges in
+RNG is 𝑆
+𝑟 
+= 𝑛𝐷
+𝑟 
+, the expected total number of edges in URNG is
+𝑂 (𝐶
+urng
+𝑛𝐷
+𝑟 
+) = 𝑂 (𝐶
+urng
+𝑆
+𝑟 
+). Because 𝐶
+urng 
+is independent of 𝑛, the
+result follows. □
+Proof of Theorem 3.8. 
+In the exact construction procedure, one
+enumerates each node 𝑥, sorts the remaining nodes by their dis-
+tances to 𝑥, and then checks all candidate witness nodes to deter-
+mine whether each edge can be pruned. The sorting stage costs
+𝑂 (𝑛
+2
+𝑑), while the witness enumeration stage costs 𝑂 (𝑛
+3
+). Since
+typically 𝑛 ≫ 𝑑, the overall complexity is 𝑂 (𝑛
+3
+). □</page></paper>

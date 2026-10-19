@@ -1,0 +1,748 @@
+<paper id="2409.02571v1"><page num="1">iRangeGraph: Improvising Range-dedicated Graphs for
+Range-filtering Nearest Neighbor Search
+Yuexuan Xu
+*
+Nanyang Technological University
+Singapore
+yuexuan001@e.ntu.edu.sg
+Jianyang Gao
+*
+Nanyang Technological University
+Singapore
+jianyang.gao@ntu.edu.sg
+Yutong Gou
+Nanyang Technological University
+Singapore
+yutong003@e.ntu.edu.sg
+Cheng Long
+†
+Nanyang Technological University
+Singapore
+c.long@ntu.edu.sg
+Christian S. Jensen
+Aalborg University
+Aalborg, Denmark
+csj@cs.aau.dk
+ABSTRACT
+Range-filtering approximate nearest neighbor (RFANN) search is
+attracting increasing attention in academia and industry. Given a
+set of data objects, each being a pair of a high-dimensional vec-
+tor and a numeric value, an RFANN query with a vector and a
+numeric range as parameters returns the data object whose nu-
+meric value is in the query range and whose vector is nearest to
+the query vector. To process this query, a recent study proposes to
+build 𝑂 (𝑛
+2
+) dedicated graph-based indexes for all possible query
+ranges to enable efficient processing on a database of 𝑛 objects.
+As storing all these indexes is prohibitively expensive, the study
+constructs compressed indexes instead, which reduces the memory
+consumption considerably. However, this incurs suboptimal perfor-
+mance because the compression is lossy. In this study, instead of
+materializing a compressed index for every possible query range
+in preparation for querying, we materialize graph-based indexes,
+called elemental graphs, for a moderate number of ranges. We then
+provide an effective and efficient algorithm that during querying
+can construct an index for any query range using the elemental
+graphs. We prove that the time needed to construct such an index
+is low. We also cover an experimental study on real-world datasets
+that provides evidence that the materialized elemental graphs only
+consume moderate space and that the proposed method is capable
+of superior and stable query performance across different query
+workloads.
+ACM Reference Format:
+Yuexuan Xu
+*
+, Jianyang Gao
+*
+, Yutong Gou, Cheng Long
+†
+, and Christian S.
+Jensen. 2018. iRangeGraph: Improvising Range-dedicated Graphs for Range-
+filtering Nearest Neighbor Search. In Proceedings of In Proceedings of the
+*
+Both authors contributed equally to this research.
+†
+Corresponding author.
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+SIGMOD ’25, June 22–27,2025, Berlin, Germany
+© 2018 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM ISBN 978-1-4503-XXXX-X/18/06
+https://doi.org/XXXXXXX.XXXXXXX
+2025 International Conference on Management of Data (SIGMOD ’25). ACM,
+New York, NY, USA, 15 pages. https://doi.org/XXXXXXX.XXXXXXX
+1 INTRODUCTION
+Nearest neighbor (NN) search in high-dimensional Euclidean
+spaces occurs in a broad range of settings, including in informa-
+tion retrieval [57 ], and machine learning systems (e.g., retrieval-
+augmented generative AI) [ 54 ] and in database systems [ 75]. The
+curse of dimensionality reduces the utility of exact NN search on
+large datasets, primarily due to long response time. To obtain better
+response time at the cost of reduced accuracy, approximate nearest
+neighbor (ANN) search [ 3 , 36 , 48 , 56 , 59, 78] had received atten-
+tion. Among existing ANN methods, graph-based methods have
+shown promising performance in terms of the trade-off between
+response time and result accuracy in in-memory settings [ 17 , 18 , 34 –
+36, 45, 50, 51, 56, 58, 59, 73, 78].
+There has been a recent growing interest in academia [29, 65 ]
+and industry (including Apple [62], Zilliz [75 ], and Alibaba [ 81]) in
+supporting ANN queries that also involve constraints on numerical
+data attributes. Here, a data object consists of two components: (1)
+a vector and (2) one or more numeric attribute values. A query
+then takes two parameters: a query vector and constraints on the
+numeric attribute values. In this paper, we study the query where
+a data object has one numeric attribute value and the constraint
+is a range, called the range-filtering ANN (RFANN) query [29, 89].
+As mentioned in industrial papers [62, 75 , 81 ], this query is impor-
+tant in many real-world systems. For example, on an e-commerce
+platform, a user could upload an image of a product, encoded as
+a vector, to find similar products within a certain price range. A
+data object is in-range if its numeric attribute value is in the query
+range; otherwise, it is out-of-range.
+Three strategies that differ in when the range filtering is done
+can be adopted to process RFANN queries. Pre-filtering first
+eliminates out-of-range data objects and finds the nearest neighbor
+of the query vector among the remaining objects that are not in-
+dexed. Post-filtering first conducts (graph-based) ANN search
+to find data objects whose vectors are close to the query vector
+and then eliminates any out-of-range data objects. In-filtering
+integrates the range filtering into the (graph-based) ANN search
+arXiv:2409.02571v1 [cs.DB] 4 Sep 2024</page><page num="4">SIGMOD ’25, June 22–27,2025, Berlin, Germany Xu and Gao, et al.
+Specifically, unlike vanilla graph-based methods that visit all neigh-
+bors 
+3 
+of an object during querying (Section 2.1), the In-filtering
+strategy only visits the in-range neighbors. This strategy cannot
+handle different query ranges with the fixed graph built for ANN
+search on the whole database. In particular, when query ranges are
+small, a data object is likely to have only a few, or even no, in-range
+neighbors. If we then increase the number of edges in the graph-
+based indexes to solve the issue of short query ranges, then when
+considering queries with long ranges, a data object may have too
+many in-range neighbors. Overall, with the In-filtering strategy,
+the quality of a fixed graph-based index is suboptimal for some
+query ranges.
+Most existing proposals aim to mitigate the issues inherent to
+the three strategies [29 , 62 , 75, 81 , 89 ]. In particular, ADBV [81 ] and
+Milvus [ 75] use a cost model to automatically select the best strat-
+egy for a given query. Milvus [ 75] further partitions a dataset into
+several subsets with consecutive attribute values. During querying,
+it conducts RFANN search separately on the subsets that inter-
+sect with the query range and then merges their results. Another
+study [ 29 ] proposes SuperPostfiltering that presets multiple
+overlapping ranges and builds a graph-based index for each range
+separately. During querying, it first finds the shortest range that
+covers the query range. Then it conducts RFANN search on the
+range with the Post-filtering strategy. Although these propos-
+als successfully avoid the distinctively disadvantageous cases of
+the basic strategies, we note that the inherent issues of the strate-
+gies have yet to be fully resolved. For example, for a query range
+of size 𝑠, SuperPostfiltering [29 ] performs Post-filtering on
+a subset of the database where there are at most 4𝑠 data objects.
+However, among them, there may still be 3𝑠 out-of-range objects,
+which causes suboptimal performance.
+To address the inherent issues of the basic strategies, a recent
+study [89] considers building a dedicated graph-based index for
+each possible query range. During querying, a method can then
+find and use the graph-based index corresponding the range of
+a query. As the graph includes exactly all in-range data objects,
+RFANN query is reduced to an ANN query. However, as explained
+already, the number of possible query ranges, each in the format of
+[𝐿, 𝑅] with 1 ≤ 𝐿 ≤ 𝑅, is 𝑂 (𝑛
+2
+). Therefore, compression is applied.
+However, the lossy compression reduces the quality of the indices,
+causing suboptimal query performance.
+3 METHODOLOGY
+3.1 Overview
+We follow the idea of performing the search process on a ded-
+icated graph-based index for a given query range as the exist-
+ing method [ 89 ] does. However, while that method considers all
+𝑂 (𝑛
+2
+) possible ranges and materializes compressed graphs for these
+ranges, we build graphs for only a moderate number of ranges be-
+fore the querying. We call these graphs elemental graphs. Then
+when a query is processed, the edges in elemental graphs are used
+as the basic elements to construct a dedicated graph for the query’s
+range. The intuition is that a query range will intersect with some
+ranges for which elemental graphs exist. The edges in these graphs
+3
+Without further specification, by “neighbors,” we mean neighbors of a node in a graph
+index, not the nearest neighbors in high-dimensional space.
+Figure 1: The iRangeGraph index applied to 16 data objects. It
+is based on a segment tree with 5 layers, namely L0 to L4. L0
+has one segment corresponding to the range [1, 16]. L1 has
+two segments corresponding to the ranges [1, 8] and [9, 16]
+respectively, etc. The elemental graphs are materialized for
+each segment with respective data objects (e.g., an elemental
+graph based on 𝑂
+1
+, 𝑂
+2
+, ..., 𝑂
+8 
+is materialized for segment [1,
+8] and the out-going edges of node 𝑂
+6 
+are represented by the
+arrows). In all elemental graphs, the maximum out-degree 𝑚
+of a node is 3 in this example.
+are leveraged to construct the dedicated graph. Dedicated graphs
+are constructed on-the-fly in that we determine the edges of a data
+object only when we are to visit its neighbors during the search
+process. The construction process incurs only a modest overhead
+compared to the cost of searching the dedicated graph. Overall, the
+dedicated graph for a query range is not materialized but is con-
+structed on-the-fly with little overhead. This eliminates the huge
+space cost of storing all dedicated graphs but can still leverage a
+dedicated graph for any query range in the search process. Two
+questions still need answers: (1) How to select the ranges for which
+elemental graphs are materialized? (2) How to construct a dedi-
+cated graph for any given query range based on elemental graphs?
+In particular, the main consideration when answering these ques-
+tions is the trade-off between a) the number of ranges for which
+elemental graphs should be built and b) the number of elemental
+graphs the algorithm needs to access when constructing the out-
+edges for a vertex on-the-fly for a given query range. The former
+determines the space complexity of the index, while the latter deter-
+mines the time complexity of querying. We notice that the classical
+segment tree has promising properties related to the handling of
+range queries and strikes a good balance between these two costs,
+as illustrated next.
+For the first question, inspired by the classical segment tree [24 ],
+we build a multi-layer index structure (see Figure 1). In the 𝑖th layer
+(𝑖 = 0, 1, ..., log 𝑛), the full range [1, 𝑛] (corresponding to the set of
+all objects 𝑂
+1
+, 𝑂
+2
+, ..., 𝑂
+𝑛 
+) is partitioned into 2
+𝑖 
+disjoint segments
+(i.e., ranges), each of length 
+𝑛
+2
+𝑖 
+. For each segment, we materialize
+an RNG-based elemental graph for the corresponding range 
+4
+. The
+rationale for choosing the segments indexed by the segment tree
+4
+To ease the presentation, we assume that 𝑛 is power of 2.</page><page num="5">iRangeGraph: Improvising Range-dedicated Graphs for Range-filtering Nearest Neighbor Search SIGMOD ’25, June 22–27,2025, Berlin, Germany
+and build graphs for them is three-fold. (1) The space consumption
+is moderate. In the multi-layer index, a data object appears only
+once in each layer, and it has a maximum out-degree of 𝑚 in a
+graph of each layer. Thus, the space complexity of storing the
+graphs for 𝑛 data objects is 𝑂 (𝑛𝑚 log 𝑛), which is much lower than
+the prohibitive space consumption of storing graphs for all possible
+query ranges, i.e., 𝑂 (𝑛
+3
+𝑚). (2) These elemental graphs enable an
+effective and efficient algorithm for constructing a dedicated graph
+for any given query range during querying (details are given in
+Section 3.3).(3) The recursive structure of the segment tree enables
+an efficient algorithm for materializing the graphs in the index
+phase. It can be shown that the asymptotic time complexity of
+constructing the entire multi-layer index differs by up to a sub-
+logarithmic factor from that of constructing a single graph-based
+index (HNSW) for the dataset. Section 3.2 elaborates the index
+phase.
+To answer the second question, we design an effective and effi-
+cient algorithm for constructing an RNG-based dedicated graph for
+any given query range on the fly. In particular, we construct the
+graph by selecting the edges for an in-range data object from the
+elemental graphs when we need to visit its neighbors during the
+search process. Each object is covered by a segment in our index
+at each of the 𝑂 (log 𝑛) layers, and hence the object is involved in
+𝑂 (log 𝑛) elemental graphs. (1) The algorithm is effective at con-
+structing an RNG-based dedicated graph because an RNG is defined
+by a pruning rule ( Section 2.1), and the relationship between the
+query range and a certain segment enables determining whether
+an edge in an elemental graph of the segment should be retained in
+the dedicated graph for the given query range. For example, when
+a segment covers the given query range, the edges (connecting
+two in-range objects) that are retained in the elemental graph of
+the segment must be retained in the dedicated graph of the query
+range (since if an edge cannot be pruned from a set of objects, it
+can not be pruned for a subset of objects, either). (2) Our algorithm
+is efficient because the index is based on the segment tree whose
+recursive structure allows us to skip the edge selection in some
+layers without affecting the dedicated graph. Based on the idea of
+skipping layers, we design an algorithm for selecting edges for an
+object, which has amortized time complexity 𝑂 (𝑚 + log 𝑛) - as a
+comparison, the time complexity is 𝑂 (𝑚 log 𝑛) when enumerating
+the edges in 𝑂 (log 𝑛) layers without skipping layers. This is low
+compared to the cost of visiting the neighbors of an object in the
+dedicated graph, which is 𝑂 (𝑚𝑑), where 𝑑 is the dimensionality
+of the vectors. Section 3.3 presents the details of the algorithm for
+constructing a dedicated graph and the search strategies in the
+query phase.
+We summarize the resulting method, called iRangeGraph and
+provide an analysis of it in Section 3.4.
+3.2 Materializing Elemental Graphs
+3.2.1 The Structure of the Index. Our index is based on segment
+tree [ 24 ], which is a powerful data structure for supporting various
+range-based queries (e.g., range maximum query, range sum query,
+etc). Specifically, it is a balanced binary tree of 𝑂 (log 𝑛) layers (see
+Figure 1). Each node in the tree represents a segment (i.e., a range),
+which is defined recursively. In particular, the root node is defined to
+represent the full range of the dataset, i.e., [1, 𝑛] (i.e., corresponding
+to the set of all objects 𝑂
+1
+, 𝑂
+2
+, ..., 𝑂
+𝑛 
+). Then recursively, for a node
+whose corresponding segment is [𝑙, 𝑟 ], its left and right children
+are defined to represent the segments of 
+[
+𝑙, 𝑚𝑖𝑑
+] 
+and 
+[
+𝑚𝑖𝑑 + 1, 𝑟 
+]
+respectively where 𝑚𝑖𝑑 = ⌊ 
+𝑙+𝑟
+2 
+⌋. Those nodes whose segments have
+the length of 1 are defined to be the leaf nodes (i.e., corresponding
+to a single object).
+Based on the recursive structure of the segment tree, we note
+that a data object appears only once in a single segment in each
+of the 𝑂 (log 𝑛) layers. Recall that a graph-based index has the
+maximum out-degree of 𝑚 for each data object. Thus, when we
+build a graph for every segment in the segment tree, the space
+complexity of storing the index is 𝑂 (𝑛𝑚 log 𝑛), which is moderate
+compared with that of storing the graphs for all possible query
+ranges, i.e., 𝑂 (𝑛
+3
+𝑚). In other word, it is feasible to materialize all
+the graphs for the segments in the segment tree in the index phase.
+These materialized graphs which we call the elemental graphs, will
+be later used in the query phase for constructing a dedicated graph
+for any given query range ( details will be presented in Section 3.3).
+For the graph indexes that are built for the segments (i.e.,
+elemental graphs), we follow state-of-the-art graph-based algo-
+rithms [36 , 51 , 59 ] and adopt approximate RNG-based graphs. Re-
+call that the time complexity of exactly computing an RNG is pro-
+hibitive [36, 51]. We follow the convention of most of the existing
+methods [ 36 , 51 , 59 ] which constructs approximate RNGs by search-
+ing for a few candidates, applying the pruning rule of RNG and
+cutting off excessive edges (see Section 2.1 for detailed description).
+3.2.2 The Algorithm for Materializing the Index. Next, to material-
+ize the index, we note that it can be achieved trivially by running
+the construction algorithm of any existing graph indexes [36 , 51 , 59 ]
+for every segment independently. The good news is that, due to
+the recursive structure of the segment tree, the construction can be
+done in a bottom-up manner, which is more efficient (e.g., it can be
+proven that the time complexity for constructing the entire index
+differs by up to a sub-logarithmic factor from that for constructing
+HNSW on the same dataset, details are given in Section 3.4), as
+follows.
+Let [𝑙, 𝑟 ] be a segment in the tree and [𝑙, 𝑚𝑖𝑑], [𝑚𝑖𝑑 + 1, 𝑟 ] be its
+left and right child segment respectively. Consider the procedure of
+constructing the approximate RNG of [𝑙, 𝑟 ], for which the graphs
+for [𝑙, 𝑚𝑖𝑑] and [𝑚𝑖𝑑 +1, 𝑟 ] are available given that we construct the
+index in a bottom-up manner. Recall that for constructing the edges
+of a data object 𝑢, we first find some candidates (e.g., approximate
+nearest neighbors) and then apply the pruning rule of RNG to them.
+Without loss of generality, assume that 𝑢 is covered by the child
+segment [𝑙, 𝑚𝑖𝑑] (the case where 𝑢 is covered by the other child
+segment [𝑚𝑖𝑑 + 1, 𝑟 ] is symmetric and thus omitted). Note that the
+candidates are from either [𝑙, 𝑚𝑖𝑑] (the child segment that contains
+𝑢) or [𝑚𝑖𝑑 + 1, 𝑟 ] (the child segment that does not contsain 𝑢). We
+discuss these two cases separately.
+First, for the candidates that are from the child segment that
+contains 𝑢, i.e., [𝑙, 𝑚𝑖𝑑], we can infer whether a candidate of object
+𝑢 will be pruned in the RNG of [𝑙, 𝑟 ] based on the RNG of its child
+segment [𝑙, 𝑚𝑖𝑑]. In particular, we note that a candidate may not
+be pruned in the RNG of [𝑙, 𝑟 ] only if it is retained in the RNG of
+the child segment [𝑙, 𝑚𝑖𝑑]. Note that the set of objects of the child</page><page num="6">SIGMOD ’25, June 22–27,2025, Berlin, Germany Xu and Gao, et al.
+segment [𝑙, 𝑚𝑖𝑑] is a subset of that of the segment [𝑙, 𝑟 ]. Thus, if
+a candidate can be pruned by an object in the subset, it can also
+be pruned by the same object in the full set. Thus, for generating
+the candidates that are from [𝑙, 𝑚𝑖𝑑], it suffices to consider those
+that cannot be pruned in the RNG of the child segment only (i.e.,
+to copy the neighbors of 𝑢 in the elemental graph of [𝑙, 𝑚𝑖𝑑] that
+have been constructed). It is unnecessary to consider other objects
+in [𝑙, 𝑚𝑖𝑑] as the candidates since otherwise they would be pruned.
+This operation avoids the cost of searching for candidates of 𝑢 in
+[𝑙, 𝑚𝑖𝑑] from scratch. Second, for the candidates that are from the
+child segment that does not contain 𝑢, i.e., [𝑚𝑖𝑑 + 1, 𝑟 ], we must
+search for candidates for 𝑢 as we have no clue which candidates
+from [𝑚𝑖𝑑 + 1, 𝑟 ] must be pruned in this case. In particular, in this
+case, we take the approximate nearest neighbors as the candidates
+by following the well-known HNSW [59] method.
+After the candidates are generated, finally the pruning of RNG
+is applied to the candidates, and the edges are built accordingly.
+In summary, in the index phase, we materialize the RNG-based
+elemental graphs for all the segments in the segment tree bottom-
+up, which is conducted recursively.
+3.3 Constructing and Searching Dedicated
+Graphs
+3.3.1 Constructing Dedicated Graphs. Let [𝐿, 𝑅] be a query range
+given in the query phase. Recall that we target to construct a dedi-
+cated RNG-based graph for any given query range on the fly for
+the RFANN query. Basically, the construction of a graph is to pro-
+vide the set of edges for every data object 𝑢 ∈ [𝐿, 𝑅]. In our index,
+note that 𝑢 is included in a single segment in each of the 𝑂 (log 𝑛)
+layers (see Figure 1). As in the elemental graph of each segment, a
+data object has up to 𝑚 edges, a data object has in total 𝑂 (𝑚 log 𝑛)
+edges in the index. To construct the dedicated graph for the query
+range, the question is how we should select up to 𝑚 edges out of the
+𝑂 (𝑚 log 𝑛) edges in the elemental graphs. For example, in Figure 1,
+the object 𝑂
+6 
+has 9 edges in total from all layers, and in order to
+construct the dedicated graph, we need to select among them up to
+3 edges for 𝑂
+6
+.
+The Strategy of Edge Selection. The relationship between a
+segment and the query range can help to decide whether an edge in
+the elemental graph should be selected in the dedicated graph for
+the query range. For example, the segments that contain an object
+𝑢 (in Figure 1, the purple stars mark all the segments that contain
+data object 𝑂
+6
+) all intersect with the query range, and the larger
+the intersection is, the more strict the pruning would be (meaning
+that it is more likely that an edge is pruned). Specifically, if an edge
+(𝑢, 𝑣) is retained in the elemental graph of the segment [𝑙, 𝑟 ], this
+indicates that the edge would not be pruned by any of the objects
+in the subset [𝐿, 𝑅] ∩ [𝑙, 𝑟 ] of the query range [𝐿, 𝑅]. In the extreme
+case, where [𝐿, 𝑅] ∩ [𝑙, 𝑟 ] = [𝐿, 𝑅], i.e., the segment covers the query
+range, it is guaranteed that the edge would not be pruned by any of
+the objects in the query range. In other word, if an edge is retained
+in the elemental graph that has larger intersection with the query
+range, it is more robust against pruning by the objects in the given
+query range. As a result, given that we only select 𝑚 edges out
+of the 𝑂 (𝑚 log 𝑛) edges, we give priority to selecting the edges in
+the segment that has larger intersection with the query range. In
+our index, they correspond to the edges in the upper layers of the
+segment tree.
+The Efficient Algorithm for Edge Selection. Based on the above
+strategy of edge selection, for a data object 𝑢, we select the edges in a
+top-down way. Specifically, we start the process from the root node
+of the segment tree. Then iteratively, we select all the in-range edges
+(𝑢, 𝑣) in the elemental graph of a layer and move to the segment
+that contains 𝑢 in the next layer. The edge selection terminates after
+selecting edges of an elemental graph whose segment is covered
+by the query range. This is because if an edge can be pruned by an
+object in this segment, then as the object is also in the query range,
+the edge is also pruned in the RNG-based graph on the query range
+by the same object.
+Although this algorithm is effective in constructing a dedicated
+graph for a given query range, its time cost in the query phase is
+unignorable. Specifically, in the worst-case, the cost of selecting the
+edges for an object is 𝑂 (𝑚 log 𝑛): it scans 𝑚 edges of the object at
+each of the 𝑂 (log 𝑛) segments covering the object and thus takes
+𝑂 (𝑚 log 𝑛) time. For example, for the query range [6, 15] and data
+object 𝑂
+6 
+shown in Figure 1, in order to select up to 3 edges, it scans
+the edges of 𝑂
+6 
+in every layer, i.e., it scans 9 edges at 4 layers in
+total. Recall that our strategy is to prioritize the edge selection in
+the segment that has the larger intersection with the query range.
+In particular, when a segment has exactly the same intersection
+with the query range as its child segment does, the edges in their
+elemental graphs have exactly the same robustness against pruning
+by the objects in the query range. In this case, we can skip the
+edge selection at this layer and directly move to the next layer. For
+example, in Figure 1, to select the edges for 𝑂
+6
+, the segments in L1
+and L2 that contain 𝑂
+6 
+have exactly the same intersection with the
+query range, and thus we can skip L1 to select edges from L2.
+We present our edge selection algorithm based on the strategy
+of skipping layers in Algorithm 1. We note that it is provable that
+the amortized time complexity of the algorithm is 𝑂 (𝑚 + log 𝑛),
+which is much smaller than the time complexity of an edge selection
+algorithm that does not skip layers (i.e., 𝑂 (𝑚 log 𝑛)). In addition,
+the time complexity of our edge selection algorithm is negligible
+compared with the time cost of visiting the 𝑚 neighbors, which is
+𝑂 (𝑚𝑑), where 𝑑 is the dimensionality (see details in Section 3.4).
+3.3.2 Searching on Dedicated Graphs. For a given RFANN query,
+we search on the dedicated graph, which we construct on the fly
+for the query range, as we do on existing graph-based indexes for
+the ANN query. Specifically, we employ greedy beam search on the
+dedicated graph, where the edges for a data object are constructed
+on the fly when we access its neighbors during the search process.
+3.4 Summary and Discussion
+In summary, the proposed method initially builds a multi-layer
+index based on the segment tree, where for each segment, we ma-
+terialize an approximate RNG-based graphs, called an elemental
+graph. During query processing, the method leverages the elemental
+graphs to construct a dedicated graph for the query being processed
+on the fly (Algorithm 1) and conduct an ANN query on it.
+Analysis. First, the space complexity of our method is of
+𝑂 (𝑛𝑚 log 𝑛) which is moderate compared with that of storing the
+dedicated graphs for all possible query ranges, i.e., 𝑂 (𝑛
+3
+𝑚). Next,</page><page num="7">iRangeGraph: Improvising Range-dedicated Graphs for Range-filtering Nearest Neighbor Search SIGMOD ’25, June 22–27,2025, Berlin, Germany
+Algorithm 1 Edge Selection
+Input: 𝑢: a data object; [𝐿, 𝑅]: the query range; 𝑚: the maximum
+out-degree; N
+lay,𝑢 
+: the set of neighbors of 𝑢 at layer lay
+Output: a set of neighbors selected for 𝑢
+1: 𝑙 ← 1, 𝑟 ← 𝑛, lay ← 0, S ← ∅
+2: while |S| &lt; 𝑚 do
+3: [𝑙
+𝑐 
+, 𝑟
+𝑐 
+] ← the child segment of [𝑙, 𝑟 ] which contains 𝑢
+4: if [𝑙
+𝑐 
+, 𝑟
+𝑐 
+] ∩ [𝐿, 𝑅] = [𝑙, 𝑟 ] ∩ [𝐿, 𝑅] then
+5: 𝑙 ← 𝑙
+𝑐 
+, 𝑟 ← 𝑟
+𝑐 
+, lay ← lay + 1
+6: else
+7: S ← S ∪ (N
+lay,𝑢 
+∩ [𝐿, 𝑅])
+8: Cut off S to the size of 𝑚
+9: if [𝑙, 𝑟 ] ⊆ [𝐿, 𝑅] then
+10: break
+11: 𝑙 ← 𝑙
+𝑐 
+, 𝑟 ← 𝑟
+𝑐 
+, lay ← lay + 1
+12: return S
+the time complexity of the index phase is a somewhat contro-
+versial topic. This is because the construction algorithm involves
+nearest neighbor search. It can be proven that no algorithm can
+be guaranteed to achieve sub-linear time complexity for nearest
+neighbor search [48 , 69 ] (including graph-based methods [ 49]).
+However, due to the promising performance of the graph-based
+methods in practice on real-world datasets, it is often the case
+that these methods have sub-linear performance on real-world
+datasets [36 , 51, 59 , 78 ]. Thus, instead of presenting an asymptotic
+time complexity for the construction algorithm, we argue that the
+time complexity of constructing the entire multi-layer index differs
+by up to a sub-logarithmic factor from that of constructing a single
+graph-based index (e.g., HNSW) for the same dataset. The conclu-
+sion holds regardless of the above issue (see Theorem 3.1 below).
+Empirically, the time cost for constructing the entire index of our
+method is no more than 3x of that for constructing HNSW over the
+set of all objects (note that HNSW only supports queries without
+range constraints). The detailed proof and empirical verification
+are in the technical report [83] due to the page limitation.
+Theorem 3.1. The time complexity of the algorithm for material-
+izing the entire index of our method differs by up to a sub-logarithmic
+factor from that for constructing HNSW on the set of all objects.
+As for the time complexity of querying, due to the same issue
+as above, it is not informative to compare two graph-based methods
+based on their big-O time complexity (because for all methods, the
+time complexity is 𝑂 (𝑛)). We note that for the RFANN query, our
+method is superior because (1) it constructs a dedicated RNG-based
+graph for any given query range in the query phase, and (2) the
+time cost of doing so is low (see Theorem 3.2 below, the detailed
+proof is given in the technical report [ 83 ]). We refer to the empirical
+study in Section 5.2.1 that provides evidence that our method is
+capable of state-of-the-art performance.
+Theorem 3.2. The amortized time complexity of the algorithm (Al-
+gorithm 1) for constructing the edges for a data object in the dedicated
+graph on the fly is 𝑂 (𝑚 + log 𝑛).
+Limitation. Nevertheless, we note that the dedicated graph con-
+structed by our algorithm might not approximate an RNG perfectly
+based on all in-range objects for a query range, i.e., the graph con-
+structed using elemental graphs is not necessarily identical to the
+corresponding dedicated graph built from scratch. The space com-
+plexity of storing the graphs that are explicitly materialized on
+the in-range objects for all possible query ranges is 𝑂 (𝑛
+3
+𝑚), while
+the space complexity of our method is only 𝑂 (𝑛𝑚 log 𝑛). We ob-
+serve that the elemental graphs may miss some edges that should
+have been retained in the approximate RNG of the query range.
+Specifically, it is possible that an edge that should be retained in
+the RNG of the query range is pruned in the elemental graph of a
+segment. This is because besides the in-range objects, a segment
+also involves some out-of-ranges objects, which may accidentally
+prune the edges. Despite this limitation, our method achieves search
+performance that is very close to the ideal search performance, as
+verified empirically in Section 5.2.4. Specifically, in Section 5.2.4,
+we explicitly materialize an HNSW for each query range in a query
+workload. These HNSWs are called Oracle-HNSW because material-
+izing them for all possible query ranges is impractical. We measure
+the search performance of our method and the Oracle-HNSW, find-
+ing that the queries per second of the impractical Oracle-HNSW is
+no more than 2x that of ours when reaching 0.9 recall. At the same
+time, the space complexity of our method is 𝑂 (𝑛𝑚 log 𝑛), which is
+much smaller than that of the Oracle-HNSW, which is 𝑂 (𝑛
+3
+𝑚).
+Comparison with SuperPostfiltering [ 29]. We notice that a
+concurrent study [29 ], which was recently posted on arXiv, pro-
+poses a method called SuperPostfiltering for the RFANN query
+with a method also inspired by the segment tree. Unlike our method
+that aims to build a dedicated graph for any given query range on
+the fly, SuperPostfiltering [ 29 ] builds graph-based indexes for
+multiple ranges in the index phase. In the query phase, it then
+adopts the corresponding graph of the smallest range that covers
+the query range for conducting Post-filtering RFANN search.
+As a result, this method still suffers from the inherent issues of
+Post-filtering (see Section 2.2), i.e., it may visit many out-of-
+range objects for finding the nearest in-range object. Furthermore,
+the concurrent study [29] only applies the segment tree for deter-
+mining the ranges to build graphs for. In our method, the segment
+tree is applied in a more integrated way, i.e., the recursive structure
+of the segment tree helps both the efficient construction of our
+index structure in the index phase (Section 3.2) and the effective
+and efficient strategy of edge selection for constructing dedicated
+graphs on the fly in the query phase (Section 3.3). According to the
+empirical study in Section 5.2.1, our method is in general superior
+to SuperPostfiltering in terms of search performance, memory
+footprint, and indexing time.
+Impact of Duplicate Attribute values and Cardinality of At-
+tribute. So far, we have assumed that all data objects have distinct
+attribute values. However, it is easy to extend the algorithm to
+handle duplicate attribute values. Specifically, we can simply put
+the data objects with identical attribute values into the same node
+in every layer of the segment tree. All other operations in the algo-
+rithm remain unchanged. Furthermore, the RFANN query becomes
+easier when duplicate attribute values exists. Specifically, when
+the number 𝑐 of distinct attribute values, i.e., the cardinality of the
+attribute, is significantly smaller than 𝑛, the space complexity of</page><page num="11">iRangeGraph: Improvising Range-dedicated Graphs for Range-filtering Nearest Neighbor Search SIGMOD ’25, June 22–27,2025, Berlin, Germany
+The Memory Footprint and Indexing Time. We then measure
+the memory footprint and indexing time of all methods. We report
+the memory footprint of all the methods for RFANN in Table 2. We
+also include the sizes of the raw vectors for reference. The overall
+memory footprint of a method minus that of the raw vectors equals
+to the size of its index. The indexing time is reported in Table 3 
+11
+.
+Note that only our method, SuperPostfiltering, Milvus, and
+Pre-filtering can stably produce reasonable recall for most of
+the datasets and query workloads. Thus, we focus the comparisons
+on these methods only. We note that the memory footprint of our
+method is smaller than that of SuperPostfiltering and larger
+than those of Pre-filtering and Milvus. Recall that our method
+outperforms Milvus and Pre-filtering by orders of magnitudes
+in terms of query efficiency across many datasets and query work-
+loads. Thus, compared with these methods, our method strikes
+a good trade-off between the search performance and the (time
+and space) costs of the index. On the other hand, as is reflected in
+Table 2, it is not guaranteed that iRangeGraph has smaller mem-
+ory footprint than 2DSegmentGraph although iRangeGraph has
+the lower space complexity of 𝑂 (𝑛𝑚 log 𝑛). This is because 2DSeg-
+mentGraph applies an aggressive compression strategy (MaxLeap)
+that produces an index whose empirical size is significantly smaller
+than 𝑂 (𝑛
+3
+𝑚). However, due to the compression, 2DSegmentGraph
+cannot enable reasonable query performance on many datasets and
+query workloads. In contrast, our method achieves superior query
+performance with a stable and moderate memory footprint.
+Based on the experimental results above, we proceed to character-
+ize the settings in which deployment of iRangeGraph is appropriate.
+Overall, iRangeGraph is suited in setting where the query work-
+load includes mixed query ranges and the dimensionality is high.
+In particular, iRangeGraph offers competitive query performance
+at the cost of moderate (but unignorable) memory consumption.
+Its memory overhead is caused by its storage of the edges of ele-
+mental graphs. When the dimensionality is high, the memory cost
+is dominated by the cost of storing the vectors. Thus, this overhead
+is relatively low. For example, the WIT dataset has 2,048 dimen-
+sions, and the memory consumption of our method is 1.6x that of
+the raw vectors. As for the query performance, unless the query
+ranges are consistently small (in this case, the RFANN query is
+intrinsically simple and Pre-filtering is the optimal solution),
+iRangeGraph shows competitive search performance. We note that
+the methods designed for label filtering do not quite suit the RFANN
+query. Recall that these methods partition the dataset into several
+consecutive buckets and assign each bucket a label. The problem is
+that it is hard to decide the length of the bucket for different query
+ranges. For example, when the query range is much larger than the
+bucket length, it is necessary to conduct separate ANN queries on
+many buckets, which causes reduced performance.
+5.2.2 The Results of the Ablation Study. In this section, we investi-
+gate the effect of the components in our search algorithm on the
+search performance. The qps-recall curves are presented in Figure 3
+with the query workloads of mixed range across all datasets. The
+ablation involves two folds.
+11
+For all methods except for 2DSegmentGraph, 32 threads are used; for 2DSegment-
+Graph, a single thread is used since its multi-thread implementation is not available.
+Table 2: Memory footprint (GB).
+WIT TripClick Redcaps YT-Rgb YT-Audio
+Raw Vectors 7.7 2.9 2.0 3.9 0.47
+iRangeGraph 12.87 4.34 7.14 9.05 1.95
+SuperPostfiltering 28.98 14.67 11.8 17.53 7.50
+Milvus 8.38 3.23 2.21 4.28 0.66
+Pre-filtering 7.7 2.9 2.0 3.9 0.47
+2DSegmentGraph 9.35 4.23 3.19 5.22 1.61
+FilteredVamana 8.17 3.29 2.31 4.18 0.84
+StitchedVamana 8.15 3.22 2.21 4.06 0.72
+Table 3: Indexing time (s).
+WIT TripClick Redcaps YT-Rgb YT-Audio
+iRangeGraph 3,776 621 1,851 4,719 236
+SuperPostfiltering 11,603 5,140 1,765 4,735 1,206
+Milvus 784 476 174 593 49
+Pre-filtering &lt;10 &lt;10 &lt;10 &lt;10 &lt;10
+2DSegmentGraph 16,865 3,165 1,412 3,038 381
+FilteredVamana 358 144 80 110 35
+StitchedVamana 450 54 41 85 16
+In order to evaluate the effectiveness of our core algorithm for
+constructing a dedicated graph for any query range for RFANN, we
+compare it with a trivial baseline, which we call BasicSearch. With
+the structure of segment tree, any query range can be expressed
+as the union of 𝑂 (log 𝑛) non-overlapping segments in the tree.
+For example in Figure 1, the query range [6, 15] can be exactly
+expressed by the union of 5 disjoint segments, i.e., segment [9, 12]
+at L2, segments [7, 8], [13, 14] at L3, and segments [6], [15] at L4.
+The BasicSearch baseline independently conducts ANN search on
+the elemental graphs of the 𝑂 (log 𝑛) segments and finally merges
+the results. We note that it is the way the segment tree is used for
+handling other types of range-based queries, e.g., range maximum
+query and range sum query [24 ]. Figure 3 shows that our method
+outperforms this trivial baseline by 2x to 4x in efficiency on all
+workloads at 0.9 recall.
+We next evaluate the effectiveness of the efficient algorithm
+for edge selection. Note that the trivial algorithm of edge selection
+without skipping some layers has the time complexity of 𝑂 (𝑚 log 𝑛)
+while the efficient algorithm has the amortized time complexity of
+𝑂 (𝑚 + log 𝑛) (Section 3.3). The former introduces unignorable over-
+head in the search algorithm. According to Figure 3, we observe that
+the search performance based on the efficient algorithm (iRange-
+Graph, the red curve) achieves consistent improvement over the
+trivial algorithm (iRangeGraph-, the blue curve), which verifies
+the effectiveness of the efficient algorithm for edge selection.
+5.2.3 Scalability Results. We evaluate the scalability of our method
+with a larger public dataset DEEP 
+12
+. The results show that as the
+dataset scales, the indexing cost remains moderate and the search
+performance remains promising. For more details, we refer to our
+technical report [83].
+5.2.4 Comparison with Oracle-HNSW. Here, we evaluate the per-
+formance gap between our dedicated graph and the graph that
+is explicitly materialized for the given query ranges. Specifically,
+in this experiment, we explicitly build an HNSW graph for every
+given query range and measure its search performance. We call this
+12
+https://research.yandex.com/blog/benchmarks-for-billion-scale-similarity-search</page></paper>

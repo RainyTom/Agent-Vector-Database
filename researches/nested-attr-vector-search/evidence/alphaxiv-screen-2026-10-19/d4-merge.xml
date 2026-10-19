@@ -1,0 +1,1304 @@
+<paper id="2505.16064v1"><page num="1">Three Algorithms for Merging Hierarchical
+Navigable Small World Graphs
+Alexander Ponomarenko 
+∗1,2
+1
+Laboratory LATNA, HSE University
+2
+Yugabyte, Inc
+Abstract
+This paper addresses the challenge of merging hierarchical navigable
+small world (HNSW) graphs, a critical operation for distributed systems,
+incremental indexing, and database compaction. We propose three algo-
+rithms for this task: Naive Graph Merge (NGM), Intra Graph Traversal
+Merge (IGTM), and Cross Graph Traversal Merge (CGTM). These algo-
+rithms differ in their approach to vertex selection and candidate collection
+during the merge process. We conceptualize graph merging as an itera-
+tive process with four key steps: processing vertex selection, candidate
+collection, neighborhood construction, and information propagation. Our
+experimental evaluation on the SIFT1M dataset demonstrates that IGTM
+and CGTM significantly reduce computational costs compared to naive
+approaches, requiring up to 70% fewer distance computations while main-
+taining comparable search accuracy. Surprisingly, IGTM outperforms
+CGTM in efficiency, contrary to our initial expectations. The proposed al-
+gorithms enable efficient consolidation of separately constructed indices,
+supporting critical operations in modern vector databases and retrieval
+systems that rely on HNSW for similarity search.
+Keywords: approximate nearest neighbor search, hierarchical navigable
+small world, graph merging, vector databases, information retrieval
+1 Introduction
+The k-nearest neighbor (k-NN) search problem has emerged as a fundamental
+computational challenge with critical applications across numerous domains. In
+today’s data-driven landscape, efficient similarity search is essential for recom-
+mendation systems, computer vision, multimedia retrieval, and natural language
+processing applications. Recent advancements in generative AI, particularly
+Retrieval-Augmented Generation (RAG) systems, have further highlighted the
+∗
+aponom84@gmail.com, aponomarenko@hse.ru
+1
+arXiv:2505.16064v1 [cs.DS] 21 May 2025</page><page num="3">Figure 1: Schematic example HNSW structure. Each layer is a navigable graph
+that suit for “greedy-like” traversal algorithms. Graphs of all levels glued to-
+gether form a navigable small world graph similar to NSW. An explicit sepa-
+ration set of edges of different lengths to layers helps to reduce the number of
+computations in search while traversing vertexes with high degrees, also called
+hubs.
+including PostgreSQL (vector extension), ORACLE [19], and other vector search
+oriented databases such as Milvus [20], Zilliz [21], Weaviate [22].
+HNSW [15] extends the navigable graphs concept by organizing points in a
+hierarchy of navigable graphs also named layers. Each layer contains a progres-
+sively smaller subset of data points. The bottommost layer contains all points,
+while the upper layers form a sparse representation of the data space. Graphs
+of all levels glued together form a navigable small world graph similar to NSW
+[23–25]. An explicit separation set of edges of different lengths to layers helps to
+reduce the number of computations in search while traversing vertexes with high
+degrees, also called hubs. A schematic example of HNSW structure presented
+in Fig. 1.
+1.3 Graph Merging Challenge
+While HNSW supports efficient dynamic insertions and deletions, an impor-
+tant operational challenge arises in practical systems: merging multiple inde-
+pendently constructed graph indices. This problem is particularly relevant in
+distributed systems, incremental indexing scenarios, and database compaction
+operations. In graph-based indices, deletion operations are often implemented
+by simply marking vertices as deleted without actually removing them, to avoid
+disrupting the graph’s connectivity. This approach prevents the computation-
+ally expensive task of rebuilding neighborhoods for affected vertices. However,
+as deletions accumulate, the index becomes increasingly sparse and less efficient.
+3</page><page num="4">Graph merging provides a way to periodically compact the structure by
+creating a fresh graph that excludes deleted vertices while preserving the nav-
+igability properties essential for efficient search. Additionally, in distributed
+computing environments, merging separately constructed indices becomes nec-
+essary for building unified search structures over partitioned datasets.
+1.4 Graph Merging as an Iterative Process
+The merge operation can be conceptualized as an iterative process consisting of
+four key steps:
+1. Processing Vertex Selection: Choosing a vertex v
+∗ 
+for which we aim
+to construct a neighborhood in the merged graph and determining which
+original graph it belongs to.
+2. Candidate Collection: Gathering potential neighbors from both input
+graphs. This involves searching within each graph structure to find vertices
+that should be considered for inclusion in v
+∗
+’s neighborhood.
+3. Neighborhood Construction: Applying a specified strategy (e.g., k-
+nearest neighbors or relative neighborhood graph) to select the final set
+of neighbors for v
+∗ 
+from the candidates.
+4. Information Propagation: Deciding what information from the current
+iteration should be preserved for the next iteration to optimize the process,
+then proceeding to step 1 with a new vertex.
+By carefully designing each of these steps, we can create merge algorithms
+that balance computational efficiency with the quality of the resulting graph
+structure.
+In this work, we propose three novel algorithms based on this iterative
+framework—Naive Graph Merge (NGM), Intra Graph Traversal Merge
+(IGTM), and Cross Graph Traversal Merge (CGTM)—for efficiently
+merging HNSW graphs. These algorithms differ primarily in how they imple-
+ment each step of the iterative process. For instance, NGM and IGTM select
+the next vertex for neighborhood construction only from the same graph as the
+current vertex. In contrast, CGTM implements the idea that the next vertex
+for neighborhood construction can be selected from any input graph.
+The rest of this paper is organized as follows. Section 2 describes the search
+algorithms for HNSW graphs that we use in merge procedures. Section 3 recalls
+neighborhood construction strategies that are essential for both graph building
+and merging. Section 4 introduces our three graph merging algorithms in detail.
+Section 5 presents computational experimental results. We give references to
+similar works in Section 6. Finally, Section 7 concludes the paper and discusses
+directions for future research.
+4</page><page num="7">parameter ℓ = 0, and assuming that v
+0 
+is one of the vertex of the top layer [30],
+[31], [17].
+In the text, we also refer to the HNSW-Search algorithm as a “standard”,
+or “default search” algorithm. The LocalSearch function is hidden from the
+user and is used only as a part of a particular implementation”.
+3 Neighborhood Construction Strategies
+Algorithm 3 KNN-Neighborhood-Construction(v
+∗
+, C, k)
+Input: Vertex v
+∗
+, candidate set C, number of neighbors k
+Output: Set C
+′ 
+of k closest neighbors
+1: C
+′ 
+← k-nearest neighbors of v
+∗ 
+in C
+2: return C
+′
+Various strategies exist for selecting a node’s neighborhood to form a navi-
+gable property for a graph. Our merging algorithms are designed to be agnostic
+to the specific neighborhood construction method, which can be provided as a
+parameter. We present two representative strategies below.
+The KNN-Neighborhood-Construction algorithm (Algorithm 3) im-
+plements the simplest approach, where a vertex’s neighborhood consists of its
+k-nearest neighbors from the candidate set. This strategy prioritizes proximity,
+but may not optimize for graph navigability properties.
+In contrast, the RNG-Neighborhood-Construction algorithm (Algo-
+rithm 4) implements a more sophisticated approach based on relative neighbor-
+hood graph principles. It processes candidates in ascending order of distance to
+the target vertex v
+∗
+. For each candidate v, it checks whether v is closer to v
+∗
+than to any previously selected neighbor w. This pruning condition helps cre-
+ate better-connected graphs with improved navigability by ensuring that edges
+span different directions in the vector space rather than clustering in the same
+region. The algorithm limits the neighborhood size to at most m vertices to
+control maximum vertex degree.
+The choice of neighborhood construction strategy significantly impacts both
+search performance and the computational cost of index maintenance opera-
+tions, including merges. While KNN-Neighborhood-Construction is com-
+putationally simpler, RNG-Neighborhood-Construction typically produces
+graphs with better search performance at the expense of more complex neigh-
+borhood formation. In this paper, we performed our experiments with RNG-
+Neighborhood-Construction.
+4 Merge Algorithms
+We now present three algorithms for merging HNSW graphs: NGM, IGTM,
+and CGTM. These algorithms operate layer by layer. We first describe the
+7</page><page num="8">Algorithm 4 RNG-Neighborhood-Construction(v
+∗
+, C, m)
+Input: Vertex v
+∗
+, candidate set C, maximum neighborhood size m
+Output: Filtered neighbor set C
+′
+1: Sort C in ascending order by distance to v
+∗
+2: C
+′ 
+← ∅
+3: for v ∈ C do
+4: f ← true
+5: for w ∈ C
+′ 
+do
+6: if ρ(v
+∗
+, v) ≥ ρ(v, w) then
+7: f ← false
+8: break
+9: if f then
+10: C
+′ 
+← C
+′ 
+∪ {v}
+11: if |C
+′
+| ≥ m then
+12: break
+13: return C
+′
+general procedure for merging the multi-layer HNSW structure, followed by the
+specific logic for merging a single layer (layer-merge algorithms).
+4.1 Simple Insertion Graph Merge
+Before we start, we need to provide a short description of simple insertion graph
+merge (SIGM). It is a default merging strategy that uses an insertion operation
+to merge graphs. It takes the largest graph and sequentially inserts data from
+other graph. Actually, it is not a merging procedure, but we use it as a basic
+benchmark.
+4.2 HNSW General Merge Framework
+The HNSW-General-Merge algorithm (Algorithm 5) provides a framework
+for merging two HNSW structures, H
+a 
+and H
+b
+. It iterates through each layer
+level and applies a chosen layer-merge algorithm (NGM, IGTM, or CGTM)
+to combine the corresponding layers G
+a
+i 
+and G
+b
+i 
+. The layer-merge algorithms
+require access to the full HNSW structures H
+a
+, H
+b 
+to perform searches using
+HNSW-Search.
+4.3 Naive Graph Merge
+The Naive Graph Merge (NGM) algorithm (Algorithm 6) provides a straight-
+forward method for merging a single layer ℓ. The algorithm begins by extracting
+the target layers from both input HNSW structures and initializing the merged
+graph’s vertex set as the union of vertices from both input graphs (lines 1-4).
+For each vertex v
+∗ 
+in graph G
+a
+ℓ 
+(line 5), the algorithm:
+8</page><page num="9">Algorithm 5 HNSW-General-Merge(H
+a
+, H
+b
+, LayerMergeAlgo, params)
+Input: HNSW graphs H
+a
+, H
+b
+. Chosen layer merge algorithm LayerMergeAlgo
+(e.g., NGM). Algorithm-specific parameters params.
+Output: Merged HNSW graph H
+c 
+= (G
+c
+i 
+)
+l
+c
+max
+i=0
+1: l
+a
+max 
+← H
+a
+.getMaxLayerNumber()
+2: l
+b
+max 
+← H
+b
+.getMaxLayerNumber()
+3: l
+c
+max 
+← max(l
+a
+max
+, l
+b
+max
+)
+4: for i = 0 to l
+c
+max 
+do ▷ Merge each layer
+5: G
+c
+i 
+← LayerMergeAlgo(H
+a
+, H
+b
+, ℓ = i, params) ▷ Calls e.g., Merge-Naive
+6: H
+c 
+← (G
+c
+i 
+)
+l
+c
+max
+i=0
+7: return H
+c
+1. Searches for potential neighbors in graph G
+b
+ℓ 
+using HNSW-Search (line
+6)
+2. Combines these candidates with v
+∗
+’s original neighbors from G
+a
+ℓ 
+(line 7)
+3. Selects the final neighborhood for v
+∗ 
+using the specified Neighborhood-
+Construction strategy and adds the corresponding edges to E
+c 
+(line
+8)
+The same process is then repeated for all vertices of graph G
+b
+ℓ 
+(lines 9-12).
+This approach ensures that each vertex in the merged graph has an ap-
+propriate neighborhood that incorporates information from both input graphs.
+However, it is computationally intensive due to repeated HNSW-Search calls
+that traverse multiple layers for each vertex.
+4.4 Intra Graph Traversal Merge
+The most effort of the NGM algorithm lies in obtaining the set of neighborhood
+candidates from the other graph utilizing the HNSW-Search procedure, which
+every time traverses the layer graphs from the top level down to the layer num-
+ber ℓ. The number of computations can be reduced if we select the next vertex
+to process v
+∗ 
+close to the previous one (line 15 of the algorithm 7), instead of
+randomly choosing it. Thus, for the new v
+∗ 
+the neighborhood candidates will
+also be close to the previous candidates set. To search for these new neighbor-
+hood candidates we can use the LocalSearch procedure which traverses the
+same graph staring from the previous neighborhood candidates set P
+b 
+(lines
+11). In line 14 in the set P
+b 
+we keep only M -closest to v
+∗ 
+candidates.
+In lines 15,16, we select a new processing vertex v
+∗ 
+close to the previous process-
+ing vertex v
+∗ 
+that was not already processed. To ensure that the new processing
+vertex v
+∗ 
+is not very far from the previous v
+∗ 
+we bound the size of the results of
+the LocalSearch procedure controlling by next step k parameter. Once
+ Lo-
+calSearch cannot find enough close unprocessed vertex (if condition in line
+17), in line 7 we choose a new v
+∗ 
+from the set V
+not done
+ 
+randomly.
+9</page><page num="10">Algorithm 6 NGM(H
+a
+, H
+b
+, ℓ, NeighborhoodConstruction, m, search ef, v
+entry 
+)
+Input: HNSW graphs H
+a
+, H
+b
+; target layer ℓ; Neighborhood construction func-
+tion NeighborhoodConstruction; target neighborhood size m; search pa-
+rameter search ef; entry point
+ v
+entry 
+(e.g., from H
+a 
+or H
+b
+)
+Output: Merged graph G
+c
+1: G
+a 
+← H
+a
+.GetLayer(ℓ); G
+b 
+← H
+a
+.GetLayer(ℓ)
+2: V 
+a 
+← vertices(G
+a
+); V 
+b 
+← vertices(G
+b
+)
+3: E
+a 
+← edges(G
+a
+); E
+b 
+← edges(G
+b
+)
+4: V 
+c 
+← V 
+a 
+∪ V 
+b
+; E
+c 
+← ∅
+5: for v
+∗ 
+∈ V 
+a 
+do
+6: C
+b 
+← HNSW-Search(H = H
+b
+, q = v
+∗
+, v
+entry 
+= v
+b
+entry 
+, k = m, L =
+search ef
+, ℓ = ℓ)
+7: C ← {v | (v
+∗
+, v) ∈ E
+a
+} ∪ C
+b
+8: E
+c 
+← E
+c 
+∪ {(v
+∗
+, v)|v ∈ neighborhood construction(C, v
+∗
+, m)}
+9: for v
+∗ 
+∈ V 
+b 
+do
+10: C
+a 
+← HNSW-Search(H = H
+a
+, q = v
+∗
+, v
+entry 
+= v
+a
+entry 
+, k = m, L =
+search ef, ℓ
+target 
+= ℓ)
+11: C ← {v | (v
+∗
+, v) ∈ E
+b
+} ∪ C
+a
+12: E
+c 
+← E
+c 
+∪ {(v
+∗
+, v)|v ∈ neighborhood construction(C, v
+∗
+, m)}
+13: return G
+c 
+= (V 
+c
+, E
+c
+)
+After we have processed all vertices from the graph G
+a
+. We do the same for the
+vertices of graph G
+b 
+(lines 21-22).
+4.5 Cross Graph Traversal Merge
+Cross Graph Traversal Merge (CGTM) algorithm is similar to IGTM utilizes
+the LocalSearch procedure to reduce computation efforts. The difference is
+that the IGTM algorithm chooses the next processing vertex v
+∗ 
+from the same
+graph, while CGTM looks for the new processing vertex v
+∗ 
+in both graphs G
+a
+,
+and G
+b
+. Thus in line 24 v
+∗ 
+is chosen from the set C
+not done
+, which is one of the
+not processed vertex of both graph (line 21). The intuition underlying CGTM
+algorithm is that when we choose a new processing vertex v
+∗ 
+from both graphs,
+we reduce the number of times when v
+∗ 
+is chosen randomly, thus minimizing
+the number of times that we use the more expensive search procedure HNSW-
+Search.
+5 Computational Experiments
+5.1 Setup
+We evaluated the proposed merge algorithms on the standard ANN benchmark
+dataset SIFT1M of 1 million 128-dimensional vectors. We divided it into two
+disjoint subsets of 500k vectors. In these subsets, we built two HNSW indices
+10</page><page num="11">Algorithm 7 IGTM(H
+a
+, H
+b
+, ℓ, jump ef, local ef, next step k, M, m)
+Input: The HNSW graphs H
+a 
+= (G
+a
+i 
+), H
+b 
+= (G
+b
+i 
+), the merging layer
+number ℓ, the size of the forming neighborhoods m ∈ N, parameters
+jump ef
+, local ef, next step k ∈ N
+Output: Merged graph G
+c
+1: G
+a 
+← H
+a
+.GetLayer(ℓ); G
+b 
+← H
+a
+.GetLayer(ℓ)
+2: V 
+a 
+← vertices(G
+a
+); V 
+b 
+← vertices(G
+b
+)
+3: E
+a 
+← edges(G
+a
+); E
+b 
+← edges(G
+b
+)
+4: V 
+c 
+← V 
+a 
+∪ V 
+b
+; E
+c 
+← ∅
+5: V
+not done
+ 
+← V 
+a
+6: while V
+not done
+̸
+ 
+= ∅ do
+7: v
+∗ 
+← random choice from V
+not done
+8: P
+b 
+← HNSW-Search(H = H
+b
+, q = v
+∗
+, v
+0
+, k = M, L = jump ef, ℓ)
+9: while True do
+10: V
+not done 
+← V
+not done 
+\ {v
+∗
+}
+11: C
+b 
+← LocalSearch(G = G
+b
+, q = v
+∗
+, C = P
+b
+, k = m, L = local ef)
+12: C ← {v : (v
+∗
+, v) ∈ E
+a
+} ∪ C
+b
+13: E
+c 
+← E
+c 
+∪ {(v
+∗
+, v) : v ∈ NeighborhoodConstruction(C, v
+∗
+, m)}
+14: P
+b 
+← {C
+b
+1
+, C
+b
+2
+, ..., C
+b
+M 
+}
+15: C
+a 
+← LocalSearch(G = G
+a
+, q = v
+∗
+, C = {v
+∗
+}, k =
+next step k, L = next step ef)
+16: C
+a 
+← C
+a 
+∩ V
+not done
+17: if C
+a 
+= ∅ then
+18: break
+19: v
+∗ 
+← C
+a
+1
+20: V
+not done 
+← V 
+b
+21: while V
+not done
+̸
+ 
+= ∅ do
+22: Repeat the same process for V 
+b 
+with the roles of H
+a 
+and H
+b 
+swapped.
+23: return G
+c 
+= (V 
+c
+, E
+c
+)
+11</page><page num="12">Algorithm 8 CGTM(H
+a
+, H
+b
+, ℓ, jump ef, local ef, next step k, M, m)
+Input: The HNSW graphs H
+a 
+= (G
+a
+i 
+), H
+b 
+= (G
+b
+i 
+), the merging layer ℓ, param-
+eters jump ef, local ef, next step k ∈ N, neighborhood sizes M, m ∈ N
+Output: Merged graph G
+c
+1: G
+a 
+← H
+a
+.GetLayer(ℓ); G
+b 
+← H
+a
+.GetLayer(ℓ)
+2: V 
+a 
+← vertices(G
+a
+); V 
+b 
+← vertices(G
+b
+)
+3: E
+a 
+← edges(G
+a
+); E
+b 
+← edges(G
+b
+)
+4: V 
+c 
+← V 
+a 
+∪ V 
+b
+; E
+c 
+← ∅
+5: V
+not done
+ 
+← V 
+a 
+∪ V 
+b
+6: while V
+not done
+̸
+ 
+= ∅ do
+7: v
+∗ 
+← randomly choice from V
+not done
+8: P
+a 
+← HNSW-Search(H = H
+a
+, q = v
+∗
+, v
+0
+, k, L = jump ef, ℓ)
+9: P
+b 
+← HNSW-Search(H = H
+b
+, q = v
+∗
+, v
+0
+, k, L = jump ef, ℓ)
+10: while True do
+11: V
+not done 
+← V
+not done 
+\ {v
+∗
+}
+12: C
+a 
+← LocalSearch(G = G
+a
+, q = v
+∗
+, C = P
+a
+, k = m, L = local ef)
+13: C
+b 
+← LocalSearch(G = G
+b
+, q = v
+∗
+, C = P
+b
+, k = m, L = local ef)
+14: if v
+∗ 
+∈ V 
+a 
+then
+15: C ← {v : (v
+∗
+, v) ∈ E
+a
+} ∪ C
+b
+}
+16: else
+17: C ← {v : (v
+∗
+, v) ∈ E
+b
+} ∪ C
+a
+}
+18: E
+c 
+← E
+c 
+∪ {(v
+∗
+, v) : v ∈ neighborhood construction(C, v
+∗
+, m)}
+19: C
+a
+not done
+ 
+← {C
+a
+1 
+, C
+a
+2 
+, ..., C
+a
+next step k
+} ∩ V
+not done
+20: C
+b
+not done
+ 
+← {C
+b
+1
+, C
+b
+2
+, ..., C
+b
+next step k
+} ∩ V
+not done
+21: C
+not done 
+← C
+a
+not done 
+∪ C
+b
+not done
+22: if C
+not done
+ 
+= ∅ then
+23: break
+24: v
+∗ 
+← argmin
+v∈C
+not done
+ρ(v, v
+∗
+)
+25: P
+a 
+← C
+a
+26: P
+b 
+← C
+b
+27: return G
+c 
+= (V 
+c
+, E
+c
+)
+12</page><page num="13">900 1000 1100 1200 1300 1400 1500 1600
+Distance Count
+0.89
+0.90
+0.91
+0.92
+0.93
+0.94
+0.95
+0.96
+0.97
+Recall@5
+L=32
+L=40
+L=50
+L=64
+L=72
+L=32
+L=40
+L=50
+L=64
+L=72
+L=32
+L=40
+L=50
+L=64
+L=72
+L=32
+L=40
+L=50
+L=64
+L=72
+NGM {'jump_ef':20}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 1}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 2}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 3}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 20}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 1}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 2}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 3}
+IGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 20}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 1}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 2}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 3}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 5}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 10}
+IGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 1}
+IGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 2}
+IGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 3}
+IGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 5}
+IGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 10}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 1}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 2}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 3}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 5}
+IGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 10}
+CGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 1}
+CGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 2}
+CGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 3}
+CGTM {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 20}
+CGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 1}
+CGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 2}
+CGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 3}
+CGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 5}
+CGTM {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 10}
+CGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 1}
+CGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 2}
+CGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 3}
+CGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 5}
+CGTM {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 10}
+SIGM {'ef_construction': 16}
+SIGM {'ef_construction': 24}
+SIGM {'ef_construction': 32}
+SIGM {'ef_construction': 40}
+Figure 2: Recall vs distance count on search stage for merged graphs.
+H
+a 
+and H
+b 
+using the following parameters: M = 16, M 0 = 32, ef construction
+= 32. Then these indices were merged using a simple insertion strategy SIGM
+and the three proposed algorithms: NGM, IGTM, and CGTM. We keep the
+same values of the parameters m = 16 and m0 = 32 as the target neighborhood
+size in the merged graph.
+In order to be independent of implementation details and low-level optimisa-
+tions, we made a comparison of the algorithms based on the number of distance
+computations required for the merge process.
+Other important characteristics of the merge process is how accurate the
+merge is done. In this case, the word “merging accuracy” can mean different
+things. For example, we can estimate merging accuracy as how similar the
+neighborhoods of the merged graph to the neighborhoods of the graph con-
+structed by simple insertion strategy SIGM. Another way, which we prefer, is
+to verify how the merged graph is good for search. To quantify search quality,
+we performed a standard search performance test on the merged graphs. So,
+for the merged graphs, we have measured a trade-off between recall and the
+number of distance computations, by running algorithm 2 with different values
+of the parameter L (search expansion factor). We measured the recall@5 metric
+for L = 32, 40, 50, 64, and 72. This metric indicates how often the true nearest
+neighbors appear in the top-5 results returned by the search algorithm.
+Formally, for a given query point q, let P
+k
+(q) denote the set of k true nearest
+neighbors, and let A
+k
+(q) be the set of the top k points returned by the algorithm.
+Then, recall@k is defined as:
+13</page><page num="14">recall@k = 
+|P
+k
+(q) ∩ A
+k
+(q)|
+k
+In our experiment as recall@5 we report an averaged value over all sequences of
+searches.
+All source codes of our implementation can be found in a public GitHub
+repository 
+1
+.
+5.2 Results
+The searching quality of the merged graph is represented in Fig. 2. The
+graph plots trade-off between recall and the number of distance computations.
+As can be seen, SIGM with ef construction
+ ≥ 32 and NGM with parameter
+jump ef = 20 produce merged graph with slightly better searing quality than
+other algorithms.
+Another important fact which 2 shows that the number of distance compu-
+tations performed by the search algorithm (Algorithm 2) for equal parameter L
+are almost the same. Therefore, the graph is better if it provides better search
+recall for a fixed value of the parameter L. Taking this into account, we can
+better interpret Fig. 3. It is easy to see the following:
+• IGTM and CGTM in our experiment setup achieve recall better than
+SIGM with parameter ef construciton = 24;
+• NGM and SIGM perform the most computations, but achieves the high-
+est recall, as it exhaustively reconstructs each neighborhood;
+• CGTM achieving comparable recall with approximately 60% fewer com-
+putations than NGM and SIGM;
+• IGTM provides the best run-time performance, reducing distance compu-
+tations about 20% than CGTM, and about 70% than NGM and SIGM
+while achieving comparable recall.
+6 Related Works on Graph Merging
+While working on the paper, we have found that just recently researchers from
+Elastic Search Lab published a blog post [32] where they proposed a fast
+merge algorithm, which also utilizes information about closeness of object in all
+graphs. The authors presented a scheme where a subset of vertices J “join set”
+from the smaller graph is selected by greedy heuristic and inserted into the larger
+graph using standard HNSW insertion procedure. For the remaining vertices
+from the small graph, their already inserted neighbors and those neighbors’
+connections in the large graph are used to perform a limited beam search (named
+1
+https://github.com/aponom84/merging-navigable-graphs
+14</page><page num="15">Merge Distance Count (log scale)
+0.915
+0.920
+0.925
+0.930
+0.935
+5@Recall
+L = 40
+Merge Distance Count (log scale)
+0.9325
+0.9350
+0.9375
+0.9400
+0.9425
+0.9450
+0.9475
+0.9500
+L = 50
+10
+9 
+2 × 10
+9 
+3 × 10
+9 
+4 × 10
+9
+Merge Distance Count (log scale)
+0.948
+0.950
+0.952
+0.954
+0.956
+0.958
+0.960
+0.962
+0.964
+5@Recall
+L = 64
+10
+9 
+2 × 10
+9 
+3 × 10
+9 
+4 × 10
+9
+Merge Distance Count (log scale)
+0.954
+0.956
+0.958
+0.960
+0.962
+0.964
+0.966
+0.968
+L = 72
+Algorithm | Params
+NGM | {'jump_ef':20}
+IGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 1}
+IGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 2}
+IGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 3}
+IGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 20}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 1}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 2}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 3}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 5}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 3, 'M': 10}
+IGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 1}
+IGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 2}
+IGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 3}
+IGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 5}
+IGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'next_step_ef': 3, 'M': 10}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 1}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 2}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 3}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 5}
+IGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'next_step_ef': 10, 'M': 10}
+CGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 1}
+CGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 2}
+CGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 3}
+CGTM | {'jump_ef': 20, 'local_ef': 5, 'next_step_k': 3, 'M': 20}
+CGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 1}
+CGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 2}
+CGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 3}
+CGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 5}
+CGTM | {'jump_ef': 64, 'local_ef': 5, 'next_step_k': 3, 'M': 10}
+CGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 1}
+CGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 2}
+CGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 3}
+CGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 5}
+CGTM | {'jump_ef': 64, 'local_ef': 10, 'next_step_k': 3, 'M': 10}
+SIGM | {'ef_construction': 16}
+SIGM | {'ef_construction': 24}
+SIGM | {'ef_construction': 32}
+SIGM | {'ef_construction': 40}
+Figure 3: Recall of final merged graph vs merging efforts
+FAST-SEARCH-LAYER) to find connection candidates. This approach limits
+full insertions and accelerates the merging process.
+Ideologically approach of [32] is similar to our work, because the authors uti-
+lize information about closeness of object in all graphs, and use light-weighted
+version of the search algorithm FAST-SEARCH-LAYER (in our case it is LO-
+CAL SEARCH. The “join set” J from some point of view is similar to the set
+vertices for which IGTM and CGTM run the standard HNSW search. How-
+ever, in [32] the “join set” J is determined separately at the first stage by a
+greedy heuristic that tries to find a good cover set, while IGTM and CGTM
+establish the vertices for which to run HNSW-Search during the work in the
+main cycle in a more homogeneous way.
+The other work which is relatively close to the present topic is a paper by
+Zhao and co-authors [33]. They proposed two algorithms: Symmetric Merge (S-
+Merge) for combining two k-NN graphs and Joint Merge (J-Merge) for incremen-
+tally extending an existing graph with new points. These methods effectively
+combine graphs built on different subsamples while maintaining high search ac-
+curacy and accelerating computations. S-Merge discards half the neighbors in
+each list, while J-Merge leverages the hierarchical structure of the graph.
+The performance comparison of the different merge algorithms is a subject
+of future research.
+15</page><page num="16">7 Conclusion and Future Work
+In this work, we introduced three algorithms to merge hierarchical navigable
+small-world graphs: NGM (Algorithm 6), IGTM (Algorithm 7), and CGTM
+(Algorithm 8).
+The NGM algorithm provides a straightforward but computationally inten-
+sive approach, performing standard HNSW searches to find sets of candidates
+to reconstruct the neighborhood of a vertex chosen in an arbitrary way. IGTM
+and CGTM improve efficiency by leveraging locality—processing vertices close
+to each other sequentially and using the less expensive LocalSearch algorithm
+(Algorithm 1).
+Our experimental results demonstrate that IGTM and CGTM significantly
+reduce the number of distance computations compared to the naive approach
+while maintaining comparable search accuracy. Our evaluation on the dataset
+of 1 million 128-dimensional vectors (SIFT1M) shows that IGTM and CGTM
+are more than 3 times faster than the straightforward insertion strategy SIGM,
+with minimal impact on recall performance.
+Interestingly, our experiments revealed that IGTM outperformed CGTM
+in terms of computational efficiency, contrary to our initial expectations. We
+had anticipated that CGTM would be more efficient since it can select the next
+vertex for neighborhood construction from both graphs, theoretically reducing
+the chances of getting stuck and thus requiring fewer costly standard search op-
+erations. However, it appears that the overhead of selecting the next processing
+vertex, for which a neighborhood is forming, in CGTM is too computationally
+expensive, and these costs are not offset by the reduction in searches when “gets
+stuck” with selecting the next close vertex to process. The study of this fact is
+a subject for further work.
+In addition, an important direction for future work is adapting the proposed
+merge algorithms to handle deleted vertices. This would enable their use in
+compaction processes, where graphs are periodically restructured to remove ob-
+solete entries and maintain search efficiency. By extending our merge algorithms
+to filter out deleted nodes during the “Processing Vertex Selection” phase.
+Also, the researchers can focus on the idea that the neighborhood construc-
+tion can be done for the set of vertex close to each other instead of forming
+neighborhood for one vertex per iteration. This can be more suitable for GPU
+or NPU settings.
+Additional areas for exploration include adaptive parameter selection based
+on dataset characteristics, and extensions to other graph-based index structures
+beyond HNSW.
+Finally, future work can be applied to develop a fast graph construction
+procedure using one of the merge algorithms. It seems very natural to start
+from the set of small graphs and merge them in a recursive manner.
+16</page><page num="18">[13] Tiezheng Ge, Kaiming He, Qifeng Chen, and Jian Sun. Optimized product
+quantization for approximate nearest neighbor search. In Proceedings of the
+IEEE Conference on Computer Vision and Pattern Recognition (CVPR),
+pages 863–870, 2013.
+[14] Mohammad Norouzi and David J. Fleet. Cartesian k-means for product
+quantization. In Proceedings of the IEEE Conference on Computer Vision
+and Pattern Recognition (CVPR), pages 119–126, 2013.
+[15] Yu A Malkov and Dmitry A Yashunin. Efficient and robust approximate
+nearest neighbor search using hierarchical navigable small world graphs.
+IEEE transactions on pattern analysis and machine intelligence, 42(4):824–
+836, 2018.
+[16] Martin Aum¨uller, Erik Bernhardsson, and Alexander Faithfull. Ann-
+benchmarks: A benchmarking tool for approximate nearest neighbor al-
+gorithms. Information Systems, 87:101374, 2020.
+[17] Matthijs Douze, Alexandr Guzhva, Chengqi Deng, Jeff Johnson, Gergely
+Szilvasy, Pierre-Emmanuel Mazar´e, Maria Lomeli, Lucas Hosseini, and
+Herv´e J´egou. The faiss library. 2024.
+[18] Leonid Boytsov and Bilegsaikhan Naidan. Engineering efficient and effec-
+tive non-metric space library. In Nieves R. Brisaboa, Oscar Pedreira, and
+Pavel Zezula, editors, Similarity Search and Applications - 6th International
+Conference, SISAP 2013, A Coru˜na, Spain, October 2-4, 2013, Proceed-
+ings, volume 8199 of Lecture Notes in Computer Science, pages 280–293.
+Springer, 2013.
+[19] Oracle Corporation. Understanding Hierarchical Navigable Small World
+Indexes, 2023. Accessed: 2025-04-05.
+[20] Hnsw index. https://milvus.io/docs/hnsw.md, 2024. Accessed: 2024-
+05-20.
+[21] Hierarchical navigable small world (hnsw). https://zilliz.com/blog/
+hnsw, 2022. Accessed: 2024-05-20.
+[22] Weaviate Team. Vector Index. Weaviate, 2024. Accessed: 2025-04-05.
+[23] Alexander Ponomarenko, Yury Malkov, Andrey Logvinov, and Vladimir
+Krylov. Approximate nearest neighbor search small world approach. In
+International Conference on Information and Communication Technologies
+&amp; Applications, volume 17, 2011.
+[24] Yury Malkov, Alexander Ponomarenko, Andrey Logvinov, and Vladimir
+Krylov. Scalable distributed algorithm for approximate nearest neighbor
+search problem in high dimensional general metric spaces. In Similar-
+ity Search and Applications: 5th International Conference, SISAP 2012,
+Toronto, ON, Canada, August 9-10, 2012. Proceedings 5, pages 132–147.
+Springer, 2012.
+18</page><page num="19">[25] Yury Malkov, Alexander Ponomarenko, Andrey Logvinov, and Vladimir
+Krylov. Approximate nearest neighbor algorithm based on navigable small
+world graphs. Information Systems, 45:61–68, 2014.
+[26] Liudmila Prokhorenkova and Aleksandr Shekhovtsov. Graph-based nearest
+neighbor search: From practice to theory. In International Conference on
+Machine Learning, pages 7803–7813. PMLR, 2020.
+[27] Shuo Yang, Jiadong Xie, Yingfan Liu, Jeffrey Xu Yu, Xiyue Gao, Qianru
+Wang, Yanguo Peng, and Jiangtao Cui. Revisiting the index construction of
+proximity graph-based approximate nearest neighbor search. arXiv preprint
+arXiv:2410.01231, 2024.
+[28] Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Rav-
+ishankar Krishnawamy, and Rohan Kadekodi. Diskann: Fast accurate
+billion-point nearest neighbor search on a single node. Advances in neural
+information processing Systems, 32, 2019.
+[29] Mengzhao Wang, Xiaoliang Xu, Qiang Yue, and Yuxiang Wang. A com-
+prehensive survey and experimental comparison of graph-based approx-
+imate nearest neighbor search. Proceedings of the VLDB Endowment,
+14(11):1964–1978, 2021.
+[30] Ash Vardanian. USearch by Unum Cloud. https://github.com/
+unum-cloud/usearch, 2025. Version 2.17.7, May 2025.
+[31] Yury Malkov et al. hnswlib: Hierarchical navigable small world graphs
+library. https://github.com/nmslib/hnswlib, 2025. Accessed: 2025-05-
+04.
+[32] Hnsw graphs: Speed up merging. https://www.elastic.co/blog/
+introducing-hnsw-graphs, 2023. Accessed: 2024-05-20.
+[33] Wan-Lei Zhao, Hui Wang, Peng-Cheng Lin, and Chong-Wah Ngo. On the
+merge of k-nn graph. IEEE Transactions on Big Data, 8(6):1496–1510,
+2021.
+19</page></paper>

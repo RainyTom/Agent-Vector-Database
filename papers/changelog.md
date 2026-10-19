@@ -115,3 +115,19 @@
 
 - 新增五方向研究路线与来源/候选快照，分别列前序、语义、假设、最小实验与反例；不改核心前缀定义。
 - 补TrieHI深目录PG遍历观察，保持其经验边界；RAPTOR/Zanzibar/TigerVector未精读候选不入全文索引，21篇/22关系不变，无算法实验。
+
+### 前缀检索六个子方向方案
+
+- 在researches/nested-attr-vector-search建立D0–D5六个子目录及directions.md；分别提出Directory-Aware执行加速、DAG增量scope、联合修补图、摘要/几何证书导航、版本快照覆盖清单、继承权限前沿方案。
+- 每方案给定义、机制、前序差异、正确性边界、成本、MVP、基线/消融和停止条件；均是待验证研究者设计，尚未实现，不能写成作者future work或已成立创新。
+- 更新研究入口、RQ-P候选构图规则、问题/检索日志；论文索引只补Directory-Aware项目启发。未精读新候选保留在日期化检索证据，仍为21篇/22关系。
+- 重点新增前序约束：Counting/DRed、SPI v3、ChronoVec分支向量索引、Zanzibar Leopard；公式统一美元分隔符，检查本地链接及索引结构。
+- 最终校验：21篇/22关系结构通过；7份新文档本地链接/分隔符通过；KaTeX 0.16.22实际生成65条公式的HTML无语法错误，未检查宿主Markdown渲染器的视觉预览。临时验证依赖已删除，未改项目依赖。
+
+### alphaXiv六方向新颖性审计及选题收缩
+
+- 保存2次alphaXiv检索与18个阅读目标的原始返回，区分14个arXiv原文、2个外部原始来源与2个失败/未命中；不以AI报告或标题相似判重。
+- 新建researches/nested-attr-vector-search/alphaxiv-novelty-audit.md和机器可读decisions.json。D0/D1/D3/D5停止独立立项，D2/D4暂停，全部原MVP不实施；没有将未找到等价论文写成创新性确认。
+- 六个README增加当前决定，directions及所有主要入口撤销原实施优先级；保留历史方案与证据。
+- 补Directory-Aware、Curator、iRangeGraph的项目判断，不改作者方法/理论；其他新候选书目与全文未完核，未新增完整论文条目，仍21篇/22关系。
+- 无算法实现或性能实验；完整组合是否等价与核心是否已有前序分开记录，历史授权/IVM及图增广引用闭包仍待补。

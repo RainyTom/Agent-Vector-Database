@@ -1,0 +1,1056 @@
+<paper id="2601.01291v3"><page num="1">Curator: Efficient Vector Search with Low-Selectivity Filters
+Yicheng Jin
+Duke University
+Durham, NC, USA
+yicheng.jin@duke.edu
+Yongji Wu
+University of California, Berkeley
+1
+Berkeley, CA, USA
+wuyongji317@gmail.com
+Wenjun Hu
+Yale University
+New Haven, CT, USA
+wenjun.hu@cantab.net
+Bruce M. Maggs
+Duke University
+Durham, NC, USA
+bmm@cs.duke.edu
+Jun Yang
+Duke University
+Durham, NC, USA
+junyang@cs.duke.edu
+Xiao Zhang
+Cisco ThousandEyes
+1
+Durham, NC, USA
+xz234@alumni.duke.edu
+Danyang Zhuo
+Duke University
+Durham, NC, USA
+danyang@cs.duke.edu
+Abstract
+Embedding-based dense retrieval has become the cornerstone of
+many critical applications, where approximate nearest neighbor
+search (ANNS) queries are often combined with filters on labels such
+as dates and price ranges. Graph-based indexes achieve state-of-the-
+art performance on unfiltered ANNS but encounter connectivity
+breakdown on low-selectivity filtered queries, where qualifying
+vectors become sparse and the graph structure among them frag-
+ments. Recent research proposes specialized graph indexes that
+address this issue by expanding graph degree, which incurs prohib-
+itively high construction costs. Given these inherent limitations of
+graph-based methods, we argue for a dual-index architecture and
+present Curator, a partition-based index that complements existing
+graph-based approaches for low-selectivity filtered ANNS. Cura-
+tor builds specialized indexes for different labels within a shared
+clustering tree, where each index adapts to the distribution of its
+qualifying vectors to ensure efficient search while sharing structure
+to minimize memory overhead. The system also supports incre-
+mental updates and handles arbitrary complex predicates beyond
+single-label filters by efficiently constructing temporary indexes
+on the fly. Our evaluation demonstrates that integrating Curator
+with state-of-the-art graph indexes reduces low-selectivity query
+latency by up to 20.9× compared to pre-filtering fallback, while
+increasing construction time and memory footprint by only 5.5%
+and 4.3%, respectively.
+1 Introduction
+The rise of deep learning has transformed information retrieval by
+enabling the representation of unstructured data as high-dimensional
+vectors that capture semantic relationships [21 , 27 , 36 ]. Approxi-
+mate nearest neighbor search (ANNS) over these vector embeddings
+has become a fundamental primitive powering modern applications
+from web search [29 , 50 ] to recommendation systems [8, 28 , 53 ]
+and retrieval-augmented generation [22, 31].
+1
+Yongji Wu and Xiao Zhang were with Duke University at the time this work was
+conducted.
+Pure semantic similarity, however, often proves insufficient for
+real-world applications. Modern systems increasingly require fil-
+tered ANNS, where vector similarity search is constrained by struc-
+tured predicates over metadata attributes. For instance, e-commerce
+platforms must find semantically similar products within specific
+price ranges and categories, while enterprise search systems need
+to respect user access permissions and document types. This com-
+bination of semantic similarity and structured filtering has driven
+significant interest from both industry [ 34, 35 , 42 , 44 , 45 ] and re-
+search communities [5, 12, 32, 43, 46, 52, 55, 56].
+Among the various challenges in filtered ANNS, handling queries
+with diverse selectivity—the fraction of vectors qualifying the filter
+conditions—is particularly difficult. The difficulty varies dramati-
+cally across the selectivity spectrum, with each regime requiring
+different algorithmic strategies and presenting distinct performance
+bottlenecks.
+1.1 Why Existing Approaches Fail at Low
+Selectivity
+Existing approaches to filtered ANNS can be broadly categorized by
+their underlying index structures: flat indexes (brute-force search),
+graph-based indexes, and partition-based indexes. While each index
+type has found success in specific scenarios, they all encounter
+limitations when handling low-selectivity queries. Fig. 1 illustrates
+these challenges across different approaches.
+Graph connectivity breakdown. As shown in Fig. 1(a), filtered
+search on graph-based indexes exposes a critical trade-off: as se-
+lectivity decreases, the sub-graph of qualifying vectors becomes
+increasingly sparse and disconnected. This connectivity breakdown
+forces algorithms to choose between two unsatisfactory options:
+visit all neighbors of each node, which is expensive since most
+neighbors are unqualified, or skip unqualified neighbors entirely,
+which is both incomplete—as some qualifying vectors become un-
+reachable—and inefficient, since graph search requires sufficient
+connectivity for optimal performance.
+arXiv:2601.01291v3 [cs.DB] 10 Jan 2026</page><page num="3">Curator : Efficient Vector Search with Low-Selectivity Filters
+regions are buffered at higher levels of the tree, adapting clustering
+granularity to the local density of qualifying vectors. The system
+constructs specialized indexes for different filter predicates, all em-
+bedded within a shared hierarchical clustering tree that maintains
+low overhead through structural sharing.
+Curator supports both label-based filtering—where vectors are
+associated with categorical labels known in advance and queries
+return the nearest vectors matching a given label—and arbitrary
+complex predicates involving multiple attribute types and logical
+operators. The core challenge with complex predicates is that they
+are typically not indexed directly due to the vast number of pos-
+sible combinations. Prior works resort to inefficient multi-stage
+filtering or inflexible special handling of a small subset of predicate
+types in index design. Curator addresses this by dynamically con-
+structing temporary indexes that mirror the shared tree structure
+with minimal overhead, enabling efficient evaluation of complex
+predicates without requiring pre-built specialized indexes for every
+combination.
+To validate this complementary design, we evaluate Curator
+against ACORN (the state-of-the-art graph-based index) using a
+semi-synthetic dataset constructed from YFCC-10M with 20 log-
+arithmically distributed selectivity levels in [0.001, 0.2], enabling
+systematic coverage of the low-selectivity regime. As shown in
+Fig. 2, brute-force search (pre-filtering fallback) exhibits linear scal-
+ing, while ACORN shows sharp performance degradation at low
+selectivity. Curator fills this gap with minimal construction and
+memory overhead. The results show that increasing graph degree
+(from ACORN-10 to ACORN-40) offers limited performance im-
+provement at low selectivity, confirming that densifying graphs is
+not an effective solution and making Curator an ideal complemen-
+tary approach.
+1.3 Contributions
+This paper makes the following key contributions:
+• Adaptive partitioning for low-selectivity ANNS: We
+design Curator, a hierarchical partition-based index that
+adapts clustering granularity to the distribution of qualified
+vectors, achieving high performance for low-selectivity
+queries while maintaining minimal memory overhead.
+• Efficient complex predicate support: We present a novel
+algorithm for handling arbitrary predicates by dynamically
+constructing temporary indexes with minimal overhead.
+• Comprehensive system design: We develop efficient
+algorithms including batch construction, incremental up-
+dates, and specialized search procedures for both single-
+label filters and complex predicates, ensuring search effi-
+ciency and completeness while adapting to dynamic changes
+in data distributions.
+• Extensive experimental validation: We conduct compre-
+hensive experiments on real-world datasets demonstrating
+that Curator reduces low-selectivity query latency by up to
+20.9× compared to the state-of-the-art solution (ACORN +
+pre-filtering), while increasing construction time and mem-
+ory footprint by only 5.5% and 4.3%, respectively, confirm-
+ing the effectiveness of our complementary approach.
+2 Background
+2.1 Problem Formulation
+We formulate the problem of filtered ANNS as follows. We start
+with single-label search and then generalize to complex predicate
+search:
+Single-label search. Let L = {𝑙
+1
+, 𝑙
+2
+, . . . , 𝑙
+| L | 
+} represent a finite
+universe of labels, and consider a dataset 𝑆 = {(𝑥, 𝐿
+𝑥 
+) | 𝐿
+𝑥 
+⊆ L}
+where each object consists of a vector 𝑥 and an associated set of
+labels 𝐿
+𝑥 
+. Single-label search involves queries that check for the
+existence of a single label in the label set: a query (𝑥
+𝑞
+, 𝑙, 𝑘) requests
+the 𝑘 nearest neighbors of the query vector 𝑥
+𝑞 
+within the subset of
+vectors where 𝑙 ∈ 𝐿
+𝑥 
+.
+Complex predicate search. Consider a more general dataset
+𝑆 = {(𝑥, 𝐴
+𝑥 
+)} where each object consists of a vector 𝑥 and associ-
+ated attributes 𝐴
+𝑥 
+including categorical labels, numerical values,
+timestamps, and other structured data. Complex predicate search
+involves arbitrary filter predicates 𝜎 combining range queries, com-
+posite conditions across multiple attributes, and complex logical
+operators. A query (𝑥
+𝑞
+, 𝜎, 𝑘) requests the 𝑘 nearest neighbors of the
+query vector 𝑥
+𝑞 
+within the subset P
+𝜎 
+of vectors qualifying predi-
+cate 𝜎. Complex predicate search subsumes single-label search and
+additionally supports AND queries (𝑥
+𝑞
+, 𝐿
+𝑞
+, 𝑘) where 𝐿
+𝑞 
+⊆ 𝐿
+𝑥 
+, and
+OR queries (𝑥
+𝑞
+, 𝐿
+𝑞
+, 𝑘) where 𝐿
+𝑞 
+∩ 𝐿
+𝑥 
+≠ ∅.
+For both search types, the selectivity of filter 𝜎 is defined as
+|P
+𝜎 
+|/|𝑆 |, which fundamentally determines query complexity. We
+measure search quality using Recall@K = 
+|𝑅∩𝑅
+∗ 
+|
+𝑘 
+, where 𝑅 and 𝑅
+∗
+denote the retrieved results and ground truth respectively.
+2.2 Filtered ANNS Approaches
+Below, we review existing methods of filtered ANNS organized
+by how filtering is integrated. This taxonomy is orthogonal to the
+underlying index type, focusing instead on how adaptations are ap-
+plied to search algorithms and index structures. For each approach,
+we first discuss its application to single-label search scenarios and
+then examine its support for complex predicate search.
+Metadata filtering. This approach integrates filtering with no
+or minimal modifications to search algorithms and index struc-
+tures, utilizing a single shared index. It includes three subtypes:
+(1) Pre-filtering [ 42, 44 , 45 ] retrieves all qualified vectors from a
+scalar index and performs brute-force search, since most vector
+indexes cannot efficiently support searching subsets of vectors. (2)
+Post-filtering [42 , 45] filters intermediate results from unfiltered
+ANNS, though determining sufficiently large 𝑘 to ensure enough
+results remain after filtering is challenging and overshoot leads to
+inefficiency. (3) Inline filtering [ 19 , 23 , 34 , 52] excludes unqualified
+vectors during search, eliminating intermediate 𝑘 selection but re-
+quiring explicit algorithmic support. This approach can support
+arbitrary complex predicates.
+Per-label indexing. This approach constructs dedicated vector
+indexes for each label and directs queries to the corresponding
+index without changing search algorithms [20 ]. While it delivers
+optimal search performance for single-label queries by eliminating
+query-time filtering, it incurs significant construction and memory
+overhead since each vector may be indexed multiple times across</page><page num="4">Yicheng Jin, Yongji Wu, Wenjun Hu, Bruce M. Maggs, Jun Yang, Xiao Zhang, and Danyang Zhuo
+different per-label indexes. Extending this to per-predicate indexing
+for complex predicate search is generally impossible due to the
+combinatorial explosion of possible predicates.
+Specialized indexes. Recent research has developed specialized
+indexes for filtered ANNS modifying both index construction and
+search algorithms, with most work focusing on graph-based ap-
+proaches. These methods can be categorized into three main strate-
+gies:
+(1) Fused distance. These methods [ 43 , 46 ] employ hybrid distance
+metrics that integrate both attribute and vector similarity through-
+out index construction and query processing. They are limited to
+equality-based attribute matching and require queries to specify
+values of all attributes for attribute similarity computation. This
+severely restricts query expressiveness, making them unsuitable
+for the problem settings we are considering.
+(2) Graph densification. Filtered DiskANN [12 ] and ACORN [ 32]
+follow a two-phase approach: dense graph construction then com-
+pression. Filtered DiskANN builds dense graphs by merging per-
+label indexes, while ACORN directly builds large-degree graphs.
+For compression, Filtered DiskANN prunes edges while preserving
+connectivity, whereas ACORN removes edges between nodes reach-
+able as two-hop neighbors, compensating by visiting both direct
+and two-hop neighbors during search. Both face the fundamental
+connectivity challenge that the required graph degree scales with
+1/selectivity. When this scaling becomes prohibitive, ACORN falls
+back to pre-filtering.
+(3) Subgraph stitching. UNG [5 ] constructs separate graph indexes
+for each unique label set and connects them using cross-group edges.
+During query processing, it traverses subgraphs corresponding to
+matching label sets, with connectivity among label sets guaranteed
+by cross-group edge construction to ensure completeness. How-
+ever, this approach often becomes inefficient when label set groups
+become highly fragmented with few nodes per group, which fre-
+quently occurs in real datasets. In such cases, the graph structure
+degrades as most edges become cross-group connections that prior-
+itize completeness over search efficiency. This leads to significant
+regression in search performance and long construction times for
+the stitching process in our evaluation.
+These specialized approaches exhibit varying support for com-
+plex predicates due to their tight integration of filtering with index
+structures. Filtered DiskANN supports only OR queries, and UNG
+supports only AND queries, while ACORN extends beyond these
+limitations to handle general complex predicates.
+3 Curator Overview
+This section presents Curator’s architecture and design principles.
+Fig. 3 illustrates Curator’s core design: a single shared base index
+and a set of per-label indexes embedded within it. This strategy al-
+lows per-label indexes to share the base index’s spatial partitioning
+while adapting their granularity to their unique label distributions,
+addressing the fundamental limitations of existing approaches for
+low-selectivity queries outlined in §2.
+Base Index
+Unfiltered Vector Distribution
+Per-Label Index
+Filtered Label Distribution
+Per-Label Indexes
+Bloom Filter
+Encode
+x2
+x4 x5
+Vector Store
+2 4 5
+Buffers
+Curator Index
+Compact Encoding of Per-Label Indexes
+Figure 3: Overview of Curator. The base index represents the
+finest-grained partitioning on unfiltered vector distribution,
+while the per-label indexes are embedded within the base
+index, adapting to the unique distribution of their respective
+labels. Per-label indexes are compactly encoded using buffers
+and Bloom filters.
+3.1 Base Index
+The base index 𝑇 is a standard hierarchical k-means clustering
+tree [ 26] that partitions all vectors in the dataset. The tree recur-
+sively partitions the vector space using k-means clustering until
+reaching sufficiently fine granularity, i.e., when a node contains
+fewer vectors than the predefined leaf capacity. The structure of
+the base index thus adapts to the distribution of all indexed vectors,
+which we refer to as the vector distribution. Within the base in-
+dex, each node stores a centroid that represents the corresponding
+cluster during search, while leaf nodes store the actual vector data
+within the cluster. This base index serves as the shared partitioning
+structure for embedded per-label indexes.
+We choose hierarchical k-means as the base index for two key
+reasons. First, as a partition-based index, it does not suffer from
+the inherent connectivity issues that plague graph-based indexes
+at low selectivity, as partitions remain well-defined regardless of
+label sparsity. Second, the hierarchical structure naturally embeds
+varied partitioning granularities for different filters within a single
+tree, allowing per-label indexes to adapt their clustering depth to
+label-specific distributions. Regarding search performance, hierar-
+chical k-means is typically slower than graph-based indexes like
+HNSW but comparable to IVF for unfiltered search. This perfor-
+mance positioning is confirmed in our evaluation (Fig. 8), where
+Curator traversing per-label clustering trees achieves performance
+comparable to per-label IVF.
+3.2 Per-Label Indexes
+Per-label indexes are embedded within the base index to adapt to
+the unique distribution of their respective labels. Unlike traditional
+approaches that build separate indexes for each label, Curator’s
+per-label indexes reuse the base index’s spatial partitioning while</page><page num="6">Yicheng Jin, Yongji Wu, Wenjun Hu, Bruce M. Maggs, Jun Yang, Xiao Zhang, and Danyang Zhuo
+x
+q
+Per-Label IndexHierarchical Clustering
+Figure 4: Single-label search on Curator. Highlighted clusters
+and tree nodes are visited by the search algorithm.
+clusters. This phase traverses from the root until reaching leaf nodes
+of the per-label index, maintaining the top-𝑏 closest nodes at each
+level. Without beam search, best-first search starting from the root
+would be misguided by the imprecision of high-level nodes, causing
+the algorithm to become trapped in suboptimal subtrees without
+exploring subtrees whose centroids are relatively far from the query
+vector but still contain nearby vectors within their boundaries.
+Exploring multiple promising paths simultaneously mitigates this
+centroid imprecision by increasing the likelihood that the actual
+nearest leaf nodes are covered by the beam search.
+Phase 2: Best-First Search. Using the frontier initialized by beam
+search, the second phase performs best-first search, systematically
+exploring the neighborhood guided by heuristic scores. The al-
+gorithm processes nodes based on their type with regard to the
+per-label index 𝑇
+𝑙 
+: leaf nodes containing buffers update the result set
+with their qualified vectors. For nodes without buffers, the Bloom
+filter B
+𝑛 
+determines whether the node is an internal node requiring
+expansion or an external node outside 𝑇
+𝑙 
+where the search should
+backtrack. During exploration, the search maintains a dynamic re-
+sult set R containing the ef closest vectors discovered so far. Each
+time a buffer is visited, the algorithm updates R and checks for
+convergence—if the result set remains unchanged (i.e., no vector
+in the buffer is closer than the worst member of R), the search
+terminates. Larger ef values widen the exploration radius, trading
+more work for higher recall. In the limit, when ef is sufficiently
+large, the traversal visits the entire per-label index encompassing
+all qualifying vectors, thus guaranteeing completeness. We found
+this adaptive termination criterion accommodates varying query
+difficulties more effectively than approaches that use a fixed com-
+putational budget.
+Heuristic Function. Both search phases employ the same heuris-
+tic function to score candidate nodes: 𝑆 (𝑛, 𝑥
+𝑞 
+) = 𝜇
+𝑛 
+− 𝑥
+𝑞 
+− 𝛼 ·
+1
+| P
+𝑛 
+|
+Í
+𝑥 ∈ P
+𝑛 
+∥
+𝑥 − 𝜇
+𝑛 
+∥
+. This heuristic estimates the minimum query-
+to-cluster distance by combining centroid distance with cluster
+radius. The 𝛼 coefficient encourages exploring large, distant clus-
+ters to avoid local optima.
+4.2 Complex Predicate Search
+The search algorithm described in the previous section supports
+only single-label categorical filters, which limits query expressive-
+ness in two key ways: (1) it only supports categorical attributes,
+preventing range queries on numerical attributes, and (2) it does
+not support logical operators like AND, OR, or NOT to compose
+multiple filtering conditions.
+Approach Overview. To address these limitations, we extend the
+system to support arbitrary complex predicates while maintaining
+the performance characteristics of single-label search. The key in-
+sight is that any complex predicate ultimately identifies a subset
+of vectors that qualify the given conditions. Instead of modifying
+the existing search infrastructure, we treat this subset as if it were
+associated with a virtual label, allowing us to reuse the same hi-
+erarchical partitioning and search algorithms. By constructing a
+temporary index containing only these qualifying vectors, we can
+apply the same search algorithm used for single-label filters.
+The challenge lies in efficiently constructing this temporary in-
+dex without expensive operations. A naive approach would require
+traversing the index for each qualified vector to find its correspond-
+ing position in the temporary index, which involves distance com-
+putations and tree traversals.
+Our approach exploits a key property of the vector identifier
+construction described in §3: given a list of qualified vectors sorted
+by their IDs, vectors from the same sub-tree are grouped contigu-
+ously. This property enables efficient temporary index construction
+through binary search operations. Given a sorted list of qualifying
+vector identifiers, we can recursively partition them into sub-trees
+by finding the boundaries between different child nodes using bi-
+nary search, following the same hierarchical structure as the main
+index.
+The sorted list of vector IDs, which we expect as the input for
+temporary index construction, is typically produced by an external
+relational database. This list could be represented as a posting list
+from an inverted index or a compressed bitmap. Evaluating attribute
+predicates and composing bitmaps inside the database is far cheaper
+than vector distance computation, so we treat this sorted list as
+the algorithm input. For further optimization, the costs of filter
+evaluation and temporary index construction can be reduced by
+only performing these operations in the sub-trees projected to be
+searched by the algorithm, rather than evaluating the predicate
+over all vectors and constructing the complete temporary index
+upfront.
+Temporary Index Construction. Algorithm 2 presents the tem-
+porary index construction procedure. The algorithm exploits the
+sorted vector ID property through a recursive tree building process
+that mirrors the structure of the main index 𝑇 . The BuildSubtree
+function constructs each node 𝑛
+𝜎 
+in the temporary index 𝑇
+𝜎 
+by
+processing a corresponding range P
+𝜎 
+[𝑙 : 𝑟 ] of sorted qualified vec-
+tor IDs. The algorithm operates as follows for each node: (1) Leaf
+condition: If the number of qualified vectors in the current range
+does not exceed the buffer capacity 𝐵
+𝑚𝑎𝑥 
+, the algorithm creates a
+leaf node and terminates recursion for this sub-tree. (2) Hierarchi-
+cal partitioning: Otherwise, it iterates through each child 𝑐 of the
+corresponding main index node 𝑛. For each child, binary search op-
+erations locate the subset of qualified vectors whose IDs fall within
+the child’s vector ID range [𝑐.min, 𝑐.max). This partitioning step
+leverages the contiguous property of sorted vector IDs to efficiently
+split the qualified vector list. After partitioning, the construction
+algorithm is then applied recursively to build the sub-tree for each
+child.</page><page num="7">Curator : Efficient Vector Search with Low-Selectivity Filters
+Algorithm 2: Temporary Index Construction
+Input: Sorted qualified vector IDs P
+𝜎 
+, main index 𝑇
+Output: Temporary hierarchical index 𝑇
+𝜎
+1 𝑇
+𝜎 
+← InitializeIndex()
+2 𝑇
+𝜎 
+.root ← BuildSubtree(P
+𝜎 
+,𝑇 .root, 0, |P
+𝜎 
+|)
+3 return 𝑇
+𝜎
+4 Function BuildSubtree(P
+𝜎 
+, 𝑛, 𝑙, 𝑟 )
+/* Build sub-tree rooted at 𝑛 for P
+𝜎 
+[𝑙 : 𝑟 ] */
+5 𝑛
+𝜎 
+← InitializeNode()
+6 if 𝑟 − 𝑙 ≤ 𝐵
+𝑚𝑎𝑥 
+then // 
+1 
+Leaf node of 𝑇
+𝜎
+7 return 𝑛
+𝜎
+8 foreach 𝑐 ∈ 𝐶
+𝑛 
+do // 2 Split P
+𝜎 
+[𝑙 : 𝑟 ]
+/* 𝑐 covers vector ID range [𝑐.min, 𝑐.max) */
+9 𝑙
+𝑐 
+← BinarySearch(P
+𝜎 
+, 𝑐.min, 𝑙, 𝑟 )
+10 𝑟
+𝑐 
+← BinarySearch(P
+𝜎 
+, 𝑐.max, 𝑙, 𝑟 )
+11 if 𝑙
+𝑐 
+≤ 𝑟
+𝑐 
+then
+12 𝑐
+𝜎 
+← BuildSubtree(P
+𝜎 
+, 𝑐, 𝑙
+𝑐 
+, 𝑟
+𝑐 
+)
+13 𝑛
+𝜎 
+.AddChild(𝑐
+𝜎 
+)
+14 return 𝑛
+𝜎
+11*10*
+0**
+000 010
+100 
+101
+Qualified vector IDs (sorted)
+Temporary Index T
+σ
+Partitioning of Qualified VIDs
+000 010 100 
+101 
+110
+100 
+101 
+110
+110
+[000,010]
+[100,101]
+Buffer
+contents 
+[110]
+L1
+idx
+L2
+idx
+Vector
+idx
+Vector Identifier (VID)
+Leaf NID + Vector Index in Leaf
+… 
+Ln
+idx
+Node Identifier (NID)
+Parent NID + Branch Index
+1**
+***
+10* 11*00* 01*
+0** 
+1**
+Base Index T
+Partitioning of VID Space
+NID represents a
+VID subspace 
+0 1
+0 1 
+0 1
+Global VID
+space
+Figure 5: Temporary index construction for complex predi-
+cates. The sorted qualified vector IDs are recursively parti-
+tioned following the base index structure, enabling efficient
+construction of a temporary index.
+Fig. 5 illustrates this process using a simplified scenario where
+each node has two children and both leaf capacity and buffer
+capacity are 2, allowing vector IDs to be represented as 3-digit
+binary numbers. The left panel shows the base index with vec-
+tor ID ranges annotated for each node, such as [000-111] for the
+root and [000-011], [100-111] for its children, corresponding to
+the [𝑐.min, 𝑐.max) ranges referenced in the algorithm. The middle
+panel demonstrates the recursive partitioning process: starting with
+sorted qualified vector IDs {000, 010, 100, 101, 110}, binary search
+finds the partition boundary at vector ID 100 (the start of the right
+sub-tree’s range [100-111]), splitting the list into groups {000, 010}
+and {100, 101, 110}. The partitioning continues recursively until the
+leaf condition is met—for instance, the right sub-tree is further split
+into {100, 101} and {110}, with the latter qualifying the leaf condi-
+tion (≤ 2 vectors). The right panel shows the resulting temporary
+index where the qualified vector IDs are distributed into buffers in
+leaf nodes.
+The temporary index maintains a lightweight structure where
+each node stores only: (1) a pointer to the corresponding node in
+the base index, (2) the range offsets [𝑙, 𝑟 ) in the qualified vector ID
+list, and (3) pointers to child nodes. This design minimizes memory
+overhead while preserving the hierarchical structure necessary for
+efficient search.
+Search Process. Once the temporary index is constructed, the
+search algorithm proceeds identically to the single-label search
+case. While there are minor layout differences between the per-label
+indexes embedded in the main index and the constructed temporary
+index, they are conceptually equivalent, thus the difference does
+not affect the correctness or efficiency of the search algorithm.
+Pre-indexing Filters. Despite finding that the overhead of tem-
+porary index construction is minimal in our evaluation, in certain
+scenarios it may be desirable to further eliminate this overhead by
+pre-constructing indexes for filter predicates, particularly when
+some filter predicates are frequently encountered. The simplest ap-
+proach is caching the constructed temporary indexes as a side prod-
+uct of complex predicate search, which requires minimal additional
+implementation effort. Alternatively, we can permanently integrate
+the temporary indexes into the main index structure to save mem-
+ory and reuse update routines. This integration process involves
+assigning a virtual label to the predicate to reference the temporary
+index in future queries, distributing the qualifying vectors as buffers
+across the appropriate nodes in the hierarchy, and updating the
+Bloom filters accordingly. The integration is straightforward due to
+the one-to-one mapping between nodes of the temporary index and
+the main index. Both approaches achieve nearly identical search
+performance in our evaluation, suggesting that the choice between
+them can be made based on application-specific considerations.
+Curator treats pre-construction or caching of temporary indexes
+as a pluggable policy. Deployments may supply custom logic or
+rely on standard workload analysis tools and query optimizers to
+identify frequent, high-payoff predicates within resource budgets,
+preserving compatibility with existing index management pipelines.
+5 Index Maintenance
+Curator maintains both a base index fitted to the overall vector
+distribution and multiple per-label indexes adapted to their respec-
+tive label distributions. As data evolves, the system must efficiently
+update these structures while preserving search performance. This
+section describes the incremental update mechanisms and rebuild-
+ing strategies that maintain index quality with minimal overhead.
+5.1 Incremental Updates
+Curator supports efficient incremental updates to both vectors and
+labels, each requiring different maintenance strategies.
+Label Updates. Label updates modify per-label indexes through
+buffer operations and Bloom filter maintenance, as illustrated in</page><page num="10">Yicheng Jin, Yongji Wu, Wenjun Hu, Bruce M. Maggs, Jun Yang, Xiao Zhang, and Danyang Zhuo
+0.6 0.8 1.0
+10
+1
+10
+2
+10
+3
+10
+4
+QPS
+1p Sel (0.0013)
+0.6 0.8 1.0
+10
+1
+10
+2
+10
+3
+10
+4
+25p Sel (0.0016)
+0.6 0.8 1.0
+Recall@10
+10
+1
+10
+2
+10
+3
+10
+4
+50p Sel (0.0022)
+0.6 0.8 1.0
+10
+1
+10
+2
+10
+3
+10
+4
+75p Sel (0.0033)
+0.6 0.8 1.0
+10
+1
+10
+2
+10
+3
+10
+4
+99p Sel (0.3387)
+Parlay IVF
+Filtered DiskANN
+Shared HNSW
+Shared IVF
+Pg-HNSW
+Pg-IVF
+ACORN-1
+ACORN-
+Pre-Filtering
+Curator
+Figure 7: Trade-offs between recall and query throughput for single-label filters with varied selectivity on YFCC-10M. Each line
+represents an algorithm’s performance across various search parameter configurations. Parenthetical numbers in subplot titles
+indicate the actual selectivity value for each filter.
+0.50 0.75 1.00
+10
+1
+10
+2
+10
+3
+10
+4
+QPS
+1p Sel (0.0083)
+0.50 0.75 1.00
+10
+1
+10
+2
+10
+3
+10
+4
+25p Sel (0.0566)
+0.50 0.75 1.00
+Recall@10
+10
+1
+10
+2
+10
+3
+10
+4
+50p Sel (0.0883)
+0.50 0.75 1.00
+10
+1
+10
+2
+10
+3
+10
+4
+75p Sel (0.1252)
+0.50 0.75 1.00
+10
+1
+10
+2
+10
+3
+10
+4
+99p Sel (0.2679)
+Per-Label HNSW
+Per-Label IVF
+Parlay IVF
+Filtered DiskANN
+Shared HNSW
+Shared IVF
+Pg-HNSW
+Pg-IVF
+ACORN-1
+ACORN-
+Pre-Filtering
+Curator
+Figure 8: Trade-offs between recall and query throughput for single-label filters with varied selectivity on arXiv. Each line
+represents an algorithm’s performance across various search parameter configurations. Parenthetical numbers in subplot titles
+indicate the actual selectivity value for each filter.
+usage and construction costs, demonstrating the efficiency of its
+embedded per-label indexes.
+This performance profile reflects Curator’s deliberate design
+trade-offs as discussed in §1. Per-label indexing approaches (Parlay-
+IVF, Per-Label HNSW/IVF) achieve the best search performance
+by eliminating query-time filtering but require excessive mem-
+ory overhead and construction costs due to vector duplication, as
+demonstrated in §6.3. Similarly, Curator exhibits slower search than
+specialized graph-based indexes (ACORN) at high selectivity, which
+is expected since Curator’s partition-based approach prioritizes ro-
+bustness to sparsity over the precision of graph connectivity. How-
+ever, Curator’s performance advantage emerges precisely where
+it was designed to excel: at low selectivity where graph connec-
+tivity breaks down, Curator maintains efficient search while other
+approaches either fail entirely or fall back to expensive pre-filtering.
+Complex Predicate Queries. We construct queries with complex
+predicates based on the YFCC-10M dataset, evaluating two types
+of filter predicates: OR queries (𝑙
+1 
+∨ 𝑙
+2
+, requiring existence of either
+label in the vector’s label list) and AND queries (𝑙
+1 
+∧ 𝑙
+2
+, requiring
+existence of both labels). Given the average label selectivity of
+approximately 1% in YFCC-10M, OR queries have selectivity around
+2% while AND queries have selectivity around 0.01%. For each
+predicate type, we randomly generate 100 label combinations and
+0.8 1.0
+Recall@10
+10¹
+10³
+QPS
+OR (Sel = 2.0e-02)
+0.8 1.0
+Recall@10
+10
+10
+0.5 1.0
+Recall@10
+10
+10²
+10
+AND (Sel = 3.2e-04)
+Curator
+Curator (Idx)
+Shared HNSW
+Per-Pred HNSW
+Shared IVF
+Per-Pred IVF
+Pg-HNSW
+Pg-IVF
+Parlay IVF
+ACORN
+Pre-Filter
+Figure 9: Recall vs query throughput trade-offs for complex
+predicate queries. Each line represents an algorithm’s per-
+formance across various search parameter configurations.
+Average selectivity values are annotated in subplot titles.
+AND query results are split into two subplots due to the wide
+throughput range. Parlay-IVF only supports AND queries.
+select 100 query vectors from the test set, resulting in 10,000 total
+queries.</page><page num="11">Curator : Efficient Vector Search with Low-Selectivity Filters
+10
+3 
+10
+4 
+10
+5 
+10
+6
+Build Time (s)
+10 
+1
+10
+0
+10
+1
+10
+2
+Index Overhead (GB)
+ 
+YFCC-10M (Sel 0.15)
+10
+2 
+10
+3 
+10
+4 
+10
+5
+Build Time (s)
+10 
+1
+10
+0
+10
+1
+10
+2
+arXiv (Sel 0.15)
+Latency
+(R=0.9)
+1ms
+10ms
+100ms
+Curator
+Pg-I
+A-1
+S-H
+S-I
+Pg-H
+A-γ
+Disk
+Curator
+S-I
+P-I 
+P-H
+A-1 
+Par
+Pg-H
+A-γ
+Disk
+S-H
+Par
+Pg-I
+Figure 10: Trade-off between index overhead, build time and
+search latency for evaluated indexes. We report search la-
+tency at 0.9 recall on low selectivity queries (≤ 0.15). For
+pgvector baselines, we report on-disk footprint rather than
+in-memory overhead. Marker size indicates search latency.
+We evaluate Curator’s performance against Shared HNSW, Shared
+IVF, Parlay-IVF (AND queries only), ACORN, and pgvector base-
+lines (Pg-IVF and Pg-HNSW), which are the only baselines support-
+ing complex predicates. Two variants of Curator are evaluated: (1)
+predicate not indexed, where Curator constructs a temporary index
+structure at query time for qualified vectors and traverses it, and (2)
+predicate indexed, where qualified vectors for each predicate are
+pre-indexed as virtual labels, eliminating the need for temporary
+index construction during search. Per-predicate HNSW and IVF
+approaches, which build separate indexes for all possible predi-
+cates, serve as references for optimal performance but are generally
+impractical due to prohibitive memory and construction costs.
+As shown in Fig. 9, Curator with predicate indexed achieves near-
+optimal performance compared to the per-predicate approaches,
+demonstrating the index quality of Curator’s temporary indexes.
+Furthermore, Curator without indexing achieves similar perfor-
+mance to the indexed version, significantly outperforming ACORN
+on both filter types and showcasing the efficiency of temporary
+index construction at query time. ACORN fails to achieve &gt;0.2 recall
+on AND queries due to limited connectivity in the graph structure
+at low selectivity. For AND queries, pgvector shows only a single
+point as the PostgreSQL query planner picks pre-filtering plan due
+to the extremely low selectivity.
+The results demonstrate that Curator provides a unified solu-
+tion for both single-label and complex predicate search: while it
+delivers competitive performance on single-label filters across all
+selectivity levels, it uniquely excels at complex predicates where
+most existing approaches either fail entirely or require prohibitive
+memory overhead for per-predicate indexing.
+6.3 Resource Efficiency
+Performance vs Resource Trade-offs. Fig. 10 provides a compre-
+hensive view of the fundamental trade-offs between search perfor-
+mance, memory efficiency, and construction cost across all evalu-
+ated approaches. This analysis focuses on low-selectivity scenarios
+(≤ 0.15) where the differences between approaches are most pro-
+nounced.
+The results demonstrate that Curator achieves competitive search
+performance on low-selectivity queries while maintaining the low-
+est in-memory overhead and build time among all evaluated ap-
+proaches. Only two baselines, Parlay-IVF and Per-Label HNSW,
+P-HNSW
+P-IVF
+Parlay
+DiskANN
+ACORN-
+ACORN-1
+S-HNSW
+S-IVF
+Pg-HNSW
+Pg-IVF
+Curator
+10
+2
+10
+3
+10
+4
+10
+5
+10
+6
+Construction Time (s)
+YFCC-10M arXiv
+Figure 11: Index construction time for the evaluated indexes.
+achieve lower search latency than Curator, but at significantly
+higher resource costs. Specifically, Parlay-IVF requires 206× and
+266× longer build times on YFCC-10M and arXiv respectively, with
+2.8× and 5.1× higher memory overhead. Per-Label HNSW (on arXiv)
+incurs 108× longer build time and 43× higher memory overhead for
+only marginal latency improvements. Pg-IVF’s on-disk footprint is
+exceptionally low at 0.95GB on YFCC-10M and 0.31GB on arXiv,
+attributed to compact inverted list encoding. However, its search
+performance lags behind in-memory approaches due to executor
+overhead and disk I/O costs as discussed previously.
+This analysis reveals why Curator represents an attractive prac-
+tical solution: it delivers performance competitive with the best
+approaches while requiring minimal additional resources, making it
+suitable for deployment scenarios where memory and construction
+time constraints are critical considerations.
+Construction Time. Fig. 11 compares the index construction
+time of Curator against all baselines. The index construction time
+includes the time to optionally train the index structure (required
+for Curator and IVF baselines) and to insert all vectors and labels.
+Filtered DiskANN, ACORN, Parlay-IVF, and pgvector baselines
+are constructed in batch mode, whereas all other indexes are built
+incrementally.
+Overall, Curator achieves the lowest construction time across all
+evaluated approaches, requiring only 727s on YFCC-10M and 144s
+on arXiv. Specialized indexes like ACORN-𝛾 and Filtered DiskANN
+incur dramatically higher construction costs on both datasets, pri-
+marily due to the overhead of constructing and compressing the
+intermediate dense graph. Specifically, ACORN-𝛾 requires 468×
+and 482× longer construction time than Curator on YFCC-10M
+and arXiv respectively, while Filtered DiskANN requires 1,360×
+and 459× longer time. These specialized approaches require signifi-
+cantly more construction time than even building separate per-label
+indexes: both ACORN-𝛾 and Filtered DiskANN take around 4×
+longer time to build than Per-Label HNSW on arXiv, highlighting
+the substantial overhead of these sophisticated indexing strategies.
+Memory Overhead. Index overhead represents the additional
+memory required by indexes beyond storing the original vectors
+(assuming no compression), calculated by subtracting raw vector
+storage size from the total memory footprint. We subtract vector
+storage because all indexes maintain at least one copy of vector
+data, making this a fair comparison baseline. However, we do not
+subtract label/metadata storage since indexes preserve metadata
+in vastly different formats: some store plain label lists or inverted</page></paper>

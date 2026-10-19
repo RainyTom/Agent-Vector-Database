@@ -1,0 +1,743 @@
+<paper id="https://www.usenix.org/system/files/atc19-pang.pdf"><page num="1">Open access to the Proceedings of the
+2019 USENIX Annual Technical Conference
+is sponsored by USENIX.
+Zanzibar: Google’s Consistent, Global
+Authorization System
+Ruoming Pang, Ramon Caceres, Mike Burrows, Zhifeng Chen, Pratik Dave,
+Nathan Germer, Alexander Golynski, Kevin Graney, and Nina Kang,
+ Google;
+Lea Kissner, Humu, Inc.; Jeffrey L. Korn, Google; Abhishek Parmar, Carbon, Inc.;
+Christina D. Richards and Mengzhi Wang, Google
+https://www.usenix.org/conference/atc19/presentation/pang
+This paper is included in the Proceedings of the
+2019 USENIX Annual Technical Conference.
+July 10–12, 2019 • Renton, WA, USA
+ISBN 978-1-939133-03-8</page><page num="4">Example Tuple in Text Notation Semantics
+doc:readme#owner@10 User 10 is an owner of doc:readme
+group:eng#member@11 User 11 is a member of group:eng
+doc:readme#viewer@group:eng#member Members of group:eng are viewers of doc:readme
+doc:readme#parent@folder:A#... doc:readme is in folder:A
+Table 1: Example relation tuples. “#...” represents a relation that does not affect the semantics of the tuple.
+“new enemy” problem, which can arise when we fail to re-
+spect the ordering between ACL updates or when we apply
+old ACLs to new content. Consider these two examples:
+Example A: Neglecting ACL update order
+1. Alice removes Bob from the ACL of a folder;
+2. Alice then asks Charlie to move new documents to
+the folder, where document ACLs inherit from folder
+ACLs;
+3. Bob should not be able to see the new documents,
+but may do so if the ACL check neglects the ordering
+between the two ACL changes.
+Example B: Misapplying old ACL to new content
+1. Alice removes Bob from the ACL of a document;
+2. Alice then asks Charlie to add new contents to the
+document;
+3. Bob should not be able to see the new contents, but
+may do so if the ACL check is evaluated with a stale
+ACL from before Bob’s removal.
+Preventing the “new enemy” problem requires Zanzibar to
+understand and respect the causal ordering between ACL or
+content updates, including updates on different ACLs or ob-
+jects and those coordinated via channels invisible to Zanz-
+ibar. Hence Zanzibar must provide two key consistency
+properties: external consistency [18] and snapshot reads
+with bounded staleness.
+External consistency allows Zanzibar to assign a times-
+tamp to each ACL or content update, such that two causally
+related updates x ≺ y will be assigned timestamps that reflect
+the causal order: T
+x 
+&lt; T
+y
+. With causally meaningful times-
+tamps, a snapshot read of the ACL database at timestamp
+T , which observes all updates with timestamps ≤ T , will re-
+spect ordering between ACL updates. That is, if the read
+observes an update x, it will observe all updates that happen
+causally before x.
+Furthermore, to avoid applying old ACLs to new contents,
+the ACL check evaluation snapshot must not be staler than
+the causal timestamp assigned to the content update. Given a
+content update at timestamp T
+c
+, a snapshot read at timestamp
+≥ T
+c 
+ensures that all ACL updates that happen causally be-
+fore the content update will be observed by the ACL check.
+To provide external consistency and snapshot reads with
+bounded staleness, we store ACLs in the Spanner global
+database system [15]. Spanner’s TrueTime mechanism as-
+signs each ACL write a microsecond-resolution timestamp,
+such that the timestamps of writes reflect the causal ordering
+between writes, and thereby provide external consistency.
+We evaluate each ACL check at a single snapshot timestamp
+across multiple database reads, so that all writes with times-
+tamps up to the check snapshot, and only those writes, are
+visible to the ACL check.
+To avoid evaluating checks for new contents using stale
+ACLs, one could try to always evaluate at the latest snapshot
+such that the check result reflects all ACL writes up to the
+check call. However, such evaluation would require global
+data synchronization with high-latency round trips and lim-
+ited availability. Instead, we design the following protocol to
+allow most checks to be evaluated on already replicated data
+with cooperation from Zanzibar clients:
+1. A Zanzibar client requests an opaque consistency token
+called a zookie for each content version, via a content-
+change ACL check (§2.4.4) when the content modifi-
+cation is about to be saved. Zanzibar encodes a current
+global timestamp in the zookie and ensures that all prior
+ACL writes have lower timestamps. The client stores
+the zookie with the content change in an atomic write to
+the client storage. Note that the content-change check
+does not need to be evaluated in the same transaction as
+the application content modification, but only has to be
+triggered when the user modifies the contents.
+2. The client sends this zookie in subsequent ACL check
+requests to ensure that the check snapshot is at least as
+fresh as the timestamp for the content version.
+External consistency and snapshot reads with staleness
+bounded by zookie prevent the “new enemy” problem. In
+Example A, ACL updates A1 and A2 will be assigned times-
+tamps T
+A1 
+&lt; T
+A2
+, respectively. Bob will not be able to see
+the new documents added by Charlie: if a check is evalu-
+ated at T &lt; T
+A2
+, the document ACLs will not include the
+folder ACL; if a check is evaluated at T ≥ T
+A2 
+&gt; T
+A1
+, the
+check will observe update A1, which removed Bob from the
+USENIX Association 2019 USENIX Annual Technical Conference 35</page><page num="6">2.4.1 Read
+Our clients read relation tuples to display ACLs or group
+membership to users, or to prepare for a subsequent write.
+A read request specifies one or multiple tuplesets and an op-
+tional zookie.
+Each tupleset specifies keys of a set of relation tuples. The
+set can include a single tuple key, or all tuples with a given
+object ID or userset in a namespace, optionally constrained
+by a relation name. With the tuplesets, clients can look up
+a specific membership entry, read all entries in an ACL or
+group, or look up all groups with a given user as a direct
+member. All tuplesets in a read request are processed at a
+single snapshot.
+With the zookie, clients can request a read snapshot no
+earlier than a previous write if the zookie from the write re-
+sponse is given in the read request, or at the same snapshot as
+a previous read if the zookie from the earlier read response
+is given in the subsequent request. If the request doesn’t
+contain a zookie, Zanzibar will choose a reasonably recent
+snapshot, possibly offering a lower-latency response than if
+a zookie were provided.
+Read results only depend on contents of relation tuples and
+do not reflect userset rewrite rules. For example, even if the
+viewer userset always includes the owner userset, reading
+tuples with the viewer relation will not return tuples with
+the owner relation. Clients that need to understand the ef-
+fective userset can use the Expand API (§2.4.5).
+2.4.2 Write
+Clients may modify a single relation tuple to add or remove
+an ACL. They may also modify all tuples related to an object
+via a read-modify-write process with optimistic concurrency
+control [21] that uses a read RPC followed by a write RPC:
+1. Read all relation tuples of an object, including a per-
+object “lock” tuple.
+2. Generate the tuples to write or delete. Send the writes,
+along with a touch on the lock tuple, to Zanzibar, with
+the condition that the writes will be committed only if
+the lock tuple has not been modified since the read.
+3. If the write condition is not met, go back to step 1.
+The lock tuple is just a regular relation tuple used by
+clients to detect write races.
+2.4.3 Watch
+Some clients maintain secondary indices of relation tuples
+in Zanzibar. They can do so with our Watch API. A watch
+request specifies one or more namespaces and a zookie rep-
+resenting the time to start watching. A watch response con-
+tains all tuple modification events in ascending timestamp
+order, from the requested start timestamp to a timestamp en-
+coded in a heartbeat zookie included in the watch response.
+The client can use the heartbeat zookie to resume watching
+where the previous watch response left off.
+2.4.4 Check
+A check request specifies a userset, represented by
+〈object#relation〉, a putative user, often represented by an au-
+thentication token, and a zookie corresponding to the desired
+object version. Like reads, a check is always evaluated at a
+consistent snapshot no earlier than the given zookie.
+To authorize application content modifications, our clients
+send a special type of check request, a content-change check.
+A content-change check request does not carry a zookie and
+is evaluated at the latest snapshot. If a content change is
+authorized, the check response includes a zookie for clients
+to store along with object contents and use for subsequent
+checks of the content version. The zookie encodes the evalu-
+ation snapshot and captures any possible causality from ACL
+changes to content changes, because the zookie’s timestamp
+will be greater than that of the ACL updates that protect the
+new content (§2.2).
+2.4.5 Expand
+The Expand API returns the effective userset given an
+〈object#relation〉 pair and an optional zookie. Unlike the
+Read API, Expand follows indirect references expressed
+through userset rewrite rules. The result is represented by
+a userset tree whose leaf nodes are user IDs or usersets
+pointing to other 〈object#relation〉 pairs, and intermediate
+nodes represent union, intersection, or exclusion operators.
+Expand is crucial for our clients to reason about the com-
+plete set of users and groups that have access to their ob-
+jects, which allows them to build efficient search indices for
+access-controlled content.
+3 Architecture and Implementation
+Figure 2 shows the architecture of the Zanzibar system.
+aclservers are the main server type. They are organized
+in clusters and respond to Check, Read, Expand, and Write
+requests. Requests arrive at any server in a cluster and that
+server fans out the work to other servers in the cluster as
+necessary. Those servers may in turn contact other servers to
+compute intermediate results. The initial server gathers the
+final result and returns it to the client.
+Zanzibar stores ACLs and their metadata in Spanner
+databases. There is one database to store relation tuples for
+each client namespace, one database to hold all namespace
+configurations, and one changelog database shared across all
+namespaces. aclservers read and write those databases in
+the course of responding to client requests.
+watchservers are a specialized server type that respond
+to Watch requests. They tail the changelog and serve a
+stream of namespace changes to clients in near real time.
+Zanzibar periodically runs a data processing pipeline to
+perform a variety of offline functions across all Zanzibar data
+in Spanner. One such function is to produce dumps of the re-
+lation tuples in each namespace at a known snapshot times-
+USENIX Association 2019 USENIX Annual Technical Conference 37</page><page num="7">read
+write
+Zanzibar serving cluster
+Check, Read,
+Expand, Write
+aclserver aclserver
+aclserver aclserver
+client
+watchserver
+...
+Spanner global database system
+client
+Watch
+read/write append 
+tail
+changelog
+namespace
+configs
+read/write
+namespace 1
+relation tuples
+namespace N
+relation tuples
+periodic offline
+pipeline
+dump
+namespace
+snapshots
+Leopard
+indexing system
+read
+Watch
+optimized set
+computation
+Figure 2: Zanzibar architecture. Arrows indicate the direction of data flow.
+tamp. Another is to garbage-collect tuple versions older than
+a threshold configured per namespace.
+Leopard is an indexing system used to optimize operations
+on large and deeply nested sets. It reads periodic snapshots
+of ACL data and watches for changes between snapshots. It
+performs transformations on that data, such as denormaliza-
+tion, and responds to requests from aclservers.
+The rest of this section presents the implementation of
+these architectural elements in more detail.
+3.1 Storage
+3.1.1 Relation Tuple Storage
+We store relation tuples of each namespace in a separate
+database, where each row is identified by primary key (shard
+ID, object ID, relation, user, commit timestamp). Multi-
+ple tuple versions are stored on different rows, so that we
+can evaluate checks and reads at any timestamp within the
+garbage collection window. The ordering of primary keys
+allows us to look up all relation tuples for a given object ID
+or (object ID, relation) pair.
+Our clients configure sharding of a namespace according
+to its data pattern. Usually the shard ID is determined solely
+by the object ID. In some cases, for example, when a names-
+pace stores groups with very large numbers of members, the
+shard ID is computed from both object ID and user.
+3.1.2 Changelog
+Zanzibar also maintains a changelog database that stores a
+history of tuple updates for the Watch API. The primary
+keys are (changelog shard ID, timestamp, unique update ID),
+where a changelog shard is randomly selected for each write.
+Every Zanzibar write is committed to both the tuple stor-
+age and the changelog shard in a single transaction. We des-
+ignate the Spanner server hosting the changelog shard as the
+transaction coordinator to minimize blocking of changelog
+reads on pending transactions.
+3.1.3 Namespace Config Storage
+Namespace configs are stored in a database with two ta-
+bles. One table contains the configs and is keyed by names-
+pace IDs. The other is a changelog of config updates and is
+keyed by commit timestamps. This structure allows a Zanz-
+ibar server to load all configs upon startup and monitor the
+changelog to refresh configs continuously.
+3.1.4 Replication
+To reduce latency, Zanzibar data is replicated to be close to
+our clients. Replicas exist in dozens of locations around the
+world, with multiple replicas per region. The 5 voting repli-
+cas are in eastern and central United States, in 3 different
+metropolitan areas to isolate failures but within 25 millisec-
+onds of each other so that Paxos transactions commit quickly.
+3.2 Serving
+3.2.1 Evaluation Timestamp
+As noted in §2.4, clients can provide zookies to ensure a
+minimum snapshot timestamp for request evaluation. When
+a zookie is not provided, the server uses a default staleness
+chosen to ensure that all transactions are evaluated at a times-
+tamp that is as recent as possible without impacting latency.
+On each read request it makes to Spanner, Zanzibar re-
+ceives a hint about whether or not the data at that timestamp
+required an out-of-zone read and thus incurred additional la-
+tency. Each server tracks the frequency of such out-of-zone
+reads for data at a default staleness as well as for fresher
+38 2019 USENIX Annual Technical Conference USENIX Association</page><page num="8">and staler data, and uses these frequencies to compute a bi-
+nomial proportion confidence interval of the probability that
+any given piece of data is available locally at each staleness.
+Upon collecting enough data, the server checks to see if
+each staleness value has a sufficiently low probability of in-
+curring an out-of-zone read, and thus will be low-latency. If
+so, it updates the default staleness bound to the lowest “safe”
+value. If no known staleness values are safe, we use a two-
+proportion z-test to see if increasing the default will be a sta-
+tistically significant amount safer. In that case, we increase
+the default value in the hopes of improving latency. This
+default staleness mechanism is purely a performance opti-
+mization. It does not violate consistency semantics because
+Zanzibar always respects zookies when provided.
+3.2.2 Config Consistency
+Because changes to namespace configs can change the re-
+sults of ACL evaluations, and therefore their correctness,
+Zanzibar chooses a single snapshot timestamp for con-
+fig metadata when evaluating each client request. All
+aclservers in a cluster use that same timestamp for the
+same request, including for any subrequests that fan out from
+the original client request.
+Each server independently loads namespace configs from
+storage continuously as they change (§3.1.3). Therefore,
+each server in a cluster may have access to a different range
+of config timestamps due to restarts or network latency.
+Zanzibar must pick a timestamp that is available across all
+of them. To facilitate this, a monitoring job tracks the times-
+tamp range available to every server and aggregates them,
+reporting a globally available range to every other server.
+On each incoming request the server picks a time from this
+range, ensuring that all servers can continue serving even if
+they are no longer able to read from the config storage.
+3.2.3 Check Evaluation
+Zanzibar evaluates ACL checks by converting check requests
+to boolean expressions. In a simple case, when there are
+no userset rewrite rules, checking a user U against a userset
+〈object#relation〉 can be expressed as
+CHECK(U, 〈object#relation〉) =
+∃ tuple 〈object#relation@U〉
+∨ ∃ tuple 〈object#relation@U
+′
+〉, where
+U
+′ 
+= 〈object
+′
+#relation
+′
+〉 s.t. CHECK(U,U
+′
+).
+Finding a valid U
+′ 
+= 〈object
+′
+#relation
+′
+〉 involves evaluat-
+ing membership on all indirect ACLs or groups, recursively.
+This kind of “pointer chasing” works well for most types of
+ACLs and groups, but can be expensive when indirect ACLs
+or groups are deep or wide. §3.2.4 explains how we han-
+dle this problem. Userset rewrite rules are also translated to
+boolean expressions as part of check evaluation.
+To minimize check latency, we evaluate all leaf nodes of
+the boolean expression tree concurrently. When the outcome
+of one node determines the result of a subtree, evaluation of
+other nodes in the subtree is cancelled.
+Evaluation of leaf nodes usually involves reading relation
+tuples from databases. We apply a pooling mechanism to
+group reads for the same ACL check to minimize the number
+of read RPCs to Spanner.
+3.2.4 Leopard Indexing System
+Recursive pointer chasing during check evaluation has diffi-
+culty maintaining low latency with groups that are deeply
+nested or have a large number of child groups. For se-
+lected namespaces that exhibit such structure, Zanzibar han-
+dles checks using Leopard, a specialized index that supports
+efficient set computation.
+A Leopard index represents a collection of named sets us-
+ing (T, s, e) tuples, where T is an enum representing the set
+type and s and e are 64-bit integers representing the set ID
+and the element ID, respectively. A query evaluates an ex-
+pression of union, intersection, or exclusion of named sets
+and returns the result set ordered by the element ID up to a
+specified number of results.
+To index and evaluate group membership, Zanzibar repre-
+sents group membership with two set types, GROUP2GROUP
+and MEMBER2GROUP, which we show here as functions
+mapping from a set ID to element IDs:
+• GROUP2GROUP(s) → {e}, where s represents an ances-
+tor group and e represents a descendent group that is
+directly or indirectly a sub-group of the ancestor group.
+• MEMBER2GROUP(s) → {e}, where s represents an in-
+dividual user and e represents a parent group in which
+the user is a direct member.
+To evaluate whether user U is a member of group G, we
+check whether
+(MEMBER2GROUP(U) ∩ GROUP2GROUP(G)) 6 = /0
+Group membership can be considered as a reachability
+problem in a graph, where nodes represent groups and users
+and edges represent direct membership. Flattening group-to-
+group paths allows reachability to be efficently evaluated by
+Leopard, though other types of denormalization can also be
+applied as data patterns demand.
+The Leopard system consists of three discrete parts: a
+serving system capable of consistent and low-latency oper-
+ations across sets; an offline, periodic index building system;
+and an online real-time layer capable of continuously updat-
+ing the serving system as tuple changes occur.
+Index tuples are stored as ordered lists of integers in
+a structure such as a skip list, thus allowing for efficient
+union and intersections among sets. For example, evaluat-
+ing the intersection between two sets, A and B, requires only
+O(min(|A|, |B|)) skip-list seeks. The index is sharded by el-
+ement IDs and can be distributed across multiple servers.
+Shards are usually served entirely from memory, but they
+USENIX Association 2019 USENIX Annual Technical Conference 39</page><page num="9">can also be served from a mix of hot and cold data spread
+between memory and remote solid-state devices.
+The offline index builder generates index shards from a
+snapshot of Zanzibar relation tuples and configs, and repli-
+cates the shards globally. It respects userset rewrite rules and
+recursively expands edges in an ACL graph to form Leop-
+ard index tuples. The Leopard servers continously watch for
+new shards and swap old shards with new ones when they
+become available.
+The Leopard system described thus far is able to effi-
+ciently evaluate deeply and widely nested group member-
+ship, but cannot do so at a fresh and consistent snapshot
+due to offline index generation and shard swapping. To sup-
+port consistent ACL evaluation, Leopard servers maintain an
+incremental layer that indexes all updates since the offline
+snapshot, where each update is represented by a (T, s, e,t, d)
+tuple, where t is the timestamp of the update and d is a dele-
+tion marker. Updates with timestamps less than or equal to
+the query timestamp are merged on top of the offline index
+during query processing.
+To maintain the incremental layer, the Leopard incremen-
+tal indexer calls Zanzibar’s Watch API to receive a tem-
+porally ordered stream of Zanzibar tuple modifications and
+transforms the updates into a temporally ordered stream of
+Leopard tuple additions, updates, and deletions. Generat-
+ing updates for the GROUP2GROUP tuples requires the incre-
+mental indexer to maintain group-to-group membership for
+denormalizing the effects of a relation tuple update to poten-
+tially multiple index updates.
+In practice, a single Zanzibar tuple addition or deletion
+may yield potentially tens of thousands of discrete Leop-
+ard tuple events. Each Leopard serving instance receives the
+complete stream of these Zanzibar tuple changes through the
+Watch API. The Leopard serving system is designed to con-
+tinuously ingest this stream and update its various posting
+lists with minimal impact to query serving.
+3.2.5 Handling Hot Spots
+The workload of ACL reads and checks is often bursty and
+subject to hot spots. For example, answering a search query
+requires conducting ACL checks for all candidate results,
+whose ACLs often share common groups or indirect ACLs.
+To facilitate consistency, Zanzibar avoids storage denormal-
+ization and relies only on normalized data (except for the
+cases described in §3.2.4). With normalized data, hot spots
+on common ACLs (e.g., popular groups) may overload the
+underlying database servers. We found the handling of hot
+spots to be the most critical frontier in our pursuit of low
+latency and high availability.
+Zanzibar servers in each cluster form a distributed cache
+for both reads and check evaluations, including intermediate
+check results evaluated during pointer chasing. Cache en-
+tries are distributed across Zanzibar servers with consistent
+hashing [20]. To process checks or reads, we fan out re-
+quests to the corresponding Zanzibar servers via an internal
+RPC interface. To minimize the number of internal RPCs,
+for most namespaces we compute the forwarding key from
+the object ID, since processing a check on 〈object#relation〉
+often involves indirect ACL checks on other relations of the
+same object and reading relation tuples of the object. These
+checks and reads can be processed by the same server since
+they share the same forwarding key with the parent check
+request. To handle hot forwarding keys, we cache results at
+both the caller and the callee of internal RPCs, effectively
+forming cache trees. We also use Slicer [12] to help dis-
+tribute hot keys to multiple servers.
+We avoid reusing results evaluated from a different snap-
+shot by encoding snapshot timestamps in cache keys. We
+choose evaluation timestamps rounded up to a coarse granu-
+larity, such as one or ten seconds, while respecting staleness
+constraints from request zookies. This timestamp quantiza-
+tion allows the vast majority of recent checks and reads to be
+evaluated at the same timestamps and to share cache results,
+despite having microsecond-resolution timestamps in cache
+keys. It is worth noting that rounding up timestamps does
+not affect Zanzibar’s consistency properties, since Spanner
+ensures that a snapshot read at timestamp T will observe all
+writes up to T —this holds even if T is in the future, in which
+case the read will wait until TrueTime has moved past T .
+To handle the “cache stampede” problem [3], where con-
+current requests create flash hot spots before the cache is
+populated with results, we maintain a lock table on each
+server to track outstanding reads and checks. Among re-
+quests sharing the same cache key only one request will be-
+gin processing; the rest block until the cache is populated.
+We can effectively handle the vast majority of hot spots
+with distributed caches and lock tables. Over time we made
+the following two improvements.
+First, direct membership checks of a user for an object and
+relation (i.e. 〈object#relation@user〉) are usually handled by
+a single relation tuple lookup. However, occasionally a very
+popular object invites many concurrent checks for different
+users, causing a hot spot on the storage server hosting rela-
+tion tuples for the object. To avoid these hot spots, we read
+and cache all relation tuples of 〈object#relation〉 for the hot
+object, trading read bandwidth for cacheability. We dynam-
+ically detect hot objects to apply this method to by tracking
+the number of outstanding reads on each object.
+Second, indirect ACL checks are frequently cancelled
+when the result of the parent ACL check is already deter-
+mined. This leaves the cache key unpopulated. While ea-
+ger cancellation reduces resource usage significantly, it neg-
+atively affects latency of concurrent requests that are blocked
+by the lock table entry. To prevent this latency impact, we
+delay eager cancellation when there are waiters on the corre-
+sponding lock table entry.
+40 2019 USENIX Annual Technical Conference USENIX Association</page><page num="12">100.0000%
+99.9990%
+99.9995%
+Dec '15 Dec '16 Dec '17 Dec '18
+Safe Recent
+Figure 5: Zanzibar’s availability over the past three years has
+remained above 99.999%.
+checks has a 10% hit rate on the delegate’s side, with an ad-
+ditional 12% saved by the lock table. Meanwhile, caching
+on the delegator’s side has a 2% hit rate with an additional
+3% from the lock table. While these hit rates appear low,
+they prevent 500K internal RPCs per second from creating
+hot spots.
+Delegated reads see higher hit rates on the delegate’s
+side—24% on the cache and 9% on the lock table—but
+the delegator’s cache is hit less than 1% of the time. For
+super-hot groups, Zanzibar further optimizes by reading and
+caching the full set of members in advance—this happens for
+0.1% of groups but further prevents hot spots.
+This caching, along with aggressive pooling of read re-
+quests, allows Zanzibar to issue only 20 million read RPCs
+per second to Spanner. The median of these requests reads
+1.5 rows per RPC, but at the 99th percentile they each read
+close to 1 thousand rows.
+Zanzibar’s Spanner reads take 0.5 msec at the median, and
+2 msec at the 95th percentile. We find that 1% of Spanner
+reads, or 200K reads per second, benefit from hedging. We
+note that Zanzibar uses an instance of Spanner that runs in-
+ternally to Google, not an instance of Cloud Spanner [6].
+The Leopard index is performing 1.56M QPS at the me-
+dian, or 2.22M QPS at the 99th percentile, based on data ag-
+gregated over 7 days. Over the same 7 days, Leopard servers
+respond in fewer than 150 μsec at the median, or under 1
+msec at the 99th percentile. Leopard’s incremental layer dur-
+ing those 7 days writes roughly 500 index updates per second
+at the median, and approximately 1.5K updates per second at
+the 99th percentile.
+4.5 Lessons Learned
+Zanzibar has evolved to meet the varied and heavy demands
+of a growing set of clients, including Google Calendar,
+Google Cloud, Google Drive, Google Maps, Google Photos,
+and YouTube. This section highlights lessons learned from
+this experience.
+One common theme has been the importance of flexibility
+to accommodate differences between clients. For example:
+• Access control patterns vary widely: Over time we have
+added features to support specific clients. For instance,
+we added computed userset to allow inferring an
+object’s owner ID from the object ID prefix, which re-
+duces space requirements for clients such as Drive and
+Photos that manage many private objects. Similarly, we
+added tuple 
+to userset to represent object hierar-
+chy with only one relation tuple per hop. The bene-
+fits are both space reduction and flexibility—it allows
+clients such as Cloud both to express ACL inheritance
+compactly and to change ACL inheritance rules without
+having to update large numbers of tuples. See §2.3.1.
+• Freshness requirements are often but not always loose:
+Clients often allow unspecified, moderate staleness dur-
+ing ACL evaluation, but sometimes require more pre-
+cisely specified freshness. We designed our zookie pro-
+tocol around this property so that we can serve most
+requests from a default, already replicated snapshot,
+while allowing clients to bound the staleness when
+needed. We also tuned the granularity of our snap-
+shot timestamps to match clients’ freshness require-
+ments. The resulting coarse timestamp quanta allow
+us to perform the majority of authorization checks on
+a small number of snapshots, thus greatly reducing the
+frequency of database reads. See §3.2.1.
+Another theme has been the need to add performance opti-
+mizations to support client behaviors observed in production.
+For example:
+• Request hedging is key to reducing tail latency: Clients
+that offer search capabilities to their users, such as
+Drive, often issue tens to hundreds of authorization
+checks to serve a single set of search results. We in-
+troduced hedging of Spanner and Leopard requests to
+prevent an occasional slow operation from slowing the
+overall user interaction. See §3.2.7.
+• Hot-spot mitigation is critical for high availability:
+Some workloads create hot spots in ACL data that can
+overwhelm the underlying database servers. A com-
+mon pattern is a burst of ACL checks for an object that
+is indirectly referenced by the ACLs for many differ-
+ent objects. Specific instances arise from the search
+use case mentioned above, where the documents in the
+search indirectly share ACLs for a large social or work
+group, and Cloud use cases where many objects indi-
+rectly share ACLs for the same object high in a hier-
+archy. Zanzibar handles most hot spots with general
+mechanisms such as its distributed cache and lock ta-
+ble, but we have found the need to optimize specific
+uses cases. For example, we added cache prefetching
+of all relation tuples for a hot object. We also delayed
+cancellation of secondary ACL checks when there are
+concurrent requests for the same ACL data. See §3.2.5.
+• Performance isolation is indispensable to protect
+against misbehaving clients: Even with hot-spot mit-
+igation measures, unexpected and sometimes unin-
+USENIX Association 2019 USENIX Annual Technical Conference 43</page><page num="13">tended client behaviors could still overload our sys-
+tem or its underlying infrastructure. Examples include
+when clients launch new features that prove unexpect-
+edly popular or exercise Zanzibar in unintended ways.
+Over time we have added isolation safeguards to ensure
+that there are no cascading failures between clients or
+between objects of the same client. These safeguards
+include fine-grained cost accounting, quotas, and throt-
+tling. See §3.2.6.
+5 Related Work
+Zanzibar is a planet-scale distributed ACL storage and eval-
+uation system. Many of its authorization concepts have been
+explored previously within the domains of access control and
+social graphs, and its scaling challenges have been investi-
+gated within the field of distributed systems.
+Access control is a core part of multi-user operating sys-
+tems. Multics [23] supports ACLs on segments and direc-
+tories. ACL entries consist of a principal identifier and a
+set of permissions bits. In the first edition of UNIX [9],
+file flags indicate whether owner and non-owner can read or
+write the file. By the 4th edition, the permissions bits had
+been expanded to read/write/execute bits for owner, group,
+and others. POSIX ACLs [4] add an arbitrary list of users
+and groups, each with up to 32 permissions bits. VMS [7, 8]
+supports ACL inheritance for files created within a direc-
+tory tree. Zanzibar’s data model supports permissions, users,
+groups, and inheritance as found in the above systems.
+Taos [24, 10] supports compound principals that incor-
+porate how an identity has been transformed as it passes
+through a distributed system. For example, if user U logged
+into workstation W to access file server S, S would see re-
+quests authenticated as “W for U” rather than just U. This
+would allow one to write an ACL on a user’s e-mail that
+would be accessible only to the user, and only if being ac-
+cessed via the mail server. Abadi et al. discuss in [11]
+a model of group-based ACLs with support for compound
+identities. Their notion of “blessings” are similar to Zanz-
+ibar tuples. However, Zanzibar adopts a unified represen-
+tation for ACLs and groups using usersets, while they are
+separate concepts in [11].
+Role-based access control (RBAC), first proposed in [17],
+introduced the notion of roles, which are similar to Zanzibar
+relations. Roles can inherit from each other and imply per-
+missions. A number of Zanzibar clients have implemented
+RBAC policies on top of Zanzibar’s namespace configura-
+tion language.
+A discussion of ACL stores in 2019 would be remiss with-
+out mentioning the Identity and Access Management (IAM)
+systems offered commercially by Amazon [1], Google [5],
+Microsoft [2], and others. These systems allow customers of
+those companies’ cloud products to configure flexible access
+controls based on various features such as: assigning users to
+roles or groups; domain-specific policy languages; and APIs
+that allow the creation and modification of ACLs. What all
+of these systems have in common is unified ACL storage and
+an RPC-based API, a philosophy also core to Zanzibar’s de-
+sign. Google’s Cloud IAM system [5] is built as a layer on
+top of Zanzibar’s ACL storage and evaluation system.
+TAO [13] is a distributed datastore for Facebook’s social
+graph. Several Zanzibar clients also use Zanzibar to store
+their social graphs. Both Zanzibar and TAO provide au-
+thorization checks to clients. Both are deployed as single-
+instance services, both operate at a large scale, and both
+are optimized for read-only operations. TAO offers eventual
+global consistency with asynchronous replication and best-
+effort read-after-write consistency with synchronous cache
+updates. In contrast, Zanzibar provides external consistency
+and snapshot reads with bounded staleness, so that it respects
+causal ordering between ACL and content updates and thus
+protects against the “new enemy” problem.
+Lamport clocks [22] provide partially ordered vector
+timestamps that can be used to determine the order of events.
+However, Lamport clocks require explicit participation of
+all “processes”, where in Zanzibar’s use cases some of the
+“processes” can be external clients or even human users. In
+contrast, Zanzibar relies on its underlying database system,
+Spanner [15], to offer both external consistency and snapshot
+reads with bounded staleness. In particular, Zanzibar builds
+on Spanner’s TrueTime abstraction [15] to provide lineariz-
+able commit timestamps encoded as zookies.
+At the same time, Zanzibar adds a number of features on
+top of those provided by Spanner. For one, the zookie proto-
+col does not let clients read or evaluate ACLs at an arbitrary
+snapshot. This restriction allows Zanzibar to choose a snap-
+shot that facilitates fast ACL evaluation. In addition, Zanz-
+ibar provides resilience to database hotspots (e.g. authoriza-
+tion checks on a suddenly popular video) and safe pointer
+chasing despite potentially deep recursion (e.g. membership
+checks on hierarchical groups).
+The Chubby distributed lock service [14] offers reliable
+storage, linearizes writes, and provides access control, but it
+lacks features needed to support Zanzibar’s use cases. In
+particular, it does not support high volumes of data, effi-
+cient range reads, or reads at a client-specified snapshot with
+bounded staleness. Its cache invalidation mechanism also
+limits its write throughput.
+Finally, ZooKeeper offers a high-performance coordina-
+tion service [19] but also lacks features required by Zanz-
+ibar. Relative to Chubby, it can handle higher read and write
+rates with more relaxed cache consistency. However, it does
+not provide external consistency for updates across different
+nodes since its linearizability is on a per-node basis. It also
+does not provide snapshot reads with bounded staleness.
+44 2019 USENIX Annual Technical Conference USENIX Association</page></paper>

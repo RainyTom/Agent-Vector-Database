@@ -1,0 +1,338 @@
+{
+  "date": "2026-10-19",
+  "platform": "alphaXiv",
+  "decision_type": "researcher_synthesis_novelty_screen",
+  "instruction": "已有核心机制不再独立立项；完整等价未证实者暂停，不把未检出当新颖",
+  "counts": {
+    "discovery_calls": 2,
+    "pdf_reader_targets": 18,
+    "returned_arxiv_papers": 14,
+    "returned_external_pdf": 1,
+    "returned_external_webpage": 1,
+    "failed_or_no_match": 2,
+    "stop_standalone": 4,
+    "hold": 2,
+    "approved": 0
+  },
+  "discovery_raw": [
+    "discover-1.json",
+    "discover-2.json"
+  ],
+  "outcomes": [
+    {
+      "id": "D0",
+      "state": "stop_standalone",
+      "reason": "Curator正文已明确按预计搜索子树计算谓词/构建临时索引，缓存与预算预构建已有；ID块编译为未证明独立的剩余差异",
+      "core_overlap_confirmed": true,
+      "full_combination_equivalence_confirmed": false,
+      "evidence": [
+        {
+          "file": "d0-curator.xml",
+          "paper": "2601.01291v3",
+          "sections": [
+            "4.2"
+          ],
+          "pages": [
+            6,
+            7
+          ]
+        }
+      ],
+      "unresolved": "固定ID块批量成员测试＋盈亏阈值未找到完整同构实现"
+    },
+    {
+      "id": "D1",
+      "state": "stop_standalone",
+      "reason": "支持撤销可归约为Counting；增量/重算成本选择已有Enzyme",
+      "core_overlap_confirmed": true,
+      "full_combination_equivalence_confirmed": false,
+      "evidence": [
+        {
+          "file": "d1-counting.xml",
+          "paper": "1711.03987v2",
+          "sections": [
+            "1",
+            "4.1",
+            "4.2",
+            "5"
+          ],
+          "pages": [
+            1,
+            2,
+            4,
+            5,
+            6
+          ]
+        },
+        {
+          "file": "d1-enzyme.xml",
+          "paper": "2603.27775v2",
+          "sections": [
+            "4.4",
+            "4.5"
+          ],
+          "pages": [
+            8
+          ]
+        }
+      ],
+      "unresolved": "稀疏多支持例外＋块级push/pull的完整表示未确认等价，但无额外界或方法证据"
+    },
+    {
+      "id": "D2",
+      "state": "hold",
+      "reason": "图共享与多尺度边已有；跨祖先分量/字节未直接判等价，需继续图增广与秩优化排查",
+      "core_overlap_confirmed": true,
+      "full_combination_equivalence_confirmed": false,
+      "evidence": [
+        {
+          "file": "d2-irange.xml",
+          "paper": "2409.02571v1",
+          "sections": [
+            "3.1",
+            "3.2",
+            "3.3"
+          ],
+          "pages": [
+            4,
+            5,
+            6,
+            7
+          ]
+        },
+        {
+          "file": "d2-jag.xml",
+          "paper": "2602.10258v1",
+          "sections": [
+            "3.2",
+            "3.3"
+          ],
+          "pages": [
+            5
+          ]
+        }
+      ],
+      "unresolved": "层状受限族能否带来超越通用范围图的实质空间/维护优势",
+      "implementation_gate": "frozen"
+    },
+    {
+      "id": "D3",
+      "state": "stop_standalone",
+      "reason": "候选上界与安全下界排除的分工已有CertEx/经典精确检索，多分辨率自适应已有SPI",
+      "core_overlap_confirmed": true,
+      "full_combination_equivalence_confirmed": false,
+      "evidence": [
+        {
+          "file": "d3-certex.xml",
+          "paper": "2610.21325v1",
+          "sections": [
+            "2",
+            "3.2",
+            "3.3",
+            "3.5"
+          ],
+          "pages": [
+            2,
+            3,
+            4,
+            7
+          ]
+        },
+        {
+          "file": "d3-spi.xml",
+          "paper": "2511.16681v3",
+          "sections": [
+            "3.6",
+            "3.7",
+            "3.8"
+          ],
+          "pages": [
+            5
+          ]
+        }
+      ],
+      "unresolved": "目录摘要前沿＋包络预算细分未完整判重；基本数学界非新增贡献"
+    },
+    {
+      "id": "D4",
+      "state": "hold",
+      "reason": "分支MVCC软件前序与湖仓快照ANN发布已有，完整目录语义未判同，现方案缺新的协议/成本证据",
+      "core_overlap_confirmed": true,
+      "full_combination_equivalence_confirmed": false,
+      "evidence": [
+        {
+          "file": "d4-chronovec.txt",
+          "url": "https://github.com/mchl-labs/chronovec",
+          "reading": "官方README，非alphaXiv索引论文；未核实现"
+        },
+        {
+          "file": "d0-lakehouse.xml",
+          "paper": "2608.05441v1",
+          "sections": [
+            "4"
+          ],
+          "pages": [
+            4
+          ]
+        }
+      ],
+      "unresolved": "目录MOVE/分支/内容记录/物理索引代际统一协议是否有实质增量",
+      "implementation_gate": "frozen"
+    },
+    {
+      "id": "D5",
+      "state": "stop_standalone",
+      "reason": "授权集合表达式、缓存快照、新鲜度token及Leopard增量集合索引已有Zanzibar",
+      "core_overlap_confirmed": true,
+      "full_combination_equivalence_confirmed": false,
+      "evidence": [
+        {
+          "file": "d5-zanzibar.xml",
+          "url": "https://www.usenix.org/system/files/atc19-pang.pdf",
+          "sections": [
+            "2.2",
+            "2.4",
+            "3.2.4",
+            "3.2.5"
+          ],
+          "page_number_note": "使用raw XML的返回页编号，不混同proceedings印刷页"
+        }
+      ],
+      "unresolved": "目录不交前沿与负策略依赖特定编码未完整判等价，当前不足独立贡献"
+    }
+  ],
+  "important_sources": [
+    {
+      "paper": "2601.01291v3",
+      "title": "Curator: Efficient Vector Search with Low-Selectivity Filters",
+      "indexed_locally": true
+    },
+    {
+      "paper": "1711.03987v2",
+      "title": "Optimised Maintenance of Datalog Materialisations",
+      "authors": [
+        "Pan Hu",
+        "Boris Motik",
+        "Ian Horrocks"
+      ],
+      "preprint_year": 2017,
+      "publication_year": 2018,
+      "venue": "AAAI",
+      "doi": "10.1609/aaai.v32i1.11554",
+      "bibliography": "沿用上一轮官方书目并核本轮原文页",
+      "indexed_locally": false
+    },
+    {
+      "paper": "2603.27775v2",
+      "title": "Enzyme: Incremental View Maintenance for Data Engineering",
+      "authors_status": "PDF多列作者顺序尚未完成正式书目核对，未建完整论文记录",
+      "venue_status": "正文页眉SIGMOD Companion 2026，正式DOI待核",
+      "indexed_locally": false
+    },
+    {
+      "paper": "2602.10258v1",
+      "title": "JAG: Joint Attribute Graphs for Filtered Nearest Neighbor Search",
+      "authors": [
+        "Haike Xu",
+        "Guy Blelloch",
+        "Laxman Dhulipala",
+        "Lars Gottesbüren",
+        "Rajesh Jayaram",
+        "Jakub Łącki"
+      ],
+      "year": 2026,
+      "venue_status": "正式出版未核实",
+      "indexed_locally": false
+    },
+    {
+      "paper": "2610.21325v1",
+      "title": "CertEx: Exact Visual Retrieval at Scale by Certified Exclusion",
+      "authors": [
+        "Dongfang Zhao"
+      ],
+      "year": 2026,
+      "venue_status": "正式出版未核实",
+      "indexed_locally": false,
+      "join_note": "原文声称支持exact radius self-join，具体pair规则/实现未精读，不误写为本项目direct join完整记录"
+    },
+    {
+      "paper": "2511.16681v3",
+      "title": "SPI: Query-Depth-Adaptive Indexing for Streaming RAG in Vector Databases",
+      "authors": [
+        "Dong Liu",
+        "Yanxuan Yu"
+      ],
+      "preprint_year": 2025,
+      "revision_year": 2026,
+      "venue_status": "正文含PVLDB DOI/页码占位符，正式venue未核实",
+      "indexed_locally": false
+    },
+    {
+      "paper": "2608.05441v1",
+      "title": "Filtered Vector Search in a Disaggregated Lakehouse: Composing Table-Format Pruning with Per-File ANN",
+      "authors": [
+        "Rakesh Jain",
+        "Thomas Griffin",
+        "Syed Zawad"
+      ],
+      "year": 2026,
+      "venue_status": "正式出版未核实",
+      "indexed_locally": false
+    },
+    {
+      "title": "Zanzibar: Google’s Consistent, Global Authorization System",
+      "venue": "USENIX ATC 2019",
+      "source": "official PDF fetched through alphaXiv reader",
+      "alphaxiv_index_hit": false,
+      "indexed_locally": false
+    },
+    {
+      "title": "ChronoVec",
+      "type": "software",
+      "source": "official GitHub webpage fetched through alphaXiv reader",
+      "alphaxiv_index_hit": false,
+      "implementation_verified": false
+    }
+  ],
+  "excluded_false_matches": [
+    {
+      "paper": "2502.13245v3",
+      "file": "d2-range.xml",
+      "reason": "几何半径range retrieval，不是属性range-filtered ANN"
+    },
+    {
+      "paper": "2607.22922v1",
+      "file": "d0-ifvs.xml",
+      "reason": "query/predicate-conditioned PQ，不等同bitmap块编译"
+    },
+    {
+      "paper": "2505.16064v1",
+      "file": "d4-merge.xml",
+      "reason": "图merge不是分支MVCC"
+    },
+    {
+      "paper": "2610.15130v1",
+      "file": "d4-staleness.xml",
+      "reason": "并发更新/租户陈旧性，不是历史目录快照"
+    }
+  ],
+  "failures": [
+    {
+      "file": "d2-packing.txt",
+      "target": "https://doi.org/10.1109/ICDE65448.2025.00272",
+      "reason": "anti-bot JavaScript page; do not count as paper"
+    },
+    {
+      "file": "d3-multistep.txt",
+      "target": "Optimal Multi-Step k-Nearest Neighbor Search",
+      "reason": "no exact title match; does not establish nonexistence"
+    }
+  ],
+  "limitations": [
+    "two broad discovery searches, not systematic exhaustive literature survey",
+    "selected original pages, not full independent reproductions",
+    "historical ACL/IVM and graph augmentation citation closure incomplete",
+    "none of six full combinations has been certified identical to a single preceding work",
+    "no novel-method approval, implementation or new performance claim"
+  ]
+}

@@ -1,0 +1,1314 @@
+<paper id="2610.21325v1"><page num="1">CertEx: Exact Visual Retrieval at Scale by Certified Exclusion
+Dongfang Zhao
+Tacoma School of Engineering &amp; Technology and eScience Institute
+University of Washington
+dzhao@uw.edu
+Abstract
+Exact k-nearest-neighbor (kNN) search over image de-
+scriptors and embeddings underlies visual retrieval, near-
+duplicate detection, the evaluation of learned representa-
+tions, and increasingly the memory of LLM agents. How-
+ever, exhaustive search computes every distance at full pre-
+cision, whereas approximate indexes return recall below
+one. We observe that exact search only needs a proof that
+each excluded vector cannot be a neighbor. Because such a
+proof only has to be conservative, it can be checked in low
+precision, much as the retina examines the whole scene at
+low resolution. We call this principle certified exclusion and
+realize it in an exact kNN method for GPUs, which we call
+CertEx. Specifically, CertEx stores a lower-bounding pro-
+jection of each vector in half precision and folds a round-
+ing certificate into the same tensor-core dot product, so that
+only the few vectors that the test keeps need exact distances.
+We prove that CertEx returns the exact kNN of every query.
+On sixteen datasets with up to 100M vectors, CertEx is ex-
+act for every query at 7.1× to 18.0× the throughput of the
+fastest cuVS search on one H100 and outperforms quan-
+tized and graph indexes whenever every query must be ex-
+act.
+1 Introduction
+Exact kNN search over large collections of visual features is
+a basic operation whose errors propagate into the tasks built
+on top of it. For instance, image retrieval ranks database de-
+scriptors such as SIFT [42] by their distance to a query de-
+scriptor, so that a missed neighbor removes a relevant image
+from the ranked list. Similarly, near-duplicate detection in
+web-scale training corpora such as LAION [58] compares
+every image embedding with its nearest neighbors [54], so
+that a missed neighbor keeps a duplicate pair in the train-
+ing data. Likewise, the kNN classifier that evaluates self-
+supervised representations [12, 50, 70] reports the search er-
+ror together with the quality of the representation whenever
+its neighbors are approximate. Moreover, LLMs and agents
+increasingly read long contexts and memories by nearest-
+neighbor search [4, 11, 34, 38, 39, 67, 69, 71], so that a
+missed neighbor drops a relevant memory. Finally, every
+benchmark of approximate search measures recall against
+exact neighbors and therefore inherits any error of the ex-
+haustive search that computes them.
+Existing systems respond to the cost of exact search in
+two ways, both of which leave a gap. First, exhaustive
+search on GPUs [18, 35] computes every query-to-vector
+distance at full precision. The throughput of exhaustive
+search is therefore bounded by one full-precision distance
+per vector, and its capacity is bounded by device memory,
+which must hold every vector at full precision. Second,
+approximate indexes based on quantization [22, 28, 37] or
+proximity graphs [43, 49, 63] are much faster. However,
+these indexes trade recall for speed by design and rely on an
+index that must be built before the first query and repaired
+when the collection changes [74]. Practitioners therefore
+choose between exact results at high cost and fast results
+whose errors are not controlled per query.
+To close this gap, we follow the division of labor in hu-
+man vision: the periphery examines the whole visual field in
+parallel at low resolution, whereas high resolution is spent
+only on the few locations that attention selects [13, 65].
+Transferred to kNN search, this principle examines every
+database vector at low precision in one parallel pass and
+spends full precision only on the few vectors that the pass
+cannot exclude. However, a low-precision distance is not
+exact. Consequently, unless every low-precision decision is
+certified to be conservative, the pass loses neighbors in the
+same way as an approximate index.
+We address this difficulty with a principle that we call
+certified exclusion: a test may run in any arithmetic as long
+as it never excludes a vector within the threshold, so that
+verifying the kept vectors yields the exact neighbors. We
+realize this principle in an exact search method that we
+call CertEx. Specifically, CertEx stores a lower-bounding
+projection of every vector in half precision, together with
+four coordinates that fold the rounding and accumulation
+errors [10, 29] of the tensor-core dot product into the prod-
+uct itself. As a result, one dot product and one comparison
+per vector decide whether the vector can still be a neighbor,
+1
+arXiv:2610.21325v1 [cs.CV] 15 Oct 2026</page><page num="2">(a) CertEx answers “a photo of a koala” exactly (b) CAGRA loses exact matches
+“a tattoo of a Pomeranian”
+exact top-5
+CAGRA top-5
+“a tattoo of a cradle”
+exact top-5
+CAGRA top-5
+exact match that CAGRA misses
+retina: all 1,281,167 images
+at low resolution (fp16) 
+274 survivors that the
+certificate cannot exclude
+0.350 0.347
+0.345 0.344
+fovea: exact top-4
+(cosine similarity)
+Figure 1: Text-to-image retrieval over 1.28M ImageNet images: CertEx (a); exact and CAGRA top-5, ranked from left to
+right (b).
+without a top-k selection and without a false dismissal. By
+analogy with human vision, we call this half-precision copy
+of the database the retina and the exact verification of the
+vectors that it keeps the fovea. Unlike quantization [22, 37]
+and graph [43, 49] indexes, which decide where a query
+should look, the retina examines every vector and backs
+each exclusion by a proof.
+For instance, Figure 1(a) follows one text query through
+CertEx: the certified test keeps 274 of the 1,281,167
+ImageNet [15] training images, from which the fovea re-
+turns the exact best matches. By comparison, CAGRA [49]
+loses the best matching image for the two prompts of Fig-
+ure 1(b), even at its most accurate configuration. Beyond
+these examples, CertEx returns exact results on one H100
+GPU with 7.1× to 18.0× the throughput of the fastest
+cuVS [47] fp32 configuration on sixteen datasets, with a
+speedup that grows with the database size. CertEx also
+outperforms the GPU indexes IVF-Flat [62], IVF-PQ [37],
+IVF-RaBitQ [22], and CAGRA [49] whenever every query
+must be exact.
+In summary, we make three contributions.
+• We propose certified exclusion, a new principle for ex-
+act search that replaces the ranking of all N vectors by
+one keep-or-exclude decision per vector. Because the
+decision never excludes a vector within the threshold,
+even when it runs in half precision, verifying only the
+kept vectors returns the exact neighbors.
+• We design CertEx as an exact kNN method that re-
+alizes certified exclusion on GPU tensor cores [10].
+We call its data structure the retina, which is a single
+half-precision matrix with one row per database vector.
+Each row holds a lower-bounding projection of one
+vector and four coordinates of a rounding certificate.
+We prove that its one-pass tensor-core test never dis-
+cards a true neighbor, answers range queries and sim-
+ilarity self-joins (all pairs within a radius) exactly, and
+keeps survivors between two balls whose gap shrinks
+as the principal coordinates capture more of the data.
+• We evaluate CertEx on sixteen datasets with up to
+100M vectors, including the embeddings of seven vi-
+sion encoders such as CLIP [56], DINOv2 [50], and
+DINOv3 [61]. CertEx answers every query exactly at
+7.1× to 18.0× the throughput of the fastest exhaus-
+tive search of NVIDIA cuVS [47] and is faster than
+IVF-Flat [62], IVF-PQ [37], IVF-RaBitQ [22], and
+CAGRA [49] whenever every query must be exact. On
+the 12.8M web images of DataComp [21], CertEx is
+exact for every query and finds all 31.4 billion dupli-
+cate pairs, which makes exact deduplication [1] practi-
+cal at web scale.
+2 Related Work
+Exact search with lower bounds. Exact methods avoid
+computing every distance by excluding the vectors whose
+lower bound exceeds the current neighbor distance. For
+instance, the k-d tree [7] and the cover tree [9] bound
+whole regions, whereas AESA [66] bounds single points
+by the triangle inequality with precomputed pivots. How-
+ever, the pruning power of such bounds decays with the di-
+mension [8, 68]. The GEMINI framework [19] therefore
+moves the bound into a contractive feature space with a
+proof of no false dismissal, which the VA-file [68] turns
+into a sequential scan of compact approximations. In con-
+trast, random projections preserve distances only up to a
+distortion factor [36] and support only approximate hash-
+ing [14, 30], whereas exhaustive GPU search [24, 35] avoids
+bounds altogether. In our terms, GEMINI and the VA-file
+are certified exclusion tests in full precision whose survivors
+are still ranked against a running candidate set; in contrast,
+CertEx certifies a half-precision tensor-core decision inside
+the same product and replaces the ranking by one compari-
+son per vector.
+Approximate indexes. Approximate indexes trade exact-
+ness for fewer examined vectors. Specifically, product
+quantization [6, 25, 28, 37] compresses vectors and probes a
+2</page><page num="3">(a) Human vision
+peripheral retina: wide, coarse
+fovea: one spot, sharp
+(b) CertEx
+Retina: all N vectors, half precision 
+Fovea: survivors, full precision
+̂
+q
+̂
+x 
+#1
+#2
+lifted projection certificate
+one tensor-core pass: keep if ⟨̂q,̂ x⟩ ≥ θ(q)
+original vector exact distance
+#1, #2: the exact k nearest (k = 2)
+Figure 2: Overview of CertEx and the visual system that motivates it.
+few partitions, to which RaBitQ [22, 23] adds a probabilistic
+error bound. In addition, FLANN [46] automates the choice
+among tree and k-means partitions. In contrast, graph in-
+dexes such as HNSW [43], DiskANN [63], SONG [75],
+GGNN [26], and CAGRA [49] walk a proximity graph to-
+ward the query. Benchmarks [5, 60] accordingly rank these
+methods by recall at a given throughput, whereas CertEx
+examines every vector and returns exact results.
+Nearest neighbors in visual recognition. Visual recog-
+nition uses nearest neighbors as a component whose errors
+enter the task metric. For instance, object retrieval [3, 32,
+53, 62] is evaluated against exhaustive ground truth [55].
+Similarly, copy detection [17, 54] and dataset curation [1,
+21] remove near and semantic duplicates from web-scale
+corpora. In representation learning, weighted kNN classi-
+fiers evaluate self-supervised representations [12, 50, 61].
+Retrieval-augmented classification [41] even feeds the re-
+trieved neighbors into the model. In practice, these
+pipelines obtain their neighbors from approximate indexes,
+cluster-restricted comparisons, or kNN graphs of fixed de-
+gree. In contrast, CertEx returns exact neighbors faster than
+exhaustive search and answers deduplication with an exact
+similarity self-join (Section 3.6).
+Foveation and certified low-precision arithmetic. Vi-
+sion models allocate resolution unevenly, for instance
+through recurrent glimpses [45], foveal-peripheral segmen-
+tation [2], or foveated rendering [27, 31]. Numerical com-
+puting allocates precision in the same way, for instance
+in mixed-precision training [44]. Computational geometry
+goes further: its floating-point filters evaluate a predicate in
+fast arithmetic together with an error bound [10, 29] and fall
+back to exact arithmetic only near zero [20, 59]. Following
+this idea, CertEx folds the error bound into the same half-
+precision product, so that every low-precision decision of
+CertEx carries a proof of no false dismissal, unlike approx-
+imate foveation.
+3 Methodology
+3.1 Overview
+Exact kNN search must examine all N database vectors, al-
+though only the few vectors near the query need full preci-
+sion. Human vision solves the same problem by dividing its
+work between two parts of the retina [13] (Figure 2(a)): the
+periphery covers the whole scene at low resolution, whereas
+the fovea sees only one spot at full resolution. Our exact
+kNN method divides its work in the same way (Figure 2(b)).
+We call this method CertEx, which stands for certified ex-
+clusion.
+The left half of Figure 2(b) shows the retina of CertEx,
+which stores one half-precision vector 
+ˆ
+x for each of the
+N database vectors x. We call 
+ˆ
+x the retina vector of x.
+The first part of 
+ˆ
+x keeps a few principal coordinates of x
+and summarizes the rest by one norm. We call this part
+the lifted projection of x (Section 3.3). The inner product
+of two lifted projections determines a lower bound on the
+distance between their vectors. Although half precision is
+the fastest arithmetic of GPU tensor cores [10], rounding to
+half precision can overestimate the distance of a true neigh-
+bor. To guard against this error, the second part of 
+ˆ
+x records
+how large the rounding error of 
+ˆ
+x can be. We call this part
+the certificate of 
+ˆ
+x. With the certificate, the test excludes a
+vector only if the vector would be excluded even under the
+worst possible rounding. Moreover, the tensor cores eval-
+uate this worst case within the same product (Section 3.4).
+Concretely, a tensor-core pass over the retina keeps a vector
+x only if ⟨
+ˆ
+q, 
+ˆ
+x⟩ ≥ θ(q), where the retina vector 
+ˆ
+q encodes
+the query q in the same form as 
+ˆ
+x and the threshold θ(q)
+follows from an upper bound U on the distance of the k-th
+nearest neighbor (Section 3.5). Because U is needed before
+the pass, CertEx obtains it from a few sampled vectors. The
+test of each vector therefore depends on no other database
+vector, so that one pass over the retina decides all N vectors
+without ranking them. We call this pass the retina pass. As
+Figure 2(b) shows, the pass excludes most vectors (crosses)
+but never a true neighbor; we call the kept vectors (checks)
+3</page><page num="4">survivors.
+The right half of Figure 2(b) shows the fovea, which takes
+over after the retina pass. For each survivor, the fovea reads
+the original vector in full precision and computes the exact
+distance between that vector and the query. As a result, the
+k survivors with the smallest exact distances are the exact k
+nearest neighbors of q, marked #1 and #2 for k = 2 in the
+figure.
+3.2 Certified Exclusion
+Consider a database X 
+:=
+ {x
+1
+, . . . , x
+N 
+} ⊂ R
+D 
+and a
+query q ∈ R
+D 
+. Exact kNN search returns the index set
+N
+k
+(q) := arg min
+S⊆[N ],|S|=k
+P
+i∈S 
+∥q − x
+i
+∥, whose far-
+thest member lies at the distance r
+k
+(q) from q. However,
+computing N
+k
+(q) requires exact distances only for the vec-
+tors that may be neighbors. Definition 1 therefore formal-
+izes what a test that excludes the other vectors must guaran-
+tee, whatever arithmetic it uses.
+Definition 1 (Certified exclusion). A test T (q, x, U ) ∈
+{keep, exclude} is a certified exclusion test if its computed
+output keeps every vector x with ∥q − x∥ ≤ U , for every
+query q, vector x, and threshold U ≥ 0.
+Definition 1 constrains only the direction of the errors of
+a test. Specifically, a certified exclusion test may keep a
+vector farther than U at the cost of one exact distance, but it
+never excludes a vector within U .
+Proposition 1 (Exact search by certified exclusion). For a
+certified exclusion test T and a threshold U ≥ r
+k
+(q), the k
+vectors with the smallest exact distances among the vectors
+that T keeps form N
+k
+(q).
+Proof. Every x ∈ N
+k
+(q) satisfies ∥q − x∥ ≤ r
+k
+(q) ≤ U
+and is therefore kept by Definition 1. The k smallest exact
+distances among a superset of N
+k
+(q) are the k smallest over
+X .
+3.3 Lifted Lower Bound
+Proposition 1 leaves open which certified exclusion test to
+use. CertEx needs a test that reads few bytes, because the
+retina pass reads every database vector and its cost grows
+with the number of bytes per vector. CertEx therefore keeps
+a few principal coordinates of each vector and one more co-
+ordinate that summarizes the rest, which together still give a
+lower bound on the distance. Specifically, consider a center
+c ∈ R
+D 
+and a matrix V ∈ R
+m×D 
+whose orthonormal rows
+are the m leading principal directions of a sample of X .
+We call m the width of the retina. The lifted projection of
+a vector keeps its m principal coordinates and summarizes
+the remaining D − m coordinates by their norm:
+ℓ(x) :=
+ 
+V(x − c)
+∥(I − V
+⊤
+V)(x − c)∥
+
+∈ R
+m+1
+. (1)
+Proposition 2 (Lower bound). For all q, x ∈ R
+D 
+, ∥ℓ(q) −
+ℓ(x)∥ ≤ ∥q − x∥.
+Proof. The entry (i, j) of VV
+⊤ 
+is the inner product of rows
+i and j of V, which is 1 for i = j and 0 otherwise because
+the rows are orthonormal. Hence VV
+⊤ 
+= I
+m
+. We write
+Π 
+:=
+ V
+⊤
+V and prove the claim in five steps.
+Step 1 splits the centered vectors. We define u 
+:=
+ q − c,
+v 
+:=
+ x−c, u
+1 
+:=
+ Πu, u
+2 
+:=
+ u−u
+1
+, v
+1 
+:=
+ Πv, and v
+2 
+:=
+v − v
+1
+. Two facts follow. First, with a 
+:=
+ V(u − v) ∈ R
+m
+,
+u
+1 
+−v
+1 
+= V
+⊤
+Vu−V
+⊤
+Vv = V
+⊤
+V(u−v) = V
+⊤
+a. (2)
+Second, since VV
+⊤ 
+= I
+m
+,
+Vu
+2 
+= Vu − VV
+⊤
+Vu = Vu − Vu = 0 (3)
+and likewise Vv
+2 
+= 0.
+Step 2 writes the lifted projections in these parts. Eq. (1)
+applied to q reads ℓ(q) = [Vu; ∥(I − V
+⊤
+V)u∥], because
+q − c = u. Its first block is Vu = V(u
+1 
++ u
+2
+) = Vu
+1 
++
+Vu
+2 
+= Vu
+1 
+by Eq. (3). Its last coordinate is ∥u
+2
+∥, because
+(I − V
+⊤
+V)u = u − Πu = u − u
+1 
+= u
+2
+. The same
+computation for x gives
+ℓ(q) =
+ 
+Vu
+1
+∥u
+2
+∥
+
+, ℓ(x) =
+
+Vv
+1
+∥v
+2
+∥
+
+,
+and subtracting the two gives
+ℓ(q) − ℓ(x) =
+ 
+V(u
+1 
+− v
+1
+)
+∥u
+2
+∥ − ∥v
+2
+∥
+
+.
+The squared norm of a stacked vector is the sum of the
+squared norms of its blocks, so that
+∥ℓ(q) − ℓ(x)∥
+2 
+= ∥V(u
+1 
+− v
+1
+)∥
+2 
++ (∥u
+2
+∥ − ∥v
+2
+∥)
+2
+. (4)
+Step 3 shows that V keeps the norm of u
+1 
+− v
+1
+. By
+Eq. (2), V(u
+1 
+− v
+1
+) = VV
+⊤
+a = a and ∥u
+1 
+− v
+1
+∥
+2 
+=
+a
+⊤
+VV
+⊤
+a = ∥a∥
+2
+. Hence
+∥u
+1 
+− v
+1
+∥
+2 
+= ∥V(u
+1 
+− v
+1
+)∥
+2
+. (5)
+Step 4 applies the Pythagorean theorem. The center can-
+cels in the difference, q − x = (q − c) − (x − c) = u − v,
+which splits as y + z with y 
+:=
+ u
+1 
+− v
+1 
+and z 
+:=
+ u
+2 
+− v
+2
+.
+By Eqs. (2) and (3), the two parts are orthogonal:
+⟨y, z⟩ = ⟨V
+⊤
+a, z⟩ = a
+⊤
+Vz = a
+⊤
+(Vu
+2 
+− Vv
+2
+) = 0.
+Expanding ∥y + z∥
+2 
+= ∥y∥
+2 
++ 2⟨y, z⟩ + ∥z∥
+2 
+therefore
+gives
+∥q − x∥
+2 
+= ∥u
+1 
+− v
+1
+∥
+2 
++ ∥u
+2 
+− v
+2
+∥
+2
+. (6)
+Step 5 applies the reverse triangle inequality. The triangle
+inequality gives ∥u
+2
+∥ ≤ ∥u
+2 
+− v
+2
+∥ + ∥v
+2
+∥ and ∥v
+2
+∥ ≤
+4</page><page num="7">3.5 Foveal Verification and Exactness
+The fovea needs the threshold U before the retina pass and
+the exact distances of the survivors after it. Before the pass,
+CertEx samples every s-th retina vector, for a stride s, and
+scores the sampled vectors by the same computed product
+b
+P as the retina pass. Among them, the sampled vectors with
+the largest products become the anchors A(q). The thresh-
+old U is then the k-th smallest exact distance among the
+anchors. Because the anchors are at least k distinct vectors
+of X , U ≥ r
+k
+(q) holds for every query. After the pass, the
+fovea computes the exact distance of each survivor from the
+full-precision difference q−x and returns the k smallest per
+query.
+Proposition 4 (Exactness). CertEx returns N
+k
+(q) for every
+query q.
+Proof. Every x with ∥q−x∥ ≤ U satisfies ∥ℓ(q)−ℓ(x)∥ ≤
+U by Proposition 2 and survives by Proposition 3. The
+retina is therefore a certified exclusion test. Since U ≥
+r
+k
+(q), Proposition 1 yields the claim.
+The anchors, the rotation V, and the width m therefore
+influence only the cost of CertEx. For instance, a loose
+threshold admits more survivors and more exact distances
+but cannot remove a true neighbor. To quantify this cost,
+Proposition 5 bounds the number of survivors. For this pur-
+pose, we write ρ(x) := ∥(I − V
+⊤
+V)(x − c)∥ for the last
+coordinate of ℓ(x), which is the norm of the component of
+x − c that is orthogonal to the rows of V. Similarly, we
+denote by η(q) the slack that μ(q) and the rounded-up co-
+ordinates add to the squared threshold, which is of the order
+of the unit roundoff times the squared norms.
+Proposition 5 (Survivor ball). Every vector that the retina
+keeps for the threshold U satisfies ∥q − x∥
+2 
+≤ U 
+2 
++ η(q) +
+4ρ(q)ρ(x).
+Proof. The proof reuses the notation of the proof of Propo-
+sition 2. There, u = q − c and v = x − c split as
+u = u
+1 
++ u
+2 
+and v = v
+1 
++ v
+2
+, where u
+1
+, v
+1 
+lie in the
+row space of V and u
+2
+, v
+2 
+are orthogonal to it. The norms
+of u
+2 
+and v
+2 
+are the last coordinates ρ(q) and ρ(x) of the
+lifted projections. The proof proceeds in three steps.
+First, the retina keeps x only if its lifted distance is small.
+By the definition of the slack η(q), every kept vector satis-
+fies
+∥ℓ(q) − ℓ(x)∥
+2 
+≤ U 
+2 
++ η(q). (16)
+Second, the squared distance exceeds the squared lifted
+distance by a term that involves only u
+2 
+and v
+2
+. Eqs. (6),
+(5), and (4) give ∥q − x∥
+2 
+= ∥u
+1 
+− v
+1
+∥
+2 
++ ∥u
+2 
+− v
+2
+∥
+2 
+and
+∥ℓ(q) − ℓ(x)∥
+2 
+= ∥u
+1 
+− v
+1
+∥
+2 
++ (∥u
+2
+∥ − ∥v
+2
+∥)
+2
+. Subtract-
+ing the second equation from the first and expanding both
+squares,
+∥q − x∥
+2 
+− ∥ℓ(q) − ℓ(x)∥
+2
+= ∥u
+2 
+− v
+2
+∥
+2 
+− (∥u
+2
+∥ − ∥v
+2
+∥)
+2
+= 
+
+∥u
+2
+∥
+2 
+− 2⟨u
+2
+, v
+2
+⟩ + ∥v
+2
+∥
+2
+
+− 
+
+∥u
+2
+∥
+2 
+− 2∥u
+2
+∥∥v
+2
+∥ + ∥v
+2
+∥
+2
+
+= 2
+
+∥u
+2
+∥∥v
+2
+∥ − ⟨u
+2
+, v
+2
+⟩
+
+.
+(17)
+Third, the Cauchy–Schwarz inequality bounds this ex-
+cess. It gives −⟨u
+2
+, v
+2
+⟩ ≤ ∥u
+2
+∥∥v
+2
+∥, so that the right-
+hand side of Eq. (17) is at most 4∥u
+2
+∥∥v
+2
+∥ = 4ρ(q)ρ(x).
+Adding this bound to Eq. (16) yields ∥q − x∥
+2 
+≤ U 
+2 
++
+η(q) + 4ρ(q)ρ(x), which is the claim.
+The survivors therefore lie between two balls. Specifi-
+cally, the inner ball has radius r
+k
+(q), and its vectors always
+survive. In contrast, the outer ball is slightly larger, by an
+excess that grows with ρ(q) and ρ(x). Because the anchors
+are the best of every s-th vector, U approximates the dis-
+tance to the (ks)-th nearest neighbor. The number of sur-
+vivors thus approaches ks when the width captures most of
+the variance of the data. A batch of B queries then costs
+BN (m + 5) half-precision multiply-adds plus about ks ex-
+act distances per query, whereas exhaustive search costs
+BN D full-precision multiply-adds and a selection among
+all N candidates.
+3.6 Certified Exclusion at Any Threshold
+Certified exclusion holds for every threshold, so that CertEx
+answers any query that fixes its threshold in advance ex-
+actly and without the anchors. Specifically, Definition 1 and
+Proposition 3 hold for every U ≥ 0, so that the test of the
+retina is certified whatever threshold a query uses. The an-
+chors of Section 3.5 have a different role: they choose the
+threshold U when a query does not fix it. For instance, kNN
+search does not fix its threshold, because Proposition 1 re-
+quires U ≥ r
+k
+(q) and the distance r
+k
+(q) becomes known
+only after the search. In contrast, a range query with ra-
+dius r asks for all database vectors within r of the query, so
+that its threshold is r from the start. CertEx thus answers a
+range query by setting U 
+:=
+ r, without any anchors. Since
+the retina may also keep vectors farther than r, the fovea
+computes their exact distances and removes them. CertEx
+therefore returns exactly the vectors within r, by Proposi-
+tions 2 and 3.
+In particular, near-duplicate detection fixes its threshold
+in advance as well, because it asks for all pairs of database
+vectors whose distance is at most a given radius r. We call
+the set of these pairs the similarity self-join. The self-join
+therefore consists of the range queries of all database vec-
+tors against the database, which CertEx answers exactly as
+above. Because each pair appears in two of these range
+7</page><page num="9">1M 10M 100M
+BIGANN database size
+10
+2
+10
+4
+10
+6
+Exact QPS
+11.0x 
+15.5x 
+18.0x
+(a) scaling
+cuVS fp32
+CertEx, m=123
+CertEx, m=59
+SIFT1M
+GIST1M
+GloVe
+BIGANN-10M
+Deep
+DINOv2
+DataComp
+10
+3
+10
+4
+10
+5
+10
+6
+QPS, 99.9% exact
+ 
+(b) all methods at 99.9% exact queries
+cuVS fp32
+fp16 + rerank
+IVF-Flat
+IVF-PQ
+RaBitQ
+CAGRA
+CertEx
+10
+1 
+10
+2
+ks (anchor prediction)
+10
+2
+10
+3
+10
+4
+10
+5
+Survivors per query
+ks
+GIST
+m&lt;D
+50M, 100M
+m=59
+DataComp
+(c) survivors
+Figure 3: Scaling with N , all methods at 99.9% exact queries (×: never reached), and survivors against ks (dashed).
+SIFT1M DINOv2 BIGANN
+100M
+10
+0
+10
+2
+10
+4
+Latency (ms)
+37.2
+5.0
+60.4
+14.5
+3601
+170
+(a) time per batch
+exhaustive search
+retina pass
+anchors
+fovea
+other
+SIFT1M DINOv2 BIGANN
+100M
+10
+0
+10
+2
+10
+4
+Retina latency (ms)
+16.0×
+5.6×
+24.3×
+1.2×
+1.5×
+1.2×
+1.5×
+1.1×
+2.1×
+(b) ablation
+CertEx
+with top-k selection
+with TF32
+with width D
+SIFT
+GIST
+GloVe
+Deep
+CLIP
+DINOv2
+0
+1
+2
+3
+4
+Violations of 4M pairs (M)
+1.996
+0
+2.007
+0
+1.997
+0
+2.000
+0
+1.998
+0
+2.002
+0
+(c) certificate
+no certificate
+certified
+Figure 4: Time per batch of 2048 queries, ablation of the retina pass, and violations without the certificate.
+18.0×, because only the retina pass scales with N whereas
+the anchors and the fovea cost nearly the same at every
+size. At 99.9% exact queries (Figure 3(b)), CertEx is 27.2×
+to 84.9× faster than IVF-Flat [62], 3.7× to 124× faster
+than IVF-PQ [37], and 2.3× to 10.7× faster than IVF-
+RaBitQ [22], which is the strongest index on the ImageNet
+embeddings. Moreover, CertEx is exact for all queries on
+every dataset, whereas CAGRA [49] reaches this level on
+only two of the thirteen datasets on which it can be built. In
+addition, the retina is built in 0.03 to 2.47 seconds, against
+2.2 to 29.7 seconds for each CAGRA graph. On the 12.79M
+DataComp images [21], CertEx is the only method that
+is exact for every image query. Finally, Figure 3(c) com-
+pares the survivors of all datasets and BIGANN strides with
+the estimate ks. Specifically, survivors lie at most 1.15×
+above ks wherever the width nears the dimension and fur-
+ther above it for narrow widths (Proposition 5).
+4.3 Ablation of the Design Elements
+We then ask where the speed of CertEx comes from and
+what its certificate costs, with every element isolated on the
+same kernel and threshold (Figure 4). For 2048 queries, a
+complete CertEx search takes 5.0 ms against 37.2 ms for
+exhaustive search on SIFT1M and 170 ms against 3.6 s on
+BIGANN-100M, of which the anchors and the fovea take
+only 2.2 ms and 22 ms (Figure 4(a)). Most of the remain-
+ing time therefore belongs to the retina pass, which costs
+less than a plain fp16 matrix multiplication (GEMM) over
+the same vectors (2.3 ms against 4.1 ms on SIFT1M and 148
+ms against 289 ms on BIGANN-100M) because it compares
+every product with its threshold inside one kernel instead
+of writing the matrix of all products. In contrast, exhaus-
+tive search must select the top 100 candidates among all
+N products, which costs 3.3× to 12.5× the GEMM alone.
+Moreover, the ablation in Figure 4(b) shows that certified
+exclusion provides most of the speed: the top-k selection
+instead slows the pass by 5.6× to 24.3×, whereas TF32 in-
+stead of fp16 and the width D instead of m slow it by only
+1.2× to 1.5× and 1.1× to 2.1×.
+In addition, the certificate makes the half-precision deci-
+sion exact (Figure 4(c)). The hardest test places every pair
+exactly on the decision boundary: for four million random
+pairs per dataset and width, we set the threshold of each
+pair to its own lower bound. In this test, the retina keeps ev-
+ery pair, whereas the same retina without the error terms of
+Eq. (10) excludes 1.996M to 2.007M of the 4M pairs, be-
+cause half-precision rounding errs in either direction with
+equal frequency. Moreover, the largest accumulation error
+that we measure for 10
+8 
+pairs per dataset and every ker-
+nel configuration is 0.43% to 0.74% of the certified bound,
+so that the certificate holds with a margin of more than
+two orders of magnitude. The certificate costs only 0.4%
+to 2.7% of throughput, yet it decides real boundary pairs:
+without it, the exact self-join of the DINOv2 [50] embed-
+dings misses 299, 50, and 1 duplicate pairs at τ = 0.90,
+9</page><page num="10">CLIP-B
+CLIP-L
+SigLIP
+DINOv2-B
+DINOv2-LDINOv3-L
+DINOv3-7B
+text
+10
+4
+10
+6
+10
+8
+QPS, 99.9% exact
+ 
+(a) ImageNet encoders
+cuVS fp32
+fp16 + rerank
+best index
+CertEx
+500 1000
+Retina width m
+10
+3
+10
+4
+10
+5
+Survivors per query
+ 
+(b) retina width
+CLIP-B
+DINOv2-B
+DINOv3-L
+Figure 5: Seven ImageNet encoders and the retina width.
+0 5 10
+Time (s)
+10
+1
+10
+3
+10
+5
+10
+7
+Duplicate pairs found
+τ = 0.90
+τ = 0.95
+τ = 0.98
+(a) duplicates
+CertEx self-join
+CertEx 10-NN
+RaBitQ 10-NN
+0.2 0.5 1 2
+Time (s)
+81.6
+81.8
+82.0
+kNN accuracy (%)
+ 
+(b) kNN classifier
+IVF-RaBitQ
+CertEx
+cuVS fp32
+Figure 6: Duplicates and kNN classification on DINOv2.
+0.95, and 0.98. The remaining parameters affect only the
+cost, so that CertEx stays faster than exhaustive search for
+every k from 1 to 100 and every batch size from 1 to 4096.
+4.4 Vision Encoders
+We next ask whether the retina stays selective on modern vi-
+sion encoders (Figure 5). On all seven ImageNet encoders,
+the retina keeps few survivors, so that CertEx is exact for
+every query and faster than every baseline at 99.9% exact
+queries (Figure 5(a)). Moreover, a larger width tightens the
+bound, so that the survivors per query on DINOv2 [50] fall
+from 10.3k at m = 507 to 671 at m = 763 (Figure 5(b)).
+Cross-modal queries further test exactness under a shift
+of the query distribution, because CLIP [56] text embed-
+dings occupy a different region of the joint embedding
+space than the image embeddings [40]. Consequently, IVF-
+Flat [62] is the only index that reaches 99.9% exact text
+queries, whereas CertEx is exact for every text query at 41×
+its throughput (Figure 5(a), right), because certified exclu-
+sion does not depend on the query distribution.
+4.5 Downstream Tasks
+We finally ask what exact neighbors change in dedupli-
+cation and kNN classification (Figure 6 and Figure 7).
+For duplicate detection, the exact self-join of the 1.28M
+ImageNet [15] training images takes 1.5 to 2.5 seconds,
+which is 22× to 37× faster than an exhaustive fp32 join,
+photo
+0.998
+✗
+photo
+0.998
+✗
+CertEx
+RaBitQ
+king penguin
+query
+CertEx
+RaBitQ
+gorilla
+query
+CertEx: found ✓
+SemDeDup: missed ✗
+CertEx: found ✓
+SemDeDup: missed ✗
+(a) deduplication
+CertEx finds all 40,
+SemDeDup none
+CertEx vote: king penguin ✓
+RaBitQ vote: killer whale ✗
+CertEx vote: gorilla ✓
+RaBitQ vote: howler monkey ✗
+(b) kNN classifier
+IVF-RaBitQ turns 463 of 50k
+correct predictions wrong
+Figure 7: Real ImageNet examples of both downstream
+tasks.
+whereas an exact 10-NN graph contains only 24.6% of its
+4.0M pairs at τ = 0.90 (Figure 6(a)). Similarly, SemD-
+eDup [1] avoids the quadratic join by comparing only the
+pairs inside each k-means cluster. Measured against the ex-
+act self-join of CertEx, this restriction misses up to 26% of
+the pairs of the worst ImageNet classes and up to 66% of
+all pairs with 50,000 clusters. At web scale, the exact self-
+join finds all 31.4 billion pairs among 1.97M of the 12.79M
+DataComp images [21] at τ = 0.95, whereas the cluster
+restriction cannot detect the duplicates of 41,875 to 56,416
+of these images. Similarly, at τ = 0.98, the exact self-join
+finds all 40 ImageNet images whose copies k-means places
+in other clusters, whereas SemDeDup with one cluster per
+class finds none (Figure 7(a)).
+For the kNN classifier of DINO [12], CertEx returns
+the exact neighbors of all 50,000 validation images in 0.40
+seconds, which is 6.4× faster than the fastest cuVS fp32
+configuration (Figure 6(b)). In contrast, the approximate
+neighbors of IVF-RaBitQ [22] lower the top-1 accuracy of
+82.07% by up to 0.42 points, so that a reported kNN ac-
+curacy also measures the index. Specifically, IVF-RaBitQ
+turns 463 of the 50,000 correct predictions wrong and only
+259 wrong ones correct. For instance, the exact neighbors
+of a king penguin are king penguins, whereas its approxi-
+mate ones are killer whales (Figure 7(b)).
+5 Conclusion
+Nearest-neighbor search serves image retrieval and dedu-
+plication and, increasingly, agentic retrieval and the long-
+context memory of LLMs. However, exact kNN search has
+so far required either a full-precision distance to every vec-
+tor or an index that gives up exactness. CertEx shows that
+10</page><page num="11">exact search needs neither: a lifted lower bound with a cer-
+tificate for its rounding error excludes almost every vec-
+tor in one half-precision tensor-core pass without a false
+dismissal. On sixteen datasets, including seven vision en-
+coders and 12.8M web images, CertEx is exact for every
+query at up to 18.0× the throughput of the fastest exhaustive
+GPU search. Exact search thus becomes a practical default
+for image retrieval, web-scale image deduplication, and the
+evaluation of visual representations.
+References
+[1] Amro Abbas, Kushal Tirumala, Dániel Simig, Surya Gan-
+guli, and Ari S. Morcos. SemDeDup: Data-Efficient Learn-
+ing at Web-Scale through Semantic Deduplication. In ICLR
+2023 Workshop on Multimodal Representation Learning
+(MRL), 2023. [URL]. 2, 3, 8, 10
+[2] Mian Muhammad Naeem Abid and Radu Timofte. Gazemo:
+Mimicking human saccades via foveal-peripheral feature
+modeling for lightweight semantic segmentation. In Pro-
+ceedings of the IEEE/CVF Conference on Computer Vi-
+sion and Pattern Recognition (CVPR) Findings, pages 7293–
+7303, 2026. [URL]. 3
+[3] Relja Arandjelovic, Petr Gronat, Akihiko Torii, Tomas Pa-
+jdla, and Josef Sivic. NetVLAD: CNN Architecture for
+Weakly Supervised Place Recognition. In 2016 IEEE
+Conference on Computer Vision and Pattern Recognition
+(CVPR), pages 5297–5307, 2016. [URL]. 3
+[4] Akari Asai, Zeqiu Wu, Yizhong Wang, Avirup Sil, and Han-
+naneh Hajishirzi. Self-RAG: Learning to Retrieve, Generate,
+and Critique through Self-Reflection. In International Con-
+ference on Learning Representations (ICLR), 2024. [URL].
+1
+[5] Martin Aumüller, Erik Bernhardsson, and Alexander Faith-
+full. ANN-Benchmarks: A benchmarking tool for approxi-
+mate nearest neighbor algorithms. Information Systems, 87:
+101374, 2020. [URL]. 3
+[6] A. Babenko and V. Lempitsky. The inverted multi-index.
+In 2012 IEEE Conference on Computer Vision and Pattern
+Recognition, pages 3069–3076, 2012. [URL]. 2
+[7] Jon Louis Bentley. Multidimensional binary search trees
+used for associative searching. Communications of the ACM,
+18(9):509–517, 1975. [URL]. 2
+[8] Kevin Beyer, Jonathan Goldstein, Raghu Ramakrishnan, and
+Uri Shaft. When Is “Nearest Neighbor” Meaningful? In
+Lecture Notes in Computer Science, pages 217–235, 1999.
+[URL]. 2
+[9] Alina Beygelzimer, Sham Kakade, and John Langford.
+Cover trees for nearest neighbor. In Proceedings of the 23rd
+international conference on Machine learning, pages 97–
+104, 2006. [URL]. 2
+[10] Pierre Blanchard, Nicholas J. Higham, Florent Lopez, Theo
+Mary, and Srikara Pranesh. Mixed Precision Block Fused
+Multiply-Add: Error Analysis and Application to GPU Ten-
+sor Cores. SIAM Journal on Scientific Computing, 42(3):
+C124–C141, 2020. [URL]. 1, 2, 3, 5, 6
+[11] Sebastian Borgeaud, Arthur Mensch, Jordan Hoffmann,
+Trevor Cai, Eliza Rutherford, Katie Millican, George van den
+Driessche, Jean-Baptiste Lespiau, Bogdan Damoc, Aidan
+Clark, Diego de Las Casas, Aurelia Guy, Jacob Menick, Ro-
+man Ring, Tom Hennigan, Saffron Huang, Loren Maggiore,
+Chris Jones, Albin Cassirer, Andy Brock, Michela Paganini,
+Geoffrey Irving, Oriol Vinyals, Simon Osindero, Karen Si-
+monyan, Jack W. Rae, Erich Elsen, and Laurent Sifre. Im-
+proving Language Models by Retrieving from Trillions of
+Tokens. In International Conference on Machine Learning
+(ICML), 2022. [URL]. 1
+[12] Mathilde Caron, Hugo Touvron, Ishan Misra, Hervé Jé-
+gou, Julien Mairal, Piotr Bojanowski, and Armand Joulin.
+Emerging Properties in Self-Supervised Vision Transform-
+ers. In IEEE/CVF International Conference on Computer
+Vision (ICCV), 2021. [URL]. 1, 3, 10
+[13] Christine A. Curcio, Kenneth R. Sloan, Robert E. Kalina, and
+Anita E. Hendrickson. Human photoreceptor topography.
+Journal of Comparative Neurology, 292(4):497–523, 1990.
+[URL]. 1, 3
+[14] Mayur Datar, Nicole Immorlica, Piotr Indyk, and Vahab S.
+Mirrokni. Locality-sensitive hashing scheme based on p-
+stable distributions. In Proceedings of the twentieth an-
+nual symposium on Computational geometry, pages 253–
+262, 2004. [URL]. 2
+[15] Jia Deng, Wei Dong, Richard Socher, Li-Jia Li, Kai Li,
+and Li Fei-Fei. ImageNet: A large-scale hierarchical im-
+age database. In IEEE Conference on Computer Vision and
+Pattern Recognition (CVPR), pages 248–255, 2009. [URL].
+2, 8, 10
+[16] Alexey Dosovitskiy, Lucas Beyer, Alexander Kolesnikov,
+Dirk Weissenborn, Xiaohua Zhai, Thomas Unterthiner,
+Mostafa Dehghani, Matthias Minderer, Georg Heigold, Syl-
+vain Gelly, Jakob Uszkoreit, and Neil Houlsby. An Image is
+Worth 16x16 Words: Transformers for Image Recognition at
+Scale. In International Conference on Learning Representa-
+tions (ICLR), 2021. [URL]. 8
+[17] Matthijs Douze, Giorgos Tolias, Ed Pizzi, Zoë Papakipos,
+Lowik Chanussot, Filip Radenovic, Tomas Jenicek, Maxim
+Maximov, Laura Leal-Taixé, Ismail Elezi, Ondˇrej Chum, and
+Cristian Canton Ferrer. The 2021 Image Similarity Dataset
+and Challenge. arXiv preprint arXiv:2106.09672, 2021.
+[URL]. 3
+[18] Matthijs Douze, Alexandr Guzhva, Chengqi Deng, Jeff John-
+son, Gergely Szilvasy, Pierre-Emmanuel Mazaré, Maria
+Lomeli, Lucas Hosseini, and Hervé Jégou. The Faiss Li-
+brary. IEEE Transactions on Big Data, 12(2):346–361, 2026.
+[URL]. 1
+11</page></paper>

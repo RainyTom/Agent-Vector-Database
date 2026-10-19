@@ -1,8 +1,12 @@
 # 前缀向量检索与Context Database的扩展路线复核
 
+> 最新[alphaXiv审计](../nested-attr-vector-search/alphaxiv-novelty-audit.md)已调整路线：四个原方案停止独立立项，两个暂停，本轮不实施。下文是扩展问题与原路线建议，不能用来覆盖后续停止决定。
+
 核查日期：2026-10-19（Asia/Shanghai）。回应用户提出的DAG、联合索引、摘要导航、多版本和权限五个方向。以下是文献综合推导的候选问题，不是五项已成立的新贡献；当前[基础问题](problem-definition.md)仍为静态单路径前缀top-k，不擅自把全部扩展加入一个模型。
 
 ## 判断依据与原文纠偏
+
+在本复核上形成的六个具体方案见[子方向总览](../nested-attr-vector-search/directions.md)：D0为Directory-Aware加速，D1–D5依次对应下文E1–E5。方案具有可实现机制，但没有实验或新颖性证明，不替代本文件的前序约束。
 
 Directory-Aware研究目录scope与维护，部署到Context Database是应用背景，不等于提出了完整文件系统内核，更不证明下述每个扩展无人研究。
 

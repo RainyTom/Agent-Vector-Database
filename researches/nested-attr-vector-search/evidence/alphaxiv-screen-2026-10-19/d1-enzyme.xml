@@ -1,0 +1,727 @@
+<paper id="2603.27775v2"><page num="1">Enzyme: Incremental View Maintenance for Data Engineering
+Ritwik Yadav
+∗
+Supun Abeysinghe
+∗
+Min Yang
+∗
+Jeffrey Helt
+∗
+Manuel Ung
+∗
+Yuhong Chen
+∗
+Databricks, Inc.
+San Francisco, CA, USA
+Melody Hu
+William Wei
+Yiming Yang
+Tom van Bussel
+Sourav Chatterji
+Indrajit Roy
+Databricks, Inc.
+San Francisco, CA, USA
+Paul Lappas
+†
+Yannis
+Papakonstantinou
+†
+Google, Inc.
+Mountain View, CA, USA
+Tahir Fayyaz
+Bilal Aslam
+Ross Bunker
+Michael Armbrust
+Shrikanth Shankar
+∗
+Databricks, Inc.
+San Francisco, CA, USA
+enzyme-
+paper@databricks.com
+Abstract
+Materialized views are a core construct in database systems, used
+to accelerate analytical queries and optimize batch pipelines for
+extract–transform–load (ETL) workflows. Maintaining view con-
+sistency as underlying data evolves is a fundamental challenge,
+especially in high-throughput and real-time settings. Incremental
+view maintenance (IVM) has been studied for decades and contin-
+ues to attract significant investment from major database vendors.
+However, most industrial systems either offer limited SQL-operator
+coverage or require users to hand-tune refresh strategies.
+This paper presents Enzyme, an IVM engine built at Databricks to
+power its declarative data pipelines platform. It provides a built-in,
+end-to-end approach to incremental pipelines, utilizing materialized
+views as first-class building blocks. By automating refresh planning,
+Enzyme reduces total cost of ownership and allows users to focus
+on business logic rather than MV mechanics. Validation across thou-
+sands of large-scale production pipelines spanning diverse applica-
+tion domains has demonstrated substantial computational efficiency
+gains, yielding a cumulative daily compute reduction of billions of
+CPU seconds. Built atop Apache Spark primitives, Enzyme adds
+a cost-based optimization layer that selects refresh strategies for
+collections of materialized views organized into pipelines.
+Enzyme’s modular architecture is designed to generalize across
+data sources and query engines. We present key design decisions
+for incremental refresh planning and execution, including optimiza-
+tions that exploit batching opportunities across materialized view
+sources. Experimental results on standard benchmarks demonstrate
+significant performance improvements at scale.
+CCS Concepts
+• Information systems → Online analytical processing en-
+gines.
+∗
+Coauthored this paper.
+†
+Work done while at Databricks.
+This work is licensed under a Creative Commons Attribution-NonCommercial-
+NoDerivatives 4.0 International License.
+SIGMOD Companion ’26, Bengaluru, India
+© 2026 Copyright held by the owner/author(s).
+ACM ISBN 979-8-4007-2450-3/2026/05
+https://doi.org/10.1145/3788853.3803098
+Keywords
+Incremental view maintenance; materialized views; ETL
+ACM Reference Format:
+Ritwik Yadav, Supun Abeysinghe, Min Yang, Jeffrey Helt, Manuel Ung,
+Yuhong Chen, Melody Hu, William Wei, Yiming Yang, Tom van Bussel,
+Sourav Chatterji, Indrajit Roy, Paul Lappas, Yannis Papakonstantinou, Tahir
+Fayyaz, Bilal Aslam, Ross Bunker, Michael Armbrust, and Shrikanth Shankar.
+2026. Enzyme: Incremental View Maintenance for Data Engineering. In
+Companion of the International Conference on Management of Data (SIGMOD
+Companion ’26), May 31-June 05, 2026, Bengaluru, India. ACM, Bengaluru,
+India, 14 pages. https://doi.org/10.1145/3788853.3803098
+1 Introduction
+Materialized views (MVs) are a fundamental building block offered
+by most database management systems [ 8, 10 , 21 , 35 , 45 ]. They are
+used primarily for reducing query execution costs by amortizing
+expensive, shared computation across multiple queries as well as
+improving the latency of individual queries. MVs have evolved from
+their traditional role as query acceleration constructs to become
+fundamental building blocks in modern data flow architectures.
+Along with data streams and primitives designed to process changes
+to datasets, MVs enable efficient extraction, transformation, and
+loading (ETL) of data at scale.
+Modern data architectures, such as the medallion architecture
+(Figure 1) commonly used in data lakehouses, leverage this capa-
+bility to organize and transform data across multiple layers. The
+quality of the data improves as it flows through subsequent layers
+in this architecture. The bronze layer lands the data as-is along with
+additional metadata. The silver layer matches, merges, conforms
+and cleans the data in the bronze layer to enable self-service analyt-
+ics for ad-hoc reporting, advanced analytics, and machine learning.
+Finally, the gold layer performs transformations for reporting, uti-
+lizing more denormalized and read-optimized data models with
+fewer joins. MVs primarily feature in the silver and gold layers to
+apply these transformations.
+Efficiently maintaining view consistency as source data evolves
+has been extensively studied in database theory over the last few
+decades [26 ]. However, with the advent of the AI era, the scale
+of data at organizations has grown exponentially, making incre-
+mental refresh of MVs a necessity rather than treating it as an
+optional optimization. This shift has exposed several critical gaps
+in existing IVM systems. Modern streaming engines offer IVM as a
+stream processing construct, updating MVs with every change to
+arXiv:2603.27775v2 [cs.DB] 30 Apr 2026</page><page num="2">SIGMOD Companion ’26, May 31-June 05, 2026, Bengaluru, India Ritwik Yadav et al.
+Figure 1: Medallion architecture organizing data into pro-
+gressively refined layers for analytics.
+their sources. While this approach minimizes data latency, batch-
+ing changes can amortize infrastructure costs, reduce scheduling
+overhead, and improve resource utilization across large-scale de-
+ployments. Additionally, most prior IVM research relies on efficient
+secondary indexes for incremental query plans to significantly out-
+perform full recomputation. Modern lakehouses, however, lack
+traditional secondary indexes and instead rely on metadata-based
+indexing at the file and column level. Research to reduce reliance
+on secondary indexes [30 ] is relatively recent. Furthermore, com-
+prehensive coverage for arbitrary compositions of common SQL
+operators—such as aggregations and window functions—remains
+rare in industrial-grade IVM engines.
+Building a production-ready IVM engine extends far beyond
+constructing efficient incremental query plans. It requires complex
+supporting infrastructure, including:
+• 
+A query fingerprinter capable of detecting changes to MV
+definitions across multiple languages (SQL, Python) and in
+the presence of user-defined functions. The diversity in lan-
+guages makes it a particularly difficult problem and inaccu-
+racies in this component can lead to incorrect results (false
+negative) or full recomputes on petabyte scale datasets (false
+positive).
+• A cost model that estimates computational complexity of
+logically equivalent plans, incorporates feedback from his-
+torical refreshes, and optimizes across a DAG of MVs while
+providing explainable output.
+• 
+Specialized query mutators to support incrementalization of
+operators such as current_timestamp() and AI functions.
+These operators are not addressed in traditional IVM litera-
+ture but are extremely popular among data engineers and
+practitioners building ETL pipelines.
+• Comprehensive correctness testing frameworks capable of
+non-deterministically generating test cases spanning the
+entire domain of valid MV definitions. The level of test cov-
+erage obtained using these frameworks cannot be matched
+by traditional unit or integration tests.
+This paper introduces Enzyme, an out-of-the-box IVM engine
+developed at Databricks that addresses these challenges through au-
+tomated, cost-based optimization of MV refreshes. Enzyme provides
+comprehensive operator coverage, supports both scheduled batch
+and continuous refresh patterns, and automatically selects between
+CREATE MATERIALIZED VIEW region_avg_sales
+SCHEDULE EVERY 1 HOUR
+AS
+SELECT
+c. region ,
+AVG (o. amount ) AS avg_order_amount
+FROM
+Customers c
+JOIN Orders o ON c. customer_id = o. customer_id
+GROUP BY
+c. region
+HAVING
+c. region IN ( 'us - east ', 'us - west ', ' asia ');
+Figure 2: A standalone MV that computes the average order
+amount for three selected regions. The MV is configured
+to refresh every hour. We use this as a running example
+throughout the paper.
+incremental and full refresh strategies based on workload char-
+acteristics and historical performance. We begin by enumerating
+the key primitives and features that Enzyme relies upon (Section
+2), followed by a formalization of the incremental view mainte-
+nance problem (Section 3). Section 4 presents Enzyme’s design
+and architecture, while Section 5 discusses lessons learned from
+its implementation. We validate Enzyme on both production work-
+loads and standard ETL benchmarks, with quantitative performance
+results presented in Section 6. Section 7 compares Enzyme with
+related systems before we conclude in Section 8.
+2 Background
+In this section, we discuss how MVs fit into the Databricks plat-
+form. We then introduce the necessary concepts and features for
+understanding the Enzyme incremental view maintenance system.
+2.1 Materialized Views at Databricks
+Databricks’s materialized views (MVs) physically store query results
+in Unity Catalog–managed tables [13 ], in contrast to standard views
+that are evaluated on demand. Users can create MVs either within
+Spark Declarative Pipelines or through Databricks SQL (DBSQL)
+warehouses. When defined inside a pipeline, an MV is refreshed
+whenever the pipeline itself is refreshed. Standalone MVs, on the
+other hand, can be refreshed on a user-specified schedule (e.g., ev-
+ery hour) or triggered automatically based on changes to their input
+tables. Each refresh logically updates the MV to reflect the result of
+re-running its defining query over the latest versions of its inputs
+when the refresh starts. Between refreshes, the MV can lag behind
+its source tables, eventually becoming consistent as subsequent
+refreshes incorporate newer changes. Delta Lake’s ACID transac-
+tions ensure readers always see the last fully committed MV state;
+refreshes are either entirely visible or not at all.
+Figure 2 shows an MV that computes the average order for three
+selected regions and refreshes hourly. We use this MV as a running
+example throughout the paper.</page><page num="3">Enzyme: Incremental View Maintenance for Data Engineering SIGMOD Companion ’26, May 31-June 05, 2026, Bengaluru, India
+Simplified Incrementalization and Orchestration. MVs remove the
+complexity of incrementalization and orchestration from the user.
+For instance, for the MV in Figure 2, the underlying engine automat-
+ically tracks changes to the input tables (Customers and Orders)
+and incrementally updates the MV accordingly. When MVs are used
+within a pipeline, the engine also identifies dependencies among
+pipeline entities and orchestrates their refresh order according to
+the underlying dependency DAG, exploiting parallelism when pos-
+sible. This ensures that, for dependencies captured within the same
+pipeline, all downstream MVs are refreshed against a consistent,
+committed snapshot of their upstream dependencies.
+Databricks additionally provides streaming tables with easy-to-
+use declarative APIs such as AUTO CDC, which implement change
+data capture (both SCD Type 1 and Type 2) and handle out-of-order
+records [16 ]. These streaming tables, when paired with MVs, allow
+users to build large, complex pipelines in a fully declarative manner.
+Enzyme is the incremental execution engine that powers efficient
+materialized view refreshes in Databricks. On each refresh, Enzyme
+evaluates multiple maintenance strategies (several incrementaliza-
+tion techniques plus the option to perform a full recompute and
+overwrite the MV’s contents) and selects the most efficient plan.
+Whenever possible, Enzyme processes only new data and changes
+in the source tables, eliminating the need for users to implement
+manual incremental logic and significantly reducing redundant
+computation.
+Internal Representation of MVs. Each MV consists of two com-
+ponents: a backing table and a top-level view. The backing table
+stores the user’s data plus internal metadata columns. The top-level
+view projects away the metadata, exposing only user-requested
+columns. This separation allows Enzyme to augment internal stor-
+age while maintaining a consistent external interface. For instance,
+as discussed later in Section 3.5, Enzyme decomposes AVG into SUM
+and COUNT [26 ], storing both components in the backing table but
+exposing only the original AVG column through the top-level view.
+Section 4.3 describes this and other such technique enablers in detail,
+including those for supporting complex aggregations and window
+functions.
+2.2 Spark Primitives
+Enzyme relies on two Spark primitives to apply computed changes
+to materialized views: MERGE INTO [17 ] applies updates, insertions,
+and deletions from a source table to a target table. It efficiently
+executes conditional actions by matching source and target rows
+on a merge condition.
+REPLACE WHERE [ 18], on the other hand, is simpler. Given a pred-
+icate and a set of new rows, it atomically replaces rows matching
+the predicate in the target table with the provided data.
+2.3 Table Format Features
+Delta Lake provides several features that Enzyme leverages for
+incremental maintenance:
+2.3.1 Row Tracking. Row tracking [ 15 ] assigns a unique identifier
+to each row at insertion time, and the identifier is preserved across
+row updates. This enables efficient row-level lineage tracking and
+MV updates [30].
+2.3.2 Change Data Feed (CDF). A change data feed (CDF) [19 ]
+tracks row-level changes between table commits. Implemented as a
+table-valued function, a table’s CDF returns one row per insertion
+or deletion, matching the source table’s schema with an additional
+metadata column indicating the change type (as +1 or -1).
+An effectivized changeset (analogous to consolidation in Differen-
+tial Dataflow [ 36 ]) is the most compact representation of a table’s
+CDF between two commits, canceling operations within the same
+changeset. For example, if a row was inserted and then deleted from
+a table, the net effect of these operations cancels. An effectivized
+changeset, however, can still contain multiple operations for a given
+row, e.g., an update is represented as a delete followed by an insert.
+To effectivize a changeset, its rows are grouped by all columns
+to compute the sum of the change type column in each group. Then
+only rows with non-zero net changes are kept.
+2.3.3 Deletion Vectors. Deletion vectors [ 20 ] implement a merge-
+on-read strategy for Delta Lake [ 6]: instead of rewriting entire
+Parquet [41 ] files on every change (copy-on-write), DELETE, UPDATE,
+and MERGE operations mark rows as removed without rewriting files.
+This reduces write amplification at the cost of additional merging
+during reads.
+2.3.4 Time Travel. Each data manipulation language (DML) opera-
+tion creates a new table version. Time travel [ 14] allows reading
+data from any historical version.
+3 Incremental Refresh of Materialized Views
+In this section, we start by formally describing the incremental
+view maintenance problem and then proceed to formally define
+Enzyme’s recursive incremental plan constructions used across a
+variety of operators and query shapes.
+3.1 Incremental View Maintenance
+Consider an MV that stores the result of a query 𝑄 (𝑇
+1
+, . . . ,𝑇
+𝑛 
+) de-
+fined over a set of base relations 𝑇
+1
+,𝑇
+2
+, . . . ,𝑇
+𝑛 
+. When the contents of
+one or more base tables are modified, Enzyme aims to automatically
+compute the corresponding change to the MV, denoted by Δ𝑄, such
+that the refreshed view satisfies:
+𝑄 (𝑇 
+′
+1 
+, . . . ,𝑇 
+′
+𝑛 
+) = 𝑄 (𝑇
+1
+, . . . ,𝑇
+𝑛 
+) ⊕ Δ𝑄,
+where 𝑇 
+′
+𝑖 
+denotes the updated state of table 𝑇
+𝑖 
+, and ⊕ represents
+the application of the incremental update (typically a combination
+of insertions and deletions) to the existing MV state. In general, for
+each base relation we define Δ𝑇
+𝑖 
+= 𝑇 
+′
+𝑖 
+− 𝑇
+𝑖 
+where &quot;−&quot; denotes the
+bag (multi-set) difference, and the incremental view maintenance
+problem is to compute Δ𝑄 given 𝑄, the current base tables 𝑇
+𝑖 
+, and
+their corresponding changes Δ𝑇
+𝑖 
+. The Δ terms are concretely rep-
+resented as relations with rows annotated with the extra change
+type column denoting insertions (+1) and deletions (-1).
+The central challenge addressed by Enzyme is to perform this
+computation automatically for arbitrary SQL queries without user
+intervention. That is, given any query 𝑄, Enzyme derives a correct
+and efficient incremental maintenance plan to update the MV in
+response to changes in its inputs, rather than recomputing the
+entire query from scratch.
+A naive strategy for incrementalization is to exploit the identity
+Δ𝑄 = 𝑄 (𝑇 
+′
+1 
+, . . . ,𝑇 
+′
+𝑛 
+) − 𝑄 (𝑇
+1
+, . . . ,𝑇
+𝑛 
+)
+. That is, one can evaluate 𝑄 on</page><page num="8">SIGMOD Companion ’26, May 31-June 05, 2026, Bengaluru, India Ritwik Yadav et al.
+plan generator (discussed below). Finally, the technique enablers
+handle the construction of the unique row identifiers described in
+Section 3.3.
+4.4 Incremental Plan Generator
+The incremental plan generator transforms a normalized and en-
+abled query plan into one that computes the MV’s incremental
+changes based on the rules defined in Section 3.2. This component
+employs a recursive visitor pattern that traverses the query plan
+bottom-up, producing at each node a representation of how to
+compute changes to that node’s output given changes to its inputs.
+Composable Delta Plan Construction. At the core of the generator
+is the concept of a delta plan, which comprises three pieces: the
+pre-state (the data before changes), the post-state (the data after
+changes), and the delta (the actual change representation with
+insertion/deletion markers). As the visitor traverses each operator
+in the query plan, it transforms the delta plans from child nodes
+into a delta plan for the current node by applying the operator-level
+delta rules described in Section 3.2. Finally, the completed traversal
+yields an incremental plan to refresh the MV.
+Effectivization. Enzyme’s plan generator selectively performs
+effectivization for changesets consumed by intermediate operators
+in the plan. This is technically optional but can be useful to reduce
+downstream computation when the change volume is large and
+contains redundant pairs.
+Further Optimizations. As discussed in Section 3.5.2, for MVs
+with top-level aggregations or window functions, Enzyme applies
+an additional optimization. Rather than computing the full change-
+set with complete before-and-after images of affected rows, the
+generator recognizes that only the aggregation or partition keys
+are needed to identify which rows to delete, along with the after-
+image values for insertion. This eliminates the need to materialize
+the full pre-state of affected groups, significantly reducing the cost
+when the aggregation or window is expensive to compute.
+4.5 Cost Model
+An effective IVM engine requires sophisticated cost modeling. Mul-
+tiple logically equivalent query plans exist for updating an MV, yet
+cost models in most online analytical processing (OLAP) databases
+lack sufficient accuracy to reliably choose between them [34 ]. En-
+zyme’s cost model addresses this gap by estimating the end-to-
+end execution cost of data transformations across layers of the
+medallion architecture. For each MV, it selects the optimal refresh
+strategy—incremental update or full recomputation (Figure 6)—by
+modeling the total refresh cost as the sum of executor CPU times
+across key physical operators, including joins, aggregates, window
+functions, shuffles, file scans, and file writes.
+Enzyme leverages execution profiles from prior refreshes to
+ground cost estimates in empirical data. For each operator in a
+refresh plan under consideration, the system identifies structurally
+similar historical executions through normalized physical plan
+matching and derives expected CPU time from observed execution
+metrics. This approach implicitly captures runtime phenomena
+such as data skew, spilling behavior, and dynamic pruning effects
+recorded in prior executions. When no historical information is
+Figure 6: Enzyme selects between incremental and full re-
+computation techniques based on estimated execution cost
+grounded by historical executions.
+available, the model falls back to default parameters derived from
+large-scale query processing logs.
+This costing framework, with its historical execution feedback
+loop, allows Enzyme to function as an adaptive, data-driven sys-
+tem capable of accurately modeling diverse query structures and
+workload characteristics while maintaining operational reliability
+at scale. The cost model serves as a fundamental component that
+opens opportunities for automatically determining which interme-
+diate MVs would benefit customer workloads by trading additional
+storage for compute savings [2, 3]. Due to its complexity and sig-
+nificance, a comprehensive treatment of Enzyme’s cost model is
+reserved for future work.
+4.6 Refresh Execution
+While Enzyme’s planning components operate on logical query
+plans, the actual execution of these plans occurs within Apache
+Spark, with Enzyme as a client. This architectural decision allows
+Enzyme to benefit from ongoing improvements to the Spark op-
+timizer and execution engine without re-implementing physical
+planning or execution logic. Enzyme operates on Spark logical
+plans, specifying transformations and actions that are then opti-
+mized and executed by Spark’s Catalyst optimizer [ 7] and execution
+engine [9, 44].
+Spark Configuration and Optimization. Before executing an incre-
+mental plan, Enzyme tunes several Spark configuration parameters
+to optimize performance based on expected workload characteris-
+tics. Because Enzyme constructs the incremental plans itself and
+has access to historical change statistics, it has additional informa-
+tion that can be used to steer the optimizer toward more informed
+decisions. For example, when a delta term participates in a join,
+Enzyme may use historical changeset sizes to hint the optimizer
+toward appropriate join strategies (e.g., broadcast vs. shuffle). Simi-
+larly, Enzyme may adjust broadcast thresholds dynamically based
+on the changeset sizes observed in previous refreshes.
+For complex plans involving multiple aggregations or joins, En-
+zyme may selectively cache intermediate results that will be reused
+multiple times within the same refresh operation. This is partic-
+ularly valuable when computing both the pre- and post-states of
+inputs for aggregate changesets, where caching the input changeset
+avoids redundant computation.</page><page num="9">Enzyme: Incremental View Maintenance for Data Engineering SIGMOD Companion ’26, May 31-June 05, 2026, Bengaluru, India
+Choosing Update Mechanisms. Given an incremental plan pro-
+duced by the plan generator, Enzyme applies the computed changes
+to the MV’s backing table. It selects between two mechanisms based
+on the changeset characteristics and query structure.
+REPLACE WHERE 
+[ 18] performs an atomic delete-then-insert op-
+eration. Since it semantically applies all deletions before any inser-
+tions, the final changeset must be effectivized to avoid incorrect
+results. Otherwise, a row appearing in both the deletion and inser-
+tion sets could introduce duplicate or stale rows. The execution
+layer is responsible for adding a final effectivization operation to
+un-effectivized REPLACE WHERE incremental plans.
+For certain MVs with top-level aggregates, Enzyme uses an op-
+timized MERGE INTO [ 17 ] formulation to update materialized re-
+sults in place by combining existing values with incremental deltas
+(see Section 3.5.2).
+Transactional Provenance Updates. Enzyme maintains provenance
+metadata for each MV that records the query fingerprint, source
+table versions, and other information necessary to validate con-
+sistency and detect definition changes. This provenance is stored
+as part of the MV’s metadata and must remain consistent with its
+data. Enzyme ensures this consistency by committing provenance
+changes in the same Delta transaction [6] that applies the data
+changes. Delta’s ACID transaction semantics guarantee that either
+both the data and provenance are updated atomically, or neither
+update is visible. This prevents the MV from entering an inconsis-
+tent state where the data reflects one set of source versions while
+the provenance metadata references others.
+5 Operational Experience &amp; Lessons
+Deploying an IVM engine in a production data platform requires
+rigorous attention to correctness, performance, and reliability. This
+section describes key operational practices and lessons learned
+from running Enzyme at scale.
+Ensuring Correctness. Enzyme employs multiple complementary
+strategies to validate correctness. The system leverages a Random
+Query Generator (RQG) framework to generate random schemas,
+synthetic data, and SQL queries covering complex combinations
+of different operators. For each generated query, Enzyme creates
+an MV, applies randomized changes to source tables, and validates
+that the incremental refresh produces identical results to complete
+recomputation. To complement synthetic testing, Enzyme lever-
+ages an A/B correctness testing system for production workloads
+that compares MV contents to their definition queries. This dual
+approach catches subtle correctness issues that manifest only un-
+der specific data distributions or timing conditions not covered by
+synthetic tests.
+Reliability Through Fallback. Beyond correctness validation, en-
+suring reliability requires graceful degradation in the face of bugs
+and other issues. Enzyme implements automatic fallback to com-
+plete recomputation when planning encounters exceptions or incor-
+rectly generates an invalid incremental plan. The system monitors
+these exceptions closely, as they often reveal bugs in the underlying
+query engine. Enzyme also integrates with the Health Mediated
+Release framework in Databricks, which automatically rolls back to
+the previously deployed version when a refresh fails after a system
+upgrade. The complexity of incremental plans exercises execution
+paths rarely encountered by typical user queries, making Enzyme
+an effective stress test for uncovering optimizer and execution bugs
+in Spark itself.
+Performance Optimization Challenges. Operating Enzyme at scale
+revealed several performance challenges requiring careful attention.
+While Enzyme leverages Spark’s query optimizer when submitting
+incremental plans for execution, several scenarios required consid-
+ering alternative plan formulations. For example, when dynamic
+file pruning optimizations failed to activate, we adjusted Enzyme to
+use an equivalent incremental formulation that leverages semijoins
+to provide more explicit pruning. Additionally, some incremental
+plans caused out-of-memory failures in the driver during optimiza-
+tion due to plan complexity. Enzyme addresses this by adding rules
+to the normalizer to simplify plans, or by reformulating incremental
+formulas to be more tractable for the optimizer.
+Pipeline-Aware Cost Modeling. A key insight from deploying En-
+zyme’s cost model is that optimization decisions must consider
+the entire graph of dependent MVs rather than optimizing each
+view in isolation. Even when an upstream MV would benefit from
+complete recomputation, performing incremental refresh may be
+preferable because it generates a smaller change feed that dramati-
+cally reduces refresh costs for downstream dependent MVs. This
+holistic approach can reduce total system cost despite being locally
+suboptimal for individual MVs.
+Fingerprint Stability Challenges. Maintaining fingerprint stability
+over time required addressing spurious fingerprint changes by lever-
+aging multi-versioning. Changes to the normalizer, for instance,
+should not change fingerprints and invalidate existing MVs. Sim-
+ilarly, the upgrade from Scala 2.12 to 2.13 potentially introduced
+many spurious changes due to differences in how Scala objects
+were hashed. The multi-versioned fingerprinter has been critical
+for allowing Enzyme to handle such cases without triggering un-
+necessary recomputation.
+6 Experimental Study
+We evaluate the effectiveness of Enzyme in performing incremental
+updates compared to both full recomputation and a state of the
+art IVM system. Our experiments aim to demonstrate three key
+outcomes: (1) Enzyme delivers superior performance and efficiency
+Figure 7: Dependency Graph of MVs in TPC-DI.</page><page num="11">Enzyme: Incremental View Maintenance for Data Engineering SIGMOD Companion ’26, May 31-June 05, 2026, Bengaluru, India
+Figure 9: Enzyme performance compared to a leading cloud vendor. Note that the y-axis is log scale.
+*Speedups were reported as 1 for queries that the vendor did not support incrementalizing.
+• When incrementalization is applied, Enzyme achieves better
+performance than full recomputation in 6 out of 8
+datasets, confirming the effectiveness of its incremental
+execution model.
+• The observed performance benefits are consistent across
+larger scale factors, indicating that Enzyme’s efficiency
+scales with data volume.
+6.2.1 Comparison with Full Recomputes in Databricks. Figure 8
+shows the relative speedup for each scale factor tested in Databricks
+for each dataset. We summarize our findings as an in-depth break-
+down of the overhead and query characteristics is outside the scope
+of this paper.
+Across the benchmark, six out of eight datasets exhibit sub-
+stantial speedups when executed incrementally compared to full
+recomputation. The speedups remain roughly constant across scale
+factors, demonstrating Enzyme’s ability to maintain efficiency and
+scalability as data volume increases.
+FactMarketHistory is a computationally intensive workload
+that computes 52-week highs and lows for each stock symbol based
+on roughly two years of historical data. Each refresh requires scan-
+ning one year of records per symbol, leading to high memory pres-
+sure and increased disk spilling at larger scale factors. This explains
+the dip in speedup between scale factors 2000 and 5000.
+Prospect performs poorly under incremental refresh because a
+large fraction of the dataset is updated in each batch. The column
+SK_RecordDateID represents the most recent date a prospective
+customer appears in the input. Since more than 95% of prospects
+persist across batches, nearly all rows in the dataset are rewritten
+during each refresh to update this column. In such cases, identifying
+and applying fine-grained row-level updates incurs more overhead
+than simply performing a full table refresh.
+DimAccount is a lightweight workload that completes in under
+a minute even at the largest scale. Small datasets like this are more
+sensitive to transient overheads—including cache contention and
+scheduling delays—caused by concurrently running queries. Al-
+though DimAccount itself shows limited speedup, incrementalizing
+it remains important because it enables more efficient incremental
+updates for its downstream consumers.
+6.2.2 Comparison with CV-IVM. Figure 9 shows the relative speedup
+of Enzyme compared to CV-IVM, tested on the 10,000 scale fac-
+tor. Although the static cost model in the CV-IVM offering did not
+choose to incrementalize any of the datasets, we overrode the cost
+model to perform incremental updates where possible.
+When setting up the workload in CV-IVM, DimAccount and Fact-
+MarketHistory were not able to be refreshed incrementally due to
+them containing unsupported operators. Although DimTrade, Fac-
+tHoldings, FactCashBalances did not have unsupported operators,
+they were forced to perform full refreshes because their upstream
+dependencies were not incrementalized.
+Of the three datasets that did incrementalize, we observed better
+performance with FactWatches, and the incremental refresh in
+CV-IVM regressed in Prospect and DimCustomer. Prospect likely
+suffered for the same reason discussed in section 6.2.1. However it
+was not apparent why DimCustomer regressed with CV-IVM.
+6.2.3 Cost model evaluation on TPC-DI. Across the TPC-DI work-
+load, the Enzyme cost model made the right decision for 7 out of
+the 8 datasets, representing an accuracy of 87.5%.
+Prospect, as discussed in Section 6.2.1, is more efficiently han-
+dled by a full recompute—consistent with the cost model’s choice.
+FactCashBalances was excluded from incrementalization due
+to operator nesting detected by the model; however, empirical re-
+sults show that its incremental refresh actually outperforms a full
+recompute.
+DimAccount was chosen to be incremental. Although it did
+not show significant gains when incrementalized, it was globally
+optimal as it helped the performance of downstream datasets.
+The cost model used by CV-IVM makes static decisions based
+on the user query, and did not choose to incrementalize any of the
+datasets in the benchmark.
+6.2.4 Autoscaling outcomes. Spark Declarative Pipelines in Databricks
+support automatic scaling, dynamically adjusting compute resources</page><page num="12">SIGMOD Companion ’26, May 31-June 05, 2026, Bengaluru, India Ritwik Yadav et al.
+(a) Task history during historical vs incremental execution
+(b) Executor history during historical vs incremental execution
+Figure 10: Autoscaling takes advantage of smoother task
+load during incremental runs to scale down and improve
+efficiency.
+based on workload demand. As shown in Figure 10a, the incremen-
+tal runs exhibit a curve in the number of submitted Spark tasks with
+smaller spikes, indicating reduced data volume and more consistent
+scheduling. Consequently, as illustrated in Figure 10b, the cluster
+requires fewer executors overall, since the smoother and lower
+task load eliminates the sharp peaks in parallelism seen during full
+recomputes. This leads to more efficient resource utilization and
+lower overall compute cost, as the cluster scales only to the level
+necessary for the incremental workload.
+7 Related Work
+Incremental view maintenance (IVM) has been a long-standing
+problem in databases. Early work [11 , 24 –26 ] developed first-order
+delta rules that propagate inserts, deletes, and updates through
+relational algebra, with follow-ups covering both set and bag se-
+mantics; nested and correlated subqueries remained difficult and
+only partially addressed by later theory.
+Higher-order IVM advanced the state of the art. DBToaster
+[ 31 , 33] applies recursive finite differencing [32], materializing not
+only the view but also higher-order deltas, trading additional state
+for substantially lower update costs on join-heavy queries. Differ-
+ential Dataflow [ 36] generalizes incremental computation using
+partially ordered timestamps and consolidation, while DBSP [12 ]
+recasts databases as streams over commutative groups with integra-
+tion/differentiation operators; the formalisms are closely related.
+Several prior works have proposed algorithms and data struc-
+tures for incrementalizing specific classes of queries. For example,
+DYN [27] and IDYN [ 28, 29 ] target acyclic conjunctive queries (CQs)
+with equality and inequality join predicates, respectively; AJU [42 ]
+focuses on incremental maintenance of acyclic foreign-key joins;
+and RPAI [1] addresses correlated nested aggregate queries.
+A complementary line exploits keys. ID-based IVM [30 ] repre-
+sents change sets as identifiers rather than full tuples, often avoiding
+base-table lookups on the update path and yielding large speedups
+on multi-join workloads, subject to key/foreign-key assumptions.
+Its modular compilation—ID inference, rule instantiation/composi-
+tion, and algebraic minimization—reduces both work and state.
+Production systems span a wide spectrum. Traditional MVs in
+Redshift [5 ], BigQuery [22 ], and Postgres-style [ 39 ] warehouses
+target query acceleration with periodic refresh. Modern streaming
+MVs (e.g., Materialize [35], RisingWave [43 ]) are typically deployed
+as long-running dataflows that continuously process input streams,
+as opposed to scheduled batch refreshes, enabling low-latency main-
+tenance. Cloud warehouses bridge paradigms: Snowflake Streams
+and Dynamic Tables [4] pair CDC with scheduled/target-freshness
+maintenance. Databricks provides MVs refreshed manually or on
+a schedule; streaming tables which provide append-oriented in-
+gestion with exactly-once processing in managed pipelines. Both
+surfaces integrate with Delta Lake Change Data Feed for row-level
+CDC. Streaming tables inherit structured streaming semantics such
+as watermarks for state bounding and exactly-once processing
+when using appropriate sources/sinks.
+Materialization strategy has been studied from view selection
+(AND–OR DAGs; multi-query optimization [37 ]) to recursive main-
+tenance (semi-naive evaluation [23 ]; DRed and counting variants
+[26 ]). These classics underpin today’s systems: DBToaster’s aggres-
+sive intermediate caches exemplify the state-vs-latency trade-off,
+while differential/DBSP frameworks formalize streaming execution
+and consolidation.
+Enzyme delivers a fully automated, built-in approach for Databricks
+MVs capable of handling arbitrary compositions of complex SQL
+operators including aggregations, joins, and window functions with-
+out user intervention. Its cost-based optimization layer intelligently
+selects refresh strategies across entire pipelines of MVs, automati-
+cally choosing between incremental updates and full recomputa-
+tion based on historical execution profiles and empirical feedback.
+On the other hand, streaming tables are designed to seamlessly
+process and store incoming data streams in real time. Unlike tra-
+ditional batch tables that require explicit refreshes or data over-
+writes, streaming tables automatically ingest new data as it arrives,
+maintaining a continuously updated, up-to-date view. This design
+makes streaming tables inherently incremental. The combination
+of streaming tables and MVs creates a unified, powerful framework
+that elegantly addresses both batch and streaming use cases.
+8 Conclusion
+Enzyme is a state-of-the-art incremental view maintenance engine
+that synthesizes decades of foundational academic research into an
+industrial-grade system, addressing the critical challenge of main-
+taining MV consistency in modern data lakehouse architectures as
+source data evolves. Built atop Apache Spark primitives, it achieves
+exceptional operator coverage and seamlessly handles complex
+operator compositions including aggregations, joins, and window
+functions. Among the few production-grade IVM engines, Enzyme
+demonstrates superior performance, validating both its scalability
+and practical effectiveness across thousands of real-world pipelines.
+Successfully bridging the gap between theoretical advances and
+operational demands, Enzyme is an essential optimization system
+for data processing in the Lakehouse era.</page></paper>

@@ -1,6 +1,8 @@
 # 待验证研究问题
 
-> 当前前缀属性方向已重新收敛，见[规范问题定义](../containment-filtered-vector-search/problem-definition.md)与[创新性复核](../containment-filtered-vector-search/novelty-analysis.md)。下文H/C/F编号保留研究过程，不代表独立的新颖贡献；当前只保留待验证主候选RQ-P。
+> 最新前缀方向[alphaXiv审计](../nested-attr-vector-search/alphaxiv-novelty-audit.md)：D0/D1/D3/D5停止独立立项，D2/RQ-P具体方案与D4暂停，原MVP不实施；没有通过新颖性门槛的六方向方案。此决定仅针对前缀扩展，不取消本文件其他vector join课题。
+
+> 当前前缀属性方向见[规范问题定义](../containment-filtered-vector-search/problem-definition.md)与[创新性复核](../containment-filtered-vector-search/novelty-analysis.md)。H/C/F编号保留研究过程，不代表独立贡献；RQ-P仍为索引主候选。用户要求的D0–D5六个具体方案见[子方向总览](../nested-attr-vector-search/directions.md)，是分别立项的待验证设计，不同时叠入基础定义。
 
 ## RQ-001：输出规模与质量不确定性下的分层存储 join 计划选择
 
@@ -115,3 +117,11 @@ H2：把 ANN witness 的 false-empty、过滤器 false-negative 与候选搜索�
 ### 2026-10-19 Context Database五扩展（不替换基础定义）
 
 见[扩展路线](../containment-filtered-vector-search/extensions.md)：E1多父DAG撤销维护、E2共享导航联合索引、E3摘要预算路由、E4版本目录/ANN一致视图、E5继承权限撤销。均为本项目综合推导，新颖性未充分排查，非原作者五项future work；每项给问题/现有前序/差异/假设/基线/最小实验/风险。E2延续RQ-P，其他需独立语义与评测。Bitmap并集不多重计数；summary相似不是安全下界；MVCC不等于lock-free；ACL不只后过滤。未实施或验证性能，不把微秒/数量级收益写成结论。
+
+### 2026-10-19 D0–D5六个可实施方案
+
+用户要求分别提出方案并在nested-attr-vector-search建立子目录，见[总览](../nested-attr-vector-search/directions.md)。D0按需块级范围编译；D1稀疏重叠支持与块级push/pull；D2跨祖先分量缺口预算修补图，细化RQ-P；D3摘要调度与完整几何前沿证书；D4拓扑/内容分离的快照覆盖清单；D5带策略新增负依赖的授权前沿。每项有明确机制、等价/一致性目标、最近前序、MVP、基线、消融和停止条件，均为研究者综合方案，不是六项已证明新颖的贡献。只跑文档/索引检查，没有原型或性能实验。新颖性补查重点为向量化范围执行、Counting/DRed、共享图修补、certified retrieval、ChronoVec分支索引与Zanzibar Leopard。
+
+### 2026-10-19 alphaXiv查重后的停止与暂停决定
+
+[逐项审计](../nested-attr-vector-search/alphaxiv-novelty-audit.md)替代上一节六方案实施建议：D0/D1/D3/D5停止作为独立创新推进；D2/D4暂停，原MVP不实施。结论来自具体核心机制与前序对照，不声称每份完整组合均已有一篇同构实现。D2仅可继续查“层状族是否带来超越通用范围图的实质空间/维护界”；D4需证明目录分支场景产生区别于常规MVCC二级索引的新协议或成本问题，未达到前不立项。当前没有确认新颖的原六方向方案，也没有新实验结果。

@@ -1,5 +1,11 @@
 > 当前语义（2026-10-19）：查询属性序列必须是返回对象属性序列的前缀；见[前缀包含过滤文档](../containment-filtered-vector-search/index.md)。下文保留此前层级节点/overlap方案，不能将一般无序集合包含或子树并集直接当作当前前缀定义。
 
+## 子方向方案入口
+
+最新查重决定见[alphaXiv新颖性审计](alphaxiv-novelty-audit.md)：D0/D1/D3/D5停止独立立项，D2/D4暂停，当前不实施原六个方案。以下链接保留设计与证据，不代表六项创新已获确认。
+
+当前六个方案见[子方向总览](directions.md)：[Directory-Aware加速](01-directory-aware-acceleration/README.md)、[DAG维护](02-dag-incremental-scope/README.md)、[联合索引](03-prefix-coupled-index/README.md)、[渐进导航](04-certified-progressive-routing/README.md)、[版本检索](05-versioned-directory-search/README.md)、[继承权限](06-inherited-acl-search/README.md)。每项已有具体机制、前序差异、最小实验与停止条件；均为待验证提案。以下Introduction和定义保留历史模型，当前单路径定义仍以前述规范入口为准。
+
 # Introduction
 
 向量检索通过表示空间中的距离刻画对象与查询之间的相关性，为文本等非结构化数据提供了检索方式。在实际应用中，用户通常还需要通过结构化属性限定检索范围。因此，查询处理需要同时满足属性条件与向量排序要求：先确定哪些对象有资格进入结果，再从这些对象中返回与查询向量最近的 k 个对象。已有混合检索研究，如 [ACORN](https://arxiv.org/abs/2403.04871)，已将向量相似度与结构化谓词的联合处理作为研究对象。

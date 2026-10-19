@@ -1,0 +1,967 @@
+<paper id="2610.15130v1"><page num="1">DAS et al.: RECALL-BOUNDED STALENESS FOR FILTERED MULTI-TENANT ANN GRAPH INDEXES 1
+Recall-Bounded Staleness for Filtered Multi-Tenant
+ANN Graph Indexes under Concurrent Updates
+Namrata Das, Kailas Devadkar, Anand Godbole
+Sardar Patel Institute of Technology, Mumbai, India
+Abstract—Production vector search must continuously ingest,
+delete, and re-tenant vectors while serving low-latency, high-
+recall, metadata-filtered approximate nearest-neighbor (ANN)
+queries for many tenants with per-tenant service-level objec-
+tives. Existing graph-based ANN systems address these require-
+ments largely in isolation, leaving recall during concurrent re-
+optimization without an analytical bound. We develop a graph-
+based index that combines streaming updates, filtered search,
+and multi-tenancy, with one theoretical result and two system
+mechanisms. Our theory decomposes per-tenant recall loss into
+staleness from updates not yet integrated into the graph and
+filtered navigability determined by the local density of points
+satisfying a tenant’s predicate. The staleness component exhibits
+anti-amortization on a merge-based graph, integrating a larger
+batch of inserts increases recall degradation super-linearly, so
+larger merges do not reduce total staleness loss. Holding the
+insert horizon fixed while increasing merge size 20×, we observe
+a monotonic decrease in terminal recall@10 from 99.44% to
+99.01%. For filtered search, the theory gives a parameter-free
+frontier-mass relationship in local predicate density and a query-
+averaged per-tenant recall bound. We instantiate the bound with
+a filter and tenant-aware staging cache and a select-not-resize
+scheduler with per-tenant staleness ceilings. On a FreshDiskANN
+substrate, the ceiling eliminates tight-tier SLA violations under
+the evaluated churn workload, while merge reordering changes
+terminal recall by only 0.02 percentage points. The results show
+how recall bounds can guide background maintenance without
+relying on merge resizing as a recall control mechanism.
+Index Terms—Approximate nearest neighbor search, vector
+databases, graph indexes, streaming indexes, filtered search,
+multi-tenancy, recall, service-level objectives, index maintenance,
+concurrent updates.
+I. INTRODUCTION
+A
+WIDELY-HELD intuition about maintaining a graph-
+based approximate-nearest-neighbor (ANN) index under
+a stream of inserts is that batching amortizes cost, since
+folding more pending points into each merge lowers per-point
+maintenance overhead. This holds for throughput; for recall it
+does not. Integrating a batch of c inserts into a merge-based
+graph index degrades disk-graph recall@k super-linearly in c,
+so the total recall loss accumulated over an insertion horizon
+does not fall with the merge size. Larger, less frequent merges
+are no better for recall than smaller, more frequent ones, and
+on our point estimates they are worse. We call this anti-
+amortization. In practice only the weak form matters, since
+re-sizing merges cannot engineer degradation away and can
+only re-prioritize it, and this motivates the system we build.
+The design rests on the direction of the effect (L
+∗ 
+non-
+decreasing in c), which we measure on two independent axes;
+the magnitude of the super-linearity is less tightly pinned, and
+its per-merge-to-horizon assembly is a conservative step we
+find loose by about 2× (§V-B).
+Anti-amortization matters because the workloads that most
+need graph ANN are exactly the ones that mutate continuously.
+Production vector search must ingest, delete, and re-tenant
+vectors while serving low-latency, high-recall queries that
+carry metadata predicates, for many tenants each with its own
+service-level objective (SLO). Recent work names the pain
+directly. CANDOR-Bench [1] observes that under concurrency
+“throughput in concurrent settings is often constrained by in-
+sertion overhead rather than query latency, which highlights a
+mismatch between streaming workloads and designs originally
+tuned for offline construction.” The VDBMS Survey [2] places
+incremental k-NN among its open problems: e-commerce and
+recommender platforms retrieve an effectively very large k in
+small increments so that results appear seamlessly, and while
+techniques exist for that access pattern, “it is unclear how to
+support this search inside vector indexes.” A VLDB tutorial
+on filtered vector search [3] makes the corresponding point on
+the predicate axis, giving as a key objective “the importance
+of achieving stable recall, ideally in a declarative manner,
+ensuring consistent recall across queries.” And, from indus-
+try, Pinecone [4] reports that “data is continuously inserted
+and deleted, and metadata may be updated independently of
+the vector index, yet filters must be applied accurately and
+efficiently at query time.”
+The literature is heavily worked along each axis sep-
+arately but not at their intersection. Filtered-static graph
+ANN (Filtered-DiskANN, ACORN, RNSG, iRangeGraph,
+STABLE) builds one index over the joint feature-and-
+attribute space and does not stream. Streaming graph ANN
+(FreshDiskANN, SPFresh, Mycelium-Index, and the recent
+single-tenant SOTA PipeANN/OdinANN) operates on unfil-
+tered, single-tenant data and provides at best empirical recall
+stability under churn. Multi-tenant vector search (Curator,
+Pinecone, GaussDB-Vector) is sparse; Curator is static and in-
+memory, Pinecone sits on an IVF substrate with no analytical
+bound, and none schedules background work by per-tenant
+SLA. No prior system occupies their intersection, and none
+bounds the recall a tenant loses during live re-optimization of
+a filtered graph index.
+Our contribution occupies the axes those systems leave
+open, combining streaming, filtered, and multi-tenant oper-
+ation with per-tenant SLA scheduling, an analytical bound,
+and disk-resident scale. On the axes they do target, PipeANN
+and OdinANN lead single-tenant streaming and Curator leads
+static per-tenant recall, and we position against rather than
+arXiv:2610.15130v1 [cs.DB] 10 Oct 2026</page><page num="2">DAS et al.: RECALL-BOUNDED STALENESS FOR FILTERED MULTI-TENANT ANN GRAPH INDEXES 2
+displace them.
+We make one theoretical and two engineering contribu-
+tions. Our theorem (C1, §III) establishes the anti-amortization
+bound and generalizes it to the filtered, multi-tenant,
+deletes/migration setting. Its filtered term is a parameter-
+free frontier-mass law in the local predicate density σ
+loc 
+that
+predicts the recovery scale L
+95 
+= 1.25 k/σ
+loc 
+and yields a
+per-tenant admission test 1.25 k/σ
+loc 
+≤ L
+max
+(ℓ
+τ 
+); evaluated
+as a query average, it is a conservative per-tenant recall lower
+bound. The staleness half is measured at horizon scale rather
+than extrapolated, with terminal recall decreasing monotoni-
+cally as the merge size grows across a 20× range of c.
+Two engineering designs instantiate the bound. A filter
+and tenant-aware staging cache (C2, §IV) absorbs in-flight
+inserts, deletes, and tenancy changes on the query path and
+collapses to the baseline on a single partition. An SLA-
+aware, select-not-resize scheduler (C3) honors a per-tenant
+max-staleness ceiling, re-prioritizing which pending work each
+fixed-size merge drains rather than re-sizing the merge that
+anti-amortization forbids.
+On a FreshDiskANN substrate we measure that anti-
+amortization holds end to end (at a fixed 60K-insert horizon,
+terminal recall@10 falls 99.44 → 99.01 as merges grow
+1K → 20K), that re-ordering merges leaves terminal recall
+unchanged (|∆recall@10| = 0.02 pp), that the per-tenant
+staleness ceiling eliminates tight-tier SLA violations under
+churn where a ceiling-less baseline fails, and that the design
+remains memory-bounded and recall-correct at 100K.
+II. SYSTEM MODEL AND NOTATION
+Vectors, queries, predicates
+Let X ⊆ R
+d 
+be the ambient space with metric ρ. A point
+x ∈ X carries metadata m(x) ∈ M; a predicate p : M →
+{0, 1} selects the filtered subset X
+p 
+= {x : p(m(x)) = 1}, of
+global selectivity σ(p) = |X
+p
+|/|X |. A query is q = (v, k, p)
+with query vector v, neighbor count k, and predicate p; its
+ground truth is the k closest points of X
+p 
+to v under ρ. Because
+filtered-graph recall is governed by predicate density near the
+query rather than globally (§III), we also define the query-
+joint local density σ
+loc
+(p, v) = Pr
+x∼nbhd(v)
+[p(m(x)) = 1],
+the fraction of v’s metric neighborhood that satisfies p.
+Tenants and SLOs
+The point set is marked by tenant: T is the tenant set and
+t(x) ∈ T each point’s tenant. A query has tenant scope T (q) ⊆
+T (single-tenant when |T (q)| = 1); its effective candidate set
+is X
+p 
+∩{x : t(x) ∈ T (q)}. Each tenant τ carries a service-level
+objective SLO(τ ) = (ρ
+τ 
+, ℓ
+τ 
+) (minimum recall ρ
+τ 
+, maximum
+latency ℓ
+τ 
+) and a max-staleness ceiling S
+τ 
+that the scheduler
+(§IV) honors.
+Graph index
+G = (V, E) is a directed graph over V ⊆ X built by
+Vamana (out-degree cap R, candidate width L, prune slack
+α &gt; 1, pool cap maxc); Search(G, q, ef ) returns an approxi-
+mate top-k using exploration budget ef . The disk graph is a
+single label-blind Vamana: predicates and tenant labels are
+query-time post-filter tags and are never used in construction.
+This fact is central to both the theorem’s additivity and
+topology preservation (§III,§IV).
+Mutation streams
+Updates arrive as a marked point process M = {(s
+i
+, u
+i
+)}
+with u
+i 
+∈ {ins(x), del(x), mig(x, τ → τ 
+′
+)} and per-class rates
+λ
+ins
+, λ
+del
+, λ
+mig
+. The toy setting (§III) is Poisson inserts-only
+(λ
+del 
+= λ
+mig 
+= 0); the general theorem admits all three
+(migration = a delete in τ plus an insert in τ 
+′
+).
+Cache, scheduler, compaction
+A filter-aware, tenant-aware staging cache C of capacity
+c holds pending mutations and is consulted on the query
+path, keyed by (p, T (q)). A priority-queue scheduler orders
+background graph-repair work by a composite key κ =
+α
+1 
+stale + α
+2 
+d
+∆R + α
+3 
+SLA + α
+4 
+mig. Compaction fires a
+merge when cache occupancy reaches c (the theorem’s referent
+for c); the merge integrates the pending batch into G and resets
+the cache.
+Recall as a random variable
+For query q at time t, R
+q 
+(t) = |(Search(G
+t
+, q, ef ) ∪
+Cache
+t
+(q)) ∩ GT(q, t)|/k. The per-tenant recall is 
+¯
+R
+τ 
+(t) =
+E
+q 
+[R
+q 
+(t) | T (q) ∋ τ ], and the recall@k loss is L
+τ 
+(t) =
+ρ
+τ 
+− 
+¯
+R
+τ 
+(t). The object the theorem bounds is the worst-case
+over time of the query-averaged per-tenant loss on the horizon
+[0, T ], L
+∗
+τ 
+= sup
+t∈[0,T ] 
+L
+τ 
+(t): worst-case in t, in expectation
+over q, so the guarantee is on the query average rather than
+on any individual query.
+III. THE RECALL-BOUNDED STALENESS THEOREM (C1)
+We first prove the central kernel in the toy setting (single
+tenant, no filter, inserts only), then lift it to the filtered, multi-
+tenant, deletes/migration setting. The staleness half of the
+bound is semi-empirical / loose-but-correct-form: its mech-
+anism and functional shape are derived and validated on two
+independent axes, while the exponents are calibrated. The
+filtered half is derived and parameter-free. We state this status
+precisely throughout.
+A. The toy bound: anti-amortization
+Definition 1 (Batch-merge operator M
+c
+). Let G
+0 
+be the disk
+graph over N points and B a batch of c pending inserts.
+M
+c
+(G
+0
+, B) acts in two phases. Forward: each x ∈ B obtains
+out-neighbors by greedy search against the frozen snapshot G
+0
+then ROBUSTPRUNE/α-RNG to degree R; G
+0 
+is not mutated
+during the batch. Reconcile: each existing node unions its
+buffered reverse edges and re-prunes (on PQ distances) only if
+it exceeds R. Two structural consequences follow: (M1) the c
+batch points are mutually invisible during selection (no x ∈ B
+takes another batch point as a neighbor, unlike a from-scratch
+build); (M2) hubs flooded by batch reverse edges are re-pruned
+lossily on approximate distances.</page><page num="5">DAS et al.: RECALL-BOUNDED STALENESS FOR FILTERED MULTI-TENANT ANN GRAPH INDEXES 5
+draws Assumption 6 posits, so the Binomial under-counts
+the in-predicate frontier mass; this separate relaxation of the
+independence assumption acts in the conservative direction,
+and is why the query-averaged 
+¯
+h
+τ 
+remains a lower bound on
+measured recall for clustered predicates (§V-C) rather than an
+exact predictor.
+Theorem 8 (C1-general: per-tenant recall-bounded staleness).
+Under Assumptions 2, 4, 5, 6 with per-tenant insert rate
+λ
+(τ )
+ins 
+, local density σ
+(τ )
+loc 
+, SLA staleness ceiling S
+τ 
+, and
+deletes/migration permitted, the worst-case (in t) per-tenant
+recall@k loss decomposes additively:
+L
+∗
+τ 
+(T ) ≤ κ
+g 
+N 
+stale
+τ 
+c 
+a−1
+N 
+−b
+0 
++ g
+del
+0 
+(L, λ
+del
+)
+| 
+{z }
+staleness/degradation (filter-independent, Assumption 5)
++ 
+
+1 − 
+¯
+h
+τ 
+(L, k)
+ 
++ δ
+ann
+(L)
+| 
+{z }
+filtered navigability (Lemma 7(ii),(iii))
+, 
+(8)
+written with an explicit prefactor κ
+g 
+rather than a Θ(·),
+since an inequality whose right-hand side names an asymp-
+totic class is not a statement one can check. On the cal-
+ibrated range, κ
+g 
+≈ 2.5 × 10
+−3 
+pp (fixed by the anchor
+g(c=5000, N
+0
+=10
+5
+) = 0.087 pp with a=1.28, b=0.64); its
+uncertainty is that of (a, b) and it over-states the assembled
+loss by 1/η ≈ 2.3–2.7× (§V-B), so the inequality holds with
+slack in the measured regime. The sum is an upper bound
+by subadditivity, not an approximation: a ground-truth item
+is missed if it is stale-and-uncached or absent from the post-
+filtered frontier, and Pr[A ∪ B] ≤ Pr[A] + Pr[B] over those
+two events per item (proof in the supplementary material);
+the slack is exactly the overlap Pr[A ∩ B], which is why
+the statement is an inequality even though Lemma 7(ii) is
+an equality in expectation. Here 
+¯
+h
+τ 
+= E
+q|τ 
+[h(σ
+loc
+(q), L, k)]
+is the query-averaged filtered term and δ
+ann
+(L) is the mea-
+surable ANN deficit of the base graph at width L. Here
+N 
+stale
+τ 
+≤ λ
+(τ )
+ins 
+(S
+τ 
++ W ) is cadence-bounded by the SLA
+ceiling: the scheduler force-drains τ once its staleness reaches
+S
+τ 
+, but only tests the ceiling at a merge trigger, so the bound
+carries one trigger window W of overshoot (W =0 recovers
+the idealized λ
+(τ )
+ins 
+S
+τ 
+and requires an early-merge mechanism
+not implemented here, §IV-C). g
+del
+0 
+is the delete/tombstone
+contribution to the V
+0 
+floor. The two terms are governed
+by disjoint parameter sets (c, N
+0
+, d, S
+τ 
+, λ
+del 
+vs. σ
+(τ )
+loc 
+, L, k);
+anti-amortization (Theorem 3) carries into the first term un-
+changed. The filtered term must be evaluated as the query
+average 
+¯
+h
+τ 
+; substituting the tenant’s mean local density gives
+1 − h(¯σ
+(τ )
+loc 
+, L, k), which by Lemma 7(iii) under-states the loss
+and is therefore not a bound, the gap reaching up to 26 pp for
+spatially-clustered predicates (§V-C). Operationally, a tenant’s
+L must be provisioned from the distribution of σ
+loc 
+over its
+queries (a low quantile) rather than from its mean.
+Remark 9 (Scope of the bound). The staleness term is loose-
+but-correct-form and inherits the toy calibration (a, b cali-
+brated). The filtered term is now derived: Lemma 7(ii) has
+no fitted constant at all (β=1 is forced by the engine’s
+result contract rather than calibrated), and it predicts rather
+than fits the recovery constant 1.25. One residual is carried
+explicitly instead of being absorbed into a constant: the ANN
+deficit δ
+ann
+(L), which is measurable and not yet measured.
+The query-dispersion gap of Lemma 7(iii) has instead been
+evaluated on the archived per-query σ
+loc
+: the query average
+¯
+h
+τ 
+is a lower bound on delivered recall that is empirically
+conservative to the reported precision (measured ≥ 
+¯
+h
+τ 
+in 14
+of 15 clustered cells; the sole exception under-runs by 0.09
+pp, within reporting precision, §V-C), loose by up to 14 pp
+at low σ
+loc
+/small L. The k-dependence of the law is a sharp
+untested prediction: h is a function of (βLσ
+loc
+, k) and not of
+x = σ
+loc
+L/k alone: at fixed x=1 it predicts 63.2/87.4/96.0%
+recall for k=1/10/100, whereas every measurement here is
+at k=10. The deletes floor g
+del
+0 
+is parameterized but not yet
+characterized, and a first-principles derivation of the degra-
+dation exponents from α-RNG occlusion geometry is open;
+both remain open items. On the shared label-blind graph,
+filtered recall degrades with σ
+loc
+: the theorem’s content, not
+an unmodeled loss; a per-tenant-navigable structure removes
+it but cannot stream and carries no bound.
+In sum, three of Theorem 8’s four parts hold unconditionally
+(the additive assembly by subadditivity, the derived parameter-
+free filtered term, and the named measurable ANN deficit),
+while the staleness term is a calibrated scaling law (its pref-
+actor and exponents fit on one substrate, dataset family, and
+c/N range). The theorem is thus a proved decomposition of
+which one component is empirical: weaker than a distribution-
+free (ϵ, δ) guarantee, stronger than a recall estimator that
+predicts without constraining. A first-principles derivation of
+the degradation exponent would replace the calibration with a
+constant; we state it as open.
+IV. SYSTEM: CACHE (C2) AND SCHEDULER (C3)
+The two engineering contributions instantiate the theorem.
+C2 (the staging cache) absorbs within-cycle staleness on the
+query path so the loss the theorem bounds is the disk-graph
+term, not cache coverage; C3 (the scheduler) re-prioritizes
+background repair without ever re-sizing a merge, which is
+the only lever anti-amortization leaves. We prototype both
+on a FreshDiskANN fork with an io_uring backend. All
+numbers below are measured on this prototype unless marked
+otherwise.
+A. Substrate: one label-blind Vamana
+The disk index is a single Vamana graph over the label-
+agnostic vector set; predicates and tenant labels are query-
+time post-filter tags and never enter graph construction or the
+merge operator M
+c
+. Two properties follow, both central to
+§III. First, the per-merge degradation g(c, N ) is filter and
+tenant-independent (Assumption 5), the additivity hinge of
+Theorem 8. Second, a partition boundary can never induce
+topology degradation, because the graph never sees one; the
+scheduler’s re-ordering only changes which vectors co-merge
+and in what order. The prototype inherits the baseline’s merge
+exactly, and by design rather than by tuning: at every trigger
+all selected partitions are folded into one combined in-memory
+index and handed to one merge of size c, so the merge operator
+receives the same point set, at the same cadence, with the</page><page num="6">DAS et al.: RECALL-BOUNDED STALENESS FOR FILTERED MULTI-TENANT ANN GRAPH INDEXES 6
+same Merge Size as the unmodified baseline. Partitioning is
+therefore invisible to M
+c 
+as a matter of code path, which is
+why the bound carries. We check that construction rather than
+infer it: with a single predicate and tenant the full C2+C3 pro-
+totype reproduces baseline post-merge recall@10 to δ=0.000
+at three successive checkpoints (99.286/99.145/99.018, brute-
+force K=100 ground truth), with the ceiling-disabled, ceiling-
+never-firing, and FIFO legs byte-identical.
+B. C2: a filter-aware, tenant-aware staging cache
+FreshDiskANN stages pending inserts in two in-memory
+buffers double-buffered against the disk merge. We re-key
+each buffer to a hash map over partitions (predicate, tenant)
+and consult it on the query path, routing a query to its own
+partition and label-post-filtering disk results. The cache there-
+fore serves freshly-inserted, same-tenant points immediately,
+which is what makes filtering on the query path viable and
+is essential for filtered queries, since disabling the query-path
+keying costs 72–86 pp of per-label recall@10 at live cache
+occupancy (93.8/78.9/81.1 keyed vs. 7.8/7.3/7.6 unkeyed,
+at comparable p99, with identical probed staging occupancy
+in both legs so the staging state is held fixed). This ablation
+toggles more than a cache-probe comparison. A single query
+key drives both the cache probe and the disk post-filter, so
+the unkeyed leg is not a filter-blind cache alongside a correct
+disk path, since it pins every query’s key to one default
+partition, which simultaneously blinds the cache probe and
+points the disk post-filter at the wrong label for every tenant
+but one. The residual 7.5% is accordingly close to arithmetic,
+approximately the one correctly-keyed tenant’s share of the
+query mix times its recall. What the ablation establishes is that
+the query-path keying as a whole is central; it does not measure
+a cache-probe-only lift. Isolating the probe would require
+holding the disk post-filter on the true label while blinding
+only the cache, which the current knobs do not expose; the
+tighter comparator (a filter-blind cache that post-filters its own
+contents) is therefore not measured. The cache changes only
+what is staged and how queries route, not the merge cadence;
+at a merge, all selected partitions are folded into one combined
+in-memory index and drained as a single merge of size c (the
+combined-index single-merge drain), identical in topology to
+the baseline (merge-order parity δ=0.000). This is what lets
+the bound carry to the prototype unchanged. Unlike read-side
+or filter-blind caches over vector indexes (Ubis, MicroNN,
+QVCache), ours is jointly filter and tenant-keyed, on the query
+path, and is the exact structure the theorem binds.
+C. C3: an SLA-aware, select-not-resize scheduler
+The scheduler never re-sizes a merge; every fired merge is
+one combined fixed-size-c drain (bound-safe by construction,
+§IV-A), and it wins by selecting which pending work fills
+each merge and when. The rule follows from Theorem 3,
+by which re-sizing is not a recall lever in the first place, so
+there is nothing to gain, and from holding the merge at the
+baseline’s shape, which keeps the bound applicable without re-
+deriving it per configuration. An implementation observation
+that draining N partitions as N separate merges reads much
+worse (84.9/76.4/70.1) than the one-combined-merge design
+is not used as evidence, since it holds nothing fixed, and the
+design rule rests on the two reasons above.
+It orders background repair by a composite key
+κ(w, t) = α
+1 
+stale(w, t)+α
+2 
+d
+∆R(w)+α
+3 
+SLA(w)+α
+4 
+mig(w),
+(9)
+over staleness, predicted recall impact, tightest tenant SLA,
+and migration cost, each min–max normalized across the pend-
+ing set at drain time. Exactly one of these terms is exercised in
+every measurement we report. The 
+d
+∆R term is implemented
+as an occupancy proxy behind a default-off flag and is disabled
+(α
+2
+=0) throughout, and no result depends on it. The migration
+term is identically zero in this prototype. The SLA term is
+inert whenever tenants share one SLO, since a term with a
+single distinct value normalizes to zero, and our churn legs
+additionally set α
+3
+=0 so that ceiling enforcement is the only
+variable. So κ reduces to staleness ordering (oldest-first) in
+all reported runs; deferred units reload as the oldest across
+the driver’s per-merge restart and drain first. The four-term
+form is the interface the scheduler exposes, not a mechanism
+this paper validates; the measured win below comes from the
+ceiling.
+On top of κ, a per-tenant max-staleness ceiling S
+τ 
+force-
+drains a tenant whose staleness has reached S
+τ 
+. This is
+a prioritization with a cadence-bounded overshoot, and the
+distinction matters for Theorem 8. The built scheduler tests
+ceilings only at a merge trigger, with no early-merge on
+crossing, so a tenant that crosses S
+τ 
+mid-window stays stale
+until the next trigger. The guarantee we actually deliver is
+N 
+stale
+τ 
+≤ λ
+(τ )
+ins
+
+S
+τ 
++ W 
+
+, (10)
+where W is the trigger window (the high-water mark). The
+theorem’s λ
+(τ )
+ins 
+S
+τ 
+cap is thus the W → 0 idealization; the
+prototype attains it up to one window, and we set W = S
+min
+τ
+to make that overshoot as small as the design admits without
+an early-merge mechanism. The effect is directly visible in our
+runs, where a tight tenant’s measured staleness reaches 1900
+against a 1000 ceiling before the force-drain resets it, and in an
+earlier configuration (even with W set equal to S
+τ 
+, the tightest
+the built cadence allows) the tight tier was still violated at one
+checkpoint on both legs for exactly this reason. Closing the gap
+would need an early-merge trigger. FIFO/threshold-triggered
+compaction (all prior streaming systems) has no per-tenant
+lever at all; §V-E shows the ceiling is what drives tight-tenant
+violations to zero under churn.
+D. Deletes and tenancy migration
+Deletes are tombstoned in the staging partitions and evicted
+at the combined merge; a tenancy migration is a delete in τ
+plus an insert in τ 
+′
+. We extend the drain to evict tombstones
+from every partition (not only a default one), verified to
+conserve points (zero silently-dropped) and to leave deleted ids
+absent from post-merge results while survivors remain. This
+is what admits the deletes/migration term of Theorem 8; the
+term’s precise floor contribution g
+del
+0 
+is not characterized here.</page><page num="10">DAS et al.: RECALL-BOUNDED STALENESS FOR FILTERED MULTI-TENANT ANN GRAPH INDEXES 10
+TABLE II
+POST-FILTER RECALL@10 VS. (ˆσ
+loc
+, L), SIFT-10K, PER-LABEL GT. GLOBAL SELECTIVITY σ=1/T SHOWN FOR CONTRAST: FOR
+SPATIALLY-COHERENT (CLUSTERED) TENANTS ˆσ
+loc 
+EXCEEDS σ SEVERAL-FOLD AT EVERY TENANT COUNT, AND IT IS ˆσ
+loc 
+THAT GOVERNS RECALL.
+control (T ) σ=1/T ˆσ
+loc 
+L=75 150 300 600 1000
+diffuse (6) 0.167 0.168 95.42 99.97 99.99 100.0 100.0
+diffuse (12) 0.083 0.084 61.87 95.27 99.98 100.0 100.0
+diffuse (24) 0.042 0.042 31.36 61.54 95.29 99.99 100.0
+diffuse (48) 0.021 0.021 15.63 31.06 61.03 95.40 99.94
+diffuse (96) 0.010 0.010 7.75 15.51 30.98 61.41 89.99
+clustered (6) 0.167 0.511 97.78 99.47 99.84 99.94 99.97
+clustered (24) 0.042 0.168 73.55 92.30 98.71 99.83 99.96
+clustered (96) 0.010 0.047 29.18 47.17 71.61 92.80 98.87
+200 400 600 800 1000
+search width L
+50
+100
+150
+200
+mean latency (ms)
+F13a: mean latency linear in L
+mean, 10k
+mean, 100k
+0.22 ms L + 1.6
+Fig. 2. Mean search latency is linear in the search width L at both scales
+(mean(L) ≈ 0.22 ms·L+1.6 ms; mean disk IOs ≈ L, one candidate ≈ one
+IO), the IO-bound cost model on which the C1 admission test rests. Latencies
+are cache-empty disk-index means; the figure establishes the linearity of the
+cost model, not absolute speed.
+convex tail) and the query average corrects both. The bound
+is safe but loose at low σ
+loc
+/small L, where 
+¯
+h
+τ 
+under-predicts
+measured recall by up to 14 pp. No retreat to the assumption-
+free envelope is needed; the only cost is that the guarantee
+is stated on 
+¯
+h
+τ 
+(a query average) rather than on the mean
+density, and is conservative for spatially-correlated predicates
+(binomial independence under-counts correlated in-predicate
+mass).
+i) Bound-check at scale.: At 100K, for the c=1000
+merge the measured loss is 0.30 pp, within the batch-fraction
+cap c/(N + c) = 0.99 pp (3.3× slack; at 18K, 0.09 pp within
+5.26 pp). The cap holds at mid-scale, though the batch-fraction
+cap is weak (it is satisfied by any merge that does not corrupt
+a constant fraction of the graph), so this is a sanity check,
+not a discriminating test ofS Assumption 2. (The single-merge
+isolation at c=10K, N =100K independently reads 0.30 pp, a
+coincidence of value from a different experiment.)
+D. Recall–latency feasibility
+The admission test of Contribution C1 (1.25 k/σ
+loc 
+≤
+L
+max
+(ℓ
+τ 
+)) assumes search cost is linear in L; we measure
+it. Mean search latency is linear in L (mean(L) ≈ 0.22 ms ·
+L + 1.6 ms, with mean disk IOs ≈ L exactly, since the search
+is IO-bound, one candidate ≈ one IO; Fig. 2), so the cost
+model holds and L
+max
+(ℓ
+τ 
+) ≈ ℓ
+τ 
+/0.22 ms, giving the concrete
+feasibility condition
+σ
+loc 
+≥ 1.25 k / L
+max
+(ℓ
+τ 
+) ≈ 1.25 k · 0.22 ms/ℓ
+τ
+(e.g. ℓ
+τ 
+= 50 ms ⇒ σ
+loc 
+≳ 0.055). 
+(12)
+This prices the boundary of §V-F/§VII quantitatively: a σ
+loc 
+=
+0.01 tenant needs L
+95 
+≈ 1250, i.e. ≈ 275 ms mean, so it
+cannot hold a 95% recall floor and an interactive latency SLO
+on this substrate, and the test reports this before deployment
+(Fig. S2, supplementary material). We report the test on mean
+latency, with a ρ=0.95 floor and a candidate latency ladder
+(ℓ ∈ {10, 50, 200} ms). Since an interactive SLO is ultimately
+a tail guarantee, a low-contention p
+99 
+capture would extend
+the test to the tail; the linear-cost and infeasibility conclusions
+here rest on the mean.
+E. Multi-tenant SLA under churn (the payoff axis)
+On an identical, genuinely-contended churn stream (T =6,
+tiers tight/medium/lax, ceilings 1000/3000/10
+9
+), the C3 ceil-
+ing drives tight-tier SLA violations to zero at equal staleness
+and equal drained recall (82.34 vs. 82.22, i.e. enforcement
+costs nothing on terminal recall), where an otherwise-identical
+scheduler-less baseline violates every tight query (Table III).
+The medium tier is uneventful in this regime (zero violations
+on both legs), so the ceiling protects the tight tier only. Two
+qualifications bound the reading. The violation counted here
+is a per-tenant staleness-ceiling breach, staleness exceeding
+S
+τ 
+, a freshness bound distinct from the recall/latency SLO
+(ρ
+τ 
+, ℓ
+τ 
+). The baseline comparison is close to definitional
+(C3 force-drains at S
+τ 
+), so it establishes that the mechanism
+is implemented and effective; and the 100%-vs-0% split is
+a saturated margin (tight queries arrive in a burst inside
+the post-ceiling stale window), demonstrating the mechanism
+while the magnitude is specific to this 10K, three-checkpoint
+regime. The mechanism is not free in every regime; in an
+earlier configuration whose high-volume tier was the lax
+one, honoring tight ceilings deferred it and cost ≈10 pp of
+aggregate unfiltered recall at intermediate checkpoints (final
+topology unaffected by merge-order invariance). The substan-
+tive comparator is a per-tenant shard, against which ours is a
+rebuild-outage advantage: a shard is unqueryable for each cold
+rebuild, growing with per-tenant size (0.26 s at 1.8K/tenant to
+≈ 28 s at 100K/tenant), while ours never rebuilds (no rebuild-
+induced serving outage; the index stays queryable through the
+background merge, which does inflate the tail for ≈ c/d s but</page><page num="12">DAS et al.: RECALL-BOUNDED STALENESS FOR FILTERED MULTI-TENANT ANN GRAPH INDEXES 12
+TABLE IV
+MEMORY VS. N ON THE MATCHED T =6 PAIR, ON consistent CONVENTIONS: serving = WHOLE-PROCESS FIRST STABLE RSS (ITS PER-VECTOR PQ+TAGS
+COMPONENT IS 0.115 KB/POINT); merge peak = PROCESS PEAK RSS (A RELEASED TRANSIENT, 8.3 KB/POINT). CURATOR IS IN-MEMORY (∝ N ).
+1M/10M ARE RESIDENCY-MODEL PROJECTIONS; SERVING
+‡ 
+IS QUOTED ON THE PQ+TAGS TERM, THE 1M MERGE PEAK IS UNRUN. (THE
+SINGLE-TENANT 100K POINT, ≈ 1.06 GB, IS FIG. 3A; IT IS NOT A T =6 PAIR MEMBER AND IS OMITTED HERE TO KEEP CONVENTIONS MATCHED.)
+N ours serving ours merge-peak Curator (in-mem) status
+18,000 (T =6) 0.77 GB 1.04 GB 0.10 GB measured
+100,000 (T =6) 0.98 GB 1.72 GB — measured
+1,000,000 ≈ 1.0 GB
+‡ 
+≈ 9 GB 5.6 GB projected
+10,000,000 ≈ 2 GB
+‡ 
+— 56 GB (OOM) projected
+‡ 
+Convention (measured vs projected serving differ and must be read together). The measured 18K/100K serving cells are whole-process first stable
+RSS (fixed baseline ≈ 0.9 GB + configured allocations + the PQ+tags residency); across the matched pair this rises at ≈ 2.6 kB/point. The projected
+1M/10M serving cells grow the only ∝ N term, the PQ+tags residency at 0.115 kB/point (matching the PQ-code size architecturally, ≈ 102 B/point at
+100K), holding the bounded remainder fixed, justified because the RSS decomposition (Fig. S3) attributes the 2.6 kB/point excess to the C2 cache (bounded
+by high-water, not ∝ N ) and per-thread buffers (fixed), not to N -growth. Hence the projection ≈ 0.9 GB baseline + 0.115 kB/point ·N . A naive linear
+extrapolation of the 2.6 kB/point two-point whole-process slope gives the pessimistic ≈ 3.4 GB at 1M; we report the architectural term as primary because
+the excess is measured-bounded, and both stay far under the in-memory ∝ N baseline. The two-point marginal is not yet firmed by a third matched point.
+20 40 60 80 100
+working set N (K)
+1000
+2000
+3000
+4000
+steady RSS (MB)
+F11: bounded RSS (recall 99.70)
+ours (measured)
+linear-in-N ref
+10
+5 
+10
+6 
+10
+7
+N (points)
+10
+2
+10
+3
+10
+4
+RAM (MB)
+16 GB
+F12: memory/scale inversion
+ours (measured)
+ours (projected)
+Curator in-mem (measured)
+Curator (projected)
+Fig. 3. (a, top) Does-it-run: the prototype is bounded and correct at 100K
+(≈ 1.06 GB, recall 99.70 on-curve). (b, bottom) Memory/scale inversion (log-
+log): a disk-resident index keeps graph and full vectors off-RAM so only PQ
+codes grow with N , while an in-memory index scales ∝ N ; measured to
+100K, modelled at 1M–10M, with the like-for-like two-point slope shown as
+the pessimistic alternative.
+RNSG [7] and iRangeGraph [8] target range predicates; STA-
+BLE [9] fuses metric and attribute signals into one joint-
+semantic graph. All build a single static, single-tenant index
+over the joint space; we add streaming inserts/deletes/tenancy-
+migration, multi-tenant isolation, and an analytical bound.
+These designs secure same-label reachability at build time;
+our repair must preserve it under churn, which shapes the
+scheduler’s ordering.
+b) Streaming / dynamic graph ANN.:
+FreshDiskANN [10] (two-pass StreamingMerge, our
+substrate), SPFresh [11], IP-DiskANN [12], CleANN [13],
+Wolverine [14], and Mycelium-Index [15] operate on
+unfiltered, single-tenant data with at best empirical recall
+stability. PipeANN [16] (OSDI’25) and OdinANN [17]
+(FAST’26) are the current single-tenant SOTA, their
+pipelined-SSD search and direct-insert (no-merge) design
+sidestepping the scheduling problem we solve rather than
+solving it; neither has a tenant concept or a recall bound,
+so we cede the single-tenant axis and compare against a
+per-tenant sharding of each. LSM-VEC [18] organizes a
+vector index as an LSM tree, and UBIS [19] is the closest
+streaming competitor, scheduling concurrent updates to
+keep recall stable under high update rates but reporting
+that empirically with no bound. None provides filtering ×
+multi-tenancy × a bound jointly.
+c) Multi-tenant ANN.: Curator [20] is the closest prior
+art, a multi-tenant graph ANN with per-tenant naviga-
+bility (clustering sub-trees) that is static and in-memory,
+with no per-tenant SLA scheduling and no bound; we
+build it and compare (conceding static recall, leading on
+streaming/SLA/bound/disk-scale). Pinecone Metadata Filter-
+ing [4] provides filter + multi-tenant + streaming on an
+IVF/serverless substrate with no analytical bound; GaussDB-
+Vector [21] is a production filtered vector database with real-
+time inserts/deletes but no per-tenant isolation, SLA schedul-
+ing, or bound.
+d) Caches over vector indexes.: MicroNN [22], QV-
+Cache [23], and LiveVectorLake [24] are read-side, or filter-
+/tenant-blind, or a different layer; our cache is jointly filter
+and tenant-keyed, on the query path, and is the structure the
+theorem binds.
+e) Theoretical bounds.: [25] bounds quantization un-
+der streaming updates, not a graph’s recall; Random-Walk
+Dynamic Graph ANN [26] bounds hitting-time topology
+preservation, not recall@k under an SLA; Quake [27] esti-
+mates recall for query-time parameters, not background work.
+Distribution-Aware HNSW [28] informs our predicted-recall-
+impact scheduler term. Ours is, to our knowledge, the first per-</page></paper>

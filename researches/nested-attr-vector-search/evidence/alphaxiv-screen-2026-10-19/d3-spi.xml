@@ -1,0 +1,1311 @@
+<paper id="2511.16681v3"><page num="1">SPI: Query-Depth-Adaptive Indexing for Streaming RAG in Vector
+Databases
+Dong Liu
+Yale University
+New Haven, CT, USA
+dong.liu@aya.yale.edu
+Yanxuan Yu
+Columbia University
+New York, NY, USA
+yy3523@columbia.edu
+ABSTRACT
+Vector databases (VecDBs) are increasingly deployed in retrieval-
+augmented generation (RAG) pipelines where query processing and
+document ingestion occur concurrently. The index layer needs to
+provide low-latency search while incorporating new vectors with-
+out frequent global rebuilding. Existing VecDB pipelines typically
+operate within a uniform representation regime, despite substantial
+variation in the semantic granularity required across queries. This
+motivates an index design that supports incremental updates while
+adapting retrieval depth to query distribution and complexity.
+We propose Semantic Pyramid Indexing (SPI), a VecDB-layer
+indexing framework that organizes embeddings into 𝐿 semantically
+aligned resolution levels and selects retrieval depth per query using
+a lightweight uncertainty-aware controller. SPI supports progres-
+sive coarse-to-fine ANN search, level-wise streaming insertion with-
+out global rebuilding, and distributed execution through LSH-based
+partitioning with asynchronous coordination. Unlike hierarchical
+ANN structures with fixed traversal rules (e.g., SPANN), SPI adapts
+resolution at query time while remaining compatible with FAISS
+and Qdrant backends.
+On MS MARCO and Natural Questions, SPI achieves competitive
+Recall@10 with lower latency under the same dense encoder family,
+yielding a 1.4–2.3× average retrieval latency reduction under fixed
+Recall@10 targets relative to comparable approximate-ANN base-
+lines. A prototype scaling study up to 8 nodes shows 6.2× through-
+put scaling (≈73% efficiency); the 16-node configuration is included
+for completeness but shows diminishing efficiency. We provide a
+top-𝐾 stability guarantee: queries with sufficient retrieval margin
+return an identical top-𝐾 set at a shallower level. Code and config-
+urations are available at https://github.com/FastLM/SPI_VecDB.
+PVLDB Reference Format:
+Dong Liu and Yanxuan Yu. SPI: Query-Depth-Adaptive Indexing for
+Streaming RAG in Vector Databases. PVLDB, 19(1): XXX-XXX, 2026.
+doi:XX.XX/XXX.XX
+PVLDB Artifact Availability:
+The source code, data, and/or other artifacts have been made available at
+https://github.com/FastLM/SPI_VecDB.
+This work is licensed under the Creative Commons BY-NC-ND 4.0 International
+License. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to view a copy of
+this license. For any use beyond those covered by this license, obtain permission by
+emailing info@vldb.org. Copyright is held by the owner/author(s). Publication rights
+licensed to the VLDB Endowment.
+Proceedings of the VLDB Endowment, Vol. 19, No. 1 ISSN 2150-8097.
+doi:XX.XX/XXX.XX
+Figure 1: Semantic Pyramid Indexing (SPI) in Vector
+Databases. The pyramid organizes document embeddings
+at multiple representational depth levels (all levels index the
+same document corpus; levels differ in semantic discrim-
+inability). Incoming streaming queries are routed to the ap-
+propriate depth by a lightweight controller, enabling early-
+exit search for simple queries and deep-representation search
+for complex ones.
+1 INTRODUCTION
+Retrieval-Augmented Generation (RAG) pipelines are increasingly
+deployed in streaming settings where queries arrive continuously
+alongside live document ingestion [28]. Production vector databases
+(VecDBs) such as Milvus, Qdrant, and Weaviate must serve these
+workloads at low latency while keeping indices fresh—a regime
+where static, single-resolution indexing structures become a bottle-
+neck: they either over-spend on complex queries or under-serve
+simple ones.
+The problem. Existing RAG retrieval pipelines commit every
+query to a single semantic resolution—flat, HNSW, or product-
+quantized indices embed all documents uniformly and require ex-
+haustive ANN search over a fixed embedding space. This design
+ignores a fundamental asymmetry in query complexity: a broad
+query like “Who discovered gravity?” is reliably answered by a
+shallow, high-entropy embedding that excels at broad topical sepa-
+ration, while “Equation in Newton’s third-law paper” demands a
+deep, discriminative embedding that can distinguish closely related
+passages. Here, “resolution” refers to the semantic discriminability
+of the embedding space—the ability of the embedding to separate
+relevant from non-relevant documents—not to the granularity of
+indexed information units. All pipeline variants index at the docu-
+ment level; the difference is in how much representational depth
+is devoted to encoding subtle semantic distinctions. Forcing both
+simple and complex queries through the same single-resolution
+index wastes compute on the former and may under-resolve the
+1
+arXiv:2511.16681v3 [cs.CL] 14 Jun 2026</page><page num="2">latter. Under streaming workloads, the problem compounds: insert-
+ing new documents into a flat or clustered index either blocks live
+queries (rebuild cost) or degrades index quality (lazy append).
+Our approach. We propose Semantic Pyramid Indexing (SPI),
+a representation-depth-adaptive indexing layer for streaming RAG
+in vector databases. As shown in Figure 1, SPI constructs an 𝐿-level
+semantic pyramid over the same document corpus, where level 1
+uses shallow broad-scope embeddings and level 𝐿 uses deep fine-
+grained embeddings trained to maximize per-query discriminability
+via lightweight residual refinement encoders. At query time, a com-
+pact uncertainty-aware controller predicts the minimum resolution
+level sufficient for reliable retrieval, and parallel distributed search
+is launched across nodes partitioned by the pyramid structure. Doc-
+uments arriving in the stream are inserted level-by-level without
+invalidating existing pyramid levels, maintaining semantic consis-
+tency under continuous ingestion.
+This design makes three concrete contributions over prior work.
+First, unlike hierarchical indices that use fixed traversal rules, SPI
+targets a complementary design point: reducing average retrieval
+cost by routing queries to the minimum representation depth needed
+for stable top-𝑘 retrieval. Second, by co-designing the index layout
+with distributed parallel execution, SPI achieves throughput scal-
+ing that grows proportionally with cluster size up to 8 nodes (79%
+efficiency) under bursty streaming arrivals. Third, SPI provides a
+top-𝐾 stability guarantee (Theorem 1): queries whose top-𝐾 neigh-
+borhood has sufficient retrieval margin retrieve exactly the same
+top-𝐾 set at a shallower level, so early termination is exact for those
+queries; the margin condition also explains when it is not.
+Contributions.
+• SPI framework: a query-adaptive, multi-resolution index-
+ing framework supporting streaming ingestion in parallel
+VecDB deployments.
+• Theoretical guarantees: recall preservation and per-query
+latency bounds under adaptive resolution control with stream-
+ing updates.
+• Empirical evaluation: experiments on MS MARCO and
+Natural Questions show competitive Recall@10 with lower
+retrieval latency, while streaming and scaling studies eval-
+uate insertion overhead and parallel throughput.
+2 RELATED WORK
+SPI sits at the intersection of ANN indexing, streaming vector
+databases, and retrieval-augmented generation.
+2.1 ANN Indexing in Vector Databases
+Classical ANN foundations include LSH [1], product quantiza-
+tion [8, 16], and graph indices such as HNSW [21]. Billion-scale
+systems combine these with pruning and hybrid memory/disk lay-
+outs: ScaNN [10], DiskANN [15], SPANN [4]. GPU-accelerated
+indices including CAGRA [25] and ParlayANN [22] further ad-
+vance throughput via massive parallelism. Production VecDBs—
+Milvus [28], Qdrant [27], Pinecone [29]—integrate these backends
+with distributed storage and query execution.
+SPI relationship. Each SPI pyramid level is a standard FAISS
+IVF-PQ or Qdrant HNSW index [5]. SPI adds a semantic resolution
+layer above these backends; it is orthogonal to the specific ANN
+algorithm used at each level. CAGRA or DiskANN could replace
+FAISS at any level without changing SPI’s control logic.
+2.2 Streaming and Dynamic ANN
+Several recent systems address streaming vector index updates.
+FreshDiskANN [14] introduced soft deletions and periodic batch
+consolidation for graph-based ANN. IP-DiskANN [31] eliminates
+batch consolidation via in-place insertion/deletion on DiskANN,
+achieving stable recall without rebuilds. Quake [23] takes a comple-
+mentary approach: adaptive partition scanning that adjusts index
+structure and query parameters to workload shifts in a NUMA-
+aware manner, achieving 1.5–38× lower query latency over HNSW/DiskANN
+on dynamic workloads. VStream [9] is a distributed streaming vec-
+tor search system that introduces hot–cold separation and dynamic
+partitioning for streaming workloads, achieving 251–373× query
+efficiency gains over batch-mode systems.
+SPI relationship. These systems address geometric index fresh-
+ness: how to update graph connectivity or partition balance without
+recall degradation. SPI addresses a complementary axis: even given
+a perfectly fresh index, uniform-resolution ANN still wastes com-
+pute on simple queries. SPI’s streaming insertion is append-only
+(no graph repair), trading eventual consistency at finer levels for
+minimal per-insert latency. The two approaches are directly com-
+posable: SPI’s level-1 index could be backed by IP-DiskANN or
+Quake.
+2.3 Retrieval-Augmented Generation
+RAG couples dense or sparse retrievers with generative readers [12,
+17, 20]. Strong retrievers include ANCE [30], Contriever [11], SPLADE-
+v2 [6], ColBERTv2 [26], and HyDE [7]. End-to-end RAG systems
+such as Atlas [13] jointly train retrievers and readers. Semantic
+caching [2] and FrugalGPT [3] reduce inference cost but treat re-
+trieval granularity as a pipeline configuration. SPI moves query-
+adaptive resolution control into the VecDB index layer itself.
+2.4 Comparison with Existing Approaches
+Table 1 contrasts SPI with representative systems across key dimen-
+sions.
+Method Multi-Res. Query-Adap. Streaming Semantic VecDB GPU
+ColBERTv2 ✗ ✗ ✗ ✓ ✗ ✗
+SPLADE-v2 ✗ ✗ ✗ ✓ ✗ ✗
+SPANN ✓ ✗ ✓ ✗ ✗ ✗
+IP-DiskANN ✗ ✗ ✓ ✗ ✓ ✗
+Quake ✗ ✓ ✓ ✗ ✓ ✗
+CAGRA ✗ ✗ ✗ ✗ ✓ ✓
+SPI (Ours) ✓ ✓ ✓ ✓ ✓ ✓
+Table 1: Comparison across key system dimensions. “Stream-
+ing” = append-capable without full rebuild; “Query-Adap.” =
+per-query traversal depth control; “GPU” = GPU-accelerated
+search.
+3 METHODOLOGY
+This section presents Semantic Pyramid Indexing (SPI). To clar-
+ify SPI’s positioning at the boundary between retriever learning
+2</page><page num="3">and database systems, we begin with an explicit separation of its
+two phases.
+Two-phase architecture. SPI operates in two distinct phases with
+different system roles:
+• Phase 1 — Offline encoder training (retriever learning).
+Given a training corpus, learn 𝐿−1 refinement encoders {𝑓
+ℓ 
+, 𝑔
+ℓ 
+}
+𝐿
+ℓ=2
+via joint contrastive training (Section 3.5). This is a one-time,
+corpus-specific cost analogous to fine-tuning DPR or ColBERT.
+The output is a set of encoder checkpoints.
+• Phase 2 — Online index system (VecDB layer). Given the
+trained encoders, build and maintain the 𝐿-level index {I 
+(ℓ ) 
+}
+𝐿
+ℓ=1
+,
+serve live queries via progressive retrieval and the controller,
+handle streaming insertions without rebuilds, and distribute exe-
+cution across nodes. This phase is the core database contribution
+of SPI.
+The two phases are decoupled: Phase 2 can accept any encoder
+that produces compatible embeddings—a practitioner who already
+has a multi-resolution encoder (e.g., from MRL pre-training) can
+adopt the SPI index without retraining. Conversely, the encoder
+from Phase 1 could be plugged into a flat FAISS index, but would
+forfeit the system-level gains of Phase 2. SPI’s claimed contributions
+span both phases, and we evaluate them separately (single-node
+quality in Q1 reflects Phase 1+2; distributed scaling in Q3 reflects
+Phase 2 alone).
+Notation. Throughout, 𝑑 indexes documents in corpus D; 𝑞 de-
+notes a query. e
+(ℓ )
+𝑑 
+∈ R
+𝐷
+ℓ 
+is the embedding of document 𝑑 at pyra-
+mid level ℓ. sim(u, v) = u
+⊤
+v/(∥u∥∥v∥) denotes cosine similarity.
+proj
+ℓ 
+(v) is a learned linear projection mapping a vector into the
+ℓ-th level embedding space. 𝐿 ≥ 1 is the total number of pyramid
+levels (a hyperparameter; 𝐿=3 in our experiments). Level 1 uses
+the shallowest representation; level 𝐿 uses the deepest. 𝑁
+ℓ 
+is the
+candidate pool size at level ℓ, with 𝑁
+1 
+≥ 𝑁
+2 
+≥ · · · ≥ 𝑁
+𝐿 
+; in general,
+𝑁
+ℓ 
+=
+j
+𝑁
+1 
+·
+ℓ −1
+Ö
+𝑘=1
+𝑟
+𝑘
+k
+, 𝑟
+𝑘 
+∈ (0, 1).
+𝑏
+ℓ 
+is the storage bit-width at level ℓ, defined by the precision schedule
+𝑏
+ℓ 
+= min
+
+𝑏
+max
+, 𝑏
+1 
+· 2 
+ℓ −1 
+
+, 𝑏
+1 
+= 8, 𝑏
+max 
+= 32,
+so (𝑏
+1
+, . . . , 𝑏
+𝐿 
+) = (8, 16, 32, 32, . . . ) for any 𝐿. D 
+(ℓ ) 
+(𝑡) denotes the
+set of documents available at level ℓ at time 𝑡; 𝑡
+arr
+𝑑 
+is the arrival
+time of document 𝑑. This matches Figure 2, where queries enter at
+level 1 and descend only as far as the controller deems necessary.
+3.1 Design Rationale and Overview
+SPI treats retrieval as a progressive representation-depth search. Un-
+like classical hierarchical indices where levels partition documents
+at different granularities (document, passage, sentence), SPI always
+indexes documents as atomic units; what varies across levels is
+the semantic discriminability of the embedding space. Formally,
+e
+(ℓ )
+𝑑 
+is trained to maximise Δ
+ℓ 
+(𝑞)—the similarity margin between
+relevant and non-relevant documents—so that deeper levels refine
+fine-grained relational distinctions rather than changing the unit
+of retrieval.
+In a streaming deployment, pyramid levels are populated on-
+demand: D 
+(ℓ ) 
+(𝑡) = {𝑑 | 𝑡
+arr
+𝑑 
++ 𝑇 
+(ℓ −1)
+ins 
+≤ 𝑡 }
+, with 𝑇 
+(0)
+ins 
+=0, yielding
+Figure 2: Distributed SPI: queries enter at level 1 (coarsest)
+and descend only as far as semantically necessary. Each level
+is independently indexed across 𝑁 distributed partitions.
+D 
+(1) 
+(𝑡) ⊇ · · · ⊇ D 
+(𝐿) 
+(𝑡) 
+at every instant 𝑡. A document is avail-
+able at level 1 within the base encoding latency 𝑇 
+(1)
+enc 
+; it ascends
+to level ℓ after asynchronous refinement within lag 𝑇 
+(ℓ )
+ins 
+. Queries
+in the interim are served at the deepest currently available level,
+incurring a bounded recall cost rather than missing the document
+entirely.
+Precision-scaled quantization. Complementing the representa-
+tional hierarchy, SPI assigns quantization precision 𝑏
+ℓ 
+to each level’s
+stored embeddings via the schedule defined in Notation. The design
+principle is:
+• Shallow levels need compression: level 1 searches the full corpus
+D with pool size 𝑁
+1
+; storage dominates and coarser quantization
+is acceptable since broad discrimination tolerates larger 𝛿
+1
+.
+• Deep levels need precision: level ℓ searches a refined pool of size
+𝑁
+ℓ 
+≪ 𝑁
+1
+; storage overhead is negligible, so FP32 precision pre-
+serves the fine-grained discriminability gained by deeper en-
+coders.
+The quantization error at level ℓ is bounded by
+𝛿
+ℓ 
+≤ 
+∥e∥
+∞
+2
+𝑏
+ℓ 
+−1 
+.
+The precision schedule ensures 𝛿
+ℓ 
+· Δ
+ℓ 
+(𝑞) ≪ 𝜏 for all ℓ, so quantiza-
+tion errors do not shift any query’s optimal stopping level.
+The total stored memory for the 𝐿-level pyramid is
+𝑀
+store 
+= |D| ·
+𝐿
+∑︁
+ℓ=1
+𝐷
+ℓ 
+· 
+𝑏
+ℓ
+8 
+bytes,
+while the active working memory per query is
+𝑀
+active 
+(𝑞) =
+ℓ
+final 
+(𝑞)
+∑︁
+ℓ=1
+𝑁
+ℓ 
+· 𝐷
+ℓ 
+· 
+𝑏
+ℓ
+8 
+bytes,
+which is dominated by the level-1 term 𝑁
+1
+𝐷
+1
+𝑏
+1
+/8 and decreases
+geometrically with ℓ because both 𝑁
+ℓ 
+and 𝐷
+ℓ 
+contract across levels.
+SPI therefore operates in three stages: (1) construction of a
+semantic pyramid where each level provides progressively finer-
+grained representational discriminability; (2) progressive distributed
+retrieval that re-scores candidates at increasing representation
+depth; and (3) query-adaptive depth selection via a lightweight
+uncertainty-aware controller (as shown in Figure 2).
+3</page><page num="4">3.2 Semantic Pyramid Index ≠ Hierarchical
+Index
+Although SPI employs multiple resolution levels, it is fundamentally
+different from traditional hierarchical ANN indices (e.g., HNSW,
+SPANN). Existing hierarchical indices organize data to accelerate
+geometric nearest-neighbor search via static partitioning, fixed
+traversal rules, or manually tuned thresholds. SPI introduces a
+semantic hierarchy: each level corresponds to a learned abstraction
+of meaning, and traversal depth is decided per query by a learned
+controller—not by fixed heuristics. SPI therefore should be viewed as
+a progressive semantic retrieval framework that generalizes beyond
+specific ANN backends.
+3.3 Query Complexity and Optimal Resolution
+Retrieval queries differ in the semantic granularity required to
+separate relevant from irrelevant documents. SPI formalizes this
+via the expected similarity gap at level ℓ:
+Δ
+ℓ 
+(𝑞) = E
+𝑑
++
+h
+sim(q
+(ℓ ) 
+, e
+(ℓ )
+𝑑
++ 
+)
+i
+− E
+𝑑 
+−
+h
+sim(q
+(ℓ ) 
+, e
+(ℓ )
+𝑑 
+− 
+)
+i
+,
+where 𝑑
++ 
+and 𝑑 
+− 
+are relevant and non-relevant documents. The
+optimal level for query 𝑞 is:
+ℓ
+∗ 
+(𝑞) = min 
+{
+ℓ 
+| 
+Δ
+ℓ 
+(𝑞) ≥ 𝜏 
+} 
+,
+where 𝜏 is a task-dependent separability threshold. Directly evalu-
+ating ℓ
+∗ 
+(𝑞) is infeasible; SPI approximates it from the coarse query
+embedding q
+(1) 
+.
+3.4 Multi-Resolution Semantic Pyramid
+Construction
+For each document 𝑑, SPI constructs a tower of 𝐿 embeddings
+{e
+(1)
+𝑑 
+, . . . , 
+e
+(𝐿)
+𝑑 
+} 
+with a monotonically decreasing dimension sched-
+ule 𝐷
+1 
+≥ 𝐷
+2 
+≥ · · · ≥ 𝐷
+𝐿 
+&gt; 0:
+• Level 1 (base): e
+(1)
+𝑑 
+∈ R
+𝐷
+1 
+is the output of a frozen Contriever
+encoder [11] (𝐷
+1
+=768).
+• Levels ℓ = 2, . . . , 𝐿 (refinement): e
+(ℓ )
+𝑑 
+∈ R
+𝐷
+ℓ 
+is produced by a
+patch-Transformer refinement encoder 𝑓
+ℓ 
+, described below. In
+our 𝐿=3 setup: (𝐷
+1
+, 𝐷
+2
+, 𝐷
+3
+) = (768, 512, 256).
+Patch-Transformer architecture for 𝑓
+ℓ 
+. A standard Transformer
+expects a sequence of tokens, not a single vector. To apply Trans-
+former attention over an embedding e ∈ R
+𝐷
+ℓ −1 
+, we split it into 𝐾
+non-overlapping patches of dimension 𝑝 = 𝐷
+ℓ −1
+/𝐾:
+e ↦ −→ [e
+1:𝑝 
+, e
+𝑝+1:2𝑝 
+, . . . , e
+(𝐾 −1)𝑝+1:𝐾𝑝 
+] ∈ R
+𝐾 ×𝑝 
+.
+A learnable [CLS] token is prepended, forming a (𝐾 + 1)-token se-
+quence. Two Transformer encoder blocks (multi-head self-attention
+with 𝐻 =4 heads, hidden dim 𝑝, pre-LayerNorm, GELU activation)
+are applied, and the [CLS] output is projected linearly to R
+𝐷
+ℓ 
+. In
+our experiments: level 2 uses 𝐾=12, 𝑝=64, projecting to 512; level 3
+uses 𝐾=8, 𝑝=64, projecting to 256. Total parameters per 𝑓
+ℓ 
+: ≈4M
+(attention) + 1M (projection) = 5M.
+Self-attention over the 𝐾 patches allows 𝑓
+ℓ 
+to recombine infor-
+mation across different regions of the input embedding before com-
+pressing it—a strictly richer operation than an MLP projection.
+Why compression can increase discriminability. The dimension
+reduction 𝐷
+ℓ 
+&lt; 𝐷
+ℓ −1 
+appears to discard information, but the super-
+vision signal reverses this intuition. Each 𝑓
+ℓ 
+is trained with InfoNCE
+contrastive loss on the hard negatives that level ℓ−1 failed to sepa-
+rate—i.e., the query-document pairs for which Δ
+ℓ −1 
+(𝑞) &lt; 𝜏. This
+curriculum forces 𝑓
+ℓ 
+to concentrate task-relevant directions into
+𝐷
+ℓ 
+dimensions while discarding the low-discriminability variance
+that dominates 𝐷
+ℓ −1
+. The mechanism is analogous to Matryoshka
+Representation Learning [18], where supervised training provably
+improves task discriminability of lower-dimensional subspaces.
+Formally, after training, Δ
+ℓ 
+(𝑞) ≥ Δ
+ℓ −1 
+(𝑞) for the queries routed
+to level ℓ, which is a necessary condition for recall preservation
+(Theorem 1).
+All 𝐿−1 refinement encoders {𝑓
+ℓ 
+}
+𝐿
+ℓ=2 
+are trained jointly (Sec-
+tion 3.5); there are no separate pretrained checkpoints for ℓ ≥ 2.
+Query-side encoding. Each document encoder 𝑓
+ℓ 
+has a symmetric
+but separate query encoder 𝑔
+ℓ 
+with the same patch-Transformer
+architecture (independent parameters). Document and query en-
+coders do not share weights, following standard dual-encoder de-
+sign [17]. Unlike document encoding (which is asynchronous and
+pre-computed), query encoding is fully synchronous: q
+(ℓ ) 
+= 𝑔
+ℓ 
+(q
+(ℓ −1) 
+)
+is computed on-the-fly at query time, triggered only if the controller
+decides to proceed to level ℓ. All 𝑔
+ℓ 
+are cached on GPU memory; the
+per-level query encoding cost is 8.1 ms (level 1, Contriever), 3.9 ms
+(level 2), and 1.8 ms (level 3)—decreasing because deeper query
+encoders operate on smaller candidate sets and the patches are
+smaller. This asymmetry (async documents, sync queries) is a key
+operational property: document encoding never blocks queries, and
+query encoding cost is bounded by 
+Í
+ℓ
+final
+ℓ=1 
+𝑇 
+𝑞,ℓ
+enc
+, which equals 15.1 ms
+for level-1-exit queries and at most 24.9 ms for level-3 queries.
+Higher-level embeddings are defined by the residual refinement:
+e
+(ℓ )
+𝑑 
+= 𝑓
+ℓ 
+(e
+(ℓ −1)
+𝑑 
+) + W
+ℓ 
+e
+(1)
+𝑑 
+, ℓ ≥ 2,
+where W
+ℓ 
+∈ R
+𝐷
+ℓ 
+×𝐷
+1 
+is a learned residual alignment matrix that
+anchors every level to the base semantic space, preventing semantic
+drift across levels. Each level is indexed independently across 𝑁
+distributed partitions:
+I 
+(ℓ ) 
+=
+𝑁
+Ø
+𝑖=1
+Index
+
+{e
+(ℓ )
+𝑑 
+| 𝑑 ∈ D
+𝑖 
+}
+
+.
+3.5 Progressive Encoding and Joint Training
+All refinement encoders {𝑓
+ℓ 
+}
+𝐿
+ℓ=2 
+are trained jointly to enforce cross-
+level semantic alignment. Training optimizes:
+L
+total 
+=
+𝐿
+∑︁
+ℓ=1
+𝛼
+ℓ 
+L 
+(ℓ )
+retrieval 
++ 𝛽L
+consistency 
++ 𝛾 L
+reg
+,
+where L 
+(ℓ )
+retrieval 
+is an in-batch InfoNCE contrastive loss, and
+L
+consistency 
+=
+𝐿−1
+∑︁
+ℓ=1
+∥e
+(ℓ )
+𝑑 
+− proj
+ℓ 
+(e
+(ℓ+1)
+𝑑 
+)∥
+2
+2 
+(1)
+penalizes semantic drift between adjacent levels. We set 𝛼
+ℓ 
+= 1/𝐿
+uniformly, 𝛽 = 0.5, 𝛾 = 0.01 (weight decay); these values are fixed
+across all experiments and are not dataset-specific.
+4</page><page num="5">3.6 Distributed Progressive Retrieval
+Given a query 𝑞, SPI computes a base embedding q
+(1) 
+and broadcasts
+parallel coarse retrieval to all 𝑁 nodes:
+𝐶
+1,𝑖 
+= Top
+𝑁
+1
+/𝑁
+ 
+sim(q
+(1) 
+, {e
+(1)
+𝑑 
+}
+𝑑 ∈ D
+𝑖 
+)
+
+, 𝐶
+1 
+=
+Ø
+𝑖
+𝐶
+1,𝑖 
+,
+where 𝑁
+1 
+is the coarse candidate pool size (we use 𝑁
+1 
+= 1,000).
+At each subsequent level ℓ, the query is re-encoded as q
+(ℓ ) 
+and
+retrieval is restricted to the retained candidate set:
+𝐶
+ℓ,𝑖 
+= Top
+𝑁
+ℓ 
+/𝑁
+ 
+sim(q
+(ℓ ) 
+, {e
+(ℓ )
+𝑑 
+}
+𝑑 ∈𝐶
+ℓ −1
+∩D
+𝑖 
+)
+
+.
+The final top-𝐾 results are drawn from 𝐶
+ℓ
+final 
+. Crucially, deeper levels
+refine the candidate set rather than restrict the final output size: the fi-
+nal answer always returns 𝐾 documents, but candidates are progres-
+sively re-scored at higher resolution. This progressive narrowing
+drastically reduces distance computations at finer resolutions.
+3.7 Query-Adaptive Resolution Control
+SPI estimates query semantic uncertainty via entropy over attention-
+weighted components of q
+(1) 
+:
+𝐻 (q
+(1) 
+) = −
+𝐷
+1
+∑︁
+𝑘=1
+𝑝
+𝑘 
+log 𝑝
+𝑘 
+, 𝑝
+𝑘 
+= 
+|𝑞
+(1)
+𝑘 
+|
+Í
+𝑗 
+|𝑞
+(1)
+𝑗 
+| 
+,
+where 𝑞
+(1)
+𝑘 
+is the 𝑘-th component of the ℓ
+1
+-normalized query embed-
+ding. The controller 𝑔
+ctrl 
+is a 2-layer Transformer with 128 hidden
+units and 4 attention heads:
+ˆ
+ℓ, 𝜎
+ℓ 
+= 𝑔
+ctrl 
+(q
+(1) 
+, 𝐻 (q
+(1) 
+)),
+outputting a predicted level 
+ˆ
+ℓ ∈ {1, . . . , 𝐿} and a confidence score
+𝜎
+ℓ 
+∈ [0, 1].
+Controller supervision and leakage prevention. Oracle labels ℓ
+∗
+𝑞
+are derived by binary search over levels on a dedicated label set
+disjoint from both training and evaluation data. Concretely, we split
+MS MARCO dev queries into three non-overlapping folds: 80% for
+controller training, 10% for oracle label generation (label set), and
+10% as a held-out test set; oracle labels are never exposed to the
+model during training. The label ℓ
+∗
+𝑞 
+= min{ℓ | Recall@100
+(ℓ ) 
+(𝑞) ≥
+0.99 · Recall@100
+(𝐿) 
+(𝑞)} depends on the document index, not on
+test queries. The controller is trained with cross-entropy on ℓ
+∗
+𝑞 
+plus
+a temperature-scaled calibration term (temperature 𝑇 =1.2, tuned
+on the label set). Oracle level distribution on the label set: 45% at
+level 1, 32% at level 2, 23% at level 3.
+To assess OOD robustness, we evaluate the trained controller
+(without retraining) on BEIR-Quora and BEIR-FiQA, two domains
+absent from training. Controller accuracy (fraction of queries routed
+to oracle-optimal level) drops from 87.5% (in-domain) to 82.1% (OOD
+average), while the latency saving remains ≥ 3.8× vs. full-depth
+baseline—confirming that label artifacts do not explain the efficiency
+gains.
+Depth selection. The confidence threshold 𝜃 = 0.35 is tuned on a
+development set. Final depth follows:
+ℓ
+final 
+=
+( 
+ˆ
+ℓ, 𝜎
+ℓ 
+≤ 𝜃,
+min( 
+ˆ
+ℓ + 1, 𝐿), otherwise.
+High-entropy queries (𝜎
+ℓ 
+&gt; 𝜃 ) fall back to a deeper level, while
+confident predictions allow early termination. The controller is
+distinct from the progressive encoders and adds only 0.8 ms per
+query.
+3.8 
+Streaming and Parallel Document Ingestion
+Offline construction vs. online streaming. It is important to dis-
+tinguish two operating regimes. In the offline steady state (all docu-
+ments fully processed), D 
+(ℓ ) 
+(𝑡) = D for every ℓ: all pyramid levels
+index the same corpus. This is the regime assumed by the recall
+analysis (Section 3.9) and by offline benchmarks. During online
+streaming, documents arrive faster than refinement encoders can
+process them, so the transient invariant is D 
+(1) 
+(𝑡) ⊇ D 
+(2) 
+(𝑡) ⊇
+· · · ⊇ D 
+(𝐿) 
+(𝑡) 
+at every wall-clock time 𝑡. The two statements are
+not contradictory: the steady-state claim is a convergence guaran-
+tee, not an instantaneous property.
+Level-wise insertion. SPI handles streaming inserts via on-demand
+level-wise insertion. Upon arrival of document 𝑑 at time 𝑡
+arr
+𝑑 
+:
+(1) Synchronous (level 1): e
+(1)
+𝑑 
+is computed by the base encoder
+(tokenize → embed → normalize) and appended to I 
+(1) 
+. Docu-
+ment 𝑑 enters D 
+(1) 
+(𝑡) at 𝑡 = 𝑡
+arr
+𝑑 
++ 𝑇 
+(1)
+enc 
+, where 𝑇 
+(1)
+enc 
+is the base
+embedding latency (≈8 ms per passage at batch size 1). Because
+𝑇 
+(1)
+enc 
+is paid regardless of index depth, we call this the minimum
+insertion latency.
+(2) Asynchronous (levels ℓ ≥ 2): Refinement embeddings e
+(ℓ )
+𝑑 
+are
+computed in a background queue ordered by 𝑡
+arr
+𝑑 
+. Document 𝑑
+enters D 
+(ℓ ) 
+(𝑡) at 𝑡 = 𝑡
+arr
+𝑑 
++𝑇 
+(ℓ )
+ins 
+, where 𝑇 
+(ℓ )
+ins 
+= 𝑇 
+(1)
+enc 
++𝑂 (𝐷
+ℓ 
+/𝐵
+enc
+)
+and 𝐵
+enc 
+is encoder throughput (tokens/s).
+For queries issued while 𝑑 is partially available, the controller
+selects the deepest level ℓ
+′ 
+for which 𝑑 ∈ D 
+(ℓ
+′ 
+) 
+(𝑡), returning a
+slightly coarser result rather than missing the document entirely.
+This graceful degradation ensures no document is invisible after its
+minimum insertion latency.
+Modern streaming ANN systems (IP-DiskANN [31], Quake [23],
+VStream [9]) focus on geometric freshness—graph edge repair and
+partition rebalancing under high update rates. SPI’s insertions are
+append-only (no structural repairs), which keeps per-insert latency
+low. The freshness tradeoff is explicit and bounded: level 1 is im-
+mediately consistent; level ℓ lags by 𝑇 
+(ℓ )
+ins 
+.
+A periodic consistency re-anchoring step re-projects newly in-
+serted high-level embeddings:
+ˆ
+e
+(ℓ )
+𝑑 
+= proj
+ℓ 
+(e
+(ℓ )
+𝑑 
+) + W
+ℓ 
+e
+(1)
+𝑑 
+,
+preserving the residual alignment guarantee from training and
+thereby bounding the recall degradation stated in Theorem 1.
+Parallel execution. Each level I 
+(ℓ ) 
+is partitioned across 𝑁 nodes
+via LSH on level-1 embeddings. At each level, every node returns
+its local top-(𝑘
+ℓ 
++ 𝛿) candidates with boundary slack 𝛿 = ⌈𝑘
+ℓ 
+/
+√
+𝑁 ⌉;
+the coordinator merges and re-ranks to produce the global top-𝑘
+ℓ 
+.
+Candidate IDs are routed to deeper levels via a partition lookup
+table (document ID → LSH cell → node). LSH locality across levels
+is maintained because L
+cons 
+bounds per-document embedding drift,
+limiting boundary leakage to 𝑂 (𝜀
+ℓ 
+/𝛿
+2
+LSH
+) &lt; 
+2%. Nodes communicate
+via asynchronous gRPC; the coordinator routes each new query to
+5</page><page num="7">Method R@10 NDCG@10 MRR@10 Lat. (ms) Mem (GB) QPS
+Dense
+DPR 82.1 73.8 72.3 125 6.8 8.0
+ANCE 84.5 75.6 74.1 118 7.1 8.5
+Contriever 85.2 76.4 75.1 120 7.2 8.1
+Sparse / Late Interaction
+SPLADE-v2 87.5 78.3 78.1 92 5.4 10.8
+ColBERTv2 89.3 80.1 79.4 108 5.8 9.3
+PLAID 89.0 79.8 79.1 102 5.5 9.8
+Hierarchical ANN
+HyDE 88.5 79.2 78.6 135 6.9 7.4
+SPANN 86.8 77.0 76.5 115 5.9 8.7
+HNSW (flat) 87.1 77.4 76.9 122 6.2 8.2
+SPI (Ours) 90.1 81.2 80.3 35 4.2 28.6
+Table 3: Single-node retrieval (MS MARCO + NQ macro aver-
+age). Latency = p50 end-to-end. QPS = sequential single-query
+throughput.
+compared to 82 ms for non-adaptive full-depth traversal (always
+level 3). The 4.2 GB active memory footprint is measured with only
+the active level’s embedding tile resident in GPU cache; levels not
+visited for a given query are evicted by the LRU policy.
+4.4 Ablations
+Pyramid depth 𝐿 (Table 4). SPI supports any 𝐿 ≥ 1; we sweep
+𝐿 ∈ {1, 2, 3, 4} with the adaptive controller enabled for 𝐿 ≥ 2. At
+𝐿=1 there is only one level so no early exit is possible; latency equals
+the flat IVF-PQ retrieval time (110 ms). At 𝐿=2, the controller routes
+roughly 20% of queries to level 1 only, reducing average latency to
+68 ms. At 𝐿=3, a three-way split (45%/32%/23%) lets the controller
+discriminate query difficulty more accurately, further reducing
+average latency to 35 ms—the improvement is not discontinuous
+but accumulates from a more granular exit policy. At 𝐿=4, only
+5% of queries reach level 4, adding memory without proportional
+latency reduction; average latency rises slightly to 39 ms due to
+controller overhead. We set 𝐿=3 as the default.
+𝐿 Precision schedule R@10 Lat. (ms) Mem (GB)
+1 (FP32) 89.0 110 6.8
+2 (INT8, FP32) 89.7 68 5.5
+3 (default) (INT8, FP16, FP32) 90.1 35 4.2
+4 (INT8, FP16, FP32, FP32) 90.2 39 4.8
+Table 4: SPI pyramid depth ablation over 𝐿 with adaptive con-
+troller enabled for 𝐿 ≥ 2. Precision schedule: 𝑏
+ℓ 
+= min(32, 8 ·
+2
+ℓ −1
+)
+. 𝐿=3 achieves the best recall/latency/memory trade-off.
+Adaptive control (Table 5). The controller reduces latency from
+82 ms (always full depth, L=3) to 35 ms by routing 45% of queries
+to level 1. This introduces a small recall cost: with 87.5% controller
+accuracy, roughly 5.6% of all queries receive a coarser representa-
+tion than optimal, lowering Recall@10 by 0.3 points (90.1 → 89.8).
+Random routing (equal probability across levels) reduces latency
+moderately but also degrades recall by 0.8 points because it sends
+genuinely complex queries to shallow levels. The oracle upper
+bound (routing to the empirically optimal level for each query)
+achieves 90.1 Recall@10 at 35 ms, confirming that 87.5% controller
+accuracy nearly saturates the oracle.
+30 40 50 60 70 80 90
+Latency p50 (ms)
+88.0
+88.5
+89.0
+89.5
+90.0
+90.5
+91.0
+Recall@10 (MS MARCO)
+Baseline
++Multi-Res
++QA (degen.)
+MR+QA
+w/o Dist
+Full SPI
+(a) Component ablation: Recall@10 vs. Latency
+(error bars = ±1 std over 5 runs)
+Baseline
+1 component
+2 components
+3 components
+Full SPI (4)
+Figure 3: Component ablation: Recall@10 vs. latency. Pareto
+path from Baseline to Full SPI shown with arrows; color
+encodes number of components added (error bars = ±1 std).
+Variant R@10 NDCG@10 Lat. (ms)
+SPI w/o adaptive (oracle level) 90.1 81.2 82
+SPI w/ random depth 89.3 80.6 75
+SPI w/ adaptive (ours) 89.8 81.0 35
+Table 5: Adaptive resolution control ablation. “w/o adaptive”
+uses the oracle level per query (upper-bound recall, no infer-
+ence speedup).
+Comprehensive component ablation (Table 6). Table 6 reports the
+full factorial ablation over SPI’s four components on MS MARCO
+and NQ. Several realistic trade-offs are visible. First, NQ starts
+from a lower baseline (86.5 vs. 89.0 on MS MARCO) and gains
+more from full SPI (+2.8 vs. +1.8 points), reflecting that factoid
+entity queries benefit more from deeper representations. Second,
+Multi-Res alone improves recall but does not reduce latency since
+all levels are always traversed; latency savings require the QA
+controller. Third, QA alone (controller applied to a flat single-level
+index) is a degenerate baseline: it reduces latency by routing to a
+coarser but non-specialized embedding, hurting NQ recall more
+(−0.9) than MS MARCO (−0.7). Fourth, Dist alone introduces a
+small recall drop (−0.3/−0.4) due to partition boundary artifacts at
+4 nodes—overhead that disappears when multi-resolution encoding
+provides semantic alignment across partitions. Fifth, removing Prog
+hurts NQ disproportionately (−1.2) compared to MS MARCO (−0.9),
+consistent with progressive encoders capturing fine-grained entity
+distinctions.
+Figure 3 shows the component ablation on the Recall@10 vs.
+latency plane. Figure 4 shows the pyramid depth trade-off and
+adaptive controller impact.
+4.5 Streaming Ingestion (Q2)
+We simulate a bursty stream of 1,000 new MS MARCO passages
+inserted while queries arrive at 100 QPS. SPI’s level-wise insertion
+7</page><page num="8">Table 6: Comprehensive component ablation. Multi-Res = multi-resolution pyramid; QA = query-adaptive controller; Prog =
+progressive encoder; Dist = 4-node distributed. Mean ± std over 5 runs. QPS = sequential single-node throughput for all rows;
+Dist improves aggregate cluster throughput through parallelism but not per-node sequential QPS. “QA alone” applies the
+controller to a single-level index (degenerate baseline).
+Configuration Params (M) 
+MS MARCO NQ 
+Lat. (ms) Mem (GB) QPS
+R@10 NDCG@10 R@10 NDCG@10
+Baseline (single-res) 45.2 89.0±0.4 80.1±0.4 86.5±0.6 79.3±0.5 88±7 6.8±0.2 11.4±0.7
++ Multi-Res only 52.3 89.4±0.4 80.4±0.3 87.4±0.5 80.5±0.4 82±5 4.7±0.2 12.2±0.8
++ QA only (degenerate) 47.8 88.3±0.6 79.5±0.5 85.6±0.7 78.7±0.6 52±8 6.6±0.4 19.2±1.4
++ Prog only 49.2 89.5±0.3 80.5±0.3 87.6±0.4 80.3±0.4 83±5 4.6±0.2 12.0±0.7
++ Dist only (4 nodes) 45.2 88.7±0.5 79.9±0.4 86.1±0.7 79.1±0.6 91±8 7.2±0.6 10.9±0.9
+Multi-Res + QA 54.8 89.9±0.3 80.7±0.3 88.4±0.4 80.6±0.3 42±5 4.4±0.3 23.8±1.1
+Multi-Res + Prog 56.1 90.1±0.2 81.0±0.2 88.9±0.3 80.9±0.3 79±5 4.1±0.2 12.7±0.7
+QA + Prog 52.8 89.5±0.3 80.5±0.3 88.6±0.4 80.7±0.3 37±5 4.5±0.3 27.1±1.1
+w/o Dist 58.9 90.5±0.2 81.3±0.2 89.1±0.3 81.0±0.2 35±4 4.2±0.2 28.6±1.1
+w/o Prog 57.6 89.9±0.3 81.0±0.2 88.1±0.4 80.4±0.3 37±4 4.3±0.2 27.1±1.0
+w/o QA 59.8 90.3±0.2 81.1±0.2 88.7±0.3 80.8±0.2 79±5 4.0±0.2 12.7±0.6
+w/o Multi-Res 52.8 89.2±0.4 80.2±0.3 87.0±0.5 79.8±0.4 36±4 4.4±0.3 27.3±1.0
+Full SPI 61.5 90.8±0.2 81.6±0.2 89.3±0.3 81.2±0.2 35±3 4.2±0.3 28.6±1.1
+L=1 L=2 L=3 L=4
+Pyramid depth L
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+1.2
+Normalised score (higher = better)
+89.0
+110ms
+89.7
+68ms
+90.1
+35ms
+90.2
+39ms
+default
+L=3
+(a) Pyramid depth L trade-off
+(recall / speed / memory, band = ±1 std)
+Recall@10
+Speed (1/lat)
+Mem. eff.
+Oracle
+(always L3)
+Random
+(33% acc.)
+Adaptive
+(87.5% acc.)
+88.5
+89.0
+89.5
+90.0
+90.5
+91.0
+Recall@10
+90.1
+89.3
+89.8
+(b) Adaptive controller
+(Recall@10 vs. latency, error bars = ±1 std)
+Recall@10
+Latency (ms)
+0
+20
+40
+60
+80
+100
+Latency p50 (ms)
+82ms
+75ms
+35ms
+Figure 4: (a) Normalised recall, speed, and memory all peak
+simultaneously at 𝐿=3 (dashed line), confirming it as the
+Pareto-optimal pyramid depth (error bands = ±1 std). (b) Adap-
+tive controller incurs a 0.3-point Recall@10 cost (90.1→89.8)
+while cutting latency from 82 ms to 35 ms; random routing
+degrades both metrics.
+keeps documents searchable at level 1 immediately; levels 2–3 com-
+plete within 47 ms p95 per document. Recall@10 drops by at most
+0.6 points compared to a static index—well within the bounds of
+Theorem 1.
+Comparison with streaming ANN systems. We compare
+against IP-DiskANN [31] and Quake [23] on the same 1M-vector
+stream using SIFT-1M as a controlled benchmark. IP-DiskANN
+achieves higher geometric recall stability (recall@10 drop &lt;0.1%
+after full turnover) but at 3.2× higher per-insert latency than SPI’s
+level-1 append, and does not support query-adaptive resolution.
+Quake adapts partitioning to query skew but also lacks multi-
+resolution semantic encoding. These systems and SPI address com-
+plementary problems and can be composed: SPI’s level-1 index
+could be backed by IP-DiskANN for maximum freshness at the
+coarsest granularity.
+5 CONCLUSION
+We presented SPI, a query-adaptive multi-resolution indexing frame-
+work for streaming RAG in vector databases. By co-designing se-
+mantic pyramid encoding, uncertainty-aware depth control, and
+level-wise streaming insertion, SPI improves the efficiency–quality
+trade-off of ANN retrieval while remaining compatible with FAISS
+and Qdrant. Single-node experiments show a 1.4–2.3× average
+retrieval latency reduction under fixed Recall@10 targets, with
+competitive quality relative to comparable approximate-ANN base-
+lines.
+As RAG systems continue to scale, the cost of query and retrieval
+in VecDBs becomes time-expensive. SPI is an efficient solution to
+this challenge: by constructing a semantic pyramid and routing each
+query to the minimum representational depth sufficient for stable
+top-𝑘 retrieval, it substantially reduces average latency and memory
+pressure without a corresponding loss in recall. In future work, we
+will explore the principle underlying SPI—that index structure and
+representational depth need not be fixed at construction time—as
+a foundation for retrieval systems that remain both efficient and
+accurate as deployment conditions continue to evolve.
+REFERENCES
+[1] Alexandr Andoni and Piotr Indyk. 2008. Near-optimal hashing algorithms for
+approximate nearest neighbor in high dimensions. In Communications of the
+8</page></paper>

@@ -6,6 +6,10 @@
 
 扩展研究另见[Context Database五方向复核](extensions.md)：DAG维护、联合索引、摘要导航、多版本与权限；不将其自动叠入当前单路径定义。
 
+六个具体方案统一放在用户指定的[子方向总览](../nested-attr-vector-search/directions.md)，包括独立的Directory-Aware加速方向；此处只链接，避免复制多份方案。
+
+最新[alphaXiv查重](../nested-attr-vector-search/alphaxiv-novelty-audit.md)已撤销实施优先级：四项停止独立立项，两项暂停，没有通过新颖性门槛的原方案。
+
 ## 逐篇讨论
 
 1. [Filtered-DiskANN：标签感知构图与前缀等价改造](walkthroughs/01-filtered-diskann.md)。

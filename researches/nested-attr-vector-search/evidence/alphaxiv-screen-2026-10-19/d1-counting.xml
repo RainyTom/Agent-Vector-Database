@@ -1,0 +1,1522 @@
+<paper id="1711.03987v2"><page num="1">arXiv:1711.03987v2 [cs.DB] 20 Nov 2017
+Optimised Maintenance of Datalog Materialisations
+Pan Hu and Boris Motik and Ian Horrocks
+Department of Computer Science, University of Oxford
+Oxford, United Kingdom
+firstname.lastname@cs.ox.ac.uk
+Abstract
+To efficiently answer queries, datalog systems often materi-
+alise all consequences of a datalog program, so the materi-
+alisation must be updated whenever the input facts change.
+Several solutions to the materialisation update problem have
+been proposed. The Delete/Rederive (DRed) and the Back-
+ward/Forward (B/F) algorithms solve this problem for gen-
+eral datalog, but both contain steps that evaluate rules ‘back-
+wards’ by matching their heads to a fact and evaluating the
+partially instantiated rule bodies as queries. We show that
+this can be a considerable source of overhead even on very
+small updates. In contrast, the Counting algorithm does not
+evaluate the rules ‘backwards’, but it can handle only non-
+recursive rules. We present two hybrid approaches that com-
+bine DRed and B/F with Counting so as to reduce or even
+eliminate ‘backward’ rule evaluation while still handling ar-
+bitrary datalog programs. We show empirically that our hy-
+brid algorithms are usually significantly faster than existing
+approaches, sometimes by orders of magnitude.
+1 Introduction
+Datalog (Abiteboul, Hull, and Vianu 1995) is a rule lan-
+guage that is widely used in modern information systems.
+Datalog rules can declaratively specify tasks in data anal-
+ysis applications (Luteberget, Johansen, and Steffen 2016;
+Piro et al. 2016), allowing application developers to fo-
+cus on the objective of the analysis—that is, on specifying
+what needs to be computed rather than how to compute it
+(Markl 2014). Datalog can also capture OWL 2 RL (Motik
+et al. 2009) ontologies possibly extended with SWRL rules
+(Horrocks et al. 2004). It is implemented in systems such
+as WebPIE (Urbani et al. 2012), VLog (Urbani, Jacobs,
+and Kr¨otzsch 2016), Oracle’s RDF Store (Wu et al. 2008),
+OWLIM (Bishop et al. 2011), and RDFox (Nenov et al.
+2015), and it is extensively used in practice.
+When performance is critical, datalog systems usually
+precompute the materialisation (i.e., the set of all conse-
+quences of a program and the explicit facts) in a prepro-
+cessing step so that all queries can later be evaluated di-
+rectly over the materialisation. Recomputing the materialisa-
+tion from scratch whenever the explicit facts change can be
+Copyright c© 2018, Association for the Advancement of Artificial
+Intelligence (www.aaai.org). All rights reserved.
+expensive. Systems thus typically use an incremental main-
+tenance algorithm, which aims to avoid repeating most of
+the work. Fact insertion can be effectively handled using
+the semina¨ıve algorithm (Abiteboul, Hull, and Vianu 1995),
+but deletion is much more involved since one has to check
+whether deleted facts have derivations that persist after the
+update. The Delete/Rederive (DRed) algorithm (Gupta, Mu-
+mick, and Subrahmanian 1993; Staudt and Jarke 1996), the
+Backward/Forward (B/F) algorithm (Motik et al. 2015), and
+the Counting algorithm (Gupta, Mumick, and Subrahmanian
+1993) are well-known solutions to this problem.
+The DRed algorithm handles deletion by first overdelet-
+ing all facts that depend on the removed explicit facts,
+and then rederiving the facts that still hold after overdele-
+tion. The rederivation stage further involves rederiving all
+overdeleted facts that have alternative derivations, and then
+recomputing the consequences of the rederived facts un-
+til a fixpoint is reached. The algorithm and its variants
+have been extensively used in practice (Urbani et al. 2013;
+Ren and Pan 2011). In contrast to DRed, the B/F algorithm
+searches for alternative derivations immediately (rather than
+after overdeletion) using a combination of backward and for-
+ward chaining. This makes deletion exact and avoids the po-
+tential inefficiency of overdeletion. In practice, B/F often,
+but not always, outperforms DRed (Motik et al. 2015).
+Both DRed and B/F search for derivations of deleted facts
+by evaluating rules ‘backwards’: for each rule whose head
+matches the fact being deleted, they evaluate the partially in-
+stantiated rule body as a query; each query answer thus cor-
+responds to a derivation. This has two consequences. First,
+one can examine rule instances that fire both before and af-
+ter the update, which is redundant. Second, evaluating rules
+‘backwards’ can be inherently more difficult than match-
+ing the rules during initial materialisation: our experiments
+show that this step can, in some cases, prevent effective ma-
+terialisation maintenance even for very small updates.
+In contrast, the Counting algorithm (Gupta, Mumick, and
+Subrahmanian 1993) does not evaluate rules ‘backwards’,
+but instead tracks the number of distinct derivations of each
+fact: a counter is incremented when a new derivation for the
+fact is found, and it is decremented when a derivation no
+longer holds. A fact can thus be deleted when its counter
+drops to zero, without the potentially costly ‘backward’ rule
+evaluation. The algorithm can also be made optimal in the</page><page num="2">sense that it considers precisely the rule instances that no
+longer fire after the update and the rule instances that only
+fire after the update. The main drawback of Counting is that,
+unlike DRed and B/F, it is applicable only to nonrecursive
+rules (Nicolas and Yazdanian 1983). Recursion is a key fea-
+ture of datalog, allowing one to express common properties
+such as transitivity. Thus, despite its favourable properties,
+the Counting algorithm does not provide us with a general
+solution to the materialisation maintenance problem.
+Towards the goal of developing efficient general-purpose
+maintenance algorithms, in this paper we present two hy-
+brid approaches that combine DRed and B/F with Counting.
+The former tracks the nonrecursive and the recursive deriva-
+tions separately, which allows the algorithm to eliminate all
+‘backward’ rule evaluation and also limit overdeletion. The
+latter tracks nonrecursive derivations only, which eliminates
+‘backward’ rule evaluation for nonrecursive rules; however,
+recursive rules can still be evaluated ‘backwards’ to eagerly
+identify alternative derivations. Both combinations can han-
+dle recursive rules, and they exhibit ‘pay-as-you-go’ be-
+haviour in the sense that they become equivalent to Counting
+on nonrecursive rules. Apart from the modest cost of main-
+taining counters, our algorithms never involve more com-
+putation steps than their unoptimised counterparts. Thus,
+our algorithms combine the best aspects of DRed, B/F, and
+Counting: without incurring a significant cost, they elimi-
+nate or reduce ‘backward’ rule evaluation, are optimal for
+nonrecursive rules, and can also handle recursive rules.
+We have implemented our hybrid algorithms and have
+compared them with the original DRed and B/F algorithms
+on several synthetic and real-life benchmarks. Our experi-
+ments show that the cost of counter maintenance is negli-
+gible, and that our hybrid algorithms typically outperform
+existing solutions, sometimes by orders of magnitude. Our
+test system and datasets are available online.
+1
+2 Preliminaries
+We now introduce datalog with stratified negation. We fix
+countable, disjoint sets of constants and variables. A term
+is a constant or a variable. A vector of terms is written 
+~
+t,
+and we often treat it as a set. A (positive) atom has the
+form P (t
+1
+, . . . , t
+k
+) where P is a k-ary predicate and each
+t
+i
+, 1 ≤ i ≤ k, is a term. A term or an atom is ground if it
+does not contain variables. A fact is a ground atom, and a
+dataset is a finite set of facts. A rule r has the form
+B
+1 
+∧ · · · ∧ B
+m 
+∧ not B
+m+1 
+∧ · · · ∧ not B
+n 
+→ H,
+where m ≥ 0, n ≥ 0, and B
+i 
+and H are atoms. The head
+h(r) of r is the atom H, the positive body b
++
+(r) of r is the
+set of atoms B
+1
+, . . . , B
+m
+, and the negative body b
+−
+(r) of r
+is the set of atoms B
+m+1
+, . . . , B
+n
+. Rule r must be safe: each
+variable occurring in r must occur in a positive body atom.
+A substitution σ is a mapping of finitely many variables to
+constants. For α a term, literal, rule, conjunction, or a vector
+or set thereof, ασ is the result of replacing each occurrence
+of a variable x in α with σ(x) (if the latter is defined).
+1
+http://krr-nas.cs.ox.ac.uk/2017/counting/
+A stratification λ of a program Π maps each predicate
+of Π to a positive integer such that, for each rule r ∈ Π with
+h(r) = P (
+~
+t), (i) λ(P ) ≥ λ(R) for each atom R(~s) ∈ b
++
+(r),
+and (ii) λ(P ) &gt; λ(R) for each atom R(~s) ∈ b
+−
+(r). Pro-
+gram Π is stratifiable if a stratification λ of Π exists. A
+rule r with h(r) = P (
+~
+t) is recursive w.r.t. λ if an atom
+R(~s) ∈ b
++
+(r) exists such that λ(P ) = λ(R); otherwise, r
+is nonrecursive w.r.t. λ. For each positive integer s, program
+Π
+s 
+= {r ∈ Π | λ(h(r)) = s} is the stratum s of Π, and pro-
+grams Π
+s
+r 
+and Π
+s
+nr 
+are the recursive and the nonrecursive
+subsets, respectively, of Π
+s
+. Finally, O
+s 
+is the set of all facts
+that belong to stratum s—that is, O
+s 
+= {P (~c) | λ(P ) = s}.
+Rule r
+′ 
+is an instance of a rule r if a substitution σ exists
+mapping all variables of r to constants such that r
+′ 
+= rσ.
+For I a dataset, the set inst
+r 
+[I] of instances of r obtained by
+applying a rule r to I, and the set Π[I] of facts obtained by
+applying a program Π to I are defined as follows.
+inst
+r 
+[I] = {rσ | b
++
+(r)σ ⊆ I and b
+−
+(r)σ ∩ I = ∅} (1)
+Π[I] = 
+⋃
+r∈Π
+{h(r
+′
+) | r
+′ 
+∈ inst
+r 
+[I]} (2)
+We often say that each instance in inst
+r
+[I] fires on I. We
+are now ready to define the semantics of stratified datalog.
+Given a dataset E of explicit facts and a stratification λ of
+Π with maximum stratum index number S, we define the
+following sequence of datasets: let I
+0
+∞ 
+= E; let I
+s
+0 
+= I
+s−1
+∞
+for index s with 1 ≤ s ≤ S; let I
+s
+i 
+= I
+s
+i−1 
+∪ Π
+s
+[I
+s
+i−1
+] for
+each integer i &gt; 0; and let I
+s
+∞ 
+= 
+⋃
+i≥0 
+I
+s
+i 
+. Set I
+S
+∞ 
+is called
+the materialisation of Π w.r.t. E and λ. It is well known
+that I
+S
+∞ 
+does not depend on λ, so we usually write it as
+mat(Π, E). In this paper, we consider the problem of main-
+taining mat(Π, E): given mat(Π, E) and datasets E
+− 
+and
+E
++
+, our algorithm computes mat(Π, (E \ E
+−
+) ∪ E
++
+) in-
+crementally while minimising the amount of work.
+3 Motivation and Intuition
+As motivation for our work, we next discuss how evaluating
+rules ‘backwards’ can be a significant source of inefficiency
+during materialisation maintenance. We base our discussion
+on the DRed algorithm for simplicity, but our conclusions
+apply to the B/F algorithm as well.
+3.1 The DRed Algorithm
+To make our discussion precise, we first present the DRed
+algorithm (Gupta, Mumick, and Subrahmanian 1993; Staudt
+and Jarke 1996). Let Π be a program with a stratification λ,
+let E be a set of explicit facts, and assume that the materi-
+alisation I = mat(Π, E) of Π w.r.t. E has been computed.
+Moreover, assume that E should be updated by deleting E
+−
+and inserting E
++
+. The DRed algorithm efficiently modi-
+fies the ‘old’ materialisation I to the ‘new’ materialisation
+I
+′ 
+= mat(Π, (E \ E
+−
+) ∪ E
++
+) by deleting some facts and
+adding others; we call such facts affected by the update.
+Due to the update, some rule instances that fire on I will
+no longer fire on I
+′
+, and some rule instances that do not fire
+on I will fire on I
+′
+; we also call such rule instances affected
+by the update. A key problem in materialisation maintenance</page><page num="4">facts in lines 8–13, and this can be done efficiently as in
+the previous paragraph. Next, in one-step rederivation, the
+algorithm will match these facts to the head of the rule (4)
+and obtain queries R(x, b) ∧ R(x, c
+i
+), R(x, c
+i
+) ∧ R(x, b),
+and R(x, c
+i
+) ∧ R(x, c
+i
+). All but the last of these queries con-
+tain atom R(x, b) and, no matter how we reorder the body
+atoms of (4), we have n queries where R(x, b) is evaluated
+first. Each of these n queries identifies n candidate matches
+R(a
+i
+, b) using the index only to find out that the second atom
+cannot be matched. Thus, R(x, b) is matched to n
+2 
+facts in
+total, so the cost of one-step rederivation is O(n
+2
+)—one de-
+gree higher than for materialisation.
+Example 1 shows that evaluating a rule ‘backwards’ can
+be inherently more difficult than evaluating it during mate-
+rialisation, thus giving rise to a dominating source of ineffi-
+ciency. In fact, evaluating a rule with m body atoms ‘back-
+wards’ can be seen as answering a query with m + 1 atoms,
+where the head of the rule is an extra query atom; since the
+number of atoms determines the complexity of query evalu-
+ation, this extra atom increases the algorithm’s complexity.
+Our next example shows that this problem is exacerbated
+if the space of admissible plans for queries corresponding
+to rule bodies is further restricted. This is common in sys-
+tems that provide built-in functions. In particular, to facilitate
+manipulation of concrete values such as strings or integers,
+datalog systems often allow rule bodies to contain built-in
+atoms of the form (t 
+:=
+ exp), where t is a term and exp is
+an expression constructed using constants, variables, func-
+tions, and operators as usual. For example, a built-in atom
+can have the form (z 
+:=
+ z
+1 
++ z
+2
+), and it assigns to z the sum
+of z
+1 
+and z
+2
+. The set of supported functions vary among im-
+plementations, but a common feature is that all values in exp
+must be bound by prior atoms before the built-in atom can
+be evaluated. As we show next, this can be problematic.
+Example 2. Let program Π consist of rules (6) and (7). If
+we read B(s, t, n) as saying that there is an edge from node
+s to node t of length n, then the program entails D(s, n) if
+there exists a path of length n from node a to node s.
+B(a, y, z) → D(y, z) (6)
+D(x, z
+1
+) ∧ B(x, y, z
+2
+) ∧ (z 
+:=
+ z
+1 
++ z
+2
+) → D(y, z) (7)
+Let E be the dataset as specified below.
+E = {B(a, b
+1
+, 1), B(a, c
+i
+, 1), B(b
+i
+, d
+j 
+, 1) | 1 ≤ i, j ≤ n}
+During materialisation, rule (6) first derives D(b
+1
+, 1) and
+all D(c
+i
+, 1) with 1 ≤ i ≤ n, so the cost of this step is O(n).
+Next, atom D(x, z
+1
+) in rule (7) is matched to n facts D(c
+i
+, 1)
+without deriving anything. Atom D(x, z
+1
+) is also matched
+to D(b
+1
+, 1) once, so atom B(x, y, z
+2
+) is instantiated to
+B(b
+1
+, y, z
+2
+) and matched to n facts B(b
+1
+, d
+j 
+, 1), deriving
+n facts D(d
+j 
+, 2). Thus, the cost of rule matching is O(n).
+Now assume that B(a, b
+1
+, 1) is deleted. Then, D(b
+1
+, 1)
+and all D(d
+j 
+, 2) can be efficiently overdeleted as in the pre-
+vious paragraph, but trying to prove them is much more dif-
+ficult. Matching each D(d
+j 
+, 2) to the head of (6) produces
+a query B(a, d
+j 
+, 2), which does not produce a rule instance.
+Moreover, matching D(d
+j 
+, 2) to the head of (7) produces a
+query D(x, z
+1
+) ∧ B(x, d
+j 
+, z
+2
+) ∧ (2 := z
+1 
++ z
+2
+). Now, as we
+discussed earlier, z
+1 
+and z
+2 
+must both be bound before we
+can evaluate the built-in atom (2 := z
+1 
++ z
+2
+). If we evalu-
+ate B(x, d
+j 
+, z
+2
+) first, then we try n facts B(b
+i
+, d
+j 
+, 1) with
+1 ≤ i ≤ n; for each of them, atom D(x, z
+1
+) is instantiated
+as D(b
+i
+, z
+1
+) and is not matched in the surviving facts. In
+contrast, if we evaluate D(x, z
+1
+) first, then we try n facts
+D(c
+i
+, 1); for each of them, atom B(x, d
+j 
+, z
+2
+) is instantiated
+as B(c
+i
+, y, z
+2
+) and is not matched. Thus, regardless of how
+we reorder the body of (7), the first atom considers a total
+of n
+2 
+facts, so the cost of one-step rederivation is O(n
+2
+).
+To overcome this, one might rewrite the built-in atom as
+(z
+1 
+:=
+ z − z
+1
+) or (z
+2 
+:=
+ z − z
+2
+) so that it can be evaluated
+immediately after z and either z
+1 
+or z
+2 
+are bound. Either
+way, one-step rederivation still takes O(n
+2
+) steps on our ex-
+ample. Also, built-in expressions are often not invertible.
+4 Combining DRed with Counting
+We now address the inefficiencies we outlined in Section 3.
+Towards this goal, in Section 4.1 we first present the intu-
+itions, and then in Section 4.2 we formalise our solution.
+4.1 Intuition
+As we already mentioned in Section 1, the Counting algo-
+rithm (Gupta, Mumick, and Subrahmanian 1993) does not
+evaluate rules ‘backwards’; instead, it tracks the number of
+derivations of each fact. The main drawback of Counting
+is that it cannot handle recursive rules. We now illustrate
+the intuition behind our DRed
+c 
+algorithm, which combines
+DRed with Counting in a way that eliminates ‘backward’
+rule evaluation, while still supporting recursive rules.
+The DRed
+c 
+algorithm associates with each fact two coun-
+ters that track the derivations via the nonrecursive and the
+recursive rules separately. The counters are decremented
+(resp. incremented) when the associated fact is derived in
+overdeletion (resp. insertion), which allows for two impor-
+tant optimisations. First, as in the Counting algorithm, the
+nonrecursive counter always reflects the number of deriva-
+tions from facts in earlier strata; hence, a fact with a nonzero
+nonrecursive counter should never be overdeleted because
+it clearly remains true after the update. This optimisation
+captures the behaviour of Counting on nonrecursive rules
+and it also helps limit overdeletion. Second, if we never
+overdelete facts with nonzero nonrecursive counters, the
+only way for a fact to still hold after overdeletion is if its
+recursive counter is nonzero; hence, we can replace ‘back-
+ward’ rule evaluation by a simple check of the recursive
+counter. Note, however, that the recursive counters can be
+checked only after overdeletion finishes. This optimisation
+extends the idea of Counting to recursive rules to completely
+avoid ‘backward’ rule evaluation. The following example il-
+lustrates these ideas and compares them to DRed.
+Example 3. Let Π be the program containing rule (8).
+A(x) ∧ B(x, y) → A(y) (8)
+Moreover, let E be defined as follows:
+E = {A(a), A(b), A(d), B(a, c), B(b, c), B(c, d), B(d, e)}</page><page num="5">T1: (1,0)
+T2: (0,0)
+T3: (0,0)
+A(a)
+A(b)
+T1: (1,0)
+T2: (1,0)
+T3: (1,0)
+T1: (0,2)
+T2: (0,1)
+T3: (0,1)
+A(c)
+T1: (1,1)
+T2: (1,0)
+T3: (1,1)
+A(d)
+T1: (0,1)
+T2: (0,1)
+T3: (0,1)
+A(e)
+Figure 1: Derivations for Example 3
+The materialisation mat(Π, E) extends E with A(c) and
+A(e). Figure 1 shows the dependencies between derivations
+using arrows. For clarity, we do not show the B-facts.
+Now assume that A(a) is deleted. The standard DRed al-
+gorithm first overdeletes A(a), A(c), A(d), and A(e); it red-
+erives A(d) since the fact is in E \ E
+−
+; it rederives A(c)
+by evaluating rule (8) ‘backwards’; and it derives A(d) and
+A(e) from the rederived facts.
+Now consider applying the DRed
+c 
+to the same update. For
+each fact, Figure 1 shows a pair consisting of the nonrecur-
+sive and the recursive counter before the update (row T1),
+after overdeletion (row T2), and after the update (row T3).
+Note that the presence of a fact in E is akin to a nonrecur-
+sive derivation, so facts A(a), A(b), and A(d) have non-
+recursive derivation counts of one before the update. Now
+A(c) is derived from A(a) and A(b) using the recursive
+rule (8), so the recursive counter for A(c) is two. Analo-
+gously, A(d) and A(e) have just one recursive derivation
+each. During overdeletion, A(a) is first removed from E,
+so the nonrecursive counter of A(a) is decremented to zero
+and the fact is deleted. Since A(a) derives A(c) via rule
+(8), the recursive counter of A(c) is decremented; since the
+nonrecursive counter of A(c) is zero, the fact is overdeleted.
+Since A(c) derives A(d) via rule (8), the recursive counter
+of A(d) is decremented. Now the nonrecursive counter of
+A(d) is nonzero, so we know that A(d) holds after the up-
+date; hence, the fact is not overdeleted, and the overdeletion
+phase stops. Thus, while DRed overdeletes four facts, DRed
+c
+overdeletes only A(a) and A(c), and does not ‘touch’ A(e).
+Next, DRed
+c 
+proceeds to one-step rederivation. The recur-
+sive counter of A(c) is nonzero, which means that the fact
+has a recursive derivation (from A(b) in this case) that is
+not affected. Thus, DRed
+c 
+rederives A(c) without any ‘back-
+ward’ rule evaluation.
+Finally, DRed
+c 
+applies insertion. Since A(c) derives A(d)
+via (8), the recursive counter of A(d) is incremented. Fact
+A(d), however, was not overdeleted, so insertion stops.
+By avoiding ‘backward’ rule evaluation, DRed
+c 
+removes
+the dominating source of inefficiency on Examples 1 and 2.
+In fact, on the nonrecursive program from Example 1, the re-
+cursive counter is never used and DRed
+c 
+performs the same
+inferences as the Counting algorithm.
+4.2 Formalisation
+We now formalise our DRed
+c 
+algorithm. Our definitions
+use the standard notion of multisets—a generalisation of
+sets where each element is associated with a positive inte-
+ger called the multiplicity specifying the number of the ele-
+ment’s occurrences in the multiset. Moreover, ⊕ is the mul-
+tiset union operator, which adds the elements’ multiplicities.
+If an operand of ⊕ is a set, it is treated as a multiset where
+all elements have multiplicity one. Finally, we extend the no-
+tion of rule matching to correctly reflect the number of times
+a fact is derived: for I
+p
+, I
+n
+, P , and N datasets with P ⊆ I
+p
+and N ∩ I
+n 
+= ∅, we define Π
+q
+I
+p
+, I
+n 
+·
+·
+· 
+P, N 
+y 
+as the multiset
+containing a distinct occurrence of h(r
+′
+) for each rule r ∈ Π
+and its instance r
+′ 
+∈ inst
+r
+[I
+p
+, I
+n 
+·
+·
+· 
+P, N ]. This multiset can
+be computed analogously to Π[I
+p
+, I
+n 
+·
+·
+· 
+P, N ].
+Just like DRed, the DRed
+c 
+takes as input a program Π,
+a stratification λ, a set of explicit facts E and its material-
+isation I = mat(Π, E), and the sets of facts E
+− 
+and E
++
+to remove from and add to E. Additionally, the algorithm
+also takes as input maps C
+nr 
+and C
+r 
+that associate each
+fact F with its nonrecursive and recursive counters C
+nr
+[F ]
+and C
+r 
+[F ], respectively. These maps should correctly reflect
+the relevant numbers of derivations. Formally, C
+nr 
+and C
+r
+must be compatible with Π, λ, and E, which is the case if
+C
+nr
+[F ] = C
+r
+[F ] = 0 for each fact F 6 ∈ I, and, for each fact
+F ∈ I and s the stratum index such that F ∈ O
+s 
+(i.e., s is
+the index of the stratum that F belongs to),
+• C
+nr
+[F ] is the multiplicity of F in E ⊕ Π
+s
+nr
+q
+I
+y
+, and
+• C
+r
+[F ] is the multiplicity of F in Π
+s
+r
+q
+I
+y
+.
+For simplicity, we assumes that C
+nr 
+and C
+r 
+are defined on all
+facts, and that C
+nr
+[F ] = C
+r
+[F ] = 0 holds for F 6 ∈ I; thus,
+we can simply increment the counters for each newly de-
+rived fact in procedure INSERT. In practice, however, one
+can maintain counters only for the derived facts and initialise
+the counters to zero for the freshly derived facts.
+DRed
+c 
+is formalised in Algorithm 2. Its structure is simi-
+lar to DRed, with the following main differences: instead of
+evaluating rules ‘backwards’, one-step rederivation simply
+checks the recursive counters (line 24); a fact is overdeleted
+only if the nonrecursive derivation counter is zero (line 34);
+and the derivation counters are decremented in overdele-
+tion (lines 29–32 and 36–37) and incremented in insertion
+(lines 41–44 and 49–50). The algorithm also accumulates
+changes to the materialisation in sets D and A by iteratively
+processing the strata of λ in three phases.
+In the overdeletion phase, DRed
+c 
+first considers explic-
+itly deleted facts or facts affected by the changes in earlier
+strata (lines 29–32). This is analogous to line 8 of DRed, but
+DRed
+c 
+must distinguish Π
+s
+nr 
+from Π
+s
+r 
+so it can decrement the
+appropriate counters. Next, DRed
+c 
+identifies the set ∆
+D 
+of
+facts that have not yet been deleted and whose nonrecursive
+counter is zero (line 34): a fact with a nonzero nonrecur-
+sive counter will always be part of the ‘new’ materialisation.
+Note that recursive derivations can be cyclic, so we cannot
+use the recursive counter to further constrain overdeletion
+at this point. Then, in lines 35–38 the algorithm propagates
+consequences of ∆
+D 
+just like Algorithm 1, with additionally
+decrementing the recursive counters in line 37.</page><page num="6">Algorithm 2 DRED
+c
+(Π, λ, E, I, E
+−
+, E
++
+, C
+nr
+, C
+r 
+)
+21: D 
+:=
+ A 
+:=
+ ∅, E
+− 
+= (E
+− 
+∩ E) \ E
++
+, E
++ 
+= E
++ 
+\ E
+22: for each stratum index s with 1 ≤ s ≤ S do
+23: OVERDELETE
+24: R 
+:=
+ {F ∈ D ∩ O
+s 
+| C
+r
+[F ] &gt; 0}
+25: INSERT
+26: E 
+:= (
+E \ E
+−
+) ∪ E
++
+, I 
+:= (
+I \ D) ∪ A
+27: procedure OVERDELETE
+28: N
+D 
+:=
+ ∅
+29: for F ∈ (E
+− 
+∩ O
+s
+) ⊕ Π
+s
+nr
+q
+I 
+·
+·
+· 
+D \ A, A \ D
+y 
+do
+30: N
+D 
+:=
+ N
+D 
+∪ {F }, C
+nr 
+[F ] := C
+nr
+[F ] − 1
+31: for F ∈ Π
+s
+r
+q
+I 
+·
+·
+· 
+D \ A, A \ D
+y 
+do
+32: N
+D 
+:=
+ N
+D 
+∪ {F }, C
+r 
+[F ] := C
+r 
+[F ] − 1
+33: loop
+34: ∆
+D 
+:=
+ {F ∈ N
+D 
+\ D | C
+nr 
+[F ] = 0}
+35: if ∆
+D 
+= ∅ then break
+36: for F ∈ Π
+s
+r
+q
+I \ (D \ A), I ∪ A 
+·
+·
+· 
+∆
+D
+y 
+do
+37: N
+D 
+:=
+ N
+D 
+∪ {F }, C
+r
+[F ] := C
+r
+[F ] − 1
+38: D 
+:=
+ D ∪ ∆
+D
+39: procedure INSERT
+40: N
+A 
+:=
+ R
+41: for F ∈ (E
++ 
+∩ O
+s
+) ⊕ Π
+s
+nr
+q
+(I \ D) ∪ A 
+·
+·
+· 
+A \ D, D \ A
+y 
+do
+42: N
+A 
+:=
+ N
+A 
+∪ {F }, C
+nr
+[F ] := C
+nr 
+[F ] + 1
+43: for F ∈ Π
+s
+r
+q
+(I \ D) ∪ A 
+·
+·
+· 
+A \ D, D \ A
+y 
+do
+44: N
+A 
+:=
+ N
+A 
+∪ {F }, C
+r
+[F ] := C
+r
+[F ] + 1
+45: loop
+46: ∆
+A 
+:=
+ N
+A 
+\ ((I \ D) ∪ A)
+47: if ∆
+A 
+= ∅ then break
+48: A 
+:=
+ A ∪ ∆
+A
+49: for F ∈ Π
+s
+r
+q
+(I \ D) ∪ A 
+·
+·
+· 
+∆
+A
+y 
+do
+50: N
+A 
+:=
+ N
+A 
+∪ {F }, C
+r 
+[F ] := C
+r 
+[F ] + 1
+In the one-step rederivation phase, instead of evaluating
+rules ‘backwards’, DRed
+c 
+just checks the recursive counter
+of each fact F ∈ D ∩ O
+s 
+(line 24): if C
+r 
+[F ] 6 = 0, then some
+derivations of F were not ‘touched’ by overdeletion so F
+holds in the ‘new’ materialisation. Conversely, if C
+r
+[F ] = 0,
+then F ∈ D guarantees that C
+nr
+[F ] = 0 holds as well, so F
+is not one-step rederivable by a rule in Π.
+The insertion phase of DRed
+c 
+just uses the semina¨ıve
+evaluation while incrementing the counters appropriately.
+Without recursive rules, DRed
+c 
+becomes equivalent to
+Counting, and it is optimal in the sense that only affected
+rule instances are considered during the update. Moreover,
+the computational complexities of both DRed
+c 
+and DRed are
+the same as for the semi-naive materialisation algorithm: Ex-
+pTime in combined and PTime in data complexity (Dantsin
+et al. 2001). Finally, DRed
+c 
+never performs more inferences
+than DRed and is thus more efficient. Theorem 1 shows that
+our algorithm is correct, and its proof is given in full in Ap-
+pendix A.
+Theorem 1. Algorithm 2 correctly updates I = mat(Π, E)
+to I
+′ 
+= mat(Π, E
+′
+) for E
+′ 
+= (E \ E
+−
+) ∪ E
++
+, and it up-
+dates C
+nr 
+and C
+r 
+so they are compatible with Π, λ, and E
+′
+.
+5 Combining B/F with Counting
+The B/F algorithm by Motik et al. (2015) uses a combina-
+tion of backward and forward chaining that makes the dele-
+tion phase exact. More specifically, when a fact F ∈ ∆
+D 
+is
+considered during deletion, the algorithm uses a combina-
+tion of backward and forward chaining to look for alternative
+derivations of F , and it deletes F only if no such derivation
+can be found. Backward chaining allows B/F to be much
+more efficient than DRed on many datasets, and this is par-
+ticularly the case if a program contains many recursive rules.
+Thus, we cannot hope to remove all ‘backward’ rule evalua-
+tion without eliminating the algorithm’s main advantage.
+Still, there is room for improvement: backward chaining
+involves ‘backward’ evaluation of both nonrecursive and re-
+cursive rules, and we can use nonrecursive counters to elim-
+inate the former. Algorithm 3 formalises B/F
+c
+—our com-
+bination of the B/F algorithm by Motik et al. (2015) with
+Counting. The main difference to the original B/F algorithm
+is that B/F
+c 
+associates with each fact a nonrecursive counter
+that is maintained in lines 59–60 and 89–90, and, instead of
+evaluating nonrecursive rules ‘backwards’ to explore alter-
+native derivations of a fact, it just checks in line 79 whether
+the nonrecursive counter is nonzero. We know that a fact
+holds if its nonrecursive counter is nonzero; otherwise, we
+apply backward chaining to recursive rules only.We next de-
+scribe the algorithm’s steps in more detail.
+Procedure DELETEUNPROVED plays an analogous role
+to the overdeletion step of DRed and DRed
+c
+. The procedure
+maintains the nonrecursive counter for each fact in the same
+way as DRed
+c
+, and the main difference is that a fact F is
+deleted (i.e., added to ∆
+D
+) in line 66 only if no alternative
+derivation can be found using a combination of backward
+and forward chaining implemented in functions CHECK and
+SATURATE. If an alternative derivation is found, F is added
+to the set P of proved facts.
+A call to CHECK(F ) searches for the alternative deriva-
+tions of F using backward chaining. The function main-
+tains the set C of checked facts, which ensures that each F
+is checked only once (line 71 and 78). The procedure first
+calls SATURATE(F ) to determine whether F follows from
+the facts considered thus far; we discuss this step in more
+detail shortly. If F is not proved, the procedure then exam-
+ines in lines 73–76 each instance r
+′ 
+of a recursive rule that
+derives F in the ‘old’ materialisation, and it tries to prove
+all body atoms of r
+′ 
+from the current stratum. This involves
+evaluating rules ‘backwards’ and, as we already discussed
+in Section 5, this is the main advantage of the B/F algorithm
+over DRed on a number of complex inputs. The function ter-
+minates once F is successfully proved (line 76).
+Set P accumulates facts that are checked and successfully
+proved, and it is computed in function SATURATE using for-
+ward chaining. Given a fact F that is being checked, it first
+verifies whether F has a nonrecursive derivation. In the orig-
+inal B/F algorithm, this is done by evaluating the nonrecur-
+sive rules ‘backwards’ in the same way as in line 4 of DRed.
+In contrast, B/F
+c 
+avoids this by simply checking whether the
+nonrecursive counter is nonzero (line 79): if that is the case,
+then F is known to have nonrecursive derivations and it is
+added to P via lines 80 and 82. If F is proved, the proce-</page><page num="7">dure propagates its consequences (line 80–85). In particular,
+the procedure ensures that each consequence F 
+′ 
+of P , the
+facts in the ‘new’ materialisation in the previous strata, and
+the recursive rules is added to P if F 
+′ 
+∈ C, or is added to the
+set Y of delayed facts if F 
+′ 
+6
+ 
+∈ C. Intuitively, set Y contains
+facts that are proved but that have not been checked yet. If
+a fact in Y is checked at a later point, it is proved in line 79
+without having to apply the rules again.
+Since the deletion step of B/F
+c 
+is ‘exact’ in the sense
+that it deletes precisely those facts that no longer hold after
+the update, rederivation is not needed. Thus, DELETEUN-
+PROVED is directly followed by INSERT, which is the same
+as in DRed and DRed
+c
+, with the only difference that B/F
+c
+maintains only the nonrecursive counters.
+Algorithm 3 is correct in the same way as B/F since
+checking whether a fact has a nonzero nonrecursive counter
+is equivalent to checking whether a derivation of the fact ex-
+ists by evaluating nonrecursve rules ‘backwards’.
+6 Evaluation
+We have implemented the unoptimised and optimised vari-
+ants of DRed and B/F and have compared them empirically.
+Benchmarks We used the following benchmarks for our
+evaluation: UOBM (Ma et al. 2006) is a synthetic bench-
+mark that extends the well known LUBM (Guo, Pan, and
+Heflin 2005) benchmark; Reactome (Croft et al. 2013) mod-
+els biological pathways of molecules in cells; Uniprot (Bate-
+man et al. 2015) describes protein sequences and their func-
+tional information; ChemBL (Gaulton et al. 2011) repre-
+sents functional and chemical properties of bioactive com-
+pounds; and Claros describes archeological artefacts. Each
+benchmark consists of a set of facts and an OWL 2 DL on-
+tology, which we transformed into datalog programs of dif-
+ferent levels of complexity and recursiveness. More specifi-
+cally, the upper bound (U) programs were obtained using the
+complete but unsound transformation by Zhou et al. (2013),
+and they entail all consequences of the original ontology but
+may also derive additional facts. The recursive (R) programs
+were obtained using the sound but incomplete transforma-
+tion by Kaminski, Nenov, and Grau (2016), and they tend to
+be highly recursive. For Claros, the lower bound extended
+(LE) program was obtained by manually introducing several
+‘hard’ rules, and it was already used by Motik et al. (2015)
+to compare DRed with B/F. Finally, to estimate the effect
+of built-in literals on materialisation maintenance, we devel-
+oped a new synthetic benchmark SSPE (Single-Source Path
+Enumeration). Its dataset consists of a randomly generated
+directed acyclic graph of 100 k nodes and 1 M edges, and its
+program traverses paths from a single source analogously to
+rules (6)–(7). All the tested programs are recursive, although
+the percentage of the recursive rules varies. Table 1 shows
+the numbers of facts (|E|), strata (S), the nonrecursive rules
+(|Π
+nr
+|), and the recursive ones (|Π
+r
+|) for each benchmark.
+Test Setup We conducted all experiments on a Dell Pow-
+erEdge R720 server with 256GB RAM and two Intel Xeon
+E5-2670 2.6GHz processors, running Fedora 24, kernel ver-
+sion 4.8.12-200.fc24.x86 
+64. All algorithms handle inser-
+tions using the semina¨ıve evaluation. The only overhead is in
+Algorithm 3 B/F
+c
+(Π, λ, E, I, E
+−
+, E
++
+, C
+nr
+)
+51: D 
+:=
+ A 
+:=
+ ∅, E
+− 
+= (E
+− 
+∩ E) \ E
++
+, E
++ 
+= E
++ 
+\ E
+52: for each stratum index s with 1 ≤ s ≤ S do
+53: C 
+:=
+ P 
+:=
+ Y 
+:=
+ ∅
+54: DELETEUNPROVED
+55: INSERT
+56: E 
+:= (
+E \ E
+−
+) ∪ E
++
+, I 
+:= (
+I \ D) ∪ A
+57: procedure DELETEUNPROVED
+58: N
+D 
+:=
+ ∅
+59: for F ∈ (E
+− 
+∩ O
+s
+) ∪ Π
+s
+nr
+q
+I 
+·
+·
+· 
+D \ A, A \ D
+y 
+do
+60: N
+D 
+:=
+ N
+D 
+∪ {F }, C
+nr
+[F ] := C
+nr 
+[F ] − 1
+61: N
+D 
+:=
+ N
+D 
+∪ Π
+s
+r 
+[I 
+·
+·
+· 
+D \ A, A \ D]
+62: loop
+63: ∆
+D 
+:=
+ ∅
+64: for F ∈ N
+D 
+\ D do
+65: CHECK(F )
+66: if F 6 ∈ P then ∆
+D 
+:= ∆
+D 
+∪ {F }
+67: if ∆
+D 
+= ∅ then break
+68: N
+D 
+:= Π
+s
+r 
+[I \ (D \ A), I ∪ A 
+·
+·
+· 
+∆
+D 
+]
+69: D 
+:=
+ D ∪ ∆
+D
+70: function CHECK(F )
+71: if F 6 ∈ C then
+72: if SATURATE(F ) = f then
+73: for each r ∈ Π
+s
+r 
+and each
+r
+′ 
+∈ inst
+r 
+[I \ ((D ∪ ∆
+D 
+) \ A), I ∪ A] s.t. h(r
+′
+) = F do
+74: for G ∈ b
++
+(r
+′
+) ∩ O
+s 
+do
+75: CHECK(G)
+76: if F ∈ P then return
+77: function SATURATE(F )
+78: C 
+:=
+ C ∪ {F }
+79: if F ∈ Y or C
+nr 
+[F ] &gt; 0 then
+80: N
+P 
+:=
+ {F }
+81: loop
+82: ∆
+P 
+:= (
+N
+P 
+∩ C) \ P , Y 
+:=
+ Y ∪ N
+P 
+\ C
+83: if ∆
+P 
+= ∅ then return t
+84: P 
+:=
+ P ∪ ∆
+P
+85: N
+P 
+:= Π
+s
+r 
+[P ∪ (O
+&lt;s 
+∩ (I \ (D \ A))), I ∪ A 
+·
+·
+· 
+∆
+P 
+]
+86: else return f
+87: procedure INSERT
+88: N
+A 
+:=
+ ∅
+89: for F ∈ (E
++ 
+∩ O
+s
+) ⊕ Π
+s
+nr
+q
+(I \ D) ∪ A 
+·
+·
+· 
+A \ D, D \ A
+y 
+do
+90: N
+A 
+:=
+ N
+A 
+∪ {F }, C
+nr 
+[F ] := C
+nr
+[F ] + 1
+91: N
+A 
+:=
+ N
+A 
+∪ Π
+s
+nr
+[(I \ D) ∪ A 
+·
+·
+· 
+A \ D, D \ A]
+92: loop
+93: ∆
+A 
+:=
+ N
+A 
+\ ((I \ D) ∪ A)
+94: if ∆
+A 
+= ∅ then break
+95: A 
+:=
+ A ∪ ∆
+A
+96: N
+A 
+:=
+ N
+A 
+∪ Π
+s
+r 
+[(I \ D) ∪ A 
+·
+·
+· 
+∆
+A
+]
+counter maintenance, which we measured during initial ma-
+terialisation (which also uses semina¨ıve evaluation). Hence,
+the main focus of our tests was on comparing the perfor-
+mance of our algorithms on ‘small’ and ‘large’ deletions. In
+both cases, we first materialised the relevant program on the
+explicit facts, and then we performed the following tests.
+To test small deletions, we measured the performance on</page></paper>

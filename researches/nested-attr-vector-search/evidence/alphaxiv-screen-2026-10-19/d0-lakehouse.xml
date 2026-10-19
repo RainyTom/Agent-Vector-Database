@@ -1,0 +1,690 @@
+<paper id="2608.05441v1"><page num="1">Filtered Vector Search in a Disaggregated Lakehouse:
+Composing Table-Format Pruning with Per-File ANN
+Rakesh Jain
+IBM Research
+San Jose, CA, USA
+rakeshj@us.ibm.com
+Thomas Griffin
+IBM Research
+San Jose, CA, USA
+tdg@us.ibm.com
+Syed Zawad
+IBM Research
+San Jose, CA, USA
+szawad@ibm.com
+ABSTRACT
+Approximate nearest-neighbor (ANN) search increasingly runs
+alongside structured data—“find the 10 nearest documents where
+tenant=’acme’ AND lang=’en’”—yet similarity and filtering are
+usually bolted together: a specialized vector index for one, a sep-
+arate filter step for the other. We ask what happens when both
+live inside an open lakehouse table (Apache Iceberg over Parquet
+on object storage), where the engine already owns a mature file-
+pruning stack (partition pruning, zone-maps, a bitmap index). We
+embed an IVF index in place in each Parquet file’s footer and make
+filtered vector queries fast not with a new filtering algorithm but
+by composing the table’s existing file pruning with per-file
+ANN: the planner prunes data files by the predicate first, then runs
+IVF only over the survivors. The index is built distributed and non-
+destructively—a metadata-only Iceberg replace that every other
+engine still reads—and a rendezvous-hashed per-file cache keeps
+object-store read latency from swamping the algorithmic win. Be-
+cause the vectors never leave the table, vector search also inherits
+the lakehouse catalog’s existing access control unchanged, rather
+than requiring a second authorization surface in a copied-out vec-
+tor store.
+The payoff comes entirely from file pruning. On an 11.5M × 768
+table, warm IVF search is ∼32× faster than brute force at recall@10
+≥ 0.90, a selective predicate having pruned 355 of 444 data files
+before ANN runs; on 5M real IBM Granite embeddings, a filter ar-
+riving across a join prunes four of five region partitions and runs
+nearly two orders of magnitude (∼94×: 14.7 s → 157 ms) faster than
+the query-time join at identical top-𝑘, once the reduction is ma-
+terialized into a region-partitioned layout. We characterize when
+the composition pays off—it requires file-level locality on the fil-
+ter column, and the residual predicate is only safe to push into
+the search over a provably pure (partitioned) column, not a merely
+sorted one—and report the failure modes we hit bolting ANN onto
+a lakehouse engine.
+CCS CONCEPTS
+• Information systems → Data management systems; Re-
+trieval models and ranking.
+KEYWORDS
+vector search, approximate nearest neighbor, lakehouse, Apache
+Iceberg, Parquet, data skipping, disaggregated compute
+1 INTRODUCTION
+Retrieval-augmented generation, semantic search, and recommen-
+dation all issue the same query shape: return the 𝑘 vectors nearest
+a query embedding, restricted by a structured predicate. Two facts
+about production data make this awkward. First, the vectors do
+not live alone; they sit next to the columns users filter on—tenant,
+language, category, timestamp, access-control tags—in tables that
+already hold terabytes of that structured data. Second, those ta-
+bles increasingly live in an open lakehouse format [3]: Apache Ice-
+berg [1] over Parquet [2] files on object storage, read by many en-
+gines (Spark, Trino, Presto, DuckDB) with compute disaggregated
+from storage.
+The prevailing answer is to copy the vectors into a dedicated
+vector database (Milvus [21], pgvector [14]) or a purpose-built
+columnar vector format (Lance [15]), and reproduce the predicate
+there. This duplicates data, diverges from the source of truth, and—
+critically—forces the filtering problem to be solved again, inside the
+vector system, with specialized filtered-ANN algorithms. A recent
+in-depth experimental study [16] surveys a dozen such algorithms
+(segmented graphs, label-partitioned indexes, joint traversal) and
+confirms both that filtered ANN is an active open problem and that
+its central lever is partitioning: the study finds partitioning “effec-
+tive for low-selectivity queries.” That study is strictly in-memory
+and single-node: every index it benchmarks lives in RAM on one
+machine, and its notion of “pruning” is graph-edge pruning inside
+the index.
+We take a different position. A lakehouse engine already has
+a partitioning-and-pruning substrate—the physical machinery it
+uses to skip data files that cannot satisfy a query: Iceberg partition
+pruning, per-column zone-maps (min/max), and a scalar bitmap
+file index. If the vector index lives inside the same table, filtered
+ANN need not reinvent filtering; it can reuse the table’s file prun-
+ing and run similarity search only on the files that survive the pred-
+icate. The algorithmic-layer finding of [16]—partitioning helps at
+low selectivity—becomes, one layer down, a storage-layout state-
+ment: filtered vector search is fast exactly when the filter column
+has file-level locality, so the table’s own pruning can drop most
+files before the ANN index is consulted.
+Realizing this on a real disaggregated lakehouse engine is where
+the systems work lies, and it is the contribution of this paper. We
+embed an IVF [13] index in each Parquet file’s footer—following an
+This work is licensed under the Creative Commons BY-NC-ND 4.0 International Li-
+cense. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to view a copy of this
+license. For any use beyond those covered by this license, obtain permission by email-
+ing info@vldb.org. Copyright is held by the owner/author(s).
+arXiv:2608.05441v1 [cs.DB] 5 Aug 2026</page><page num="2">emerging technique [10, 23]—but the single-file, single-node ver-
+sion of that idea does not survive contact with a distributed, S3-
+backed engine. We had to solve: (i) building the index distributed
+and non-destructively so the table remains a valid Iceberg table
+readable by other engines; (ii) a query planner rewrite that com-
+poses predicate file-pruning with per-file ANN and a direct top-𝑘
+assembly that avoids re-scanning data; and (iii) making warm la-
+tency acceptable when compute is separated from storage and the
+per-query bottleneck is random-access rescore reads over object
+storage.
+Contributions
+• Composition of lakehouse pruning with per-file
+ANN (§5). A planner rewrite pushes the query predicate
+through the table’s existing file-pruning tiers (partition /
+zone-map / bitmap), then runs IVF only over surviving
+files, assembling the global top-𝑘 from workers’ projected
+candidate rows with no second data scan. A residual filter
+over a file-pure column (partition or materialized-cluster)
+is pushed into the per-file search as a mask, keeping the
+filtered query on the fast path rather than aborting to a
+full rescore—sound precisely because sorted is not pure, so
+SORT/ZORDER columns are excluded from the pushdown.
+• A locality condition for filtered ANN (§6). We show—
+and measure—that the composition pays off iff the filter
+column has file-level locality; a bitmap over a uniformly-
+mixed column prunes nothing. This is the storage-layer
+analogue of the in-memory “partitioning helps” finding
+of [16].
+• Distributed, non-destructive in-place index build (§4).
+Stateless compute pods rewrite each file’s footer in paral-
+lel; the engine commits a metadata-only Iceberg replace
+(delete-old + add content-identical-new), preserving time-
+travel and leaving files readable by any Parquet reader.
+• Disaggregated warm-set engineering (§7). A per-file
+cache (index blob + embedding matrix) with rendezvous-
+hashed file→pod placement whose warmth survives au-
+toscaling; we trace the 1.0× → 32× speedup to the specific
+fixes.
+• Evaluation and lessons (§8,§10) on an 11.5M × 768 table,
+including the failure modes of bolting ANN onto a lake-
+house engine.
+One framing point is worth stating up front, because it recurs
+throughout the paper. The pruning-plus-IVF composition removes
+an enormous share of the arithmetic—a simple cost model (§9) pre-
+dicts ∼500× fewer distance computations at 𝜎=0.2—yet the end-to-
+end speedup we measure is only ∼30×. The gap is not a disappoint-
+ment; it is the systems contribution. On disaggregated hardware
+the fixed per-query costs (two-phase dispatch, object-store reads,
+shard merge) dominate warm latency, and the value of the warm-
+set engineering (§7) is precisely that it keeps those fixed costs from
+swamping the algorithmic win. The reader should therefore read
+the 32×/94× headline numbers as “how much of a large algorith-
+mic win survives the systems tax,” not as the algorithmic win itself.
+2 RELATED WORK
+Filtered ANN algorithms. A large body of work makes similarity
+search predicate-aware at the index level. Chronis et al. [7] orga-
+nize the space into three families—pre-filter (restrict the candidate
+set, then search), post-filter (search, then discard non-matching),
+and in-filter (evaluate the predicate during index traversal)—and
+argue the field’s central goals are stable recall (the same recall re-
+gardless of the predicate) and declarative recall (the user states a
+target, not a knob). Concrete designs span graphs [17, 19], inverted-
+file/quantized indexes [13], predicate-agnostic traversal [18], label-
+aware graph construction (Filtered-DiskANN [11], NHQ [22]), and
+partition indexes tuned to the filter (CAPS [12]). The recent ex-
+perimental study of Li et al. [16] taxonomizes and benchmarks a
+dozen such algorithms in a uniform in-memory, single-node setting
+(indexes in 2 TB RAM, up to 10M vectors, selectivity 0.1–100%).
+Our work is orthogonal and complementary: we do not pro-
+pose a filtered-ANN algorithm. We take the simplest pre-filtering
+strategy—restrict the candidate set, then search it—and realize it
+at the storage layer of a distributed lakehouse, where the “restrict”
+step is the table format’s own file pruning rather than an in-index
+mechanism. This is precisely the case Chronis et al. single out as
+having an exact optimum: for a categorical-equality filter, the ideal
+is a partitioned index, one partition per value [7]; our locality condi-
+tion (§6) is that same statement realized in the physical layout of an
+open table rather than in a bespoke index. Their finding and Li et
+al.’s (partitioning helps at low selectivity) and ours (file-level local-
+ity on the filter column is the precondition) are the same principle
+at three layers. What we do not yet provide is stable/declarative re-
+call across selectivities—our over-fetch 𝑠 and 𝑛
+probe 
+are still explicit
+knobs—which we return to in §8 and §10.
+Vector databases and vector formats. Dedicated systems
+(Milvus [21], pgvector [14]) and vector-native columnar formats
+(Lance [15]) deliver excellent ANN but require the vectors to be
+copied out of the lakehouse into a system or format they control.
+Copying out has a governance cost that is easy to overlook: the
+copy leaves the perimeter the lakehouse catalog governs, so it
+needs its own authentication, table- and column-level permissions,
+row/column masking, and audit trail—a second access-control
+surface that must be kept in sync with the source table’s policy
+and can silently drift from it. Our goal is the opposite: keep
+vectors in the standard Iceberg/Parquet table so they stay the
+single source of truth, remain readable by every lakehouse engine,
+and—because the query goes through the same catalog—inherit the
+table’s existing access control unchanged, with no separate policy to
+define or reconcile. ANN is added as an in-place, ignorable footer
+artifact.
+Disk- and object-store ANN. Once the index leaves RAM,
+the design problem becomes minimizing random-access reads.
+DiskANN [19] keeps a compressed representation in memory and
+reads full vectors from a local SSD only for rescoring; SPANN [6]
+is a memory–disk hybrid inverted index that holds centroids in
+memory and posting lists on disk, the same coarse-quantize-then-
+fetch shape our per-file IVF uses one level further out (centroids
+in a cached footer blob, vectors random-read from object storage).
+Both target a single node’s local disk; the disaggregated, S3-backed
+setting adds network latency on every fetch, which is what makes
+2</page><page num="3">our warm-set caching (§7) load-bearing rather than incidental.
+Embedding an ANN index in a Parquet footer and searching
+it from a query engine has also appeared in practice [10, 23];
+these are single-file or single-node in spirit. We contribute the
+distributed build, the non-destructive Iceberg commit, the pruning-
+composition planner rewrite, and the disaggregated warm-set
+mechanics that a multi-node, S3-backed deployment requires.
+Concurrent work: ANN indexes in Apache Iceberg. Closest
+to our setting is the concurrent proposal of Borycki [5], which
+also attaches distributed ANN indexes to Iceberg on a compute-
+disaggregated engine and, like us, inherits atomicity, time travel,
+and multi-engine readability from the table format. The two de-
+signs diverge on three axes that define our contribution. (i) Storage.
+That work stores a Vamana/DiskANN graph in a Puffin sidecar file
+bound through the snapshot summary, leaving the Parquet data
+files untouched; we embed a per-file IVF index in each Parquet
+footer, copying data pages byte-for-byte so file-local row ordinals
+stay valid—keeping the index inside the same object the row lives
+in, at the cost of the rewrite the sidecar avoids. (ii) Filtering. Its
+query path is similarity search with centroid-distance file elimina-
+tion and coarse bloom-filter/zone-map pruning “against ordinary
+columns”; it does not compose a structured predicate with file prun-
+ing, push a residual predicate into the per-file search under a purity
+condition, or reduce a filter arriving across a join—the three mech-
+anisms that are the subject of §5–§5.2. (iii) Evidence. That work
+is explicitly pre-production and reports projected build and query
+performance for tables up to 10
+9 
+vectors; our results are measured
+on real 11.5M- and 5M-vector corpora. The two are complemen-
+tary: a sidecar graph and an in-footer IVF are points on the same
+design space, and the filtered-query composition we contribute is
+orthogonal to where the index blob physically lives.
+Vector search in lakehouse/OLAP engines. Vector indexing is
+increasingly a feature of columnar analytics engines rather than
+only of dedicated vector stores: DuckDB’s VSS extension [10] and
+ClickHouse’s approximate-nearest-neighbor indexes [8] both add
+in-engine ANN over otherwise-relational tables, and Lance [15] is
+a columnar format built for it. These co-locate the index with the
+data as we do, but each owns its own storage format or engine.
+Our target is the open-table case: the vectors stay in a standard
+Iceberg/Parquet table readable by every engine, and the index is
+an ignorable footer artifact rather than a format-specific structure;
+where the Iceberg community pursues a native vector column, our
+footer approach is the compatible interim that requires no format
+change.
+Lakehouse engines. Disaggregated cloud query engines [4, 9]
+established compute-storage separation and metadata-driven file
+skipping as the performance foundation of the lakehouse. We show
+that this same file-skipping substrate is exactly what filtered vector
+search needs, if the vector index is co-located in the table.
+3 BACKGROUND AND SYSTEM SETTING
+Notation. Throughout, 𝑑 is the embedding dimension; a table holds
+𝑁 vectors in 𝜙 data files; 𝐶 is the number of IVF centroids per
+file; 𝑛
+probe 
+is the number of centroids probed per query; 𝑘 is the
+requested neighbor count and 𝑠 ≥ 1 the over-fetch safety factor
+Coordinator (stateless)
+plan + plan_files pruning
+read read 
+. . .
+read-compute (autoscaled, per-file cache)
+build build
+write-compute
+Object store (S3)
+Parquet + footer IVF
+shards build tasks
+read
+rewrite
+metadata
+Figure 1: Disaggregated topology. The coordinator prunes
+files from Iceberg metadata and dispatches shards; stateless
+read/write pools touch S3 directly. Build fans out over the
+write pool (rewrite files in place); query fans out over the
+read pool (per-file ANN + rescore). Both pools scale to zero
+when idle, so per-pod cache state must survive membership
+churn.
+(the search retains 𝑘·𝑠 candidates per shard so a residual filter still
+leaves ≥ 𝑘); and 𝜎 ∈ (0, 1] is the selectivity of the query predicate
+(the fraction of files, equivalently rows under file-level locality, that
+survive pruning). These are introduced again in context below.
+The engine. Our system is a Flight-SQL query engine over Apache
+Iceberg tables stored as Parquet on S3-compatible object stor-
+age. Compute is disaggregated: a small set of stateless coordina-
+tor pods plans queries and holds the catalog/metadata caches; a
+larger, autoscaled pool of stateless read-compute pods executes
+scan and search shards; a separate write-compute pool handles in-
+gest, rewrite, and index builds (Figure 1). No worker owns data; ev-
+ery pod reads Parquet from object storage on demand and is scaled
+to zero when idle. Each compute pod runs the actual scan/search in
+a co-located worker process addressed over Flight; the coordinator
+dispatches a shard by sending it the file list and the operation. This
+is the standard modern lakehouse topology [3, 4, 9] and it shapes
+every design decision below—most importantly, that (a) reading
+any file crosses the network to object storage, so random-access
+reads are expensive and worth caching, and (b) the worker set
+changes size mid-workload as the autoscaler reacts, so any per-pod
+state must tolerate membership churn (§7).
+The vector column and footer index. A table declares an embed-
+ding column as FLOAT[𝑑] (fixed dimension 𝑑), physically an Ice-
+berg list&lt;float&gt;. The writer tunes this column so that each vec-
+tor occupies its own Parquet data page (page-size limit = 4𝑑 bytes,
+uncompressed, no dictionary), so a random-access read fetches ex-
+actly one vector. All other columns store normally. An IVF index—
+𝐶 centroids from mini-batch 𝑘-means plus per-centroid posting
+lists of file-local row ordinals—is serialized into a blob and ap-
+pended after the Parquet footer, with a tiny pointer in the footer’s
+key-value metadata [23]. Standard readers seek to the footer and
+never see the blob; ANN-aware readers follow the pointer. The in-
+dex is per file: each file has independent centroids, and recall comes
+from a per-query candidate over-fetch, not a global index.
+The pruning substrate. Independently of vectors, the engine
+skips data files a query cannot need, in three tiers evaluated
+at plan time from Iceberg metadata: (1) partition pruning on
+3</page><page num="4">identity/derived partition columns; (2) per-column zone-maps
+(min/max per file/row-group); (3) a consolidated scalar bitmap
+index—a per-file value-presence set for low-cardinality columns—
+materialized once per snapshot. The planner turns a SQL WHERE
+into an Iceberg predicate and returns the surviving file set. This
+substrate exists to speed up ordinary analytic queries; §5 reuses it
+verbatim for vector queries.
+4 DISTRIBUTED, ICEBERG-COMPATIBLE
+INDEX BUILD
+Building a per-file footer index for a large table is embarrassingly
+parallel across files, but doing it inside a live Iceberg table—without
+breaking readers—is not obvious.
+Fan-out. CREATE VECTOR INDEX ON Col1 returns immediately
+and runs asynchronously (a large build takes minutes; a synchro-
+nous RPC trips connection timeouts). The coordinator enumerates
+the current snapshot’s live data files, shards them across the write-
+compute pool, and dispatches a “build these files” task to each pod.
+A pod reads each assigned file from S3, trains 𝑘-means on the em-
+bedding column, appends the IVF blob after the footer, and uploads
+a new object (object stores have no atomic rename; a new path
+also keeps the parent snapshot valid). Crucially, the data pages
+are copied byte-for-byte, so file-local row ordinals—the identity the
+posting lists reference—are preserved exactly.
+Non-destructive commit. Each worker returns a new DataFile
+whose record_count equals the original’s. The coordinator com-
+mits a metadata-only replace: one new manifest with add-entries
+for the new files and delete-entries for the old, published as a
+Replace-operation snapshot. Old files remain referenced by the
+parent snapshot (time-travel intact) and are physically removed
+only by ordinary snapshot expiry. The result is a normal Iceberg
+table: Spark or DuckDB read the new files as plain Parquet, ignor-
+ing the footer blob. Per-file failures are non-fatal (that file stays
+un-indexed and falls back to brute force at query time); re-running
+fills gaps.
+Making the build CPU-bound, not core-bound. The build’s
+cost is 𝑘-means, which is compute-bound. Two mistakes we cor-
+rected mattered at scale. First, the per-file build must run on a
+blocking thread pool, not inline on the async executor—otherwise
+concurrent file builds serialize on one runtime worker and an
+8-core pod pins one core. Second, index granularity is per file:
+𝐶 should track rows-per-file, not table size. We start from the
+common 
+√
+rows/file rule of thumb, scale it up by a small con-
+stant so each posting list stays short, and round to a power of
+two: 𝐶 = 2
+⌈log
+2 
+(4
+√
+rows/file) ⌉ 
+. For our ∼26k–34k-row files this gives
+4
+√
+rows/file ≈ 645–738, which rounds to 𝐶=1024; the rule is a floor
+rounded up, not an exact target. Over-clustering (we initially used
+𝐶=4096) inflates 𝑘-means cost (𝑂 (𝐶 · 𝑑) per point) with no recall
+benefit; 𝐶=1024 built far faster at comparable recall. With both
+fixed, the build saturates all cores of every pod.
+Building the table itself. Generating a large embedding table by
+client ingest is a single serial stream (a few thousand rows/s at
+𝑑=768). The distributed write path is far faster: seed a modest table,
+then INSERT . . . SELECT from the table into itself—the SELECT
+reads the table’s own files, which the coordinator shards across the
+write pool. Two such doublings took a ∼3M-row seed to 11.5M in
+∼90 s, versus the serial ingest stalling at 3M in 25 min.
+5 QUERY: COMPOSING PRUNING WITH ANN
+A vector query is ordinary SQL:
+SELECT id, title
+FROM docs
+WHERE category = ’tech’
+ORDER BY array_distance(embedding, q)
+LIMIT 10
+The planner recognizes the ORDER BY array_distance(·, lit-
+eral) LIMIT 𝑘 shape on a table with a registered vector index and
+rewrites it into a three-step plan; any unmet precondition falls back
+to a plain scalar array_distance scan (correct, slower).
+Step 1: prune files by the predicate. The rewrite runs the
+query’s WHERE through the same file-planning routine ordinary
+scans use (§3), applying partition, zone-map, and bitmap pruning.
+The output is the set of data files that can satisfy the predicate.
+This is the crux: the vector query pays nothing to build filtering
+machinery—it inherits the table’s.
+Step 2: distributed IVF over survivors. The surviving files are
+sharded across read-compute pods; each pod, for each of its files,
+loads the footer IVF index, finds the 𝑛
+probe 
+nearest centroids to 𝑞,
+gathers their posting lists, random-reads those candidate vectors,
+and rescores with exact L2, returning a per-file shortlist. The coor-
+dinator merges shard results into a global candidate list of size 𝑘 · 𝑠
+(a safety factor 𝑠 over-fetches to absorb the residual row predicate).
+Step 3: direct top-𝑘, no rescan. Because each worker already
+read its candidate rows to rescore, it also returns the query’s pro-
+jected columns for those rows (as an Arrow batch aligned with
+the candidates). The coordinator merges by distance, applies the
+residual row predicate, and emits the top 𝑘—with no second pass
+over the data. This matters concretely: an earlier design re-ran
+the projection SQL over the candidate files through the engine’s
+normal scan path, which read those files in full and cost ∼138 s—
+indistinguishable from brute force—even though the IVF step had
+already identified the exact candidate rows in ∼seconds. The IVF
+search already touched those rows to rescore them; carrying their
+projected columns back with the distances is what collapses the
+query to sub-second. The lesson generalizes: in a per-file ANN de-
+sign, the search and the projection must be fused, or the projection
+re-does the scan the index was meant to avoid.
+Correctness details. The query embedding is a SQL array literal
+cast to FLOAT[𝑑] on both sides of array_distance (the stored col-
+umn is a variable list and literals infer as decimal); the planner sees
+through these casts. A dimension mismatch is a loud error, never
+a silent empty result. Files written after the last build carry no in-
+dex and are searched by brute force within Step 2, so results stay
+correct as the table grows.
+A worked trace. Consider the example query on our 11.5M×768
+table, laid out with file-level locality on category (444 data files,
+∼26k rows each). Step 1 turns category=’tech’ into an Iceberg
+predicate; the scalar bitmap index reports tech present in only 89
+files, so PlanFiles returns those 89 and drops the other 355 before
+a single vector is read. Step 2 shards the 89 survivors across the
+4</page><page num="5">Algorithm 1 Filtered vector top-𝑘 (planner rewrite)
+Require: query embedding 𝑞, predicate 𝑃, projection Π, limit 𝑘
+1: 𝐹 ← PlanFiles(table, 𝑃 ) ⊲ partition/zonemap/bitmap prune
+2: if 𝐹 = ∅ or no index on table then return FallbackScan()
+3: end if
+4: shards ← Rendezvous(𝐹, readPods) ⊲ stable file→pod
+5: parfor shard (𝑤, 𝐹
+𝑤 
+) do
+6: for file 𝑓 ∈ 𝐹
+𝑤 
+do
+7: (idx, 𝑀 ) ← CacheOrLoad(𝑓 ) ⊲ footer IVF + matrix
+8: 𝑐 ← Probe(idx, 𝑞, 𝑛
+probe 
+) ⊲ posting rows
+9: emit ⟨𝑓 , 𝑟, ∥𝑀 [𝑟 ] − 𝑞 ∥, Π (𝑀, 𝑓 , 𝑟 ) ⟩ for top 𝑘 ·𝑠 of 𝑐
+10: end for
+11: end parfor
+12: 𝑅 ← merge shard emissions by distance
+13: return top-𝑘 of {𝑟 ∈ 𝑅 : 𝑃 (𝑟 ) } ⊲ residual predicate; no rescan
+read pool; each pod probes 𝑛
+probe
+=10 of 𝐶=1024 centroids per file,
+so it exact-rescores ≈ 1% (𝑛
+probe
+/𝐶) of each surviving file’s rows.
+The 89 survivors hold ≈ 2.3M rows (the 𝜎=0.2 fraction of the ta-
+ble), of which the IVF probe rescores ≈ 2.3M × 10/1024 ≈ 23k can-
+didate distances—versus 11.5M for brute force, and consistent with
+the “∼0.2% of the vectors” figure below (0.2% of 11.5M ≈ 23k) and
+with the §9 cost model. Each pod returns its top 𝑘·𝑠 rows with the
+projected id, title columns already attached. Step 3 merges 89
+short lists, applies the residual category=’tech’ check (a no-op
+here, since pruning was exact), and emits 10 rows—no file re-read.
+The two prunings compose multiplicatively: the predicate removes
+4/5 of the files and IVF removes ∼ 99% of the rows within each sur-
+vivor, so the query touches ∼ 0.2% of the vectors the brute-force
+baseline would.
+5.1 Predicate pushdown for a residual filter
+Step 1 prunes at the granularity of a file: it drops files that can-
+not match, but a surviving file may still hold non-matching rows.
+Whenever the predicate is not exactly covered by pruning, a resid-
+ual row filter remains, and applying it is what forces the projection
+to materialize—in an early design, a residual filter disabled the di-
+rect top-𝑘 return of Step 3 and fell back to rescoring over every
+surviving file (the 138 s regression above). The fix is to push the
+residual predicate down into the per-file search: the coordinator seri-
+alizes the scalar comparisons (=, IN, ranges, and their conjunctions
+over scalar columns) into the shard request, and each worker ap-
+plies them as a mask over the IVF candidate rows before rescoring—
+so the filter rides the fast path instead of aborting it. The worker
+lazily caches the relevant scalar columns per file alongside the em-
+bedding matrix.
+The pushdown is only sound when a surviving file is pure in the
+filter column—every row in it satisfies (or the file was pruned). We
+compute the pure set as
+file_local_cols = partition columns
+∪ materialized cluster-spec columns,
+and push the predicate only when the filter’s columns lie in that set.
+The distinction that matters here—and that we did not anticipate—
+is that sorted is not pure. Iceberg SORT/ZORDER ordering makes a col-
+umn locally contiguous, so its zone-maps prune well, but a bound-
+ary file straddles two values; a mask that assumed purity would
+silently drop valid rows or admit invalid ones. Only identity par-
+titioning, or a materialized clustering whose per-file value set we
+have recorded, guarantees a file is single-valued in the column. So
+SORT/ZORDER columns are excluded from file_local_cols: they still
+drive Step 1 file pruning, but their residual predicate is not pushed.
+If, after the mask, a file yields fewer than 𝑘 candidates (the over-
+fetch was too thin for a selective residual), the worker falls back to
+the exact rescore path for that file, so recall is never traded for the
+shortcut. The net effect is that a partition- or cluster-column fil-
+ter now gets the same in-memory fast path as an unfiltered query;
+only genuinely non-local filters pay the rescore.
+5.2 Filtered ANN across a join
+The filter is rarely a literal on the ANN table itself; more often it
+lives on a joined dimension—“nearest documents where the cus-
+tomer is in the EU”:
+SELECT d.id, c.region
+FROM docs d
+JOIN customers c ON d.customer_id = c.id
+WHERE c.region = ’EU’
+ORDER BY array_distance(d.embedding, q) LIMIT
+10
+Vector databases typically handle this by post-filtering (fetch
+neighbors, then join and discard) or by maintaining a separate
+metadata index. In a SQL engine over a lakehouse, a better option
+falls out of the same substrate: semi-join reduction. The planner
+recognizes that the ANN is on one table (docs) and the join
+only constrains it, evaluates the dimension predicate to a key set
+({customer_id : region=’EU’}), and rewrites the query to the
+single-table form . . . WHERE d.customer_id IN (𝑘
+1
+, . . . , 𝑘
+𝑚 
+)
+ORDER BY array_distance. . . . That IN-list is then just another
+predicate fed to PlanFiles (Step 1): if customer_id has file-level
+locality, the join predicate prunes files before ANN runs, exactly
+as a literal WHERE does. The dimension’s own columns (c.region)
+are reattached in Step 3 by rescoring over the shortlist with the
+dimension registered alongside the candidate files—a join over a
+few thousand rows, not the table.
+This reuses machinery the engine already has for analytic
+queries (the same dimension-key materialization that turns a star-
+schema filter into a fact-table IN-list), so filtered-across-a-join
+ANN costs no new index and no new operator. The reduction is
+exact for an inner equi-join whose predicate is separable by table;
+other join shapes (post-join ranking, outer joins, predicates span-
+ning both tables) fall back to a full ANN sweep plus a normal join—
+correct, just without the extra file pruning. When the dimension
+filter is so broad that its key set is very large, the planner aban-
+dons the reduction and runs the ordinary path rather than inline
+an enormous IN-list; dropping the filter is never an option, as it
+would admit out-of-filter neighbors.
+Query-time vs. materialized reduction. The rewrite above runs
+the reduction per query: it re-materializes the key set and prunes
+on customer_id on every call. This still prunes files, but the join
+key is a high-cardinality identifier, so its file-locality (a contigu-
+ous customer_id range per region) is fragile—an unlucky re-bin-
+packing on ingest scatters a region’s rows across files and prun-
+ing collapses. When the join is a fixed, recurring shape, a robustly
+5</page><page num="7">is minutes per query. We verified IVF and brute force return set-
+identical top-𝑘 IDs on spot checks to confirm the index is correct,
+not merely fast.
+Scope of the claims. The comparisons below are self-relative: IVF
+versus this system’s own brute force, and materialized versus this
+system’s own query-time join. They establish feasibility and the
+design principle (that the table’s file pruning composes with per-
+file ANN and pays off under file-level locality). They are deliber-
+ately not a claim of raw competitiveness against a dedicated vec-
+tor database or a whole-table index—and §8.7 measures exactly
+that gap: a dedicated Milvus HNSW answers a subset version of
+the filtered query in 5 ms and a whole-table IVF-PQ answers the
+full-corpus unfiltered query in 175 ms, against this system’s 34 s
+rescore/projection path (or 157 ms when the predicate is partition-
+aligned and stays on the fast path). Those baselines quantify the
+tax of the per-file, in-table choice; the paper’s claim is that the tax
+buys no data copy, a single source of truth, a table every engine
+can still read, and—because the vector query runs through the lake-
+house catalog like any other scan—the table’s existing access con-
+trol applied to vector search for free, with no second authorization
+surface to define or keep in sync.
+8.1 Distributed build
+The full build over ∼336 initial files completes in ∼10 min across
+12 pods with all cores saturated (28 files/pod), 0 failed shards,
+row count preserved, committed as a single metadata-only replace.
+The build is CPU-bound in 𝑘-means: aggregate CPU held at ∼95
+cores throughout and tailed off as shards finished, confirming near-
+perfect fan-out. Two levers dominate build wall-clock.
+Parallelism. Before we moved the per-file build off the async ex-
+ecutor onto a blocking pool (§4), each 8-core pod ran at ∼1 core
+(the synchronous 𝑘-means monopolized one runtime thread and
+files serialized); the build spent 40+ min without finishing. After
+the fix, per-pod CPU rose to ∼8 cores and aggregate to ∼95, and
+the build completed in ∼10 min.
+Cluster count. 𝐶 enters 𝑘-means cost as 𝑂 (𝐶 · 𝑑) per assigned
+point, so over-clustering a per-file index is pure waste. At 𝐶=4096
+on ∼34k-row files the build pegged all cores for far longer with no
+recall gain; 𝐶=1024 (the 4
+√
+rows/file ≈ 738 floor rounded up to a
+power of two, §4) was the single largest build-time lever. Building
+the 11.5M-row table itself used the distributed INSERT. . . SELECT
+path (§4): two doublings in ∼90 s, versus serial client ingest stalling
+at 3M rows in 25 min.
+8.2 Warm search: IVF vs. brute force
+Table 1 reports the unfiltered top-10 latency at 𝑛
+probe
+=10 (result
+cache off, warm), over a 200-query sample with three timed runs
+per query (we report the per-query median, then percentiles across
+the sample). IVF is ∼32× faster than brute force at recall@10 ≥ 0.90.
+Brute-force latency is bimodal—∼1–2 s when a query’s shards find
+the embedding matrix already resident, ∼21 s otherwise—so its p50
+(21.1 s) reflects the common cold-matrix case; IVF is consistently
+sub-second (p50 668 ms, p99 903 ms).
+IVF
+(nprobe 10)
+brute
+force
+10
+0
+10
+1
+warm p50 latency (s, log)
+1.6s
+31.0s
+Figure 2: Warm top-10 latency, 11.5M×768, 𝑛
+probe
+=10, re-
+sult cache off, 200-query sample. Bars are p50; black ticks
+overlay p95. Latency (𝑦) is log
+10 
+seconds. IVF p50/p95 =
+668/831 ms; brute-force is bimodal (cached ∼1–2 s vs. cold
+∼21 s), p50 21.1 s.
+Table 1: Warm top-10 latency, 11.5M×768, 𝑛
+probe
+=10, cache
+off, 200-query sample × 3 timed runs/query (per-query me-
+dian, then percentiles across the sample). Brute-force is bi-
+modal (cached vs. cold matrix); its full distribution is wide,
+so we give its p50. Speedup is on the p50s.
+p50 p90 p95 p99
+IVF (nprobe 10) 668 ms 749 ms 831 ms 903 ms
+Brute force 21.1 s — — —
+Speedup (p50) 31.6× recall@10 ≥ 0.90 (IVF), 1.00 (brute)
+8.3 Recall vs. latency: 𝑛
+probe
+Figure 3 sweeps 𝑛
+probe
+. Recall climbs from 0.83 at 𝑛
+probe
+=1 to ≈
+1.0 at 𝑛
+probe
+=10, trading latency monotonically—the standard IVF
+knob, exposed per query via a call header so applications tune re-
+call without a rebuild.
+The recall figures we report are means of recall@10 over the
+200-query sample. A mean can hide a low-recall tail—the failure
+mode that filtered-ANN work is most concerned with, and the
+reason Chronis et al. [7] elevate stable recall (the same recall re-
+gardless of the predicate) to a first-class goal. Our per-file design
+has a specific tail risk: when a selective residual filter leaves fewer
+than 𝑘 candidates after the mask, the over-fetch 𝑠 was too thin,
+and the worker falls back to exact rescore for that file (§5.1)—
+which protects recall at a latency cost, so the tail appears in la-
+tency rather than in recall. Reporting the recall distribution rather
+than a bare mean bears this out: over a brute-force spot-check sam-
+ple at 𝑛
+probe
+=10, recall@10 has mean ∼0.97 but a floor of 0.90 (no
+query fell below 0.90), and the low-recall instances coincide with
+the over-fetch-fallback described above—i.e. the tail surfaces as the
+occasional rescore in the latency distribution, not as a recall miss.
+A full recall-vs-selectivity curve—recall@10 swept across predicate
+selectivities—would substantiate stable recall across predicates di-
+rectly rather than by the mechanism argument above; we leave it
+to future work because an exact brute-force ground truth on the
+deployed layout is cost-prohibitive at this scale (a single unindexed
+top-𝑘 over the 11.5M×768 corpus costs &gt;700 s of single-pod CPU),
+7</page></paper>

@@ -187,3 +187,21 @@
 用户提出DAG/联合索引/摘要导航/MVCC/ACL，先查已有TrieHI全文/创新页，再搜vector similarity join/vector join与DAG/MVCC/permission、self-join/high-dimensional/inner-product variants，随后查hierarchical RAG及官方系统文档。核RAPTOR的ICLR2024摘要、Zanzibar的Google/ATC2019摘要、Milvus2.6 timestamp、Qdrant租户过滤、Git对象及Linux symlink手册；TigerVector作者PDF检索命中图模式vector-join候选，完整书目/输出语义未核，登记待办。新候选仅摘要/片段，不纳入全文索引。
 
 重核TrieHI §V-E确实说明深目录PG遍历成本增大；不扩展为HNSW必然掉召回。新增extensions.md与日期化初筛，修正bitmap去重/撤销、symlink可成环、RAG非安全几何剪枝、版本/权限已有前序等论证。核心单路径静态定义保持，21篇/22关系不变，无实验。待补动态可达性增量维护、版本ANN/权限继承及RAPTOR/Zanzibar/TigerVector原文，不能声称五方向均新颖。
+
+## 2026-10-19 六个子方向方案设计与初筛
+
+先查papers/papers.jsonl、relations.jsonl、Directory-Aware及现有十篇笔记，复核VADER、Graph Range Filters、Grant的本地报告。先检索vector similarity join的hierarchical变体，随后检索DAG/过滤ANN；第二轮补齐vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join等核心同义词，再查递归维护、版本、权限及多分辨率导航。核心扩展搜索噪声较多，不作为方法证据。完整查询及来源状态见[日期化证据](../nested-attr-vector-search/evidence/subdirection-design-screen-2026-10-19.json)。
+
+新增待精读线索：AAAI2018 Optimised Maintenance of Datalog Materialisations（官方作者/题名/DOI/日期已核，摘要阅读）；作者PDFMaterialisation Maintenance Revisited（书目版本未核实）；arXiv2606.18520可达嵌入（摘要）；SPI arXiv2511.16681v3（官方版本题名与摘要，搜索旧摘要混杂，本文不引用旧性能）；ChronoVec官方README已声明MVCC/分支delta，未固定commit或验证实现。Zanzibar本轮读§2.2/§2.4/§3.2.4，明确token和Leopard集合快照/增量索引为前序；非全篇精读。CRoaring仅核官方README，具体lazy/fused API待实现时冻结版本。
+
+输出[六方向总览](../nested-attr-vector-search/directions.md)和六个独立子目录。未精读候选不建完整论文记录；仅补Directory-Aware项目启发，论文21/关系22不变。新颖性尚未充分排查，尤其需每项引用闭包与逐步骤机制对照。本轮无算法性能实验。
+
+## 2026-10-19 alphaXiv六方向新颖性淘汰审计
+
+按用户“有人做的就不要做了”要求，在alphaXiv执行2次跨方向discovery、18个PDF/URL阅读目标。14个arXiv论文返回原文相关页；另有Zanzibar官方PDF和ChronoVec官方网页。Packing DOI返回反机器人页，经典多步近邻题名入口未命中，这2项不计入读到原文。原始检索结果与相关页保存在[证据目录](../nested-attr-vector-search/evidence/alphaxiv-screen-2026-10-19/)，逐项来源、版本、章节、缺口见[审计](../nested-attr-vector-search/alphaxiv-novelty-audit.md)和[decisions.json](../nested-attr-vector-search/evidence/alphaxiv-screen-2026-10-19/decisions.json)。
+
+重要直接前序：Curator §4.2已有按预计访问子树过滤/构建与缓存；Counting/DRed与Enzyme §4.5已有支持撤销及增量/重算选择；iRangeGraph/JAG已有共享范围图/多尺度边；CertEx已有候选上界+安全投影下界排除，SPI v3已有自适应多分辨率；ChronoVec软件声明分支/MVCC，湖仓ANN §4已有索引与表快照共同发布；Zanzibar已有Expand、Leopard、快照缓存和新鲜度。未将相邻机制的存在写成完整组合均已实现。
+
+决定：D0/D1/D3/D5停止独立立项；D2/D4暂停、冻结原MVP。没有方案通过新颖性门槛，不开始实现或实验。排除伪重合：2502.13245是几何半径range retrieval，2607.22922是PQ codebook，不作为同名范围/instance编译判重。alphaXiv历史授权/IVM命中有限，未形成引用闭包，完整组合均未被认证为某一论文完全等价。未知不转成新意。
+
+新增候选仅登记在审计与日期化证据，书目/全文未完成者不伪装成完整论文记录；已有Directory-Aware、Curator、iRangeGraph补项目判断，主索引仍21篇/22关系。没有性能实验。

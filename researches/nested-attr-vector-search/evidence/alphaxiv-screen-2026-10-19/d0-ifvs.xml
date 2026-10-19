@@ -1,0 +1,650 @@
+<paper id="2607.22922v1"><page num="1">iFVS: Towards Instance-Optimized Filtered Vector Search
+Abdullah Al-Mamun
+Purdue University
+West Lafayette, USA
+mamuna@purdue.edu
+Yeasir Rayhan
+Purdue University
+West Lafayette, USA
+yrayhan@purdue.edu
+Walid G. Aref
+Purdue University
+West Lafayette, USA
+aref@purdue.edu
+ABSTRACT
+Filtered vector search (FVS) is increasingly important in modern
+AI + DB systems, where vector similarity search is combined with
+relational predicates. Quantization plays a vital role in these sys-
+tems by enabling query processing over large vector datasets. How-
+ever, lossy approaches, e.g., Product Quantization (PQ), incur a
+precision penalty during distance calculation, thereby negatively
+impacting the query recall performance. This problem becomes
+more challenging in FVS because the relevant vector space can
+change with the relational predicate and selectivity. Motivated by
+the success of instance-optimized database system components, we
+introduce iFVS, an Instance-Optimized Filtered Vector Search tech-
+nique. Given a fixed, quantized vector dataset, and a representative
+workload of filtered vector queries, iFVS adopts a query-specific
+codebook generation approach for FVS that is instance-optimized
+towards a certain dataset and query workload. Instead of using a
+fixed codebook for all queries, iFVS conditions distance estimation
+on both the query vector and the filter predicate. This enables more
+accurate ranking over compressed vectors while preserving com-
+pact per-vector storage. Experiments show that iFVS improves the
+Queries Per Second (QPS)-recall tradeoff across several filter selec-
+tivity bins compared with fixed-codebook quantized FVS baselines.
+VLDB Workshop Reference Format:
+Abdullah Al-Mamun, Yeasir Rayhan, and Walid G. Aref. iFVS: Towards
+Instance-Optimized Filtered Vector Search. VLDB 2026 Workshop: .
+1 INTRODUCTION
+Modern database systems store and query high-dimensional vector
+embeddings for similarity search operation. Both specialized vector
+databases (e.g., Milvus [25]) and integrated vector databases (e.g.,
+pgvector [16, 22]) play a vital role in the Large Language Models
+(LLMs) inference step [20]. These vector embeddings represent a di-
+verse set of objects (e.g., documents, images). Moreover, compressed
+representations of vector embeddings are often required for very
+large datasets. A common approach is to leverage quantization [9]
+techniques, e.g., Product Quantization (PQ) [12]. PQ can reduce
+memory requirements by splitting vectors into separate subspaces
+and quantizing each subspace independently. For example, a 128-
+dimensional vector can be split into 16 subspaces of 8 dimensions
+each, where each subspace has its own independent set of learned
+centroids in the form of a codebook.
+In many real-world scenarios, Approximate K-Nearest Neighbor
+search (ANN, for short) is combined with relational predicates (e.g.,
+This work is licensed under the Creative Commons BY-NC-ND 4.0 International
+License. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to view a copy of
+this license. Copyright is held by the owner/author(s).
+Proceedings of the VLDB Endowment. ISSN .
+=, ≥, ≤ ). For example, a researcher might want to filter with dates
+while searching similar research papers/documents. This setup is
+commonly known as Filtered Vector Search (FVS) [2, 4, 8, 14, 15,
+19, 21, 28]. The general form of an FVS query [27] is shown below,
+where filter predicates are applied to col1 and col2, and ANN search
+is performed over vector_col using the query vector q1.
+SELECT * FROM T1
+WHERE col1 &gt; value1 AND col2 = value2
+ORDER BY distance (q1 , vector_col )
+LIMIT K
+Listing 1: Example of an FVS query.
+FVS imposes additional challenges to ANN query processing be-
+cause the filter predicate changes the effective search space [4]. Par-
+ticularly, queries with highly-selective predicates return a small frac-
+tion of vector data as candidates for similarity search and uses brute
+force vector search over the candidates instead of building a vector
+index per query [23]. Existing systems use multiple FVS strategies,
+e.g., pre-filtering, post-filtering, in-filtering, and expanded filtering
+as no single strategy dominates across all filter selectivities [27].
+As a result, practical systems often rely on dynamic FVS strategy
+selection during query processing.
+Recent progress in instance-optimized systems, e.g., [5, 6, 24],
+has demonstrated that database systems can benefit from tailor-
+ing internal components to given data and query workloads, e.g.,
+learned indexes [3, 13]. Inspired by this direction, in this paper,
+we study FVS through the lens of instance-optimization and in-
+vestigate whether the quantization component in FVS can also be
+instance-optimized. In particular, rather than relying on a single
+filtered-query-agnostic PQ codebook, we study whether the code-
+book can be adapted to a fixed vector dataset and a representative
+FVS-query workload with the goal of improving the QPS-recall
+tradeoff over its workload-agnostic counterparts. Although there
+are a few studies on query-aware quantization [11, 26], these meth-
+ods have not been studied in the context of FVS.
+In this paper, we propose a filtered-query-aware PQ codebook
+generation framework for FVS. We refer to this approach by iFVS,
+short for Instance-optimized Filtered Vector Search. Given a query
+vector and a relational predicate, iFVS generates a filter-aware PQ
+codebook by perturbing a fixed base codebook. The perturbation
+is produced from the query-predicate pair using a shared mem-
+ory bank and learned adjustment directions. Moreover, the rela-
+tional predicate is encoded into a filter-aware weight vector that
+re-weights vector dimensions according to their relevance to the
+filter predicate. During query processing, the filter predicate first
+determines the eligible candidate pool. The candidates are ranked
+using the generated filter-aware codebook and weights. Thus, iFVS
+keeps the compact PQ codes and the base codebook fixed, while
+adapting the scoring representation to each filtered query.
+arXiv:2607.22922v1 [cs.DB] 24 Jul 2026</page><page num="2">Notice that PQ is lossy and therefore approximates the true
+distance from the original vector using either Asymmetric Dis-
+tance Computation (ADC) or Symmetric Distance Computation
+(SDC) [12]. As a result, lossy quantization methods, e.g., PQ, can
+suffer from lower query recall compared with their full-precision
+counterparts. The standard PQ codebook is both query- and filter-
+agnostic in the context of FVS. This creates an opportunity for
+instance optimization, which is what iFVS does. Rather than using
+a single fixed codebook for all queries, iFVS adapts the original
+codebook to a fixed dataset and a representative filtered-query
+workload.
+In summary, this paper makes the following contributions:
+C1. 
+We initiate the study of FVS through the lens of instance-
+optimization.
+C2. We propose iFVS, a query-specific, filter-aware PQ codebook
+generation framework for FVS.
+C3. Extensive experimental evaluation on SIFT1M and SIFT10M
+datasets demonstrates the potential of iFVS.
+2 iFVS
+Given a query vector 𝑞 ∈ R
+𝐷 
+and a relational predicate 𝑓 , iFVS
+processes an FVS query as follows. The query-predicate pair, ⟨𝑞, 𝑓 ⟩
+is fingerprinted via ℎ independent hash functions into a shared
+memory bank M of 𝐵 rows. The resulting ℎ coefficient vectors that
+are summed to obtain a query-specific adjustment 𝛼 ∈ R
+𝑀 ×𝑟 
+. 𝑀 de-
+notes the number of sub-spaces, which is tied to the underlying PQ
+Codebook. 𝑟 denotes a hyper-parameter specifying the number of
+directions the adjustment can take place. The relational predicate 𝑓
+is encoded by a light-weight Transformer into a filter-aware weight
+vector 𝑤
+𝑧 
+∈ R
+𝐷 
+. 𝑤
+𝑧 
+reweighs the dimensions of the query and the
+database vectors according to their relevance to Predicate 𝑓 . The ad-
+justment 𝛼 is combined with a learned parameter 𝑊 ∈ R
+𝑀 ×𝑟 ×𝐾 ×𝑑
+to produce the query-specific perturbation of the PQ Codebook,
+making it filter-aware. 𝐾 denotes the number of codewords per
+subspace, and 𝑑 denotes the dimensionality of each codeword in
+the PQ codebook. Together, 𝛼 and w
+𝑓 
+define iFVS perturbed filter-
+aware Codebook 𝐶
+iFVS
+, which is built on top of the PQ Codebook
+𝐶
+PQ
+.
+𝚫 = 𝛼 · 𝑊 𝑤
+𝑓 
+= softplus
+(
+𝑤
+𝑧 
+)
+𝐶
+iFVS 
+= 𝐶
+PQ 
++ 𝚫
+Given 𝐶
+iFVS
+, our approach executes an FVS-query in the follow-
+ing three stages.
+1. Filter. The relational predicate 𝑓 is evaluated over each vector
+node’s relational attributes to identify a candidate pool P.
+2. Rank. For each candidate vector𝑣 ∈ P, we reconstruct its ap-
+proximate vector from our filter-aware codebook 𝐶
+iFVS
+. The
+candidate is then scored as follows.
+score(𝑣) =
+𝑀
+∑︁
+𝑚=1
+𝐷/𝑀
+∑︁
+𝑑=1
+h
+2 (w
+𝑓 
+)
+𝑚,𝑑 
+q
+𝑚,𝑑 
+𝐶
+iFVS 
+[𝑚, code
+𝑖 
+[𝑚]]
+𝑑
+− (w
+𝑓 
+)
+𝑚,𝑑 
+𝐶
+iFVS 
+[𝑚, code
+𝑖 
+[𝑚]] 
+2
+𝑑
+i
+3. Select. We return the top-𝑘 candidates ranked by score.
+Learning 𝐶
+iFVS 
+and 𝑤
+𝑓 
+. At the start of training, we initialize 𝛼 = 0
+and 𝑤
+𝑓 
+= 1. Thus, the model initially reduces to the original PQ
+codebook, i.e., 𝐶
+eff 
+= 𝐶
+PQ
+, with no predicate-aware reweighting.
+From this initialization, we train 𝛼 and 𝑤
+𝑓 
+to make the PQ repre-
+sentation filter-aware. For each training query-predicate pair ⟨𝑞, 𝑓 ⟩,
+the model constructs the current 𝐶
+iFVS 
+and 𝑤
+𝑓 
+, as described above.
+It then scores the ground-truth positive vectors and mines hard
+negatives from the candidate pool P. Precisely, hard negatives are
+the highest-scoring non-ground-truth candidates under the cur-
+rent 𝐶
+iFVS 
+and 𝑤
+𝑓 
+, since these are the candidates most likely to be
+confused with the true answers. We also add an anchor regularizer
+that keeps 𝐶
+iFVS 
+close to the original 𝐶
+PQ
+. During training, gradi-
+ents flow through 𝛼 and updates the memory bank M, the learned
+parameter 𝑊 , and 𝑤
+𝑓 
+. The base codebook 𝐶
+PQ 
+and the PQ codes
+remain fixed throughout training.
+3 EVALUATION
+We run all experiments on an Ubuntu 18.04 with Intel Xeon Plat-
+inum 8168 (2.70GHz) and 3TB of total available memory. Moreover,
+the search performance is evaluated under single-threaded execu-
+tion using the FAISS [7] library. Both training and inference for
+iFVS run on an NVIDIA A30 Tensor Core GPU.
+3.1 Dataset and Filter Query Workloads
+We use the SIFT1M and SIFT10M datasets [1] for all experiments.
+Each dataset contains 128-dimensional base vectors and 10K query
+vectors without any filtering conditions. For the filtered query
+workloads, we generate filtered vector-search queries by imposing
+relational predicates over a fixed set of SIFT dimensions. The filter-
+able attributes are selected to cover different spatial cells of the SIFT
+descriptor. For each query and each selectivity bin, the generator
+samples one predicate over one to three of these fixed dimensions.
+We use three target selectivity bins for the filter predicates: [0.01,
+0.05, 0.10]. For each selectivity bin, we use the 10K SIFT query
+vectors as the base query set and assign generated filter predicates
+to each query. This creates a filtered workload in which every ANN
+query is evaluated only over the subset of base vectors that satisfy
+its predicate. Finally, we compute the exact top-100 filtered ground
+truth directly over the predicate-passing vectors.
+3.2 Baselines
+We use 13 baselines for our evaluation where 12 baselines are stan-
+dard FAISS implementation except the Pre_SDC_numpy which has
+been implemented using numpy. For the post- and In-filtering base-
+lines, we have included the HNSW [18] and IVF [12] indexes. For
+theh PQ-encoded dataset, we choose 16 subspaces of 8 dimensions
+each. Table 1 presents the construction and search parameters of
+the baseline indexes for SIFT1M and SIFT10M.
+B1. Pre-filtering. These methods evaluate the filter predicates
+first to obtain the candidate set, then perform the distance com-
+putation over that set of vectors: (i) Pre_IndexFlatL2 performs
+exact L2 distance calculation over the full-precision vectors. (ii)
+Pre_IndexFlatL2_PQ reconstructs vectors from their PQ codes and
+performs exact L2 distance calucation. (iii) Pre_IndexPQ_ADC
+ranks the candidate set over quantized data with Asymmetric Dis-
+tance Computation (ADC). (iv) Pre_IndexPQ_SDC ranks the can-
+didate set over quantized query + data with Symmetric Distance
+2</page><page num="3">Table 1: Index construction and search parameters for SIFT1M and SIFT10M datasets. 𝑀: HNSW graph connections per layer;
+ef
+build
+: beam width during construction; 𝑛
+list
+: number of IVF inverted lists. Search parameters ef (HNSW) and nprobe (IVF) are
+swept over the listed ranges to trace QPS-recall tradeoff curves; IVFFlat and IVFPQ share identical nprobe ranges. The same
+parameter ranges are used for both post-filtering and in-filtering. “—” denotes not applicable.
+Dataset Index 
+Construction Parameters Search Parameters
+𝑀 ef
+build 
+𝑛
+list 
+𝑠 = 0.01 𝑠 = 0.05 𝑠 = 0.10
+SIFT1M
+HNSWFlat 16 200 — ef: 100–5000 ef: 100–2000 ef: 100–1000
+HNSWPQ 16 200 — ef: 100–20000 ef: 100–10000 ef: 100–5000
+IVFFlat / IVFPQ — — 4096 nprobe: 16–1024 nprobe: 16–1024 nprobe: 16–1024
+SIFT10M
+HNSWFlat 32 400 — ef: 100–10000 ef: 100–5000 ef: 100–2000
+HNSWPQ 32 400 — ef: 100–20000 ef: 100–10000 ef: 100–5000
+IVFFlat / IVFPQ — — 16384 nprobe: 64–1024 nprobe: 64–1024 nprobe: 64–1024
+Computation (SDC). (v) Pre_SDC_numpy is a NumPy-based imple-
+mentation of pre-filtered SDC scoring over PQ-encoded vectors.
+B2. Post-filtering. These indexes run the vector search first
+and then discard results that do not satisfy the filter predicates:
+Post_HNSWPQ, Post_IVFPQ, Post_HNSWFlat, and Post_IVFFlat.
+B3. In-filtering. These indexes integrate the filter predicate di-
+rectly into the search by providing a filtering bitmap, skipping
+non-qualified candidates during traversal: In_HNSWPQ, In_IVFPQ,
+In_HNSWFlat, and In_IVFFlat.
+3.3 Performance Evaluation
+3.3.1 QPS vs. recall Tradeoff. Figures 1 and 2 show the QPS vs. re-
+call tradeoff on the full SIFT1M, and SIFT10M FVS query workloads,
+respectively. iFVS splits the FVS query workload into training and
+test queries. The training queries are used to learn the filter-aware
+codebook adjustments, while the test queries show the performance
+of iFVS beyond the queries used for training. The figures report
+the average recall across both sets, while Table 2 reports them
+separately.
+iFVS achieves a strong balance between recall and throughput
+across all selectivity bins. On SIFT1M, it obtains Recall@100 of
+0.836, 0.802, and 0.762 at 1%, 5%, and 10% selectivity, respectively,
+while maintaining 443, 429, and 393 QPS. On SIFT10M, it obtains
+Recall@100 of 0.774, 0.715, and 0.678, with 334, 291, and 223 QPS.
+These results show that iFVS maintains high throughput while
+improving the ranking quality of compact PQ representations.
+3.3.2 Comparison with PQ-encoded Baselines. iFVS consistently
+improves recall over fixed-codebook PQ baselines. For example, on
+SIFT10M at 1% selectivity, Pre_PQ_ADC achieves 0.682 Recall@100
+and 114 QPS, while iFVS achieves 0.774 Recall@100 and 334 QPS.
+Similar trends hold for PQ-SDC and numpy-based SDC baselines.
+This suggests that adapting the codebook to the FVS query work-
+load improves the accuracy of distance estimation over compressed
+vectors.
+3.3.3 Comparison with Post- and In-filtering Baselines. iFVS domi-
+nates all post-filtering baselines across both datasets and all selec-
+tivity bins, improving both recall and QPS. This is expected because
+post-filtering spends search effort on vectors that may not satisfy
+the predicate. iFVS outperforms all PQ-compressed in-filtering base-
+lines (In_HNSWPQ, In_IVFPQ) in both metrics. The exceptions are
+raw-vector in-filtering methods (In_IVFFlat, In_HNSWFlat), which
+can achieve higher recall at larger selectivities. These methods store
+full-precision vectors, while iFVS uses compact PQ codes. Even in
+these cases, iFVS remains faster in QPS.
+3.3.4 Effect of Selectivity. As selectivity increases, the eligible can-
+didate pool becomes larger. This makes ranking more expensive.
+iFVS degrades gradually under this change. On SIFT1M, recall de-
+creases from 0.836 to 0.762 as selectivity increases from 1% to 10%,
+while QPS decreases from 443 to 393. On SIFT10M, recall decreases
+from 0.774 to 0.678, while QPS decreases from 334 to 223. Thus, the
+method remains effective across multiple selectivity bins.
+3.3.5 Effect of Memory-bank Size. Table 2 studies the effect of
+memory-bank size M at 1% selectivity. Increasing M improves
+training recall on both datasets. On SIFT1M, training recall increases
+from 0.9094 at M = 4,096 to 0.9709 at M = 45,000. On SIFT10M,
+it increases from 0.8195 to 0.8906. However, test recall is highest
+with the smallest memory bank: 0.7491 on SIFT1M and 0.6706 on
+SIFT10M. This shows that memory-bank capacity controls a tradeoff
+between workload specialization and generalization.
+3.3.6 Index Size and Construction Time. iFVS provides compact
+storage compared with graph-based and raw-vector baselines. On
+SIFT1M, the total index size is 89.9 MB, which is 1.8× smaller than
+HNSWPQ, 7.3× smaller than HNSWFlat, and 5.8× smaller than
+IVFFlat. On SIFT10M, the index size is 220.5 MB, which is 13.4×
+smaller than HNSWPQ, 36.4× smaller than HNSWFlat, and 24.2×
+smaller than IVFFlat. The main cost is offline construction time:
+57 minutes on SIFT1M and 89 minutes on SIFT10M. This is slower
+than IVF-based baselines but faster than HNSW-based baselines at
+10M scale.
+Table 2: Recall@100 vs. M (selectivity = 1%)
+SIFT1M SIFT10M
+Memory Bank 
+Train Test Train Test
+Size, M
+4,096 0.9094 0.7491 0.8195 0.6706
+8,192 0.9270 0.7338 0.8402 0.6582
+16,384 0.9490 0.7212 0.8629 0.6493
+32,768 0.9641 0.6976 0.8868 0.6508
+45,000 0.9709 0.7017 0.8906 0.6572
+3</page><page num="4">0.0 0.2 0.4 0.6 0.8 1.0
+Recall@k=100 (Selectivity 0.01)
+10
+1
+10
+2
+10
+3
+QPS (queries/sec)
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall@k=100 (Selectivity 0.05)
+10
+2
+10
+3
+0.2 0.4 0.6 0.8 1.0
+Recall@k=100 (Selectivity 0.10)
+10
+1
+10
+2
+Pre_IndexFlatL2
+Pre_IndexFlatL2_PQ
+Pre_IndexPQ_ADC
+Pre_IndexPQ_SDC
+Pre_SDC_numpy
+Post_HNSWPQ
+Post_IVFPQ
+In_HNSWPQ
+In_IVFPQ
+Post_HNSWFlat
+Post_IVFFlat
+In_HNSWFlat
+In_IVFFlat
+iFVS
+Figure 1: FVS over the SIFT1M dataset.
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall@k=100 (Selectivity 0.01)
+10
+1
+10
+2
+QPS (queries/sec)
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall@k=100 (Selectivity 0.05)
+10
+1
+10
+2
+0.2 0.4 0.6 0.8 1.0
+Recall@k=100 (Selectivity 0.10)
+10
+0
+10
+1
+10
+2
+Pre_IndexFlatL2
+Pre_IndexFlatL2_PQ
+Pre_IndexPQ_ADC
+Pre_IndexPQ_SDC
+Pre_SDC_numpy
+Post_HNSWPQ
+Post_IVFPQ
+In_HNSWPQ
+In_IVFPQ
+Post_HNSWFlat
+Post_IVFFlat
+In_HNSWFlat
+In_IVFFlat
+iFVS
+Figure 2: FVS over the SIFT10M dataset.
+HNSWPQ
+IVFPQ
+HNSWFlat
+IVFFlat
+iFVS
+Index Type
+0
+200
+400
+600
+Size (MB)
+Data Size Index Size
+(a) SIFT 1M.
+HNSWPQ
+IVFPQ
+HNSWFlat
+IVFFlat
+iFVS
+Index Type
+0
+2500
+5000
+7500
+Size (MB)
+Data Size Index Size
+ (b) SIFT 10M.
+Figure 3: Index size comparison.
+HNSWPQ
+IVFPQ
+HNSWFlat
+IVFFlat
+iFVS
+Index Type
+10
+1
+10
+2
+10
+3
+Time (seconds)
+(a) SIFT 1M.
+HNSWPQ
+IVFPQ
+HNSWFlat
+IVFFlat
+iFVS
+Index Type
+10
+3
+10
+4
+Time (seconds)
+ (b) SIFT 10M.
+Figure 4: Index construction time.
+3.3.7 Scaling from SIFT1M to SIFT10M. iFVS scales favorably as
+the dataset grows by 10×. At 1% selectivity, QPS decreases from
+442.6 on SIFT1M to 333.8 on SIFT10M, a slowdown of only 1.33×. In
+contrast, Pre_FlatL2 slows down by 20.2×, and Pre_PQ_ADC slows
+down by 13.6×. At 10M scale, iFVS achieves higher QPS than every
+evaluated baseline across all selectivity bins.
+Overall, the experiments show that filtered-query-specific code-
+book generation improves the QPS-recall tradeoff for quantized
+FVS. iFVS consistently improves over fixed-codebook PQ baselines,
+dominates post-filtering baselines, and scales well from 1M to 10M
+vectors. Its main tradeoffs are offline construction cost and sensi-
+tivity to memory-bank capacity.
+4 CONCLUSION AND FUTURE WORK
+Instance-optimized FVS is a promising direction for querying large
+scale vector datasets where quantization is necessary. The proposed
+iFVS improves the QPS-recall tradeoff across varying filter selec-
+tivities over many of the baselines. Moreover, our experimental
+evaluation suggests that filtered-query-aware codebook adapta-
+tion provides a practical path towards instance-optimized FVS. In
+future work, we plan to investigate: (a) the performance of iFVS
+on recently proposed filtered query benchmarks [10, 17, 23, 27],
+(b) new optimization techniques so that the generalization over
+unseen queries are improved, and (c) self-adjustment of iFVS in the
+presence of significant query workload shift.
+REFERENCES
+[1] [n.d.]. SIFT Dataset. http://corpus-texmex.irisa.fr/. Dataset webpage. Accessed:
+2026.
+[2] Anas Ait Aomar, Karima Echihabi, Marco Arnaboldi, Ioannis Alagiannis, Damien
+Hilloulin, and Manal Cherkaoui. 2025. RWalks: Random Walks as Attribute
+Diffusers for Filtered Vector Search. Proceedings of the ACM on Management of
+Data 3, 3 (2025), 1–26.
+[3] Abdullah Al-Mamun, Hao Wu, Qiyang He, Jianguo Wang, and Walid G Aref.
+2025. A survey of learned indexes for the multi-dimensional space. Comput.
+Surveys 58, 4 (2025), 1–37.
+4</page><page num="5">[4] Yannis Chronis, Helena Caminal, Yannis Papakonstantinou, Fatma Özcan, and
+Anastasia Ailamaki. 2025. Filtered Vector Search: State-of-the-Art and Research
+Opportunities. Proceedings of the VLDB Endowment 18, 12 (2025), 5488–5492.
+[5] 
+Jialin Ding, Ryan Marcus, Andreas Kipf, Vikram Nathan, Aniruddha Nrusimha,
+Kapil Vaidya, Alexander van Renen, and Tim Kraska. 2022. Sagedb: An instance-
+optimized data analytics system. Proceedings of the VLDB Endowment 15, 13
+(2022).
+[6] Jialin Ding, Umar Farooq Minhas, Badrish Chandramouli, Chi Wang, Yinan Li,
+Ying Li, Donald Kossmann, Johannes Gehrke, and Tim Kraska. 2021. Instance-
+optimized data layouts for cloud analytics workloads. In Proceedings of the 2021
+International Conference on Management of Data. 418–431.
+[7] Matthijs Douze, Alexandr Guzhva, Chengqi Deng, Jeff Johnson, Gergely Szilvasy,
+Pierre-Emmanuel Mazaré, Maria Lomeli, Lucas Hosseini, and Hervé Jégou. 2025.
+The faiss library. IEEE Transactions on Big Data (2025).
+[8] Siddharth Gollapudi, Neel Karia, Varun Sivashankar, Ravishankar Krishnaswamy,
+Nikit Begwani, Swapnil Raz, Yiyong Lin, Yin Zhang, Neelam Mahapatro, Premku-
+mar Srinivasan, et al. 2023. Filtered-diskann: Graph algorithms for approximate
+nearest neighbor search with filters. In Proceedings of the ACM Web Conference
+2023. 3406–3416.
+[9] Robert M. Gray and David L. Neuhoff. 2002. Quantization. IEEE transactions on
+information theory 44, 6 (2002), 2325–2383.
+[10] 
+Patrick Iff, Paul Brügger, Marcin Chrapek, Maciej Besta, and Torsten Hoefler. 2025.
+Benchmarking Filtered Approximate Nearest Neighbor Search Algorithms on
+Transformer-based Embedding Vectors. arXiv preprint arXiv:2507.21989 (2025).
+[11] Shikhar Jaiswal, Ravishankar Krishnaswamy, Ankit Garg, Harsha Vardhan
+Simhadri, and Sheshansh Agrawal. 2022. Ood-diskann: Efficient and scalable
+graph anns for out-of-distribution queries. arXiv preprint arXiv:2211.12850 (2022).
+[12] Herve Jegou, Matthijs Douze, and Cordelia Schmid. 2010. Product quantization
+for nearest neighbor search. IEEE transactions on pattern analysis and machine
+intelligence 33, 1 (2010), 117–128.
+[13] Tim Kraska, Alex Beutel, Ed H Chi, Jeffrey Dean, and Neoklis Polyzotis. 2018.
+The case for learned index structures. In Proceedings of the 2018 international
+conference on management of data. 489–504.
+[14] Zhaoheng Li, Silu Huang, Wei Ding, Yongjoo Park, and Jianjun Chen. 2025.
+SIEVE: Effective Filtered Vector Search with Collection of Indexes. Proc. VLDB
+Endow. 18, 11 (July 2025), 4723–4736.
+[15] 
+Anqi Liang, Pengcheng Zhang, Bin Yao, Zhongpu Chen, Yitong Song, and
+Guangxu Cheng. 2024. UNIFY: Unified Index for Range Filtered Approximate
+Nearest Neighbors Search. Proc. VLDB Endow. 18, 4 (2024), 1118–1130.
+[16] Jiayi Liu, Yunan Zhang, Chenzhe Jin, Aditya Gupta, Shige Liu, and Jianguo Wang.
+2026. Fast Vector Search in PostgreSQL: A Decoupled Approach.. In CIDR.
+[17] Duo Lu, Helena Caminal, Manos Chatzakis, Yannis Papakonstantinou, Yannis
+Chronis, Vaibhav Jain, and Fatma Özcan. 2026. An In-Depth Study of Filter-
+Agnostic Vector Search on a PostgreSQL Database System:[Experiments &amp; Anal-
+ysis]. Proceedings of the ACM on Management of Data 4, 3 (SIGMOD (2026),
+1–26.
+[18] Yu A Malkov and Dmitry A Yashunin. 2018. Efficient and robust approximate
+nearest neighbor search using hierarchical navigable small world graphs. IEEE
+transactions on pattern analysis and machine intelligence 42, 4 (2018), 824–836.
+[19] 
+Jason Mohoney, Anil Pacaci, Shihabur Rahman Chowdhury, Ali Mousavi, Ihab F
+Ilyas, Umar Farooq Minhas, Jeffrey Pound, and Theodoros Rekatsinas. 2023.
+High-throughput vector similarity search in knowledge graphs. Proceedings of
+the ACM on Management of Data 1, 2 (2023), 1–25.
+[20] 
+James Jie Pan, Jianguo Wang, and Guoliang Li. 2024. Survey of vector database
+management systems. The VLDB Journal 33, 5 (2024), 1591–1615.
+[21] Liana Patel, Peter Kraft, Carlos Guestrin, and Matei Zaharia. 2024. Acorn: Per-
+formant and predicate-agnostic search over vector embeddings and structured
+data. Proceedings of the ACM on Management of Data 2, 3 (2024), 1–27.
+[22] 
+pgvector. [n.d.]. pgvector: Open-source vector similarity search for Postgres.
+https://github.com/pgvector/pgvector. GitHub repository. Accessed: 2026.
+[23] Junjie Song, Yu Liu, Guoyu Hu, Zhongle Xie, Ming Yang, Beng Chin Ooi, and Ke
+Zhou. 2026. FAVOR: Efficient Filter-Agnostic Vector ANNS Based on Selectivity-
+Aware Exclusion Distances. Proceedings of the ACM on Management of Data 4, 3
+(SIGMOD (2026), 1–25.
+[24] Mihail Stoian, Johannes Thürauf, Andreas Zimmerer, Alexander van Renen, and
+Andreas Kipf. 2025. Instance-Optimized String Fingerprints (Extended Abstracts).
+Applied AI for Database Systems and Applications (AIDB) at VLDB (2025).
+[25] Jianguo Wang, Xiaomeng Yi, Rentong Guo, Hai Jin, Peng Xu, Shengjun Li, Xi-
+angyu Wang, Xiangzhou Guo, Chengming Li, Xiaohai Xu, et al. 2021. Milvus:
+A purpose-built vector data management system. In Proceedings of the 2021
+international conference on management of data. 2614–2627.
+[26] Jin Zhang, Defu Lian, Haodi Zhang, Baoyun Wang, and Enhong Chen. 2023.
+Query-aware quantization for maximum inner product search. In Proceedings of
+the AAAI Conference on Artificial Intelligence, Vol. 37. 4875–4883.
+[27] Xiang Zhang, Chao Zhang, Ju Fan, Guoliang Li, and Xiaoyong Du. 2026.
+VecBench: A Controllable Benchmark for Filtered Vector Search:[Experiments &amp;
+Analysis]. Proceedings of the ACM on Management of Data 4, 3 (SIGMOD (2026),
+1–27.
+[28] 
+Chaoji Zuo, Miao Qiao, Wenchao Zhou, Feifei Li, and Dong Deng. 2024. Serf: Seg-
+ment graph for range-filtering approximate nearest neighbor search. Proceedings
+of the ACM on Management of Data 2, 1 (2024), 1–26.
+5</page></paper>
