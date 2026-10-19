@@ -285,6 +285,10 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
     g.gen = 1;
   }
   const uint32_t gen = g.gen;
+  // Prefetch the vector+adjacency block of every neighbour before the
+  // distance loop; random block access is the dominant cold-graph cost.
+  constexpr int prefetch = 3;
+  const bool descent_prefetch = std::getenv("GRAPH_DESCENT_PREFETCH") != nullptr;
   const size_t voff = inline_vec_off<T>(g.M);
   auto dist = [&](uint32_t id) {
     return u8_l2(q, &g.blocks[size_t(id) * g.stride + voff], g.dim);
@@ -298,6 +302,14 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
       changed = false;
       const T* p = inline_upper_block(g, ep, level);
       uint32_t c = p[0];
+      if (descent_prefetch) {
+        for (uint32_t j = 0; j < c; ++j) {
+          const uint8_t* bp = &g.blocks[size_t(p[1 + j]) * g.stride];
+          __builtin_prefetch(bp, 0, 1);
+          __builtin_prefetch(bp + 64, 0, 1);
+          __builtin_prefetch(bp + 128, 0, 1);
+        }
+      }
       for (uint32_t j = 0; j < c; ++j) {
         uint32_t nb = p[1 + j];
         float dn = dist(nb);
@@ -333,6 +345,15 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
     uint32_t c = cd.second;
     const T* slot = reinterpret_cast<const T*>(&g.blocks[size_t(c) * g.stride]);
     uint32_t cnt = slot[0];
+    if (prefetch) {
+      for (uint32_t j = 0; j < cnt; ++j) {
+        uint32_t nb = slot[1 + j];
+        const uint8_t* bp = &g.blocks[size_t(nb) * g.stride];
+        __builtin_prefetch(bp, 0, 1);
+        __builtin_prefetch(bp + 64, 0, 1);
+        __builtin_prefetch(bp + 128, 0, 1);
+      }
+    }
     for (uint32_t j = 0; j < cnt; ++j) {
       uint32_t nb = slot[1 + j];
       if (g.visited[nb] == gen) continue;
