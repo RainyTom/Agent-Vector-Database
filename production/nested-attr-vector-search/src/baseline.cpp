@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
   Args args = parse(argc, argv);
   // Search breadth for each per-node ANN search. Local indexes contain only
   // feasible points, so no filter is involved.
-  size_t EF = 28;
+  size_t EF = 21;
   if (const char* e = std::getenv("GRAPH_EF")) EF = std::strtoull(e, nullptr, 10);
 
   if (args.mode == "build") {
@@ -203,7 +203,7 @@ int main(int argc, char** argv) {
       }
     }
 
-    size_t M_OVERRIDE = 16, EFC_OVERRIDE = 0;
+    size_t M_OVERRIDE = 24, EFC_OVERRIDE = 200;
     if (const char* e = std::getenv("GRAPH_M")) M_OVERRIDE = std::strtoull(e, nullptr, 10);
     if (const char* e = std::getenv("GRAPH_EFC")) EFC_OVERRIDE = std::strtoull(e, nullptr, 10);
     // Optional locality ordering: project all objects on the first principal
@@ -247,11 +247,6 @@ int main(int argc, char** argv) {
       float span = std::max(1e-9f, hi - lo);
       for (int i = 0; i < m.n; ++i)
         order_key[i] = uint32_t((p1[i] - lo) / span * 1e6f);
-      std::vector<float> pc1_out;
-      pc1_out.reserve(2 * size_t(m.dim));
-      for (int j = 0; j < m.dim; ++j) pc1_out.push_back(float(mean[j]));
-      for (int j = 0; j < m.dim; ++j) pc1_out.push_back(float(v[j]));
-      write_bin(args.index_dir + "/pc1.bin", pc1_out);
     }
 
     U8L2Space space(m.dim);
@@ -265,8 +260,7 @@ int main(int argc, char** argv) {
         return a < b;
       });
       size_t M = M_OVERRIDE;
-      size_t ef_construction = EFC_OVERRIDE ? EFC_OVERRIDE
-                                            : (mem.size() > 40000 ? 200 : 100);
+      size_t ef_construction = EFC_OVERRIDE;
       hnswlib::HierarchicalNSW<float> index(&space, mem.size(), M, ef_construction, 42 + v);
       for (uint32_t id : mem) index.addPoint(&base[size_t(id) * m.dim], hnswlib::labeltype(id));
       index.saveIndex(node_path(args.index_dir, v));
@@ -311,20 +305,6 @@ int main(int argc, char** argv) {
       indexes[v]->setEf(std::max<size_t>(ef_v, k));
     }
 
-    // Order each node's queries by the same PC1 projection used for id
-    // layout, so consecutive searches on a graph visit nearby regions.
-    std::vector<float> qproj(nq, 0.f);
-    {
-      std::vector<float> pc1 = read_bin<float>(args.index_dir + "/pc1.bin",
-                                               size_t(2 * m.dim));
-      for (int qi = 0; qi < nq; ++qi) {
-        double dot = 0.0;
-        for (int j = 0; j < m.dim; ++j)
-          dot += (double(queries[size_t(qi) * m.dim + j]) - pc1[j]) * pc1[m.dim + j];
-        qproj[qi] = float(dot);
-      }
-    }
-
     // Scope-grouped scheduling: all queries that touch node v run back to
     // back while v's graph is hot. Results are buffered per query and merged
     // afterwards, preserving the original output order.
@@ -333,12 +313,6 @@ int main(int argc, char** argv) {
       for (int slot = 0; slot < int(qnodes[qi].size()); ++slot) {
         node_qs[qnodes[qi][slot]].push_back({qi, slot});
       }
-    }
-    for (auto& lst : node_qs) {
-      std::sort(lst.begin(), lst.end(), [&](const auto& a, const auto& b) {
-        if (qproj[a.first] != qproj[b.first]) return qproj[a.first] < qproj[b.first];
-        return a.first < b.first;
-      });
     }
     std::vector<std::vector<Cand>> parts(nq);
     for (int qi = 0; qi < nq; ++qi) parts[qi].reserve(qnodes[qi].size() * k);
