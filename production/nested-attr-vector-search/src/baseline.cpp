@@ -1,17 +1,12 @@
-// Baseline candidate for the hierarchical filtered top-k benchmark.
-//
-// Two modes, selected per query:
-//   * scope popcount <= SCAN_THRESHOLD: exact brute-force scan over the
-//     feasible set (guaranteed exact, bounded work).
-//   * larger scope: global HNSW with an id-allowance filter; ef is sized from
-//     the scope selectivity and doubled until k results are found.
+// Candidate: one materialized HNSW index per hierarchy node ("index per
+// subtree"). Each node's index contains exactly its feasible set, so query
+// execution is a plain ANN search with no predicate filtering; antichain
+// queries search each node index and merge by (distance, id).
 //
 // CLI:
-//   baseline build --base B --tree T --labels L --index-dir DIR
-//   baseline query --base B --tree T --index-dir DIR --queries Q \
-//                  --workload W --out IDS --timings T --repeats R
-//
-// Query mode prints "QUERY_SECONDS <median>" for the timed repeat.
+//   candidate build --base B --tree T --labels L --meta M --index-dir DIR
+//   candidate query --base B --tree T --meta M --index-dir DIR --queries Q \
+//                   --workload W --out IDS --timings T --repeats R
 
 #include <algorithm>
 #include <chrono>
@@ -22,7 +17,6 @@
 #include <cstring>
 #include <fstream>
 #include <iostream>
-#include <numeric>
 #include <queue>
 #include <string>
 #include <vector>
@@ -91,7 +85,6 @@ Meta read_meta(const std::string& path) {
 struct TreeData {
   std::vector<int> parent;
   std::vector<std::vector<int>> children;
-  std::vector<char> in_desc;
 
   void load(const std::string& path) {
     std::ifstream f(path);
@@ -104,16 +97,6 @@ struct TreeData {
       f >> id >> p;
       parent[id] = p;
       if (p >= 0) children[p].push_back(id);
-    }
-    in_desc.assign(nodes, 0);
-  }
-
-  void mark_descendants(int u, std::vector<char>& mark) const {
-    std::vector<int> stack{u};
-    while (!stack.empty()) {
-      int v = stack.back(); stack.pop_back();
-      mark[v] = 1;
-      for (int c : children[v]) stack.push_back(c);
     }
   }
 };
@@ -133,62 +116,22 @@ inline float l2sq(const float* a, const float* b, int dim) {
   return (s0 + s1) + (s2 + s3);
 }
 
-inline int popcount_bits(const uint64_t* bits, int words) {
-  int c = 0;
-  for (int w = 0; w < words; ++w) c += __builtin_popcountll(bits[w]);
-  return c;
-}
-
-struct BitsFilter : hnswlib::BaseFilterFunctor {
-  const uint64_t* bits;
-  explicit BitsFilter(const uint64_t* b) : bits(b) {}
-  bool operator()(hnswlib::labeltype id) override {
-    return (bits[id >> 6] >> (id & 63)) & 1ULL;
-  }
-};
-
 struct Cand {
   float d;
   int id;
 };
-struct Worse {
-  bool operator()(const Cand& a, const Cand& b) const {
-    return a.d < b.d || (a.d == b.d && a.id < b.id);
-  }
-};
 
-void topk_exact(const float* q, const float* base, int dim, const uint64_t* bits,
-                int words, int k, std::vector<std::pair<float, int>>& out) {
-  std::priority_queue<Cand, std::vector<Cand>, Worse> heap;
-  for (int w = 0; w < words; ++w) {
-    uint64_t x = bits[w];
-    while (x) {
-      int b = __builtin_ctzll(x);
-      x &= x - 1;
-      int id = w * 64 + b;
-      float d = l2sq(q, base + size_t(id) * dim, dim);
-      if (int(heap.size()) < k) {
-        heap.push({d, id});
-      } else {
-        Cand worst = heap.top();
-        if (d < worst.d || (d == worst.d && id < worst.id)) {
-          heap.pop();
-          heap.push({d, id});
-        }
-      }
-    }
-  }
-  out.clear();
-  while (!heap.empty()) { out.push_back({heap.top().d, heap.top().id}); heap.pop(); }
-  std::reverse(out.begin(), out.end());
+std::string node_path(const std::string& dir, int v) {
+  return dir + "/node_" + std::to_string(v) + ".bin";
 }
 
 }  // namespace
 
 int main(int argc, char** argv) {
   Args args = parse(argc, argv);
-  int SCAN_THRESHOLD = 16000;
-  if (const char* e = std::getenv("FILTERED_SCAN_THRESHOLD")) SCAN_THRESHOLD = std::atoi(e);
+  // Search breadth for each per-node ANN search. Local indexes contain only
+  // feasible points, so no filter is involved.
+  const size_t EF = 64;
 
   if (args.mode == "build") {
     Meta m = read_meta(args.meta);
@@ -197,27 +140,28 @@ int main(int argc, char** argv) {
     std::vector<int32_t> labels = read_bin<int32_t>(args.labels, size_t(m.n) * 3);
     std::vector<float> base = read_bin<float>(args.base, size_t(m.n) * m.dim);
 
-    // Scope masks: bit i set iff object i has a direct label inside the
-    // subtree rooted at this node.
-    std::vector<uint64_t> masks(size_t(m.nodes) * m.words, 0);
+    // Exact feasible set per node: walk each direct label up to the root.
+    std::vector<std::vector<uint32_t>> members(m.nodes);
     for (int i = 0; i < m.n; ++i) {
       for (int j = 0; j < 3; ++j) {
         int l = labels[size_t(i) * 3 + j];
-        if (l >= 0) masks[size_t(l) * m.words + (i >> 6)] |= 1ULL << (i & 63);
+        for (int v = l; v >= 0; v = tree.parent[v]) members[v].push_back(uint32_t(i));
       }
     }
-    for (int v = m.nodes - 1; v > 0; --v) {
-      int p = tree.parent[v];
-      uint64_t* dst = &masks[size_t(p) * m.words];
-      const uint64_t* src = &masks[size_t(v) * m.words];
-      for (size_t w = 0; w < m.words; ++w) dst[w] |= src[w];
-    }
-    write_bin(args.index_dir + "/masks.bin", masks);
 
     hnswlib::L2Space space(m.dim);
-    hnswlib::HierarchicalNSW<float> index(&space, m.n, 16, 200, 42);
-    for (int i = 0; i < m.n; ++i) index.addPoint(&base[size_t(i) * m.dim], hnswlib::labeltype(i));
-    index.saveIndex(args.index_dir + "/hnsw.bin");
+    for (int v = 0; v < m.nodes; ++v) {
+      auto& mem = members[v];
+      if (mem.empty()) continue;
+      std::sort(mem.begin(), mem.end());
+      mem.erase(std::unique(mem.begin(), mem.end()), mem.end());
+      size_t M = 16;
+      size_t ef_construction = mem.size() > 40000 ? 200 : 100;
+      hnswlib::HierarchicalNSW<float> index(&space, mem.size(), M, ef_construction, 42 + v);
+      for (uint32_t id : mem) index.addPoint(&base[size_t(id) * m.dim], hnswlib::labeltype(id));
+      index.saveIndex(node_path(args.index_dir, v));
+      std::vector<uint32_t>().swap(mem);
+    }
     std::cout << "BUILD_OK\n";
     return 0;
   }
@@ -226,10 +170,7 @@ int main(int argc, char** argv) {
     Meta m = read_meta(args.meta);
     TreeData tree;
     tree.load(args.tree);
-    std::vector<float> base = read_bin<float>(args.base, size_t(m.n) * m.dim);
     std::vector<float> queries = read_bin<float>(args.queries, size_t(m.nq) * m.dim);
-    std::vector<uint64_t> masks = read_bin<uint64_t>(args.index_dir + "/masks.bin",
-                                                     size_t(m.nodes) * m.words);
 
     std::ifstream wf(args.workload);
     int nq, k;
@@ -243,51 +184,47 @@ int main(int argc, char** argv) {
     }
 
     hnswlib::L2Space space(m.dim);
-    auto* index = new hnswlib::HierarchicalNSW<float>(&space, args.index_dir + "/hnsw.bin", false, m.n);
+    std::vector<hnswlib::HierarchicalNSW<float>*> indexes(m.nodes, nullptr);
+    for (int v = 0; v < m.nodes; ++v) {
+      std::ifstream probe(node_path(args.index_dir, v));
+      if (!probe.good()) continue;
+      probe.close();
+      indexes[v] = new hnswlib::HierarchicalNSW<float>(&space, node_path(args.index_dir, v), false, 0);
+      indexes[v]->setEf(std::max<size_t>(EF, k));
+    }
 
-    std::vector<uint64_t> bits(m.words);
     std::vector<int32_t> ids(size_t(nq) * k, -1);
     std::vector<double> timings(nq, 0.0);
-    std::vector<std::pair<float, int>> cands;
+    std::vector<Cand> cands;
 
     double best_per_repeat = 1e300;
     for (int rep = 0; rep < args.repeats; ++rep) {
       double total_s = 0.0;
       for (int qi = 0; qi < nq; ++qi) {
         auto t0 = std::chrono::steady_clock::now();
-        std::fill(bits.begin(), bits.end(), 0);
-        for (int u : qnodes[qi]) {
-          const uint64_t* src = &masks[size_t(u) * m.words];
-          for (size_t w = 0; w < m.words; ++w) bits[w] |= src[w];
-        }
-        int cnt = popcount_bits(bits.data(), int(m.words));
         const float* q = &queries[size_t(qi) * m.dim];
         cands.clear();
-        if (cnt <= SCAN_THRESHOLD) {
-          topk_exact(q, base.data(), m.dim, bits.data(), int(m.words), k, cands);
-        } else {
-          double sel = double(cnt) / double(m.n);
-          size_t ef = std::max<size_t>(64, size_t(std::ceil(1.5 * k / sel)));
-          if (ef > size_t(m.n)) ef = m.n;
-          BitsFilter filter(bits.data());
-          hnswlib::AlgorithmInterface<float>::DistanceLabelPriorityQueue res;
-          while (true) {
-            index->setEf(ef);
-            res = index->searchKnn(q, k, &filter);
-            if (res.size() >= size_t(k) || ef >= size_t(m.n)) break;
-            ef *= 2;
-          }
+        for (int u : qnodes[qi]) {
+          if (!indexes[u]) continue;
+          auto res = indexes[u]->searchKnn(q, k, nullptr);
           while (!res.empty()) {
             cands.push_back({res.top().first, int(res.top().second)});
             res.pop();
           }
-          std::sort(cands.begin(), cands.end(), [](const auto& a, const auto& b) {
-            return a.first < b.first || (a.first == b.first && a.second < b.second);
-          });
         }
+        std::sort(cands.begin(), cands.end(), [](const Cand& a, const Cand& b) {
+          return a.d < b.d || (a.d == b.d && a.id < b.id);
+        });
         std::fill(ids.begin() + size_t(qi) * k, ids.begin() + size_t(qi + 1) * k, -1);
-        for (int j = 0; j < k && j < int(cands.size()); ++j)
-          ids[size_t(qi) * k + j] = cands[j].second;
+        int filled = 0;
+        int32_t* row = &ids[size_t(qi) * k];
+        for (const Cand& c : cands) {
+          bool dup = false;
+          for (int t = 0; t < filled; ++t) dup = dup || row[t] == c.id;
+          if (dup) continue;
+          row[filled++] = c.id;
+          if (filled == k) break;
+        }
         auto t1 = std::chrono::steady_clock::now();
         timings[qi] = std::chrono::duration<double, std::milli>(t1 - t0).count();
         total_s += timings[qi] / 1000.0;
