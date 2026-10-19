@@ -1,0 +1,44 @@
+{
+  "date": "2026-10-19",
+  "type": "researcher_synthesis_and_limited_novelty_screen",
+  "canonical_definition": "researches/containment-filtered-vector-search/problem-definition.md",
+  "canonical_analysis": "researches/containment-filtered-vector-search/novelty-analysis.md",
+  "scope": "static single-path hard-prefix constrained per-query approximate top-k; not vector join",
+  "queries": [
+    "vector similarity join / vector join + prefix hierarchy",
+    "similarity self-join / high-dimensional similarity join / inner-product similarity join + prefix hierarchy",
+    "prefix filtered nearest neighbor hierarchical index",
+    "Directory-Aware Query TrieHI",
+    "hierarchical filtered ANN prefix tree",
+    "laminar filtered nearest neighbor",
+    "hierarchical filters nearest neighbor",
+    "prefix filtered ANN graph index",
+    "subtree filtered vector search index",
+    "iRangeGraph range graph"
+  ],
+  "primary_rechecks": [
+    "https://arxiv.org/abs/2606.16903",
+    "https://arxiv.org/abs/2409.02571",
+    "https://github.com/YuexuanXu7/iRangeGraph"
+  ],
+  "local_evidence": [
+    "papers/prefix-vector-search/2606.16903-directory-aware/paper.md",
+    "papers/filtered-ann/10.1145-3802098-pathseer/paper.md",
+    "papers/filtered-ann/2409.02571-irangegraph/paper.md",
+    "papers/filtered-ann/2601.01291-curator/paper.md",
+    "papers/filtered-ann/2403.04871-acorn/paper.md"
+  ],
+  "conclusion": {
+    "new_query_semantics": "not supported; recursive DSQ and exact reductions are direct prior art",
+    "new_algorithm": "not established",
+    "candidate": "RQ-P: shared navigation for laminar prefix scopes under total-byte and recall constraints",
+    "old_hypotheses": "F1–F10 retained as history/components, not ten contributions"
+  },
+  "coverage_limits": [
+    "no complete forward/backward citation closure",
+    "UniFilter/UNG originals still missing",
+    "tree/laminar/range-family and hierarchical tenant indexing prior art incomplete",
+    "no ANN implementation or performance experiment",
+    "AI-generated summaries and unrelated occurrences of prefix excluded"
+  ]
+}

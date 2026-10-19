@@ -171,3 +171,19 @@
 ### 2026-10-19 TrieHI后端选择补核
 
 用户追问为何不用先进filtered ANN；复核原文§II-A、§V-A、§VI与参考文献：实验固定Viking PG/IVF以隔离目录元数据开销，且确实引用ACORN/Filtered-DiskANN/UNG。原文未逐一解释排除各先进后端，不能臆测作者意图或将未跑解释成不能组合；结论限已测scope/后端。第九篇与阅读报告补充交叉实验建议及版本时序边界；未新增记录/实验。
+
+### 2026-10-19 前缀问题重定义与创新性复核
+
+先检查总书目/关系、当前前缀定义、十篇报告与历史H/C/F，再按vector join六类词及prefix/hierarchy变体检索，随后prefix-filtered/hierarchical/laminar/subtree ANN与directory/iRangeGraph。原始arXiv与作者iRangeGraph仓库重核静态范围图前序；其余命中含无关字符串prefix/AI综述，不作为直接证据。未得新的足以确立创新的原始论文，不将有限检索未命中写成无人研究。
+
+新增problem-definition.md和novelty-analysis.md，主index改为引用统一规范，旧nested-attr创新页标历史模型，入口/研究问题同步。六定义包含精确合法、距离与ID排序、零/不足k、欠填/recall、全预算；创新性撤回新算子/Trie本身，归并为RQ-P待验证共享导航。证据快照记录覆盖与缺口；补3篇项目启发，无新论文/关系，21篇/22关系不变。未运行算法/性能实验，待补层状/层级过滤图与UniFilter/UNG原文及同后端强基线。
+
+### 2026-10-19 原生目录必要性论证纠偏
+
+用户提供MOVE/非递归/存储三点解释，复核Directory-Aware原文§III–V：PE-Online目录键级改写不必逐向量更新；TrieHI MOVE仍需children/parent、祖先bitmap及catalog处理；Local仅不变量记号，non-recursive仍做子集合并差；TableV显示TrieHI存储最大。补第九篇常见论证纠偏，区分原始片段无序contains与正确前缀编码，并把稳定目录ID+外部目录服务标为本项目备选推导。未进行新文献发现或算法实验，未新增论文/关系。
+
+### 2026-10-19 Context Database扩展路线初筛
+
+用户提出DAG/联合索引/摘要导航/MVCC/ACL，先查已有TrieHI全文/创新页，再搜vector similarity join/vector join与DAG/MVCC/permission、self-join/high-dimensional/inner-product variants，随后查hierarchical RAG及官方系统文档。核RAPTOR的ICLR2024摘要、Zanzibar的Google/ATC2019摘要、Milvus2.6 timestamp、Qdrant租户过滤、Git对象及Linux symlink手册；TigerVector作者PDF检索命中图模式vector-join候选，完整书目/输出语义未核，登记待办。新候选仅摘要/片段，不纳入全文索引。
+
+重核TrieHI §V-E确实说明深目录PG遍历成本增大；不扩展为HNSW必然掉召回。新增extensions.md与日期化初筛，修正bitmap去重/撤销、symlink可成环、RAG非安全几何剪枝、版本/权限已有前序等论证。核心单路径静态定义保持，21篇/22关系不变，无实验。待补动态可达性增量维护、版本ANN/权限继承及RAPTOR/Zanzibar/TigerVector原文，不能声称五方向均新颖。

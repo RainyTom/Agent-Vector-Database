@@ -30,7 +30,7 @@
 - [Vector Join](papers/vector-join/README.md)、[过滤 ANN](papers/filtered-ann/README.md)、[前缀/目录检索](papers/prefix-vector-search/README.md)、[一般相似连接](papers/similarity-join/README.md)
 - [可检索论文索引](papers/papers.jsonl)、[论文关系](papers/relations.jsonl)、[更新记录](papers/changelog.md)
 - [检索覆盖与补查队列](researches/vector-join/search-log.md)、[待验证研究问题](researches/vector-join/research-questions.md)
-- [前缀包含过滤向量搜索：定义、归约与八项相关工作](researches/containment-filtered-vector-search/index.md)
+- 前缀属性向量检索：[问题定义](researches/containment-filtered-vector-search/problem-definition.md)、[创新性复核](researches/containment-filtered-vector-search/novelty-analysis.md)、[逐篇证据](researches/containment-filtered-vector-search/index.md)
 - [Vector Join 研究综述](researches/vector-join/survey.md)
 - [Vector Join 学习与实验路线](researches/vector-join/roadmap.md)
 

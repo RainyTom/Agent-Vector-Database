@@ -2,6 +2,10 @@
 
 更新日期：2026-10-19（Asia/Shanghai）。
 
+当前规范入口：[问题定义（Introduction / Definitions / Naive Solutions）](problem-definition.md)、[创新性复核与立项条件](novelty-analysis.md)。以下逐篇笔记和早期集合模型作为证据与背景；研究主张以本轮复核为准。
+
+扩展研究另见[Context Database五方向复核](extensions.md)：DAG维护、联合索引、摘要导航、多版本与权限；不将其自动叠入当前单路径定义。
+
 ## 逐篇讨论
 
 1. [Filtered-DiskANN：标签感知构图与前缀等价改造](walkthroughs/01-filtered-diskann.md)。
@@ -25,52 +29,9 @@
 
 ## Problem Definition
 
-**定义 1（属性序列与数据对象）。** 令 $\Sigma$ 为属性符号全集，$\Sigma^*$ 为其有限序列集合。数据集为
+完整学术定义统一维护于[问题定义](problem-definition.md)：以唯一对象ID、向量和单一路径为输入，查询由向量、前缀与k组成；精确前缀合法性不因ANN近似而放宽。定义同时明确精确答案、欠填、零/不足k、并列、平均召回与总预算，避免主文和笔记出现多个版本。
 
-$$
-\mathcal D=\{o_i=(\mathrm{id}_i,\mathbf x_i,s_i)\}_{i=1}^{n},
-\qquad
-\mathbf x_i\in\mathbb R^d,\quad
-s_i=(a_{i,1},\ldots,a_{i,m_i})\in\Sigma^*.
-$$
-
-每个对象基础版本具有一条有序属性序列。例如分类路径 $(\text{计算机科学},\text{数据库},\text{向量检索})$。路径按完整属性节点分词，字符串字符前缀不自动等同于属性序列前缀；序列末端可以停在内部类别节点。
-
-**定义 2（前缀包含关系）。** 对序列 $p=(b_1,\ldots,b_\ell)$ 和 $s=(a_1,\ldots,a_m)$，定义
-
-$$
-p\preceq_{\mathrm{pref}}s
-\quad\Longleftrightarrow\quad
-\ell\le m\ \land\ \forall j\in\{1,\ldots,\ell\},\ b_j=a_j.
-$$
-
-因此匹配必须从首位开始、连续且顺序一致。允许相等，即序列自身也是其前缀；空前缀 $\epsilon$ 匹配全部对象。例如，查询 $(A,B)$ 匹配 $(A,B,C)$ 和 $(A,B)$，不匹配 $(B,A,C)$、$(A,C,B)$ 或 $(X,A,B)$。无序集合包含与一般有序子序列都可能错误地接受其中部分结果。
-
-**定义 3（前缀过滤向量查询）。** 查询为 $Q=(\mathbf q,p,k)$，其中 $\mathbf q\in\mathbb R^d$，$p\in\Sigma^*$，$k\in\mathbb N_{>0}$。可行对象集合为
-
-$$
-\mathcal D_p=\{o_i\in\mathcal D:p\preceq_{\mathrm{pref}}s_i\}.
-$$
-
-固定距离函数 $\delta$ 和对象 ID 的并列规则，令 $k_Q=\min(k,|\mathcal D_p|)$，精确答案为
-
-$$
-R^*(Q)=\operatorname{TopK}_{o_i\in\mathcal D_p}
-\bigl((\delta(\mathbf q,\mathbf x_i),\mathrm{id}_i);k_Q\bigr).
-$$
-
-返回对象必须逐一满足前缀关系，并按原始向量距离排序、按 ID 去重。不足 k 个可行对象时返回全部，空可行集返回空。近似搜索只允许损失近邻召回，不放宽前缀条件；最终 Recall@k 以 $k_Q$ 为分母，空结果真值查询单列。
-
-**定义 4（前缀可行集合的层级结构）。** 若 $p\preceq_{\mathrm{pref}}r$，则 $\mathcal D_r\subseteq\mathcal D_p$。基础单序列版本中，若 p 与 r 互非前缀，则 $\mathcal D_p\cap\mathcal D_r=\varnothing$。因而所有前缀对应的可行集合构成层状集合族（laminar family），可以由共享前缀 Trie 表示。这里前缀 Trie 来自属性路径，不是 HNSW 的导航层，也不是 UNG 对任意无序标签集合构造的包含图。
-
-该性质为本项目从定义出发的推导。若业务允许一个对象具有多条分类路径，应另定义 $S_i\subseteq\Sigma^*$，采用“存在一条路径被前缀匹配”的谓词
-
-$$
-\mathcal D_p^{\mathrm{multi}}
-=\{o_i:\exists s\in S_i,\ p\preceq_{\mathrm{pref}}s\}.
-$$
-
-此时不同分支可能命中同一对象，层状性不再对对象集合整体成立，且不能把不同路径的节点混为一条路径。首版按单序列定义研究，多路径属于明确区分的扩展。
+前缀可行集合为 $\mathcal D_p=\{o_i:p\preceq s_i\}$。单路径可行集合层状；完整前缀单标签与静态DFS区间归约均精确成立。这些是已有执行能力的基础，不单独构成新意。
 
 ## 与一般包含过滤的关系与研究动机
 

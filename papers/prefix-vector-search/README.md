@@ -6,6 +6,8 @@
 
 当前[前缀过滤问题与逐篇讨论](../../researches/containment-filtered-vector-search/index.md)以目录前缀范围为研究场景。Directory-Aware/TrieHI 是直接前序；[filtered ANN](../filtered-ann/README.md)中的论文通过编码或导航组件参与比较，不复制全文到本目录。
 
+当前研究规范：[问题定义](../../researches/containment-filtered-vector-search/problem-definition.md)、[创新性复核](../../researches/containment-filtered-vector-search/novelty-analysis.md)。
+
 | 论文 | 年份与版本状态 | 本地材料 |
 |---|---|---|
 | [Directory-Aware Query and Maintenance in Vector Databases](https://arxiv.org/abs/2606.16903) | 2026；arXiv preprint; 正式venue未核实 | [目录](2606.16903-directory-aware/)、[阅读报告](2606.16903-directory-aware/paper.report.md) |

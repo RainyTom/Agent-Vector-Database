@@ -1,5 +1,7 @@
 # 待验证研究问题
 
+> 当前前缀属性方向已重新收敛，见[规范问题定义](../containment-filtered-vector-search/problem-definition.md)与[创新性复核](../containment-filtered-vector-search/novelty-analysis.md)。下文H/C/F编号保留研究过程，不代表独立的新颖贡献；当前只保留待验证主候选RQ-P。
+
 ## RQ-001：输出规模与质量不确定性下的分层存储 join 计划选择
 
 状态：**基于文献综合推导的研究假设；新颖性尚未充分排查**。不是作者共同提出的原话，也不声称首次提出成本优化或向量基数估计。
@@ -105,3 +107,11 @@ H2：把 ANN witness 的 false-empty、过滤器 false-negative 与候选搜索�
 ### F10 PathSeer约束下的前缀判定与局部预算
 
 见[第十篇](../containment-filtered-vector-search/walkthroughs/10-pathseer.md)。PathSeer已有双区融合索引、局部DFN/DOS混合和离线VOB调度，不能把一般局部自适应当作新意。F10为本项目综合推导、新颖性未充分排查：利用合法源下的LCP证书及准确前缀membership降低判定代价，再独立重profile控制预算。DFN可经不合格源，必须保留直接验证目的的分支；AX→ABC、queryAB说明无条件LCP测试会拒绝合法目的。原生过滤改变c_filter，旧VOB不能直接复用作公平对照。文中给静态最小实验、双阶段消融、总字节/profile/scope/导航/recall口径和bitmap低成本等反例；未运行ANN。hnswlib移植只属组件适配，原论文复现需Faiss双区与完整profile。
+
+### 2026-10-19 当前主候选RQ-P（替代并列罗列F1–F10）
+
+用户要求重定义与创新分析，已统一[规范定义](../containment-filtered-vector-search/problem-definition.md)和[复核](../containment-filtered-vector-search/novelty-analysis.md)。单路径硬前缀scope/精确top-k/近似recall与欠填/预算六定义，TrieHI直接重合与DFS区间归约前序明确。RQ-P仅保留同字节/同召回下的前缀共享导航候选；F2/F3/F7/F8/F9合并，F1/F6/F10为支撑表示，F5/F4不同时叠加贡献。给先测scope+现代执行器及DFS+iRangeGraph再立项的停止条件，未有算法结果或新颖性证明；本项目综合推导、尚未充分排查。
+
+### 2026-10-19 Context Database五扩展（不替换基础定义）
+
+见[扩展路线](../containment-filtered-vector-search/extensions.md)：E1多父DAG撤销维护、E2共享导航联合索引、E3摘要预算路由、E4版本目录/ANN一致视图、E5继承权限撤销。均为本项目综合推导，新颖性未充分排查，非原作者五项future work；每项给问题/现有前序/差异/假设/基线/最小实验/风险。E2延续RQ-P，其他需独立语义与评测。Bitmap并集不多重计数；summary相似不是安全下界；MVCC不等于lock-free；ACL不只后过滤。未实施或验证性能，不把微秒/数量级收益写成结论。

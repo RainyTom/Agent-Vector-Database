@@ -1,0 +1,110 @@
+{
+  "date": "2026-10-19",
+  "status": "limited_extension_screen_not_novelty_proof",
+  "analysis": "researches/containment-filtered-vector-search/extensions.md",
+  "core_model_changed": false,
+  "candidates": [
+    {
+      "title": "RAPTOR: Recursive Abstractive Processing for Tree-Organized Retrieval",
+      "authors": [
+        "Parth Sarthi",
+        "Salman Abdullah",
+        "Aditi Tuli",
+        "Shubh Khanna",
+        "Anna Goldie",
+        "Christopher D. Manning"
+      ],
+      "year": 2024,
+      "venue": "ICLR2024",
+      "url": "https://proceedings.iclr.cc/paper_files/paper/2024/hash/8a2acd174940dbca361a6398a4f9df91-Abstract-Conference.html",
+      "arxiv": "2401.18059",
+      "reading_status": "official abstract/bibliography only; full algorithm unreviewed",
+      "relevance": "C/background hierarchical RAG; transfer is summary routing, not geometric vector join",
+      "open_items": [
+        "full algorithms and evaluation",
+        "current directory-routing equivalence"
+      ]
+    },
+    {
+      "title": "Zanzibar: Google’s Consistent, Global Authorization System",
+      "authors": [
+        "Ruoming Pang",
+        "Ramon Caceres",
+        "Mike Burrows",
+        "Zhifeng Chen",
+        "Pratik Dave",
+        "Nathan Germer",
+        "Alexander Golynski",
+        "Kevin Graney",
+        "Nina Kang",
+        "Lea Kissner",
+        "Jeffrey L. Korn",
+        "Abhishek Parmar",
+        "Christina D. Richards",
+        "Mengzhi Wang"
+      ],
+      "year": 2019,
+      "venue": "USENIX ATC2019",
+      "url": "https://research.google/pubs/zanzibar-googles-consistent-global-authorization-system/",
+      "reading_status": "official abstract/bibliography only; not original algorithm review",
+      "relevance": "background authorization consistency; transfer to permission-scope snapshots; not ANN/join",
+      "open_items": [
+        "authorization inheritance and revision protocols",
+        "integration with ANN and historical content"
+      ]
+    },
+    {
+      "title": "TigerVector: Supporting Vector Search in Graph Databases for Advanced RAGs",
+      "url": "https://www.cs.purdue.edu/homes/csjgwang/pubs/SIGMOD25_TigerVector.pdf",
+      "authors": "未核实完整作者顺序",
+      "venue_status": "作者PDF路径含SIGMOD25，正式书目待核",
+      "reading_status": "primary search snippets only; full text not read",
+      "relevance": "potential direct vector-join-on-graph-patterns candidate; pair semantics/category to audit before indexing",
+      "open_items": [
+        "full bibliography",
+        "exact top-k pair vs per-query semantics",
+        "method and relation evidence"
+      ]
+    }
+  ],
+  "official_docs": [
+    {
+      "url": "https://man7.org/linux/man-pages/man7/symlink.7.html",
+      "used_for": "symbolic-link loops/dangling semantics; not identical to DAG"
+    },
+    {
+      "url": "https://git-scm.com/book/en/v2/Git-Internals-Git-Objects",
+      "used_for": "content-addressed objects/tree/commit background"
+    },
+    {
+      "url": "https://milvus.io/docs/v2.6.x/timestamp.md",
+      "used_for": "version-specific timestamps/Travel_timestamp as existing background, not Git-branch ANN equivalence"
+    },
+    {
+      "url": "https://qdrant.tech/documentation/tutorials/multiple-partitions/",
+      "used_for": "tenant search can use payload filters/shards; does not establish inherited directory ACL"
+    }
+  ],
+  "local_primary_evidence": {
+    "paper": "arxiv:2606.16903v1",
+    "path": "papers/prefix-vector-search/2606.16903-directory-aware/paper.md",
+    "sections": [
+      "IV-A consistency",
+      "IV-C tiered context",
+      "V-E depth sensitivity"
+    ]
+  },
+  "corrections": [
+    "bitmap union deduplicates; deletion needs alternative support accounting",
+    "PG deep-scope traversal increase is in original; arbitrary HNSW recall collapse is not proven",
+    "summary distance is not a descendant lower bound",
+    "MVCC is not automatically lock-free/microsecond",
+    "permission filtering is not limited to post-filtering"
+  ],
+  "coverage_limits": [
+    "DAG incremental reachability/materialized-view lineage not exhaustively screened",
+    "versioned ANN and inherited ACL indexing not fully surveyed",
+    "RAPTOR/Zanzibar/TigerVector originals not read this turn",
+    "no performance experiments; no new full-text records"
+  ]
+}

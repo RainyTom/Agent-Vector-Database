@@ -105,6 +105,16 @@ Table IV 表明递归 scope 访问中 PE-Offline 与 TrieHI 都很有竞争力�
 
 作者明确 future work 是更丰富的 path predicates 与混合语义/层级条件的 cost-aware planning（§VII）；本项目 F9 为文献综合推导，不冒充作者 future work。
 
+## 常见论证纠偏：数据库是否必须知道层级目录
+
+2026-10-19按用户提供的三点论证重核§III–V。结论是：原生目录层是一个设计选择，不是前缀搜索语义的必要条件。静态递归查询可通过正确编码的包含过滤执行；原始片段数组的无序contains不等于前缀，必须保留位置或完整路径标识。
+
+1. **写放大有表示前提。** 若每对象显式保存可变完整路径及祖先成员，MOVE可能更新大量对象；但原文PE-Online主要重映射目录键，成本关联受影响目录数而非必然逐一改所有向量实体。还可设计稳定directory ID、对象绑定目录ID和独立目录服务，避免每次移动重写全部对象；该备选为本项目设计推导，不是原文已实现方案。原生TrieHI的MOVE也需维护旧/新children映射、parent、祖先inclusive集合及catalog一致性，不是只赋一个parent指针。bitmap成本依移动集合和压缩表示而变，不能无条件宣称由几十秒降至微秒。
+2. **非递归查询不是数组索引的表达能力缺陷。** 直接parent_path或parent_directory_id倒排即可精确查询当前目录；PE-Online原文已有直接posting查询。仅维护祖先聚合时才需要子集合并差。TrieHI原文虽然用Local(v)记号描述不变量，却未在列出的四个节点字段中独立物化Local；其non-recursive DSQ同样计算Inc(p)减去直接子节点Inc的并集，不能把直接Local读取写成该文现有机制。
+3. **路径字符串共享不等于消除祖先成员。** TrieHI逐节点维护inclusive IDs，每对象仍进入祖先聚合，逻辑成员数依路径深度增长。两种方案都可用Roaring等压缩，物理字节不能只据逻辑项数推断。§V-D/TableV明确TrieHI总索引空间在两数据集上最大，不能宣称它天然更省全部索引存储。
+
+准确动机是：通过稳定目录节点和原生拓扑，提高递归scope复用及结构变更的一致性与维护效率；这是空间、查询和维护之间的折中。性能大小、动态操作频率与集中维护是否必要，需由实际工作负载与实现证明，不能称所有属性索引都有“致命缺陷”。
+
 ## 本地材料与待补查
 
 [PDF](../../../papers/prefix-vector-search/2606.16903-directory-aware/paper.pdf)、[全文](../../../papers/prefix-vector-search/2606.16903-directory-aware/paper.md)、[阅读报告](../../../papers/prefix-vector-search/2606.16903-directory-aware/paper.report.md)。新增全文索引，保留早先仅摘要候选快照并追加本轮状态快照。数据和 OpenViking 入口来自原文，当前实现与论文版本一致性尚未核查；没有运行 ANN 性能实验。

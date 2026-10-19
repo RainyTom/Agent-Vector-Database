@@ -1,5 +1,7 @@
 # 层级属性约束向量搜索的创新性分析
 
+> 历史模型说明：本文件基于早期多标签分类树/overlap建模。当前用户明确的单路径前缀问题，以[规范定义](../containment-filtered-vector-search/problem-definition.md)和[创新性复核](../containment-filtered-vector-search/novelty-analysis.md)为准；TrieHI与PathSeer已补读，不沿用下文早期证据空缺判断。
+
 分析日期：2026-10-18（Asia/Shanghai）。对象为 [Problem Definition 与 Naive Solutions](index.md)。以 alphaXiv 两轮检索与相关 PDF 页为主要依据，辅以原始 arXiv 页面、作者代码仓库、Crossref 与作者机构发表记录核实身份和版本。
 
 ## 结论与立项判断
