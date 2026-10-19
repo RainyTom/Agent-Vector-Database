@@ -1,5 +1,9 @@
 > 当前语义（2026-10-19）：查询属性序列必须是返回对象属性序列的前缀；见[前缀包含过滤文档](../containment-filtered-vector-search/index.md)。下文保留此前层级节点/overlap方案，不能将一般无序集合包含或子树并集直接当作当前前缀定义。
 
+## 基准与实现结果
+
+当前测量入口见[基准协议](benchmark-protocol.md)；每节点物化 HNSW 的实现、消融与负结果见[每节点物化 HNSW](07-materialized-scope-graphs.md)。该结果不改变下方六个方向的停止/暂停决定。
+
 ## 子方向方案入口
 
 最新查重决定见[alphaXiv新颖性审计](alphaxiv-novelty-audit.md)：D0/D1/D3/D5停止独立立项，D2/D4暂停，当前不实施原六个方案。以下链接保留设计与证据，不代表六项创新已获确认。
