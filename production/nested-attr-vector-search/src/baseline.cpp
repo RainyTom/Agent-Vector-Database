@@ -286,8 +286,13 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
   const uint32_t gen = g.gen;
   // Prefetch the vector+adjacency block of every neighbour before the
   // distance loop; random block access is the dominant cold-graph cost.
-  int prefetch = 3;
-  if (const char* e = std::getenv("GRAPH_PREFETCH")) prefetch = std::atoi(e);
+  // The vector occupies the first two cache lines of each block; those are
+  // the only lines needed for the distance computation.
+  constexpr int prefetch = 2;
+  // Its adjacency (count + ids) lives in the next two lines; fetch them while
+  // the candidate is still in the heap.
+  constexpr int pop_prefetch = 2;
+  static const bool prefetch_unvisited = std::getenv("GRAPH_PREFETCH_UNVISITED") != nullptr;
   auto dist = [&](uint32_t id) {
     return u8_l2(q, &g.blocks[size_t(id) * g.stride], g.dim);
   };
@@ -331,6 +336,11 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
   while (!cand.empty()) {
     auto cd = cand.front();
     if (top.size() >= ef && cd.first > top.front().d) break;
+    if (pop_prefetch) {
+      const uint8_t* nb = &g.blocks[size_t(cd.second) * g.stride];
+      __builtin_prefetch(nb + 128, 0, 1);
+      if (pop_prefetch >= 2) __builtin_prefetch(nb + 192, 0, 1);
+    }
     cand_pop();
     uint32_t c = cd.second;
     const uint8_t* cb = &g.blocks[size_t(c) * g.stride];
@@ -339,11 +349,10 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
     if (prefetch) {
       for (uint32_t j = 0; j < cnt; ++j) {
         uint32_t nb = slot[1 + j];
+        if (prefetch_unvisited && g.visited[nb] == gen) continue;
         const uint8_t* bp = &g.blocks[size_t(nb) * g.stride];
         __builtin_prefetch(bp, 0, 1);
-        if (prefetch >= 2) __builtin_prefetch(bp + 64, 0, 1);
-        if (prefetch >= 3) __builtin_prefetch(bp + 128, 0, 1);
-        if (prefetch >= 4) __builtin_prefetch(bp + 192, 0, 1);
+        __builtin_prefetch(bp + 64, 0, 1);
       }
     }
     for (uint32_t j = 0; j < cnt; ++j) {
