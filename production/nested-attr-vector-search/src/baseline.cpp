@@ -206,7 +206,6 @@ void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
   g.lv.resize(m);
   g.upper_off.assign(m, 0);
   g.blocks.assign(size_t(m) * g.stride, 0);
-  size_t voff = inline_vec_off<T>(M);
   for (uint32_t t = 0; t < m; ++t) {
     g.gid[t] = uint32_t(idx.getExternalLabel(t));
     g.lv[t] = uint8_t(idx.element_levels_[t]);
@@ -214,10 +213,10 @@ void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
     auto* lk = idx.get_linklist_at_level(t, 0);
     uint32_t cnt = *lk;
     auto* ids = reinterpret_cast<uint32_t*>(lk + 1);
-    T* slot = reinterpret_cast<T*>(blk);
+    std::memcpy(blk, idx.getDataByInternalId(t), dim);
+    T* slot = reinterpret_cast<T*>(blk + dim);
     slot[0] = T(cnt);
     for (uint32_t j = 0; j < cnt; ++j) slot[1 + j] = T(ids[j]);
-    std::memcpy(blk + voff, idx.getDataByInternalId(t), dim);
     if (g.lv[t] > 0) {
       g.upper_off[t] = uint32_t(g.up_adj.size());
       for (int level = 1; level <= int(g.lv[t]); ++level) {
@@ -249,7 +248,7 @@ bool load_inline_graph(const std::string& path, InlineGraph<T>& g) {
   in.read(reinterpret_cast<char*>(hdr), sizeof(hdr));
   if (!in) return false;
   g.m = hdr[0]; g.maxlevel = hdr[1]; g.enter = hdr[2];
-  g.M = hdr[3]; g.dim = hdr[4]; g.stride = hdr[5];
+  g.M = hdr[3]; g.dim = hdr[4]; g.stride = hdr[5]; g.stride = hdr[5];
   g.gid.resize(g.m);
   g.lv.resize(g.m);
   g.upper_off.resize(g.m);
@@ -287,11 +286,10 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
   const uint32_t gen = g.gen;
   // Prefetch the vector+adjacency block of every neighbour before the
   // distance loop; random block access is the dominant cold-graph cost.
-  constexpr int prefetch = 3;
-  const bool descent_prefetch = std::getenv("GRAPH_DESCENT_PREFETCH") != nullptr;
-  const size_t voff = inline_vec_off<T>(g.M);
+  int prefetch = 3;
+  if (const char* e = std::getenv("GRAPH_PREFETCH")) prefetch = std::atoi(e);
   auto dist = [&](uint32_t id) {
-    return u8_l2(q, &g.blocks[size_t(id) * g.stride + voff], g.dim);
+    return u8_l2(q, &g.blocks[size_t(id) * g.stride], g.dim);
   };
 
   uint32_t ep = g.enter;
@@ -302,14 +300,6 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
       changed = false;
       const T* p = inline_upper_block(g, ep, level);
       uint32_t c = p[0];
-      if (descent_prefetch) {
-        for (uint32_t j = 0; j < c; ++j) {
-          const uint8_t* bp = &g.blocks[size_t(p[1 + j]) * g.stride];
-          __builtin_prefetch(bp, 0, 1);
-          __builtin_prefetch(bp + 64, 0, 1);
-          __builtin_prefetch(bp + 128, 0, 1);
-        }
-      }
       for (uint32_t j = 0; j < c; ++j) {
         uint32_t nb = p[1 + j];
         float dn = dist(nb);
@@ -343,15 +333,17 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
     if (top.size() >= ef && cd.first > top.front().d) break;
     cand_pop();
     uint32_t c = cd.second;
-    const T* slot = reinterpret_cast<const T*>(&g.blocks[size_t(c) * g.stride]);
+    const uint8_t* cb = &g.blocks[size_t(c) * g.stride];
+    const T* slot = reinterpret_cast<const T*>(cb + g.dim);
     uint32_t cnt = slot[0];
     if (prefetch) {
       for (uint32_t j = 0; j < cnt; ++j) {
         uint32_t nb = slot[1 + j];
         const uint8_t* bp = &g.blocks[size_t(nb) * g.stride];
         __builtin_prefetch(bp, 0, 1);
-        __builtin_prefetch(bp + 64, 0, 1);
-        __builtin_prefetch(bp + 128, 0, 1);
+        if (prefetch >= 2) __builtin_prefetch(bp + 64, 0, 1);
+        if (prefetch >= 3) __builtin_prefetch(bp + 128, 0, 1);
+        if (prefetch >= 4) __builtin_prefetch(bp + 192, 0, 1);
       }
     }
     for (uint32_t j = 0; j < cnt; ++j) {
