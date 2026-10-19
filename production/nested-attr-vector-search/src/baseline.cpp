@@ -182,7 +182,7 @@ int main(int argc, char** argv) {
   Args args = parse(argc, argv);
   // Search breadth for each per-node ANN search. Local indexes contain only
   // feasible points, so no filter is involved.
-  size_t EF = 21;
+  size_t EF = 20;
   if (const char* e = std::getenv("GRAPH_EF")) EF = std::strtoull(e, nullptr, 10);
 
   if (args.mode == "build") {
