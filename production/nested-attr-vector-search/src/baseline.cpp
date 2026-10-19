@@ -305,6 +305,13 @@ int main(int argc, char** argv) {
       indexes[v]->setEf(std::max<size_t>(ef_v, k));
     }
 
+    int loaded = 0;
+    for (int v = 0; v < m.nodes; ++v) loaded += (indexes[v] != nullptr);
+    if (loaded == 0) {
+      std::cerr << "no node indexes found in " << args.index_dir << "\n";
+      return 2;
+    }
+
     // Scope-grouped scheduling: all queries that touch node v run back to
     // back while v's graph is hot. Results are buffered per query and merged
     // afterwards, preserving the original output order.
