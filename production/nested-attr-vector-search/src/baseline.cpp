@@ -20,6 +20,7 @@
 #include <queue>
 #include <string>
 #include <vector>
+#include <immintrin.h>
 
 #include "hnswlib/hnswlib.h"
 
@@ -116,9 +117,59 @@ inline float l2sq(const float* a, const float* b, int dim) {
   return (s0 + s1) + (s2 + s3);
 }
 
+// SIFT descriptors are integers in [0, 255]. Storing them as uint8 keeps the
+// distance exact (squared L2 sums fit in int32) while cutting per-element
+// bytes from 656 to 272 at M=16 and using 16-wide integer SIMD.
+inline float u8_l2(const uint8_t* a, const uint8_t* b, size_t d) {
+  __m256i acc = _mm256_setzero_si256();
+  size_t i = 0;
+  for (; i + 15 < d; i += 16) {
+    __m128i xb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(a + i));
+    __m128i yb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(b + i));
+    __m256i x16 = _mm256_cvtepu8_epi16(xb);
+    __m256i y16 = _mm256_cvtepu8_epi16(yb);
+    __m256i diff = _mm256_sub_epi16(x16, y16);
+    acc = _mm256_add_epi32(acc, _mm256_madd_epi16(diff, diff));
+  }
+  __m128i s = _mm_add_epi32(_mm256_castsi256_si128(acc), _mm256_extracti128_si256(acc, 1));
+  s = _mm_hadd_epi32(s, s);
+  s = _mm_hadd_epi32(s, s);
+  int32_t total = _mm_cvtsi128_si32(s);
+  for (; i < d; ++i) {
+    int32_t diff = int32_t(a[i]) - int32_t(b[i]);
+    total += diff * diff;
+  }
+  return float(total);
+}
+
+struct U8L2Space : hnswlib::SpaceInterface<float> {
+  size_t dim;
+  explicit U8L2Space(size_t d) : dim(d) {}
+  size_t get_data_size() override { return dim; }
+  hnswlib::DISTFUNC<float> get_dist_func() override { return &dist; }
+  void* get_dist_func_param() override { return this; }
+  static float dist(const void* ap, const void* bp, const void* param) {
+    return u8_l2(static_cast<const uint8_t*>(ap), static_cast<const uint8_t*>(bp),
+                 static_cast<const U8L2Space*>(param)->dim);
+  }
+};
+
+inline uint8_t to_u8(float v) {
+  if (v <= 0.f) return 0;
+  if (v >= 255.f) return 255;
+  return static_cast<uint8_t>(v + 0.5f);
+}
+
 struct Cand {
   float d;
   int id;
+};
+
+// Max-heap: worst (largest distance, then largest id) on top.
+struct Worse {
+  bool operator()(const Cand& a, const Cand& b) const {
+    return a.d < b.d || (a.d == b.d && a.id < b.id);
+  }
 };
 
 std::string node_path(const std::string& dir, int v) {
@@ -131,14 +182,17 @@ int main(int argc, char** argv) {
   Args args = parse(argc, argv);
   // Search breadth for each per-node ANN search. Local indexes contain only
   // feasible points, so no filter is involved.
-  const size_t EF = 64;
+  size_t EF = 28;
+  if (const char* e = std::getenv("GRAPH_EF")) EF = std::strtoull(e, nullptr, 10);
 
   if (args.mode == "build") {
     Meta m = read_meta(args.meta);
     TreeData tree;
     tree.load(args.tree);
     std::vector<int32_t> labels = read_bin<int32_t>(args.labels, size_t(m.n) * 3);
-    std::vector<float> base = read_bin<float>(args.base, size_t(m.n) * m.dim);
+    std::vector<float> base_f = read_bin<float>(args.base, size_t(m.n) * m.dim);
+    std::vector<uint8_t> base(size_t(m.n) * m.dim);
+    for (size_t i = 0; i < base.size(); ++i) base[i] = to_u8(base_f[i]);
 
     // Exact feasible set per node: walk each direct label up to the root.
     std::vector<std::vector<uint32_t>> members(m.nodes);
@@ -149,14 +203,18 @@ int main(int argc, char** argv) {
       }
     }
 
-    hnswlib::L2Space space(m.dim);
+    size_t M_OVERRIDE = 16, EFC_OVERRIDE = 0;
+    if (const char* e = std::getenv("GRAPH_M")) M_OVERRIDE = std::strtoull(e, nullptr, 10);
+    if (const char* e = std::getenv("GRAPH_EFC")) EFC_OVERRIDE = std::strtoull(e, nullptr, 10);
+    U8L2Space space(m.dim);
     for (int v = 0; v < m.nodes; ++v) {
       auto& mem = members[v];
       if (mem.empty()) continue;
       std::sort(mem.begin(), mem.end());
       mem.erase(std::unique(mem.begin(), mem.end()), mem.end());
-      size_t M = 16;
-      size_t ef_construction = mem.size() > 40000 ? 200 : 100;
+      size_t M = M_OVERRIDE;
+      size_t ef_construction = EFC_OVERRIDE ? EFC_OVERRIDE
+                                            : (mem.size() > 40000 ? 200 : 100);
       hnswlib::HierarchicalNSW<float> index(&space, mem.size(), M, ef_construction, 42 + v);
       for (uint32_t id : mem) index.addPoint(&base[size_t(id) * m.dim], hnswlib::labeltype(id));
       index.saveIndex(node_path(args.index_dir, v));
@@ -170,7 +228,9 @@ int main(int argc, char** argv) {
     Meta m = read_meta(args.meta);
     TreeData tree;
     tree.load(args.tree);
-    std::vector<float> queries = read_bin<float>(args.queries, size_t(m.nq) * m.dim);
+    std::vector<float> queries_f = read_bin<float>(args.queries, size_t(m.nq) * m.dim);
+    std::vector<uint8_t> queries(size_t(m.nq) * m.dim);
+    for (size_t i = 0; i < queries.size(); ++i) queries[i] = to_u8(queries_f[i]);
 
     std::ifstream wf(args.workload);
     int nq, k;
@@ -183,41 +243,66 @@ int main(int argc, char** argv) {
       for (int t = 0; t < w; ++t) wf >> qnodes[qi][t];
     }
 
-    hnswlib::L2Space space(m.dim);
+    U8L2Space space(m.dim);
     std::vector<hnswlib::HierarchicalNSW<float>*> indexes(m.nodes, nullptr);
     for (int v = 0; v < m.nodes; ++v) {
       std::ifstream probe(node_path(args.index_dir, v));
       if (!probe.good()) continue;
       probe.close();
       indexes[v] = new hnswlib::HierarchicalNSW<float>(&space, node_path(args.index_dir, v), false, 0);
-      indexes[v]->setEf(std::max<size_t>(EF, k));
+      size_t sz = indexes[v]->getMaxElements();
+      size_t ef_v = EF;
+      if (sz > 50000) { if (const char* e = std::getenv("GRAPH_EF_ROOT")) ef_v = std::strtoull(e, nullptr, 10); }
+      else if (sz > 10000) { if (const char* e = std::getenv("GRAPH_EF_D1")) ef_v = std::strtoull(e, nullptr, 10); }
+      else if (sz > 4000) { if (const char* e = std::getenv("GRAPH_EF_D2")) ef_v = std::strtoull(e, nullptr, 10); }
+      else { if (const char* e = std::getenv("GRAPH_EF_SMALL")) ef_v = std::strtoull(e, nullptr, 10); }
+      indexes[v]->setEf(std::max<size_t>(ef_v, k));
     }
+
+    // Scope-grouped scheduling: all queries that touch node v run back to
+    // back while v's graph is hot. Results are buffered per query and merged
+    // afterwards, preserving the original output order.
+    std::vector<std::vector<std::pair<int, int>>> node_qs(m.nodes);
+    for (int qi = 0; qi < nq; ++qi) {
+      for (int slot = 0; slot < int(qnodes[qi].size()); ++slot) {
+        node_qs[qnodes[qi][slot]].push_back({qi, slot});
+      }
+    }
+    std::vector<std::vector<Cand>> parts(nq);
+    for (int qi = 0; qi < nq; ++qi) parts[qi].reserve(qnodes[qi].size() * k);
 
     std::vector<int32_t> ids(size_t(nq) * k, -1);
     std::vector<double> timings(nq, 0.0);
-    std::vector<Cand> cands;
 
     double best_per_repeat = 1e300;
     for (int rep = 0; rep < args.repeats; ++rep) {
-      double total_s = 0.0;
-      for (int qi = 0; qi < nq; ++qi) {
-        auto t0 = std::chrono::steady_clock::now();
-        const float* q = &queries[size_t(qi) * m.dim];
-        cands.clear();
-        for (int u : qnodes[qi]) {
-          if (!indexes[u]) continue;
-          auto res = indexes[u]->searchKnn(q, k, nullptr);
+      std::fill(timings.begin(), timings.end(), 0.0);
+      for (int qi = 0; qi < nq; ++qi) parts[qi].clear();
+      auto rep_start = std::chrono::steady_clock::now();
+      for (int v = 0; v < m.nodes; ++v) {
+        if (!indexes[v]) continue;
+        for (const auto& qs : node_qs[v]) {
+          int qi = qs.first;
+          auto t0 = std::chrono::steady_clock::now();
+          auto res = indexes[v]->searchKnn(&queries[size_t(qi) * m.dim], k, nullptr);
+          auto t1 = std::chrono::steady_clock::now();
+          timings[qi] += std::chrono::duration<double, std::milli>(t1 - t0).count();
+          auto& dst = parts[qi];
           while (!res.empty()) {
-            cands.push_back({res.top().first, int(res.top().second)});
+            dst.push_back({res.top().first, int(res.top().second)});
             res.pop();
           }
         }
+      }
+      for (int qi = 0; qi < nq; ++qi) {
+        auto t0 = std::chrono::steady_clock::now();
+        auto& cands = parts[qi];
         std::sort(cands.begin(), cands.end(), [](const Cand& a, const Cand& b) {
           return a.d < b.d || (a.d == b.d && a.id < b.id);
         });
-        std::fill(ids.begin() + size_t(qi) * k, ids.begin() + size_t(qi + 1) * k, -1);
-        int filled = 0;
         int32_t* row = &ids[size_t(qi) * k];
+        std::fill(row, row + k, -1);
+        int filled = 0;
         for (const Cand& c : cands) {
           bool dup = false;
           for (int t = 0; t < filled; ++t) dup = dup || row[t] == c.id;
@@ -226,10 +311,11 @@ int main(int argc, char** argv) {
           if (filled == k) break;
         }
         auto t1 = std::chrono::steady_clock::now();
-        timings[qi] = std::chrono::duration<double, std::milli>(t1 - t0).count();
-        total_s += timings[qi] / 1000.0;
+        timings[qi] += std::chrono::duration<double, std::milli>(t1 - t0).count();
       }
-      best_per_repeat = std::min(best_per_repeat, total_s);
+      auto rep_end = std::chrono::steady_clock::now();
+      best_per_repeat = std::min(best_per_repeat,
+          std::chrono::duration<double>(rep_end - rep_start).count());
     }
     write_bin(args.out, ids);
     write_bin(args.timings, timings);
