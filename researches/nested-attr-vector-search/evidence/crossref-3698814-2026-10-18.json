@@ -1,0 +1,113 @@
+{
+  "DOI": "10.1145/3698814",
+  "title": [
+    "iRangeGraph: Improvising Range-dedicated Graphs for Range-filtering Nearest Neighbor Search"
+  ],
+  "author": [
+    {
+      "ORCID": "https://orcid.org/0009-0009-2354-9323",
+      "authenticated-orcid": false,
+      "given": "Yuexuan",
+      "family": "Xu",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Nanyang Technological University, Singapore, Singapore"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0008-4684-3624",
+      "authenticated-orcid": false,
+      "given": "Jianyang",
+      "family": "Gao",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Nanyang Technological University, Singapore, Singapore"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0007-7005-6463",
+      "authenticated-orcid": false,
+      "given": "Yutong",
+      "family": "Gou",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Nanyang Technological University, Singapore, Singapore"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0001-6806-8405",
+      "authenticated-orcid": false,
+      "given": "Cheng",
+      "family": "Long",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Nanyang Technological University, Singapore, Singapore"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0002-9697-7670",
+      "authenticated-orcid": false,
+      "given": "Christian S.",
+      "family": "Jensen",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Aalborg University, Aalborg, Denmark"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "published": {
+    "date-parts": [
+      [
+        2024,
+        12,
+        18
+      ]
+    ]
+  },
+  "container-title": [
+    "Proceedings of the ACM on Management of Data"
+  ],
+  "volume": "2",
+  "issue": "6",
+  "article-number": null
+}

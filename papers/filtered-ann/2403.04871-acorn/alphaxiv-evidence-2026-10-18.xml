@@ -1,0 +1,745 @@
+<paper id="2403.04871v1"><page num="1">ACORN: Performant and Predicate-Agnostic Search Over Vector
+Embeddings and Structured Data
+Liana Patel
+Stanford University
+Stanford, USA
+lianapat@stanford.edu
+Peter Kraft
+DBOS, Inc.
+USA
+peter.kraft@dbos.dev
+Carlos Guestrin
+Stanford University
+Stanford, USA
+guestrin@stanford.edu
+Matei Zaharia
+UC Berkeley
+Berkeley, USA
+matei@berkeley.edu
+ABSTRACT
+Applications increasingly leverage mixed-modality data, and must
+jointly search over vector data, such as embedded images, text and
+video, as well as structured data, such as attributes and keywords.
+Proposed methods for this hybrid search setting either suffer from
+poor performance or support a severely restricted set of search pred-
+icates (e.g., only small sets of equality predicates), making them im-
+practical for many applications. To address this, we present ACORN,
+an approach for performant and predicate-agnostic hybrid search.
+ACORN builds on Hierarchical Navigable Small Worlds (HNSW), a
+state-of-the-art graph-based approximate nearest neighbor index,
+and can be implemented efficiently by extending existing HNSW
+libraries. ACORN introduces the idea of predicate subgraph traver-
+sal to emulate a theoretically ideal, but impractical, hybrid search
+strategy. ACORN’s predicate-agnostic construction algorithm is
+designed to enable this effective search strategy, while supporting a
+wide array of predicate sets and query semantics. We systematically
+evaluate ACORN on both prior benchmark datasets, with simple,
+low-cardinality predicate sets, and complex multi-modal datasets
+not supported by prior methods. We show that ACORN achieves
+state-of-the-art performance on all datasets, outperforming prior
+methods with 2–1,000× higher throughput at a fixed recall.
+CCS CONCEPTS
+• Information systems → Information retrieval query pro-
+cessing; Data structures.
+KEYWORDS
+Vector Search, Approximate Nearest Neighbor Search, Hybrid Search
+1 INTRODUCTION
+Due to the representation strength of modern deep learning mod-
+els, vector embeddings have become a powerful first-class datatype
+for wide-ranging applications that use retrieval-augmented gener-
+ation [3 , 65 ] or similarity-based search [18 , 21, 42 ]. As a result,
+vector databases and indices are seeing increasing adoption in
+many production use cases. These systems provide an efficient
+approximate-nearest-neighbor (ANN) search interface over embed-
+ded unstructured data e.g., images, text, video, or user profiles.
+However, many applications must jointly query both unstructured
+and structured data, requiring ANN search in combination with
+predicate filtering. For example, customers on an e-commerce site
+can search for t-shirts similar to a reference image, while filtering on
+price [ 64 ]. Similarly, researchers performing a literature review may
+search with both natural language queries and filters on publication
+date, keywords or topics [54 ]. Likewise, a data scientist working on
+outlier detection can find misclassified images by retrieving those
+that look similar to a reference dog but have the label &quot;cat&quot; [2, 7].
+To leverage diverse data modalities, applications need data man-
+agement systems that effectively support hybrid search queries, i.e.,
+similarity search with structured predicates. Such systems require
+(1) query performance, i.e., efficient and accurate search despite
+variance in workload characteristics, such as selectivity, attribute
+correlations, and scale, and (2) expressive query semantics: sup-
+port for diverse query predicates that may not be known a priori
+(e.g., user-entered keywords, range searches, or regex matching).
+Unfortunately, existing systems fall short of these goals. Three
+commonly used methods are pre-filtering [ 62 , 64], post-filtering
+[ 1, 5, 62 , 64 , 67 ], and specialized data structures for low-cardinality
+predicate sets [ 25 , 49 , 63, 66 ]. Pre-filtering first finds all records in
+the dataset that pass the query predicate, then performs brute force
+similarity-search over the filtered vector set. This approach scales
+poorly, becoming inefficient for medium to high selectivity predi-
+cates on large datasets. Alternatively, post-filtering first searches an
+ANN index, then removes results that fail the query predicate. Since
+the database vectors closest to the query vector may not pass the
+predicate, post-filtering methods must typically expand the search
+scope. This is often expensive, particularly for search predicates
+with low selectivity or low correlation to the query vector, as we
+show in Figure 2. Milvus [ 62 ], Weaviate [ 1 ], AnalyticDB-V [64 ],
+and FAISS-IVF [5 ] build systems using these two core methods, and
+suffer from their performance limitations.
+Recognizing these limitations, recent works construct specialized
+indices designed for hybrid search workloads with low-cardinality
+predicate sets consisting of equality predicate operators. For ex-
+ample, Filtered-DiskANN [ 25 ] outperforms prior baselines, but
+restricts the cardinality of the predicate set to about 1,000 and only
+supports equality predicates. HQANN [ 66 ] and NHQ [12] similarly
+constrain the predicate set to a small number of equality filters and
+in addition allow only a single structured attributes per dataset
+entry. These methods are often impractical since many applica-
+tions have large, or unbounded predicate sets that are unknown
+a priori. In general, the possible predicate set’s cardinality grows
+arXiv:2403.04871v1 [cs.IR] 7 Mar 2024</page><page num="2">exponentially with each attribute’s cardinality, which itself may be
+large. Thus, we instead propose a predicate-agnostic index, which
+can support arbitrary and unbounded predicate sets.
+In this paper, we propose ACORN (ANN Constraint-Optimized
+Retrieval Network), a novel approach for performant and predicate-
+agnostic hybrid search that can serve high-cardinality and un-
+bounded predicate sets. We propose two indices: ACORN-𝛾, de-
+signed for high-efficiency search, and ACORN-1, designed for low
+construction overhead in resource-constrained settings. Both meth-
+ods modify the hierarchical navigable small world (HNSW) index,
+a state-of-the-art graph-based index for ANN search, and are easy
+to implement in existing HNSW libraries.
+ACORN tackles both the performance limitations of pre- and
+post- filtering, as well as the semantic limitations of specialized
+indices. ACORN proposes the idea of predicate subgraph traversal
+during search. As the name implies, the search strategy traverses
+the subgraph of the ACORN index induced by the set of nodes
+that pass the query predicate. ACORN designs the index such that
+these arbitrary predicate subgraphs approximate an HNSW index.
+Unlike pre- and post-filtering, this allows ACORN to provide sub-
+linear retrieval times despite variance in correlation between query
+vectors and predicates, which we find to be a major challenge for
+existing hybrid search systems. ACORN also serves wide-ranging
+predicate sets by employing a predicate-agnostic construction that
+alters HNSW’s algorithm to create a denser graph. Specifically,
+we introduce a predicate-agnostic neighbor expansion strategy in
+ACORN-𝛾 based on target predicate selectivity thresholds, which
+can be estimated empirically with or without knowing the predicate
+set. In conjunction, we propose a predicate-agnostic compression
+heuristic to efficiently manage the index space footprint while main-
+taining efficient search. We also explore the trade-off space between
+search performance and construction overhead, designing ACORN-
+1 to approximate ACORN-𝛾’s search performance while further
+reducing the time-to-index (TTI) for resource-constrained settings.
+We systematically evaluate ACORN-𝛾 and ACORN-1 on four
+datasets: SIFT1M [35 ], Paper [63], LAION [55 ], and TripClick [54 ].
+Our evaluation includes both prior benchmark datasets, with sim-
+ple, low-cardinality predicate sets, which prior specialized indices
+can serve, as well as more complex datasets with millions of possi-
+ble predicates, which existing indices cannot to handle. On each,
+ACORN-𝛾 achieves state-of-the-art hybrid search performance with
+2–1000× higher queries per second (QPS) at 0.9 recall compared
+to prior methods. Specifically, ACORN achieves 2-10× higher QPS
+on prior benchmarks, over 30× higher QPS on new benchmarks,
+and over 1,000x higher QPS at scale, on a 25-million-vector dataset.
+We find that ACORN-1 empirically approximates ACORN-𝛾, at-
+taining at most 5× lower QPS at fixed recall but 9–53× lower TTI
+compared to ACORN-𝛾. Our detailed evaluation demonstrates the
+effectiveness of ACORN’s predicate-subgraph traversal strategy
+and predicate-agnostic construction techniques.
+2 BACKGROUND
+Existing methods for Approximate Nearest Neighbor (ANN) search
+can be broadly categorized as tree-based [ 15 –17 , 19 , 28 , 45 , 50 ,
+56 ], hashing-based [9– 11 , 24, 26 , 29 , 30, 40 , 41, 44 , 46 , 52, 59 , 69 ],
+quantization-based [ 23 , 27 , 34, 35, 39 ], and graph-based [22, 25, 32,
+Figure 1: Schematic drawing of search over an HNSW index. The
+search path is shown by blue arrows, beginning on level 2 and ending
+on level 0 at the query point, shown in green.
+47 , 48, 58 , 68 ]. In this work build on HNSW, a graph-based method
+that is empirically one of the best-performing on high-dimensional
+datasets, and we adapt it to support hybrid search.
+Graph-based ANN methods have gained popularity due their
+state-of-the-art performance on varied ANN benchmarks [13 , 57 ].
+These methods typically perform search using a greedy routing
+strategy that traverses a graph index, starting from a pre-defined
+entry point. The index itself forms a proximity graph 𝐺 (𝑉 , 𝐸), such
+that each dataset point is represented by a vertex and edges connect
+nearby points. The index construction algorithm typically aims to
+approximate subgraphs of the Delaunay graph [ 38 ]. While the De-
+launay graph guarantees convergence of a greedy routing algorithm,
+it is impossible to efficiently construct for arbitrary metric spaces
+[ 51 ]. Thus graph methods focus on more tractable approximations
+of Delaunay subgraphs, such as the Relative Neighbor Graph (RNG)
+[37, 60], and the Nearest-Neighbor Graph (NNG) [8, 20].
+2.1 Hierarchical Navigable Small Worlds
+As Figure 1 illustrates, HNSW forms a hierarchical, multi-level
+graph index with bounded degree. Below we briefly summarize the
+HNSW search and construction algorithm.
+The HNSW construction algorithm iteratively inserts each
+point into the graph index, to construct a navigable graph with
+bounded degree, specified by parameter 𝑀. For each inserted ele-
+ment 𝑣, first, a maximum layer index 𝑙 is stochastically chosen using
+an exponentially decaying probability distribution, normalized by
+the constant 𝑚
+𝐿 
+= 1/𝑙𝑛(𝑀). The level assignment probability en-
+sures that the expected characteristic path length increases with the
+level index. Intuitively, the upper-most level contains the longest-
+range links, which will be traversed first by the search algorithm,
+and the bottom-most level contains the shortest-range links, which
+are traversed last by the search algorithm. The insertion procedure
+then proceeds in two phases. In the first phase, a greedy search is
+performed iteratively from the top layer, beginning at a pre-defined
+entrypoint down to the (𝑙 + 1)th layer. At each of these levels, the
+greedy subroutine chooses a single node that becomes the entry-
+point into the next layer. In the second phase, the greedy search
+iterates over level 𝑙 to level 0. The greedy search at each level now
+chooses efc nodes as candidate edges. Of these candidates, at most
+𝑀 are selected to become neighbors of 𝑣 according to an RNG-based
+pruning algorithm [ 31 ]. At level 0, the degree bound is increased
+2 × 𝑀, which is shown to empirically improve performance.
+The HNSW search algorithm begins its traversal from a pre-
+defined entry point at the upper-most layer of the multilayer graph,</page><page num="4">Definition: Query Correlation. We will consider the query-
+to-target distances for the given dataset compared to the expected
+query-to-target distances for a hypothetical dataset, under which
+no clustering is present. Formally, we define the query correlation
+of the hybrid search workload 𝑄 over dataset 𝐷 as:
+𝐶 (𝐷, 𝑄) = E
+(𝑥
+𝑖 
+,𝑝
+𝑖 
+) ∈𝑄
+
+E
+𝑅
+𝑖 
+[𝑔(𝑥
+𝑖 
+, 𝑅
+𝑖 
+)] − 𝑔(𝑥
+𝑖 
+, 𝑋
+𝑝
+𝑖 
+)
+
+We let 𝑅
+𝑖 
+be a random set variable of |𝑋
+𝑝
+𝑖 
+| vectors drawn uni-
+formly from 𝑋 , defined for each hybrid query (𝑥
+𝑖 
+, 𝑝
+𝑖 
+) ∈ 𝑄. We
+define 𝑔(𝑥, 𝑆) = min
+𝑦 ∈𝑆 
+𝑑𝑖𝑠𝑡 (𝑥, 𝑦) to be the function mapping the
+query vector 𝑥 to the minimum distance of neighbors from the
+given vector set 𝑆 ⊆ 𝑅
+𝑑 
+. Note that 𝑔(𝑥
+𝑖
+, 𝑋
+𝑝
+𝑖 
+) is the ground-truth
+hybrid-search target of the query (𝑥
+𝑖 
+, 𝑝
+𝑖 
+).
+If, on average, query vectors are closer to their targets in 𝑋
+𝑝
+𝑖 
+, the
+true dataset of hybrid search targets, than in 𝑅
+𝑖 
+, the no-clustering
+dataset, then the workload has positive query correlation. If the
+reverse is true, the workload has negative query correlation. We
+may also consider nearest-neighbor distance rather than the metric
+distance in the above definition. We also note that we can easily
+extend this definition to consider 𝐾 targets of the hybrid search,
+rather than one, by summing distances over the 𝐾 search targets.
+4 THEORETICAL IDEAL HYBRID SEARCH
+PERFORMANCE WITH HNSW
+For a given hybrid search query, we define the theoretically ideal
+search performance using HNSW data structures as the perfor-
+mance attainable if we knew the search predicate 𝑝
+𝑞 
+during con-
+struction. In this case, we could construct an HNSW index over
+𝑋
+𝑝 
+. We call this the oracle partition index for that query. The
+complexity of searching this index is 𝑂𝑠 (log 𝑠𝑛 + 𝐾). Notably, the
+search performance of the oracle partition index outperforms both
+pre- and post-filtering across variations in predicate selectivity, data
+size, and query correlation. While pre-filtering’s search scales in
+|𝑋
+𝑝 
+|, search over the oracle partition scales sublinearly in |𝑋
+𝑝 
+|. The
+oracle partition is also robust under variations in query correlation:
+it does not require the search scope expansion used in post-filtering.
+Despite its ideal search performance, the oracle partition index
+requires us to know all search predicates in advance and to create
+a full HNSW index per predicate. In practice, the oracle partition
+index is not possible to construct because query predicate sets are
+often unknown during construction and have high or unbounded
+cardinality. Building an HNSW per predicate would require prohib-
+itive amounts of space and time. Thus, in this work, we will instead
+approximate search over the oracle partition index for a particular
+query, without ever explicitly constructing this index.
+5 ACORN OVERVIEW
+We now describe ACORN, a predicate-agnostic approach for state-
+of-the-art hybrid search. We propose two variants, which we refer
+to as ACORN-𝛾 (5.1, 5.2) and ACORN-1 (5.3). We design ACORN-𝛾
+to achieve efficient search performance, and we design ACORN-
+1 to approximate ACORN-𝛾’s search performance while further
+reducing the algorithm’s time to index (TTI) and space footprint
+for resource-constrained settings.
+ACORN’s core idea is to search over the index’s predicate sub-
+graph, i.e., the subgraph induced by 𝑋
+𝑝 
+for a given search predicate
+Figure 3: An illustration of the predicate subgraph, shown by the
+green nodes. ACORN searches over the predicate subraph to emulate
+search over an oracle partition index.
+Table 1: Summary of Notation
+Symbol Description
+𝛾 neighbor expansion factor for ACORN index
+𝑀
+𝛽 
+compression parameter for ACORN index
+ef size of dynamic candidate list in ACORN greedy search
+𝑀 degree bound for traversed nodes during ACORN search
+𝑚
+𝐿 
+= 1/ln 𝑀 level normalization constant for ACORN index
+𝑒 entry-point to ACORN index
+𝑒
+𝑝 
+entry-point to ACORN’s predicate 𝑝’s subgraph
+𝑙 (𝑣) maximum level index of node 𝑣 in ACORN index
+𝑁 
+𝑙 
+(𝑣) neighbor list of node 𝑣 at level 𝑙
+𝑁 
+𝑙
+𝑝 
+(𝑣) filtered neighbors of node 𝑣 at level 𝑙 under predicate 𝑝
+𝑋
+𝑝 
+vector dataset that passes predicate 𝑝
+𝑠 selectivity
+𝑛 size of dataset
+𝑝, as shown in Figure 3. We modify the HNSW construction algo-
+rithms so that arbitrary predicate subgraphs emulate an HNSW
+oracle partition index without the need to explicitly construct one.
+ACORN-𝛾 achieves this by constructing a denser version of HNSW,
+which we parameterize by a neighbor list expansion factor, 𝛾, a com-
+pression factor, 𝑀
+𝛽 
+, and the HNSW parameters, efc and 𝑀. Then by
+adding a filter step during search to ignore neighbors that fail the
+predicate, we find ACORN-𝛾’s search can efficiently navigate to and
+traverse over the predicate subgraph, even under variations in query
+correlation. Meanwhile, ACORN-1 expands neighbor lists during
+search rather than during construction to approximate ACORN-𝛾’s
+dense graph structure without building it.
+1
+Overall, ACORN prescribes a simple and general framework for
+performant hybrid search based on the idea of predicate-subgraph
+traversal. The core techniques we propose are predicate-agnostic
+neighbor-list expansions and pruning during construction in com-
+bination with predicate-based filtering during search. While this
+framework can be applied to a variety of graph-based ANN in-
+dices, in this work we focus on HNSW due their state-of-the-art
+performance and widespread use.
+5.1 ACORN-𝛾 Search Algorithm
+Algorithm 2 outlines the greedy search algorithm ACORN uses
+at each level, beginning from the top level at a pre-defined entry-
+point. The main difference between ACORN’s search algorithm and
+that of HNSW is how neighbor look-ups (line 9) are performed at
+1
+For highly selective queries where even ACORN’s predicate subgraph would be
+disconnected within the larger ACORN graph, ACORN falls back to pre-filtering,
+which is effective for such queries. ACORN is configured with a minimum selectivity,
+𝑠
+𝑚𝑖𝑛 
+, under which it should use pre-filtering when a query is estimated to be more
+selective than 𝑠
+𝑚𝑖𝑛 
+. We describe how to configure 𝛾 based on 𝑠
+𝑚𝑖𝑛 
+in Section 5.2.</page><page num="6">Figure 5: A comparison of HNSW and ACORN-𝛾’s strategies for (a)
+selecting candidate edges, shown for 𝑀=3, and (b) pruning candidate
+edges for each inserted node 𝑣, shown for 𝑀=3, 𝑀
+𝛽 
+=2, 𝛾=2.
+obtaining perfect recall at possibly lower QPS than if the ACORN
+index was instead searched. If the reverse is true, the system will
+mistakenly search the ACORN index, whereas pre-filtering would
+have offered similar QPS and perfect recall.
+Compression. A key challenge with ACORN-𝛾’s neighbor ex-
+pansion step is that it increases index size and TTI. The increased
+index size poses a significant issue particularly for memory-resident
+graph indices, like HNSW. To address this, we introduce a predicate-
+agnostic pruning technique. While we could apply compression to
+the full index, as discussed in Section 6.1, we specifically target
+the bottom level’s neighbor lists since they contribute most signifi-
+cantly to the indexing overhead. This follows from the exponentially
+decaying level assignment probability ACORN uses.
+The core idea of the pruning procedure is to precisely retain
+each node’s nearby neighbors in the index, while approximating
+farther away neighbor during search. We use the tunable compres-
+sion parameter, 𝑀
+𝛽 
+, where 0 ≤ 𝑀
+𝛽 
+, ≤ 𝑀 · 𝛾. During construction,
+ACORN chooses each node’s final neighbor list by automatically
+retaining the nearest 𝑀
+𝛽 
+candidate edges and aggressively prun-
+ing the remaining candidates. During search we can recover the
+first 𝑀
+𝛽 
+neighbors of each node 𝑣 directly from the neighbor list
+𝑁 
+𝑙 
+(𝑣), and approximate remaining neighbors by looking at 2-hop
+neighbors during search, as we described in Section 5.1.
+Figure 5 outlines this pruning procedure applied to node 𝑣’s
+candidate neighbor list. The algorithm iterates over the ordered
+candidate edge list and keeps the first 𝑀
+𝛽 
+candidates. Over the
+remaining sub-list of candidates, the algorithm applies the following
+pruning procedure at each node. Let H be the dynamic set of 𝑣’s
+chosen two-hop neighbors, initialized to ∅. We prune candidate
+𝑐 if it is contained in 𝐻 ; otherwise, we keep 𝑐 and add all of its
+neighbors to 𝐻 . The pruning procedure stops after iterating over
+all candidates, or if |𝐻 | plus the number of chosen edges exceeds
+𝑀 · 𝛾. The pruned and ordered neighbor list is then stored in the
+ACORN index and H is discarded.
+We highlight that the neighbor expansion during search, de-
+scribed in Section 5.1, can recover pruned neighbors regardless of
+the query predicate. It follows from ACORN’s pruning rule that any
+node 𝑥 that was pruned from some node 𝑣’s neighbor list, 𝑁 
+𝑙 
+(𝑣),
+must be in the neighbor list 𝑁 
+𝑙 
+(𝑦) such that 𝑦 is a neighbor of 𝑣
+with index greater than 𝑀
+𝛽 
+. During search, the neighbor lookup at
+𝑣 on level 𝑙 will perform a neighbor-list expansion for all neighbors
+with an index greater than 𝑀
+𝛽 
+, thus checking 𝑁 
+𝑙 
+(𝑦) and finding 𝑥.
+We now briefly describe why HNSW’s pruning, a metadata-
+blind mechanism, is insufficient for hybrid search. Consider the
+simple scenario shown in Figure 5. For a node, 𝑣, inserted into
+the HNSW index at an arbitrary level 𝑙, the algorithm generates
+candidates neighbors 𝑎, 𝑏 and 𝑐. HNSW’s pruning rule iterates over
+𝑣’s candidate neighbor list in order of nearest to farthest neighbors.
+Node 𝑏 is pruned since there exists a neighbor 𝑎 such that 𝑏 is closer
+to 𝑎 than to 𝑣. This RNG-approximation strategy corresponds to
+pruning the longest edge of the triangle formed by a triplet 𝑣, 𝑎, 𝑏.
+In this case, we can prune the edge 𝑣 − 𝑏 and expect a search path
+to traverse from 𝑣 to 𝑏 via 𝑎. The problem with this technique
+arises when we consider the hybrid search setting for an arbitrary
+predicate. Say 𝑣 and 𝑏 pass a given query predicate 𝑝
+𝑞 
+, but 𝑎 does
+not. Then 𝑣, 𝑏, 𝑎 do not form a triangle in the predicate subgraph,
+and we cannot expect to find the path from 𝑣 to 𝑏 through 𝑎. As a
+result, HNSW’s pruning mechanism will falsely prune edge 𝑣 − 𝑏.
+If we had complete knowledge of all possible query predicates, we
+could ensure that we only prune edges of triangles such that all
+three vertices always exist in the same subset of possible predicate
+subgraphs. FilteredDiskANN [ 25 ] takes this approach by restricting
+the set of possible query predicates. However, for arbitrary query
+predicates, ensuring this property holds becomes intractable.
+5.3 ACORN-1
+We now describe ACORN-1, an alternative approach which aims to
+approximate ACORN-𝛾’s search performance, while further min-
+imizing index size and TTI. ACORN-1 achieves this by perform-
+ing the neighbor expansion step solely during search, rather than
+during construction, as ACORN-𝛾 does. ACORN-1’s construction
+corresponds to the original HNSW index without pruning. This
+construction corresponds to ACORN-𝛾’s construction algorithm,
+with fixed parameters 𝛾 = 1 and 𝑀
+𝛽 
+= 𝑀.
+ACORN-1’s main difference from ACORN-𝛾 during search, is
+its neighbor lookup strategy. Specifically, at each visited node, 𝑣,
+during greedy search, ACORN-1 uses a full neighbor list expansion
+to consider all one-hop and two-hop neighbors of 𝑣, before applying
+the predicate filter and truncating the resulting neighbor list to size
+𝑀. Figure 4(c) outlines this procedure.
+6 DISCUSSION
+In this section we analyze the ACORN index’s space complexity,
+construction complexity and search performance. We focus our
+attention on ACORN-𝛾, since ACORN-1’s index construction rep-
+resents a special case of ACORN-𝛾 for fixed parameters (𝛾 = 1,
+𝑀
+𝛽 
+= 𝑀), and we empirically show that ACORN-1 search approxi-
+mates ACORN-𝛾 in Section 7. We note that our analysis in Sections
+6.2 and 6.3 considers the complexity scaling of the search procedure
+under the assumption that we build the exact Delaunay graphs
+rather than approximate ones.
+6.1 Index Size
+The average memory consumption per node of the ACORN-𝛾 index
+is 𝑂 (𝑀
+𝛽 
++ 𝑀 + 𝑚
+𝐿 
+· 𝑀 · 𝛾), assuming the number of bytes per edge
+is constant. For comparison, average memory consumption per
+node for the HNSW index scales 𝑂 (𝑀 +𝑚
+𝐿 
+· 𝑀). Overall, ACORN-𝛾
+increases the bottom-level’s memory consumption by 𝑂 (𝑀
+𝛽 
+) per</page><page num="8">We see that both bounds decay exponentially in 𝛾.
+Fixed Entry-point. Similar to HNSW, ACORN’s search begins
+from a fixed entry-point, chosen during construction. This pre-
+defined entry-point provides a simple and effective strategy that
+is also predicate-independent and robust to variations in query
+correlation, as we empirically show in Figure 10.
+Intuitively, we expect the search to successfully navigate from
+ACORN’s fixed entry-point, 𝑒, to the predicate-subgraph entry-
+point, 𝑒
+𝑝 
+, when we find a node that passes the predicate on an upper
+level of the index that is fully connected. In this case, there will
+exist a one-hop path from 𝑒 to 𝑒
+𝑝 
+. We consider 𝑒
+𝑝 
+to be an arbitrary
+node that passes a given predicate 𝑝 and is on the maximum level of
+the predicate subgraph. The index’s neighbor expansion parameter,
+𝛾, causes the index’s upper levels to be denser and, specifically
+those with less than 𝑀 · 𝛾 nodes, to be fully connected. When these
+fully connected levels contain at least one node that passes the
+predicate, the search is guaranteed to route from 𝑒 to 𝑒
+𝑝 
+. Since
+ACORN samples all nodes with equal probability at each level, the
+probability that nodes passing a given predicate, 𝑝, exist on some
+level is proportional to the predicate’s selectivity, which takes a
+lower bound of 𝑠
+𝑚𝑖𝑛 
+= 1/𝛾.
+Connectivity. We note that neither HNSW nor ACORN provides
+theoretical guarantees on connectivity over its level graphs for arbi-
+trary datasets. Thus we instead rely primarily on empirical results
+for our analysis. However, for some cases, we can expect ACORN’s
+predicate subgraph to be connected when the HNSW oracle parti-
+tion is connected. Two such cases are when 𝑋
+𝑝 
+exhibits no predicate
+clustering, or 𝑋
+𝑝 
+is clustered around a single region. In either case,
+each node has an expected degree of at least 𝑀 and each level ap-
+proximates a KNN graph, which is connected when 𝐾 &gt;&gt; log 𝑛. We
+empirically show in Figure 13a that ACORN’s predicate subgraphs
+exhibit connectivity for real datasets and hybrid search queries. To
+analyze potential connectivity problems, we recommend bench-
+marking ACORN’s hybrid search performance against HNSW’s
+ANN search performance using equivalent 𝑀 and efc parameters. If
+a significant gap in accuracy exists, we recommend incrementally
+increasing 𝛾 from its its initial value of 1/𝑠
+𝑚𝑖𝑛 
+.
+6.3.2 Search Complexity. ACORN-𝛾’s expected search complexity
+scales:
+𝑂 ((𝑑 + 𝛾) · log(𝑠 · 𝑛) + log(1/𝑠))
+This approximates the HNSW oracle partition’s expected search
+complexity, 𝑂 (𝑑 ·log(𝑠 ·𝑛)). Intuitively, ACORN-𝛾’s search path per-
+forms some filtering at the upper levels before likely entering and
+traversing the predicate sub-graph, during which ACORN incurs a
+small overhead compared to HNSW search in order to perform the
+predicate filtering step over each neighbor list.
+We derive ACORN-𝛾’s search complexity by considering two
+stages of its search traversal. In the first stage, search begins from a
+pre-defined entry-point 𝑒, which need not pass the query predicate.
+In this stage, the search performs filtering only, dropping down
+each level on which the filtered neighbor list, 𝑁
+𝑝 
+(𝑒), is found to be
+empty. Once the traversal reaches the first node, 𝑒
+𝑝 
+that passes the
+predicate, it enters the second stage, beginning its traversal over
+the predicate subgraph 𝐺 (𝑋
+𝑝 
+).
+In stage 1 the greedy search path on each layer has length 1,
+and occurs over 𝑂 (log 𝑛 − log(𝑠 · 𝑛)) expected levels, yielding the
+complexity 𝑂 (log(1/𝑠). We see this because the expected maximum
+level index of the full ACORN index graph scales 𝑂 (log 𝑛) based
+on its level-assignment probability [ 48]. Meanwhile, the predicate
+subgraph 𝐺 (𝑋
+𝑝 
+) of size 𝑠 ·𝑛 has an expected maximum level index of
+𝑂 (log(𝑠 · 𝑛)), once again according to its level sampling procedure.
+The second stage of the search traverses the predicate subgraph
+in expected 𝑂 ((𝑑 + 𝛾) · log(𝑠 · 𝑛)) complexity. As we previously de-
+scribe, the expected maximum level index of the predicate subgraph
+scales 𝑂 (log(𝑠 · 𝑛)). At each level, the expected greedy path length
+can be bounded by a constant 𝑆 due to the index level sampling pro-
+cedure employed during construction. For each node visited along
+the greedy path, we perform distance computations in 𝑂 (𝑑) time
+on at most 𝑀 neighbors, and perform a constant-time predicate
+evaluations over at most 𝑀 · 𝛾 neighbors.
+7 EVALUATION
+We evaluate ACORN through a series of experiments on real and
+synthetic datasets. Overall, our results show the following:
+• ACORN-𝛾 achieves state-of-the-art hybrid search perfor-
+mance, outperforming existing methods by 2-1,000× higher
+QPS at 0.9 recall on both prior benchmark datasets with
+simple, low-cardinality predicate sets, and more complex
+datasets with high-cardinality predicate sets. Specifically,
+ACORN achieves 2-10× higher QPS on prior benchmarks,
+over 30× higher QPS on new benchmarks, and over 1,000x
+higher QPS at scale on a 25-million-vector dataset.
+• ACORN-𝛾 and ACORN-1 are predicate-agnostic methods,
+providing robust search performance under variations in
+predicate operators, predicate selectivity, query correlation,
+and dataset size.
+• ACORN-1 and ACORN-𝛾 exhibit trade-offs between search
+performance and construction overhead. While ACORN-
+𝛾 achieves up to 5× higher QPS than ACORN-1 at fixed
+recalls, ACORN-1 can be constructed with 9-53× lower
+time-to-index (TTI).
+We now discuss our results in detail. We first describe the datasets
+(7.1) and baselines (7.2) we use. Then, we present a systematic
+evaluation of ACORN’s search peformance (7.3). Finally, we assess
+ACORN’s construction efficiency (7.4). We run all experiments on
+an AWS m5d.24xlarge instance with 370 GB of RAM, 96 vCPUs,
+and 196 threads.
+7.1 Datasets
+We conduct our experiments on two datasets with low-cardinality
+predicate sets (LCPS) and two datasets with high-cardinality predi-
+cate sets (HCPS). The LCPS datasets allow us to benchmark prior
+works that only support a constrained set of query predicates. The
+HCPS datasets consist of more complex and realistic query work-
+loads, allowing us to more rigorously evaluate ACORN’s search
+performance. Table 2 provides a concise summary of all datasets.
+3
+On the TripClick dataset, we create two distinct query workloads, described in Section
+7.1.2. The average selectivity for either workload is .17 (keywords), and .26 (dates).
+3
+On the LAION dataset, we create four distinct query workloads, described in Section
+7.1.2. These workloads have average selectivities of .10 (no-cor), .13 (pos-cor), .069
+(neg-cor), .056 (regex).</page><page num="13">ACORN: Search Over Vector Embeddings and Structured Data
+(a) TTI (b) Space footprint
+(c) # Edges Pruned (d) Search Perf.
+Figure 12: Comparison of pruning methods on SIFT1M and their
+impact on TTI (a), space footprint of the index (b), the number of
+candidate edges pruned (c) and search performance (d). 𝑀
+𝛽 
+values
+used for ACORN-𝛾 are shown along the x-axis.
+7.4.3 Graph Quality. Finally, we investigate the graph quality of
+ACORN-𝛾’s predicate subgraphs. Figure 13 compares graph connec-
+tivity, graph height, and out degrees for HNSW oracle partitions and
+ACORN-𝛾 predicate subgraphs across varied predicate selectivities
+on the TripClick dataset’s real hybrid search queries.
+From Figure 13a, we see ACORN-𝛾’s predicate-subgraph con-
+nectivity empirically matches or exceeds that of the HNSW oracle
+partition across selectivities, demonstrating the effectiveness of
+ACORN-𝛾’s neighbor expansion strategy. Next, Figure 13b shows
+that the controlled hierarchy of ACORN-𝛾’s predicate subgraphs
+emulate that of the HNSW oracle partitions. Malkov et al. show
+that HNSW search performance is sensitive to graph height [48 ];
+thus, this result helps explain ACORN-𝛾’s ability to emulate the
+search efficiency of the oracle partition. Lastly, Figure 13c examines
+the average out degree resulting from performing the search-time
+filtering, described in Figure 4(a), over the ACORN-𝛾 index. We note
+that sufficiently high, but bounded, out-degrees are important for
+emulating HNSW’s navigability properties, as discussed in Section
+6.3. The figure confirms that ACORN’s predicate subgraphs have
+average out-degrees consistently close to and bounded by 𝑀. As
+expected, the HNSW oracle partition has significantly lower aver-
+age out-degrees than nodes on ACORN-𝛾’s uncompressed levels
+because HNSW applies RNG-based pruning. We also note, that the
+ACORN predicate subgraph with 1 percentile selectivity has lower
+average out degrees than the other predicate subgraphs because
+the low selectivity predicates result in fewer than 128 nodes on the
+largest uncompressed levels, thus capping the maximum out degree
+per node below 𝑀 = 128. Overall, we observe that ACORN-𝛾 pro-
+duces high quality predicate subgraphs, which empirically emulate
+several HNSW properties related to search efficiency.
+8 RELATED WORK
+Pre- &amp; Post-filtering-based Systems. Many hybrid search sys-
+tems rely on pre- and post-filtering. While several systems have
+developed pre-processing methods to perform faster filtering dur-
+ing search, these systems fail to reduce the excessive and expensive
+distance computations which bottleneck performance. Weaviate [1]
+creates an inverted index for structured data ahead of time, then
+uses it at query time to create a bitmap of eligible candidates during
+(a) # SCC (b) Graph Height (c) Avg Out Degree
+Figure 13: Graph quality of ACORN-𝛾 predicate subgraph evalu-
+ated by (a) average number of strongly connected components per
+level, (b) graph height, and (c) average out degree of nodes across
+uncompressed levels. Results are shown for the TripClick dataset
+with 1, 25, 50, 75, and 99 percentile selectivity predicates to generate
+the predicate subgraph and HNSW oracle partition.
+post-filtering. Milvus [ 62 ] likewise creates an approved list of points
+by maintaining a distribution of attributes over the dataset in order
+to map commonly used query filters to a list of approved points
+before performing pre- or post-filtering. Several space-partitioning
+indices like FAISS-IVF [ 14, 34 ] and LSH [10 ] store metadata infor-
+mation in the index, allowing them to rapidly filter entities during
+post-filtering. Despite the optimized filtering steps in each of these
+approaches, the core problems of pre- and post-filtering remain,
+particularly for low correlation or selectivity predicates.
+Specialized Indices. Alternatively, several recent works develop
+novel graph-based algorithms for hybrid search, often improving
+performance for a constrained set of predicates. NHQ [ 63 ] encodes
+attributes alongside vectors, and then uses a &quot;fusion distance&quot; dur-
+ing search that accounts for vector distances as well as attribute
+matches. This approach supports only equality query predicates
+and assumes each dataset entity has only one structured attribute.
+Filtered-DiskANN [ 25 ] proposes two algorithms: FilteredVamana
+and StitchedVamana. Both methods constrain the query filter cardi-
+nality to about 1, 000 with only equality predicates so that the index
+construction steps can use this knowledge to appropriately generate
+and prune candidate edge lists. Similarly HQI [49 ] optimizes batch
+query-processing by assuming a limited cardinality of 20 query
+predicates to design an efficient partitioning scheme. On the other-
+hand, Qdrant [ 61 ] proposes to densify an HNSW graph and perform
+a filtered greedy search. While this approach aligns intuitively with
+ACORN’s neighbor-list expansions during construction, Qdrant’s
+proposal inadvertently flattens the graph by directly increasing the
+HNSW parameter 𝑀, which impacts HNSW’s level normalization
+constant. Malkov et al. show that HNSW’s performance is sensitive
+to its number of levels, and flattening the graph degrades search
+performance [48]. In addition, Qdrant’s proposed method does not
+provide a solution for dealing with the increased memory overhead
+after creating a denser HNSW.
+9 CONCLUSION
+We proposed ACORN, the first approach for efficient hybrid search
+across vectors and structured data that supports large and diverse
+sets of query predicates. ACORN uses a simple, yet effective, search
+strategy based on the core idea of predicate subgraph traversal. We
+presented two indices, ACORN-𝛾 and ACORN-1, that implement
+this search strategy by modifying the HNSW indexing algorithm.
+Our results show that ACORN achieves state-of-the-art hybrid
+search performance on both prior benchmarks, involving simple,</page></paper>

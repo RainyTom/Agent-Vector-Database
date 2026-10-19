@@ -1,6 +1,6 @@
 # Vector Join 八篇论文深度综合：方案来源、演化、展望与缺陷
 
-> 2026-10-11 版本审计：当前结构化索引见 [论文目录](../../papers/vector-join/README.md)。本报告其余历史展望/数值仍须按记录的正文版本核对；尤其不能把 NN-Map 已讨论的维护、统计与多集合 map 选择当成未研究方向。
+> 2026-10-11 版本审计：当前结构化索引见 [论文库总入口](../../papers/README.md)。本报告其余历史展望/数值仍须按记录的正文版本核对；尤其不能把 NN-Map 已讨论的维护、统计与多集合 map 选择当成未研究方向。2026-10-19 按论文主主题拆分物理目录，相关性等级与论文身份保持不变。
 
 ## 1. 先给结论
 
@@ -159,6 +159,6 @@ merged index、LSH table、bucket graph、learned model 都有构建和维护成
 5. [Xling 学习型过滤](../../papers/vector-join/2402.13397-xling/paper.report.md)
 6. [GPU-Join exact baseline](../../papers/vector-join/1809.09930-gpu-similarity-self-join/paper.report.md)
 7. [LSH-SS 基数估计](../../papers/vector-join/1104.3212-lsh-join-size-estimation/paper.report.md)
-8. [SJPC 流式基数估计](../../papers/vector-join/1806.03313-streaming-join-size-estimation/paper.report.md)
+8. [SJPC 流式基数估计](../../papers/similarity-join/1806.03313-streaming-join-size-estimation/paper.report.md)
 
 每份报告均区分作者明确陈述、实验支持程度和分析者推断，并包含形式化定义、伪代码、复杂度、实验可信度、失败条件与后续实验建议。

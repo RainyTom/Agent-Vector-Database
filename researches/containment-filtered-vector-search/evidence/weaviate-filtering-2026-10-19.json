@@ -1,0 +1,55 @@
+{
+  "type": "system_documentation",
+  "system": "Weaviate",
+  "checked_on": "2026-10-19",
+  "sources": [
+    {
+      "url": "https://docs.weaviate.io/weaviate/concepts/filtering",
+      "sections": [
+        "Efficient Pre-Filtered Searches",
+        "Filter strategy",
+        "indexFilterable",
+        "Flat-Search Cutoff"
+      ]
+    },
+    {
+      "url": "https://docs.weaviate.io/weaviate/config-refs/indexing/vector-index",
+      "sections": [
+        "HNSW filterStrategy",
+        "flatSearchCutoff"
+      ]
+    }
+  ],
+  "observed_documentation": {
+    "allow_list": "inverted index resolves eligible IDs; HNSW uses allow-list",
+    "filter_strategies": [
+      "sweeping",
+      "acorn",
+      "pathseer"
+    ],
+    "default_filter_strategy": "acorn; documentation says since v1.34",
+    "pathseer_added": "v1.40 according to docs",
+    "acorn_implementation": "custom paper-inspired implementation, distinct from original paper",
+    "flatSearchCutoff": {
+      "documented_default": 40000,
+      "type": "integer",
+      "force_vector_index": 0,
+      "note": "do not treat illustrative 15 percent as the default; implementation trigger unverified"
+    }
+  },
+  "candidate": {
+    "title": "PathSeer: Adaptive Neighbor Handling for Efficient Filtered ANN Search",
+    "doi": "10.1145/3802098",
+    "url": "https://doi.org/10.1145/3802098",
+    "venue_status": "official system docs identify SIGMOD2026; original publication metadata not independently verified",
+    "authors_status": "full author list/order unverified",
+    "reading_status": "original DOI fetch403; no full-text catalog entry"
+  },
+  "open_items": [
+    "version-pinned implementation and heuristic thresholds",
+    "path/tokenization semantics",
+    "PathSeer original paper and implementation",
+    "independent system experiments"
+  ],
+  "note": "Documentation is not a paper record and not a new vector-join paper"
+}

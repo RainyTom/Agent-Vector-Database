@@ -107,4 +107,4 @@ SJPC 在流式、多属性相似度模型中用与记录数无关的计数器数
 - `1806.03313` — Similarity Join and Similarity Self-Join Size Estimation in a Streaming Environment
 - `1104.3212` — Similarity Join Size Estimation using Locality Sensitive Hashing
 
-alphaXiv 的原始检索结果、结构化报告和逐页证据保存在 [`alphaxiv/`](alphaxiv/)；正文材料保存在 [`papers/vector-join/`](../../papers/vector-join/)。
+alphaXiv 的原始检索结果、结构化报告和逐页证据保存在 [`alphaxiv/`](alphaxiv/)；正文材料按自身研究主题存放，见[论文库总入口](../../papers/README.md)与[几何向量连接目录](../../papers/vector-join/README.md)。一般多字段相似连接另列于[相邻主题](../../papers/similarity-join/README.md)。

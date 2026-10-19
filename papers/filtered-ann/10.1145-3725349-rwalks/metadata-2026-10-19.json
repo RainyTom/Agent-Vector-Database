@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "id": "doi:10.1145/3725349",
+  "aliases": [
+    "RWalks"
+  ],
+  "title": "RWalks: Random Walks as Attribute Diffusers for Filtered Vector Search",
+  "authors": [
+    "Anas Ait Aomar",
+    "Karima Echihabi",
+    "Marco Arnaboldi",
+    "Ioannis Alagiannis",
+    "Damien Hilloulin",
+    "Manal Cherkaoui"
+  ],
+  "year": 2025,
+  "preprint_year": null,
+  "venue": "Proceedings of the ACM on Management of Data 3(3), Article 212 (2025); SIGMOD 2025",
+  "version_status": "作者公开仓库 26 页稿，首页正式 DOI，第三作者拼写与出版元数据有差异；与最终版差异未逐项核对",
+  "versions": [
+    {
+      "kind": "analyzed_author_copy",
+      "identifier": "10.1145/3725349",
+      "url": "https://raw.githubusercontent.com/AnasAito/rwalks-reproduce-v2/master/RWalks_paper_public.pdf",
+      "local_pdf": "papers/filtered-ann/10.1145-3725349-rwalks/paper.pdf",
+      "note": "相关章节核读，非全部定理复现"
+    }
+  ],
+  "links": {
+    "paper": "https://doi.org/10.1145/3725349",
+    "preprint": null,
+    "preprint_status": "未核实独立预印本 ID，不猜测",
+    "full_text": "https://raw.githubusercontent.com/AnasAito/rwalks-reproduce-v2/master/RWalks_paper_public.pdf",
+    "code": [
+      "https://github.com/AnasAito/rwalks-reproduce-v2"
+    ],
+    "code_status": "入口已核/原文给出，未运行；空列表为未核实",
+    "datasets": [],
+    "dataset_link_status": "数据名称核读，下载/许可未核实"
+  },
+  "tags": [
+    "filtered-ANN",
+    "label-containment",
+    "RWalks"
+  ],
+  "relevance": {
+    "level": "B",
+    "role": "可迁移借鉴：属性过滤、共享结构或导航组件；原问题为单查询 ANN，非 vector join"
+  },
+  "problem": {
+    "input": "二进制多属性 filtered ANN；AND 要求所有激活查询属性出现，亦定义 OR/NOT",
+    "output": "满足相应谓词的近似 top-k 对象",
+    "pair_convention": "单查询对象；边界/去重规则需按本项目对齐"
+  },
+  "join_type": {
+    "sets": [
+      "不适用：单查询 filtered ANN"
+    ],
+    "selection": [
+      "per-query-top-k"
+    ],
+    "accuracy": "approximate",
+    "attribute_filter": "二进制多属性 filtered ANN；AND 要求所有激活查询属性出现，亦定义 OR/NOT"
+  },
+  "metrics": [
+    "原文 L2/Euclidean，归一化与逐数据预处理需对齐"
+  ],
+  "data_assumptions": [
+    "原始向量空间与标签一致编码",
+    "内存/SSD/线程按论文版本分别记录，不默认可直接比较"
+  ],
+  "method": [
+    "基础向量图保持不变，后处理 random-walk attribute diffusion",
+    "hybrid distance 引导导航",
+    "twin priority queue 保留被挤出的合格对象",
+    "启发式 attribute pruning 减少距离计算，输出按原始属性校验"
+  ],
+  "guarantees": {
+    "theory": "§4 单二进制属性/i.i.d. 距离等模型下的局部有效访问比例命题，不是端到端 recall 下界",
+    "complexity": "原文在固定参数下给平均 HNSW O(nlogn) 构建/O(logn) 查询与 O(n) 属性扩散；属性维数与活跃属性数变化时不可忽略，稀疏 map 成本另计",
+    "error": "§1 Scope 明确 retrieval-quality theoretical guarantees 不在范围内；启发式阈值可能导致 recall saturation"
+  },
+  "experiments": {
+    "datasets": [
+      "Deep",
+      "SIFT",
+      "YFCC",
+      "arXiv"
+    ],
+    "baselines": [
+      "HNSW search-then-filter",
+      "HNSW inline",
+      "IVF",
+      "HQANN",
+      "Filtered-DiskANN",
+      "ACORN-1",
+      "ACORN-γ"
+    ],
+    "evaluation_metrics": [
+      "Recall@k",
+      "QPS/latency",
+      "index size",
+      "build time"
+    ],
+    "main_results": [
+      "§5 Recall@10–QPS、空间/建图及消融；支持有/无过滤与复合 AND；摘要的加速属于原文各实验，未复现"
+    ],
+    "result_status": "原文相关章节核读；未独立复现"
+  },
+  "limitations": [
+    "标签空间/扩散后活跃属性数会带来属性表示开销",
+    "高剪枝阈值影响高召回，困难数据可关闭剪枝",
+    "当前固定 L2；range/其他距离列未来工作",
+    "作者稿第三作者 Arnobaldi 与正式 Crossref Arnaboldi 拼写不同"
+  ],
+  "related_work": [
+    "方法关联及证据见 researches/containment-filtered-vector-search/index.md"
+  ],
+  "project_insights": [
+    "适合评估保留基础向量图时的属性导航",
+    "导航融合距离不能改变原向量排序定义",
+    "局部有效率改善不直接等于 top-k召回改善"
+  ],
+  "evidence": [
+    {
+      "kind": "full_text_sections",
+      "version": "作者公开仓库 26 页稿，首页正式 DOI，第三作者拼写与出版元数据有差异；与最终版差异未逐项核对",
+      "local_path": "papers/filtered-ann/10.1145-3725349-rwalks/paper.md",
+      "url": "https://raw.githubusercontent.com/AnasAito/rwalks-reproduce-v2/master/RWalks_paper_public.pdf",
+      "sections": [
+        "1 Scope",
+        "2.1 Definitions",
+        "3 Algorithms 1–2",
+        "4 analysis",
+        "5 experiments",
+        "6 future work"
+      ],
+      "pdf_pages": [
+        "3–4",
+        "7–16",
+        "22"
+      ]
+    },
+    {
+      "kind": "bibliography",
+      "local_path": "researches/containment-filtered-vector-search/evidence/crossref-rwalks-2026-10-19.json",
+      "url": "https://api.crossref.org/works/10.1145/3725349"
+    }
+  ],
+  "verification": {
+    "date": "2026-10-19",
+    "reading_status": "定义、方法、部分分析与实验相关章节阅读；非逐段全文验证",
+    "bibliography_status": "DOI/作者顺序/venue/年已核，作者稿拼写与版本差异保留",
+    "open_items": [
+      "最终稿差异与全部理论细节",
+      "官方实现及真实包含工作负载复现",
+      "零/不足k的行为与数据许可"
+    ]
+  },
+  "local_dir": "papers/filtered-ann/10.1145-3725349-rwalks"
+}

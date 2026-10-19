@@ -1,0 +1,149 @@
+{
+  "DOI": "10.1145/3786635",
+  "title": [
+    "Curator: Efficient Vector Search with Low-Selectivity Filters"
+  ],
+  "author": [
+    {
+      "ORCID": "https://orcid.org/0000-0001-6966-1219",
+      "authenticated-orcid": false,
+      "given": "Yicheng",
+      "family": "Jin",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Duke University, Durham, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0000-6297-1599",
+      "authenticated-orcid": false,
+      "given": "Yongji",
+      "family": "Wu",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "University of California, Berkeley, Berkeley, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0007-5988-3193",
+      "authenticated-orcid": false,
+      "given": "Wenjun",
+      "family": "Hu",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Yale University, New Haven, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0002-5692-7062",
+      "authenticated-orcid": false,
+      "given": "Bruce",
+      "family": "Maggs",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Duke University, Durham, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0003-0604-6790",
+      "authenticated-orcid": false,
+      "given": "Jun",
+      "family": "Yang",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Duke University, Durham, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0003-3119-4880",
+      "authenticated-orcid": false,
+      "given": "Xiao",
+      "family": "Zhang",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Cisco ThousandEyes, Durham, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0002-0611-3941",
+      "authenticated-orcid": false,
+      "given": "Danyang",
+      "family": "Zhuo",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Duke University, Durham, USA"
+        }
+      ],
+      "role": [
+        {
+          "role": "author",
+          "vocabulary": "crossref"
+        }
+      ]
+    }
+  ],
+  "published": {
+    "date-parts": [
+      [
+        2026,
+        4,
+        2
+      ]
+    ]
+  },
+  "container-title": [
+    "Proceedings of the ACM on Management of Data"
+  ],
+  "volume": "4",
+  "issue": "1",
+  "article-number": null
+}

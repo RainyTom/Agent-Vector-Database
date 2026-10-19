@@ -11,7 +11,7 @@
 
 ## 文献工作流程
 
-1. 先检查 `papers/vector-join/papers.jsonl`、`relations.jsonl`、已有全文和研究笔记，再查重与更新。
+1. 先检查 `papers/papers.jsonl`、`relations.jsonl`、已有全文和研究笔记，再查重与更新。
 2. 每轮先搜 vector similarity join、vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join 及变体，再搜 ANN、filtered ANN、混合查询等。
 3. 优先原始论文、正式 proceedings、作者稿和全文；综述用于术语与引用链。覆盖数据库、IR 相关会议期刊及有直接迁移价值的其他领域。
 4. 核实标题、完整作者顺序、年份、venue、链接、版本状态。正式发表年份与预印本/会议年份分开。未知写“未核实”，不能猜测。
@@ -21,9 +21,11 @@
 
 ## 持久索引
 
-- `papers/vector-join/papers.jsonl`：结构化论文记录，字段约定见同目录 README。
-- `papers/vector-join/relations.jsonl`：有方向、有证据的引用、比较、方法继承等边；作者关系与研究者推断分开。
-- `papers/vector-join/changelog.md`：新增、修订、去重和分类变化。
+论文按自身主研究问题存放在 `papers/vector-join/`、`papers/filtered-ann/`、`papers/prefix-vector-search/` 或 `papers/similarity-join/`；总索引使用 `topic` 与对应 `local_dir`。A/B/C 是相对 vector join 主线的相关性，不决定主题目录。每篇全文只存一份，跨主题用统一关系索引关联。
+
+- `papers/papers.jsonl`：结构化论文记录，字段约定见同目录 README。
+- `papers/relations.jsonl`：有方向、有证据的引用、比较、方法继承等边；作者关系与研究者推断分开。
+- `papers/changelog.md`：新增、修订、去重和分类变化。
 - `researches/vector-join/search-log.md`：检索词、来源、覆盖限制、未完成候选与补查项。
 - `researches/vector-join/research-questions.md`：研究假设、新颖性排查与最小实验。
 - PDF/Markdown/图片沿用已有目录，不为标题更新重命名目录；旧的元数据快照不覆盖成无日期的新快照。

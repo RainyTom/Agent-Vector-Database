@@ -1,0 +1,39 @@
+{
+  "id": "doi:10.1145/3769765",
+  "title": "Beyond Vector Search: Querying With and Without Predicates",
+  "aliases": [
+    "UniFilter"
+  ],
+  "authors": [
+    "Jiadong Xie",
+    "Jeffrey Xu Yu",
+    "Siyi Teng",
+    "Yingfan Liu"
+  ],
+  "year": 2025,
+  "venue": "PACMMOD 3(6), Article 300, 1–26 (2025); SIGMOD 2026",
+  "status": "candidate_waiting_original_full_text",
+  "links": {
+    "paper": "https://doi.org/10.1145/3769765",
+    "author_institution": "https://research.cuhk.edu.hk/en/publications/beyond-vector-search-querying-with-and-without-predicates/",
+    "author_survey": "https://xiejiadong.github.io/files/paper/vector_survey.pdf"
+  },
+  "evidence_levels": {
+    "bibliography": "Crossref/机构原始记录已核",
+    "abstract": "机构页面已核，统一无谓词/类别/数值谓词",
+    "method": "仅作者综述 PDF p.20：谓词 AND/OR 图与 proximity graph 联合，非原文精读",
+    "overlap": "LSSG v1 Table 2/§2.2 的作者分类；UniFilter 原文执行未核实",
+    "guarantees": "未核实",
+    "experiments": "未核实"
+  },
+  "relevance": {
+    "level": "B",
+    "role": "候选：filtered ANN 组件可迁移，非 join"
+  },
+  "open_items": [
+    "原始全文及 overlap 执行",
+    "理论保证与实验",
+    "官方实现"
+  ],
+  "checked_on": "2026-10-18"
+}

@@ -1,0 +1,18 @@
+{
+  "checked_on": "2026-10-19",
+  "source_candidate": "ung-candidate-2026-10-19.json",
+  "status": "原文全文仍缺；作者海报与官方实现支持机制说明",
+  "walkthrough": "../walkthroughs/03-ung.md",
+  "researcher_derivations": [
+    "完整前缀编码下集合包含等价于路径前缀",
+    "占用终止组的极小包含图为森林",
+    "没有内部终止组时宽前缀可能产生多入口前沿",
+    "候选兄弟桥接按LCP控制启用，尚无性能验证"
+  ],
+  "verification": "两符号长度0–2的7序列，共127种非空终止序列分布，核组图森林及前沿覆盖；不是原代码/ANN复现",
+  "open_items": [
+    "原始论文理论/版本差异",
+    "原UNG、Trie路由、条件桥接的等预算实验",
+    "TrieHI/范围索引与其他组间导航前序"
+  ]
+}

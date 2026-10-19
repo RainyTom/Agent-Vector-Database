@@ -1,0 +1,44 @@
+{
+  "id": "doi:10.1145/3698822",
+  "title": "Navigating Labels and Vectors: A Unified Approach to Filtered Approximate Nearest Neighbor Search",
+  "authors": [
+    "Yuzheng Cai",
+    "Jiayang Shi",
+    "Yizhuo Chen",
+    "Weiguo Zheng"
+  ],
+  "year": 2024,
+  "venue": "PACMMOD 2(6), Article 246 (2024); SIGMOD 2025",
+  "aliases": [
+    "UNG"
+  ],
+  "status": "candidate_original_full_text_pending",
+  "relevance": {
+    "level": "B",
+    "role": "filtered containment ANN 可迁移组件，非join"
+  },
+  "problem": "Lq⊆Li；作者海报与官方实现明确",
+  "method": [
+    "相同标签集合分组",
+    "LNG 极小超集入口",
+    "组内 Vamana 与向上 cross-group edges"
+  ],
+  "guarantees": "原文定理/完整实验未核实；海报 completeness 不解释为精确top-k保证",
+  "links": {
+    "paper": "https://doi.org/10.1145/3698822",
+    "code": "https://github.com/YZ-Cai/Unified-Navigating-Graph",
+    "poster": "https://drive.google.com/file/d/1jGAgrHEz2n0qqQC4lRK8qLL_r0oe_gI3/view"
+  },
+  "evidence": [
+    "crossref-ung-2026-10-19.json",
+    "ung-author-poster-2026-10-19.pdf",
+    "ung-readme-2026-10-19.md",
+    "ung-uni-nav-graph-2026-10-19.cpp"
+  ],
+  "open_items": [
+    "原文全文",
+    "版本/理论/全实验",
+    "独立复现"
+  ],
+  "checked_on": "2026-10-19"
+}

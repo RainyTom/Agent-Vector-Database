@@ -1,0 +1,95 @@
+{
+  "DOI": "10.1145/3654923",
+  "title": [
+    "ACORN: Performant and Predicate-Agnostic Search Over Vector Embeddings and Structured Data"
+  ],
+  "author": [
+    {
+      "ORCID": "https://orcid.org/0000-0003-3464-9556",
+      "authenticated-orcid": false,
+      "given": "Liana",
+      "family": "Patel",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Stanford University, Stanford, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0008-7215-7425",
+      "authenticated-orcid": false,
+      "given": "Peter",
+      "family": "Kraft",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "DBOS, Inc., Mountain View, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0001-6348-5939",
+      "authenticated-orcid": false,
+      "given": "Carlos",
+      "family": "Guestrin",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Stanford University, Stanford, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0002-7547-7204",
+      "authenticated-orcid": false,
+      "given": "Matei",
+      "family": "Zaharia",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "UC Berkeley, Berkeley, USA"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "published": {
+    "date-parts": [
+      [
+        2024,
+        5,
+        29
+      ]
+    ]
+  },
+  "container-title": [
+    "Proceedings of the ACM on Management of Data"
+  ],
+  "volume": "2",
+  "issue": "3",
+  "article-number": null
+}

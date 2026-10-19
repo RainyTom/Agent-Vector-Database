@@ -1,0 +1,18 @@
+{
+  "source": "https://upenn.ferric.systems/dbscholar/sigmod_papers/2026/10.1145_3802098.pdf",
+  "doi": "10.1145/3802098",
+  "retrieved_on": "2026-10-19",
+  "pages": 27,
+  "bytes": 2485048,
+  "extraction": "PyMuPDF",
+  "code_commit": "6e0cd1df08927651013823f1f5458e6fb4a2336f",
+  "note": "原论文镜像；与ACM在线文件逐字节一致性未核",
+  "bibliography_note": "PDF刊头June2026；Crossref published2026-05-18",
+  "code_snapshot_files": [
+    "evidence/author-readme-2026-10-19.md",
+    "evidence/IndexPathSeer-2026-10-19.cpp",
+    "evidence/IndexPathSeer-2026-10-19.h",
+    "evidence/PathSeer-impl-2026-10-19.cpp",
+    "evidence/PathSeer-impl-2026-10-19.h"
+  ]
+}

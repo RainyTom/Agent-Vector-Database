@@ -1,0 +1,16 @@
+{
+  "id": "arxiv:2606.16903",
+  "version": "2606.16903v1",
+  "checked_on": "2026-10-19",
+  "status": "original_full_text_sections_read_and_indexed",
+  "local_dir": "papers/prefix-vector-search/2606.16903-directory-aware",
+  "prior_snapshot": "directory-aware-candidate-2026-10-19.json",
+  "core_update": "recursive DSQ aligns with single-path prefix scope; TrieHI stores inclusive bitmap and preserves ANN layout",
+  "open_items": [
+    "真实代码版本与scope-ANN接口",
+    "距离/归一化和后端参数",
+    "数据下载与许可",
+    "zero/不足k/tie语义",
+    "前缀与ANN联合导航的前后向引用"
+  ]
+}

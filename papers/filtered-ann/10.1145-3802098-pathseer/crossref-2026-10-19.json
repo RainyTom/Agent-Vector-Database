@@ -1,0 +1,708 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          5,
+          18
+        ]
+      ],
+      "date-time": "2026-05-18T19:06:50Z",
+      "timestamp": 1779131210888,
+      "version": "3.51.4"
+    },
+    "reference-count": 65,
+    "publisher": "Association for Computing Machinery (ACM)",
+    "issue": "3",
+    "funder": [
+      {
+        "DOI": "10.13039/501100001809",
+        "name": "National Natural Science Foundation of China",
+        "doi-asserted-by": "publisher",
+        "award": [
+          "62302503"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "62302503"
+            ]
+          }
+        ],
+        "id": [
+          {
+            "id": "10.13039/501100001809",
+            "id-type": "DOI",
+            "asserted-by": "publisher"
+          }
+        ]
+      },
+      {
+        "DOI": "10.13039/501100001809",
+        "name": "National Natural Science Foundation of China",
+        "doi-asserted-by": "publisher",
+        "award": [
+          "62025203"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "62025203"
+            ]
+          }
+        ],
+        "id": [
+          {
+            "id": "10.13039/501100001809",
+            "id-type": "DOI",
+            "asserted-by": "publisher"
+          }
+        ]
+      },
+      {
+        "DOI": "10.13039/501100001809",
+        "name": "National Natural Science Foundation of China",
+        "doi-asserted-by": "publisher",
+        "award": [
+          "62402499"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "62402499"
+            ]
+          }
+        ],
+        "id": [
+          {
+            "id": "10.13039/501100001809",
+            "id-type": "DOI",
+            "asserted-by": "publisher"
+          }
+        ]
+      },
+      {
+        "name": "Innovation Research Foundation of NUDT",
+        "award": [
+          "ZK23-15"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "ZK23-15"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Open Research Fund from State Key Laboratory of High Performance Computing of China",
+        "award": [
+          "202401-09"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "202401-09"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "Young Elite Scientists Sponsorship Program by CAST",
+        "award": [
+          "YESS20240767"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "YESS20240767"
+            ]
+          }
+        ]
+      }
+    ],
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [
+      "Proc. ACM Manag. Data"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          2026,
+          5,
+          18
+        ]
+      ]
+    },
+    "abstract": "<jats:p>Filtered approximate nearest neighbor (ANN) search over high-dimensional vectors and associated attributes is critical for recommendation systems and RAG-based LLMs. However, existing methods face performance bottlenecks under workloads of varying characteristics due to static and single neighbor-handling strategies---either computing distances before filtering or filtering before distance computation---which fail to adapt to diverse data and workload patterns. In this paper, we propose PathSeer, an approach that enables efficient filtered ANN search through dynamic and hybrid neighbor-handling strategies. PathSeer introduces three key techniques: (1) a fusion vector indexing scheme that supports two neighbor-handling strategies within a single index, (2) a dynamic neighbor traversal strategy that allows adjusting the ratios of different neighbor-handling strategies at each step of index traversal while preserving high search performance, and (3) a heuristic parameter tuning mechanism that adapts the ratios of neighbors employing different neighbor-handling strategies to workload characteristics. Evaluations on six workloads show that PathSeer delivers 1.17×–47.4× higher throughput for filtered ANN search compared to existing methods, without sacrificing recall.</jats:p>",
+    "DOI": "10.1145/3802098",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2026,
+          5,
+          18
+        ]
+      ],
+      "date-time": "2026-05-18T18:19:16Z",
+      "timestamp": 1779128356000
+    },
+    "page": "1-27",
+    "source": "Crossref",
+    "is-referenced-by-count": 0,
+    "title": [
+      "PathSeer: Adaptive Neighbor Handling for Efficient Filtered ANN Search"
+    ],
+    "prefix": "10.1145",
+    "volume": "4",
+    "author": [
+      {
+        "ORCID": "https://orcid.org/0000-0003-3207-3493",
+        "authenticated-orcid": false,
+        "given": "Zhiyue",
+        "family": "Li",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "Tsinghua University, Beijing, China"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-3480-5902",
+        "authenticated-orcid": false,
+        "given": "Guangyan",
+        "family": "Zhang",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Tsinghua University, Beijing, China"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0009-0001-2763-0577",
+        "authenticated-orcid": false,
+        "given": "Ruochun",
+        "family": "Jin",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "National University of Defense Technology, Changsha, China"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0009-0002-9966-8467",
+        "authenticated-orcid": false,
+        "given": "Bojun",
+        "family": "Li",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "National University of Defense Technology, Changsha, China"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0003-2416-2031",
+        "authenticated-orcid": false,
+        "given": "Xiaoguang",
+        "family": "Ren",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Intelligent Game and Decision Lab, Beijing, China"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-6997-0406",
+        "authenticated-orcid": false,
+        "given": "Wenjing",
+        "family": "Yang",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "National University of Defense Technology, Changsha, China"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      }
+    ],
+    "member": "320",
+    "published-online": {
+      "date-parts": [
+        [
+          2026,
+          5,
+          18
+        ]
+      ]
+    },
+    "reference": [
+      {
+        "key": "e_1_2_1_1_1",
+        "unstructured": "2010. Datasets for approximate nearest neighbor search. http://corpustexmex.irisa.fr/."
+      },
+      {
+        "key": "e_1_2_1_2_1",
+        "unstructured": "2021. LAION-400-MILLION open dataset. https://laion.ai/blog/laion-400-open-dataset/."
+      },
+      {
+        "key": "e_1_2_1_3_1",
+        "unstructured": "2022. H&M personalized fashion recommendations. https://www.kaggle.com/competitions/h-and-m-personalizedfashion-recommendations."
+      },
+      {
+        "key": "e_1_2_1_4_1",
+        "unstructured": "2026. Struct faiss::IDSelector. https://faiss.ai/cpp_api/struct/structfaiss_1_1IDSelector.html."
+      },
+      {
+        "key": "e_1_2_1_5_1",
+        "unstructured": "Guestrin Lab at Stanford University. 2024. ACORN. https://github.com/guestrin-lab/ACORN."
+      },
+      {
+        "key": "e_1_2_1_6_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3709693"
+      },
+      {
+        "key": "e_1_2_1_7_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3726302.3730004"
+      },
+      {
+        "key": "e_1_2_1_8_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3698822"
+      },
+      {
+        "key": "e_1_2_1_9_1",
+        "unstructured": "Chroma. 2025. Metadata filtering. https://docs.trychroma.com/docs/querying-collections/metadata-filtering."
+      },
+      {
+        "key": "e_1_2_1_10_1",
+        "unstructured": "Cppreference. 2025. std::memmove. https://cppreference.com/w/cpp/string/byte/memmove."
+      },
+      {
+        "key": "e_1_2_1_11_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.5555/3618408.3618774"
+      },
+      {
+        "key": "e_1_2_1_12_1",
+        "unstructured": "Faiss. 2025. IndexIVFFlat. https://github.com/facebookresearch/faiss/blob/main/faiss/IndexIVFFlat.cpp."
+      },
+      {
+        "key": "e_1_2_1_13_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3303753.3303754"
+      },
+      {
+        "key": "e_1_2_1_14_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3589282"
+      },
+      {
+        "key": "e_1_2_1_15_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3543507.3583552"
+      },
+      {
+        "key": "e_1_2_1_16_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3219819.3219885"
+      },
+      {
+        "key": "e_1_2_1_17_1",
+        "volume-title": "19th USENIX Symposium on Operating Systems Design and Implementation. 171-186",
+        "author": "Guo Hao",
+        "year": "2025",
+        "unstructured": "Hao Guo and Youyou Lu. 2025. Achieving low-latency graph-based vector search via aligning best-first search algorithm with SSD. In 19th USENIX Symposium on Operating Systems Design and Implementation. 171-186."
+      },
+      {
+        "key": "e_1_2_1_18_1",
+        "volume-title": "Proceedings of the 2022 international conference on management of data. 2259-2272",
+        "author": "Ilyas Ihab F",
+        "year": "2022",
+        "unstructured": "Ihab F Ilyas, Theodoros Rekatsinas, Vishnu Konda, Jeffrey Pound, Xiaoguang Qi, and Mohamed Soliman. 2022. Saga: A platform for continuous construction and serving of knowledge at scale. In Proceedings of the 2022 international conference on management of data. 2259-2272."
+      },
+      {
+        "key": "e_1_2_1_19_1",
+        "volume-title": "The 1st Workshop on Vector Databases.",
+        "author": "Ingber Amir",
+        "year": "2025",
+        "unstructured": "Amir Ingber and Edo Liberty. 2025. Accurate and efficient metadata filtering in Pinecone's serverless vector database. In The 1st Workshop on Vector Databases."
+      },
+      {
+        "key": "e_1_2_1_20_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/5.163414"
+      },
+      {
+        "key": "e_1_2_1_21_1",
+        "volume-title": "Ravishankar Krishnawamy, and Rohan Kadekodi.",
+        "author": "Subramanya Suhas Jayaram",
+        "year": "2019",
+        "unstructured": "Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Ravishankar Krishnawamy, and Rohan Kadekodi. 2019. DiskANN: Fast accurate billion-point nearest neighbor search on a single node. Advances in neural information processing systems 32 (2019)."
+      },
+      {
+        "key": "e_1_2_1_22_1",
+        "unstructured": "Patrick Lewis Ethan Perez Aleksandra Piktus Fabio Petroni Vladimir Karpukhin Naman Goyal Heinrich Küttler Mike Lewis Wen-tau Yih Tim Rocktäschel et al. 2020. Retrieval-augmented generation for knowledge-intensive NLP tasks. Advances in neural information processing systems 33 (2020) 9459-9474."
+      },
+      {
+        "key": "e_1_2_1_23_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TKDE.2022.3220683"
+      },
+      {
+        "key": "e_1_2_1_24_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1609/aaai.v38i8.28729"
+      },
+      {
+        "key": "e_1_2_1_25_1",
+        "volume-title": "Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs",
+        "author": "Malkov Yu A",
+        "year": "2018",
+        "unstructured": "Yu A Malkov and Dmitry A Yashunin. 2018. Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs. IEEE transactions on pattern analysis and machine intelligence 42, 4 (2018), 824-836."
+      },
+      {
+        "key": "e_1_2_1_26_1",
+        "unstructured": "Julian McAuley. 2014. Amazon product images dataset (2014 version). https://cseweb.ucsd.edu/~jmcauley/datasets/amazon/links.html."
+      },
+      {
+        "key": "e_1_2_1_27_1",
+        "unstructured": "Meta. 2025. Faiss. https://github.com/facebookresearch/faiss."
+      },
+      {
+        "key": "e_1_2_1_28_1",
+        "unstructured": "Non metric space library. 2025. HNSWlib. https://github.com/nmslib/hnswlib."
+      },
+      {
+        "key": "e_1_2_1_29_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3589777"
+      },
+      {
+        "key": "e_1_2_1_30_1",
+        "unstructured": "OpenMP. 2024. OpenMP home page. https://www.openmp.org/."
+      },
+      {
+        "key": "e_1_2_1_31_1",
+        "unstructured": "Malte Ostendorff. 2022. arXiv paper embeddings dataset. https://huggingface.co/datasets/malteos/aspect-paperembeddings/tree/main."
+      },
+      {
+        "key": "e_1_2_1_32_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3626246.3654691"
+      },
+      {
+        "key": "e_1_2_1_33_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3654923"
+      },
+      {
+        "key": "e_1_2_1_34_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3588908"
+      },
+      {
+        "key": "e_1_2_1_35_1",
+        "unstructured": "Qdrant. 2024. A complete guide to filtering in vector search. https://qdrant.tech/articles/vector-search-filtering/#conclusion-real-life-use-cases-of-filtering."
+      },
+      {
+        "key": "e_1_2_1_36_1",
+        "volume-title": "Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval. 2507-2513",
+        "author": "Rekabsaz Navid",
+        "year": "2021",
+        "unstructured": "Navid Rekabsaz, Oleg Lesota, Markus Schedl, Jon Brassey, and Carsten Eickhoff. 2021. TripClick: the log files of a large health web search engine. In Proceedings of the 44th International ACM SIGIR Conference on Research and Development in Information Retrieval. 2507-2513."
+      },
+      {
+        "key": "e_1_2_1_37_1",
+        "unstructured": "Abdel Rodriguez John Trengrove and Joon-Pil Hwang. 2024. How we speed up filtered vector search with ACORN. https://weaviate.io/blog/speed-up-filtered-vector-search."
+      },
+      {
+        "key": "e_1_2_1_38_1",
+        "volume-title": "VLDB Workshops.",
+        "author": "Sanca Viktor",
+        "year": "2023",
+        "unstructured": "Viktor Sanca and Anastasia Ailamaki. 2023. E-Scan: Consuming contextual data with model plugins. In VLDB Workshops."
+      },
+      {
+        "key": "e_1_2_1_39_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3677052.3698671"
+      },
+      {
+        "key": "e_1_2_1_40_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3749646.3749704"
+      },
+      {
+        "key": "e_1_2_1_41_1",
+        "unstructured": "Gaurav Sehgal and Semih Salihoğlu. 2025. Faiss-navix. https://github.com/gaurav8297/faiss-navix."
+      },
+      {
+        "key": "e_1_2_1_42_1",
+        "unstructured": "Ryan Siegler. 2024. Optimizing vector search with metadata filtering and fuzzy filtering. https://medium.com/kxsystems/ optimizing-vector-search-with-metadata-filtering-41276e1a7370."
+      },
+      {
+        "key": "e_1_2_1_43_1",
+        "first-page": "177",
+        "article-title": "Results of the NeurIPS'21 challenge on billion-scale approximate nearest neighbor search. In NeurIPS 2021 Competitions and Demonstrations Track",
+        "author": "Simhadri Harsha Vardhan",
+        "year": "2022",
+        "unstructured": "Harsha Vardhan Simhadri, George Williams, Martin Aumüller, Matthijs Douze, Artem Babenko, Dmitry Baranchuk, Qi Chen, Lucas Hosseini, Ravishankar Krishnaswamny, Gopal Srinivasa, et al. 2022. Results of the NeurIPS'21 challenge on billion-scale approximate nearest neighbor search. In NeurIPS 2021 Competitions and Demonstrations Track. PMLR, 177-189.",
+        "journal-title": "PMLR"
+      },
+      {
+        "key": "e_1_2_1_44_1",
+        "volume-title": "Proceedings of the 36th International Conference on Machine Learning (Proceedings of Machine Learning Research",
+        "volume": "6114",
+        "author": "Tan Mingxing",
+        "year": "2019",
+        "unstructured": "Mingxing Tan and Quoc Le. 2019. EfficientNet: Rethinking model scaling for convolutional neural networks. In Proceedings of the 36th International Conference on Machine Learning (Proceedings of Machine Learning Research, Vol. 97), Kamalika Chaudhuri and Ruslan Salakhutdinov (Eds.). PMLR, 6105-6114."
+      },
+      {
+        "key": "e_1_2_1_45_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.5555/3724648.3724659"
+      },
+      {
+        "key": "e_1_2_1_46_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1126/science.1237825"
+      },
+      {
+        "key": "e_1_2_1_47_1",
+        "volume-title": "Proceedings of the 2021 international conference on management of data. 2614-2627",
+        "author": "Yi Xiaomeng",
+        "year": "2021",
+        "unstructured": "JianguoWang, Xiaomeng Yi, Rentong Guo, Hai Jin, Peng Xu, Shengjun Li, XiangyuWang, Xiangzhou Guo, Chengming Li, Xiaohai Xu, et al. 2021. Milvus: A purpose-built vector data management system. In Proceedings of the 2021 international conference on management of data. 2614-2627."
+      },
+      {
+        "key": "e_1_2_1_48_1",
+        "volume-title": "Navigable proximity graph-driven native hybrid queries with structured and unstructured constraints. CoRR abs/2203.13601",
+        "author": "Wang Mengzhao",
+        "year": "2022",
+        "unstructured": "Mengzhao Wang, Lingwei Lv, Xiaoliang Xu, Yuxiang Wang, Qiang Yue, and Jiongkang Ni. 2022. Navigable proximity graph-driven native hybrid queries with structured and unstructured constraints. CoRR abs/2203.13601 (2022)."
+      },
+      {
+        "key": "e_1_2_1_49_1",
+        "first-page": "15738",
+        "article-title": "An efficient and robust framework for approximate nearest neighbor search with attribute constraint",
+        "volume": "36",
+        "author": "Wang Mengzhao",
+        "year": "2023",
+        "unstructured": "Mengzhao Wang, Lingwei Lv, Xiaoliang Xu, Yuxiang Wang, Qiang Yue, and Jiongkang Ni. 2023. An efficient and robust framework for approximate nearest neighbor search with attribute constraint. Advances in Neural Information Processing Systems 36 (2023), 15738-15751.",
+        "journal-title": "Advances in Neural Information Processing Systems"
+      },
+      {
+        "key": "e_1_2_1_50_1",
+        "volume-title": "Knowledge graph embedding: A survey of approaches and applications",
+        "author": "Wang Quan",
+        "year": "2017",
+        "unstructured": "Quan Wang, Zhendong Mao, Bin Wang, and Li Guo. 2017. Knowledge graph embedding: A survey of approaches and applications. IEEE transactions on knowledge and data engineering 29, 12 (2017), 2724-2743."
+      },
+      {
+        "key": "e_1_2_1_51_1",
+        "unstructured": "Weaviate. 2026. Inverted indexes. https://docs.weaviate.io/weaviate/concepts/indexing/inverted-index."
+      },
+      {
+        "key": "e_1_2_1_52_1",
+        "unstructured": "Weaviate. 2026. Weaviate flat index. https://docs.weaviate.io/weaviate/concepts/vector-index/#flat-index."
+      },
+      {
+        "key": "e_1_2_1_53_1",
+        "unstructured": "Weaviate. 2026. Weaviate homepage. https://weaviate.io."
+      },
+      {
+        "key": "e_1_2_1_54_1",
+        "unstructured": "Weaviate. 2026. Weaviate monitoring. https://docs.weaviate.io/deploy/configuration/monitoring."
+      },
+      {
+        "key": "e_1_2_1_55_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3415478.3415541"
+      },
+      {
+        "key": "e_1_2_1_56_1",
+        "unstructured": "Wikipedia. 2025. Cosine distance. https://en.wikipedia.org/wiki/Cosine_similarity#Cosine_distance."
+      },
+      {
+        "key": "e_1_2_1_57_1",
+        "unstructured": "Wikipedia. 2025. Euclidean distance. https://en.wikipedia.org/wiki/Euclidean_distance."
+      },
+      {
+        "key": "e_1_2_1_58_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3511808.3557610"
+      },
+      {
+        "key": "e_1_2_1_59_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3600006.3613166"
+      },
+      {
+        "key": "e_1_2_1_60_1",
+        "volume-title": "2024 IEEE 40th International Conference on Data Engineering. IEEE, 4357-4369",
+        "author": "Yang Tiannuo",
+        "year": "2024",
+        "unstructured": "Tiannuo Yang, Wen Hu, Wangqi Peng, Yusen Li, Jianguo Li, Gang Wang, and Xiaoguang Liu. 2024. VDTuner: Automated performance tuning for vector data management systems. In 2024 IEEE 40th International Conference on Data Engineering. IEEE, 4357-4369."
+      },
+      {
+        "key": "e_1_2_1_61_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3318464.3386131"
+      },
+      {
+        "key": "e_1_2_1_62_1",
+        "volume-title": "A topology-aware localized update strategy for graph-based ANN index. arXiv preprint arXiv:2503.00402",
+        "author": "Yu Song",
+        "year": "2025",
+        "unstructured": "Song Yu, Shengyuan Lin, Shufeng Gong, Yongqing Xie, Ruicheng Liu, Yijie Zhou, Ji Sun, Yanfeng Zhang, Guoliang Li, and Ge Yu. 2025. A topology-aware localized update strategy for graph-based ANN index. arXiv preprint arXiv:2503.00402 (2025)."
+      },
+      {
+        "key": "e_1_2_1_63_1",
+        "volume-title": "17th USENIX Symposium on Operating Systems Design and Implementation. 377-395",
+        "author": "Zhang Qianxi",
+        "year": "2023",
+        "unstructured": "Qianxi Zhang, Shuotao Xu, Qi Chen, Guoxin Sui, Jiadong Xie, Zhizhen Cai, Yaoqi Chen, Yinxuan He, Yuqing Yang, Fan Yang, et al. 2023. VBASE: Unifying online vector similarity search and relational queries via relaxed monotonicity. In 17th USENIX Symposium on Operating Systems Design and Implementation. 377-395."
+      },
+      {
+        "key": "e_1_2_1_64_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3685800.3685905"
+      },
+      {
+        "key": "e_1_2_1_65_1",
+        "volume-title": "2023 60th ACM/IEEE Design Automation Conference. IEEE, 1-6.",
+        "author": "Zhu Zhenhua",
+        "year": "2023",
+        "unstructured": "Zhenhua Zhu, Jun Liu, Guohao Dai, Shulin Zeng, Bing Li, Huazhong Yang, and Yu Wang. 2023. Processing-inhierarchical- memory architecture for billion-scale approximate nearest neighbor search. In 2023 60th ACM/IEEE Design Automation Conference. IEEE, 1-6."
+      }
+    ],
+    "container-title": [
+      "Proceedings of the ACM on Management of Data"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://dl.acm.org/doi/pdf/10.1145/3802098",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2026,
+          5,
+          18
+        ]
+      ],
+      "date-time": "2026-05-18T18:28:09Z",
+      "timestamp": 1779128889000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://dl.acm.org/doi/10.1145/3802098"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2026,
+          5,
+          18
+        ]
+      ]
+    },
+    "references-count": 65,
+    "journal-issue": {
+      "issue": "3",
+      "published-print": {
+        "date-parts": [
+          [
+            2026,
+            5,
+            18
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "10.1145/3802098"
+    ],
+    "URL": "https://doi.org/10.1145/3802098",
+    "relation": {},
+    "ISSN": [
+      "2836-6573"
+    ],
+    "issn-type": [
+      {
+        "value": "2836-6573",
+        "type": "electronic"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          2026,
+          5,
+          18
+        ]
+      ]
+    }
+  }
+}

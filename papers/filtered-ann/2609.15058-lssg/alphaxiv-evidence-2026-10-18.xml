@@ -1,0 +1,1494 @@
+<paper id="2609.15058v1"><page num="1">Fast Label-Filtering Approximate Nearest Neighbor Search via
+Progressive Label Set Stratification
+Ziqi Wang
+State Key Laboratory for Novel Software Technology
+Nanjing University, China
+ziqiw.nju@gmail.com
+Jingzhe Zhang
+State Key Laboratory for Novel Software Technology
+Nanjing University, China
+jzzhang.nju@gmail.com
+Shuo Shen
+State Key Laboratory for Novel Software Technology
+Nanjing University, China
+sshen.nju@gmail.com
+Wei Hu
+∗
+State Key Laboratory for Novel Software Technology
+National Institute of Healthcare Data Science
+Nanjing University, China
+whu@nju.edu.cn
+Abstract
+Approximate nearest neighbor search (ANNS) retrieves the most
+similar vectors to a query vector in high-dimensional space. Label-
+filtering ANNS (LFANNS) extends ANNS with a label filter that
+the labels of base vectors must satisfy a set relation (e.g., equality,
+containment, or overlap) with the query labels. Existing LFANNS
+indices suffer from inconsistent performance across different filter
+types and degraded scalability under varying label scale and dis-
+tribution. In this paper, we define label-stratified similarity graph
+(LSSG), where edges connect neighboring vectors whose label sets
+fall within stratified similarity thresholds. To implement LSSG ef-
+ficiently, we design an incremental insertion algorithm to prune
+redundant edges in both vector and label spaces, and leverage a
+MinHash structure to ensure scalability for large-scale labels. We an-
+alyze stepwise probabilities under explicit label models and explain
+why stricter label tiers reduce ineffective in-filtering expansions.
+Benchmark experiments show that LSSG achieves ideal optimality
+for equality queries, and 1.06x–92.9x and 1.08x–84.1x faster than
+the best competing index for containment and overlap, respectively,
+in query speed with identical accuracy and 0.35x index size.
+CCS Concepts
+• Information systems → Nearest-neighbor search; Special-
+ized information retrieval.
+Keywords
+approximate nearest neighbor search, graph-based index, vector
+database, label set similarity
+∗
+Corresponding author
+Permission to make digital or hard copies of all or part of this work for personal or
+classroom use is granted without fee provided that copies are not made or distributed
+for profit or commercial advantage and that copies bear this notice and the full citation
+on the first page. Copyrights for components of this work owned by others than the
+author(s) must be honored. Abstracting with credit is permitted. To copy otherwise, or
+republish, to post on servers or to redistribute to lists, requires prior specific permission
+and/or a fee. Request permissions from permissions@acm.org.
+SIGMOD ’27, Huntington Beach, CA
+© 2026 Copyright held by the owner/author(s). Publication rights licensed to ACM.
+ACM ISBN 978-1-4503-XXXX-X/2018/06
+https://doi.org/XXXXXXX.XXXXXXX
+ACM Reference Format:
+Ziqi Wang, Jingzhe Zhang, Shuo Shen, and Wei Hu. 2026. Fast Label-Filtering
+Approximate Nearest Neighbor Search via Progressive Label Set Stratifica-
+tion. In Proceedings of the ACM SIGMOD/PODS International Conference on
+Management of Data (SIGMOD ’27). ACM, New York, NY, USA, 21 pages.
+https://doi.org/XXXXXXX.XXXXXXX
+1 Introduction
+Approximate nearest neighbor search (ANNS) is a fundamental op-
+eration for semantic query answering, used in vector database man-
+agement systems (VDBMS) [23, 39, 57, 63, 70], search engines [6,
+29, 59, 68], retrieval-augmented generation (RAG) applications [8,
+9, 15], etc. Enormous high-dimensional vectors are generated from
+texts, images, and audios by modern embedding models [43, 46, 56].
+Given a query vector, rather than scanning all base vectors to obtain
+the exact 𝑘 nearest neighbors, ANNS indices enable to retrieve most
+of these neighbors with significantly lower latency. Particularly,
+graph-based ANNS indices [11, 12, 16, 34, 45, 65] are popular for
+their fast query speed and high accuracy.
+With growing demands for customized queries, label-filtering
+ANNS (LFANNS) has become prominent for semantic-constrained
+vector search beyond basic similarity retrieval [40, 58, 59, 66]. Label
+set predicates are commonly organized around three canonical
+positive semantics [1, 5]. For example, in a medical image retrieval
+system [2], a physician may query a CT image labeled “lung” and
+“nodule”. An equality filter strictly matches images labeled only
+“lung” and “nodule”, excluding cases with additional findings or
+comorbidities. This filter is useful for scenarios requiring precise
+and controlled subsets [19]. A containment filter retrieves images
+whose label sets include both query terms (e.g., also annotated with
+“CT”, “solid”, or “cancer”), ensuring a comprehensive coverage of
+relevant cases. An overlap filter returns images sharing at least one
+query label (e.g., lung-related images without nodules, or nodule
+images from other regions), supporting association analysis.
+There are three mainstream solutions for LFANNS [30]. (1) Pre–
+filtering scans all data objects and only computes vector similarity
+between the query vector and the filtered subset. Since no vector
+index is constructed for the subset, the linear scan becomes ineffi-
+cient when the subset is large (e.g., tens of thousands of vectors).
+(2) Post-filtering operates on an ANN index constructed over the
+entire vector dataset. It first retrieves the most similar vectors using
+arXiv:2609.15058v1 [cs.DB] 14 Sep 2026</page><page num="3">Fast Label-Filtering Approximate Nearest Neighbor Search via Progressive Label Set Stratification SIGMOD ’27, June 13–19, 2027, Huntington Beach, CA
+Table 1: Frequently-used notations
+Notations Descriptions
+𝒟 = {𝒱, ℒ} Hybrid dataset 𝒟 consisting of vector dataset 𝒱 and label
+dataset ℒ, with mapping function 𝑙 ∶ 𝒱 → ℒ
+𝛿
+𝑣 
+(𝑣
+1
+, 𝑣
+2
+) Distance between vectors 𝑣
+1 
+and 𝑣
+2
+𝛿
+𝐿 
+(𝐿
+1
+, 𝐿
+2
+) Distance between label sets 𝐿
+1 
+and 𝐿
+2
+𝑓 Label filter. 𝑓
+𝑒 
+: equality; 𝑓
+𝑐 
+: containment; 𝑓
+𝑜 
+: overlap
+𝑁 
+𝑡
+𝑣 
+Neighbor set of 𝑣 at tier 𝑡
+𝑐
+𝑡
+𝑖 
+, 𝑛
+𝑡
+𝑖 
+𝑖
+th 
+candidate (𝑐) and neighbor (𝑛) in tier 𝑡
+𝑇 Number of tiers
+𝜔
+𝑐 
+Index parameter: beam width in insertion
+𝑚 Index parameter: maximum out-degree
+𝜙 Index parameter: IVF scanning budget
+𝜏, 𝛽 Index parameter: MinHash signature length and bands
+also validates scalability to hundreds of thousands of labels and
+millions of label sets, robustness to label distribution drift, effec-
+tive tier utilization, and competitive performance against popular
+ANNS systems. Source code, experiment data, and appendix are
+available at https:// github.com/ nju-websoft/ LSSG.
+2 Preliminaries
+2.1 Problem Formulation
+Definition 1 (ANNS). Given a 𝑑-dimensional vector dataset 𝒱
+measured by a distance function 𝛿
+𝑣 
+, for a query vector 𝑣
+𝑞 
+∈ R
+𝑑 
+, ANNS
+seeks to find a result set 𝒫 ⊂ 𝒱 of 𝑘 neighbors (𝑘 ≪⋃︀ 𝒱⋃︀ ) to minimize
+∑
+𝑘
+𝑖=1 
+𝛿
+𝑣 
+(𝑣
+𝑖 
+, 𝑣
+𝑞 
+), ∀𝑣
+𝑖 
+∈ 𝒫.
+The main distinction between ANNS and exact 𝑘 nearest neigh-
+bor search is that non-closest vectors are allowed in trade for higher
+efficiency (e.g., queries per second (QPS)). The approximation accu-
+racy is usually measured by recall@𝑘, defined by
+⋃︀
+ 
+𝒫∩𝒯⋃︀
+𝑘 
+, where 𝒯
+denotes the set of 𝑘 exact nearest neighbors.
+Definition 2 (Label Set and Filter Type). Given a universe
+of labels 𝐴 = {𝑎
+1
+, 𝑎
+2
+, . . . , 𝑎
+⋃︀
+ 
+𝐴⋃︀ 
+}, where 𝑎
+𝑗 
+is a basic type (e.g., integer,
+text), a label set dataset is defined by ℒ = {𝐿
+1
+, 𝐿
+2
+, . . . , 𝐿
+⋃︀
+ 
+ℒ⋃︀ 
+}, ∀𝐿
+𝑖 
+⊆ 𝐴.
+Given a query label set 𝐿
+𝑞 
+⊆ 𝐴, there are three label filter (𝑓 ) types:
+● Equality filter: 𝑓
+𝑒 
+(𝐿
+𝑖
+⋃︀
+ 
+𝐿 
+𝑞 
+) = I(𝐿
+𝑞 
+= 𝐿
+𝑖 
+),
+● Containment filter: 𝑓
+𝑐 
+(𝐿
+𝑖
+⋃︀
+ 
+𝐿 
+𝑞 
+) = I(𝐿
+𝑞 
+⊆ 𝐿
+𝑖 
+),
+● Overlap filter: 𝑓
+𝑜 
+(𝐿
+𝑖
+⋃︀
+ 
+𝐿 
+𝑞 
+) = I(𝐿
+𝑞 
+∩ 𝐿
+𝑖 
+≠ ∅),
+where I(⋅) is an indicator that equals 1 if true and 0 otherwise.
+Label-filtering ANNS is to find the most similar vectors whose
+corresponding label sets satisfy a given label filter.
+Definition 3 (LFANNS). Given a hybrid dataset 𝒟 = {𝒱, ℒ},
+𝑙(⋅) ∶ 𝒱 → ℒ denotes a mapping function for the corresponding label
+set of a vector in ℒ. Given a query vector 𝑣
+𝑞 
+∈ R
+𝑑 
+and a query label
+set 𝐿
+𝑞 
+⊆ 𝐴, LFANNS aims to find a result set ℛ ⊂ 𝒱 of 𝑘 neighbors
+(𝑘 ≪⋃︀ 𝒱⋃︀ ) to minimize 
+∑
+𝑘
+𝑖=1 
+𝛿
+𝑣 
+(𝑣
+𝑖 
+, 𝑣
+𝑞 
+), ∀𝑣
+𝑖 
+∈ ℛ ∧ 𝑓 (𝑙(𝑣
+𝑖 
+)⋃︀ 𝐿 
+𝑞 
+) = 1,
+where 𝑓 ∈ {𝑓
+𝑒 
+, 𝑓
+𝑐 
+, 𝑓
+𝑜 
+}.
+Like ANNS, the accuracy of LFANNS is measured by recall@𝑘 as
+well. The filter ratio is defined as the number of passed items over
+the size of the dataset, formally 
+∑
+𝑣
+𝑖 
+∈𝒱 
+𝑓 (𝑙(𝑣
+𝑖 
+)⋃︀ 𝐿 
+𝑞 
+)⋃︀
+𝒱⋃︀ 
+. Query workloads
+with high selectivity typically exhibit a small filter ratio.
+Table 2: Comparison of LFANNS indices
+Indices Mech. Sem. Robt. Guar. Vers. Fidl. Cmpl.
+NHQ Part. 𝑓
+𝑒 
+× × × × ×
+Vamana Enhc. 𝑓
+𝑐 
+× × × × ×
+CAPS Part. 𝑓
+𝑒 
+× × × × ✓
+UniFilter Part. 𝑓
+𝑐 
+, 𝑓
+𝑜 
+✓ ✓ × × ✓
+Curator Part. 𝑓
+𝑐 
+, 𝑓
+𝑜 
+✓ × × × ✓
+Packing Enhc. 𝑓
+𝑐 
+✓ × ✓ × ×
+RWalks Enhc. 𝑓
+𝑐 
+× ✓ ✓ × ×
+UNG Enhc. 𝑓
+𝑒 
+, 𝑓
+𝑐 
+× × ✓ ✓ ✓
+ELI Part. 𝑓
+𝑐 
+, 𝑓
+𝑜 
+× ✓ ✓ × ×
+LSSG Enhc. 𝑓
+𝑒 
+, 𝑓
+𝑐 
+, 𝑓
+𝑜 
+✓ ✓ ✓ ✓ ✓
+Notes. Mech.: mechanism (Part.: label partition; Enhc.: label enhancement).
+Sem.: query semantics supported consistently by design (cf. Challenge 1).
+Robt.: robustness (cf. Challenge 2). Guar.: whether theoretical guarantees are
+provided. Vers./Fidl./Cmpl.: the three challenges in [5]: Versatility: base and
+query label sets contain an arbitrary number of labels; Fidelity: comparisons
+are only made to vectors whose label sets pass the filter; Completeness: the
+index returns sufficient 𝑘 vectors.
+Frequently used notations are present in Table 1.
+2.2 Related Work
+ANNS and Filtering ANNS. There are mainly four categories of
+ANNS indices: tree-based [37], LSH-based [27, 54, 55, 64], clustering-
+based [13, 14, 24, 33, 35], and graph-based [11, 12, 16, 34, 45, 65].
+Graph-based indices are popular for fast and accurate query perfor-
+mance [60, 65], and their efficiency mainly relies on the monotonic
+search property of relative neighborhood graphs (RNG) [12, 34, 60],
+where edge pruning preserves this property by eliminating redun-
+dant connections based on neighborhood dominance [28, 41].
+Filtering ANNS includes four categories: (1) Vector databases
+and some ANNS libraries [23, 31, 36, 57, 70, 71] employ cost esti-
+mation to select between pre-filtering and post-filtering strategies.
+(2) Predicate-agnostic indices [20, 40, 51] support arbitrary filters
+without requiring attribute information during index construction.
+(3) Range-filtering ANNS indices [21, 42, 62, 67, 74] are specifically
+designed for numerical attributes with filters that denote numeric
+ranges. (4) LFANNS indices [1, 5, 16, 17, 22, 32, 58, 66, 69] achieve
+high efficiency for filtering data objects whose label sets contain
+query-specified labels. Specialized indices for range and label filters
+show superiority over the first two categories [67, 69]. This paper
+focuses on LFANNS and discusses recent work as follows.
+LFANNS indices can be divided into two categories. Label-partition
+indices group vectors with identical labels or label sets, and groups
+are arranged by a tree or an inverted file (IVF) structure. Represen-
+tatives include CAPS [17], ELI [69], UniFilter [66], and Curator [22].
+This category is effective when filters are simple and label sets
+are small (e.g., base/query label sets contain fewer than five labels
+on average), since the index can focus on frequent labels [17, 22]
+or manageable label combinations [66, 69]. However, as label sets
+grow, the number of possible combinations explodes, which either
+limits support for complex queries [17, 22, 66] or incurs substantial
+space overhead [69]. Consequently, when a query does not match
+any pre-built (shared) index, it must fall back to a less compatible</page><page num="5">Fast Label-Filtering Approximate Nearest Neighbor Search via Progressive Label Set Stratification SIGMOD ’27, June 13–19, 2027, Huntington Beach, CA
+(b) Label space: LabelPrune
+increase by !
+!
+1 2 3
+{1,3,6}{1,3}{6}{1,3,6,8}{3,6,8}
+&quot;
+&quot;
+# 
+&quot;
+#
+# 
+&quot;
+$
+# 
+&quot;
+%
+# 
+#
+&amp;
+#
+'
+prune !
+!
+&quot; 
+by &quot;
+# 
+# !
+&quot;
+&quot; 
+, # !
+!
+&quot; 
+&lt; &amp;
+&quot;
+(a) Vector space: RNGPrune
+1
+2
+3
+'
+$
+(
+%
+&quot;
+(
+&quot;
+&quot;
+(
+&amp;
+&quot;
+(
+!
+&quot;
+prune (
+&quot;
+&quot; 
+by &quot;
+' 
+'
+$
+, (
+&quot;
+&quot; 
+&gt; &quot;
+' 
+(
+%
+&quot;
+, (
+&quot;
+&quot;
+Figure 2: Dual-space pruning diversification for tier 2
+Progressive MinHash probing. While IVF scanning is accurate
+and space-efficient, its probing cost can grow with the label uni-
+verse size⋃︀ 𝐴⋃︀ and the number of label sets⋃︀ ℒ⋃︀ (especially under
+high-frequency labels), and it treats all retrieved candidates uni-
+formly, even though candidates with higher Jaccard similarity are
+more likely to satisfy 𝛿
+𝐿 
+≤ 𝜃
+𝑡 
+. To address both issues, we use the
+standard MinHash LSH banding technique [4] to prioritize label
+sets with high Jaccard similarity. MinHash probing is insensitive
+to⋃︀ 𝐴⋃︀ during lookup and tends to retrieve more similar label sets
+with higher probability. We target label sets within a tier-specific
+distance threshold 𝜃
+𝑡 
+(equivalently, Jaccard similarity 𝐽 ≥ 1 − 𝜃
+𝑡 
+),
+with a collision probability characterized by Theorem 3.1.
+Theorem 3.1. Let ℋ = {ℎ
+1
+, ℎ
+2
+, . . . , ℎ
+𝜏 
+} be 𝜏 independent hash
+functions used to form MinHash signatures. For a label set 𝐿 ⊆ 𝐴, its
+signature is 𝑠
+𝐿 
+= 
+
+ℎ
+min
+1 
+(𝐿), ℎ
+min
+2 
+(𝐿), . . . , ℎ
+min
+𝜏 
+(𝐿), where ℎ
+min
+𝑖 
+(𝐿) =
+min
+𝑎∈𝐿 
+ℎ
+𝑖 
+(𝑎). Partition 𝑠
+𝐿 
+into 𝛽 bands, each containing 𝑟 = 
+𝜏
+𝛽 
+rows.
+For two label sets 𝐿
+1
+, 𝐿
+2
+, if 𝐽 (𝐿
+1
+, 𝐿
+2
+) ≥ 1 −𝜃
+𝑡 
+, the probability that they
+match in at least one band satisfies:
+𝑃
+collide 
+≥ 1 − 
+
+1 − (1 − 𝜃
+𝑡 
+)
+𝑟 
+
+𝛽 
+. (1)
+Equality holds at the similarity boundary 𝐽 (𝐿
+1
+, 𝐿
+2
+) = 1 − 𝜃
+𝑡 
+.
+The proof is given in Appendix A. Since 𝑃
+collide 
+increases with
+Jaccard similarity (and thus decreases with 𝜃
+𝑡 
+), more similar label
+sets are more likely to be retrieved. This property aligns with LSSG’s
+tiering: higher tiers impose smaller 𝜃
+𝑡 
+and stricter label constraints,
+so candidate selection increasingly prioritizes highly similar label
+sets. In practice, (𝜏, 𝛽) controls the recall–efficiency trade-off. A
+larger signature improves recall but also increases probing cost.
+Based on this guarantee, MinHashProbe (Lines 11–12 in Alg. 1)
+gathers candidate label sets ℒ
+𝐶 
+by probing 𝛽 LSH tables using the
+band hashes of 𝐿
+𝑥 
+’s signature. We then compute 𝛿
+𝐿 
+only on ℒ
+𝐶 
+for
+the later selection of which candidates satisfy 𝛿
+𝐿 
+≤ 𝜃
+𝑡 
+.
+3.3 Multi-tiered Insertion
+Alg. 2 inserts a vector 𝑣
+𝑥 
+with label set 𝐿
+𝑥 
+in four phases.
+Phase 1 (label set registration). We first check whether 𝐿
+𝑥 
+has
+appeared before. If 𝐿
+𝑥 
+is new, we register it in the label-to-labelset
+inverted structures (e.g., IVF bitmaps). When MinHash is enabled,
+we additionally compute the MinHash signature of 𝐿
+𝑥 
+and insert it
+into the corresponding LSH band tables.
+Phase 2 (similar label set selection). We then invoke Alg. 1 to
+retrieve a candidate set of label sets likely to be close to 𝐿
+𝑥 
+. For each
+retrieved label set 𝐿, we compute 𝛿
+𝐿 
+(𝐿
+𝑥 
+, 𝐿) and cache the results in
+a map 𝒥 . It is later reused to filter candidates by tier thresholds 𝜃
+𝑡
+without recomputing 𝛿
+𝐿 
+.
+Algorithm 2: Insert
+Input: 𝑣
+𝑥 
+: vector to insert; 𝐿
+𝑥 
+: label set of 𝑣
+𝑥
+Output: 𝐼 : index after 𝑣
+𝑥 
+is inserted
+Index parameters :𝑚, 𝜔
+𝑐 
+,𝑇 (see Table 1)
+▷ Phase 1: label set registration
+1 if 𝐿
+𝑥 
+∉ inserted label set dataset ℒ
+𝐼 
+then
+2 insert 𝐿
+𝑥 
+into label IVF bitmaps of ℒ
+𝐼 
+;
+3 calculate signature 𝑆
+𝑥 
+and insert it into MinHash LSH;
+▷ Phase 2: similar label set selection
+4 ℒ
+𝐶 
+← SelectSimilarLabelSets(𝐿
+𝑥 
+);
+5 𝒥 ← {𝛿
+𝐿 
+(𝐿
+𝑥 
+, 𝐿
+𝑦 
+)⋃︀ 𝐿 
+𝑦 
+∈ ℒ
+𝐶 
+};
+6 𝐶 ← {}; ▷ pool for cross-tier sharing candidates
+7 for tier 𝑡 ← 1, . . . ,𝑇 do
+▷ Phase 3: filtered candidate selection
+8 ℒ
+𝑡 
+← {𝐿
+𝑦
+⋃︀
+ 
+𝛿 
+𝐿 
+(𝐿
+𝑥 
+, 𝐿
+𝑦 
+) ∈ 𝒥 ∩(︀ 0, 𝜃 
+𝑡
+⌋︀
+ 
+}; ▷ 𝜃 
+𝑡 
+= 1 − 
+𝑡 −1
+𝑇 −1
+9 𝐶 ← {𝑐⋃︀ 𝑐 ∈ 𝐶 ∧ 𝑙(𝑐) ∈ ℒ 
+𝑡 
+}; ▷ retain similar label sets
+10 if⋃︀ 𝐶⋃︀ &lt; 𝑚 then 𝐶 ← 𝐶 ∪ BeamSearch(𝑣 
+𝑥 
+, ℒ
+𝑡 
+, 𝜔
+𝑐 
+);
+▷ Phase 4: dual-space pruning and edge update
+11 𝑁 
+𝑡
+𝑣
+𝑥 
+← RNGPrune(𝐶, 
+𝑚
+2 
+);
+12 foreach vector 𝑣
+𝑦 
+∈ 𝑁 
+𝑡
+𝑣
+𝑥 
+do
+13 𝑁 
+𝑡
+𝑣
+𝑦 
+← 𝑁 
+𝑡
+𝑣
+𝑦 
+∪ {𝑣
+𝑥 
+}; ▷ skip Line 14 if⋃︀ 𝑁 
+𝑡
+𝑣𝑦
+⋃︀
+ 
+≤ 𝑚
+14 𝑁 
+𝑡
+𝑣
+𝑦 
+← RNGPrune(𝑁 
+𝑡
+𝑣
+𝑦 
+,𝑚) ∩ LabelPrune(𝑁 
+𝑡
+𝑣
+𝑦 
+, 𝜃
+𝑡 
+);
+15 return 𝐼 ;
+Phase 3 (vector-space candidate collection). For each tier 𝑡, we
+collect candidate vertices by combining vector proximity with the
+tier-specific label constraint. Specifically, we restrict candidates to
+vertices whose label sets satisfy 𝛿
+𝐿 
+(𝐿
+𝑥 
+, 𝑙(𝑣)) ∈(︀ 0, 𝜃
+𝑡
+⌋︀
+ 
+, and perform
+beam search (Alg. 3) to obtain a vector-close candidate pool. When
+the candidate pool from Phase 2 is already sufficiently large, we
+optionally skip beam search to accelerate indexing, a common
+strategy in hierarchical graph indices [42, 62].
+Phase 4 (dual-space pruning and edge update). Finally, we
+construct outgoing edges for 𝑣
+𝑥 
+by enforcing the two constraints in
+Def. 4. We select up to 
+𝑚
+2 
+neighbors from the filtered candidates and
+keep the remaining capacity for future insertions [34], following
+an RNG-style pruning strategy (RNGPrune). Fig.2(a) iteratively
+considers candidates in ascending 𝛿
+𝑣 
+order (𝑐
+2
+1 
+→ 𝑐
+2
+4 
+→ 𝑐
+2
+3 
+→ 𝑐
+2
+2
+) and
+removes geometrically redundant edges (𝑐
+2
+2 
+in this example).
+For each picked neighbor 𝑣
+𝑦 
+, we also attempt to insert the back-
+edge into 𝑣
+𝑦 
+’s neighbor list. If 𝑣
+𝑦 
+’s list is full, we apply RNGPrune
+to reduce vector-space redundancy. If the remaining neighbors still
+satisfy the RNG constraint, we further apply LabelPrune to increase
+label set diversity. This dual-space pruning reserves capacity for
+neighbors with more diverse label sets, and reduces local graph
+density, which speeds up traversal convergence and, in turn, lowers
+the total indexing cost of candidate preparation in Phase 3.
+Fig. 2(b) shows LabelPrune in tier 2, where 𝜃
+2 
+= 0.67 (rounded
+from 𝜃
+2 
+= 
+2
+3 
+, hereafter). Consider diversifying the neighbor list of a
+selected neighbor 𝑣
+𝑦 
+with 𝑙(𝑣
+𝑦 
+) = {1, 3, 6}, and candidate neighbors
+𝑛
+2
+1 
+∶ {1, 3, 6}, 𝑛
+2
+2 
+∶ {1, 3}, 𝑛
+2
+3 
+∶ {6}, 𝑛
+2
+4 
+∶ {1, 3, 6, 8}, as well as the
+incoming vertex 𝑣
+𝑥 
+with 𝑙(𝑣
+𝑥 
+) = {3, 6, 8}. LabelPrune processes
+candidates in ascending 𝛿
+𝑣 
+order and compares each candidate only</page><page num="9">Fast Label-Filtering Approximate Nearest Neighbor Search via Progressive Label Set Stratification SIGMOD ’27, June 13–19, 2027, Huntington Beach, CA
+Table 3: Statistical data of the benchmark datasets
+Datasets Size Dim⋃︀ 𝐴⋃︀⋃︀ ℒ⋃︀ 
+Avg/Med/P90
+label set size
+⋃︀
+ 
+𝑄⋃︀
+SIFT 1,000,000 128 12 2,385 2.3 / 2 / 4 10,000
+GIST 1,000,000 960 12 2,385 2.3 / 2 / 4 1,000
+TripClick 1,055,976 768 29 7,734 1.1 / 1 / 2 1,000
+LAION 1,000,448 512 30 62,066 2.9 / 3 / 5 1,000
+YTB-Video 1,000,000 1,024 3,862 160,018 3.0 / 3 / 5 200
+YTB-Audio 5,000,000 128 3,862 498,335 3.0 / 3 / 5 1,000
+Wikipedia 5,000,000 384 237,417 184,298 5.9 / 6 / 8 1,000
+YFCC-1M 1,000,000 192 181,931 636,356 8.8 / 6 / 16 1,000
+● YTB-Video and YTB-Audio [49] share identical topic labels.
+Following [52], feature vectors of one million video frames and
+five million audio samples are used for benchmarking.
+● Wikipedia [18] has five million English paragraph embeddings,
+encoded via all-MiniLM-L6-v2 [61]. Labels are from Wikidata P31
+(instance of) and P279 (subclass of) properties.
+● YFCC-1M [38] is from an image embedding dataset with 10
+million vectors [53]. Following [52], main experiments use the
+first one million subset and YFCC-10M serves for scalability test.
+We compute Spearman’s 𝜌 between label Jaccard distance 𝛿
+𝐿
+and vector L2 distance 𝛿
+𝑣 
+by label set size quartile. Seven datasets
+except Wikipedia have negligible overall correlation (⋃︀ 𝜌⋃︀ ≤ 0.021)
+and quartile-wise values &lt; 0.05. Wikipedia shows a modest positive
+correlation (𝜌 = 0.15 overall, 0.038–0.176 by quartile). So, the eval-
+uated workloads generally exhibit weak label–vector correlation,
+which LSSG does not assume. Complete results are in Appendix D.
+Competitors. We compare LSSG to ten competing LFANNS base-
+lines using their official open-source implementations. For each
+baseline, we use the recommended building parameters, and sweep
+query parameters to obtain Pareto-optimal QPS–recall curves.
+● LSSG-IVF and LSSG-MinHash differ in similar label set selec-
+tion. Unless stated otherwise, they both use 𝑇 = 9, 𝑚 = 16, 𝜔
+𝑐 
+=
+128, with 𝜙 = 50,000 for IVF and (𝜏, 𝛽) = (64, 16) for MinHash.
+● ACORN [40] is a predicate-agnostic index. It uses bitmaps to
+indicate which vector IDs can pass the filter. As suggested, we
+set its index parameters to 𝑀 = 16, 𝑀
+𝛽 
+= 32, 𝐿 = 256,𝛾 = 30.
+● Packing is the best strategy in [32]. Following their settings, we
+set 𝑀 = 96, efCons = 256 for the optimal query performance.
+● RWalks [1] uses label vector and hybrid distance to enhance
+HNSW indices. We use the recommended parameters in their
+paper, 𝑀 = 32, efCons = 200, 𝜏 = 0, and ℎ = 0.1.
+● UNG [5] builds separate Vamana indices for all label sets and
+adds cross-group edges to ensure connectivity. We follow them
+and set 𝑀 = 32, 𝐿 = 100 with 𝛿 = 6 cross-group edges.
+● ELI [69] builds multiple small indices with identical parameters.
+We choose 𝑀 = 16, efCons = 200 with elastic factor set to 0.2 as
+reported the most competitive in the paper.
+● FAISS [23] and VSAG [72] serve as ANNS libraries and Milvus
+[57] and PGVector [25] serve as VDBMS with native filtering.
+HNSW (𝑀 = 32, efCons = 200) and k-means IVF (n_lists = 10,000)
+are evaluated.
+Table 4: Indexing performance
+Index size (MB)
+Indices SIFT GIST Trip LAION Video Audio Wiki YFCC
+ACORN 346 346 366 347 346 3,416 3,397 346
+Packing 310 306 311 439 497 570 2,447 2,826
+RWalks 413 413 578 552 29,785 - - -
+UNG 228 410 318 271 152 
+954 1,044 433
+ELI 419 440 351 745 21,292 92,693 - -
+LSSG-IVF 311 204 199 271 136 1,069 602 239
+⋆-MinHash 296 
+192 200 277 142 1,065 606 303
+Indexing time (s)
+Indices SIFT GIST Trip LAION Video Audio Wiki YFCC
+ACORN 223 881 754 500 411 1,313 3,630 277
+Packing 176 358 471 574 419 2,828 2,387 145
+RWalks 155 631 595 306 760 - - -
+UNG 76 429 311 189 211 1,422 973 309
+ELI 98 
+364 287 257 253 807 - -
+LSSG-IVF 133 241 270 181 287 946 487 379
+⋆-MinHash 122 224 233 179 243 
+721 426 111
+● Pre-filtering only computes distance between the query vector
+and filtered vectors to obtain exact nearest neighbors.
+Note that UniFilter [66] is excluded due to code unavailability,
+and its reported performance is comparable to UNG. Curator [22]
+requires filters to be known a priori with at most two labels, con-
+flicting with our query-time filter setup for arbitrary labels. Early
+LFANNS studies, including Filtered-Vamana [16], Stitched-Vamana
+[16], NHQ [58], and CAPS [17], are omitted for inferior performance
+to existing baselines like UNG [5] and ELI [69].
+6.2 RQ1: Indexing Analysis
+Table 4 lists the indexing performance under 16-thread parallelism.
+(1) Index size. LSSG-IVF and LSSG-MinHash are the smallest (or
+among the most compact) indices across datasets. Averaged over
+datasets, compared with the most space-efficient baseline UNG,
+LSSG-IVF and LSSG-MinHash use 0.82x and 0.84x of UNG’s size,
+respectively. Specifically, MinHash adds signature and LSH-bucket
+storage, but it often probes far fewer label sets than IVF scanning,
+shrinking the insertion candidate set 𝑈 and producing a sparser
+final graph that offsets the overhead. So, LSSG-MinHash is smaller
+than LSSG-IVF on SIFT, GIST, and YTB-Audio.
+(2) Indexing time. LSSG-MinHash achieves the best or near-best
+indexing time on all datasets, averaging 0.78x UNG’s and 0.87x
+ELI’s time (the two fastest baselines). LSSG-IVF is also comparable
+to UNG and ELI. This is consistent with Sec. 3.3, where LSSG com-
+bines fast similar label set selection (IVF/MinHash) with dual-space
+pruning to reduce extensive vector-distance computations.
+(3) Sensitivity to label characteristics. LSSG’s indexing cost re-
+mains stable as⋃︀ 𝐴⋃︀ increases, indicating it is dominated by local
+graph operations rather than combinatorial label enumeration.
+ACORN and UNG show similar insensitivity, but several baselines
+degrade. Packing is fast on YFCC-1M but less competitive when⋃︀ 𝐴⋃︀
+is small (e.g., LAION). RWalks is highly sensitive to⋃︀ 𝐴⋃︀ and fails</page><page num="19">Fast Label-Filtering Approximate Nearest Neighbor Search via Progressive Label Set Stratification SIGMOD ’27, June 13–19, 2027, Huntington Beach, CA
+300
+450
+600
+ρ = −0.004
+Overall
+SIFT
+1
+2
+3 
+ρ = 0.004
+Overall
+GIST
+8
+10
+12 
+ρ = 0.016 ∗ ∗∗
+Overall
+TripClick
+0.8
+1
+1.2 
+ρ = 0.004
+Overall
+LAION
+15
+30 
+ρ = 0.021 ∗ ∗∗
+Overall
+YTB-Video
+5
+10
+15 
+ρ = −0.005
+Overall
+YTB-Audio
+1.2
+1.4
+1.5 
+ρ = 0.150 ∗ ∗∗
+Overall
+Wikipedia
+320
+400
+480 
+ρ = 0.010∗
+Overall
+YFCC-1M
+300
+450
+600
+ρ = −0.012
+Q1 (0–25%): |L| = 1 
+1
+2
+3 
+ρ = −0.004
+Q1 (0–25%): |L| = 1
+8
+10
+12 
+ρ = 0.008
+Q1 (0–25%): |L| = 1 
+0.8
+1
+1.2 
+ρ = −0.001
+Q1 (0–25%): |L| ∈ [1, 2]
+15
+30
+ρ = 0.048 ∗ ∗∗
+Q1 (0–25%): |L| ∈ [1, 2] 
+5
+10
+15 
+ρ = 0.001
+Q1 (0–25%): |L| ∈ [1, 2]
+1.4
+1.5 
+ρ = 0.038 ∗ ∗∗
+Q1 (0–25%): |L| ∈ [1, 6] 
+150
+300
+450 
+ρ = 0.001
+Q1 (0–25%): |L| ∈ [1, 3]
+300
+450
+600
+ρ = 0.004
+Q2 (25–50%): |L| ∈ [1, 2] 
+1
+2
+3 
+ρ = 0.011
+Q2 (25–50%): |L| ∈ [1, 2]
+8
+10
+12 
+ρ = 0.017
+Q2 (25–50%): |L| = 1 
+0.8
+1
+1.2 
+ρ = 0.003
+Q2 (25–50%): |L| ∈ [2, 3]
+15
+30 
+ρ = 0.014
+Q2 (25–50%): |L| ∈ [2, 3] 
+5
+10
+15 
+ρ = −0.009
+Q2 (25–50%): |L| ∈ [2, 3] 
+1.2
+1.4
+1.5 
+ρ = 0.170 ∗ ∗∗
+Q2 (25–50%): |L| = 6 
+320
+400
+480 
+ρ = −0.004
+Q2 (25–50%): |L| ∈ [3, 6]
+300
+450
+600
+ρ = −0.011
+Q3 (50–75%): |L| ∈ [2, 3] 
+1
+2
+3 
+ρ = 0.008
+Q3 (50–75%): |L| ∈ [2, 3]
+8
+10
+12 
+ρ = −0.002
+Q3 (50–75%): |L| = 1 
+0.8
+1
+1.2 
+ρ = 0.007
+Q3 (50–75%): |L| ∈ [3, 4] 
+10
+20
+30 
+ρ = 0.015
+Q3 (50–75%): |L| ∈ [3, 4] 
+5
+10
+15 
+ρ = −0.014
+Q3 (50–75%): |L| ∈ [3, 4] 
+1.2
+1.4
+1.5 
+ρ = 0.176 ∗ ∗∗
+Q3 (50–75%): |L| = 6 
+320
+400
+480 
+ρ = 0.005
+Q3 (50–75%): |L| ∈ [6, 10]
+0.0 0.5 1.0
+300
+450
+600
+ρ = 0.006
+Q4 (75–100%): |L| ∈ [3, 8]
+0.0 0.5 1.0
+1
+2
+3 
+ρ = 0.009
+Q4 (75–100%): |L| ∈ [3, 8]
+0.0 0.5 1.0
+8
+10
+ρ = −0.004
+Q4 (75–100%): |L| ∈ [1, 8]
+0.0 0.5 1.0
+0.8
+1
+1.2 
+ρ = 0.005
+Q4 (75–100%): |L| ∈ [4, 12]
+0.0 0.5 1.0
+10
+20
+30 
+ρ = 0.025 ∗ ∗
+Q4 (75–100%): |L| ∈ [4, 21]
+0.0 0.5 1.0
+5
+10
+15 
+ρ = 0.006
+Q4 (75–100%): |L| ∈ [4, 23]
+0.0 0.5 1.0
+1.4
+1.5 
+ρ = 0.100 ∗ ∗∗
+Q4 (75–100%): |L| ∈ [6, 17]
+0.0 0.5 1.0
+320
+400
+480 
+ρ = 0.033 ∗ ∗∗
+Q4 (75–100%): |L| ∈ [10, 1332]
+Jaccard Distance
+L2 Distance
+Figure 17: Correlation between pairwise Jaccard distance and L2 distance. Darker regions indicate more object pairs. The red
+curve shows E(︀𝛿 
+𝑣 
+(𝑣
+1
+, 𝑣
+2
+)⋃︀ 𝛿 
+𝐿 
+(𝑙(𝑣
+1
+), 𝑙(𝑣
+2
+))⌋︀, and Spearman’s coefficient 𝜌 is marked at the top right corner.
+0.6 0.8 1.0
+10
+3
+10
+4
+Equality
+DC
+SIFT
+0.6 0.8 1.0
+10
+2
+10
+3
+10
+4
+TripClick
+0.6 0.8 1.0
+10
+3
+10
+4
+10
+5
+YTB-Video
+0.6 0.8 1.0
+10
+2
+YFCC-1M
+0.6 0.8 1.0
+10
+3
+10
+4
+Containment
+DC
+0.6 0.8 1.0
+10
+3
+10
+4
+0.6 0.8 1.0
+10
+3
+10
+4
+10
+5
+0.6 0.8 1.0
+10
+3
+0.6 0.8 1.0
+Recall@10
+10
+3
+10
+4
+Overlap
+DC
+0.6 0.8 1.0
+Recall@10
+10
+3
+10
+4
+0.6 0.8 1.0
+Recall@10
+10
+4
+10
+6
+0.6 0.8 1.0
+Recall@10
+10
+3
+10
+4
+10
+5
+LSSG-IVF
+LSSG-MinHash 
+ACORN
+Packing 
+RWalks
+UNG 
+ELI
+Oracle
+Figure 18: DC of LFANNS indices on other datasets
+equality and 0.60–0.93 for containment across these datasets. On
+YTB-Video overlap, it reaches only 0.89 recall. At 0.95 recall for con-
+tainment, the best VSAG, Milvus, and PGVector variants achieve 18–
+136, 17–122, and 9–44 QPS, respectively, while LSSG remains on the
+upper QPS–recall frontier. Although library implementations can
+be competitive for overlap on SIFT, TripClick, and YFCC-1M, their
+performance varies substantially across workloads and degrades
+on YTB-Video. Overall, LSSG provides more consistent high-recall
+performance across datasets and filter semantics.
+Impact of different label set distances. Fig. 21 compares tiering
+on LAION using distances induced by alternative label set simi-
+larities, including cosine (
+⋃︀
+ 
+𝐿 
+1
+∩𝐿
+2
+⋃︀⌈︂⋃︀
+𝐿 
+1
+⋃︀
+ 
+×⋃︀𝐿 
+2
+⋃︀
+ 
+), Dice ( 
+2⋃︀𝐿 
+1
+∩𝐿
+2
+⋃︀⋃︀
+𝐿 
+1
+⋃︀
+ 
++⋃︀𝐿 
+2
+⋃︀
+ 
+), and overlap
+(
+⋃︀
+ 
+𝐿 
+1
+∩𝐿
+2
+⋃︀
+min(⋃︀𝐿 
+1
+⋃︀
+ 
+,⋃︀𝐿 
+2
+⋃︀
+ 
+) 
+). (1) Jaccard is the best fit for tiering. Stratification by
+overlap distance degrades containment because it provides weaker
+granularity for separating tiers, underutilizing higher tiers and
+10% 30% 50% 70% 90%
+10
+3
+10
+4
+Equality
+QPS
+SIFT
+10% 30% 50% 70% 90%
+10
+3
+10
+4
+10
+5
+TripClick
+10% 30% 50% 70% 90%
+10
+3
+10
+4
+R=0.85
+YTB-Video
+10% 30% 50% 70% 90%
+10
+5
+YFCC-1M
+10% 30% 50% 70% 90%
+10
+3
+10
+4
+Containment
+QPS
+10% 30% 50% 70% 90%
+10
+3
+10
+4
+10% 30% 50% 70% 90%
+10
+1
+10
+2
+10
+3
+10
+4 
+R=0.80
+10% 30% 50% 70% 90%
+10
+4
+10% 30% 50% 70% 90%
+Percentile
+10
+3
+Overlap
+QPS
+10% 30% 50% 70% 90%
+Percentile
+10
+3
+10% 30% 50% 70% 90%
+Percentile
+10
+0
+10
+1
+10
+2
+10
+3 
+R=0.70
+10% 30% 50% 70% 90%
+Percentile
+10
+3
+10% 30% 50% 70% 90%
+Percentile
+10
+−
+4
+10
+−
+2
+1
+Avg. Filter Ratio
+10% 30% 50% 70% 90%
+Percentile
+10
+−
+5
+10
+−
+4
+10
+−
+3
+10
+−
+2
+10
+−
+1
+10% 30% 50% 70% 90%
+Percentile
+10
+−
+4
+10
+−
+3
+10
+−
+2
+10
+−
+1
+10% 30% 50% 70% 90%
+Percentile
+10
+−
+5
+10
+−
+4
+10
+−
+3
+10
+−
+2
+10
+−
+1
+LSSG-IVF
+LSSG-MinHash 
+ACORN
+UNG 
+ELI
+Equality 
+Containment
+Overlap
+Figure 19: Selectivity breakdown on other datasets
+weakening progressive navigation. (2) MinHash benefits from met-
+ric alignment. Non-Jaccard distances hurt LSSG-MinHash more
+than LSSG-IVF, since MinHash is an unbiased estimator for Jaccard
+similarity but not for the other distance measures.
+Impact of the Jaccard threshold distribution. In Def. 4, we
+use uniformly spaced Jaccard-distance thresholds across tiers. We
+additionally evaluate logarithmic (𝜃
+𝑡 
+= 1− 
+log(𝑡 )
+log(𝑇 ) 
+), exponential (𝜃
+𝑡 
+=
+1− 
+exp( 
+𝑡 −1
+𝑇 −1 
+)−1
+𝑒−1 
+), and quadratic (𝜃
+𝑡 
+= 1−( 
+𝑡 −1
+𝑇 −1 
+)
+2
+) schedules. As shown
+in Fig. 22, LSSG-MinHash is robust across all threshold schedules,
+suggesting that its probing step tolerates moderate changes in tier</page></paper>

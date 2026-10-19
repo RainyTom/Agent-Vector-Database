@@ -1,0 +1,577 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          3,
+          18
+        ]
+      ],
+      "date-time": "2026-03-18T23:20:09Z",
+      "timestamp": 1773876009382,
+      "version": "3.50.1"
+    },
+    "reference-count": 59,
+    "publisher": "Association for Computing Machinery (ACM)",
+    "issue": "4",
+    "content-domain": {
+      "domain": [
+        "dl.acm.org"
+      ],
+      "crossmark-restriction": true
+    },
+    "short-container-title": [
+      "Proc. VLDB Endow."
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          1
+        ]
+      ]
+    },
+    "abstract": "<jats:p>\n                    Real-world vector embeddings often carry additional label attributes, such as keywords and tags. In this context,\n                    <jats:bold>\n                      label-hybrid approximate\n                      <jats:italic toggle=\"yes\">k</jats:italic>\n                      -nearest neighbor (AKNN)\n                    </jats:bold>\n                    search retrieves the top-\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    approximate nearest vectors to a query, subject to the constraint that their labels fully contain the query-label set. A naive solution builds a separate index for every query-label set, but the exponential growth of such sets makes this approach storage-prohibitive. To overcome this, we propose selectively indexing only a subset of query-label sets while still ensuring efficient processing for all queries. This is made possible by a key insight into label containment: an index built for a label set\n                    <jats:italic toggle=\"yes\">L</jats:italic>\n                    can also serve any query whose label set\n                    <jats:italic toggle=\"yes\">L'</jats:italic>\n                    is a superset of\n                    <jats:italic toggle=\"yes\">L</jats:italic>\n                    , with query cost bounded by the elastic factor—the ratio between the number of vectors matching\n                    <jats:italic toggle=\"yes\">L</jats:italic>\n                    and those matching\n                    <jats:italic toggle=\"yes\">L'</jats:italic>\n                    . We formalize the index-selection task as a constrained optimization problem that chooses which label sets to index to satisfy space and query efficiency constraints. We prove the problem is NP-complete and propose efficient greedy algorithms for its efficiency- and space-constrained variants. Extensive experiments on real-world datasets show that our method achieves 10X-800X speedups over state-of-the-art techniques. Moreover, our approach is index-agnostic and can be seamlessly integrated into existing vector database systems.\n                  </jats:p>",
+    "DOI": "10.14778/3785297.3785304",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2026,
+          3,
+          18
+        ]
+      ],
+      "date-time": "2026-03-18T15:39:18Z",
+      "timestamp": 1773848358000
+    },
+    "page": "617-630",
+    "update-policy": "https://doi.org/10.1145/crossmark-policy",
+    "source": "Crossref",
+    "is-referenced-by-count": 0,
+    "title": [
+      "Elastic Index Selection for Label-Hybrid AKNN Search"
+    ],
+    "prefix": "10.14778",
+    "volume": "19",
+    "author": [
+      {
+        "given": "Mingyu",
+        "family": "Yang",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "HKUST (GZ) &amp; HKUST"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "given": "Wenxuan",
+        "family": "Xia",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "HKUST (GZ)"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "given": "Wentao",
+        "family": "Li",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "University of Leicester"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "given": "Raymond Chi-Wing",
+        "family": "Wong",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "HKUST"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      },
+      {
+        "given": "Wei",
+        "family": "Wang",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "HKUST (GZ) &amp; HKUST"
+          }
+        ],
+        "role": [
+          {
+            "role": "author",
+            "vocabulary": "crossref"
+          }
+        ]
+      }
+    ],
+    "member": "320",
+    "published-online": {
+      "date-parts": [
+        [
+          2026,
+          3,
+          18
+        ]
+      ]
+    },
+    "reference": [
+      {
+        "key": "e_1_2_1_1_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/2856318.2856324"
+      },
+      {
+        "key": "e_1_2_1_2_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1016/j.is.2019.02.006"
+      },
+      {
+        "key": "e_1_2_1_3_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/93597.98741"
+      },
+      {
+        "key": "e_1_2_1_4_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/1143844.1143857"
+      },
+      {
+        "key": "e_1_2_1_5_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3698822"
+      },
+      {
+        "key": "e_1_2_1_6_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TIT.1967.1053964"
+      },
+      {
+        "key": "e_1_2_1_7_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/997817.997857"
+      },
+      {
+        "key": "e_1_2_1_8_1",
+        "volume-title": "Proceedings of the twenty-ninth annual ACM symposium on Theory of computing. 256–264",
+        "author": "Martin Fürer Duh",
+        "year": "1997",
+        "unstructured": "Rong-chii Duh and Martin Fürer. 1997. Approximation of k-set cover by semi-local optimization. In Proceedings of the twenty-ninth annual ACM symposium on Theory of computing. 256–264."
+      },
+      {
+        "key": "e_1_2_1_9_1",
+        "volume-title": "Approximate Nearest Neighbor Search with Window Filters. ICML 2024",
+        "author": "Engels Joshua",
+        "year": "2024",
+        "unstructured": "Joshua Engels, Benjamin Landrum, Shangdi Yu, Laxman Dhulipala, and Julian Shun. 2024. Approximate Nearest Neighbor Search with Window Filters. ICML 2024 (2024)."
+      },
+      {
+        "key": "e_1_2_1_10_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TPAMI.2021.3067706"
+      },
+      {
+        "key": "e_1_2_1_11_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3303753.3303754"
+      },
+      {
+        "key": "e_1_2_1_12_1",
+        "volume-title": "Practical and Asymptotically Optimal Quantization of High-Dimensional Vectors in Euclidean Space for Approximate Nearest Neighbor Search. arXiv preprint arXiv:2409.09913",
+        "author": "Gao Jianyang",
+        "year": "2024",
+        "unstructured": "Jianyang Gao, Yutong Gou, Yuexuan Xu, Yongyi Yang, Cheng Long, and Raymond Chi-Wing Wong. 2024. Practical and Asymptotically Optimal Quantization of High-Dimensional Vectors in Euclidean Space for Approximate Nearest Neighbor Search. arXiv preprint arXiv:2409.09913 (2024)."
+      },
+      {
+        "key": "e_1_2_1_13_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3589282"
+      },
+      {
+        "key": "e_1_2_1_14_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3654970"
+      },
+      {
+        "key": "e_1_2_1_15_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TPAMI.2013.240"
+      },
+      {
+        "key": "e_1_2_1_16_1",
+        "first-page": "518",
+        "article-title": "Similarity search in high dimensions via hashing",
+        "volume": "99",
+        "author": "Gionis Aristides",
+        "year": "1999",
+        "unstructured": "Aristides Gionis, Piotr Indyk, Rajeev Motwani, et al. 1999. Similarity search in high dimensions via hashing. In Vldb, Vol. 99. 518–529.",
+        "journal-title": "Vldb"
+      },
+      {
+        "key": "e_1_2_1_17_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/227683.227684"
+      },
+      {
+        "key": "e_1_2_1_18_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3543507.3583552"
+      },
+      {
+        "key": "e_1_2_1_19_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3709730"
+      },
+      {
+        "key": "e_1_2_1_20_1",
+        "volume-title": "Data cube: A relational aggregation operator generalizing group-by, cross-tab, and sub-totals. Data mining and knowledge discovery 1, 1",
+        "author": "Gray Jim",
+        "year": "1997",
+        "unstructured": "Jim Gray, Surajit Chaudhuri, Adam Bosworth, Andrew Layman, Don Reichart, Murali Venkatrao, Frank Pellow, and Hamid Pirahesh. 1997. Data cube: A relational aggregation operator generalizing group-by, cross-tab, and sub-totals. Data mining and knowledge discovery 1, 1 (1997), 29–53."
+      },
+      {
+        "key": "e_1_2_1_21_1",
+        "unstructured": "Jiawei Han Jian Pei and Hanghang Tong. 2022. Data mining: concepts and techniques. Morgan kaufmann."
+      },
+      {
+        "key": "e_1_2_1_22_1",
+        "volume-title": "Mining frequent patterns without candidate generation. ACM sigmod record 29, 2",
+        "author": "Han Jiawei",
+        "year": "2000",
+        "unstructured": "Jiawei Han, Jian Pei, and Yiwen Yin. 2000. Mining frequent patterns without candidate generation. ACM sigmod record 29, 2 (2000), 1–12."
+      },
+      {
+        "key": "e_1_2_1_23_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/235968.233333"
+      },
+      {
+        "key": "e_1_2_1_24_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3186728.3164145"
+      },
+      {
+        "key": "e_1_2_1_25_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/CVPR.2016.616"
+      },
+      {
+        "key": "e_1_2_1_26_1",
+        "unstructured": "Patrick Iff Paul Bruegger Marcin Chrapek Maciej Besta and Torsten Hoefler. 2025. Benchmarking Filtered Approximate Nearest Neighbor Search Algorithms on Transformer-based Embedding Vectors. arXiv:2507.21989 [cs.DB] https://arxiv.org/abs/2507.21989"
+      },
+      {
+        "key": "e_1_2_1_27_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/276698.276876"
+      },
+      {
+        "key": "e_1_2_1_28_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.52202/075280-2891"
+      },
+      {
+        "key": "e_1_2_1_29_1",
+        "volume-title": "Ravishankar Krishnawamy, and Rohan Kadekodi.",
+        "author": "Subramanya Suhas Jayaram",
+        "year": "2019",
+        "unstructured": "Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Ravishankar Krishnawamy, and Rohan Kadekodi. 2019. Diskann: Fast accurate billion-point nearest neighbor search on a single node. Advances in Neural Information Processing Systems 32 (2019)."
+      },
+      {
+        "key": "e_1_2_1_30_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/CVPR.2014.298"
+      },
+      {
+        "key": "e_1_2_1_31_1",
+        "volume-title": "Reducibility among combinatorial problems. In 50 Years of Integer Programming 1958–2008: from the Early Years to the State-of-the-Art",
+        "author": "Karp Richard M",
+        "unstructured": "Richard M Karp. 2009. Reducibility among combinatorial problems. In 50 Years of Integer Programming 1958–2008: from the Early Years to the State-of-the-Art. Springer, 219–241."
+      },
+      {
+        "key": "e_1_2_1_32_1",
+        "first-page": "9459",
+        "article-title": "Retrieval-augmented generation for knowledge-intensive nlp tasks",
+        "volume": "33",
+        "author": "Lewis Patrick",
+        "year": "2020",
+        "unstructured": "Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, et al. 2020. Retrieval-augmented generation for knowledge-intensive nlp tasks. Advances in Neural Information Processing Systems 33 (2020), 9459–9474.",
+        "journal-title": "Advances in Neural Information Processing Systems"
+      },
+      {
+        "key": "e_1_2_1_33_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TKDE.2019.2909204"
+      },
+      {
+        "key": "e_1_2_1_34_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3489496.3489506"
+      },
+      {
+        "key": "e_1_2_1_35_1",
+        "volume-title": "CHASE: A Native Relational Database for Hybrid Queries on Structured and Unstructured Data. arXiv preprint arXiv:2501.05006",
+        "author": "Ma Rui",
+        "year": "2025",
+        "unstructured": "Rui Ma, Kai Zhang, Zhenying He, Yinan Jing, X Sean Wang, and Zhenqiang Chen. 2025. CHASE: A Native Relational Database for Hybrid Queries on Structured and Unstructured Data. arXiv preprint arXiv:2501.05006 (2025)."
+      },
+      {
+        "key": "e_1_2_1_36_1",
+        "unstructured": "Yu A Malkov and Dmitry A Yashunin. [n.d.]. hnswlib. https://github.com/nmslib/hnswlib."
+      },
+      {
+        "key": "e_1_2_1_37_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TPAMI.2018.2889473"
+      },
+      {
+        "key": "e_1_2_1_38_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/2206869.2206874"
+      },
+      {
+        "key": "e_1_2_1_39_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1007/s007780200060"
+      },
+      {
+        "key": "e_1_2_1_40_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3654923"
+      },
+      {
+        "key": "e_1_2_1_41_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3588908"
+      },
+      {
+        "key": "e_1_2_1_42_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1007/978-3-540-72079-9_9"
+      },
+      {
+        "key": "e_1_2_1_43_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3448016.3457550"
+      },
+      {
+        "key": "e_1_2_1_44_1",
+        "volume-title": "Navigable proximity graph-driven native hybrid queries with structured and unstructured constraints. arXiv preprint arXiv:2203.13601",
+        "author": "Wang Mengzhao",
+        "year": "2022",
+        "unstructured": "Mengzhao Wang, Lingwei Lv, Xiaoliang Xu, Yuxiang Wang, Qiang Yue, and Jiongkang Ni. 2022. Navigable proximity graph-driven native hybrid queries with structured and unstructured constraints. arXiv preprint arXiv:2203.13601 (2022)."
+      },
+      {
+        "key": "e_1_2_1_45_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3639269"
+      },
+      {
+        "key": "e_1_2_1_46_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3476249.3476255"
+      },
+      {
+        "key": "e_1_2_1_47_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3424573.3424580"
+      },
+      {
+        "key": "e_1_2_1_48_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3415478.3415541"
+      },
+      {
+        "key": "e_1_2_1_49_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3511808.3557610"
+      },
+      {
+        "key": "e_1_2_1_50_1",
+        "volume-title": "iRangeGraph: Improvising Range-dedicated Graphs for Range-filtering Nearest Neighbor Search. arXiv preprint arXiv:2409.02571",
+        "author": "Xu Yuexuan",
+        "year": "2024",
+        "unstructured": "Yuexuan Xu, Jianyang Gao, Yutong Gou, Cheng Long, and Christian S Jensen. 2024. iRangeGraph: Improvising Range-dedicated Graphs for Range-filtering Nearest Neighbor Search. arXiv preprint arXiv:2409.02571 (2024)."
+      },
+      {
+        "key": "e_1_2_1_51_1",
+        "volume-title": "Effective and General Distance Computation for Approximate Nearest Neighbor Search. arXiv preprint arXiv:2404.16322",
+        "author": "Yang Mingyu",
+        "year": "2024",
+        "unstructured": "Mingyu Yang, Wentao Li, Jiabao Jin, Xiaoyao Zhong, Xiangyu Wang, Zhitao Shen, Wei Jia, and Wei Wang. 2024. Effective and General Distance Computation for Approximate Nearest Neighbor Search. arXiv preprint arXiv:2404.16322 (2024)."
+      },
+      {
+        "key": "e_1_2_1_52_1",
+        "volume-title": "ESG: Elastic Graphs for Range-Filtering Approximate k-Nearest Neighbor Search. arXiv preprint arXiv:2504.04018",
+        "author": "Yang Mingyu",
+        "year": "2025",
+        "unstructured": "Mingyu Yang, Wentao Li, Zhitao Shen, Chuan Xiao, and Wei Wang. 2025. ESG: Elastic Graphs for Range-Filtering Approximate k-Nearest Neighbor Search. arXiv preprint arXiv:2504.04018 (2025)."
+      },
+      {
+        "key": "e_1_2_1_53_1",
+        "volume-title": "Fast High-dimensional Approximate Nearest Neighbor Search with Efficient Index Time and Space. arXiv preprint arXiv:2411.06158",
+        "author": "Yang Mingyu",
+        "year": "2024",
+        "unstructured": "Mingyu Yang, Wentao Li, and Wei Wang. 2024. Fast High-dimensional Approximate Nearest Neighbor Search with Efficient Index Time and Space. arXiv preprint arXiv:2411.06158 (2024)."
+      },
+      {
+        "key": "e_1_2_1_54_1",
+        "unstructured": "Mingyu Yang Wenxuan Xia Wentao Li Raymond Chi-Wing Wong and Wei Wang. 2025. Technical Report. https://github.com/mingyu-hkustgz/LabelANN/blob/master/technical_report.pdf"
+      },
+      {
+        "key": "e_1_2_1_55_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3709679"
+      },
+      {
+        "key": "e_1_2_1_56_1",
+        "volume-title": "Scalable algorithms for association mining",
+        "author": "Zaki Mohammed Javeed",
+        "year": "2002",
+        "unstructured": "Mohammed Javeed Zaki. 2002. Scalable algorithms for association mining. IEEE transactions on knowledge and data engineering 12, 3 (2002), 372–390."
+      },
+      {
+        "key": "e_1_2_1_57_1",
+        "volume-title": "17th USENIX Symposium on Operating Systems Design and Implementation (OSDI 23)",
+        "author": "Zhang Qianxi",
+        "year": "2023",
+        "unstructured": "Qianxi Zhang, Shuotao Xu, Qi Chen, Guoxin Sui, Jiadong Xie, Zhizhen Cai, Yaoqi Chen, Yinxuan He, Yuqing Yang, Fan Yang, et al. 2023. {VBASE}: Unifying Online Vector Similarity Search and Relational Queries via Relaxed Monotonicity. In 17th USENIX Symposium on Operating Systems Design and Implementation (OSDI 23). 377–395."
+      },
+      {
+        "key": "e_1_2_1_58_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3377369.3377374"
+      },
+      {
+        "key": "e_1_2_1_59_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3639324"
+      }
+    ],
+    "container-title": [
+      "Proceedings of the VLDB Endowment"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://dl.acm.org/doi/pdf/10.14778/3785297.3785304",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2026,
+          3,
+          18
+        ]
+      ],
+      "date-time": "2026-03-18T15:39:48Z",
+      "timestamp": 1773848388000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://dl.acm.org/doi/10.14778/3785297.3785304"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          1
+        ]
+      ]
+    },
+    "references-count": 59,
+    "journal-issue": {
+      "issue": "4",
+      "published-print": {
+        "date-parts": [
+          [
+            2025,
+            12,
+            1
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "10.14778/3785297.3785304"
+    ],
+    "URL": "https://doi.org/10.14778/3785297.3785304",
+    "relation": {},
+    "ISSN": [
+      "2150-8097"
+    ],
+    "issn-type": [
+      {
+        "value": "2150-8097",
+        "type": "print"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          1
+        ]
+      ]
+    },
+    "assertion": [
+      {
+        "value": "2026-03-18",
+        "order": 3,
+        "name": "published",
+        "label": "Published",
+        "group": {
+          "name": "publication_history",
+          "label": "Publication History"
+        }
+      }
+    ]
+  }
+}

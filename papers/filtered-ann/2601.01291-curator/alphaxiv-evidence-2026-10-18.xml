@@ -1,0 +1,748 @@
+<paper id="2601.01291v3"><page num="1">Curator: Efficient Vector Search with Low-Selectivity Filters
+Yicheng Jin
+Duke University
+Durham, NC, USA
+yicheng.jin@duke.edu
+Yongji Wu
+University of California, Berkeley
+1
+Berkeley, CA, USA
+wuyongji317@gmail.com
+Wenjun Hu
+Yale University
+New Haven, CT, USA
+wenjun.hu@cantab.net
+Bruce M. Maggs
+Duke University
+Durham, NC, USA
+bmm@cs.duke.edu
+Jun Yang
+Duke University
+Durham, NC, USA
+junyang@cs.duke.edu
+Xiao Zhang
+Cisco ThousandEyes
+1
+Durham, NC, USA
+xz234@alumni.duke.edu
+Danyang Zhuo
+Duke University
+Durham, NC, USA
+danyang@cs.duke.edu
+Abstract
+Embedding-based dense retrieval has become the cornerstone of
+many critical applications, where approximate nearest neighbor
+search (ANNS) queries are often combined with filters on labels such
+as dates and price ranges. Graph-based indexes achieve state-of-the-
+art performance on unfiltered ANNS but encounter connectivity
+breakdown on low-selectivity filtered queries, where qualifying
+vectors become sparse and the graph structure among them frag-
+ments. Recent research proposes specialized graph indexes that
+address this issue by expanding graph degree, which incurs prohib-
+itively high construction costs. Given these inherent limitations of
+graph-based methods, we argue for a dual-index architecture and
+present Curator, a partition-based index that complements existing
+graph-based approaches for low-selectivity filtered ANNS. Cura-
+tor builds specialized indexes for different labels within a shared
+clustering tree, where each index adapts to the distribution of its
+qualifying vectors to ensure efficient search while sharing structure
+to minimize memory overhead. The system also supports incre-
+mental updates and handles arbitrary complex predicates beyond
+single-label filters by efficiently constructing temporary indexes
+on the fly. Our evaluation demonstrates that integrating Curator
+with state-of-the-art graph indexes reduces low-selectivity query
+latency by up to 20.9× compared to pre-filtering fallback, while
+increasing construction time and memory footprint by only 5.5%
+and 4.3%, respectively.
+1 Introduction
+The rise of deep learning has transformed information retrieval by
+enabling the representation of unstructured data as high-dimensional
+vectors that capture semantic relationships [21 , 27 , 36 ]. Approxi-
+mate nearest neighbor search (ANNS) over these vector embeddings
+has become a fundamental primitive powering modern applications
+from web search [29 , 50 ] to recommendation systems [8, 28 , 53 ]
+and retrieval-augmented generation [22, 31].
+1
+Yongji Wu and Xiao Zhang were with Duke University at the time this work was
+conducted.
+Pure semantic similarity, however, often proves insufficient for
+real-world applications. Modern systems increasingly require fil-
+tered ANNS, where vector similarity search is constrained by struc-
+tured predicates over metadata attributes. For instance, e-commerce
+platforms must find semantically similar products within specific
+price ranges and categories, while enterprise search systems need
+to respect user access permissions and document types. This com-
+bination of semantic similarity and structured filtering has driven
+significant interest from both industry [ 34, 35 , 42 , 44 , 45 ] and re-
+search communities [5, 12, 32, 43, 46, 52, 55, 56].
+Among the various challenges in filtered ANNS, handling queries
+with diverse selectivity—the fraction of vectors qualifying the filter
+conditions—is particularly difficult. The difficulty varies dramati-
+cally across the selectivity spectrum, with each regime requiring
+different algorithmic strategies and presenting distinct performance
+bottlenecks.
+1.1 Why Existing Approaches Fail at Low
+Selectivity
+Existing approaches to filtered ANNS can be broadly categorized by
+their underlying index structures: flat indexes (brute-force search),
+graph-based indexes, and partition-based indexes. While each index
+type has found success in specific scenarios, they all encounter
+limitations when handling low-selectivity queries. Fig. 1 illustrates
+these challenges across different approaches.
+Graph connectivity breakdown. As shown in Fig. 1(a), filtered
+search on graph-based indexes exposes a critical trade-off: as se-
+lectivity decreases, the sub-graph of qualifying vectors becomes
+increasingly sparse and disconnected. This connectivity breakdown
+forces algorithms to choose between two unsatisfactory options:
+visit all neighbors of each node, which is expensive since most
+neighbors are unqualified, or skip unqualified neighbors entirely,
+which is both incomplete—as some qualifying vectors become un-
+reachable—and inefficient, since graph search requires sufficient
+connectivity for optimal performance.
+arXiv:2601.01291v3 [cs.DB] 10 Jan 2026</page><page num="2">Yicheng Jin, Yongji Wu, Wenjun Hu, Bruce M. Maggs, Jun Yang, Xiao Zhang, and Danyang Zhuo
+(a) Vanilla Graph Index (b) Specialized Graph Index
+(c) Vanilla Partition Index (d) Curator
+Figure 1: Comparison of different approaches to filtered
+ANNS. Blue points represent qualifying vectors, gray points
+represent non-qualifying vectors. (a) Vanilla graph-based
+approach suffers from connectivity breakdown at low selec-
+tivity. (b) Specialized graph-based approach requires increas-
+ing graph degree significantly to maintain connectivity. (c)
+Vanilla partition-based approach suffers from granularity
+mismatch at low selectivity. (d) Curator adopts a hierarchi-
+cal partitioning approach that buffers qualifying vectors in
+sparse regions at higher levels of the tree, adapting clustering
+granularity to filter selectivity.
+Densification becomes prohibitive. Recent approaches attempt
+to address connectivity issues through graph densification, as illus-
+trated in Fig. 1(b). Both ACORN [ 32] and Filtered DiskANN [12 ]
+build dense graphs to ensure connectivity among qualifying vec-
+tors. However, the required graph degree grows rapidly as selec-
+tivity decreases. If each node needs 𝑚 qualified neighbors and
+selectivity is 𝑠, then the total degree must be approximately 𝑚/𝑠.
+This relationship makes densification prohibitively expensive for
+low-selectivity queries, as our empirical evaluation demonstrates
+significant increases in construction time and memory usage. Al-
+ternative approaches like UNG [5 ] attempt different strategies but
+face significant limitations, as detailed in §2.
+Pre-filtering scales poorly. When densification becomes imprac-
+tical, many systems fall back to pre-filtering: first identifying all
+qualifying vectors, then performing brute-force search over this sub-
+set. While this approach guarantees completeness, it scales poorly
+with the absolute number of qualifying vectors. On large-scale
+datasets, low-selectivity filters can still match tens of thousands of
+vectors, making brute-force search computationally expensive.
+Partition granularity mismatch. Given these limitations of
+graph-based approaches, one might consider partition-based alter-
+natives. Indexes like IVF (Inverted File) cluster vectors and reduce
+10 
+3 
+10 
+2 
+10 
+1
+Filter Selectivity
+10 
+1
+10
+0
+10
+1
+10
+2
+Query Latency (ms)
+Curator Pre-Filtering ACORN-10 ACORN-40
+Figure 2: Performance comparison between Curator and the
+state-of-the-art solution (ACORN + pre-filtering) across var-
+ied selectivity levels in the low-selectivity regime. ACORN-𝛾
+(𝛾 = 10, 40) denotes ACORN with different graph degrees, with
+larger 𝛾 indicating denser index graphs. Curator closes the
+performance gap of ACORN at low selectivity with minimal
+overhead. Detailed experiment setup is provided in §6.4.
+search scope by examining only nearby clusters, and they are not
+vulnerable to connectivity breakdown. However, naively applying
+them incurs another issue: partitions built for all indexed vectors
+are too fine-grained for filtered search. As shown in Fig. 1(c), when
+selectivity is low, each cluster contains only a few qualifying vec-
+tors, thus the search must visit significantly more clusters compared
+to unfiltered search, leading to substantial overhead for distance
+computations against cluster centroids.
+1.2 Our Approach: Adaptive Hierarchical
+Partitioning
+The limitations across existing approaches suggest the need for a
+specialized index dedicated to low-selectivity filters. This raises a
+natural question: should we design a dedicated index or improve
+existing specialized indexes to handle a wider range of selectivity?
+Given the fundamental connectivity challenges that graph-based
+indexes face at low selectivity, we design Curator to complement
+existing graph-based approaches through a dual-index architecture
+rather than attempting to extend their performance into the low-
+selectivity regime. Graph-based methods excel at high-selectivity
+scenarios, while Curator specializes in the low-selectivity regime
+where traditional approaches struggle. This complementary design
+enables the two indexes to work together, achieving better overall
+performance across the entire selectivity spectrum. The key require-
+ment for this approach to be cost-effective is that Curator must
+maintain low memory and construction overhead.
+Following this complementary design philosophy, this paper
+introduces Curator, a partition-based index that employs adaptive
+hierarchical clustering to achieve efficient low-selectivity search.
+As a partition-based approach, Curator deliberately accepts slower
+search performance than graph-based indexes at high selectivity,
+where graph connectivity remains strong, in exchange for robust
+performance at low selectivity where graph-based approaches suf-
+fer from connectivity breakdown. As illustrated in Fig. 1(d), Curator
+uses hierarchical partitioning where qualifying vectors in sparse</page><page num="3">Curator : Efficient Vector Search with Low-Selectivity Filters
+regions are buffered at higher levels of the tree, adapting clustering
+granularity to the local density of qualifying vectors. The system
+constructs specialized indexes for different filter predicates, all em-
+bedded within a shared hierarchical clustering tree that maintains
+low overhead through structural sharing.
+Curator supports both label-based filtering—where vectors are
+associated with categorical labels known in advance and queries
+return the nearest vectors matching a given label—and arbitrary
+complex predicates involving multiple attribute types and logical
+operators. The core challenge with complex predicates is that they
+are typically not indexed directly due to the vast number of pos-
+sible combinations. Prior works resort to inefficient multi-stage
+filtering or inflexible special handling of a small subset of predicate
+types in index design. Curator addresses this by dynamically con-
+structing temporary indexes that mirror the shared tree structure
+with minimal overhead, enabling efficient evaluation of complex
+predicates without requiring pre-built specialized indexes for every
+combination.
+To validate this complementary design, we evaluate Curator
+against ACORN (the state-of-the-art graph-based index) using a
+semi-synthetic dataset constructed from YFCC-10M with 20 log-
+arithmically distributed selectivity levels in [0.001, 0.2], enabling
+systematic coverage of the low-selectivity regime. As shown in
+Fig. 2, brute-force search (pre-filtering fallback) exhibits linear scal-
+ing, while ACORN shows sharp performance degradation at low
+selectivity. Curator fills this gap with minimal construction and
+memory overhead. The results show that increasing graph degree
+(from ACORN-10 to ACORN-40) offers limited performance im-
+provement at low selectivity, confirming that densifying graphs is
+not an effective solution and making Curator an ideal complemen-
+tary approach.
+1.3 Contributions
+This paper makes the following key contributions:
+• Adaptive partitioning for low-selectivity ANNS: We
+design Curator, a hierarchical partition-based index that
+adapts clustering granularity to the distribution of qualified
+vectors, achieving high performance for low-selectivity
+queries while maintaining minimal memory overhead.
+• Efficient complex predicate support: We present a novel
+algorithm for handling arbitrary predicates by dynamically
+constructing temporary indexes with minimal overhead.
+• Comprehensive system design: We develop efficient
+algorithms including batch construction, incremental up-
+dates, and specialized search procedures for both single-
+label filters and complex predicates, ensuring search effi-
+ciency and completeness while adapting to dynamic changes
+in data distributions.
+• Extensive experimental validation: We conduct compre-
+hensive experiments on real-world datasets demonstrating
+that Curator reduces low-selectivity query latency by up to
+20.9× compared to the state-of-the-art solution (ACORN +
+pre-filtering), while increasing construction time and mem-
+ory footprint by only 5.5% and 4.3%, respectively, confirm-
+ing the effectiveness of our complementary approach.
+2 Background
+2.1 Problem Formulation
+We formulate the problem of filtered ANNS as follows. We start
+with single-label search and then generalize to complex predicate
+search:
+Single-label search. Let L = {𝑙
+1
+, 𝑙
+2
+, . . . , 𝑙
+| L | 
+} represent a finite
+universe of labels, and consider a dataset 𝑆 = {(𝑥, 𝐿
+𝑥 
+) | 𝐿
+𝑥 
+⊆ L}
+where each object consists of a vector 𝑥 and an associated set of
+labels 𝐿
+𝑥 
+. Single-label search involves queries that check for the
+existence of a single label in the label set: a query (𝑥
+𝑞
+, 𝑙, 𝑘) requests
+the 𝑘 nearest neighbors of the query vector 𝑥
+𝑞 
+within the subset of
+vectors where 𝑙 ∈ 𝐿
+𝑥 
+.
+Complex predicate search. Consider a more general dataset
+𝑆 = {(𝑥, 𝐴
+𝑥 
+)} where each object consists of a vector 𝑥 and associ-
+ated attributes 𝐴
+𝑥 
+including categorical labels, numerical values,
+timestamps, and other structured data. Complex predicate search
+involves arbitrary filter predicates 𝜎 combining range queries, com-
+posite conditions across multiple attributes, and complex logical
+operators. A query (𝑥
+𝑞
+, 𝜎, 𝑘) requests the 𝑘 nearest neighbors of the
+query vector 𝑥
+𝑞 
+within the subset P
+𝜎 
+of vectors qualifying predi-
+cate 𝜎. Complex predicate search subsumes single-label search and
+additionally supports AND queries (𝑥
+𝑞
+, 𝐿
+𝑞
+, 𝑘) where 𝐿
+𝑞 
+⊆ 𝐿
+𝑥 
+, and
+OR queries (𝑥
+𝑞
+, 𝐿
+𝑞
+, 𝑘) where 𝐿
+𝑞 
+∩ 𝐿
+𝑥 
+≠ ∅.
+For both search types, the selectivity of filter 𝜎 is defined as
+|P
+𝜎 
+|/|𝑆 |, which fundamentally determines query complexity. We
+measure search quality using Recall@K = 
+|𝑅∩𝑅
+∗ 
+|
+𝑘 
+, where 𝑅 and 𝑅
+∗
+denote the retrieved results and ground truth respectively.
+2.2 Filtered ANNS Approaches
+Below, we review existing methods of filtered ANNS organized
+by how filtering is integrated. This taxonomy is orthogonal to the
+underlying index type, focusing instead on how adaptations are ap-
+plied to search algorithms and index structures. For each approach,
+we first discuss its application to single-label search scenarios and
+then examine its support for complex predicate search.
+Metadata filtering. This approach integrates filtering with no
+or minimal modifications to search algorithms and index struc-
+tures, utilizing a single shared index. It includes three subtypes:
+(1) Pre-filtering [ 42, 44 , 45 ] retrieves all qualified vectors from a
+scalar index and performs brute-force search, since most vector
+indexes cannot efficiently support searching subsets of vectors. (2)
+Post-filtering [42 , 45] filters intermediate results from unfiltered
+ANNS, though determining sufficiently large 𝑘 to ensure enough
+results remain after filtering is challenging and overshoot leads to
+inefficiency. (3) Inline filtering [ 19 , 23 , 34 , 52] excludes unqualified
+vectors during search, eliminating intermediate 𝑘 selection but re-
+quiring explicit algorithmic support. This approach can support
+arbitrary complex predicates.
+Per-label indexing. This approach constructs dedicated vector
+indexes for each label and directs queries to the corresponding
+index without changing search algorithms [20 ]. While it delivers
+optimal search performance for single-label queries by eliminating
+query-time filtering, it incurs significant construction and memory
+overhead since each vector may be indexed multiple times across</page><page num="4">Yicheng Jin, Yongji Wu, Wenjun Hu, Bruce M. Maggs, Jun Yang, Xiao Zhang, and Danyang Zhuo
+different per-label indexes. Extending this to per-predicate indexing
+for complex predicate search is generally impossible due to the
+combinatorial explosion of possible predicates.
+Specialized indexes. Recent research has developed specialized
+indexes for filtered ANNS modifying both index construction and
+search algorithms, with most work focusing on graph-based ap-
+proaches. These methods can be categorized into three main strate-
+gies:
+(1) Fused distance. These methods [ 43 , 46 ] employ hybrid distance
+metrics that integrate both attribute and vector similarity through-
+out index construction and query processing. They are limited to
+equality-based attribute matching and require queries to specify
+values of all attributes for attribute similarity computation. This
+severely restricts query expressiveness, making them unsuitable
+for the problem settings we are considering.
+(2) Graph densification. Filtered DiskANN [12 ] and ACORN [ 32]
+follow a two-phase approach: dense graph construction then com-
+pression. Filtered DiskANN builds dense graphs by merging per-
+label indexes, while ACORN directly builds large-degree graphs.
+For compression, Filtered DiskANN prunes edges while preserving
+connectivity, whereas ACORN removes edges between nodes reach-
+able as two-hop neighbors, compensating by visiting both direct
+and two-hop neighbors during search. Both face the fundamental
+connectivity challenge that the required graph degree scales with
+1/selectivity. When this scaling becomes prohibitive, ACORN falls
+back to pre-filtering.
+(3) Subgraph stitching. UNG [5 ] constructs separate graph indexes
+for each unique label set and connects them using cross-group edges.
+During query processing, it traverses subgraphs corresponding to
+matching label sets, with connectivity among label sets guaranteed
+by cross-group edge construction to ensure completeness. How-
+ever, this approach often becomes inefficient when label set groups
+become highly fragmented with few nodes per group, which fre-
+quently occurs in real datasets. In such cases, the graph structure
+degrades as most edges become cross-group connections that prior-
+itize completeness over search efficiency. This leads to significant
+regression in search performance and long construction times for
+the stitching process in our evaluation.
+These specialized approaches exhibit varying support for com-
+plex predicates due to their tight integration of filtering with index
+structures. Filtered DiskANN supports only OR queries, and UNG
+supports only AND queries, while ACORN extends beyond these
+limitations to handle general complex predicates.
+3 Curator Overview
+This section presents Curator’s architecture and design principles.
+Fig. 3 illustrates Curator’s core design: a single shared base index
+and a set of per-label indexes embedded within it. This strategy al-
+lows per-label indexes to share the base index’s spatial partitioning
+while adapting their granularity to their unique label distributions,
+addressing the fundamental limitations of existing approaches for
+low-selectivity queries outlined in §2.
+Base Index
+Unfiltered Vector Distribution
+Per-Label Index
+Filtered Label Distribution
+Per-Label Indexes
+Bloom Filter
+Encode
+x2
+x4 x5
+Vector Store
+2 4 5
+Buffers
+Curator Index
+Compact Encoding of Per-Label Indexes
+Figure 3: Overview of Curator. The base index represents the
+finest-grained partitioning on unfiltered vector distribution,
+while the per-label indexes are embedded within the base
+index, adapting to the unique distribution of their respective
+labels. Per-label indexes are compactly encoded using buffers
+and Bloom filters.
+3.1 Base Index
+The base index 𝑇 is a standard hierarchical k-means clustering
+tree [ 26] that partitions all vectors in the dataset. The tree recur-
+sively partitions the vector space using k-means clustering until
+reaching sufficiently fine granularity, i.e., when a node contains
+fewer vectors than the predefined leaf capacity. The structure of
+the base index thus adapts to the distribution of all indexed vectors,
+which we refer to as the vector distribution. Within the base in-
+dex, each node stores a centroid that represents the corresponding
+cluster during search, while leaf nodes store the actual vector data
+within the cluster. This base index serves as the shared partitioning
+structure for embedded per-label indexes.
+We choose hierarchical k-means as the base index for two key
+reasons. First, as a partition-based index, it does not suffer from
+the inherent connectivity issues that plague graph-based indexes
+at low selectivity, as partitions remain well-defined regardless of
+label sparsity. Second, the hierarchical structure naturally embeds
+varied partitioning granularities for different filters within a single
+tree, allowing per-label indexes to adapt their clustering depth to
+label-specific distributions. Regarding search performance, hierar-
+chical k-means is typically slower than graph-based indexes like
+HNSW but comparable to IVF for unfiltered search. This perfor-
+mance positioning is confirmed in our evaluation (Fig. 8), where
+Curator traversing per-label clustering trees achieves performance
+comparable to per-label IVF.
+3.2 Per-Label Indexes
+Per-label indexes are embedded within the base index to adapt to
+the unique distribution of their respective labels. Unlike traditional
+approaches that build separate indexes for each label, Curator’s
+per-label indexes reuse the base index’s spatial partitioning while</page><page num="5">Curator : Efficient Vector Search with Low-Selectivity Filters
+adjusting granularity to label-specific vector densities. This hier-
+archical storage strategy ensures that all vector data resides exclu-
+sively in the base index, avoiding the costly vector duplication that
+would occur if per-label indexes stored their own copies of vector
+data.
+Per-label indexes are compactly encoded using two key data
+structures: buffers that store vector identifiers at leaf nodes, and
+Bloom filters that define the structure of per-label indexes.
+Vector Identifiers and Buffers. To avoid vector duplication,
+per-label indexes store buffers—sorted lists of vector identifiers—at
+leaf nodes rather than actual vectors. The buffer capacity 𝐵
+𝑚𝑎𝑥
+controls leaf node granularity. These identifiers are constructed
+hierarchically to encode each vector’s tree location: each node is
+assigned a node identifier as a sequence of branch indices from the
+root, and each vector’s identifier combines its containing leaf’s
+node identifier with its index within that leaf. These two compo-
+nents are bit-packed into a single integer with zero padding for
+uniform length. This construction ensures each node identifier rep-
+resents a vector ID subspace containing all vectors with that prefix,
+so sorting vector identifiers groups vectors from the same sub-tree
+contiguously (Fig. 5). This property enables efficient construction
+of temporary per-predicate indexes (§4.2), batch construction of
+per-label indexes (§5.2), and buffer split/merge operations during
+updates (§5.1).
+Bloom Filters. The base index contains three distinct node types
+with respect to each per-label index: internal nodes requiring fur-
+ther partitioning, leaf nodes containing buffers with qualified vec-
+tors, and external nodes not included in the per-label index. During
+search, Curator must efficiently determine the boundaries of each
+per-label index—consisting of leaf nodes and external nodes—to
+know when to backtrack. While leaf nodes are easily identified
+by the presence of buffers, distinguishing between internal and
+external nodes is challenging since both lack buffers.
+A straightforward approach would maintain an exact set at each
+node 𝑛 representing the per-label indexes containing it, denoted
+as T
+𝑛 
+= {𝑙 | 𝑛 ∈ 𝑇
+𝑙 
+}. During search, checking membership 𝑙 ∈ T
+𝑛
+would determine whether the current node is inside 𝑇
+𝑙 
+. However,
+storing T
+𝑛 
+exactly becomes costly when the number of unique la-
+bels in the dataset is large. Therefore, Curator approximates T
+𝑛
+using Bloom filters B
+𝑛 
+at each node in the base index. Bloom filters
+are space-efficient probabilistic data structures that support mem-
+bership queries with bounded false positive rate 𝑝. Importantly,
+Bloom filters have no false negatives, ensuring that when 𝑙 ∉ B
+𝑛 
+,
+the search algorithm has definitively reached an external node and
+can safely backtrack. While false positives may cause occasional
+unnecessary exploration of nodes outside the per-label index, they
+do not affect search correctness since external nodes do not contain
+buffers and thus never contribute to the result set.
+4 Search Algorithms
+This section presents the core search algorithms that enable Cu-
+rator to deliver efficient search when the filter selectivity is low.
+We distinguish two query types: single-label search and complex
+predicates that involve more attribute types and logical operators.
+The embedded per-label index structure ensures both efficiency
+by avoiding visits to unqualified vectors and adapting structure
+Table 1: Notations used in the paper
+Notation Description
+P Set of indexed vectors
+L Finite universe of labels
+P
+𝑙 
+Vectors associated with label 𝑙
+L
+𝑥 
+Labels associated with vector 𝑥
+𝑇 ,𝑇
+𝑙 
+Index and per-label index for label 𝑙
+P
+𝑛 
+Cluster represented by tree node 𝑛
+𝜇
+𝑛 
+Centroid of node 𝑛
+P
+𝑛,𝑙 
+Buffer for label 𝑙 at node 𝑛
+B
+𝑛 
+Bloom filter at node 𝑛
+𝐶
+𝑛 
+Child nodes of node 𝑛
+𝐵
+𝑚𝑎𝑥 
+Buffer capacity
+Algorithm 1: Single-Label Search
+Input : Index 𝑇 , query vector 𝑥
+𝑞 
+, label 𝑙, beam width 𝑏,
+result set size ef
+Output :𝑘 approximate nearest neighbors of 𝑥
+𝑞
+1 Initialize Q ← BeamSearch(𝑇 .root, 𝑏) // Frontier
+2 Initialize R ← ∅ // Result set
+3 while Q ≠ ∅ do
+4 𝑛 ← arg min
+𝑛
+′ 
+∈ Q 
+𝑆 (𝑛
+′
+, 𝑥
+𝑞 
+)
+5 Q ← Q \ {𝑛}
+6 if 𝑙 ∉ B
+𝑛 
+then // 
+1 
+Outside 𝑇
+𝑙
+7 continue
+8 else if P
+𝑛,𝑙 
+≠ ∅ then // 2 Leaf node
+9 R
+′ 
+← R ∪ P
+𝑛,𝑙
+10 if |R
+′ 
+| &gt; ef then
+11 R
+′ 
+← top-ef closest vectors in R
+′
+12 if R
+′ 
+= R then
+13 break
+14 R ← R
+′
+15 else // 3 Internal node
+16 Q ← Q ∪ 𝐶
+𝑛
+17 return top-𝑘 closest vectors in R
+to label distribution, and completeness by covering all qualifying
+vectors within a connected clustering tree. For single-label filters,
+Curator traverses the corresponding pre-built per-label index; for
+complex predicates, it first constructs a temporary per-predicate in-
+dex with minimal overhead and then applies the exact same search
+algorithm.
+4.1 Single-Label Search
+Single-label search finds qualifying vectors by scanning clusters
+closest to the query vector within the space partitioning represented
+by the per-label index (Fig. 4). Algorithm 1 implements this in two
+phases: beam search for robust initialization that traverses to the
+neighborhood of the query vector, followed by best-first search for
+efficient exploration of that neighborhood.
+Phase 1: Beam Search. Algorithm 1 begins with beam search to
+initialize the search frontier Q with tree nodes representing nearest</page><page num="14">Yicheng Jin, Yongji Wu, Wenjun Hu, Bruce M. Maggs, Jun Yang, Xiao Zhang, and Danyang Zhuo
+Fig. 15(c) shows that traversal overhead decreases from 26.9% to
+18.9% as dataset size grows from 2M to 10M vectors, demonstrat-
+ing that the overhead remains moderate and diminishes at larger
+scales.
+7 Related Work
+Approximate Nearest Neighbor Search. As vector similarity
+search becomes increasingly important across various modern ap-
+plications, many efficient vector indexing techniques have been
+proposed. Graph-based indexes [ 9, 10 , 13, 15 , 16 , 24 ] construct
+proximity graphs, where vectors are connected to their nearest
+neighbors. At query time, a best-first beam search begins from
+a set of seed nodes and navigates through the graph to locate
+vectors near the query. Partition-based indexes, which can be fur-
+ther categorized into clustering-based [ 3 , 4, 6, 19 , 54 ], hashing-
+based [1 , 11 , 30 , 37, 38 , 47 ] and tree-based [ 25 , 26 , 40] approaches,
+partition the vector space into sub-spaces and represent vectors by
+the sub-space to which they belong. During search, the algorithm
+navigates the index to identify the sub-spaces closest to the query
+vector and examines all vectors within them.
+Filtered ANNS. Existing approaches to filtered ANNS follow three
+main paradigms. Metadata filtering strategies, widely adopted in
+production vector databases [ 42 , 45], use cost models to dynamically
+select optimal filtering strategies based on estimated selectivity.
+Per-label indexing constructs dedicated vector indexes for each
+label to eliminate query-time filtering overhead. While applying
+this approach naively incurs prohibitive memory overhead due to
+storing multiple copies of vectors, Parlay-IVF [20 ] addresses this
+limitation through shared vector storage across per-label indexes.
+To further improve performance beyond these straightforward
+approaches, specialized indexes tailor both index construction and
+search algorithms for filtered ANNS. Fused distance approaches [ 43 ,
+46 ] incorporate attribute similarity into vector distance to bias
+search toward qualified vectors, though they limit query expressive-
+ness by requiring all attributes to be specified. Graph densification
+methods [ 12, 32 ] build high-degree graphs to ensure connectivity
+among qualifying vectors, then compress them to reduce memory
+usage, but face prohibitive construction costs at low selectivity.
+Subgraph stitching [5] constructs separate graphs for each unique
+label set and adds interconnecting edges, yet suffers from degraded
+index quality when these graphs are highly fragmented with few
+vectors in each.
+Beyond categorical filtering, several works address range filtering
+on numeric attributes, where queries specify value ranges rather
+than discrete labels. ARKGraph [ 55] and SeRF [56 ] merge and com-
+press per-range indexes to reduce storage overhead, while iRange-
+Graph [ 48 ] constructs graph indexes for fewer ranges and dynami-
+cally combines them at query time. DIGRA [18 ] and RangePQ [ 51]
+extend these approaches with dynamic update capabilities. Unlike
+Curator’s focus on categorical label filtering, range filtering lever-
+ages the total order of numeric attributes to optimize for contiguous
+value ranges, representing a complementary but distinct problem
+domain.
+8 Conclusion
+This paper introduced Curator, a partition-based index that comple-
+ments existing graph-based approaches for low-selectivity filtered
+ANNS. Curator employs hierarchical clustering to build specialized
+per-label indexes within a shared clustering tree, adapting cluster-
+ing granularity to label distributions while maintaining low over-
+head through structural sharing. Curator supports both single-label
+search and complex predicate search by dynamically constructing
+temporary indexes with minimal overhead. Our evaluation demon-
+strates that integrating Curator with state-of-the-art graph indexes
+reduces low-selectivity query latency by up to 20.9× compared to
+pre-filtering fallback, while increasing construction time and mem-
+ory footprint by only 5.5% and 4.3%, respectively. Curator’s source
+code is publicly available at https://github.com/hatsu3/curator-v2.
+Acknowledgments
+We thank the anonymous reviewers for their valuable feedback.
+This research was partially supported by NSF AI Institute on Edge
+Computing (Athena, grant No. 2112562) and NSF grants (2503010,
+2402696, 2238665, 2402823), and by gifts from Adobe, Amazon, Meta,
+and IBM.
+References
+[1] 
+Alexandr Andoni, Piotr Indyk, Thijs Laarhoven, Ilya Razenshteyn, and Ludwig
+Schmidt. 2015. Practical and optimal LSH for angular distance. Advances in
+Neural Information Processing Systems 28 (2015).
+[2] 
+Lars Arge. 1995. The buffer tree: A new technique for optimal I/O-algorithms. In
+Workshop on Algorithms and Data structures. Springer, 334–345.
+[3] 
+Artem Babenko and Victor Lempitsky. 2015. The inverted multi-index. IEEE
+transactions on pattern analysis and machine intelligence 37, 6 (2015), 1247–1260.
+[4] Dmitry Baranchuk, Artem Babenko, and Yury Malkov. 2018. Revisiting the
+inverted indices for billion-scale approximate nearest neighbors. In Proceedings
+of the European Conference on Computer Vision (ECCV). 202–216.
+[5] 
+Yuzheng Cai, Jiayang Shi, Yizhuo Chen, and Weiguo Zheng. 2024. Navigating La-
+bels and Vectors: A Unified Approach to Filtered Approximate Nearest Neighbor
+Search. Proceedings of the ACM on Management of Data 2, 6 (2024), 1–27.
+[6] Qi Chen, Bing Zhao, Haidong Wang, Mingqin Li, Chuanjie Liu, Zengzhong
+Li, Mao Yang, and Jingdong Wang. 2021. Spann: Highly-efficient billion-scale
+approximate nearest neighborhood search. Advances in Neural Information
+Processing Systems 34 (2021), 5199–5212.
+[7] 
+Colin B Clement, Matthew Bierbaum, Kevin P O’Keeffe, and Alexander A Alemi.
+2019. On the use of arxiv as a dataset. arXiv preprint arXiv:1905.00075 (2019).
+[8] Paul Covington, Jay Adams, and Emre Sargin. 2016. Deep neural networks
+for youtube recommendations. In Proceedings of the 10th ACM conference on
+recommender systems. 191–198.
+[9] 
+Cong Fu and Deng Cai. 2016. Efanna: An extremely fast approximate nearest
+neighbor search algorithm based on knn graph. arXiv preprint arXiv:1609.07228
+(2016).
+[10] Cong Fu, Chao Xiang, Changxu Wang, and Deng Cai. 2019. Fast approximate
+nearest neighbor search with the navigating spreading-out graph. Proceedings of
+the VLDB Endowment 12, 5 (2019), 461–474.
+[11] Aristides Gionis, Piotr Indyk, and Rajeev Motwani. 1999. Similarity search in
+high dimensions via hashing. In Proceedings of the 25th International Conference
+on Very Large Data Bases. 518–529.
+[12] Siddharth Gollapudi, Neel Karia, Varun Sivashankar, Ravishankar Krishnaswamy,
+Nikit Begwani, Swapnil Raz, Yiyong Lin, Yin Zhang, Neelam Mahapatro, Premku-
+mar Srinivasan, Amit Singh, and Harsha Vardhan Simhadri. 2023. Filtered-
+DiskANN: Graph Algorithms for Approximate Nearest Neighbor Search with
+Filters. In Proceedings of the ACM Web Conference 2023. 3406–3416.
+[13] 
+Ben Harwood and Tom Drummond. 2016. FANNG: Fast approximate nearest
+neighbour graphs. In Proceedings of the IEEE Conference on Computer Vision and
+Pattern Recognition. 5713–5722.
+[14] 
+Hugging Face. 2021. sentence-transformers/all-MiniLM-L6-v2 - Hugging Face.
+https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2. Accessed:
+2023-11-26.
+[15] Masajiro Iwasaki and Daisuke Miyazaki. 2018. Optimization of indexing based on
+k-nearest neighbor graph for proximity search in high-dimensional data. arXiv
+preprint arXiv:1810.07355 (2018).</page></paper>

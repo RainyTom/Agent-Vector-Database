@@ -1,0 +1,880 @@
+<paper id="2610.11563v1"><page num="1">Grant: A Framework for Approximate Nearest Neighbor Search with
+Multi-Attribute Range Filters
+Daichi Amagata
+The University of Osaka
+amagata.daichi@ist.osaka-u.ac.jp
+Abstract
+Recently, academia and industry have considered the problem of approximate nearest neighbor search (ANNS) with
+filters. In this setting, each object consists of a high-dimensional vector and attribute values. Given a query vector, filters
+for attribute values, and 𝑘, this problem retrieves 𝑘 vectors approximately nearest to the query vector among a set of objects
+passing the filters. This paper considers range filters, i.e., users can specify a range constraint for each attribute. Most
+existing works do not consider this setting, and they assume (i) only a single attribute or (ii) matching filters that require
+the same attribute values or categories. Existing techniques for these assumptions are not available for our setting or are
+trivially not efficient. Although standard solutions, such as pre-filter and post-filter, can handle our problem, they are also
+inefficient. Some works tackle the same problem as ours, but their techniques necessitate historical query workloads, which
+significantly limit practical use cases. To remove these limitations, this work proposes Grant, a novel framework that solves
+this problem efficiently while accepting arbitrary range filters and ANNS data structures. Grant can guarantee a search
+time sub-linear to the number of objects, which is not held by existing techniques. We conduct extensive experiments, and
+their results demonstrate that Grant outperforms existing techniques.
+1 Introduction
+Modern search engines increasingly rely on machine learning models that embed many types of objects, such as images and
+texts, into high-dimensional vectors. Due to this fact, the problem of similarity search in a high-dimensional space becomes
+more important in many fields, such as recommender systems [1, 2], information retrieval [6, 5, 8, 24, 23], databases [35, 44,
+54, 45], artificial intelligence [27], and machine learning [3, 4]. For example, computing the exact nearest neighbor on large
+data with high dimensionality is computationally expensive, and many applications, such as RAG (Retrieval-Augmented
+Generation), allow approximate results [28]. Therefore, approximate nearest neighbor search (ANNS) has been studied
+extensively [7].
+Nowadays, to enable making use of attribute information associated with objects, ANNS with attribute filters has been
+considered both in academia [51, 20, 48, 58, 53, 37] and industry (e.g., Alibaba [50], Apple [34], and Microsoft [57, 19]). As
+specified in these industrial works, the problem of ANNS with attribute filters is also important in many real-world Web
+applications. A typical example of this problem is that, in e-commerce scenarios, each user finds the products most similar
+to a given query vector among a set of objects satisfying attribute filters (e.g., price, rating, and production date). Similarly,
+RAG applications receive benefits from ANNS with attribute filters. For example, when a user wants to know health risk,
+he/she may write a prompt like “investigate what symptoms tend to appear for people aged from 40 to 50 and with blood
+pressure at least 140.” This script is transformed into an ANNS with range filters on age and blood pressure attributes, and
+the large language model obtains the answer from the retriever.
+1.1 Limitations of Prior Work
+The existing works on the problem of ANNS with attribute filters have the following issues.
+(1) Single attribute assumption. Many existing works [51, 58, 53, 37, 30, 52, 49, 55] assume that each object has only a single
+attribute, and their techniques are available only in this case. (Although some works [53, 58, 15, 30, 55] consider range filters,
+they cannot deal with multiple attributes, or they are reduced to the standard technique, Post-filter, which is introduced in
+Section 2.) This setting significantly limits applications, and objects generally have multiple attributes, as seen in the above
+examples.
+(2) Dealing with only matching filters. Most existing works consider attribute “matching” as a filter [26, 51, 20, 19, 48, 37, 13],
+i.e., a filter evaluates whether a given object has the same attribute value/category as that of this filter. As the above
+1
+arXiv:2610.11563v1 [cs.DB] 8 Oct 2026</page><page num="2">application examples show, users typically specify “range” filters, e.g., they want items whose prices and production dates
+fall within certain ranges. Obviously, existing techniques for matching filters are inefficient for range filters on multiple
+attributes, as they require running for each filter in multiple continuous ranges, which necessitates an infinite number of
+iterations.
+(3) Always requiring past queries. Although some works [34, 29] consider range filters on multiple attributes, they necessitate
+past queries. They build ANNS indices based on past queries, so they do not function without past queries. This strong
+assumption significantly limits practical use cases. A better and practical property is that an ANNS algorithm works well
+without past query workloads and its efficiency can be accelerated with past queries. Note that no work devised optimal
+algorithms for ANNS with range filters on multiple attributes, without past query workloads.
+(4) Vector data management systems are general but inefficient. Some vector data management systems, e.g., [50, 46, 41],
+support multiple attributes and range filters. They, however, do not optimize ANNS algorithms for this setting, and their
+approaches are essentially Pre-filter or Post-filter.
+1.2 Contribution
+This paper tackles the problem of ANNS with multi-attribute range filters, a more general and challenging problem than
+those with a single attribute and matching filters. An efficient and generally available solution (i) must be a workload-free
+structure and (ii) has an option of past query usage for efficiency acceleration. No existing works satisfy efficiency and
+generality at the same time for this problem.
+This paper proposes Grant (Graph in tree index), an efficient framework for this problem, and it incorporates graph
+indices into a tree index. It has three main advantages: (i) It handles multiple attributes and arbitrary ranges, optimized for
+practical scenarios. (ii) It can employ arbitrary state-of-the-art multi-dimensional tree index and proximity graph. (iii) It
+functions well without any past query workloads, and its efficiency can be enhanced with past query vectors. (iv) It is fast
+and accurate in practice. To summarize, our main contributions are as follows.
+• We propose Grant, a new and general framework for the problem of ANNS with multi-attribute range filters, and it is
+built without any past query workloads.
+• We present an efficient range-filtered ANNS algorithm that exploits the Grant structure. If past query vectors are avail-
+able, the efficiency of the proposed algorithm can be accelerated.
+• When we use a kd-tree [12] as a base structure of Grant, Grant can have a theoretical guarantee that the ANNS time
+is sub-linear to 𝑛, where 𝑛 is the number of objects. This theoretical result is not achieved by existing algorithms for
+ANNS with range filters on multiple attributes.
+• We conduct extensive experiments, and their results demonstrate that Grant outperforms state-of-the-art baselines in
+most tests.
+2 Preliminary
+2.1 Problem Definition
+Let 𝑋 be a set of 𝑛 objects. Each object 𝑥
+𝑖 
+∈ 𝑋 has a 𝑑-dimensional vector 𝐯
+𝑖 
+and 𝑚 attribute values 𝐚
+𝑖
+, i.e., 𝑥
+𝑖 
+= (𝐯
+𝑖
+, 𝐚
+𝑖
+) where
+𝑑 is large and 𝑚 ≥ 2. Notice that the 𝑚 attribute values can be represented as an 𝑚-dimensional vector, so we use 𝑎
+𝑖
+[𝑗] to
+denote the 𝑗-th attribute value of 𝐚
+𝑖
+. Let 𝑑𝑖𝑠𝑡(⋅, ⋅) be the distance between two vectors. The problem of 𝑘 nearest neighbor
+search with multi-attribute range filters is defined as follows:
+Definition 1 (𝑘 nearest neighbor search with multi-attribute range filters). Given an object set 𝑋, a query vector
+𝐪, query range filters 𝐹 = {[𝑙
+1
+, 𝑢
+1
+], ..., [𝑙
+𝑚
+, 𝑢
+𝑚
+]}, and a result size 𝑘, this problem retrieves a set 𝑆
+∗
+(𝐪, 𝐹 ) of 𝑘 objects such that (i)
+𝑆
+∗
+(𝐪, 𝐹 ) ⊆ 𝑋(𝐹 ) and (ii) ∀𝑥 ∈ 𝑆
+∗
+(𝐪, 𝐹 ) and ∀𝑥
+′ 
+∈ 𝑋(𝐹 )\𝑆
+∗
+(𝐪, 𝐹 ), 𝑑𝑖𝑠𝑡(𝐯, 𝐪) ≤ 𝑑𝑖𝑠𝑡(𝐯
+′
+, 𝐪), where
+𝑋(𝐹 ) = {𝑥 | 𝑥 ∈ 𝑋, ∀𝑗 ∈ [1, 𝑚], 𝑙
+𝑗 
+≤ 𝑎[𝑗] ≤ 𝑢
+𝑗 
+}.
+Ties are broken arbitrarily. If |𝑋(𝐹 )| &lt; 𝑘, we return 𝑋(𝐹 ).
+This paper considers an approximation version of the above problem. We search for 𝑆(𝐪, 𝐹 ) such that 𝑆(𝐪, 𝐹 ) ⊆ 𝑋(𝐹 ),
+|𝑆(𝐪, 𝐹 )| = 𝑘, but we may have 𝑆(𝐪, 𝐹 ) ≠ 𝑆
+∗
+(𝐪, 𝐹 ). To measure the accuracy of 𝑆, we use recall@𝑘, a criterion commonly
+used in ANNS studies, and
+𝑟𝑒𝑐𝑎𝑙𝑙@𝑘 = 
+|𝑆(𝐪, 𝐹 ) ∩ 𝑆
+∗
+(𝐪, 𝐹 )|
+𝑘 
+.
+2</page><page num="4">ANNS with Matching Filter. Many works consider this setting [51, 19, 48, 37, 13, 42]. For example, FilteredVamana
+[19] extends Vamana by adding a label for each edge. During ANNS, only edges with the label matching a given filter
+are traversed. StitchedVamana is another variant of Vamana, and it is a Vamana of the objects having the same label (or
+attribute value). That is, for each distinct label, a StitchedVamana is built. NHQ [48] defines a customized distance function
+that considers vector and label similarities. A proximity graph is built based on this customized distance function. They do
+not support multi-attribute cases and/or range filters.
+ANNS with Range Filter. Recent studies [58, 53] considered how to support a range filter in HNSW. SeRF [58] requires
+𝑂(𝑛
+2
+) space, and iRangeGraph reduced this space to 𝑂(𝑛 log 𝑛). Another work [15] developed a different data structure
+based on a segment tree, and it also needs 𝑂(𝑛 log 𝑛) space. Literature [30] further reduces the space complexity to 𝑂(𝑛).
+These works focus on a single attribute case, and [53] suggests that their approaches are reduced to Post-filter when query
+filters specify multiple attributes. WoW [49] achieves an updatable index for ANNS with a single range filter.
+HQI [34] and SIEVE [29] can deal with multi-attribute range filters, but they require historical query filters to build the
+structures. That is, without this assumption, their structures cannot be built. (Without past filters, SIEVE is reduced to a
+standard algorithm, e.g., Post-filter on a graph index.) Furthermore, HQI focuses on batch query processing, and this setting
+is different from our objective, i.e., processing each ANN query efficiently while providing a high recall result. Unlike these
+works, the Grant structure can be built without any past information.
+Vector Data Management Systems. Milvus [46], NaviX [41], and ADBV [50] support multi-attribute range filters. Milvus
+can select an ANNS index, e.g., graph index and IVF (inverted file index), whereas ADBV employs IVF. ADBV proposes
+two approaches: one is Pre-filter, and the other is the verification of a subset of 𝑋. Specifically, when IVF is used, only
+some posting lists similar to a given query vector are verified. This verification is the same as the brute-force algorithm
+introduced in Section 2. NaviX also employs Pre-filter but runs an approximate verification. Milvus also employs Pre-filter
+and considers Post-filter.
+4 Grant
+Main idea. Indexing low-dimensional data is a classic problem, and many famous tree-based indices, such as kd-tree [12]
+and R-tree [21], are known. These data structures support efficient orthogonal (or axis-parallel) range queries. Because
+the attribute values held by the objects in 𝑋 are regarded as low-dimensional vectors, we can build a tree index based on
+the attribute values. Then, for example, 𝑋(𝐹 ) can be efficiently obtained with a range query of 𝐹 . This approach avoids
+accessing many vectors that do not satisfy 𝐹 . However, simply applying this idea results in Pre-filter, so we suffer from a
+high computational cost when |𝑋(𝐹 )| is large. (If 𝑛 is large, e.g., tens of millions, |𝑋(𝐹 )| = 0.01 ⋅ 𝑛 is still large.)
+On the other hand, assume that 𝑋 is indexed by a graph index (i.e., based on the 𝑑-dimensional vectors). Although this
+approach yields a fast search time for ANNS without filters, our approach is limited to Post-filter when filters are specified.
+Post-filter may need to access many objects (vectors) that do not satisfy 𝐹 .
+Now we have a challenging question: Given a query vector 𝐪 and query filters 𝐹 , how can we access only objects that satisfy
+𝐹 and are similar to 𝐪? The above observations of the tree and graph indices actually suggest an idea yielding a positive
+answer to this question. If we receive benefits of the tree and graph indices (if we can run graph-based ANNS on the range
+query result of 𝐹 ), we overcome the above challenge. We propose Grant, which achieves this idea.
+4.1 Grant Structure
+Existing indices do not have the ability to navigate objects that pass a given filter and have vectors similar to 𝐪. The
+novelty of Grant is this navigation ability. Grant is a tree structure in which leaf nodes have a capacity of 𝑂(𝑛/𝑐), where
+𝑐 is a constant and hyper-parameter. This tree structure is constructed based on the attribute values. Each object in 𝑋 is
+maintained by a leaf node of the Grant, and each leaf node maintains the 𝑂(𝑛/𝑐) objects by using a graph index  based on
+their 𝑑-dimensional vectors. Note that the number of leaf nodes in Grant is 𝑂(𝑐) = 𝑂(1).
+Figure 1 illustrates an example of the Grant structure, assuming that each node can have at most two child nodes. This
+combination of tree and graph structures is simple yet effective: The main merits of this structure are as follows. (i) A set of
+objects having similar attribute values can be maintained by a graph index, i.e., attribute-based and vector-based navigation
+is simultaneously achieved. (ii) No past information is required. These properties are not held by existing techniques for
+our problem and are important to positively answer the challenging question mentioned earlier and yield a fast ANNS time
+described in Theorem 1.
+Grant construction. This construction is done only once, and the Grant is general to any query vectors and range filters.
+Let  be the base tree structure of Grant. We use a top-down tree-building approach, and the Grant is built based on the
+construction algorithm of  . We assume that it is a balanced tree.
+4</page><page num="5">Figure 1: Grant structure. Grey nodes represent leaf nodes, each of which maintains a graph index.
+Algorithm 1: Build(𝑋, 𝑐)
+Input: 𝑋, 𝑐
+1 root node of  ← Make-Node(𝑋, 𝑐)
+2 return 
+3 Function Make-Node(𝑌 , 𝑐):
+4 𝑢 ← a new node of 
+5 if |𝑌 | ≤ 𝑛/𝑐 then
+6 Build-Graph(𝑌 )
+7 return 𝑢
+8 𝑌
+𝑙
+, 𝑌
+𝑟 
+← Split(𝑌 )
+9 left child node of 𝑢 ← Make-Node(𝑌
+𝑙
+, 𝑐)
+10 right child node of 𝑢 ← Make-Node(𝑌
+𝑟 
+, 𝑐)
+11 return 𝑢
+Algorithm 1 describes the constuction algorithm. Building  is performed by Make-Node(⋅, 𝑐). Given 𝑋, we make a
+root node of  . If |𝑋| ≤ 𝑛/𝑐, it is a leaf node, and we build a graph index  based on the 𝑑-dimensional vectors in 𝑋. ( is
+an arbitrary graph index.) Otherwise, we equally split 𝑋 based on the construction algorithm of  (i.e., based on attribute
+values) to make  balanced. We then create its descendant nodes in a recursive manner.
+Proposition 1. Let 𝑓 (𝑛) be the time of splitting a given set of 𝑛 objects. Also, let 𝑔(𝑛) be the time of building a given proximity
+graph of the object set. A Grant is built in 𝑂(𝑛(1 + 𝑓 (𝑛))) + 𝑔(𝑛) time
+1
+.
+Proof. Since  is a balanced tree, the height of  is at most log 𝑐 = 𝑂(1) (recall that each leaf node can manage at most
+𝑛/𝑐 objects and 𝑐 = 𝑂(1)). In addition, the number of nodes of  is ≤ 2𝑐 − 1 = 𝑂(𝑐) = 𝑂(1). Hence,  can be built in
+𝑂(𝑛(log 𝑐 + 𝑓 (𝑛))) = 𝑂(𝑛(1 + 𝑓 (𝑛))) time. The remaining cost we need to consider is that of building a graph index in each
+leaf node. When we call Build-Graph(𝑌 ) in Algorithm 1, |𝑌 | ≤ 𝑛/𝑐. Because the number of leaf nodes is at most 𝑐 = 𝑂(1),
+the total cost of building the graph indices is 𝑔(𝑛). It is now clear that this proposition holds.
+Proposition 2 (Space complexity of a Grant). Let 𝑆(𝑛) be the space of a given proximity graph, and a Grant needs 𝑂(1) + 𝑆(𝑛)
+space.
+Proof. Recall the following three facts. (i) Each object in 𝑋 is maintained in a leaf node of  . (ii)  has 𝑂(𝑐) = 𝑂(1) nodes,
+because the Grant has 𝑐 = 𝑂(1) leaf nodes. (iii) Each graph has 𝑆(𝑛) space. Given these, this proposition is true.
+4.2 ANNS on Grant
+Algorithm 2 describes our approach to running ANNS with multi-attribute range filters on the Grant. We first run a range
+query of 𝐹 on the Grant and obtain a set of leaf nodes 𝑈 that overlap with 𝐹 . Then, for each 𝑢 ∈ 𝑈 , we run a graph-based
+ANNS algorithm and pick only objects satisfying 𝐹 . Note that each leaf node may partially overlap 𝐹 , so some objects
+maintained in a given leaf node may not satisfy 𝐹 . Figure 2 depicts an example.
+1
+As seen in Section 5, Grant is built quickly, e.g., within a few minutes on ten million objects. Hence, as long as 𝑋 is not frequently updated, rebuilding
+Grant is practical for dynamic 𝑋 (e.g., batch updates).
+5</page><page num="6">Algorithm 2: Query( , 𝐪, 𝐹 , 𝑘)
+Input:  (Grant), 𝐪, 𝐹 , 𝑘
+1 𝑆(𝐪, 𝐹 ) ← ∅
+2 𝑈 ← Range-Search( , 𝐹 )
+3 foreach 𝑢 ∈ 𝑈 do
+4 𝑆
+′ 
+← ANNS(, 𝐪, 𝑘)
+5 foreach 𝑥 ∈ 𝑆
+′ 
+such that 𝑥 satisfies 𝐹 do
+6 Update 𝑆(𝐪, 𝐹 ) if necessary
+7 return 𝑆
+One of our main results is that this approach theoretically sounds and is practically fast, as analyzed below. Note that
+̃
+𝑂(⋅) hides any polylog factors.
+Lemma 1. Let 𝑇 (𝑛) be the time of a range search on  of 𝑛 objects. Our algorithm can run in 𝑇 (𝑛) +
+̃
+ 𝑂(1) time.
+Proof. Line 2 requires 𝑇 (𝑛) time. We rely on the recent result [31], and there exists a proximity graph that deals with
+ANNS(, 𝐪, 𝑘) in
+̃
+ 𝑂(1) worst time
+2
+. Since the number leaf nodes is at most 𝑐 = 𝑂(1), |𝑈 | = 𝑂(1). Therefore, lines 3–6 need
+̃
+𝑂(1) time.
+Existing works that can deal with this problem have no time bound, but our algorithm can yield a sub-linear query time.
+Theorem 1. If we use a kd-tree as the base tree structure of a Grant, our algorithm can run in 𝑂(𝑛
+1−1/𝑚
+) time.
+Proof. A range search on a kd-tree needs 𝑂(𝑛
+1−1/𝑚 
++ OUT) time, where OUT is the result size of the range search [12].
+Then, 𝑇 (𝑛) = 𝑂(𝑛
+1−1/𝑚 
++ |𝑈 |) = 𝑂(𝑛
+1−1/𝑚
+). Note that 𝑂(𝑛
+1−1/𝑚
+) &gt;̃ 𝑂(1). From Lemma 1, this theorem holds.
+4.3 Optimizing ANNS on Grant by Heuristic
+An interesting observation of the above algorithm is that, although Theorem 1 suggests that the main cost of our algorithm
+is the range search theoretically, the main “practical” cost is derived from the graph-based ANNS of each leaf node in 𝑈 .
+It is important to notice that at most 𝑘 leaf nodes have the objects ∈ 𝑆
+∗
+(𝐪, 𝐹 ), but we may have |𝑈 | &gt; 𝑘. In this case, our
+algorithm runs graph-based ANNS on at least |𝑈 | − 𝑘 unnecessary leaf nodes. However, it is hard to know which leaf node
+has the objects ∈ 𝑆
+∗
+(𝐪, 𝐹 ) in advance. We therefore propose heuristic approaches that skip leaf nodes in 𝑈 that would not
+have the objects ∈ 𝑆
+∗
+(𝐪, 𝐹 ). Note that these heuristics are applied only when |𝑈 | &gt; 𝑂(𝑘).
+Probabilistic node verification. 
+The idea of our heuristic is to make use of an overlapping ratio between 𝐹 and each leaf
+node in 𝑈 . In Figure 2, although 𝑢
+8 
+overlaps 𝐹 , the overlapping space is very slight against the partition of 𝑢
+8 
+and 𝐹 . Hence,
+it is intuitive that 𝑢
+8 
+would not have the 𝑘NN objects, suggesting that 𝑢
+8 
+is skippable. This idea is specific to the Grant
+structure. To implement this idea, we define the overlap ratio between 𝐹 and a leaf node 𝑢.
+Definition 2. Let 𝑉 (𝐹 ) be the volume of the hyper-rectangle defined by the ranges in 𝐹 . Also, let 𝑉 (𝑢) be the volume of the
+hyper-rectangle of a node 𝑢. The overlap ratio between 𝐹 and 𝑢, 𝑟(𝐹 , 𝑢), is
+𝑟(𝐹 , 𝑢) = max 
+(
+𝑉 (𝐹 ∩ 𝑢)
+𝑉 (𝐹 ) 
+, 
+𝑉 (𝐹 ∩ 𝑢)
+𝑉 (𝑢) 
+) 
+,
+where 𝐹 ∩ 𝑢 is the overlapping space between 𝐹 and 𝑢.
+Assuming a local uniform distribution of attributes within a leaf node, the number of valid candidates 𝐸[𝑛
+𝑣𝑎𝑙𝑖𝑑 
+] is esti-
+mated as
+𝐸[𝑛
+𝑣𝑎𝑙𝑖𝑑 
+| 𝑢, 𝐹 ] ∝ 
+𝑛
+𝑐 
+⋅ 𝑟(𝐹 , 𝑢).
+Nodes with higher 𝐸[𝑛
+𝑣𝑎𝑙𝑖𝑑 
+] can be prioritized to increase the likelihood of retrieving true nearest neighbors.
+For 𝑢 ∈ 𝑈 , we have 𝑟(𝐹 , 𝑢) ∈ (0, 1], and 𝑟(𝐹 , 𝑢) is obtained in 𝑂(1) time. Because it is not guaranteed that 𝑘 leaf nodes
+with the largest overlap ratio have the 𝑘NN objects, we employ a probabilistic approach. Specifically, for each leaf node 𝑢
+in the range search result, if 𝑟(𝐹 , 𝑢) is larger than a random real value ∈ (0, 1], we run graph-based ANNS in this leaf node.
+2
+In our experiments, we used HNSW as a practical instantiation of [31] because it empirically follows similar efficiency trends [33, 40] while providing
+superior scalability and implementation simplicity for real-world deployments [47, 10, 28].
+6</page><page num="7">𝑢
+1
+𝑢
+2
+𝑢
+3
+𝑢
+4
+𝑢
+5
+𝑢
+6
+𝑢
+7
+𝑢
+8
+𝑢
+9
+𝑢
+10
+𝑢
+11
+𝑢
+12
+𝑢
+13
+𝑢
+14
+𝑢
+15
+𝑢
+16
+Figure 2: Black points represent two-dimensional attribute values of the objects in 𝑋, and each partition is maintained by
+a leaf node 𝑢
+𝑖
+. The grey rectangle shows 𝐹 , and it overlaps with 𝑢
+5
+, 𝑢
+6
+, 𝑢
+7
+, and 𝑢
+8
+, so we run graph-based ANNS on these
+leaf nodes.
+4.4 Workload-aware ANNS
+If past query vectors are available, we can enhance our proposed approach. Let 𝐩 be the nearest vector to a given query
+vector 𝐪 among a set of past query vectors
+3
+. Furthermore, let 𝑑𝑖𝑠𝑡(𝐩, 𝑢
+𝑖
+) be the distance between 𝐩 and the nearest neighbor
+vector in the leaf node 𝑢
+𝑖 
+of the Grant. For ease of explanation, assume that 𝑑𝑖𝑠𝑡(𝐩, 𝑢
+1
+) &lt; 𝑑𝑖𝑠𝑡(𝐩, 𝑢
+2
+) &lt; ⋯ 𝑑𝑖𝑠𝑡(𝐩, 𝑢
+𝑐
+).
+Assuming that 𝑘 = 2 and 𝐹 overlaps with 10 leaf nodes, 𝑢
+1
+, 𝑢
+2
+, ..., and 𝑢
+10
+, it is intuitively known that running ANNS of 𝐪
+in 𝑢
+1 
+and 𝑢
+2 
+is sufficient to obtain the objects ∈ 𝑆
+∗
+(𝐪, 𝐹 ). This is because, if 𝑑𝑖𝑠𝑡(𝐩, 𝐪) is small, 𝐩 and 𝐪 share similar ANNS
+results. This idea also skips ANNS on unnecessary nodes and enables accessing only 𝑂(𝑘) leaf nodes while keeping high
+recall.
+Additional pre-processing. Let 𝐏 be a set of past query vectors, and it is maintained based on a graph index 
+𝐏
+. Addi-
+tionally, for each past query vector 𝐩 ∈ 𝐏, we run ANNS on each leaf node 𝑢 of the Grant. Let 𝑥 be the object obtained for
+the ANNS, and we record 𝑑𝑖𝑠𝑡(𝐩, 𝐯). We use a matrix  to maintain such a record:
+ =
+⎛
+⎜
+⎜
+⎝
+𝑑𝑖𝑠𝑡(𝐩
+1
+, 𝐯
+𝛼 
+) ⋯ 𝑑𝑖𝑠𝑡(𝐩
+1
+, 𝐯
+𝛽 
+)
+⋮ ⋱ ⋮
+𝑑𝑖𝑠𝑡(𝐩
+𝑐
+, 𝐯
+𝛾 
+) ⋯ 𝑑𝑖𝑠𝑡(𝐩
+𝑐
+, 𝐯
+𝜙
+)
+⎞
+⎟
+⎟
+⎠
+where the 𝑖-th row 𝑗-th column is the ANN result of 𝐩
+𝑖 
+in the leaf node 𝑢
+𝑗 
+. This is done after running building Grant. Note
+that this additional pre-processing is also done only once.
+When an HNSW is used as the index of 𝐏 such that |𝐏| ≤ 𝑛, the additional pre-processing time is
+̃
+ 𝑂(|𝐏|𝑛). This is because
+building an HNSW of 𝐏 needs 𝑂(|𝐏| log |𝐏|) time [33] and obtaining  requires 𝑂(|𝐏|𝑐) = 𝑂(|𝐏|) time. Similarly, its space
+complexity is 𝑂(|𝐏|𝑛). (To reduce the time and space complexities, we can randomly sample past queries.)
+Query processing. Algorithm 3 presents our algorithm for ANNS with multi-attribute range filters on Grant with 
+𝑃 
+and
+. Its main difference from Algorithm 2 is to exploit a past query vector that is similar to a given query vector 𝐪. We
+obtain a set 𝑈 
+′ 
+of leaf nodes that overlap 𝐹 . If |𝑈 
+′
+| is large, we compute 𝐩
+𝑖
+, which is an ANN vector to 𝐪 in 𝐏, by running
+graph-based ANN on 
+𝐏
+. Then, we pick only 𝑂(𝑘) leaf nodes in 𝑈 
+′ 
+such that 𝑑𝑖𝑠𝑡(𝐩
+𝑖
+, ⋅) is the smallest. The subsequent
+operations are the same as our original query processing algorithm. This is an optional workload-aware optimization that
+can be applied on top of Grant when past query vectors are available.
+3
+This is a different assumption from that of [34, 29], since they assume that not past query vectors but past query filters are available. Our assumption
+is easier to hold: for example, we can use the vectors in 𝑋 as past query vectors.
+7</page><page num="8">Algorithm 3: Query( , 
+𝐏
+, , 𝐪, 𝐹 , 𝑘)
+Input:  (Grant), 
+𝐏
+, , 𝐪, 𝐹 , 𝑘
+1 𝑆(𝐪, 𝐹 ) ← ∅
+2 𝑈 , 𝑈 
+′ 
+← Range-Search( , 𝐹 )
+3 if |𝑈 
+′
+| &gt; 𝑂(𝑘) then
+4 𝐩
+𝑖 
+← ANNS(
+𝐏
+, 𝐪, 1)
+5 𝑈 ← 𝑂(𝑘) nodes in 𝑈 
+′ 
+such that 𝑑𝑖𝑠𝑡(𝐩
+𝑖
+, ⋅) (in [𝑖]) is the smallest
+6 Run lines 3–6 of Algorithm 2
+7 return 𝑆
+5 Experiment
+All experiments were conducted on a Ubuntu 22.04 LTS machine with a 2.2GHz Intel Core i9-13950HX processor and 128GB
+RAM.
+5.1 Setting
+Datasets. 
+We used four datasets commonly used in ANNS works: Deep [11], SIFT (http://corpus-texmex.irisa.
+fr/), SPACEV [14], and T2 (https://big-ann-benchmarks.com/neurips21.html). They are large-scale
+and contain 10 million vectors. Deep is a set of 96-dimensional deep features, and SIFT is a set of 128-dimensional SIFT
+features. SPACEV is a set of 100-dimensional learned document vectors, and T2I is a set of 200-dimensional vectors learned
+from the Yandex visual search engine results. We followed the existing filtered ANNS works [34, 50, 46, 29] to provide
+each object with attribute values, and the attribute values follow a power-law distribution [20], which reflects real-world
+scenarios [39]. By default, 𝑚 = 2.
+Queries. 
+For each dataset, we used 100 random query vectors that can be obtained from the same source of the dataset.
+Given a query vector 𝐪, to generate query range filters 𝐹 , we first assigned a random value, which also follows the same
+power-law distribution of the attribute domain, to 𝑙
+𝑗 
+for each 𝑗 ∈ [1, 𝑚]. Then, 𝑢
+𝑗 
+= 𝑙
+𝑗 
++ 𝜆× domain size, where 𝜆 ∈ [0.2, 0.8].
+By default, 𝜆 = 0.2 and 𝑘 = 10. In this default setting, the average selectivity (i.e., the ratio of the objects satisfying the
+range filter) was 0.15.
+Evaluated algorithms. 
+For algorithms that do not require past query workloads, we evaluated the following ones:
+• BF: A brute-force exact algorithm.
+• Pre-filter: This algorithm employs a kd-tree based on the attribute values of the objects in 𝑋. Given a query, it first
+traverses the kd-tree based on the query range filters and obtains a set of objects that satisfy the range filters. Then, it
+runs a linear scan of this set to return the 𝑘NN vectors, so this algorithm also returns the exact answer. This algorithm
+actually corresponds Milvus [46]. Navix [41] also follows this approach but returns an approximate result. We tested
+Navix, but its performance was worse than the exact version of Pre-filter, so we omit its result.
+• IVF: An ANNS algorithm that is based on an inverted file structure. This approach is widely employed in the state-of-
+the-art ANNS systems [46, 50, 34].
+• Post-filter: The baseline algorithm introduced in Section 2. We used HNSW [33] as its ANNS index. This algorithm
+actually corresponds to SIEVE [29] without past query filters (see Section 3) and VBase [57].
+• ACORN: The baseline algorithm introduced in Section 2. Because ACORN-𝛾 [37] could not be built in a reasonable time
+(i.e., 1 hour), we used ACORN-1.
+• Grant-basic: Our algorithm described in Section 4.2. We used a kd-tree as the base tree structure, and each leaf node
+maintains the corresponding objects by HNSW. This setting was applied to the next algorithms. We set 𝑐 = 150 (see our
+supplementary).
+• Grant-pnv: Our algorithm with the probabilistic node verification heuristic.
+For algorithms that require past query workloads, we evaluated
+• WA-Grant: Our algorithm that exploits past query vectors, see Section 4.4. For each dataset, we randomly sampled 1,000
+vectors and added Gaussian noise to them. We used them as past query vectors, and they were also indexed by an HNSW.
+8</page><page num="9">0
+200
+400
+600
+800
+1000
+c (SIFT)
+QPS
+&lt; 76 150 300 450
+(a) SIFT
+0
+50
+100
+150
+200
+250
+300
+350
+c (SPACEV)
+QPS
+&lt; 76 150 300 450
+ (b) SPACEV
+Figure 3: Impact of 𝑐 under recall ≈ 0.9
+• SIEVE [29]: the state-of-the-art algorithm for ANNS with range filter on multiple attributes. To maximize performance,
+we used the same query filters as past ones (although it is impractical). Because this algorithm requires a memory budget,
+we set it so that its memory usage is almost the same as WA-Grant for fair comparison.
+All algorithms were implemented in C++ and compiled by g++ 11.3.0 with -O3 optimization. They enabled SIMD instruc-
+tions.
+For the algorithms using HNSW, we used the original implementation
+4
+. We tuned the inner parameters to obtain a
+Pareto-optimal QPS-recall tradeoff. For HNSW, we did a grid search from 𝑀 = {8, 16, 32, 64, 128} and 𝑒𝑓
+𝑐𝑜𝑛𝑠𝑡𝑟𝑢𝑐𝑡𝑖𝑜𝑛 
+=
+{32, 64, 100, 200, 300}. As a result, we set 𝑀 = 64 and 𝑒𝑓
+𝑐𝑜𝑛𝑠𝑡𝑟𝑢𝑐𝑡𝑖𝑜𝑛 
+= 200 for the baselines, whereas we set 𝑀 = 16 and
+𝑒𝑓
+𝑐𝑜𝑛𝑠𝑡𝑟𝑢𝑐𝑡𝑖𝑜𝑛 
+= 64 for Grant. (Since each leaf node has at most 𝑛/𝑐 &lt; 𝑛 vectors, each HNSW in Grant has smaller parameter
+values.) For IVF, we used 1,000 clusters.
+We did not consider works that assume matching filters on multiple attributes [20, 48], as they are not trivial to efficiently
+address our problem. A straightforward extension of matching filter techniques to range filters requires discretizing each
+continuous range into a very large number of (in principle, infinitely many) equality predicates, which is impractical.
+5.2 Result
+We first report the performances of the algorithms that do not require past query workloads. For indexing time, memory
+usage, impact of 𝑐, impact of 𝑘, impact of 𝑚, and impact of range size, refer to our supplementary.
+Impact of 𝑐. 
+We tuned 𝑐 for Grant, and Figure 3 shows QPS (queries per second) under recall ≈ 0.9 on SIFT and SPACEV.
+Note that (i) we have similar results on Deep and T2I and (ii) the “&lt; 76” case shows the best result when 𝑐 ≤ 75.
+Although Grant is not very sensitive to 𝑐, it has an optimal 𝑐. When 𝑐 is large, we have many leaf nodes overlapping 𝐹 ,
+so it incurs many ANNSs. On the other hand, when 𝑐 is small, we have fewer leaf nodes overlapping 𝐹 but have a larger
+number of objects that do not satisfy 𝐹 . These observations yield the results in Figure 3.
+Indexing time. 
+Table 2 shows the indexing time of each algorithm. (Since BF does not employ any data structure, it is
+omitted.) This phase used 24 threads. Grant-basic and Grant-pnv share the same data structure, so their indexing time is
+represented by Grant. Since Pre-filter employs a single tree structure based only on attributes, it needs a shorter indexing
+time than the others.
+Although Grant employs tree and graph structures, its indexing time is at most just 1.5 minutes for 10 million high-
+dimensional vectors. An interesting observation is that Grant needs shorter indexing time than IVF, Post-filter, and ACORN.
+Memory consumption. 
+Table 3 exhibits the memory consumption of the data structure of each algorithm. Because of the
+graph-based indices, Post-filter and our algorithm needs more memory than Pre-filter and IVF. Nonetheless, our algorithm
+does not consume much memory, and only less than about 10GB is required for 10 million high-dimensional vectors, which
+is easy to fit into modern servers. (ACORN employs a graph index that is essentially HNSW, so its memory consumption is
+almost the same as Post-filter.)
+QPS vs. recall. 
+We compare our algorithms with the baseline ones w.r.t. time and accuracy tradeoff. Figure 4 plots the QPS
+vs. recall curve of each algorithm. Note that QPS and recall were the averages of the results of the 100 queries. We used a
+single thread for each query.
+4
+https://github.com/nmslib/hnswlib
+9</page><page num="11">0.7 0.75 0.8 0.85 0.9 0.95 1
+10
+1
+10
+2
+10
+3
+10
+4
+Recall@10 (Deep)
+QPS
+(a) Deep
+0.6 0.65 0.7 0.75 0.8 0.85 0.9 0.95 1
+10
+1
+10
+2
+10
+3
+10
+4
+Recall@10 (SIFT)
+QPS
+ (b) SIFT
+0.65 0.7 0.75 0.8 0.85 0.9 0.95 1
+10
+1
+10
+2
+10
+3
+10
+4
+Recall@10 (SPACEV)
+QPS
+ (c) SPACEV
+0.65 0.7 0.75 0.8 0.85 0.9 0.95 1
+10
+1
+10
+2
+10
+3
+10
+4
+Recall@10 (T2I)
+QPS
+ (d) T2I
+Figure 5: QPS vs. recall@10. “▽” shows SIEVE and “∗” shows WA-Grant.
+traversal based on past query vectors is effective. Note that the performance of WA-Grant is better than that of Grant-pnv
+(more than 2 times faster at recall@10 = 0.9), confirming that Grant can be accelerated by using past query vectors. (This
+observation can be seen by comparing the results in Figures 4 and 5.)
+6 Conclusion
+This paper addressed the problem of ANNS with multi-attribute range filters and proposed Grant, a new data structure
+that solves this problem efficiently. Our theoretical analysis proves the efficiency of Grant. In addition, we proposed two
+heuristics that optimized the query processing performance of Grant. Our experiments demonstrate that Grant outperforms
+the existing state-of-the-art techniques.
+Limitation. This work considers a static dataset, and how to efficiently deal with dynamic data (i.e., vector insertions and
+deletions) is an open problem. In addition, this work assumes that 𝑚 is small because real-world datasets have this tendency
+(e.g., price, rating, and date), and it is highly unlikely that ranges are specified for many attributes. If this assumption does
+not hold, the Grant structure may not be efficient because the tree structure is efficient only when 𝑚 (or dimensionality) is
+small (although, due to the curse of dimensionality, it is common to degrade the performance of a given algorithm for large
+𝑚).
+Acknowledgment. We thank Dr. Yusuke Matsui for his useful comments, which improved the presentation of this paper.
+A Additional Experiments
+Impact of 𝑘. 
+Figure 6 illustrates the result under recall ≈ 0.9. We omit Grant-basic because Grant-pnv is always better. The
+QPS of Grant-pnv decreases as 𝑘 increases. Nevertheless, it is much better than the existing algorithms. BF, Pre-filter, and
+IVF are not affected by 𝑘 because they access all objects in 𝑋, all objects in a result set of the range search, and all objects in
+the corresponding posting lists, respectively. As 𝑘 becomes larger, the QPS of Post-filter becomes very low (e.g., less than
+40 for 𝑘 = 50) because Post-filter needs to iterate more ANNS. ACORN failed to obtain nearly 0.9 recall (so it does not have
+plots) when 𝑘 ≥ 20, because its graph traversal approach loses the path to reach the exact 𝑘NN objects.
+Impact of 𝑚. 
+We next study the impact of the number of attributes 𝑚. Figure 7 shows that our algorithm keeps outper-
+forming the other ones. Recall the time complexity of our algorithm, and its empirical performance follows the theoretical
+result. We see that Post-filter and Pre-filter have the opposite tendency. Post-filter is very sensitive to 𝑚, whereas Pre-filter
+improves its efficiency with a larger 𝑚. This is because a larger 𝑚 usually yields a smaller range search result set. ACORN
+again failed to obtain nearly 0.9 recall when 𝑚 ≥ 3. These results demonstrate that ACORN is not appropriate for our
+problem.
+Impact of range size. 
+To investigate the impact of range size (i.e., |𝑋(𝐹 )|), we ran experiments by varying 𝜆. Figure 8
+exhibits the robustness of our algorithm against range size. This robustness is attributed to their unnecessary leaf node
+skipping heuristics. A larger range size provides a larger 𝑋(𝐹 ), so the performance of Pre-filter (Post-filter) becomes lower
+(higher) as 𝜆 becomes larger. The performance of Post-filter did not reach that of our algorithm even when 𝜆 is large.
+11</page><page num="12">10 20 30 40 50
+10
+0
+10
+1
+10
+2
+10
+3
+10
+4
+k (Deep)
+QPS
+(a) Deep
+10 20 30 40 50
+10
+0
+10
+1
+10
+2
+10
+3
+10
+4
+k (SIFT)
+QPS
+ (b) SIFT
+10 20 30 40 50
+10
+0
+10
+1
+10
+2
+10
+3
+k (SPACEV)
+QPS
+ (c) SPACEV
+10 20 30 40 50
+10
+0
+10
+1
+10
+2
+10
+3
+k (T2I)
+QPS
+ (d) T2I
+Figure 6: Impact of 𝑘 under recall ≈ 0.9. “⋄” shows BF, “△” shows Pre-filter, “□” shows IVF, “×” shows Post-filter, “◦” shows
+ACORN, and “+” shows Grant-pnv.
+2 3 4
+10
+0
+10
+1
+10
+2
+10
+3
+10
+4
+#attributes (Deep)
+QPS
+(a) Deep
+2 3 4
+10
+0
+10
+1
+10
+2
+10
+3
+10
+4
+#attributes (SIFT)
+QPS
+ (b) SIFT
+2 3 4
+10
+0
+10
+1
+10
+2
+10
+3
+#attributes (SPACEV)
+QPS
+ (c) SPACEV
+2 3 4
+10
+0
+10
+1
+10
+2
+10
+3
+#attributes (T2I)
+QPS
+ (d) T2I
+Figure 7: Impact of the number of attributes under recall ≈ 0.9. “⋄” shows BF, “△” shows Pre-filter, “□” shows IVF, “×”
+shows Post-filter, “◦” shows ACORN, and “+” shows Grant-pnv.
+0.2 0.4 0.6 0.8
+10
+0
+10
+1
+10
+2
+10
+3
+10
+4
+Range size (Deep)
+QPS
+(a) Deep
+0.2 0.4 0.6 0.8
+10
+0
+10
+1
+10
+2
+10
+3
+10
+4
+Range size (SIFT)
+QPS
+ (b) SIFT
+0.2 0.4 0.6 0.8
+10
+0
+10
+1
+10
+2
+10
+3
+Range size (SPACEV)
+QPS
+ (c) SPACEV
+0.2 0.4 0.6 0.8
+10
+0
+10
+1
+10
+2
+10
+3
+Range size (T2I)
+QPS
+ (d) T2I
+Figure 8: Impact of range size under recall ≈ 0.9. “⋄” shows BF, “△” shows Pre-filter, “□” shows IVF, “×” shows Post-filter,
+“◦” shows ACORN, and “+” shows Grant-pnv.
+References
+[1] D. Amagata and T. Hara. Reverse maximum inner product search: How to efficiently find users who would like to buy
+my item? In RecSys, pages 273–281, 2021.
+[2] D. Amagata and T. Hara. Reverse maximum inner product search: Formulation, algorithms, and analysis. ACM
+Transactions on the Web, 17(4):1–23, 2023.
+[3] D. Amagata, M. Onizuka, and T. Hara. Fast and exact outlier detection in metric spaces: a proximity graph-based
+approach. In SIGMOD, pages 36–48, 2021.
+[4] D. Amagata, M. Onizuka, and T. Hara. Fast, exact, and parallel-friendly outlier detection algorithms with proximity
+graph in metric spaces. The VLDB Journal, 31(4):797–821, 2022.
+[5] D. Amagata, K. Aoyama, K. Kido, and S. Fujita. Approximate reverse k-ranks queries in high dimensions. In SSDBM,
+pages 1–6, 2025.
+12</page></paper>

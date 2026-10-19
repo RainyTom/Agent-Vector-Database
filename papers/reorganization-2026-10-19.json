@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-19",
+  "reason": "Separate primary paper topics from vector-join relevance levels",
+  "moves": {
+    "papers/vector-join/1806.03313-streaming-join-size-estimation": "papers/similarity-join/1806.03313-streaming-join-size-estimation",
+    "papers/vector-join/2403.04871-acorn": "papers/filtered-ann/2403.04871-acorn",
+    "papers/vector-join/2409.02571-irangegraph": "papers/filtered-ann/2409.02571-irangegraph",
+    "papers/vector-join/2601.01291-curator": "papers/filtered-ann/2601.01291-curator",
+    "papers/vector-join/2609.15058-lssg": "papers/filtered-ann/2609.15058-lssg",
+    "papers/vector-join/2607.00727-graph-range-filters": "papers/filtered-ann/2607.00727-graph-range-filters",
+    "papers/vector-join/2610.11563-grant": "papers/filtered-ann/2610.11563-grant",
+    "papers/vector-join/2609.38053-vader": "papers/filtered-ann/2609.38053-vader",
+    "papers/vector-join/2505.03212-eli": "papers/filtered-ann/2505.03212-eli",
+    "papers/vector-join/10.1145-3543507.3583552-filtered-diskann": "papers/filtered-ann/10.1145-3543507.3583552-filtered-diskann",
+    "papers/vector-join/10.1109-ICDE65448.2025.00272-tag-filtered-ann": "papers/filtered-ann/10.1109-ICDE65448.2025.00272-tag-filtered-ann",
+    "papers/vector-join/10.1145-3725349-rwalks": "papers/filtered-ann/10.1145-3725349-rwalks",
+    "papers/vector-join/2606.16903-directory-aware": "papers/prefix-vector-search/2606.16903-directory-aware",
+    "papers/vector-join/papers.jsonl": "papers/papers.jsonl",
+    "papers/vector-join/relations.jsonl": "papers/relations.jsonl",
+    "papers/vector-join/changelog.md": "papers/changelog.md"
+  },
+  "paper_counts": {
+    "filtered-ann": 11,
+    "prefix-vector-search": 1,
+    "similarity-join": 1,
+    "vector-join": 7
+  },
+  "binary_files_hash_verified": 147,
+  "catalog": "papers/papers.jsonl",
+  "relations": "papers/relations.jsonl"
+}

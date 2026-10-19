@@ -1,0 +1,64 @@
+# 论文库
+
+论文按其自身研究问题归档，总索引支持跨主题查重、检索和关系追踪。相对项目主线的“可迁移借鉴”不再决定物理存放位置。
+
+| 主主题 | 数量 | 内容与入口 |
+|---|---:|---|
+| vector-join | 7 | [几何向量连接](vector-join/README.md)：执行、复杂性、基数估计 |
+| filtered-ann | 12 | [过滤 ANN](filtered-ann/README.md)：标签、范围、共享结构、召回控制 |
+| prefix-vector-search | 1 | [前缀与目录检索](prefix-vector-search/README.md)：Directory-Aware/TrieHI |
+| similarity-join | 1 | [一般相似连接](similarity-join/README.md)：多字段 equality/Hamming 等相邻问题 |
+
+总计 **21 篇论文、22 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+
+```text
+papers/
+├── README.md
+├── papers.jsonl
+├── relations.jsonl
+├── changelog.md
+├── vector-join/<id>-<slug>/
+├── filtered-ann/<id>-<slug>/
+├── prefix-vector-search/<id>-<slug>/
+└── similarity-join/<id>-<slug>/
+```
+
+`paper.pdf` 是原始全文，`paper.md` 是文本提取，`paper.report.md` 是阅读报告。保留原有版本、日期化元数据、图片与 MinerU 产物，不因主题迁移改写论文身份。原有 8 篇有 MinerU 产物，其余 13 篇为 PyMuPDF 文本；不能将所有文本都称为 MinerU 转换。
+
+UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入 21 篇全文记录。获取受限与理论未提供是两种不同状态。
+
+2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
+
+## 索引字段与核实状态
+
+`papers.jsonl` 一行一个 JSON 对象，`schema_version=1`。相同工作按正式 DOI（优先）或 arXiv ID 合并，`aliases` 保留预印本 ID；稳定目录名无需随标题/发表年份变化。
+
+| 字段 | 内容 |
+|---|---|
+| `id`, `aliases` | 唯一键与去重别名 |
+| `title`, `authors`, `year`, `preprint_year`, `venue` | 正式书目与预印本年份，完整作者顺序 |
+| `version_status`, `versions` | 发表状态、实际分析版本、正式稿与早期稿链接及差异待办 |
+| `links` | 论文/全文/预印本/代码/数据链接，未核实链接的状态 |
+| `topic`, `tags`, `relevance` | 主研究主题、细分标签、相对 vector join 的 A/B/C 相关性；三者分开 |
+| `problem`, `join_type`, `metrics`, `data_assumptions` | 输入输出、pair 计数、self/cross、threshold/top-k、精确/近似、属性过滤、度量/假设 |
+| `method`, `guarantees` | 方法/组件、理论/复杂度/误差；“未提供”区别于“未核实” |
+| `experiments`, `limitations` | 数据、基线、指标、原文结果及适用边界 |
+| `related_work`, `project_insights` | 前序/比较/后续与项目可复用点 |
+| `evidence`, `verification`, `local_dir` | 证据版本/章节/链接、本轮日期与未核事项、本地材料 |
+
+`relations.jsonl` 使用 `source → target`：例如后续方法 → 前序方法，比较论文 → baseline。`basis=paper_explicit` 是原文明确关系；`researcher_synthesis` 是研究者类比或组合假设，不当作作者引用。
+
+书目核实不表示所有算法保证与实验都已精读。当前记录来自本轮相关章节核对；正式稿与本地预印本的逐项差异、未核数据与官方代码链接留在 `verification.open_items`/`links` 中。旧 `metadata.json` 保留历史抓取快照，当前书目信息以注明日期的索引为准。
+
+## 检索与维护
+
+从项目根目录运行：
+
+```bash
+python tools/research_index.py search 'SSD' --topic vector-join
+python tools/research_index.py search 'containment' --topic filtered-ann --json
+python tools/research_index.py validate
+```
+
+更新顺序：查重 → 核实书目/版本 → 核对正文证据 → 更新论文与关系 → 修订综述/研究假设 → 写 changelog 与 search-log → 验证标识符和路径。验证脚本检查结构和本地引用完整性，不自动判断论文事实正确性。
+

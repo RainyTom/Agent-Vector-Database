@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "id": "doi:10.14778/3785297.3785304",
+  "aliases": [
+    "arxiv:2505.03212",
+    "arxiv:2505.03212v1",
+    "arxiv:2505.03212v2",
+    "ELI"
+  ],
+  "title": "Elastic Index Selection for Label-Hybrid AKNN Search",
+  "authors": [
+    "Mingyu Yang",
+    "Wenxuan Xia",
+    "Wentao Li",
+    "Raymond Chi-Wing Wong",
+    "Wei Wang"
+  ],
+  "year": 2025,
+  "preprint_year": 2025,
+  "venue": "Proceedings of the VLDB Endowment 19(4):617–630 (2025); VLDB 2026",
+  "version_status": "正式首页与 Crossref print=2025-12-01；online=2026-03-18 分开记录；相关附录阅读 arXiv v2 (2025-12-11)",
+  "versions": [
+    {
+      "kind": "analyzed_preprint",
+      "identifier": "2505.03212v2",
+      "url": "https://arxiv.org/pdf/2505.03212v2",
+      "local_pdf": "papers/filtered-ann/2505.03212-eli/paper.pdf",
+      "note": "18 页，A.2/A.3 overlap 在 PDF p.16"
+    },
+    {
+      "kind": "published",
+      "identifier": "10.14778/3785297.3785304",
+      "url": "https://www.vldb.org/pvldb/vol19/p617-yang.pdf",
+      "local_pdf": "papers/filtered-ann/2505.03212-eli/published-2025.pdf",
+      "note": "14 页；首页 PVLDB citation 年份 2025，非将附录归入正式稿"
+    }
+  ],
+  "links": {
+    "paper": "https://doi.org/10.14778/3785297.3785304",
+    "preprint": "https://arxiv.org/abs/2505.03212",
+    "full_text": "https://arxiv.org/pdf/2505.03212v2",
+    "code": [
+      "https://github.com/mingyu-hkustgz/LabelANN"
+    ],
+    "code_status": "论文首页提供，未运行或核对 overlap 实现",
+    "datasets": [],
+    "dataset_link_status": "正文名称已核，下载和许可未核实"
+  },
+  "tags": [
+    "filtered-ANN",
+    "containment",
+    "overlap-extension",
+    "index-selection",
+    "elastic-factor",
+    "memory-budget"
+  ],
+  "relevance": {
+    "level": "B",
+    "role": "可迁移借鉴：标签过滤索引选择、复用及空间模型；单查询 ANN 非 join"
+  },
+  "problem": {
+    "input": "向量、对象标签集合、查询向量/标签集合/k及物化预算",
+    "output": "主问题 containment AKNN；附录扩展 overlap/equality",
+    "pair_convention": "不同对象 top-k，不是 pair 枚举；本项目需核实现去重/空结果规则"
+  },
+  "join_type": {
+    "sets": [
+      "不适用：单查询 filtered ANN"
+    ],
+    "selection": [
+      "per-query-top-k"
+    ],
+    "accuracy": "approximate",
+    "attribute_filter": "主问题 Lq⊆Li；overlap 附录拆 singleton containment 后合并"
+  },
+  "metrics": [
+    "L2 示例；逐数据归一化与实际实现待对齐"
+  ],
+  "data_assumptions": [
+    "查询标签工作负载驱动物化选择",
+    "期望成本界假设标签/向量位置独立、匹配均匀及后续邻居摊销常数枚举"
+  ],
+  "method": [
+    "按包含关系选择性物化 query-label 子索引",
+    "elastic factor 为可行集/覆盖索引成员数",
+    "greedy fixed-efficiency 与 space-constrained 选择",
+    "实验采用 HNSW；overlap 拆为每标签一条 containment 查询"
+  ],
+  "guarantees": {
+    "theory": "§3.3 Theorem 3.4：EIS 决策 NP-complete；不自动适用于 taxonomy overlap 子类",
+    "complexity": "§3.1 Lemma 3.2 与 A.1：带假设的期望 O(C+k/c)，不是最坏界；索引空间以成员数近似且 top index 增量成本置零",
+    "error": "未提供本项目所需的任意分布端到端 Recall@k 下界；greedy 非全局最优"
+  },
+  "experiments": {
+    "datasets": [
+      "SIFT",
+      "MSMARCO",
+      "LAION",
+      "OpenAI-1536",
+      "PAPER",
+      "TripClick",
+      "Arxiv",
+      "DEEP 100M"
+    ],
+    "baselines": [
+      "UNG",
+      "ACORN-1",
+      "ACORN-γ",
+      "brute force"
+    ],
+    "evaluation_metrics": [
+      "QPS",
+      "Recall@10/20",
+      "index size",
+      "build time",
+      "updates"
+    ],
+    "main_results": [
+      "v2 A.3 Exp-7 Fig.14：SIFT/PAPER overlap；作者报告与 ACORN-γ 接近、比 ACORN/UNG 高 2–10 倍；非 taxonomy 结果"
+    ],
+    "result_status": "相关章节核对，未独立复现；正式稿与附录分开"
+  },
+  "limitations": [
+    "overlap 未纳入其核心 index-selection 优化工作负载，作者列未来扩展",
+    "期望界依赖分布/枚举假设",
+    "实际字节与总全局索引不能由其成员预算直接推出",
+    "并行/共享/标签密度影响多路代价，不能断言线性随标签数增长"
+  ],
+  "related_work": [
+    "LSSG §6 以 ELI 为 baseline；本轮新增原文关系",
+    "作者 future work：v2 A.3 直接优化 overlap 与复杂条件"
+  ],
+  "project_insights": [
+    "强对照必须同时含 flat overlap 与 ancestor-expanded overlap",
+    "不同对象合并不等于平均桶 recall",
+    "先固定总内存和端到端成本再评测紧凑谓词收益"
+  ],
+  "evidence": [
+    {
+      "kind": "full_text_sections",
+      "version": "2505.03212v2",
+      "local_path": "papers/filtered-ann/2505.03212-eli/paper.md",
+      "url": "https://arxiv.org/pdf/2505.03212v2",
+      "sections": [
+        "2.1",
+        "3.1 Lemma 3.2",
+        "3.2–3.3",
+        "4",
+        "5",
+        "A.1",
+        "A.2",
+        "A.3 Exp-7 Fig.14"
+      ],
+      "pdf_pages": [
+        "3",
+        "5–9",
+        "15–16"
+      ]
+    },
+    {
+      "kind": "published_first_page",
+      "local_path": "papers/filtered-ann/2505.03212-eli/published-2025.md",
+      "url": "https://www.vldb.org/pvldb/vol19/p617-yang.pdf",
+      "pdf_pages": [
+        "1"
+      ]
+    },
+    {
+      "kind": "bibliography",
+      "local_path": "researches/nested-attr-vector-search/evidence/crossref-eli-2026-10-18.json",
+      "url": "https://api.crossref.org/works/10.14778/3785297.3785304"
+    }
+  ],
+  "verification": {
+    "date": "2026-10-18",
+    "reading_status": "相关定义、理论假设、附录 overlap/实验精读，非全文逐段复核",
+    "bibliography_status": "作者/正式引用年/DOI已核，print/online 分开",
+    "open_items": [
+      "完整版本差异",
+      "官方实现 overlap 去重与边界查询",
+      "硬件与全部数据预处理",
+      "taxonomy workload 复现"
+    ]
+  },
+  "local_dir": "papers/filtered-ann/2505.03212-eli"
+}

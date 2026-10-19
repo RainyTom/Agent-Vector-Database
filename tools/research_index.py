@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
-"""Search and check the local vector join bibliography using only the stdlib."""
+"""Search and check the topic-organized research bibliography."""
 import argparse
 import json
 from pathlib import Path
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
-CATALOG = ROOT / "papers/vector-join"
+CATALOG = ROOT / "papers"
+TOPICS = ("vector-join", "filtered-ann", "prefix-vector-search", "similarity-join")
 REQUIRED = {
     "id", "aliases", "title", "authors", "year", "venue", "version_status",
     "versions", "links", "tags", "relevance", "problem", "join_type", "metrics",
     "data_assumptions", "method", "guarantees", "experiments", "limitations",
-    "related_work", "project_insights", "evidence", "verification", "local_dir",
+    "related_work", "project_insights", "evidence", "verification", "local_dir", "topic",
 }
 
 
@@ -46,6 +47,10 @@ def validate(papers):
             seen[alias] = row["id"]
         if row["relevance"]["level"] not in {"A", "B", "C"}:
             raise ValueError(f"{row['id']}: invalid relevance")
+        if row["topic"] not in TOPICS:
+            raise ValueError(f"{row['id']}: invalid topic")
+        if Path(row["local_dir"]).parent != Path("papers") / row["topic"]:
+            raise ValueError(f"{row['id']}: local_dir does not match topic")
         if not row["evidence"] or not row["authors"] or not row["versions"]:
             raise ValueError(f"{row['id']}: empty evidence/authors/versions")
         if not (ROOT / row["local_dir"] / "paper.md").is_file():
@@ -53,6 +58,9 @@ def validate(papers):
         for evidence in row["evidence"]:
             if "local_path" in evidence and not (ROOT / evidence["local_path"]).is_file():
                 raise ValueError(f"{row['id']}: missing evidence file")
+        for version in row["versions"]:
+            if "local_pdf" in version and not (ROOT / version["local_pdf"]).is_file():
+                raise ValueError(f"{row['id']}: missing version PDF")
     ids = {row["id"] for row in papers}
     relations = read_jsonl("relations.jsonl")
     keys = set()
@@ -64,6 +72,12 @@ def validate(papers):
         key = (edge["source"], edge["target"], edge["type"])
         if key in keys or not edge["evidence"]:
             raise ValueError(f"duplicate or unsupported relation: {key}")
+        evidence_items = edge["evidence"]
+        if isinstance(evidence_items, dict):
+            evidence_items = [evidence_items]
+        for evidence in evidence_items:
+            if "local_path" in evidence and not (ROOT / evidence["local_path"]).is_file():
+                raise ValueError(f"relation missing evidence file: {key}")
         keys.add(key)
     print(f"OK: {len(papers)} papers, {len(relations)} relations; identifiers and local evidence paths checked.")
 
@@ -73,6 +87,7 @@ def main():
     parser.add_argument("command", choices=["search", "validate"])
     parser.add_argument("query", nargs="?", default="")
     parser.add_argument("--level", choices=["A", "B", "C"])
+    parser.add_argument("--topic", choices=TOPICS, help="Paper's primary research topic")
     parser.add_argument("--json", action="store_true", help="Print complete JSONL records")
     args = parser.parse_args()
     try:
@@ -82,6 +97,8 @@ def main():
             return
         matches = 0
         for row in papers:
+            if args.topic and row["topic"] != args.topic:
+                continue
             if args.level and row["relevance"]["level"] != args.level:
                 continue
             if args.query.casefold() not in json.dumps(row, ensure_ascii=False).casefold():

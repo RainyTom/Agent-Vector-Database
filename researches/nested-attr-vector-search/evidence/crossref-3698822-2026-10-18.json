@@ -1,0 +1,95 @@
+{
+  "DOI": "10.1145/3698822",
+  "title": [
+    "Navigating Labels and Vectors: A Unified Approach to Filtered Approximate Nearest Neighbor Search"
+  ],
+  "author": [
+    {
+      "ORCID": "https://orcid.org/0009-0006-7096-5328",
+      "authenticated-orcid": false,
+      "given": "Yuzheng",
+      "family": "Cai",
+      "sequence": "first",
+      "affiliation": [
+        {
+          "name": "Fudan University, Shanghai, CN"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0005-6459-4180",
+      "authenticated-orcid": false,
+      "given": "Jiayang",
+      "family": "Shi",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Fudan University, Shanghai, CN"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0009-0002-4931-1259",
+      "authenticated-orcid": false,
+      "given": "Yizhuo",
+      "family": "Chen",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Fudan University, Shanghai, CN"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    },
+    {
+      "ORCID": "https://orcid.org/0000-0003-1200-7368",
+      "authenticated-orcid": false,
+      "given": "Weiguo",
+      "family": "Zheng",
+      "sequence": "additional",
+      "affiliation": [
+        {
+          "name": "Fudan University, Shanghai, CN"
+        }
+      ],
+      "role": [
+        {
+          "vocabulary": "crossref",
+          "role": "author"
+        }
+      ]
+    }
+  ],
+  "published": {
+    "date-parts": [
+      [
+        2024,
+        12,
+        18
+      ]
+    ]
+  },
+  "container-title": [
+    "Proceedings of the ACM on Management of Data"
+  ],
+  "volume": "2",
+  "issue": "6",
+  "article-number": null
+}

@@ -1,0 +1,34 @@
+{
+  "id": "arxiv:2606.16903",
+  "title": "Directory-Aware Query and Maintenance in Vector Databases",
+  "authors": [
+    "Mengzhao Wang",
+    "Zheng Gong",
+    "Jingpei Hu",
+    "Jiajie Fu",
+    "Maojia Sheng",
+    "Junwen Chen",
+    "Yifan Zhu"
+  ],
+  "year": 2026,
+  "version": "2606.16903v1",
+  "first_submitted": "2026-06-15",
+  "venue": "未核实正式venue；arXiv预印本",
+  "url": "https://arxiv.org/abs/2606.16903",
+  "relevance": {
+    "level": "B",
+    "role": "直接相邻的目录前缀过滤检索候选；可向join迁移过滤表示/索引组件，当前非join"
+  },
+  "reading_status": "仅核原始摘要、作者、日期与版本；未精读正文",
+  "abstract_evidence": [
+    "摘要提出DSQ/DSM",
+    "摘要比较PE-Online、PE-Offline和TrieHI"
+  ],
+  "open_items": [
+    "DSQ与prefix top-k算子是否等价",
+    "单路径/多路径及内部节点对象",
+    "理论/复杂度/实现/实验与版本",
+    "正式发表信息"
+  ],
+  "checked_on": "2026-10-19"
+}

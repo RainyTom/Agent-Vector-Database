@@ -1,0 +1,44 @@
+{
+  "id": "doi:10.1145/3769765",
+  "checked_on": "2026-10-19",
+  "status": "candidate_waiting_original_full_text",
+  "analysis": "researches/containment-filtered-vector-search/walkthroughs/08-unifilter.md",
+  "previous_snapshot": "researches/containment-filtered-vector-search/evidence/unifilter-candidate-2026-10-18.json",
+  "attempts": [
+    {
+      "url": "https://dl.acm.org/doi/pdf/10.1145/3769765",
+      "result": "HTTP 403 in web and requests; alphaXiv PDF fetch failed"
+    },
+    {
+      "url": "https://dl.acm.org/doi/epdf/10.1145/3769765",
+      "result": "HTTP 403"
+    },
+    {
+      "url": "https://xiejiadong.com/",
+      "result": "author page lists title/authors/SIGMOD2026; no original PDF link observed"
+    },
+    {
+      "url": "https://api.github.com/repos/Xiejiadong/Xiejiadong.github.io/git/trees/main?recursive=1",
+      "result": "HTTP 200; no filter/predicate/sigmod26 filename matches; limited path-name search, not exhaustive availability proof"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/Xiejiadong/Xiejiadong.github.io/main/files/paper/vector_survey.pdf",
+      "result": "HTTP 200, 873943 bytes; extracted PDF page20 confirms existing author-survey mechanism; not original UniFilter"
+    },
+    {
+      "url": "https://research.cuhk.edu.hk/en/publications/beyond-vector-search-querying-with-and-without-predicates/",
+      "result": "original institutional bibliography/abstract accessible"
+    }
+  ],
+  "project_synthesis": [
+    "Single-node exact prefix coverage conditional on all semantic prefix nodes being routable; not original coverage theorem",
+    "F8 concerns prefix entry organization and budgets; original cross-edge comparison unavailable"
+  ],
+  "open_items": [
+    "Original full text and precise coverage/cross-edge algorithms",
+    "Official implementation",
+    "Theory, full experimental details, and versions",
+    "Directory-Aware/TrieHI and hierarchical entry-selection prior art"
+  ],
+  "index_action": "No full-text catalog entry or new method relation; preserve evidence status"
+}

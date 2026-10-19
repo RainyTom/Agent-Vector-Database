@@ -1,0 +1,1652 @@
+<paper id="2505.03212v2"><page num="1">Elastic Index Selection for Label-Hybrid AKNN Search
+Mingyu Yang
+HKUST (GZ) &amp; HKUST
+myang250@connect.hkust-gz.edu.cn
+Wenxuan Xia
+HKUST (GZ)
+wxia248@connect.hkust-gz.edu.cn
+Wentao Li
+University of Leicester
+wl226@leicester.ac.uk
+Raymond Chi-Wing Wong
+HKUST
+raywong@cse.ust.hk
+Wei Wang
+∗
+HKUST (GZ) &amp; HKUST
+weiwcs@ust.hk
+ABSTRACT
+Real-world vector embeddings often carry additional label at-
+tributes, such as keywords and tags. In this context, label-hybrid
+approximate 𝑘-nearest neighbor (AKNN) search retrieves the
+top-𝑘 approximate nearest vectors to a query, subject to the con-
+straint that their labels fully contain the query-label set. A naive so-
+lution builds a separate index for every query-label set, but the expo-
+nential growth of such sets makes this approach storage-prohibitive.
+To overcome this, we propose selectively indexing only a subset
+of query-label sets while still ensuring efficient processing for all
+queries. This is made possible by a key insight into label contain-
+ment: an index built for a label set 𝐿 can also serve any query
+whose label set 𝐿
+′ 
+is a superset of 𝐿, with query cost bounded by
+the elastic factor: the ratio between the number of vectors match-
+ing 𝐿 and those matching 𝐿
+′
+. We formalize the index-selection task
+as a constrained optimization problem that chooses which label
+sets to index to satisfy space and query efficiency constraints. We
+prove the problem is NP-complete and propose efficient greedy algo-
+rithms for its efficiency- and space-constrained variants. Extensive
+experiments on real-world datasets show that our method achieves
+10×–800× speedups over state-of-the-art techniques. Moreover, our
+approach is index-agnostic and can be seamlessly integrated into
+existing vector database systems.
+PVLDB Reference Format:
+Mingyu Yang, Wenxuan Xia, Wentao Li, Raymond Chi-Wing Wong, Wei
+Wang. Elastic Index Selection for Label-Hybrid AKNN Search. PVLDB,
+19(4): XXX-XXX, 2025.
+doi:XX.XX/XXX.XX
+PVLDB Artifact Availability:
+The source code, data, and/or other artifacts have been made available at
+https://github.com/mingyu-hkustgz/LabelANN.
+1 INTRODUCTION
+The 𝑘-nearest neighbor (KNN) search over high-dimensional
+vectors is a core operation in modern data systems, underpinning
+a wide range of applications such as recommendation systems [ 48 ],
+data mining [ 8], face recognition [ 56 ], product search [56 ], and
+∗
+Corresponding author.
+This work is licensed under the Creative Commons BY-NC-ND 4.0 International
+License. Visit https://creativecommons.org/licenses/by-nc-nd/4.0/ to view a copy of
+this license. For any use beyond those covered by this license, obtain permission by
+emailing info@vldb.org. Copyright is held by the owner/author(s). Publication rights
+licensed to the VLDB Endowment.
+Proceedings of the VLDB Endowment, Vol. 19, No. 4 ISSN 2150-8097.
+doi:XX.XX/XXX.XX
+Item #1
+Brand: A
+Size: L
+Color: blue
+Year: 2025
+x
+1
+Item #2
+Brand: B
+Size: S
+Color: red
+Year: 2024
+x
+2
+Item #3
+Brand: A
+Size: M
+Color: yellow
+Year: 2024
+x
+3
+Item #4
+Brand: A
+Size: L
+Color: white
+Year: 2025
+x
+4
+An item that is most similar to
+the photo
+-Filters: &quot;brand=A&quot; and
+&quot;year=2025&quot;
+q
+Customer 
+Vector Space
+x
+1
+x
+2
+x
+3
+x
+4
+q
+√
+Figure 1: Example of label-hybrid AKNN search in an online shop-
+ping scenario (𝑘 = 1). Each item is represented by an embedding
+vector 𝑥
+𝑖 
+(𝑖 ∈ [1, 4]) and associated with label attributes such as
+brand and year. A customer submits a reference photo 𝑞 together
+with a query-label set 𝐿
+𝑞 
+. The task is to find the item most similar to
+𝑞 that also satisfies the label constraint. Thus, 𝑥
+2 
+and 𝑥
+3 
+are discarded
+for label mismatch, and 𝑥
+4 
+is returned as the nearest neighbor.
+retrieval-augmented generation (RAG) for large language mod-
+els [38 ]. In real-world deployments, vector embeddings are often
+associated with label attributes, such as product brands, keywords,
+and geolocations. For example, in an e-commerce setting, a user
+may search for items similar to a given photo while specifying label
+constraints like brand name and release year.
+In this context, we introduce the problem of label-hybrid 𝑘-
+nearest neighbor (KNN) search, illustrated in Fig. 1. Unlike tradi-
+tional KNN search, this variant considers both the vector embed-
+dings and their associated label attributes. Formally, each entry
+in the database 𝑆 consists of a vector embedding and a label set
+𝐿. Given a query vector 𝑞 and the label constraint (expressed as a
+query-label set 𝐿
+𝑞 
+), the goal is to retrieve the top-𝑘 nearest neigh-
+bors of 𝑞 in 𝑆, where each returned vector with label set 𝐿 must
+contain all labels in the query-label set 𝐿
+𝑞 
+, i.e., 𝐿
+𝑞 
+⊆ 𝐿. However, due
+to the curse of dimensionality [32 ], computing exact label-hybrid
+KNN in high-dimensional spaces is computationally expensive. Re-
+cent work therefore studies the label-hybrid approximate KNN
+(AKNN) problem, which efficiently returns the top-𝑘 approximate
+neighbors satisfying the label constraint, trading a small amount of
+accuracy for substantial performance gains [6, 46].
+Existing Solutions. To support label-hybrid AKNN search, ex-
+isting approaches often employ graph-based indexes [12, 13 , 21 ,
+23 , 29, 34 , 39, 40 , 43 , 47 , 51 , 54 , 63 ] combined with filter-based
+search strategies, due to their good search efficiency. Specifically,
+the graph-based index is constructed by adding base vectors in data-
+base 𝑆 as nodes and connecting each node to its nearby neighbors
+to form edges, which are carefully selected to support efficient nav-
+igation. At query time, on top of the graph-based index, filter-based
+arXiv:2505.03212v2 [cs.DB] 11 Dec 2025</page><page num="5">A[3]
+Empty[3]
+ABC[3]
+B[1] C[1]
+AC[3]AB[1] BC[2]
+I
+2
+:A[10]
+I
+1
+:Empty[17]
+I
+8
+:ABC[3]
+I
+3
+:B[7] I
+4
+:C[9]
+I
+6
+:AC[6]I
+5
+:AB[4] I
+7
+:BC[5]
+(a): Number of Vectors
+Associated with Label Set
+I
+1
+:{Empty, A, B, C, AC}
+I
+2
+:{A, AB, AC, ABC}
+I
+3
+:{B, AB, BC, ABC}
+I
+4
+:{C, AC, BC, ABC}
+I
+5
+:{AB, ABC}
+I
+6
+:{AC, ABC}
+I
+7
+:{BC, ABC}
+I
+8
+:{ABC}
+(c): The Index Sharing with
+an Elastic Factor of 0.3
+(b): Number of Vectors Matched
+by Each Query-Label Set
+I
+2
+:A[10]
+I
+1
+:Empty[17]
+I
+8
+:ABC[3]
+I
+3
+:B[7] I
+4
+:C[9]
+I
+6
+:AC[6]I
+5
+:AB[4] I
+7
+:BC[5]
+(d): Greedy Result
+I
+2
+:A[10]
+I
+1
+:Empty[17]
+I
+8
+:ABC[3]
+I
+3
+:B[7] I
+4
+:C[9]
+I
+6
+:AC[6]I
+5
+:AB[4] I
+7
+:BC[5]
+(e): Optimal Result
+Figure 4: The Running Example of Elastic Factor and Greedy Methods
+𝑒 = 0.001 𝑒 = 0.01 𝑒 = 0.1 𝑒 = 1
+90 92 94 96 98 100
+10
+1
+10
+2
+10
+3
+recall@10(%)
+Qps
+90 92 94 96 98 100
+10
+1
+10
+2
+10
+3
+recall@20(%)
+Qps
+Figure 5: Effect of the elastic factor on query efficiency (𝑘 = 10: left,
+𝑘 = 20: right). We randomly generate label sets for both base and
+query vectors and build HNSW indexes on the SIFT100M dataset.
+Queries are grouped by elastic factor—0.001, 0.01, 0.1, and 1—with
+𝑒 = 1 serving as the optimal baseline.
+Connection to Query Efficiency. In the extreme, one could per-
+form filter-based search (e.g., PostFiltering) on the top index 𝐼
+⊤
+,
+which contains all entries and whose label set (∅) is a subset of every
+query-label set. However, this is inefficient for queries with non-
+empty 𝐿
+𝑞 
+because the search must traverse many label-mismatched
+nodes in the graph index. The inefficiency arises because the elastic
+factor of 𝐼
+⊤ 
+is typically very low for such queries. To raise the elastic
+factor, additional indexes must be added to I. The key question then
+becomes: when the elastic factor of I for a query 𝑞 is at least 𝑐, what
+is the resulting query cost?
+To answer this, we first analyze the expected cost of KNN search
+(ignoring label constraints). To retrieve the 𝑘 nearest neighbors, we
+first use the index to locate the top-1 result and then incrementally
+continue the search from each previously discovered neighbor until
+all 𝑘 results are obtained (e.g., extending from top-1 to top-2, and
+so on). Thus, the efficiency of KNN search depends on the expected
+number of steps required to obtain 𝑘 valid results. When using
+an index built over the entire dataset 𝑆 (as in PostFiltering), the
+expected number of steps E(𝑟 ) can grow to 𝑂 (𝑁 ) under low query
+selectivity, where 𝑁 = |𝑆 |, explaining its inefficiency. In contrast, if
+the query is answered using an index with a constant elastic factor
+𝑐, the expected number of steps to obtain 𝑘 results is bounded by
+𝑂 (𝑘/𝑐) [46 , 60 ]. This bound holds because, in graph-based indexes,
+retrieving the next nearest-neighbor/result typically requires only
+one additional expansion step after locating the current result,
+under ideal conditions (e.g., slow growth or when the query is
+contained in the dataset). Extending this reasoning to our label-
+hybrid AKNN search, we still first locate the top-1 nearest neighbor
+and then continue the search until all 𝑘 results satisfying the label
+constraint are retrieved. We show that, apart from the cost of finding
+the first neighbor, the additional cost of retrieving the remaining
+results remains 𝑂 (𝑘/𝑐), as formalized in Lemma 3.2.
+Lemma 3.2. Given a dataset 𝑆, a query (𝑞, 𝐿
+𝑞 
+), and a selected index
+set I, let 𝑂 (𝐶) denote the expected time to retrieve the top-1 neighbor
+from a graph index. If the elastic factor satisfies 𝑒 
+
+𝑆 (𝐿
+𝑞 
+), I
+ 
+≥ 𝑐 for
+some constant 𝑐 ∈ (0, 1], then the expected time to obtain the top-𝑘
+label-hybrid AKNN results with PostFiltering is 𝑂
+
+𝐶 + 
+𝑘
+𝑐
+
+.
+Proof sketch. We make two assumptions. (i) After incurring a
+cost of 𝑂 (𝐶) to locate the top-1 nearest neighbor, each successive
+nearest neighbor can be retrieved in amortized constant time. Note
+that we do not require the visited neighbors to satisfy the query’s
+label constraints, and the property holds for most graph indexes.
+(ii) Conditioned on distance ordering, at least a fraction 𝑐 of the
+visited nearest neighbors satisfy the query’s label constraints, guar-
+anteed by 𝑒 (·, ·) ≥ 𝑐. Since PostFiltering outputs a vector only if it
+matches the query label set, more than 𝑘 neighbors may need to be
+examined. Let 𝑇 denote the number of (steps to examine) neighbors
+until 𝑘 matches are found. 𝑇 follows a negative-hypergeometric (or
+geometric) distribution with success probability at least 𝑐, which
+yields E[𝑇 ] ≤ 𝑘/𝑐. Including the cost 𝑂 (𝐶) for locating the first
+neighbor, the total expected cost is bounded by 𝑂 (𝐶 + 𝑘/𝑐).
+Remark on Lemma 3.2. The above result provides an expected
+bound under two standard assumptions: (1) locating the top-1 near-
+est neighbor costs 𝑂 (𝐶), and enumerating additional neighbors re-
+quires amortized constant work; (2) Label-matched and mismatched
+vectors are assumed to be uniformly distributed in the graph and in-
+dependent of the labels, ensuring that at least a 𝑐-fraction of visited
+vectors satisfy the label constraint (as guaranteed by the elastic fac-
+tor). This bound is not a worst-case guarantee, as these assumptions
+may not always hold for graph indexes such as HNSW. Neverthe-
+less, the elastic factor 𝑐 remains a useful control knob for expected
+performance, because the additional time cost scales directly with
+𝑘/𝑐. Our empirical studies (Fig. 5) confirm this monotonic relation-
+ship: larger elastic factors yield higher query throughput (Qps) at
+fixed recall, and the observed performance drop as 𝑐 decreases.
+Empirical studies. To further validate Lemma 3.2, we measure the
+practical efficiency of PostFiltering search under varying elastic
+factors on the 100M subset of the SIFT1B dataset [2 ], denoted
+SIFT100M. In the classical PostFiltering strategy, the elastic fac-
+tor is fixed as it uses only the top index containing all base vectors.
+Here, we add more indexes to I to vary the elastic factor and report
+results in Fig. 5. As shown, higher elastic factors yield better effi-
+ciency (measured in Qps), consistent with the lower time complexity
+predicted by theory. When the factor reaches 1, search achieves
+optimal efficiency—equivalent to indexing only the label-matched
+data. Efficiency decreases sublinearly as the elastic factor drops: for
+example, reducing the factor to 
+1
+10 
+lowers throughput by only 2×
+at 98% recall with 𝑘=10. This occurs because the added cost scales
+5</page><page num="6">Empty[2000]
+C[600]
+ABC[100]
+B[900]
+AB[500] BC[200]AC[200]
+A[1000]
+Elastic Factor=0.5
+Empty[2000]
+C[600]
+ABC[100]
+B[900]
+AB[500] BC[200]AC[200]
+A[1000]
+Elastic Factor=0.3
+Figure 6: Example of the EIS Problem
+with 𝑘, while the top-1 search still runs in 𝑂 (𝐶), usually 𝑂 (log 𝑁 ).
+The gap widens for larger 𝑘 (e.g., a 3× slowdown at 𝑘=20 and 98%
+recall), but in most applications 𝑘 is small relative to 𝑁 . Thus, as
+long as the elastic factor remains constant, the overall time cost
+stays bounded.
+3.2 Problem Definition
+We have analyzed the impact of the elastic factor on search effi-
+ciency for a given index set I. When using I, the expected query cost
+is directly tied to the elastic factor of I for each query. If the elastic
+factor for every query in the workload is guaranteed to exceed a
+constant lower bound 𝑐, then the AKNN search cost is bounded by
+an additional 𝑂 (𝑘/𝑐). This establishes a clear relationship between
+index cost (the total size of indexes in I) and query efficiency (cap-
+tured by the elastic factor). Building on this, among all subsets of
+indexes that can correctly answer the query workload, we seek a
+subset I that is both small and yields a large elastic factor, ensuring
+strong query performance. This motivates the formal definition of
+the Elastic Index Selection (EIS) problem.
+Definition 3.3 (Fixed Efficiency Index Selection (EIS)).
+Input A label-hybrid dataset 𝑆, a query workload with label
+sets L = {𝐿
+1
+, . . . , 𝐿
+𝑛 
+}, and a universal index set I =
+{𝐼
+1
+, . . . , 𝐼
+𝑛 
+}, where each index 𝐼
+𝑖 
+= 𝑆 (𝐿
+𝑖 
+) is built over the
+base vectors matching the query-label set 𝐿
+𝑖 
+with cost
+|𝐼
+𝑖 
+|. Let 𝜏 and 𝑐 be non-negative real numbers.
+Output Decide whether there exists a subset I ⊆ I such that
+𝑒 
+
+𝑆 (𝐿
+𝑖 
+), I
+ 
+≥ 𝑐 for every 𝐿
+𝑖 
+∈ L and the total cost satis-
+fies 
+Í
+𝐼 ∈I 
+|𝐼 | ≤ 𝜏.
+The EIS problem is a decision problem: determine whether a
+subset of indexes from the universal set I can be chosen such that
+(1) the total space usage is within a user-specified bound 𝜏, and
+(2) the elastic factor—which governs query efficiency—is at least a
+given threshold 𝑐. In Section 4, we present the optimization version,
+where the goal is either to minimize space cost while satisfying a
+required elastic-factor threshold or to maximize the elastic factor
+subject to a space budget.
+Example 2. The EIS problem under different elastic-factor thresh-
+olds, 𝑐 = 0.5 and 𝑐 = 0.3 is in Fig. 6. When 𝑐 = 0.5, the top index 𝐼
+⊤
+(built on the empty label set) can serve queries with 𝐿
+𝑞 
+= {𝐴} and
+𝐿
+𝑞 
+= ∅, since their overlaps exceed 0.5. It cannot, however, support
+𝐿
+𝑞 
+= {𝐵}, whose overlap is only 0.45. With a more relaxed threshold
+of 𝑐 = 0.3, 𝐼
+⊤ 
+also supports 𝐿
+𝑞 
+= {𝐵} and 𝐿
+𝑞 
+= {𝐶}, but it still cannot
+answer 𝐿
+𝑞 
+= {𝐴𝐵}, whose overlap is 0.25, unless 𝑐 &lt; 0.25. Finally,
+when 𝑐 = 0, the top index can serve all possible queries.
+Remark on Query Workload. In the problem definition, we as-
+sume a query workload with query-label sets L
+𝑞 
+= {𝐿
+1
+, . . . , 𝐿
+𝑛 
+}.
+This assumption is justified for two reasons: (1) It generalizes the
+traditional setting where L
+𝑞 
+includes all subsets of the alphabet Σ
+(i.e., the power set). (2) It enables a workload-driven approach: L
+𝑞
+can reflect historical query patterns, allowing index selection and
+optimization to match realistic query behavior.
+Although the total number of possible query-label sets can reach
+2
+|Σ| 
+in the worst case, the effective number is typically far smaller
+due to mutual exclusivity among certain labels. For example, a prod-
+uct has only one brand name, making brand labels mutually exclu-
+sive. Our formulation explicitly captures such cases, ensuring that
+incompatible label combinations—like different brand names—do
+not co-occur in L
+𝑞 
+. We also assume the workload always includes
+the empty set ∅, representing queries with no label constraints and
+thus matching all base vectors. For simplicity, we treat the cost of
+this top index as zero, i.e., |𝐼
+top 
+| = 0.
+Remark on Index Size/Cost. The cost of each index 𝐼
+𝑖 
+(built for
+query-label set 𝐿
+𝑖 
+) reflects the space it occupies. For graph-based
+indexes, this cost can be approximated by the number of vectors it
+contains, since node degree is typically bounded by a constant [13 ,
+33 ]. In practice, each node maintains 𝑀 edges to support efficient
+memory access, where 𝑀 is a user-defined parameter [ 42 ]. Thus,
+the overall space usage of an index can be estimated as the product
+of its vector count and 𝑀. In our study, however, we measure index
+size/cost |𝐼 | simply by the number of vectors it contains.
+Index Selection at Query Time. At query time, a label set 𝐿
+𝑞 
+may
+be served by multiple indexes in the selected set I. For example, a
+query with 𝐿
+𝑞 
+= {𝐴𝐵} can be answered by the index for {𝐴} or
+for {𝐵} if both are present in I. In such cases, our method selects
+the index that yields the maximum elastic factor with 𝑆 (𝐿
+𝑞 
+). This
+choice improves query efficiency because greater overlap means
+fewer label-mismatched vectors in the index, reducing the cost of
+scanning irrelevant entries.
+3.3 Problem Hardness
+We prove that the EIS problem is NP-complete in Theorem 3.4,
+underscoring the computational challenges inherent in solving it.
+Theorem 3.4. The EIS problem is NP-complete.
+Proof sketch. We show EIS is NP-complete by reducing from
+the 3-Set Cover (3-SC) problem [ 10 , 37 ]. EIS is in NP as validity is
+verifiable in polynomial time. Given a 3-SC instance with elements
+U, subsets S, and budget 𝑘, we construct an EIS instance with a
+universal index set I containing: (1) an element index 𝐼
+𝑢
+𝑖 
+for each
+𝑢
+𝑖 
+∈ U; (2) a subset index 𝐼
+𝑠
+𝑗 
+for each 𝑠
+𝑗 
+∈ S; (3) a top index 𝐼
+⊤
+covering all base vectors; and (4) a bottom index 𝐼
+all
+.
+Let 𝑏 &gt; 3. We set the index sizes to |𝐼
+𝑢
+𝑖 
+| = 𝐴 = 𝑏+1, |𝐼
+𝑠
+𝑗 
+| = 𝐵 = 2𝑏,
+|𝐼
+⊤ 
+| = 𝑁 &gt; 4𝑏, and |𝐼
+all 
+| = 𝑏. We set the elastic factor 𝑐 = 2𝑏/𝑁 and
+the cost budget 𝜏 = 𝑘 · 𝐵. The construction ensures the following
+overlap properties: (1) 𝐼
+⊤ 
+covers every subset index 𝐼
+𝑠
+𝑗 
+with ratio
+𝐵/𝑁 = 𝑐, but fails to cover element indexes 𝐼
+𝑢
+𝑖 
+sufficiently (ratio
+𝐴/𝑁 &lt; 𝑐). (2) A subset index 𝐼
+𝑠
+𝑗 
+covers an element index 𝐼
+𝑢
+𝑖 
+with
+ratio 𝐴/𝐵 &gt; 𝑐 if and only if 𝑢
+𝑖 
+∈ 𝑠
+𝑗 
+. (3) To enforce cost constraints,
+we introduce duplicate elements 𝑢
+′
+𝑖 
+such that covering a specific
+element 𝑢
+𝑖 
+directly via element indexes requires selecting both 𝐼
+𝑢
+𝑖
+6</page><page num="12">UNG ELI-0.2 ELI-2.0 ACORN-1 ACORN-𝛾
+80 90 100
+10
+2
+10
+3
+10
+4
+recall@10(%)
+Qps
+Ave. Select 18% Zipf
+70 80 
+90 100
+10
+2
+10
+3
+recall@10(%)
+Qps
+Ave. Select 6.8% Uniform
+80 90 100
+10
+2
+10
+3
+10
+4
+recall@10(%)
+Qps
+Ave. Select 20% Poisson
+70 80 90 100
+10
+2
+10
+3
+recall@10(%)
+Qps
+Ave. Select 5.3% multinormal
+Figure 10: Varying Label Distributions
+ELI-0.2 ELI-2.0 
+ELI
+′
+-0.2 ELI
+′
+-2.0
+85 90 95 100
+10
+3
+10
+4
+recall@10(%)
+Qps
+(a) SIFT
+92 94 96 98 100
+10
+2
+10
+2.5
+recall@10(%)
+Qps
+(b) Arxiv
+Figure 11: Query Performance Drop Caused by Incremental Updates
+10% Update20% Update50% Update
+Rebuild
+0
+5K
+10K
+15K
+20K
+25K
+30K
+Index Times (ms)
+Comparison of Incremental Update Time
+ELI-0.2 Update ELI-2.0 Update
+10% Update20% Update50% Update
+Rebuild
+0
+50K
+100K
+150K
+200K
+250K
+Index Vector
+Comparison of Incremental Update Vector
+ELI-0.2 Update ELI-2.0 Update
+Figure 12: The Time and Space Cost of Incremental Updates
+choose between these strategies using cost models. ACORN also
+follows the PreFiltering strategy but builds a denser graph index to
+mitigate its connectivity issues. Because these approaches ignore
+attributes during index construction, their search accuracy and
+efficiency lag behind methods that incorporate attributes directly.
+Attribute-Dependent Solutions. These methods build indexes by con-
+sidering the attribute type. (1) For attribute-hybrid AKNN search
+with numerical attributes, recent work [11 , 58, 60] organizes query-
+specified numeric intervals using segment trees, while SeRF [68 ]
+further compresses indexes across overlapping intervals. (2) For
+attribute-hybrid AKNN search with label attributes, UNG [6 ] ex-
+ploits label-set inclusion, adding cross-group edges so the graph
+index searches only filtered vectors. NHQ [51 ] incorporates at-
+tribute similarity into vector similarity, requiring manual tuning of
+vector and attribute weights.
+Data Cube Computation. Existing studies on OLAP and data-cube
+computation select group-by aggregates over the subset lattice of di-
+mensions, exploiting the fact that coarser aggregates (supersets) can
+be derived from finer-grained materializations (subsets) [24 , 27 , 44].
+Our setting shares this lattice structure and the reuse principle: an
+index built for a query-label set can serve queries with superset
+labels via label containment. However, key differences remain: (1)
+Cube computation relies on algebraic properties of aggregates (e.g.,
+distributive or algebraic measures) to derive superset results exactly
+from subsets, whereas our reuse is containment-based, yielding a
+query cost bounded by 𝑂 (𝐶 + 𝑘/𝑐) on graph-based indexes, where
+𝑐 is the elastic factor and 𝑘/𝑐 is the additional cost. (2) Cube/view
+selection minimizes aggregate-query latency subject to storage lim-
+its, while our Elastic Index Selection (EIS) problem selects a subset
+of query-label sets to index so as to satisfy both space budgets and
+workload-wide elastic-factor coverage, ensuring predictable AKNN
+efficiency under label constraints. (3) Although both problems are
+NP-hard and typically approached with greedy heuristics, our ben-
+efit function and feasibility constraints are tailored to vector-search
+semantics and the label-containment relationship.
+Frequent Itemset Mining. Our work is conceptually related to Fre-
+quent Itemset Mining (FIM), where labels correspond to items and
+label sets to transactions [25 , 26 , 64 ]. Both exploit the anti-monotone
+property of support (the Apriori principle), with classic algorithms
+such as Apriori and FP-Growth widely used for FIM [ 25 , 26 ]. The
+objectives, however, differ fundamentally. FIM finds all itemsets
+whose support exceeds a threshold for pattern discovery, whereas
+our ELI task is an optimization problem: selecting a subset of query-
+label sets on which to build indexes. This selection is guided not
+by absolute support but by a novel elastic factor modeling query
+efficiency. Thus, while FIM outputs frequent patterns, our method
+produces a concrete indexing plan for AKNN search, making the
+formulation and goals distinct.
+7 CONCLUSION
+This paper investigates the label-hybrid AKNN search problem and
+shows that an index built for a query–label set remains effective for
+all its supersets with bounded query time. Building on this insight,
+we formalize the Elastic Index Selection (EIS) problem, prove that
+EIS is NP-complete, and introduce two optimization variants solved
+by efficient greedy algorithms. Extensive experiments demonstrate
+the effectiveness and superiority of our approach. As future work,
+we plan to explore hardware acceleration for further speedups.
+ACKNOWLEDGMENTS
+We are grateful to the anonymous reviewers for their constructive
+comments. Wentao Li is supported by NSFC (Grant No.62302417).
+Raymond Chi-Wing Wong is supported by PRP/004/25FX. Wei
+Wang is supported by HKUST(GZ)-IEIP-RoP (G01RF000256),
+Guangdong Provincial Key Lab of Integrated Communication,
+Sensing and Computation for Ubiquitous Internet of Things
+(No.2023B1212010007, SL2023A03J00934), Guangzhou Municipal
+Science and Technology Project (No. 2023A03J0003, 2023A03J0013,
+and 2024A03J0621). This work is also supported by Ant Group.
+12</page><page num="15">A APPENDIX
+A.1 Proofs
+Proof of Lemma 3.2. We analyze the expected search time of the
+PostFiltering strategy on a graph index by decomposing it into two
+phases: (1) the initial search to locate the first nearest neighbor
+(top-1 result), and (2) iterative expansion to collect 𝑘 neighbors
+satisfying the query’s label constraint.
+Phase 1: Initial Search Let 𝐶 denote the expected cost of finding
+the top-1 neighbor of query 𝑞 on the underlying graph index. This
+abstracts the entry cost of popular structures such as HNSW or NSG,
+typically analyzed as 𝑂 (log 𝑁 ) under standard assumptions [ 13 , 46 ],
+where 𝑁 is the number of indexed points.
+Phase 2: Iterative Expansion 
+After the first match, PostFiltering in-
+spects candidates in increasing distance order until 𝑘 items sat-
+isfying 𝐿
+𝑞 
+are found. Efficiency depends on the probability that
+a candidate satisfies the label constraint. We assume (i) label at-
+tributes are independent of vector positions, and (ii) label-matched
+points are uniformly distributed in the space and the number is
+larger than 𝑘. If the elastic factor satisfies 𝑒 
+
+𝑆 (𝐿
+𝑞 
+), I
+ 
+≥ 𝑐, then at
+least a 𝑐-fraction of candidates within the selected index set I match
+𝐿
+𝑞 
+. Under these assumptions, the probability that any visited candi-
+date matches 𝐿
+𝑞 
+is 𝑝 ≥ 𝑐. Finding 𝑘 matches is therefore a sequence
+of Bernoulli trials with success probability 𝑝 without replacement,
+so the number of trials 𝑇 follows a negative-hypergeometric distri-
+bution with expectation E[𝑇 ] = 𝑘 
+𝑁 +1
+𝑝𝑁 +1 
+&lt; 𝑘/𝑐. Modern graph-based
+indexes [13 , 23, 34 , 42 ] retrieve the next neighbor in 𝑂 (1) amortized
+time because each node maintains a bounded-degree neighbor list.
+Hence, the expected cost of this phase is 𝑂 (𝑘/𝑐).
+Total Cost 
+Summing both phases, the expected time to obtain
+the top-𝑘 label-hybrid AKNN results is 𝑂
+
+𝐶 + 
+𝑘
+𝑐
+
+. This matches
+and generalizes prior analyses of post-filtering strategies, such as
+HNSW-based filtered search [46 ], within our elastic-factor frame-
+work. As with HNSW and NSG, the bound captures expected com-
+plexity and does not guarantee worst-case recall, but it aligns with
+recent NSG analyses [60 ] that report the same 𝑂 (𝐶 + 𝑘/𝑐) cost
+under similar conditions.
+Proof of Theorem 3.4. Given a dataset 𝑆, a query workload with la-
+bel sets L = {𝐿
+1
+, . . . , 𝐿
+𝑛 
+}, and a universal index set I = {𝐼
+1
+, . . . , 𝐼
+𝑛 
+}
+(where each 𝐼
+𝑖 
+∈ I is built on a label set 𝐿
+𝑖 
+∈ L), the EIS prob-
+lem asks whether there exists a subset I ⊆ I such that for every
+query–label set 𝐿
+𝑞 
+∈ L we can find an index 𝐼 ∈ I with elastic
+factor 𝑒 (𝑆 (𝐿
+𝑞 
+), 𝐼 ) greater than a threshold 𝑐, while the total cost
+satisfies 
+Í
+𝐼 ∈I 
+|𝐼 | ≤ 𝜏.
+The problem is in NP as we can verify in polynomial time that
+(1) the total cost 
+Í
+𝐼 ∈I 
+|𝐼 | 
+does not exceed the budget 𝜏, and (2)
+each query–label set is covered by some selected index with elastic
+factor at least 𝑐. To show NP-completeness, we reduce from the
+NP-complete 3-Set Cover (3-SC) problem [10, 37].
+Definition 7.1 (3-Set Cover (3-SC)). Input A universal set
+U = {𝑢
+1
+, 𝑢
+2
+, . . . , 𝑢
+𝑝 
+} of 𝑝 elements and a collection
+S = {𝑠
+1
+, 𝑠
+2
+, . . . , 𝑠
+𝑙 
+} of 𝑙 subsets, where each 𝑠
+𝑖 
+has size at
+most 3 and 
+Ð
+𝑙
+𝑖=1 
+𝑠
+𝑖 
+= U. Let the selection budget be 𝑘.
+Output 
+Determine if there exists a subset S ⊆ S of size at most
+𝑘 such that 
+Ð
+𝑠
+𝑖 
+∈S 
+𝑠
+𝑖 
+= U.
+I:u'
+1
+[11] I:u'
+2
+[11] 
+I:u'l[11]
+I:u'
+3
+[11]
+I:u
+1
+[11]
+I:s
+1
+[20] I:s
+2
+[20] I:s
+p
+[20]
+Empty[N]
+I:u
+2
+[11] I:u
+3
+[11] I:u
+l
+[11]
+Cover Relationship
+s
+1
+s
+2
+u'
+1
+[1] s
+2
+u'
+2
+[1] s
+l
+u'p[1]s
+1
+s
+l
+u'
+3
+[1]
+s
+1
+s
+2
+u
+1
+[1]
+s
+1
+[8] s
+2
+[4] s
+l
+[6]
+Empty
+s
+2
+u
+2
+[1] s
+1
+s
+l
+u
+3
+[1] s
+l
+u
+p
+[1]
+(b) EIS Problem Instance (d) Query Label Set and Vector Label
+u
+1 
+u
+2 
+u
+3 
+u
+l
+s
+1 
+s
+2 
+s
+p
+element unit
+Set Mapping
+Set Mapping
+(a) 3-SC Example
+element unit
+All[10] 
+All[10]
+I:
+top
+:{I:
+top
+, I:s
+1
+, I:s
+2 
+,..., I:s
+l 
+}
+I:s
+i
+:{I:u
+j 
+,..., I:u'
+j
+}(up to 3 Element unit and I:
+all
+)
+I:u
+j
+:{I:u
+j, 
+I:all} I:
+all
+:{I:
+all
+}
+(c): Set Cover Relationship
+Under Elastic Factor = 20/N
+Figure 13: Proof of NP-completeness. Set 𝐷 = 𝑏 = 10, so 𝐴 = 𝑏 + 1 = 11,
+𝐵 = 2𝑏 = 20, and 𝑁 = 50 &gt; 4𝑏. Then 𝑐 = 
+𝐵
+𝑁 
+= 
+20
+50 
+= 0.4. Thus
+we have 10 vectors in 𝐼
+all 
+and 50 vectors in 𝐼
+⊤
+. Each element index
+𝐼
+𝑢
+𝑖 
+is duplicated with a dummy index 𝐼
+𝑢
+′
+𝑖 
+, and each subset index
+𝐼
+𝑠 
+𝑗 
+connects to at most three element indexes 𝐼
+𝑢
+𝑖 
+or 𝐼
+𝑢
+′
+𝑖 
+. Moreover,
+|𝐼
+𝑠 
+𝑗 
+|/|𝐼
+⊤ 
+| = 0.4 = 𝑐, |𝐼
+𝑢
+𝑖 
+|/|𝐼
+⊤ 
+| = 
+11
+50 
+= 0.22 &lt; 𝑐, |𝐼
+𝑢
+𝑖 
+|/|𝐼
+𝑠
+𝑖 
+| = 
+11
+20 
+&gt; 𝑐.
+Construction. Given a 3-SC instance (U, S, 𝑘), we create a corre-
+sponding EIS instance (see Fig. 13). Let the alphabet be Σ = U ∪ S,
+and define four types of indexes as follows: (1) for each element
+𝑢
+𝑖 
+∈ U, an element index 𝐼
+𝑢
+𝑖 
+of size |𝐼
+𝑢
+𝑖 
+| = 𝐴; (2) for each subset
+𝑠
+𝑗 
+∈ S
+, a subset index 𝐼
+𝑠
+𝑗 
+of size |𝐼
+𝑠
+𝑗 
+| = 𝐵
+; together with two
+special indexes: (3) a top index 𝐼
+⊤ 
+(Empty[N] in Fig. 13) containing
+all base vectors, with size |𝐼
+⊤ 
+| = 𝑁 ; and (4) a bottom index 𝐼
+all
+(All[D] in Fig. 13) containing vectors matching all labels in Σ, with
+size |𝐼
+all 
+| = 𝐷. The top index 𝐼
+⊤
+, required for AKNN search, always
+exists, and we omit its cost for simplicity. The costs 𝐴, 𝐵, 𝐷 and the
+elastic-factor threshold 𝑐 are set to satisfy the following conditions.
+(1) Each subset index 𝐼
+𝑠
+𝑗 
+covers an element index 𝐼
+𝑢
+𝑖 
+with overlap
+ratio at least 𝑐 (i.e., 𝐼
+𝑢
+𝑖 
+⊆ 𝐼
+𝑠
+𝑗 
+, |𝐼
+𝑢
+𝑖 
+|/|𝐼
+𝑠
+𝑗 
+| ≥ 𝑐) if and only if 𝑢
+𝑖 
+∈ 𝑠
+𝑗 
+.
+(2) The top index 𝐼
+⊤ 
+covers every subset index 𝐼
+𝑠
+𝑗 
+with overlap ratio
+𝑐, while its overlap ratio with any element index 𝐼
+𝑢
+𝑖 
+is less than 𝑐.
+(3) To cover element/label set 𝑢
+𝑖 
+, selecting the element index 𝐼
+𝑢
+𝑖
+incurs higher cost than selecting any subset index 𝐼
+𝑠
+𝑗 
+, where 𝑢
+𝑖 
+∈ 𝑠
+𝑗 
+.
+Feasibility. We next show how to satisfy the above conditions. •
+Set the cost of 𝐼
+all 
+to 𝐷 = 𝑏 &gt; 3 (as in Fig. 13(b), where 𝑏 = 10
+and 𝐼
+all 
+contains vectors covering all labels in Σ). • Let 𝐴 = 𝑏 + 1,
+𝐵 = 2𝑏, and set the elastic–factor threshold to 𝑐 = 
+2𝑏
+𝑁 
+with 𝑁 &gt; 4𝑏.
+If 𝑁 ≤ 4𝑏, we pad 𝐼
+⊤ 
+with vectors carrying no labels to increase 𝑁
+(as in Fig. 13(b), where 𝑁 &gt; 40). • Each element index 𝐼
+𝑢
+𝑖 
+is built
+from the 𝑏 vectors in 𝐼
+all 
+plus one additional vector whose label set
+is 𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+𝑖 
+, where 𝑠
+1
+, . . . , 𝑠
+𝑥 
+are the subsets containing 𝑢
+𝑖 
+. Thus
+|𝐼
+𝑢
+𝑖 
+| = 𝑏 + 1 = 𝐴, created on the query–label set 𝐿
+𝑞 
+= {𝑠
+1
+, . . . , 𝑠
+𝑥 
+, 𝑢
+𝑖 
+}.
+For this additional vector, we also create another vector with label
+set 𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+′
+𝑖 
+, where 𝑢
+′
+𝑖 
+is a duplicate label equivalent in meaning
+to 𝑢
+𝑖 
+(i.e., if 𝑢
+𝑖 
+∈ 𝑠
+𝑗 
+then 𝑢
+′
+𝑖 
+∈ 𝑠
+𝑗 
+). Accordingly, we introduce another
+element index 𝐼
+𝑢
+′
+𝑖 
+of size 𝑏 + 1, consisting of the 𝑏 vectors from 𝐼
+all
+plus one vector with labels 𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+′
+𝑖 
+, created on the query–label
+set 𝐿
+𝑞 
+= {𝑠
+1
+, . . . , 𝑠
+𝑥 
+, 𝑢
+′
+𝑖 
+}. • Each subset index 𝐼
+𝑠
+𝑗 
+is created on the
+query–label set 𝐿
+𝑞 
+= {𝑠
+𝑗 
+}. Since each subset 𝑠
+𝑗 
+contains at most
+three elements 𝑢
+𝑖 
+(and their duplicates 𝑢
+′
+𝑖 
+), it covers at most 3 × 2
+vectors of the form 𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+𝑖 
+or 𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+′
+𝑖 
+, together with the 𝑏
+vectors in 𝐼
+all
+. We then append up to 2𝑏 − 6 extra vectors labeled 𝑠
+𝑗
+so that the total number of vectors matching 𝑠
+𝑗 
+equals 𝐵 = 2𝑏.
+In summary, the query workload is L =
+{{𝑠
+1 
+}, . . . , {𝑠
+𝑙 
+}, {𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+𝑖 
+}, . . . , {𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+′
+𝑖 
+}, ∅, Σ}
+, and the corre-
+sponding universal index set is I = {𝐼
+𝑠
+1 
+, . . . , 𝐼
+𝑠
+𝑙 
+, 𝐼
+𝑢
+1 
+, . . . , 𝐼
+𝑢
+𝑝 
+, 𝐼
+⊤
+, 𝐼
+all 
+}.
+15</page><page num="16">Conditional Checking. Note that 𝑐 = 
+2𝑏
+𝑁 
+&lt; 
+2𝑏
+4𝑏 
+= 
+1
+2 
+. For Condition
+(1), when 𝑢
+𝑖 
+∈ 𝑠
+𝑗 
+, the overlap between 𝐼
+𝑢
+𝑖 
+and 𝐼
+𝑠
+𝑗 
+equals |𝐼
+𝑢
+𝑖 
+|, so
+the overlap ratio is 
+|𝐼
+𝑢
+𝑖 
+|
+|𝐼
+𝑠 
+𝑗 
+| 
+= 
+𝐴
+𝐵 
+= 
+𝑏+1
+2𝑏 
+&gt; 
+1
+2 
+&gt; 𝑐. For Condition (2),
+for each 𝑠
+𝑗 
+, the overlap ratio with 𝐼
+⊤ 
+is 
+|𝐼
+𝑠 
+𝑗 
+|
+|𝐼
+⊤ 
+| 
+= 
+𝐵
+𝑁 
+= 
+2𝑏
+𝑁 
+= 𝑐
+. For
+each 𝑢
+𝑖 
+, it is 
+|𝐼
+𝑢
+𝑖 
+|
+|𝐼
+⊤ 
+| 
+= 
+𝐴
+𝑁 
+= 
+𝑏+1
+𝑁 
+. Since 2𝑏 &gt; 𝑏 + 1 and 𝑏 &gt; 3, we
+have 
+𝑏+1
+𝑁 
+&lt; 𝑐
+, satisfying the condition. For Condition (3), to cover
+vectors containing label 𝑢
+𝑖 
+, selecting a subset index 𝐼
+𝑠
+𝑗 
+with 𝑢
+𝑖 
+∈ 𝑠
+𝑗
+costs 𝐵 = 2𝑏. Selecting the element index 𝐼
+𝑢
+𝑖 
+also requires selecting
+𝐼
+𝑢
+′
+𝑖 
+(otherwise, the vector with label set 𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+′
+𝑖 
+would not be
+included), for a total cost of 2𝐴 = 2(𝑏 + 1). As 2𝑏 &lt; 2(𝑏 + 1),
+choosing 𝐼
+𝑠
+𝑗 
+is cheaper, so this condition holds.
+Correctness. Note that 𝐼
+⊤ 
+must always be selected but incurs zero
+cost, while 𝐼
+all 
+need not be selected since it is already covered by
+other indexes. We set the space budget 𝜏 = 𝑘 · 𝐵, which permits
+selecting at most 𝑘 subset indexes (by Condition (3)).
+3-SC ⇒ EIS. If the 3-SC instance admits a cover S ⊆ S with |S| ≤ 𝑘,
+select the corresponding subset indexes {𝐼
+𝑠
+𝑗 
+: 𝑠
+𝑗 
+∈ S}. Each 𝐼
+𝑠
+𝑗 
+is
+created on the query–label set 𝑠
+𝑗 
+and covers all vectors whose label
+set is 𝑢
+𝑖 
+for every 𝑢
+𝑖 
+∈ 𝑠
+𝑗 
+. The overlap ratio is at least 𝑐, so the elastic
+factor between 𝐼
+𝑠
+𝑗 
+and both 𝑠
+𝑗 
+and 𝑢
+𝑖 
+is at least 𝑐. This solves EIS
+because (1) the top index 𝐼
+⊤ 
+covers the query-label sets S (as well as
+∅) in L with elasticity factor 𝑐, and (2) the index built on the selected
+S covers the query-label sets {{𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+𝑖 
+}, . . . , {𝑠
+1 
+· · · 𝑠
+𝑥
+𝑢
+′
+𝑖 
+} (as well
+as Σ, since |𝐼
+all|/|𝐼
+𝑠 
+𝑗 
+| 
+| = 𝑏/2𝑏 &gt; 𝑐) in L with elasticity factor 𝑐.
+3-SC ⇐ EIS. Conversely, suppose the EIS instance admits a feasible
+selection I. By Condition (3), any 𝐼
+𝑢
+𝑖 
+∈ I 
+can be replaced by some
+𝐼
+𝑠
+𝑗 
+containing 𝑢
+𝑖 
+without violating constraints or increasing total
+cost. Thus we may assume the solution consists solely of subset
+indexes after such replacements. Let S = {𝑠
+𝑗 
+: 𝐼
+𝑠
+𝑗 
+∈ I}
+. Because
+every 𝑢
+𝑖 
+(in the query workload U ⊆ L) must be covered by some
+subset index (with overlap ratio at least 𝑐), we have 
+Ð
+𝑠
+𝑗 
+∈S 
+𝑠
+𝑗 
+= U
+.
+The budget enforces |S| ≤ 𝜏/𝐵 = 𝑘, yielding a valid 3-SC solution.
+A.2 EXTRA DISCUSSIONS
+Other Types of Label Constraints. Our work primarily addresses
+the label-containment constraint, where a vector’s label set must
+contain the query label set. Other label constraints can also be
+supported:
+(1) Label equality. Here, we require base vectors whose label set
+𝐿
+𝑖 
+exactly matches the query label set 𝐿
+𝑞 
+. To handle AKNN search
+under this constraint, we group base vectors by their label sets to
+form a label-set inverted list. An index is then built for each group,
+and the overall dataset cardinality remains unchanged. For example,
+an index for 𝐿
+𝑞 
+= {𝐴} is built over base vectors 𝑥
+2 
+and 𝑥
+5
+, both
+labeled {𝐴}. When using a graph-based index—the most efficient
+structure to date—the total space complexity is 𝑂 (𝑁 𝑀), where 𝑀
+is the maximum node degree constrained by edge occlusion.
+(2) Label overlap. Here we require that a vector’s label set intersects
+the query label set, i.e., 𝐿
+𝑖 
+∩ 𝐿
+𝑞 
+≠ ∅. To support AKNN search under
+this type of label constraint, we decompose the query into |𝐿
+𝑞 
+|
+subqueries, each with a single-label containment constraint. For
+example, a label-overlap query with label set 𝐿
+𝑞 
+= {𝐴𝐵} can be
+answered by merging the results of label-containment queries with
+UNG ELI-0.2 ELI-2.0 ACORN-1 ACORN-𝛾
+80 90 100
+10
+2
+10
+3
+recall@10(%)
+Qps
+Label Overlap(Zipf,|Σ|=12)
+(a) SIFT
+70 80 90 100
+10
+1
+10
+2
+10
+3
+10
+4
+recall@10(%)
+Qps
+Label Overlap(Real,|Σ|=7)
+(b) PAPER
+Figure 14: The Test of Label-Overlap Constraints
+label sets 𝐿
+𝑞 
+= {𝐴} and 𝐿
+𝑞 
+= {𝐵} and taking their union. These
+extensions show that our approach naturally generalizes beyond
+simple label containment, while we focus on the containment case
+throughout this paper.
+Vector Similarity Search. Vector similarity search is closely re-
+lated to AKNN search and has been extensively studied. Most prior
+work targets approximate search [ 19 ], since exact search is prohib-
+itively expensive in high-dimensional spaces [ 32]. Among these
+methods, 𝑐-approximate nearest neighbor search returns results
+within a factor 𝑐 of the true distance and can be solved in sublinear
+time using locality-sensitive hashing (LSH) [ 9, 14, 19 , 20 , 30 , 49 , 66].
+For the AKNN search problem in this paper, graph-based vector
+indexes [12 , 13 , 23 , 34 , 40 , 43 , 47 , 53 ] represent the current state
+of the art and are significantly more efficient than LSH according
+to benchmarks [39 ]. In addition, inverted-list indexes [ 3 , 35 ] and
+quantization-based methods [ 15, 17 , 18, 22 , 35 , 36 , 61 ] are widely
+used for AKNN search. Inverted indexes provide low space over-
+head, while quantization techniques speed up distance computa-
+tions [ 52 , 59 ]. In this paper, we employ the widely adopted HNSW
+algorithm [42 ] as the underlying index for each vector group, al-
+though other optimized AKNN libraries [ 34 , 67] can be used as
+drop-in replacements.
+A.3 Extra Experiments
+Exp-7: Test of Label-Overlap Constraints. We previously dis-
+cussed how our method for AKNN search with label-containment
+constraints can be extended to handle label-overlap constraints.
+Specifically, a query with label overlap is decomposed into multiple
+single-label containment sub-queries; We solve each sub-query in-
+dependently and then merge the results. We evaluate this approach
+on both synthetic SIFT data with a Zipf distribution and the real-
+world Paper dataset, as shown in Fig. 14. The figure shows that,
+despite requiring multiple search calls for single-label containment
+sub-queries, our methods ELI-0.2 and ELI-2.0 achieve search per-
+formance comparable to ACORN-𝛾, while delivering 2×–10× the
+efficiency of ACORN and UNG. Since our current framework does
+not treat overlap queries as part of the optimization workload, we
+plan to explore extensions of our greedy method to support such
+queries and, more broadly, other complex label constraints.
+Exp-8: Scalability to Large Datasets. To validate the scalability
+of our algorithm on large-scale data, we adopt the DEEP dataset
+containing 100M vectors of 96 dimensions. Labels follow a Zipf dis-
+tribution with varying query selectivities, and the results are shown
+16</page></paper>

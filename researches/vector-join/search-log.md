@@ -48,3 +48,126 @@
 - semantic/LLM、集合/字符串 join 尚未形成单独背景索引；仅在明确算法/系统/评价迁移点后收录。
 - 官方实现/下载链接、formal/preprint 差异、recall 分母/zero-result queries、pair conventions 与 materialization 开销仍需逐篇补证。
 - 粗筛已发现更早 cost models 与 Fast AVJ §6，不能宣称向量 join 基数/优化器无人研究；研究假设新颖性仍“尚未充分排查”。
+
+## 2026-10-18 层级属性向量搜索定义与候选发现
+
+用户确认目标为 `researches/nested-attr-vector-search/index.md`。该方向是 filtered top-k search，归入 B 类可迁移借鉴方向，不作为 vector join 执行工作。场景、形式化与实验草案保存在该文件。
+
+- 先检索：`"vector similarity join" "vector join" threshold`、`"similarity self-join" "high-dimensional similarity join"`、`"inner-product similarity join"`；随后检索 `site.acm.org CCS concepts multiple concepts hierarchical classification papers` 与 `"filtered" "approximate nearest neighbor" "hierarchical" labels taxonomy`。
+- 核对已有 papers.jsonl、relations.jsonl、研究问题及 SimJoin §2 / Fast AVJ §3.1 后，区分 join 与单查询 top-k。
+- 候选：[Hierarchical Multi-Label Classification of Scientific Documents](https://arxiv.org/abs/2211.02810)，Mobashir Sadat、Cornelia Caragea。仅核摘要，支持论文层级多标签应用；原问题为分类，暂作 C 类应用/数据候选，不填 ANN 算法与实验结论，不加入精读索引。
+- ACM CCS 官方指南全文访问返回 403；真实 taxonomy 的多父结构、内部标签和直接/继承标注需核数据版本。搜索返回 TrieHNSW 仓库入口，但打开为 404，未作可用实现或方法证据。
+- 未完成：hierarchy-aware filtered ANN 与 label-set containment 全文排查、SciHTC 数据/许可核查。本轮不是相关工作覆盖综述，新颖性尚未充分排查。
+
+### 2026-10-18 层级属性搜索 Introduction 撰写
+
+在 `researches/nested-attr-vector-search/index.md` 的问题定义前加入应用与动机。复核 SciHTC（arXiv:2211.02810）与既有候选 ACORN（arXiv:2403.04871）的原始摘要，仅用于层级多标签场景及混合检索背景；未据此填造算法、性能或层级检索新颖性结论。本文对逐类别索引、全局检索后过滤及祖先重复索引的讨论为方案层面的推导，尚无实测收益。待补查层级共享索引先前工作及真实数据标签编码。
+
+## 2026-10-18 alphaXiv 层级属性检索创新性排查
+
+- 目标：明确层级属性约束向量 top-k 与 generic filtered ANN、label-set containment/overlap、range-filtered ANN、共享索引和召回控制的联系。
+- 已查本地 8 条原始记录、6 条关系、现有搜索日志与 nested-attr-vector-search 定义；本轮复用此前核心 join 查询结果，没有重复进行全量 join 文献搜索。
+- alphaXiv 两轮 discovery，关键词覆盖 hierarchy-constrained vector top-k search、hierarchical label filtering、filtered approximate nearest neighbor search、label-set containment、共享索引与 ACORN。随后对定位论文批量读取 PDF 的问题定义、相关方法、保证与实验页。原始检索返回保存在 `researches/nested-attr-vector-search/evidence/alphaxiv-discovery-{1,2}-2026-10-18.json`。
+- 新增七篇 B 类记录及原始全文：ACORN、iRangeGraph、Curator、LSSG、DLH、Grant、VADER；保存相关页证据和 PyMuPDF 完整文本（非 MinerU），新增七条有证据关系。正式 DOI 使用 Crossref 和原始出版/作者机构记录核实；预印本、接收声明和未来会议年份分开。
+- 结论：当前过滤语义可精确归约为 overlap 或祖先展开后的单标签过滤；单标签可归约为 DFS 数值区间。问题定义本身不足以确认为全新问题；具体 taxonomy 索引共享/多标签去重机制的创新仍“尚未充分排查”。
+- 完整区别矩阵、七篇作者顺序/版本/章节证据、H1–H3 与最小实验见 `researches/nested-attr-vector-search/novelty-analysis.md`。
+- 仍为候选：UNG（DOI 10.1145/3698822 及官方实现已核，alphaXiv 题名无匹配、正式 PDF 403，未以二手描述冒充全文）；RaG-Tree（2608.01255，仅核摘要）；E2E（2602.06721）、实验综述（2508.16263）；TrieHNSW 仅搜索缓存线索，实际 GitHub/API 404，身份与全文未确认。
+- 未完成：taxonomy 直接同题工作前后向引用、ELI/UniFilter、Hi-PNG/SeRF、subset search 与数据库 distinct top-k、真实分类编码与许可，以及任何算法复现。未声称排除全部同题工作。
+
+## 2026-10-18 UniFilter Curator ELI 原文核查与 overlap 细化
+
+- 起点：已有 15 条论文记录、13 条关系、相关 PDF 和 novelty-analysis。先复核三篇的现有记录，新增 ELI 而不重复 Curator。先查 `vector similarity join` / `similarity self-join` / `high-dimensional similarity join` / `inner-product similarity join` / `vector join` 核心词，再针对题名、DOI、overlap、taxonomy、multi-label distinct top-k 查原始论文与引用线索。
+- ELI：取得 arXiv:2505.03212v2（18 页）与 PVLDB 正式稿（14 页），分别保存。核对 §3.1 Lemma 3.2、§3.2 成本/预算、A.2/A.3 p.16 overlap 与 Fig.14。正式引用刊年 2025、online 2026-03-18 与 VLDB 2026 分开；alphaXiv 原始相关页及 Crossref 日期快照已保存。
+- Curator：复核已有 v3 §4.2/Algorithm 2 pp.6–7 及 §6.2 Fig.9 pp.10–11。复杂谓词以外部有序合格 ID 为输入，支持临时构建及所述延迟子树优化；Idx 为已预建 virtual-label 版本，非同一路径简单扣时；实验 OR/AND 各两标签，不代表表达能力只限两标签。
+- UniFilter：Crossref/作者机构/作者主页核标题、完整作者、PACMMOD 2025 与 SIGMOD 2026；ACM PDF/HTML 403，alphaXiv 无原文匹配，作者站点文件列表未提供全文。作者综述相关页（p.20）已保存，说明 AND/OR 谓词图与 proximity graph 联合；LSSG 的 label-partition 分类不替代原文。候选信息单独保存，未加入要求 paper.md 全文的 papers.jsonl。
+- 新增 1 条 B 类论文、修订 Curator、追加 2 条关系（1 原文比较、1 研究者方法对照）。文献比较、结构化 overlap 定义、预算/端到端约束、H4/H5/强基线/最小实验见 `researches/nested-attr-vector-search/overlap-refinement.md`；主稿加入定义 7–10。
+- 主要边界：一般 overlap 已有直接方法，原问题是其结构化子类。祖先展开使大子树查询变成短 overlap，必须纳入强对照。精确 distinct 局部 top-k 合并足够，不能把标签交叠本身写成结果缺额原因。
+- 未完成：UniFilter 原文/官方实现、subset/structured OR/interval-union/distinct top-k 系统引用闭包、真实 taxonomy 版本与许可、任何性能复现。没有从三篇差异推导“无人研究”，新颖性仍尚未充分排查。
+
+## 2026-10-19 包含过滤搜索的八项工作
+
+- 用户明确当前谓词为查询标签集合包含于每个结果对象的标签集合，即 Lq⊆Li；序列按集合解释，不把 AND 与此前 overlap OR 混同。目标文档为 `researches/containment-filtered-vector-search/index.md`，前期稿增加语义变更入口。
+- 先检查已有16篇/15关系、全文、novelty-analysis/overlap-refinement，再查重；先搜 `vector similarity join` / `vector join` containment 与 `similarity self-join` / `high-dimensional similarity join` / `inner-product similarity join`，随后检索 TFANNS/RWalks/Filtered-DiskANN/UNG/UniFilter 原题名、DOI和作者源。
+- 新取得 Filtered-DiskANN 作者11页稿、TFANNS作者13页稿、RWalks作者仓库26页稿及补充4页，保存 PyMuPDF 全文、日期化书目与报告。TFANNS 在 alphaXiv 查询原始 URL 获取相关页；题名直接查询无匹配时不以相似论文代替。
+- 一条网页线索将 arXiv:2211.12850 关联 Filtered-DiskANN，实际工具返回 OOD-DiskANN，已按标题/作者不一致排除，未登记为其版本。Filtered-DiskANN 以原作者网站全文和 DOI 10.1145/3543507.3583552 为准，不猜测预印本 ID。
+- 重要纠偏：Filtered-DiskANN §2/§3.1 的原生评测主问题单标签，多标签入口为 OR；明确 AND 为 future work。Packing 是 TFANNS 的方法而非论文名，Global 空间 Lemma 不冒充 Packing 端到端界；RWalks 的属性公式与 Equality 名称按公式区分；LSSG 表2/§6 对比边界与先前论文原文分别记录。
+- UNG 原论文 ACM PDF 403，作者站只提供 poster/code；新增作者海报和官方 README/核心代码快照，核containment传递与极小超集入口。UniFilter原文仍403/未匹配，沿用作者综述证据。两篇保留原文待补候选，不造 paper.md 入全文索引。
+- Crossref核新三篇DOI和作者；TFANNS二次保存遇429，不循环重试，首次响应已核且有IEEE/作者稿佐证。Filtered-DiskANN 作者稿 Premukumar 与正式 Crossref Premkumar、RWalks 作者稿 Arnobaldi 与正式 Arnaboldi 的拼写差异已记，不猜改作者顺序。
+- 追加3篇B类、5条原文明示边；修订LSSG复杂度、测试仅保留≥k答案和Table2能力粒度；ELI旧题名补alias。索引现19篇（A7/B11/C1）、20关系。文档含定义、8项对照、逐篇动机/机制/保证/实验边界、方法关系、C1/C2假设和统一评测。
+- 未完成：UniFilter/UNG原文、原文/当前代码版本核查、真实层级/查询数据与许可、相关领域完整前后向引用、独立复现。未声称领域全覆盖，未执行算法性能实验。
+
+### 2026-10-19 前缀包含语义修正
+
+- 用户澄清当前是 prefix containment，上一轮将属性序列视为无序集合丢失顺序，已修正当前文档开头与问题定义；原八项集合包含文献保留为背景和经编码后的强基线。
+- 先检查现有文档/索引约定，检索 `"vector similarity join" "vector join" prefix`、`"similarity self-join" "high-dimensional similarity join" "inner-product similarity join"`，再查 `"prefix" "filtered" "nearest neighbor" hierarchy` 与 `"prefix" "vector search" "trie"`。
+- 当前形式化为 p 是对象序列 s 的起始连续前缀，含相等与空前缀。单序列前缀集合层状性、位置编码到containment、完整前缀token到singleton、DFS子树范围归约均为本项目从定义推导；多路径不能混合位置标签或沿用对象集合层状性。
+- 新候选：Directory-Aware Query and Maintenance in Vector Databases，arXiv:2606.16903v1，2026-06-15；Mengzhao Wang、Zheng Gong、Jingpei Hu、Jiajie Fu、Maojia Sheng、Junwen Chen、Yifan Zhu。已核原始arXiv摘要/作者/版本；摘要含DSQ/DSM、PE-Online/PE-Offline/TrieHI。正式venue未核，正文与当前prefix top-k的精确差别尚未读，未伪造实验/理论入全文索引。
+- 这是前缀相关工作的有限初筛，不是完整引用闭包。待办优先精读2606.16903，核单/多路径对象语义与检索算子，随后比较位置编码/前缀展开/原生Trie/range基线；新颖性尚未充分排查。本轮未新增已精读论文或关系。
+
+### 2026-10-19 逐篇讨论第一篇 Filtered-DiskANN
+
+按用户“一篇一篇、循序渐进”要求，本轮仅讨论 FilteredVamana/StitchedVamana，复读已有原文 §3–4 Algorithms 1–5，并打开原作者PDF核对，不扩展新一轮全领域检索。新增 `researches/containment-filtered-vector-search/walkthroughs/01-filtered-diskann.md`，区分原方案、完整前缀singleton基线、本项目LCP等价剪枝/Trie查询判定推导，以及尚未成型的边预算动机。F1给假设、基线、数据/指标、最小实验和反例；单路径/静态Trie前提明确，多路径不沿用单LCP。用长度0–3、两符号序列枚举3375组三元组核对剪枝标签条件与LCP深度条件等价，非性能实验；尚未实现ANN改造或验证加速。主索引补项目启发，未把推导写成作者结果，论文/关系数量不变。下一篇先读TFANNS/Packing的频率与边预算。
+
+### 2026-10-19 逐篇讨论第二篇 TFANNS/Packing
+
+用户“继续”承接上一轮一篇一篇讨论，本轮仅复读已存TFANNS原文§I/§III–V Algorithms 2/3/6/7，未重新开展全文献检索。原作者PDF网页解析因15MB尺寸限制失败，使用此前已取得的同一作者原始PDF文本核查。新增walkthroughs/02-packing.md，区分Local/Global/Packing、对数频率分配、最稀有覆盖图查询与前缀累计有效度假设F2；将新意边界、物理边/槽位区别、宽前缀几何多样性、单路径前提及最小实验写明。更新主文入口/项目启发，不改原论文保证、不新增论文或关系；未运行算法实验。下一篇衔接UNG标签包含导航。
+
+### 2026-10-19 逐篇讨论第三篇 UNG
+
+继续上一轮逐篇任务，仅复核已有UNG作者海报、官方README和核心代码get_min_super_sets/build_label_nav_graph/build_cross_group_edges/get_entry_points/iterate_to_fixed_point，并重新打开官方仓库；ACM原文PDF仍不可读，未将代码冒充论文全文，不补造原文定理/实验。新增walkthroughs/03-ung.md，说明极小超集入口、组内Vamana、单调跨组边，以及原实现已有标签集合Trie。
+
+本项目推导：完整前缀编码使占用终止组包含图成为森林；内部空节点和大入口前沿仍是宽前缀问题。将Trie路由等价简化与新增LCP条件跨分支桥接分别定义为F3研究组件。用2符号长度0–2的7条序列的127种非空终止分布核森林与前沿覆盖关系，非ANN/性能实验。补充候选分析快照，保留原候选元数据；没有新论文/关系入库，19篇/20关系不变。待补UNG原文、原型基线及TrieHI/范围导航前序；下一篇ELI。
+
+### 2026-10-19 逐篇讨论第四篇 ELI
+
+继续逐篇任务，复读ELI已有正式稿/v2 §3–4并打开PVLDB原始正式PDF，不重复做全领域检索。新增walkthroughs/04-eli.md，解释覆盖索引方向、elastic factor、两种优化目标及其假设。前缀适配需保留完整链查询才能让原字面subset路由识别祖先；singleton正确过滤不自动具有相同可用索引集。
+
+本项目推导限定候选前缀、单祖先服务、独立可加成本与固定factor门槛的树DP，分开代理最优与ANN实效。用7节点固定树、3种候选集、4个门槛和128种查询节点集共1536组与穷举一致；不是性能实验或新颖性证明。补项目启发/F4与主文入口，19篇/20关系不变。待补树覆盖/物化视图/结构化索引选择前序、真实成本与召回验证；下一篇Curator。
+
+### 2026-10-19 逐篇讨论第五篇 Curator
+
+继续用户逐篇任务，本轮复读已有Curator v3 §3.1–4.2/Algorithm2及§6.2，重新打开原始arXiv版本；未重复开展全领域检索。新增walkthroughs/05-curator.md，分开共享几何树、标签自适应buffer、临时virtual-label视图、已有延迟/缓存能力与前缀候选改进。
+
+本项目F5限定跨前缀共享成员表示及局部几何视图；推导属性DFS/几何ID双顺序交集和单路径计数加和，枚举24种四对象顺序核对交叉分区无共同连续序，不是ANN实验。补主文入口、项目启发、研究问题及变更日志，19篇/20关系不变。待补原实现延迟构建与完整计时、Directory-Aware/TrieHI和范围索引前序；下一篇RWalks。
+
+### 2026-10-19 逐篇讨论第六篇 RWalks
+
+继续逐篇任务，先检查既有论文/关系/作者全文，再复读RWalks §2.1/§3/§4/§5相关部分。本轮未重复开展全领域检索；原DOI网页不可读，作者PDF网页解析被content-type拒绝，采用此前保存的原始作者PDF文本，保留正式稿差异待核。新增walkthroughs/06-rwalks.md，区分扩散、混合导航、双队列和启发式剪枝，以及原始分数/标准化分数/精确过滤。
+
+本项目F6推导终止路径计数表示：680个三采样多重集、10,200次逐前缀核对中，显式展开与DFS二分计数一致，并核原始祖先单调性；不作为ANN或性能证据。更新主入口、项目启发、研究问题与变更日志，19篇/20关系不变。待补原代码标准化/统计成本与层级扩散前序，新颖性尚未充分排查；下一篇LSSG，UniFilter原全文仍待获取。
+
+### 2026-10-19 逐篇讨论第七篇 LSSG
+
+继续逐篇任务，检查既有论文/关系/作者全文，复读LSSG v1 §3–5/§6.1并打开原始arXiv页面；未重复全领域检索。新增walkthroughs/07-lssg.md，区分标签相似范围与实际分层边、原生in-filtering与候选截断、局部概率与ANN召回。
+
+本项目F7给完整前缀Jaccard的LCP恒等式、深度分桶候选条件、固定深度的门槛等价、变长路径相似/合法错位反例及合法深度分层假设。30条非空路径、900对、6门槛共5400次核对一致，非性能实验。更新入口/项目启发/F7/变更日志，19篇/20关系不变。UniFilter原文仍待补，不能用LSSG二手分类代替其机制；下一轮优先补原始证据，新颖性未充分排查。
+
+### 2026-10-19 逐篇讨论第八篇 UniFilter（原文未取得）
+
+继续八项逐篇任务，先查已有候选/作者综述/论文关系，再搜完整标题PDF、UniFilter+DOI/github/cross-edges。机构原始摘要和作者主页可读；ACM PDF/ePDF在web与requests仍403，alphaXiv原PDF读取失败。检查作者主页公开仓库main递归文件树，未发现filter/predicate/sigmod26相关命名文件；不把有限路径名搜索当全文不存在证明。作者综述raw PDF下载200、873943字节，重核p20的AND/OR谓词图、coverage和cross-edges。排除同名多模态UniFilter与异作者Beyond Vector Search项目，未用Paperity开头预览重建算法。
+
+新增walkthroughs/08-unifilter.md及日期化补查快照，保留10-18候选。原机制证据受限，F8仅为本项目前缀谓词路由/入口预算问题；单语义节点覆盖不等于单向量入口保证。补入口/F8/变更日志，未将作者综述伪造为原文、未入全文索引或加方法关系，仍19篇/20关系。无ANN实验。下一步精读直接相关2606.16903 Directory-Aware/TrieHI，再收敛创新点。
+
+### 2026-10-19 第九篇 Directory-Aware／TrieHI 原文核查
+
+按上一轮承诺继续精读已登记的直接相邻候选，先查本地索引/候选，再打开原始arXiv摘要/HTML，取得v1原始15页PDF（3082250bytes）、PyMuPDF全文、日期化元数据与阅读报告。核读§II–V/§VII：recursive DSQ单路径scope与当前定义一致，内部目录本地对象已有；TrieHI为scope层，仍存逐节点inclusive-ID/Roaring聚合，不改变ANN布局。
+
+核TableII节点工作与bitmap总时间边界、TableIV非普遍更快、TableV空间最大及共同catalog排除；WIKI-Dir单规范路径、ARXIV-Dir两独立命名空间不冒称任意多路径。OpenViking入口可读但原代码/commit未核；数据仓库网页超时，下载与许可待补。新增walkthroughs/09-directory-aware.md、全文论文记录与读取快照，保留摘要候选；主文修正过时的仅摘要状态，F9收缩创新定位。现20篇(A7/B12/C1)/20关系，无新作者继承边、无ANN性能实验。待核scope接口/质量边界和更直接的层级图导航前后向文献后，选择一个机制开展最小实验。
+
+### 2026-10-19 论文目录整理（非文献检索轮次）
+
+按用户要求将主研究主题与项目相关性分离：7篇vector-join、11篇filtered-ann、1篇prefix-vector-search、1篇一般similarity-join。统一书目/关系/变更记录上移papers/，新增topic检索，更新引用与维护约定；原研究日志保留为历史，不据此判断全文分类。未新增论文、未改作者关系或论文保证；20篇/20关系及迁移完整性核对通过。详见papers/changelog.md与迁移清单。
+
+### 2026-10-19 Weaviate官方过滤文档（系统资料）
+
+用户指定官方Filtering链接，本轮先读此页并核Vector index参数参考，不重复全领域检索。补systems/weaviate-filtering.md与日期化证据：allow-list+过滤HNSW、定制ACORN与论文实现区别、sweeping/pathseer及flat回退。默认/版本为本轮文档观察，不代表本地运行；图例15%不当默认，参考配置整数40000/0强制向量索引另记。PathSeer DOI3802098正文403，未核全作者/算法/出版信息，列待读候选。补ACORN项目启发/系统文档证据，未新增全文论文或作者关系；20篇/20关系不变。待补PathSeer原文、版本固定代码/路径边界和实际系统实验，未运行Weaviate。
+
+### 2026-10-19 PathSeer原文与作者代码学习
+
+按用户指定论文任务，先查现有Weaviate候选与总索引，再搜精确标题/作者来源。ACM原PDF仍403；作者主页/清华组页面与SIGMOD官方核会议作者，Crossref核卷期/日期。由DBScholar链接取得原论文PDF镜像27页/2485048bytes，核标题/作者/DOI/刊头，未用其AI摘要作机制证据；未与ACM文件逐字节比对。保存PDF、PyMuPDF全文、日期化元数据/Crossref。
+
+核读§2–5/§6，重点双区融合索引、DFN/DOS、VOB近似/离线profile、六工作负载/同Faiss余条件与空间代价。原文不依赖DOS二跳且需额外存储，与Weaviate文档同名实现分开。保存作者仓库commit6e0cd1df08927651013823f1f5458e6fb4a2336f的README/IndexPathSeer/impl核心文件，核VO函数和profile说明，未编译运行。新增filtered-ann记录/阅读报告/第十篇/F10与2条原文明示关系（比较ACORN、讨论Filtered-DiskANN），现21篇(A7/B13/C1)/22关系。旧Weaviate候选快照保留，当前笔记状态更新。待核完整profile时间/groundtruth边界/同内存/产品代码对应，未运行实验。
+
+### 2026-10-19 TrieHI后端选择补核
+
+用户追问为何不用先进filtered ANN；复核原文§II-A、§V-A、§VI与参考文献：实验固定Viking PG/IVF以隔离目录元数据开销，且确实引用ACORN/Filtered-DiskANN/UNG。原文未逐一解释排除各先进后端，不能臆测作者意图或将未跑解释成不能组合；结论限已测scope/后端。第九篇与阅读报告补充交叉实验建议及版本时序边界；未新增记录/实验。

@@ -1,0 +1,1226 @@
+<paper id="https://miaoqiao.github.io/paper/ICDE25.pdf"><page num="1">Tag-Filtered Approximate Nearest Neighbor Search
+Jiarui Luo
+Rutgers University
+jl3288@scarletmail.rutgers.edu
+Miao Qiao
+The University of Auckland
+miao.qiao@auckland.ac.nz
+Chaoji Zuo
+Rutgers University
+chaoji.zuo@rutgers.edu
+Dong Deng
+Rutgers University
+dong.deng@rutgers.edu
+Abstract—Approximate Nearest Neighbor Search (ANNS)
+plays an important role in the search and recommendation of
+objects represented with high-dimensional vectors. For objects
+that are associated with tags such as the origin location, color,
+and type, it is common to perform ANNS with tag constraints,
+i.e., conduct search on objects that carry the query tags.
+We call such search Tag-Filtered Approximate Nearest Neigh-
+bor Search (TFANNS). The state-of-the-art TFANNS method
+Filtered-DiskANN is a graph-based method which suffers from a
+low recall for queries with low-to-medium frequent tags. Pre-
+filtering on these tags could boost the recall but lead to a
+large memory footprint. To address this issue, we propose three
+strategies in constructing a graph that strikes a balance between
+the performance and memory footprint; note that we are the first
+work on tag-frequency-aware graph-based indexing for TFANNS.
+Our extensive experiments show the superiority of our proposed
+methods over existing baselines: under ≥ 0.9 recall, our QPS is
+up to 13 times that of the best baseline.
+Index Terms—ANNS, tag frequency, graph-based indexing
+I. INTRODUCTION
+Given a set P of n vectors in d-dimensional space R
+d
+,
+Nearest Neighbor Search (NNS) reports, for a query vector q in
+R
+d
+, k vectors in P with the shortest distances to q. With deep
+learning effectively embedding objects such as videos, images,
+and products, into high dimensional space such that similar
+objects have similar representations, NNS becomes a routine
+for applications such as document retrieval, image search, and
+recommendation systems [1]–[4]. Objects in these applications
+are often associated with metadata in the form of keywords or
+attributes such as the type of an image, the product category,
+or the music genres. Therefore, NNS can be raised with tag
+constraints. For example, in recommendation systems, an NNS
+query may specify preferences, genres, or product categories
+to retrieve personalized suggestions; in large collections of
+publications, an NNS may need to report semantically similar
+documents with a specified topic or author. For these scenarios,
+each vector p in P is associated with a set t(p) of tags
+and an NNS query may require the NNS to be conducted
+among the vectors whose tag sets satisfy specific constraints.
+We call the NNS with tag constraints Tag-Filtered NNS: For
+a query Q(k, q) with a query vector q that is associated
+with a tag set t(q), and an integer k, report the k nearest
+neighbors of q in the vectors P [t(q)] that carry tag t(q) where
+P [t(q)] = {p ∈ P |t(q) ⊆ t(p)}. An efficient solution to Tag-
+Filtered NNS serves as a building block for, and is essential
+to, NNS with complicated tag constraints.
+Approximation is introduced to NNS on large datasets to
+enable a shorter delay. This is because exact NNS has an
+inherent complexity barrier – asymptotically, NNS can hardly
+be processed significantly faster than a linear scan under strong
+exponential hypothesis [5]. Approximate Nearest Neighbor
+Search (ANNS) has been extensively studied [6], [7]. Graph-
+based ANNS such as HNSW [8] has been widely adopted due
+to its superior performance.
+This paper considers Tag-Filtered Approximate Nearest
+Neighbor Search (TFANNS) where the aim is to efficiently
+report, for a query Q(k, q), a set R of k vectors with a high
+recall to the real k-nearst neighbors (kNN) of q in P [t(q)].
+The state-of-the-art TFANNS is StitchedVamana [9]. It con-
+structs a graph-based index (based on DiskANN [10]) with a
+tag-sensitive pruning strategy. Specifically, in DiskANN, the
+nearest neighbors S of a vector p undergo a pruning process,
+after which the remaining vectors are retained as the neighbors
+of p in the navigation graph of DiskANN. The pruning process
+lies on a domination relation: for two nodes u and v in S,
+u dominates v if 1) p is closer to u than to v and 2) v is
+closer to u than to p. In such a case, v will be pruned. The
+pruning process eliminates the dominated vectors in S and the
+M (M is a parameter indicating the maximum degree of the
+navigation graph) remaining nodes that are closest to q will
+be the neighbors of p. The critical change StitchedVamana
+made to the pruning process of DiskANN is to add an
+additional tag-related condition to the domination relation, i.e.,
+3) t(v) ⊆ t(u). In other words, u dominates v requires 1)-3).
+With this tag-sensitive pruning, StitchedVamana conceptually
+stitches the indexes built for different tags together into a
+single graph. StitchedVamana performs well for tags that
+are frequent enough; for tags with low-to-medium frequency,
+however, StitchedVamana cannot ensure the connectivity of
+the graph with regard to the tags.
+Example 1: Figure 2(a) illustrates a scenario where the
+dataset contains two tags blue and green of colors. The
+maximum degree M of the graph of StitchedVamana is 3.
+There are 6 vectors with only the blue tag and 3 vectors
+with both tags blue and green. The subgraph induced by
+vectors with the blue tag is well-connected. The subgraph
+corresponding to the green tag has no edge. This is because the
+vectors with green tag are not among each other’s top-3 nearest
+neighbors. Consequently, the green tag subgraph suffers from
+poor connectivity, which can result in a low recall for queries
+involving the green tag. Such a scenario often appears on tags
+with low-to-medium frequency.
+A straightforward remedy is to perform pre-filtering over
+low-to-medium frequency tags; however, it leads to a large</page><page num="2">memory footprint and is thus not practical. Specifically, we
+construct, for each tag t whose frequency is lower than a
+given cutoff value, a graph index on P [t] and resort to
+StitchedVamana for the other high frequency tags. Figure 1
+shows the query performance with cutoff values 0, 1K, 10K,
+and 100K. We used the single-tag queries on a real-world
+dataset YFCC [11]. In the figure, the y-axis is the recall,
+while the x-axis shows the frequency of the query tag. To
+get a recall above 60%, the cutoff needs to be ≥ 100K,
+leading to an index size of 82G, 11 times the index size
+of StitchedVamana (i.e., when the cutoff is 0). It means for
+StitchedVamana+prefiltering, without paying massive mem-
+ory overhead, it is hard to achieve an acceptable recall con-
+sistently for all the queries.
+cutoff = 0, index size = 7.4GB
+cutoff = 1000, index size = 27.9GB
+cutoff = 10000, index size = 55.2GB
+cutoff = 100000, index size= 82.0GB
+2 3 4 5 6
+Log10(Tag Cardinality)
+0.0
+0.2
+0.4
+0.6
+0.8
+1.0
+Average Recall
+Fig. 1 Tag cardinality v.s. average recall of a combination
+of pre-filtering and StitchedVamana. For a cutoff value in
+{0, 10
+3
+, 10
+4
+, 10
+5
+}, tags with frequencies smaller than the cutoff are
+coped with pre-filtering, while tags with frequencies larger than the
+cutoff are processed with StitchedVamana.
+The poor performance in low-to-medium frequency tags
+is not unique to StitchedVamana. Other TFANNS ap-
+proaches such as NHQ [12], ACORN [13], and Post-filtering
+HNSW [14] all suffer from this issue. The main reason is that
+existing approaches do not pay attention to the tag frequency,
+i.e., the construction of their index is tag-frequency-insensitive.
+To improve the performance for low-to-medium frequency
+tags, the indexing should allocate more resources to these tags
+to keep the connectivity of the graph w.r.t. these tags. However,
+it is yet to be known how to improve the recall for low-to-
+medium frequency tags while keeping the index size small.
+This paper proposes three graph-based TFANNS approaches
+that are sensitive to the tag frequencies to boost the perfor-
+mance of queries with low-to-medium frequency tags. Specif-
+ically, we propose three different schemes of node degree
+allocation based on tag frequencies in the index construction.
+1) The local method builds the index in a node-centric way,
+i.e., each node has the maximum degree M and the allocation
+of M to the neighbors of a node p is based on the frequency of
+tags of p. 2) The global method builds the index in a tag-centric
+way, i.e., each tag will have a maximum degree (applied to all
+the vectors with this tag) proportional to a function over the tag
+frequency. 3) The packing method saves space by considering
+several vectors together to reduce the impact of variance of
+𝑣
+2
+(a) StitchedVamana
+𝑣
+1
+𝑣
+2
+𝑣
+3
+𝑣
+4
+ (b) Local
+Fig. 2 Compare the graph structure of StitchedVamana with that
+of our Local edge allocation strategy when the maximum degree
+M = 3. There are two tags in the data, blue and green. (a) In the
+StitchedVamana graph, there does not exist any edge between two
+vectors with green tag. (b) In the Local allocation method, some
+edges exist between green tag vectors while the subgraph of vectors
+of blue tag remain connected.
+the number of tags of vectors: within each pack, we use tag-
+centric indexing, across different packs, we apply pack-centric
+indexing, i.e., each pack has the same size for index.
+Our contribution is summarized as below.
+1) This is the first work discussing the impact of frequency
+distribution of the tags in indexing and their performance
+of TFANNS, especially for low-to-medium frequency .
+2) We propose three graph-based TFANNS approaches to
+improve the recall especially for low-to-medium fre-
+quency tags with low memory overhead.
+3) We conducted extensive experiments to evaluate the per-
+formance of our proposed approaches, and results show
+that they significantly outperform existing methods.
+This paper is organized as follows. Section II defines the
+problem and introduces the building blocks of our approach.
+Section III introduces the local algorithm, Section IV the
+global algorithm and Section V the packing strategy. Sec-
+tion VII presents the related work, Section VI shows the
+experiment, and Section VIII concludes the paper.
+II. PRELIMINARY
+Fig. 3 TFANNS
+Let T be the domain of all tags.
+Let d &gt; 0 be an integer. Let P =
+{p
+1
+, p
+2
+, · · · , p
+n
+} be a set of n data
+vectors where each p ∈ P is a vector
+in R
+d 
+with a set of tags t(p) ⊆ T .
+For each tag t ∈ T , its frequency is
+f(t) 
+.
+= |{p ∈ P |t ∈ t(p)}|.
+Definition 1 (Tag-Filtered-NNS): A
+Tag-Filtered Nearest Neighbor Search (Tag-Filtered-NNS)
+query Q = (k, q) consists of an integer k and a query vector
+q in R
+d 
+with a set of query tags t(q). It reports a set of data
+vectors R ⊆ P with size |R| = k such that they all carry tags
+t(q), i.e., ∀v ∈ R, t(q) ⊆ t(v), and all vectors carry tags t(q)
+are more distant to q than nodes in R, i.e., for ∀v ∈ P \ R,
+either t(q)̸ ⊆ t(v) or d(v, q) ≥ d(u, q) for ∀u ∈ R.
+Definition 2 (Tag-Filtered Approximate NNS (TFANNS)):
+Consider a dataset P of n vectors, a Tag-Filtered-NNS query
+Q = (k, q). Let S be the exact result of Q. Consider a set R of
+vectors in P . Define the recall of R w.r.t. Q as Recall@k =
+|R∩S|
+k 
+. The problem of (TFANNS) is to find a set R ⊆ P that
+maximizes the recall with minimal delay.</page><page num="6">The values of l(t), m(t) and len are maintained during the
+index construction.
+Index construction. The main challenge of building the index
+for global method is to maintain the structure that up holds
+Equations 1- 2. Note that when a new vector arrives to the
+system (Line 1), for each tag t ∈ t(p), we maintain the tag set
+and the frequency function. When the frequency firstly reaches
+θ, we setup the values for l(t), maintains len, determine m(t)
+(Line 6), and then construct the HNSW graph G
+t 
+(Line 7). Due
+to the truncation when computing the value of l(t), only when
+f(t) is a power of 2 can increment the value of l(t), which may
+potentially trigger the reconstruction of the HNSW graph G
+t
+(Lines 9-11). Most of the time m(t) can remain unchanged.
+When Equation 2 no longer holds, we may need to rebuild
+the entire index with a larger θ. The value of θ is doubled
+every time to find a valid value (Lines 13-16). After finding
+a working value of θ, we rebuild the entire index over all the
+tags with frequency over θ (Lines 17-20).
+Lemma 1 (Space Complexity): Denote by f the total fre-
+quency of T . The space of G
+X
+t∈T,f(t)&gt;θ
+f(t)m(t) ≤ M
+0 
+min{ 
+f
+θ 
+, 2n}.
+The space complexity is thus O(nM
+0
+).
+Proof 1: Because 
+P
+t∈T ,f(t)≥θ 
+m(t) &lt; 2M
+0
+, we have
+X
+t∈T,f(t)≥θ
+f(t)m(t) &lt; 2nM
+0
+.
+Search with the index. The search is generally the same with
+Algorithm 3. The difference lines in that the navigation graph
+used for conducting the search of Lines 11-19 is on the graph
+G
+t 
+with tag t selected based on Line 1.
+V. PACKING STRATEGY
+While the global method can cope with corner cases, it is
+not sufficiently cost-effective in index time. To this end, we
+propose packing strategy to combine the benefits of both local
+and global methods.
+Packing strategy packs data vectors into blocks and treating
+tags with large frequency into a global mask tag. By packing
+data vectors into blocks, degree resources are shared among
+vectors inside the same block. As a result, when a data vector
+has many tags and needs more than M degrees, it could
+”borrow” degrees from data vectors in the same block that
+have few tags and need few degrees. Therefore, it could
+improve the utilization of degree resources and thus improve
+the search performance. On the other hand, packing large tags
+into a global mask tag avoids wasting degrees on the tags that
+are already frequent enough to ensure the graph connectivity.
+This introduce a new threshold parameter θ
+′ 
+controls how large
+the tags should be packed to the mask tag. The cardinality of
+a mask tag is defined as the large cardinality of tags.
+Based on these two designs, the degree allocated to a tag
+of a vector is proportional to the size of the tag in the block.
+Algorithm 5: GLOBALINSERT
+Input: p: a vector with tags t(p); T inserted tags; f(·): the
+frequency function of all the tags inserted;
+G = {G
+t
+|t ∈ T , f (t) ≥ θ}: a collection of HNSW graphs
+for frequent tags; P : the node set; M
+0 
+and θ: parameters.
+len: global value dependent on the structure, initially to be 0.
+Output: Insert p to the structure (T , f(·), G, P, M
+0
+, θ) .
+1 Add p to P ;
+2 foreach t ∈ t(p) do
+3 if t̸ ∈ T then Add t to T ; f(t) ← 1; else f(t) ← f(t) + 1;
+4 if f(t) &lt; θ then continue;
+5 if f(t) = θ then
+6 l(t) ← ⌈log
+2
+(θ)⌉; len+ = l(t); m(t) ← ⌈ 
+M
+0
+·l(t)
+len 
+⌉;
+7 Build HNSW graph G
+t 
+on P [t] with M = m(t);
+8 else
+9 if f(t) is a power of 2 then
+10 l(t) + = 1; len + = 1; m(t) ← ⌈ 
+M
+0
+·l(t)
+len 
+⌉;
+11 Build HNSW graph G
+t 
+on P [t] with M = m(t);
+12 rebuild ← false;
+13 while 2M
+0 
+· ⌈log
+2 
+θ⌉ ≤ len do
+14 rebuild ← true; θ ← θ × 2; len ← 0;
+15 foreach t
+′ 
+∈ T with f (t
+′
+) &gt; θ do
+16 l(t
+′
+) ← ⌈log
+2
+(f (t
+′
+))⌉; len+ = l(t
+′
+);
+17 if rebuild or len doubles since the last rebuild then
+18 Empty G;
+19 foreach t
+′ 
+∈ T with f (t
+′
+) &gt; θ do
+20 m(t
+′
+) ← ⌈ 
+M
+0
+l(t
+′
+)
+len 
+⌉; Build the HNSW graph G
+t
+′ 
+on
+P [t
+′
+] with M = m(t
+′
+);
+Algorithm 6: ALLOCATEDEGREEFORBLOCK
+Input: B: a set of vectors; f(·): the frequency function of all the
+tags inserted; θ: parameter threshold ; M : degree of a vector.
+Output: M
+p 
+= {m
+p
+(t): maximum degree of t ∈ t(p)}, for ∀p ∈ B.
+1 len ← 0;
+2 foreach p ∈ B do
+3 foreach t ∈ t(p) ∧ f(t) &gt; θ do
+4 l(t) ← ⌊log
+2
+(f(t))⌋; len+ = l(t);
+5 foreach p ∈ B do
+6 foreach t ∈ t(p) ∧ f(t) &gt; θ do
+7 m
+p
+(t) ← ⌊ 
+M ∗|B|∗l(t)
+len 
+⌋;
+8 return M
+p 
+= {m
+p
+(t)|∀t ∈ t(p)}, for ∀p ∈ B;
+Mathematically, packing strategy allocates degree for tag t of
+a data vector p in a block B is
+m
+p
+(t) =
+(
+0 if f(t) &lt; θ,
+M ∗k∗log f(t)
+P
+p
+′
+∈B
+P
+t∈{t
+′
+∈t(p
+′
+)|f(t
+′
+)≥θ} 
+log f(t) 
+if f(t) ≥ θ.
+Index structure. 
+(T , f(·), G, P, M, θ, θ
+′
+, pack, k, gTags, maxf),
+the structure has an additional threshold θ
+′
+, where any tag
+with frequency exceeding θ
+′ 
+will be considered as the dummy
+masktag in the resource allocation. The frequency of the
+dummy tag is set as the maximum frequency maxf of all the
+tags that have been inserted so far while all the frequent tags
+are kept in the set of gTags.
+Index construction. 
+The indexing process, as Algorithm 7
+shows, is similar to Algorithm 4 while having the following
+differences. Line 1 buffers vectors and when there are k
+vectors in the buffer, Line 9 allocates degree using Algorithm
+6. Lines 3−7 maintains the structure while the tags who should</page><page num="9">10.0 10.5 11.0 11.5
+Log(Cardinality)
+0
+10
+20
+30
+Degree
+ 
+f(t)
+sqrt(f(t))
+log2(f(t))
+10.0 10.5 11.0 11.5
+Log(Cardinality)
+0.2
+0.4
+0.6
+0.8
+1.0
+Recall
+f(t)
+sqrt(f(t))
+log2(f(t))
+Fig. 6 YouTube-Audio: The difference in degree and recall among
+different filters when we use different allocation functions on packing
+strategy. (M = 96, efSearch = 10)
+128, 256} to identify the configuration with the best query
+performance. During the search process, we varied efSearch,
+which controls the candidate list size, from 10 to 150. We
+instructed the HNSW index to return the top efSearch candi-
+dates, then performed filtering on these candidates to retain
+the top-k neighbors that meet the search criteria.
+Faiss-IVF: The Faiss-IVF method integrates both pre-filtering
+and post-filtering search strategies. It uses a threshold to
+determine which search plan to apply. If the smallest query
+filter cardinality is below the threshold, it first filters out all
+unsatisfactory vectors and then performs a brute-force search.
+Otherwise, it searches using a pre-trained IVF index and filters
+out unsatisfactory results afterward. We created 1024 clusters
+in IVF and used scalar quantization during the indexing phase
+and varied the number of clusters to traverse from 1 to 96
+during the search phase.
+C. Evaluating Proposed Methods
+In this section, we evaluate the three proposed methods, the
+local method as described in Section III, the global method
+presented in Section IV, and the packing strategy (Section V).
+Specifically, we first evaluate the impact of allocation functions
+and then the index size, index time, query performance, and
+scalability of our methods.
+Degree Allocation Function Comparison. In this experiment,
+we compare our allocation function log(f (t)) with two alterna-
+tives: f (t) and 
+p
+f (t). We first built indexes on the YouTube-
+Audio dataset using the packing strategy, ensuring an average
+degree of 96 per vector using these three allocation functions.
+We then performed searches on these indexes with efSearch set
+to 10, and recorded the average degrees and recall of various
+tags. Figure 6 shows the results on tags with cardinality from
+1000 to 3000. We can see that using f (t) for allocation results
+in very few degrees (fewer than 5 edges) for smaller tags,
+leading to low recall rates. In contrast, 
+p
+f (t) allows these
+smaller tags to have more degrees, resulting in recall rates
+exceeding 0.9 for most tags. The log(f (t)) function, however,
+provides even more degrees for smaller tags, achieving near
+1.0 recall for these tags. This focus on smaller tags is crucial
+because our query optimization directs queries with both large
+and small tags to the graph of small tags, improving graph
+connectivity and search performance. It is worth noting that
+the base of the logarithm does not significantly impact degree
+allocation, as the proportion of a tag among a set of tags
+remains unaffected by the logarithm base.
+Index Construction. We then compare the index cost of the
+three methods. Figure 7 shows the index time and index size
+of these methods by varying the average degree per data vector.
+The local method and packing strategy had almost the same
+index time, while the global method took much longer. For
+example, on the Youtube-Audio dataset, the local method and
+packing strategy respectively took 198 and 265 seconds when
+the average degree per vector was 64, while the global method
+took 1048 seconds. This is because the global method needs
+to rebuild a tag’s graph to match the degree of the graph with
+the tag’s frequency when a tag’s frequency shifts. In terms of
+index size, the global method had a slightly smaller index size
+than the other two. For example, the index size of the global
+method was 0.73 GB while those of the local method and
+packing strategy were both 0.79 GB. This is mainly because
+the local method and packing strategy need space for some
+allocated, but not used, degrees.
+Query Performance. We evaluate the query performance of our
+methods. We varied one of the two parameters, the average
+degree M and the search candidate size efSearch, and fixed
+the others. For YouTube-Audio and SIFT Zipf Attr, we varied
+M from 16 to 96 respectively. In addition, we varied efSearch
+from 10 to 50 for both datasets. Figure 8 shows the results.
+As we can see, with the increase of the average degree,
+the recall improved rapidly while QPS decreased sublinearly.
+For instance, on YouTube-Audio, when the average degree
+increased from 16 to 96, the recall grew from 0.75 to 0.95
+for the local method, from 0.75 to 0.92 for the global method,
+and from 0.8 to 0.95 for the packing strategy, while the QPS
+dropped from 10,000 to 6,132 for the local method, from
+8,300 to 6,104 for the global method, and from 9,600 to 6,445
+for the packing strategy. This is because the enhanced graph
+connectivity with a higher average degree improves recall at
+the cost of exploring more vectors, thus reducing QPS. A
+similar effect is observed with increased search candidate size,
+efSearch, on the YouTube-Audio Dataset.
+Notice that the increase in recall varies across methods and
+datasets. On the YouTube-Audio dataset, the global method
+achieved the highest recall and QPS, indicating its effective-
+ness in finding accurate results with fewer explorations. This
+is due to the global method’s frequent adjustments to degree
+allocation and proximity graph rebuilding, which enhances
+graph quality. However, this advantage comes with higher
+index costs, as discussed previously. In contrast, the benefit
+of the global method is less pronounced on the SIFT dataset.
+Although its superior graph quality improves recall, it requires
+more data vectors to be explored, resulting in lower QPS
+compared to other methods. Therefore, we will use the packing
+strategy in the subsequent experiments due to its low index
+cost and comparable query performance to the global method.
+Another parameter of our algorithm is the threshold which
+controls if we use graph search or brute-force search. We
+varied the threshold in set {512, 1024, 2048} and tested our
+performances on Youtube-Audio datasets. Figure 9 shows
+the results. When the threshold increases, our algorithms
+use brute-force more frequently and also have higher degree
+resources to allocate among the tags, recall tends to increase
+and QPS tends to drop. For example, when the threshold
+varied from 512 to 2048, for the global method, QPS dropped</page><page num="10">8 16 32 64
+Average Degree per Point
+0.0
+0.3
+0.6
+0.9
+Index Size (GB)
+ 
+Local Method
+Global Method
+Packing Strategy
+8 16 32 64
+Average Degree per Point
+0
+100
+200
+300
+400
+500
+Index Time (s)
+ 
+Local Method
+Global Method
+Packing Strategy
+(a) SIFT Zipf Attr Dataset
+16 32 64 96
+Average Degree per Point
+0.0
+0.3
+0.6
+0.9
+Index Size (GB)
+ 
+Local Method
+Global Method
+Packing Strategy
+16 32 64 96
+Average Degree per Point
+0
+300
+600
+900
+1200
+Index Time (s)
+ 
+Local Method
+Global Method
+Packing Strategy
+ (b) YouTube-Audio Dataset
+Fig. 7 Evaluating index construction.
+16 32 48 64 80 96
+Average Degree per Point (M)
+0.5
+0.8
+1.1
+1.4
+QPS
+×10
+4
+Local Method
+Global Method
+Packing Strategy
+16 32 48 64 80 96
+Average Degree per Point (M)
+0.7
+0.8
+0.9
+1.0
+Recall
+Local Method
+Global Method
+Packing Strategy
+10 20 30 40 50
+efSearch
+0.5
+0.8
+1.1
+1.4
+QPS
+×10
+4
+Local Method
+Global Method
+Packing Strategy
+10 20 30 40 50
+efSearch
+0.7
+0.8
+0.9
+1.0
+Recall
+Local Method
+Global Method
+Packing Strategy
+(a) Youtube-Audio Dataset (M = 16, efSearch = 10)
+16 32 48 64 80 96
+Average Degree per Point (M)
+0.0
+0.5
+1.0
+1.5
+QPS
+×10
+4
+Local Method
+Global Method
+Packing Strategy
+16 32 48 64 80 96
+Average Degree per Point (M)
+0.7
+0.8
+0.9
+1.0
+Recall
+Local Method
+Global Method
+Packing Strategy
+10 20 30 40 50
+efSearch
+0.2
+0.6
+1.0
+1.4
+QPS
+×10
+4
+Local Method
+Global Method
+Packing Strategy
+10 20 30 40 50
+efSearch
+0.7
+0.8
+0.9
+1.0
+Recall
+Local Method
+Global Method
+Packing Strategy
+(b) SIFT Zipf Attr Dataset (M = 16, efSearch = 10)
+Fig. 8 Evaluating query performance.
+512 1024 2048
+Threshold
+0.5
+0.8
+1.1
+1.4
+QPS
+×10
+4
+Local Method
+Global Method
+Packing Strategy
+512 1024 2048
+Threshold
+0.7
+0.8
+0.9
+1.0
+Recall
+Local Method
+Global Method
+Packing Strategy
+Fig. 9 Evaluate The Influence of Threshold.
+from over 11000 to 6000 when ef Search = 10 while recall
+increased from 0.90 to 0.96.
+As we discussed in Section V, the proposed packing strategy
+introduces an additional data structure to maximize the use of
+the degree allocated. This added data structure incurs negligi-
+ble overhead while significantly enhancing search quality. For
+instance, when the average degree is 96 and sf Search is set
+to 10, the packing strategy increases the index size by only
+1% yet improves recall by 5% under the same QPS.
+Scalability. We evaluate the scalability of our methods by
+varying the number of data vectors in SIFT Zipf Tag from
+100,000 to 50 million while maintaining an average degree
+of 96. We evaluated scalability using million-scale datasets
+because billion-scale datasets cannot fit in our memory. For the
+packing strategy, the number of vectors per block was set to 10.
+As shown in Figure 11, the index size increased linearly with
+the dataset size due to our strict memory constraints during
+index construction. As for the query performance, although
+the recall decreased as the dataset size grew, it remains high
+enough, with all three methods achieving a recall above 0.8.
+This is because, with a fixed average degree per vector, the
+graph’s connectivity diminishes as the dataset size grows.
+Consequently, QPS decreased sublinearly with the increase
+of dataset size. Specifically, as the dataset size grew from
+100,000 to 50 million, QPS dropped from around 3,000 to 400.
+This decline occurs because a larger dataset size necessitates
+more iterations for the search process to complete, leading to
+increasing distance computations. These findings highlight the
+robustness of our methods on varying dataset scales.
+Insertion Order. We evaluate the robustness of our algorithms
+under the changes in tag distribution on Youtube-Audio
+dataset. To facilitate significant changes in tag distribution, we
+reordered the insertion orders of data points so that data points
+sharing the same tags will be inserted together. We used two
+insertion orders, one is to insert tags with high frequency first,
+and the other is to insert tags with low frequency first. The first
+two figures in Figure 10 show the selectivity changes of the 5
+most frequent tags during the insertion process. We tested the
+query performance of our algorithms on the snapshots when
+25%, 50%, 75%, 100% of data has been inserted. Since some
+query tags may not be inserted when progress has not reached
+100%, we only keep queries whose query tags have been
+inserted in the snapshot. The last two figures in Figure 10 show
+the QPS of our proposed methods when they achieve 0.90
+recall under each insertion order. We can see the QPS drops
+from around 15000 to around 6000 — the graph becomes
+larger during the insertion process. This experiment shows that
+our algorithms keep high recall (&gt; 0.90) at high QPS during
+the insertion process regardless of the insertion order.
+D. Comparison with Existing Approaches.
+The objective of this part is to compare our proposed
+algorithm with the state-of-the-art methods. The experiments
+are divided into three parts: the first part utilizes datasets
+with queries containing a single filter while the second part
+employs datasets with queries that include multiple filters. This
+division is necessary because some methods like NHQ do not
+support multi-filter queries. In the last part, we investigate how
+different tag distributions influence the query performance.
+Evaluating Single-Filter Queries. Figure 12 compares the QPS
+and recall of our algorithm (packing strategy) with the state-
+of-the-art algorithms on datasets whose queries having single-
+filters. Our method achieved both the highest QPS and the
+highest recall in most scenarios. For example, on semi-</page><page num="11">0 20 40 60 80 100
+Progress
+0.00
+0.25
+0.50
+0.75
+1.00
+Selectivity
+High Frequency First
+Tag 0
+Tag 1
+Tag 2
+Tag 3
+Tag 4
+0 20 40 60 80 100
+Progress
+0.00
+0.25
+0.50
+0.75
+1.00
+Selectivity
+Low Frequency First
+Tag 0
+Tag 1
+Tag 2
+Tag 3
+Tag 4
+25 50 75 100
+Progress
+0.0
+0.4
+0.8
+1.2
+1.6
+QPS when &gt;= 0.90 recall
+×10
+4 
+High Frequency First
+Local Method
+Global Method
+Packing Strategy
+25 50 75 100
+Progress
+0.0
+0.4
+0.8
+1.2
+1.6
+QPS when &gt;= 0.90 recall
+×10
+4 
+Low Frequency First
+Local Method
+Global Method
+Packing Strategy
+Fig. 10 Evaluating robustness to changes in tag distribution.
+16 
+17 
+18 19 20 21 22 23 24 25 26
+Log(# of points)
+0
+10
+20
+30
+Index Size (GB)
+ 
+Local Method
+Global Method
+Packing Strategy
+16 
+17 
+18 19 20 21 22 23 24 25 26
+Log(# of points)
+0.80
+0.85
+0.90
+0.95
+1.00
+Recall
+Local Method
+Global Method
+Packing Strategy
+16 
+17 
+18 19 20 21 22 23 24 25 26
+Log(# of points)
+0
+1000
+2000
+3000
+4000
+QPS
+Local Method
+Global Method
+Packing Strategy
+Fig. 11 Evaluating the scalability by varying the number of vectors in SIFT Zipf Tag from 100,000 to 50,000,000.
+Packing Strategy Post-filter IVF Post-filter HNSW Faiss-IVF ACORN StitchedVamana FilteredVamana NHQ
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+3
+6
+9
+QPS
+×10
+3
+(a) YFCC Single Filter
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+1
+2
+3
+4
+5
+QPS
+×10
+3
+ (b) YouTube-Video
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+3
+6
+9
+QPS
+×10
+3
+ (c) YouTube-Audio
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0.0
+0.5
+1.0
+1.5
+2.0
+QPS
+×10
+3
+ (d) LAION
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+1
+2
+3
+QPS
+×10
+3
+(e) GIST Zipf Attr
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+3
+6
+9
+QPS
+×10
+3
+ (f) SIFT Zipf Attr
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+3
+6
+9
+QPS
+×10
+3
+ (g) SIFT Zipf Tag
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+2
+4
+6
+8
+QPS
+×10
+3
+ (h) SIFT Uniform Attr
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+2
+4
+6
+QPS
+×10
+3
+(i) Paper Uniform Attr
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+2
+4
+6
+QPS
+×10
+3
+ (j) YFCC Multi Filter
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+2
+4
+6
+QPS
+×10
+3
+ (k) YouTube-Audio Multi Filter
+0.0 0.2 0.4 0.6 0.8 1.0
+Recall
+0
+1
+2
+3
+QPS
+×10
+3
+ (l) YouTube-Video Multi-Filter
+Fig. 12 Comparison with the state-of-the-art algorithms.
+TABLE III Index Size (GB) and Index Construction Time (s).
+Alg./Dataset SIFTUniform GISTUniform SIFTZipf GISTZipf YFCC YouTube-Audio YouTube-Video LAION
+Packing Strategy 0.75 / 96 3.95 / 245 0.79 / 153 3.95 / 215 8.60 / 7980 0.91 / 350 4.28 / 354 3.16 / 906
+StitchedVamana 0.71 / 52 3.83 / 298 0.72 / 259 3.82 / 423 7.46 / 8777 0.87 / 247 4.27 / 885 3.13 / 423
+FilteredVamana 0.74 / 84 3.83 / 500 0.72 / 435 3.84 / 435 7.57 / 3310 0.85 / 170 4.25 / 776 3.12 / 441
+NHQ 0.72 / 22 3.90 / 126 0.72 / 25 3.90 / 131 - - - -
+ACORN 1.37 / 562 4.47 / 3235 1.37 / 560 4.47 / 3240 19.22 / 58552 1.39 / 683 4.73 / 2393 3.62 / 174
+synthetic dataset GIST Zipf Attr, the recall of our method,
+StitchedVamana, FilteredVamana, Post-filter IVF, Post-filter
+HNSW, Faiss-IVF, ACORN and NHQ were respectively 0.96,
+0.92, 0.37, 0.44, 0.57, 0.95, 0.01 and 0.41, while the QPS were
+respectively 853, 682, 1568, 6.6, 52, 129, 220 and 770. Same
+results can be observed on real-world datasets. For example, on
+YouTube-Video, our method achieved 0.95 recall at a QPS of
+1307, while the only other algorithm could achieve this recall,
+StitchedVamana, was at a QPS of 600. The most significant
+improvement came from YFCC, a real-world dataset with a
+larger number of low-to-medium frequency tags (as shown in
+Table II, YFCC has 200,386 unique tags and 75% of them have
+a selectivity of less than 1%). On this dataset, we achieved
+approximately 13 times speed up compared to the second
+best algorithm Faiss-IVF when the recall was at 0.9. This
+significant improvement was attribute to the following reasons.
+First, compared to post-filtering methods, our method filters
+inappropriate candidates during graph search, which reduces
+the number of distance computations. Second, compared to
+other incremental algorithms like FilteredVamana and NHQ,
+our algorithm maintains the connectivity of the subgraph
+of each filter during index construction, which results in
+better search performance. Finally, compared to other graph-
+based methods like StitchedVamana, FilteredVamana, NHQ
+and ACORN, our high query performance came from our
+reasonably allocated degrees, which makes the index better
+utilizes the limited memory resource.
+Table III lists the index time and the index size of graph-
+based methods. The index sizes of our packing strategy were
+comparable to those of StitchedVamana, FilteredVamana and</page><page num="12">0 10 20 30 40 50
+Rank (1 = Most Frequent)
+0.00
+0.25
+0.50
+0.75
+1.00
+Frequency
+1e6
+Zipf Factor
+s = 0.3
+s = 0.5
+s = 0.7
+s = 0.9
+s = 1.1
+0.3 0.5 0.7 0.9 1.1
+Zipf Factor
+0
+1
+2
+3
+4
+5
+6
+QPS when recall&gt;=0.90
+×10
+3
+Packing Strategy
+StitchedVamana
+Faiss-IVF
+Post-filter IVF
+ACORN
+Fig. 13 The Influence of Tag Distribution.
+NHQ. For example, on YouTube-Video, our packing strat-
+egy took 4.28GB, while StitchedVamana and FilteredVamana
+occupied 4.27GB and 4.25GB respectively. ACORN needed
+much more storage as its degree of a vector could be at most
+M × γ. As for the index time, our packing strategy used less
+time than StitchedVamana and FilteredVamana on SIFT Zipf
+Attr, GIST, YFCC, and YouTube-Video, but more time on
+SIFT Uniform Attr and YouTube-Audio, which suggests that
+our packing strategy was less sensitive to data dimension and
+more adaptive to complicated filter distributions.
+Evaluating Multi-Filter Queries. Figure 12 also compares our
+algorithm with the state-of-the-art algorithms where the
+queries could have multiple filters – data vectors reported
+should satisfy all the query filters. Since FilteredVamana and
+StitchedVamana do not support multi-filter search, we imple-
+ment our multi-filter search strategy on their index, where we
+first find the smallest-selectivity tag in the query tags, and
+then conduct graph search inside this tag’s subgraph; only data
+points that matches the query tags will be added to the result
+queue. NHQ is excluded because even our search strategy
+cannot be used on NHQ to support multi-filter search. Among
+these algorithms, our algorithm shows superior performance.
+For example, on YFCC, our algorithm achieved a recall of 0.95
+with QPS 1008, while StitchedVamana, FilteredVamana, Post-
+filter IVF, Post-filter HNSW, Faiss-IVF and ACORN could
+only achieve 0.75, 0.56, 0.49, 0.40, 0.84 and 0.69 recall
+respectively with no more than 670 QPS.
+The Influence of Tag Distribution. In this experiment, we var-
+ied the Zipf factor from 0.3 to 1.1 and compared the perfor-
+mance of different algorithms on SIFT dataset by the QPS
+they achieve when recall reaches 0.90. The figure on the left
+of Figure 13 shows how different zipf factors influence the
+distribution of the tags by recording the cardinality of each
+tag. When zipf factor increases, tags with larger frequency
+will appear. At the same time, the average number of tags each
+data point has will also increase. The right hand side figure
+in Figure 13 shows the QPS of each algorithm when they
+achieves 0.90 recall. Some algorithms like FilteredVamana
+and Post-filter HNSW are not included because they failed
+to achieve this recall in the search scope. We can see from
+this figure that when zipf factor increased, QPS declined for all
+Graph-based methods, including Packing Strategy, StitchedVa-
+mana and ACORN. This is because when zipf factor increases,
+the subgraph on each tag also increases, resulting in a larger
+search scope for graph-based methods. Post-filtering method
+like post-filter IVF, on the contrary, has slightly larger QPS
+for large zipf factor. This is because tags with larger frequency
+makes it easier for post-filtering methods to find candidates
+that match the query filters. This experiment also demonstrates
+that our proposed method can have superior performance than
+other methods on various tag distributions.
+VII. RELATED WORK
+Attribute-Filtered Approximate Nearest Neighbor Search.
+The analytic database system AnalyticDB-V [23] proposes
+a cost model to select the optimized query plan for hybrid
+queries (e.g., search over a table containing attribute columns
+and a vector column). Focusing on the same problem, Milvus
+extends the query plans developed in AnalyticDB-V by
+introducing a partition-based query plan [24]. Mohoney et
+al. combined vector similarity queries with predicates over
+relational attributes while proposing workload-awareness
+optimization [25]. NHQ [12] leverages self-defined distance
+metrics to fuse the embedding vector with the attributes
+together. The follower HQANN [26] proposed another fusion
+distance metric, which emphasizes more on attributes rather
+than vector distances. These two methods are inefficient when
+the number of attributes is large. SeRF [27] specializes in the
+range-filtered ANNS for total order attributes, compressing
+n
+2 
+ANNS graphs into one index. Joshua et al. [28] studied
+a similar problem as SeRF using another term: Window
+Filtered. They adopted a tree-based structure to store multiple
+ANNS indices for arbitrary window filters.
+Tag-Filtered Approximate Nearest Neighbor Search. To sup-
+port TFANNS, industry vector databases like Milvus [24],
+Faiss [3], and PGVector [29] adopted post-filtering strategy on
+the HNSW index, suffering from visiting too many unsatisfied
+vectors. Filtered-DiskANN [9] considers attribute information
+in its heuristic prune procedure. However, their proposed
+strategy will be degraded to distance-only pruned when the
+distribution of attributes is skewed, which avoids underrepre-
+sented attributes. ACORN [13] introduces a metadata-agnostic
+graph index to support arbitrary filtering predicates, including
+tag-based filtering. Instead of relying on a distance-based
+heuristic for pruning, ACORN uses an attribute-based online
+pruning strategy, which can result in reduced search speed
+compared to other proximity-graph-based methods.
+VIII. CONCLUSION
+This paper investigates the problem of TFANNS and iden-
+tifies a common problem of low recall on queries with low-
+medium frequency tags on existing approaches, which cannot
+be easily remedied by pre-filtering. To address this problem,
+we provide three tag-frequency-aware approaches. Local algo-
+rithm is node-centric, global algorithm is tag-centric and pack-
+ing strategy combines node-centric and tag-centric to strike
+a better balance between index size and query performance.
+Our extensive experiments have justified the superiority of our
+proposed approach compared to existing TFANNS approaches
+on real-world dataset.
+Acknowledgments. Dong Deng* was supported by the Na-
+tional Science Foundation grant #2212629 and a gift from
+Adobe Research.</page></paper>

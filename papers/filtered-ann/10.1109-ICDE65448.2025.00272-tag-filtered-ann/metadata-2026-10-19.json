@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "id": "doi:10.1109/ICDE65448.2025.00272",
+  "aliases": [
+    "Packing",
+    "TFANNS"
+  ],
+  "title": "Tag-Filtered Approximate Nearest Neighbor Search",
+  "authors": [
+    "Jiarui Luo",
+    "Miao Qiao",
+    "Chaoji Zuo",
+    "Dong Deng"
+  ],
+  "year": 2025,
+  "preprint_year": null,
+  "venue": "2025 IEEE 41st International Conference on Data Engineering (ICDE), 3642–3654",
+  "version_status": "作者公开 13 页稿；Crossref 与 IEEE 元数据核对；正式版差异未逐项核对",
+  "versions": [
+    {
+      "kind": "analyzed_author_copy",
+      "identifier": "10.1109/ICDE65448.2025.00272",
+      "url": "https://miaoqiao.github.io/paper/ICDE25.pdf",
+      "local_pdf": "papers/filtered-ann/10.1109-ICDE65448.2025.00272-tag-filtered-ann/paper.pdf",
+      "note": "相关章节核读，非全部定理复现"
+    }
+  ],
+  "links": {
+    "paper": "https://doi.org/10.1109/ICDE65448.2025.00272",
+    "preprint": null,
+    "preprint_status": "未核实独立预印本 ID，不猜测",
+    "full_text": "https://miaoqiao.github.io/paper/ICDE25.pdf",
+    "code": [],
+    "code_status": "入口已核/原文给出，未运行；空列表为未核实",
+    "datasets": [],
+    "dataset_link_status": "数据名称核读，下载/许可未核实"
+  },
+  "tags": [
+    "filtered-ANN",
+    "label-containment",
+    "TFANNS / Packing"
+  ],
+  "relevance": {
+    "level": "B",
+    "role": "可迁移借鉴：属性过滤、共享结构或导航组件；原问题为单查询 ANN，非 vector join"
+  },
+  "problem": {
+    "input": "查询标签 t(q)⊆t(p)，原生 conjunctive multi-tag ANN",
+    "output": "满足相应谓词的近似 top-k 对象",
+    "pair_convention": "单查询对象；边界/去重规则需按本项目对齐"
+  },
+  "join_type": {
+    "sets": [
+      "不适用：单查询 filtered ANN"
+    ],
+    "selection": [
+      "per-query-top-k"
+    ],
+    "accuracy": "approximate",
+    "attribute_filter": "查询标签 t(q)⊆t(p)，原生 conjunctive multi-tag ANN"
+  },
+  "metrics": [
+    "原文 L2/Euclidean，归一化与逐数据预处理需对齐"
+  ],
+  "data_assumptions": [
+    "原始向量空间与标签一致编码",
+    "内存/SSD/线程按论文版本分别记录，不默认可直接比较"
+  ],
+  "method": [
+    "Local 逐节点按标签频率分配边",
+    "Global 逐标签图与全局预算",
+    "Packing 块内共享出度并合并高频 mask tag",
+    "Algorithm 3 选择最稀有查询标签作覆盖范围，估交集基数后扫描或图搜索，完整标签校验"
+  ],
+  "guarantees": {
+    "theory": "§IV Lemma 1 给 Global 图边空间；不是完整 Packing 召回保证",
+    "complexity": "Global 图边空间 O(nM0)；Packing 块内度预算与高频 mask；本轮未核独立完整时间上界",
+    "error": "未提供任意数据下的端到端 Recall@k 下界；导航覆盖单标签不保证交集所有近邻"
+  },
+  "experiments": {
+    "datasets": [
+      "SIFT",
+      "GIST",
+      "YFCC",
+      "YouTube-Audio",
+      "YouTube-Video"
+    ],
+    "baselines": [
+      "FilteredVamana",
+      "StitchedVamana",
+      "ACORN",
+      "NHQ",
+      "post-filter HNSW",
+      "Faiss-IVF"
+    ],
+    "evaluation_metrics": [
+      "Recall@k",
+      "QPS/latency",
+      "index size",
+      "build time"
+    ],
+    "main_results": [
+      "§VI 单/多标签、分布/频率/数据规模比较；摘要报告 recall≥0.9 下最高约13倍 QPS，仅原文实验"
+    ],
+    "result_status": "原文相关章节核读；未独立复现"
+  },
+  "limitations": [
+    "需要标签频率、估计、阈值及度分配参数",
+    "原文基数估计不应小于最稀有 posting 的文字与交集关系相反，需核实现",
+    "中低频优化不等同外部 taxonomy 原生共享"
+  ],
+  "related_work": [
+    "方法关联及证据见 researches/containment-filtered-vector-search/index.md"
+  ],
+  "project_insights": [
+    "包含过滤原生强基线",
+    "按稀有标签覆盖后精确验证是合法 AND 路径，不可替换成 OR 多路合并",
+    "包含基数估计/扫描与图选择已有先前工作"
+  ],
+  "evidence": [
+    {
+      "kind": "full_text_sections",
+      "version": "作者公开 13 页稿；Crossref 与 IEEE 元数据核对；正式版差异未逐项核对",
+      "local_path": "papers/filtered-ann/10.1109-ICDE65448.2025.00272-tag-filtered-ann/paper.md",
+      "url": "https://miaoqiao.github.io/paper/ICDE25.pdf",
+      "sections": [
+        "I motivation",
+        "II Definitions 1–2",
+        "III Algorithm 3",
+        "IV Lemma 1",
+        "V Packing Algorithms 6–7",
+        "VI"
+      ],
+      "pdf_pages": [
+        "1–7",
+        "8–12"
+      ]
+    },
+    {
+      "kind": "publisher_metadata",
+      "url": "https://ieeexplore.ieee.org/document/11112973/",
+      "note": "Crossref 初次响应已核；再次快照遇429，未伪造完整返回；IEEE 与作者稿佐证"
+    }
+  ],
+  "verification": {
+    "date": "2026-10-19",
+    "reading_status": "定义、方法、部分分析与实验相关章节阅读；非逐段全文验证",
+    "bibliography_status": "DOI/作者顺序/venue/年已核，作者稿拼写与版本差异保留",
+    "open_items": [
+      "最终稿差异与全部理论细节",
+      "官方实现及真实包含工作负载复现",
+      "零/不足k的行为与数据许可"
+    ]
+  },
+  "local_dir": "papers/filtered-ann/10.1109-ICDE65448.2025.00272-tag-filtered-ann"
+}

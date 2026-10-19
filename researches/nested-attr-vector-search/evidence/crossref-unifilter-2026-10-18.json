@@ -1,0 +1,489 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          8,
+          18
+        ]
+      ],
+      "date-time": "2026-08-18T01:47:54Z",
+      "timestamp": 1787017674550,
+      "version": "build-2736575974"
+    },
+    "reference-count": 46,
+    "publisher": "Association for Computing Machinery (ACM)",
+    "issue": "6",
+    "content-domain": {
+      "domain": [],
+      "crossmark-restriction": false
+    },
+    "short-container-title": [
+      "Proc. ACM Manag. Data"
+    ],
+    "published-print": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          4
+        ]
+      ]
+    },
+    "abstract": "<jats:p>\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    -ANN search has been extensively studied to find\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    approximate nearest neighbors for a given query vector in a high-dimensional dataset, where a data item is represented as a vector. As there are many new emerging real-world applications that have categorical/numerical attributes associated with vectors, it is highly needed to support\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    -ANN search with additional predicates on such attributes. In this paper, we study\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    -ANN queries, q = (v\n                    <jats:sub>q</jats:sub>\n                    , c\n                    <jats:sub>q</jats:sub>\n                    ), where v\n                    <jats:sub>q</jats:sub>\n                    is a query vector and c\n                    <jats:sub>q</jats:sub>\n                    is a predicate on categorical/numerical attributes. Note that the conventional\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    -ANN search is a\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    -ANN query when c\n                    <jats:sub>q</jats:sub>\n                    = ∅. In the literature, some can support the cases when c\n                    <jats:sub>q</jats:sub>\n                    = ∅, some can support the cases when c\n                    <jats:sub>q</jats:sub>\n                    is on categorical attributes, and some can support the cases when c\n                    <jats:sub>q</jats:sub>\n                    is on numerical attributes. But none of them can support all cases efficiently. In this paper, we propose an all-in-one approach. Our approach supports conventional\n                    <jats:italic toggle=\"yes\">k</jats:italic>\n                    -ANN search in the same way as the state-of-the-art approaches, and supports the predicates in a similar or even better way compared to the approaches that are tailored to support either categorical attributes or numerical attributes. We conduct extensive performance studies and confirm the accuracy and the efficiency of our approach in comparison with the state-of-the-art approaches.\n                  </jats:p>",
+    "DOI": "10.1145/3769765",
+    "type": "journal-article",
+    "created": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          6
+        ]
+      ],
+      "date-time": "2025-12-06T04:32:13Z",
+      "timestamp": 1764995533000
+    },
+    "page": "1-26",
+    "source": "Crossref",
+    "is-referenced-by-count": 3,
+    "title": [
+      "Beyond Vector Search: Querying With and Without Predicates"
+    ],
+    "prefix": "10.1145",
+    "volume": "3",
+    "author": [
+      {
+        "ORCID": "https://orcid.org/0000-0003-4535-8359",
+        "authenticated-orcid": false,
+        "given": "Jiadong",
+        "family": "Xie",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "The Chinese University of Hong Kong, Hong Kong, Hong Kong"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-9738-827X",
+        "authenticated-orcid": false,
+        "given": "Jeffrey Xu",
+        "family": "Yu",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "The Hong Kong University of Science and Technology (Guangzhou), Guangzhou, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0009-0004-1210-4672",
+        "authenticated-orcid": false,
+        "given": "Siyi",
+        "family": "Teng",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "The Chinese University of Hong Kong, Hong Kong, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0002-3743-5249",
+        "authenticated-orcid": false,
+        "given": "Yingfan",
+        "family": "Liu",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Xidian University, Xian, China"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "320",
+    "published-online": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          5
+        ]
+      ]
+    },
+    "reference": [
+      {
+        "key": "e_1_2_1_1_1",
+        "unstructured": "2010. Datasets for approximate nearest neighbor search. http://corpus-texmex.irisa.fr/."
+      },
+      {
+        "key": "e_1_2_1_2_1",
+        "unstructured": "2023. Common Crawl. https://commoncrawl.org/."
+      },
+      {
+        "key": "e_1_2_1_3_1",
+        "unstructured": "2024. ACORN Source Code. https://github.com/stanford-futuredata/ACORN."
+      },
+      {
+        "key": "e_1_2_1_4_1",
+        "volume-title": "ANN-Benchmarks: A benchmarking tool for approximate nearest neighbor algorithms. Inf. Syst. 87",
+        "author": "Aumüller Martin",
+        "year": "2020",
+        "unstructured": "Martin Aumüller, Erik Bernhardsson, and Alexander John Faithfull. 2020. ANN-Benchmarks: A benchmarking tool for approximate nearest neighbor algorithms. Inf. Syst. 87 (2020)."
+      },
+      {
+        "key": "e_1_2_1_5_1",
+        "first-page": "591",
+        "volume-title": "The Million Song Dataset. In ISMIR",
+        "author": "Bertin-Mahieux Thierry",
+        "year": "2011",
+        "unstructured": "Thierry Bertin-Mahieux, Daniel P. W. Ellis, Brian Whitman, and Paul Lamere. 2011. The Million Song Dataset. In ISMIR 2011. University of Miami, 591-596."
+      },
+      {
+        "key": "e_1_2_1_6_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3698822"
+      },
+      {
+        "key": "e_1_2_1_7_1",
+        "first-page": "5199",
+        "article-title": "SPANN",
+        "volume": "2021",
+        "author": "Chen Qi",
+        "year": "2021",
+        "unstructured": "Qi Chen, Bing Zhao, Haidong Wang, Mingqin Li, Chuanjie Liu, Zengzhong Li, Mao Yang, and Jingdong Wang. 2021. SPANN: Highly-efficient Billion-scale Approximate Nearest Neighborhood Search. In NeurIPS 2021. 5199-5212.",
+        "journal-title": "Highly-efficient Billion-scale Approximate Nearest Neighborhood Search. In NeurIPS"
+      },
+      {
+        "key": "e_1_2_1_8_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1007/978-3-662-04245-8"
+      },
+      {
+        "key": "e_1_2_1_9_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/ACSSC.1988.754602"
+      },
+      {
+        "key": "e_1_2_1_10_1",
+        "volume-title": "Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks 1, NeurIPS Datasets and Benchmarks",
+        "author": "Desai Karan",
+        "year": "2021",
+        "unstructured": "Karan Desai, Gaurav Kaul, Zubin Aysola, and Justin Johnson. 2021. RedCaps: Web-curated image-text data created by the people, for the people. In Proceedings of the Neural Information Processing Systems Track on Datasets and Benchmarks 1, NeurIPS Datasets and Benchmarks 2021."
+      },
+      {
+        "key": "e_1_2_1_11_1",
+        "volume-title": "Approximate Nearest Neighbor Search with Window Filters. In Forty-first International Conference on Machine Learning, ICML 2024",
+        "author": "Engels Joshua",
+        "year": "2024",
+        "unstructured": "Joshua Engels, Benjamin Landrum, Shangdi Yu, Laxman Dhulipala, and Julian Shun. 2024. Approximate Nearest Neighbor Search with Window Filters. In Forty-first International Conference on Machine Learning, ICML 2024, Vienna, Austria, July 21-27, 2024. OpenReview.net."
+      },
+      {
+        "key": "e_1_2_1_12_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TPAMI.2021.3067706"
+      },
+      {
+        "key": "e_1_2_1_13_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3303753.3303754"
+      },
+      {
+        "key": "e_1_2_1_14_1",
+        "volume-title": "Computers and intractability",
+        "author": "Garey Michael R",
+        "unstructured": "Michael R Garey and David S Johnson. 2002. Computers and intractability. Vol. 29. wh freeman New York."
+      },
+      {
+        "key": "e_1_2_1_15_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3543507.3583552"
+      },
+      {
+        "key": "e_1_2_1_16_1",
+        "first-page": "5713",
+        "volume-title": "FANNG: Fast Approximate Nearest Neighbour Graphs. In 2016 IEEE Conference on Computer Vision and Pattern Recognition, CVPR",
+        "author": "Harwood Ben",
+        "year": "2016",
+        "unstructured": "Ben Harwood and Tom Drummond. 2016. FANNG: Fast Approximate Nearest Neighbour Graphs. In 2016 IEEE Conference on Computer Vision and Pattern Recognition, CVPR 2016. IEEE Computer Society, 5713-5722."
+      },
+      {
+        "key": "e_1_2_1_17_1",
+        "volume-title": "Ravishankar Krishnawamy, and Rohan Kadekodi.",
+        "author": "Subramanya Suhas Jayaram",
+        "year": "2019",
+        "unstructured": "Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Ravishankar Krishnawamy, and Rohan Kadekodi. 2019. DiskANN: Fast Accurate Billion-point Nearest Neighbor Search on a Single Node. In Advances in Neural Information Processing Systems, Vol. 32. Curran Associates, Inc."
+      },
+      {
+        "key": "e_1_2_1_18_1",
+        "unstructured": "Govinda D. Kurup. 1992. Database Organized on the Basis of Similarities with Applications in Computer Vision. Ph. D. Dissertation."
+      },
+      {
+        "key": "e_1_2_1_19_1",
+        "unstructured": "Patrick S. H. Lewis Ethan Perez Aleksandra Piktus Fabio Petroni Vladimir Karpukhin Naman Goyal Heinrich Küttler Mike Lewis Wen-tau Yih Tim Rocktäschel Sebastian Riedel and Douwe Kiela. 2020. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. In Advances in Neural Information Processing Systems."
+      },
+      {
+        "key": "e_1_2_1_20_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3318464.3380600"
+      },
+      {
+        "key": "e_1_2_1_21_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TKDE.2019.2909204"
+      },
+      {
+        "key": "e_1_2_1_22_1",
+        "volume-title": "UNIFY: Unified Index for Range Filtered Approximate Nearest Neighbors Search. CoRR abs/2412.02448",
+        "author": "Liang Anqi",
+        "year": "2024",
+        "unstructured": "Anqi Liang, Pengcheng Zhang, Bin Yao, Zhongpu Chen, Yitong Song, and Guangxu Cheng. 2024. UNIFY: Unified Index for Range Filtered Approximate Nearest Neighbors Search. CoRR abs/2412.02448 (2024)."
+      },
+      {
+        "key": "e_1_2_1_23_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1016/j.patcog.2006.04.045"
+      },
+      {
+        "key": "e_1_2_1_24_1",
+        "first-page": "3017",
+        "volume-title": "Privacy-Preserving Approximate Nearest Neighbor Search on High-Dimensional Data. In 41st IEEE International Conference on Data Engineering, ICDE 2025",
+        "author": "Liu Yingfan",
+        "year": "2025",
+        "unstructured": "Yingfan Liu, Yandi Zhang, Jiadong Xie, Hui Li, Jeffrey Xu Yu, and Jiangtao Cui. 2025. Privacy-Preserving Approximate Nearest Neighbor Search on High-Dimensional Data. In 41st IEEE International Conference on Data Engineering, ICDE 2025, Hong Kong, May 19-23, 2025. IEEE, 3017-3029."
+      },
+      {
+        "key": "e_1_2_1_25_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1016/j.is.2013.10.006"
+      },
+      {
+        "key": "e_1_2_1_26_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TPAMI.2018.2889473"
+      },
+      {
+        "key": "e_1_2_1_27_1",
+        "first-page": "3111",
+        "article-title": "Distributed Representations of Words and Phrases and their Compositionality",
+        "author": "Mikolov Tomás",
+        "year": "2013",
+        "unstructured": "Tomás Mikolov, Ilya Sutskever, Kai Chen, Gregory S. Corrado, and Jeffrey Dean. 2013. Distributed Representations of Words and Phrases and their Compositionality. In Advances in Neural Information Processing Systems. 3111-3119.",
+        "journal-title": "Advances in Neural Information Processing Systems."
+      },
+      {
+        "key": "e_1_2_1_28_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3589777"
+      },
+      {
+        "key": "e_1_2_1_29_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/26.3776"
+      },
+      {
+        "key": "e_1_2_1_30_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3529372.3530912"
+      },
+      {
+        "key": "e_1_2_1_31_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3654923"
+      },
+      {
+        "key": "e_1_2_1_32_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3588908"
+      },
+      {
+        "key": "e_1_2_1_33_1",
+        "volume-title": "Manning",
+        "author": "Pennington Jeffrey",
+        "year": "2014",
+        "unstructured": "Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. Glove: Global Vectors for Word Representation. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing, EMNLP 2014, A meeting of SIGDAT, a Special Interest Group of the ACL. ACL, 1532-1543."
+      },
+      {
+        "key": "e_1_2_1_34_1",
+        "volume-title": "LAION-400M: Open Dataset of CLIP-Filtered 400 Million Image-Text Pairs. CoRR abs/2111.02114",
+        "author": "Schuhmann Christoph",
+        "year": "2021",
+        "unstructured": "Christoph Schuhmann, Richard Vencu, Romain Beaumont, Robert Kaczmarczyk, Clayton Mullis, Aarush Katta, Theo Coombes, Jenia Jitsev, and Aran Komatsuzaki. 2021. LAION-400M: Open Dataset of CLIP-Filtered 400 Million Image-Text Pairs. CoRR abs/2111.02114 (2021)."
+      },
+      {
+        "key": "e_1_2_1_35_1",
+        "unstructured": "Harsha Vardhan Simhadri Martin Aumüller Amir Ingber Matthijs Douze George Williams Magdalen Dobson Manohar Dmitry Baranchuk Edo Liberty Frank Liu Benjamin Landrum Mazin Karjikar Laxman Dhulipala Meng Chen Yue Chen Rui Ma Kai Zhang Yuzheng Cai Jiayang Shi Yizhuo Chen Weiguo Zheng Zihao Wan Jie Yin and Ben Huang. 2024. Results of the Big ANN: NeurIPS'23 competition. CoRR abs/2409.17424 (2024)."
+      },
+      {
+        "key": "e_1_2_1_36_1",
+        "volume-title": "Ravishankar Krishnaswamy, and Harsha Vardhan Simhadri.",
+        "author": "Singh Aditi",
+        "year": "2021",
+        "unstructured": "Aditi Singh, Suhas Jayaram Subramanya, Ravishankar Krishnaswamy, and Harsha Vardhan Simhadri. 2021. FreshDiskANN: A Fast and Accurate Graph-Based ANN Index for Streaming Similarity Search. CoRR abs/2105.09613 (2021)."
+      },
+      {
+        "key": "e_1_2_1_37_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/2812802"
+      },
+      {
+        "key": "e_1_2_1_38_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3448016.3457550"
+      },
+      {
+        "key": "e_1_2_1_39_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3476249.3476255"
+      },
+      {
+        "key": "e_1_2_1_40_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3415478.3415541"
+      },
+      {
+        "key": "e_1_2_1_41_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3736716"
+      },
+      {
+        "key": "e_1_2_1_42_1",
+        "first-page": "6",
+        "volume-title": "Proc. ACM Manag. Data 2",
+        "author": "Xu Yuexuan",
+        "year": "2024",
+        "unstructured": "Yuexuan Xu, Jianyang Gao, Yutong Gou, Cheng Long, and Christian S. Jensen. 2024. iRangeGraph: Improvising Range-dedicated Graphs for Range-filtering Nearest Neighbor Search. Proc. ACM Manag. Data 2, 6 (2024), 239:1-239:26."
+      },
+      {
+        "key": "e_1_2_1_43_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3725688.3725709"
+      },
+      {
+        "key": "e_1_2_1_44_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3352063.3352124"
+      },
+      {
+        "key": "e_1_2_1_45_1",
+        "first-page": "377",
+        "volume-title": "17th USENIX Symposium on Operating Systems Design and Implementation, OSDI",
+        "author": "Zhang Qianxi",
+        "year": "2023",
+        "unstructured": "Qianxi Zhang, Shuotao Xu, Qi Chen, Guoxin Sui, Jiadong Xie, Zhizhen Cai, Yaoqi Chen, Yinxuan He, Yuqing Yang, Fan Yang, Mao Yang, and Lidong Zhou. 2023. VBASE: Unifying Online Vector Similarity Search and Relational Queries via Relaxed Monotonicity. In 17th USENIX Symposium on Operating Systems Design and Implementation, OSDI 2023. USENIX Association, 377-395."
+      },
+      {
+        "key": "e_1_2_1_46_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3639324"
+      }
+    ],
+    "container-title": [
+      "Proceedings of the ACM on Management of Data"
+    ],
+    "original-title": [],
+    "language": "en",
+    "link": [
+      {
+        "URL": "https://dl.acm.org/doi/pdf/10.1145/3769765",
+        "content-type": "unspecified",
+        "content-version": "vor",
+        "intended-application": "similarity-checking"
+      }
+    ],
+    "deposited": {
+      "date-parts": [
+        [
+          2026,
+          6,
+          13
+        ]
+      ],
+      "date-time": "2026-06-13T04:41:57Z",
+      "timestamp": 1781325717000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://dl.acm.org/doi/10.1145/3769765"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          4
+        ]
+      ]
+    },
+    "references-count": 46,
+    "journal-issue": {
+      "issue": "6",
+      "published-print": {
+        "date-parts": [
+          [
+            2025,
+            12,
+            4
+          ]
+        ]
+      }
+    },
+    "alternative-id": [
+      "10.1145/3769765"
+    ],
+    "URL": "https://doi.org/10.1145/3769765",
+    "relation": {},
+    "ISSN": [
+      "2836-6573"
+    ],
+    "issn-type": [
+      {
+        "value": "2836-6573",
+        "type": "electronic"
+      }
+    ],
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          2025,
+          12,
+          4
+        ]
+      ]
+    }
+  }
+}

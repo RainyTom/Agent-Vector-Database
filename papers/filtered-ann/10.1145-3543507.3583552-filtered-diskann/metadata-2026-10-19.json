@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "id": "doi:10.1145/3543507.3583552",
+  "aliases": [
+    "FilteredVamana",
+    "StitchedVamana",
+    "Filtered-Vamana",
+    "Stitched-Vamana"
+  ],
+  "title": "Filtered-DiskANN: Graph Algorithms for Approximate Nearest Neighbor Search with Filters",
+  "authors": [
+    "Siddharth Gollapudi",
+    "Neel Karia",
+    "Varun Sivashankar",
+    "Ravishankar Krishnaswamy",
+    "Nikit Begwani",
+    "Swapnil Raz",
+    "Yiyong Lin",
+    "Yin Zhang",
+    "Neelam Mahapatro",
+    "Premkumar Srinivasan",
+    "Amit Singh",
+    "Harsha Vardhan Simhadri"
+  ],
+  "year": 2023,
+  "preprint_year": null,
+  "venue": "Proceedings of the ACM Web Conference 2023 (WWW 2023), 3406–3416",
+  "version_status": "作者公开 11 页稿；首页正式 DOI，ISBN 等有占位符；与最终版差异未逐项核对",
+  "versions": [
+    {
+      "kind": "analyzed_author_copy",
+      "identifier": "10.1145/3543507.3583552",
+      "url": "https://harsha-simhadri.org/pubs/Filtered-DiskANN23.pdf",
+      "local_pdf": "papers/filtered-ann/10.1145-3543507.3583552-filtered-diskann/paper.pdf",
+      "note": "相关章节核读，非全部定理复现"
+    }
+  ],
+  "links": {
+    "paper": "https://doi.org/10.1145/3543507.3583552",
+    "preprint": null,
+    "preprint_status": "未核实独立预印本 ID，不猜测",
+    "full_text": "https://harsha-simhadri.org/pubs/Filtered-DiskANN23.pdf",
+    "code": [
+      "https://github.com/microsoft/DiskANN"
+    ],
+    "code_status": "入口已核/原文给出，未运行；空列表为未核实",
+    "datasets": [],
+    "dataset_link_status": "数据名称核读，下载/许可未核实"
+  },
+  "tags": [
+    "filtered-ANN",
+    "label-containment",
+    "Filtered-DiskANN"
+  ],
+  "relevance": {
+    "level": "B",
+    "role": "可迁移借鉴：属性过滤、共享结构或导航组件；原问题为单查询 ANN，非 vector join"
+  },
+  "problem": {
+    "input": "原文主要单标签 f∈Li；§3.1 多查询标签是 OR；§2 将 AND 列 future work",
+    "output": "满足相应谓词的近似 top-k 对象",
+    "pair_convention": "单查询对象；边界/去重规则需按本项目对齐"
+  },
+  "join_type": {
+    "sets": [
+      "不适用：单查询 filtered ANN"
+    ],
+    "selection": [
+      "per-query-top-k"
+    ],
+    "accuracy": "approximate",
+    "attribute_filter": "原文主要单标签 f∈Li；§3.1 多查询标签是 OR；§2 将 AND 列 future work"
+  },
+  "metrics": [
+    "原文 L2/Euclidean，归一化与逐数据预处理需对齐"
+  ],
+  "data_assumptions": [
+    "原始向量空间与标签一致编码",
+    "内存/SSD/线程按论文版本分别记录，不默认可直接比较"
+  ],
+  "method": [
+    "FilteredGreedySearch 与每标签入口",
+    "FilteredVamana 逐点增量构建",
+    "StitchedVamana 叠加每标签 Vamana 图再压缩",
+    "FilteredRobustPrune 在距离剪枝外维护共同标签覆盖"
+  ],
+  "guarantees": {
+    "theory": "未提供任意多标签 AND 的端到端保证；原文 §2 明确 conjunction 为未来工作",
+    "complexity": "单点最大出度由 R 或 Rstitched 限制；图边量 O(nR) 为据算法的结构上界，不含标签/向量/构建临时图；一般查询复杂度未核实",
+    "error": "ANN 启发式召回；原文单标签实验不构成任意 conjunction 召回证书"
+  },
+  "experiments": {
+    "datasets": [
+      "Turing",
+      "Prep",
+      "DANN",
+      "Audio",
+      "SIFT1M",
+      "Paper",
+      "Msong",
+      "GIST"
+    ],
+    "baselines": [
+      "post-processing",
+      "inline-processing",
+      "FAISS IVF-PQ",
+      "NHQ",
+      "Milvus"
+    ],
+    "evaluation_metrics": [
+      "Recall@k",
+      "QPS/latency",
+      "index size",
+      "build time"
+    ],
+    "main_results": [
+      "§5 按标签 specificity 比较 QPS–Recall@10；含 SSD 测试，48 线程，不与其他硬件论文直接横比"
+    ],
+    "result_status": "原文相关章节核读；未独立复现"
+  },
+  "limitations": [
+    "所读主问题为单标签；OR 搜索不等同于任意多标签 AND",
+    "有界出度仍可能使低频标签导航弱",
+    "每标签图暂存与标签元数据不能只用最终出度估总内存"
+  ],
+  "related_work": [
+    "方法关联及证据见 researches/containment-filtered-vector-search/index.md"
+  ],
+  "project_insights": [
+    "作为过滤构图前序与 singleton 基线",
+    "如适配 AND，需要覆盖集合+完整属性检查或谓词标签物化，明确新增成本",
+    "保留原文与 LSSG Table 2 对能力概括的差异"
+  ],
+  "evidence": [
+    {
+      "kind": "full_text_sections",
+      "version": "作者公开 11 页稿；首页正式 DOI，ISBN 等有占位符；与最终版差异未逐项核对",
+      "local_path": "papers/filtered-ann/10.1145-3543507.3583552-filtered-diskann/paper.md",
+      "url": "https://harsha-simhadri.org/pubs/Filtered-DiskANN23.pdf",
+      "sections": [
+        "1.1",
+        "2",
+        "3 Algorithms 1–4",
+        "4 Algorithm 5",
+        "5"
+      ],
+      "pdf_pages": [
+        "1–8",
+        "10–11"
+      ]
+    },
+    {
+      "kind": "bibliography",
+      "local_path": "researches/containment-filtered-vector-search/evidence/crossref-filtered-diskann-2026-10-19.json",
+      "url": "https://api.crossref.org/works/10.1145/3543507.3583552"
+    }
+  ],
+  "verification": {
+    "date": "2026-10-19",
+    "reading_status": "定义、方法、部分分析与实验相关章节阅读；非逐段全文验证",
+    "bibliography_status": "DOI/作者顺序/venue/年已核，作者稿拼写与版本差异保留",
+    "open_items": [
+      "最终稿差异与全部理论细节",
+      "官方实现及真实包含工作负载复现",
+      "零/不足k的行为与数据许可"
+    ]
+  },
+  "local_dir": "papers/filtered-ann/10.1145-3543507.3583552-filtered-diskann"
+}
