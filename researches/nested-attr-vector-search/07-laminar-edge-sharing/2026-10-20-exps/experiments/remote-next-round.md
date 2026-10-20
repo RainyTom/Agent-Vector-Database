@@ -2,6 +2,8 @@
 
 状态：**待远端执行**。本文件是研究侧向实验侧的 Git 交接协议，不是实验结果。先完成 P0/P1，再按证据选择 P2；本轮不直接投入联合构图大改。
 
+具体改进规格见 [les-improvement-plan.md](les-improvement-plan.md)：优先 E0 搜索内存复用、S1 共享存储下恢复作用域邻接；R1 并集补充搜索与 A1 多入口按条件进入。远端不仅要测瓶颈，还须完成 E0 和 S1 静态空间分析，并按门槛决定结构原型。
+
 ## 1. 目标与已核查问题
 
 目标：解释 sift100k 上 LES-v3 与共享向量 PSG 的吞吐差距，判断 53.3 MB 的空间优势在严格召回门槛及相近空间预算下是否成立。任务是 Subtree filtered top-k ANN，不是 vector join。
@@ -12,7 +14,7 @@
 2. LES 34,313 QPS 对应 varint、**adaptive=0**、ef12；不能把这一行标为 adaptive 的收益。四格消融必须拆开 layout 与 beam。
 3. LES `QUERY_SECONDS` 是各轮逐查询时间和的最小值，PSG 是批次 wall time 最小值；两者 timings 文件均保留最后一轮。不能用最好轮 QPS 与最后轮 p95 共同描述一个样本。
 4. PSG `baseline.cpp` 先构造 `node_qs`，按作用域集中查询；LES 按原始 qi 顺序。当前对比混入调度/缓存局部性收益。
-5. LES 的 `SCANNED/distcomp` 跨所有 repeats 累加，且不包含完整 upper-level 距离计算；不能直接当作每查询总成本。`M=16` 也不等于每次实际只扫 16 条邻接，必须统计真实读取条目。
+5. LES 的 `SCANNED/distcomp` 跨所有 repeats 累加，且不包含完整 upper-level 距离计算；不能直接当作每查询总成本。当前 PSG 导出器将 level-0 邻接截到至多 M 条（源码 `write_inline_graph`），M16 是当前导出图的上限，不是每次恰好扫描16条；必须统计真实读取条目。
 6. 桶内 u16 + mapping 不改变边集和扫描条数，还引入映射读取。它是表示假设，不能预先称为解决并图冗余。
 
 ## 2. P0：冻结输入、修正测量契约
