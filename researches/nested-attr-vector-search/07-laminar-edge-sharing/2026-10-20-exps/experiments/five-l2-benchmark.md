@@ -222,9 +222,9 @@ LES 的共享并图把逐作用域度数从约 19 提到约 37，因此测试两
 | 共享 PSG M16 | 62.3 MB | 0.9673 / 48,987 | 0.9840 / 37,021 |
 | 共享 PSG M16 + adaptive | 62.3 MB | 0.9559 / 51,957 | 0.9876 / 32,800 |
 
-同空间约 53.5 MB：LES 在 r95 门槛快 $1.18\times$；在约 0.963 召回（LES ef14 0.9625/34,699 vs PSG-M12 ef40 0.9638/32,707）快 $1.06\times$；r98 慢 $1.18\times$。PSG-M16 多 17% 空间，r95/r98 快 $1.20\times$/$1.45\times$。**LES 不是被严格支配，而是更小空间下的中等召回工作点。**
+同空间约 53.5 MB 的历史诊断集表曾显示 LES 在 r95 门槛与约 0.963 召回不落后；**冻结 400/300/300 的独立 test（300 条）推翻了该外推**：LES policy r95 0.9553/36,712、policy r98 0.9813/24,641；PSG-M12 在 0.958 召回 41,443、0.985 召回 23,029，分别快 $1.24\times$/$1.21\times$，空间仅多 0.6%。**LES 在独立 test 上仍被同空间 M12 支配。** fixed ef12 未达 r95、旧 adaptive 未达 r98；B1 让 LES 达标但未翻盘。B1 对 PSG-M16 的 r95 策略在 test 只有 0.9453，说明预算表也会过拟合。
 
-**S1 静态空间分析（未实现查询）。** 对每个 $(u,\text{local source})$ 的有序全局邻接做 exact interning：$N_{\rm ref}=1,034,631$，唯一列表 1,019,476（唯一率 **0.985**），平均长度 12.8。字节：refs 4.14 + offsets 8.16 + targets 52.11 + gid 4.14 + upper 1.61 + base 12.80 = **82.99 MB**，高于共享 PSG 62.34 MB 与 LES-v3 53.27 MB。按门槛**不实现**；逐作用域邻接几乎不可跨 scope 复用，S1 路线结束。
+**S1 静态空间分析（未实现查询）。** 对每个 $(u,\text{local source})$ 的有序全局邻接做 exact interning：$N_{\rm ref}=1,034,631$，唯一列表 1,019,476（唯一率 **0.985**），平均长度 12.8。已统计组件：refs 4.14 + offsets 8.16 + targets 52.11 + gid 4.14 + upper 1.61 + base 12.80 = **82.99 MB**；补每引用 1 B `lv` 与 4 B `upper_off` 至少 5.17 MB，且未计 global→local lookup，**88.16 MB 只是下界**。高于共享 PSG 62.34 MB 与 LES-v3 53.27 MB，按门槛**不实现**。该否决只针对 full-list exact interning，不覆盖块共享、邻居字典或少数 scope 覆盖。
 
 **负结果**：① 邻居向量预取使固定 ef24 从 45.2 ms 退化到 56.3 ms，已移除；② 对 $<1000$ 可行集的查询改走精确扫描无收益（31.0 ms vs 30.4 ms）。原始数据：`data/five_l2_les_v3_20261020T104139Z-68414a0f.csv`、`data/five_l2_strict_summary_20261020.csv`。
 
@@ -315,4 +315,16 @@ $BIN/les_query --out-dir /tmp/les_var --queries \
   --out /tmp/ids.bin --timings /tmp/t.bin
 # 共享 PSG 的自适应 beam
 GRAPH_ADAPTIVE=1 GRAPH_SHARE_VECTORS=1 GRAPH_EF=32 $BIN/candidate query ...
+```
+
+第二轮 B1（独立 split + 预算表 + 15 blocks）：
+
+```bash
+$PY production/nested-attr-vector-search/src/make_splits.py
+$PY production/nested-attr-vector-search/src/b1_calibrate.py --run b1_20261020 --methods les,psg_m16,psg_m12
+$PY production/nested-attr-vector-search/src/run_b1_blocks.py --blocks 15
+$PY production/nested-attr-vector-search/src/analyze_b1_blocks.py
+# 策略接口：
+$BIN/les_query ... --ef-policy data/b1_policies/b1_20261020/policy_les_r95.txt
+GRAPH_EF_POLICY=... $BIN/candidate query ...
 ```

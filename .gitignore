@@ -174,3 +174,8 @@ core.*
 production/nested-attr-vector-search/work/
 
 *.ids
+# B1 experiment binaries (logs/CSV/JSON stay tracked)
+researches/**/experiments/b1/**/*.ids
+researches/**/experiments/b1/**/*.t
+researches/**/experiments/b1/**/ids.bin
+researches/**/experiments/b1/**/timings.f64

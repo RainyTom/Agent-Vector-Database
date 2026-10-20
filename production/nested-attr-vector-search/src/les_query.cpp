@@ -25,6 +25,7 @@ struct Args {
   int k = 10, repeats = 3;
   size_t ef = 64;
   bool adaptive = false;
+  std::string ef_policy;
 };
 
 Args parse(int argc, char** argv) {
@@ -42,6 +43,7 @@ Args parse(int argc, char** argv) {
     else if (f == "--ef") a.ef = std::stoull(next());
     else if (f == "--repeats") a.repeats = std::stoi(next());
     else if (f == "--adaptive") a.adaptive = true;
+    else if (f == "--ef-policy") a.ef_policy = next();
     else { std::cerr << "unknown " << f << "\n"; std::exit(2); }
   }
   return a;
@@ -93,7 +95,49 @@ inline float u8_l2(const uint8_t* a, const uint8_t* b, size_t d) {
   return float(total);
 }
 
+struct EfPolicy {
+  bool loaded = false;
+  std::string method;
+  int k = 10;
+  int fallback = 0;
+  int ef[5] = {0, 0, 0, 0, 0};
+  bool has[5] = {false, false, false, false, false};
+};
+
+int size_bucket(size_t size) {
+  if (size == 0) return 0;
+  if (size < 10) return 1;
+  if (size < 500) return 2;
+  if (size < 10000) return 3;
+  return 4;
+}
+
+EfPolicy load_policy(const std::string& path, int k) {
+  EfPolicy p;
+  std::ifstream f(path);
+  if (!f) { std::cerr << "cannot open ef policy " << path << "\n"; std::exit(2); }
+  p.loaded = true;
+  p.k = k;
+  std::string key;
+  while (f >> key) {
+    if (key == "method") f >> p.method;
+    else if (key == "k") f >> p.k;
+    else if (key == "fallback") f >> p.fallback;
+    else if (key == "ef") {
+      int b, v;
+      f >> b >> v;
+      if (b < 0 || b >= 5) { std::cerr << "bad bucket in policy\n"; std::exit(2); }
+      p.ef[b] = v; p.has[b] = true;
+    } else { std::cerr << "unknown policy key " << key << "\n"; std::exit(2); }
+  }
+  if (p.method != "les") { std::cerr << "policy method mismatch\n"; std::exit(2); }
+  if (p.k != k) { std::cerr << "policy k mismatch\n"; std::exit(2); }
+  if (p.fallback <= 0) { std::cerr << "policy missing fallback\n"; std::exit(2); }
+  return p;
+}
+
 struct Cand { float d; int id; };
+
 struct Worse {
   bool operator()(const Cand& a, const Cand& b) const {
     return a.d < b.d || (a.d == b.d && a.id < b.id);
@@ -191,6 +235,11 @@ int main(int argc, char** argv) {
       counts = read_bin<uint32_t>(a.outdir + "/counts.bin", nodes);
     }
   }
+  EfPolicy policy;
+  if (!a.ef_policy.empty()) {
+    if (a.adaptive) { std::cerr << "--ef-policy and --adaptive are exclusive\n"; return 2; }
+    policy = load_policy(a.ef_policy, a.k);
+  }
   std::vector<uint8_t> base8 = read_bin<uint8_t>(a.outdir + "/base_u8.bin", size_t(n) * dim);
 
   std::ifstream qf(a.queries, std::ios::binary);
@@ -240,20 +289,28 @@ int main(int argc, char** argv) {
   std::vector<int32_t> ids(size_t(nq) * a.k, -1);
   std::vector<double> timings(nq, 0.0);
   double best = 1e300;
+  double best_wall = 1e300;
   std::vector<Cand> cands;
   std::vector<Cand> top_heap;
   std::vector<std::pair<float, uint32_t>> cand_heap;
   uint64_t pruned = 0, scanned = 0, distcomp = 0;
 
   for (int rep = 0; rep < a.repeats; ++rep) {
+    auto rep_start = std::chrono::steady_clock::now();
     double total_s = 0.0;
     for (int qi = 0; qi < nq; ++qi) {
       auto t0 = std::chrono::steady_clock::now();
       const uint8_t* q = &queries[size_t(qi) * dim];
       size_t ef_q = a.ef;
-      if (a.adaptive && !counts.empty()) {
-        size_t size = 0;
-        for (int u : qnodes[qi]) size += counts[size_t(u)];
+      size_t scope_size = 0;
+      if (!counts.empty()) {
+        for (int u : qnodes[qi]) scope_size += counts[size_t(u)];
+      }
+      if (policy.loaded) {
+        const int b = size_bucket(scope_size);
+        ef_q = std::max<size_t>(a.k, policy.has[b] ? policy.ef[b] : policy.fallback);
+      } else if (a.adaptive && !counts.empty()) {
+        const size_t size = scope_size;
         if (size < 500) ef_q = std::max<size_t>(a.k, a.ef / 2);
         else if (size < 10000) ef_q = std::max<size_t>(a.k, (a.ef * 2) / 3);
         else ef_q = a.ef;
@@ -412,11 +469,16 @@ int main(int argc, char** argv) {
       timings[qi] = std::chrono::duration<double, std::milli>(t1 - t0).count();
       total_s += timings[qi] / 1000.0;
     }
+    auto rep_end = std::chrono::steady_clock::now();
+    best_wall = std::min(best_wall,
+        std::chrono::duration<double>(rep_end - rep_start).count());
     best = std::min(best, total_s);
   }
   write_bin(a.out, ids);
   write_bin(a.timings, timings);
   std::printf("QUERY_SECONDS %.9f\n", best);
+  std::printf("QUERY_SUM_SECONDS %.9f\n", best);
+  std::printf("BATCH_WALL_SECONDS %.9f\n", best_wall);
   std::printf("PRUNED %llu / SCANNED %llu (%.2f%%), distcomp %llu\n",
               (unsigned long long)pruned, (unsigned long long)scanned,
               scanned ? 100.0 * pruned / scanned : 0.0, (unsigned long long)distcomp);

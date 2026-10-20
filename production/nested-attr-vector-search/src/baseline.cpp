@@ -26,6 +26,45 @@
 
 namespace {
 
+struct EfPolicyCfg {
+  bool loaded = false;
+  int k = 10;
+  int fallback = 0;
+  int ef[5] = {0, 0, 0, 0, 0};
+  bool has[5] = {false, false, false, false, false};
+};
+
+int policy_bucket(size_t size) {
+  if (size == 0) return 0;
+  if (size < 10) return 1;
+  if (size < 500) return 2;
+  if (size < 10000) return 3;
+  return 4;
+}
+
+EfPolicyCfg load_policy_cfg(const std::string& path, int k) {
+  EfPolicyCfg p;
+  std::ifstream f(path);
+  if (!f) { std::cerr << "cannot open ef policy " << path << "\n"; std::exit(2); }
+  p.loaded = true;
+  p.k = k;
+  std::string key, method;
+  while (f >> key) {
+    if (key == "method") f >> method;
+    else if (key == "k") f >> p.k;
+    else if (key == "fallback") f >> p.fallback;
+    else if (key == "ef") {
+      int b, v; f >> b >> v;
+      if (b < 0 || b >= 5) { std::cerr << "bad policy bucket\n"; std::exit(2); }
+      p.ef[b] = v; p.has[b] = true;
+    } else { std::cerr << "unknown policy key " << key << "\n"; std::exit(2); }
+  }
+  if (method != "psg") { std::cerr << "policy method mismatch (want psg)\n"; std::exit(2); }
+  if (p.k != k) { std::cerr << "policy k mismatch\n"; std::exit(2); }
+  if (p.fallback <= 0) { std::cerr << "policy missing fallback\n"; std::exit(2); }
+  return p;
+}
+
 struct Args {
   std::string mode, base, tree, labels, meta, index_dir, queries, workload, out, timings;
   std::string query_mode = "subtree";
@@ -604,6 +643,15 @@ int main(int argc, char** argv) {
     std::vector<InlineGraph<uint32_t>> ci32(m.nodes);
     std::vector<size_t> node_ef(m.nodes, EF);
     const bool adaptive_ef = std::getenv("GRAPH_ADAPTIVE") != nullptr;
+    const char* policy_env = std::getenv("GRAPH_EF_POLICY");
+    EfPolicyCfg policy;
+    if (policy_env && *policy_env) {
+      if (adaptive_ef) {
+        std::cerr << "GRAPH_EF_POLICY and GRAPH_ADAPTIVE are exclusive\n";
+        return 2;
+      }
+      policy = load_policy_cfg(policy_env, k);
+    }
     for (int v = 0; v < m.nodes; ++v) {
       std::string cp = args.index_dir + "/c_" + std::to_string(v) + ".bin";
       std::ifstream probe(cp, std::ios::binary);
@@ -614,8 +662,11 @@ int main(int argc, char** argv) {
       if (hdr[6] == 2) load_inline_graph<uint16_t>(cp, ci16[v]);
       else load_inline_graph<uint32_t>(cp, ci32[v]);
       size_t ef_v = EF;
-      if (adaptive_ef) {
-        const size_t msize = ci16[v].m ? ci16[v].m : ci32[v].m;
+      const size_t msize = ci16[v].m ? ci16[v].m : ci32[v].m;
+      if (policy.loaded) {
+        const int b = policy_bucket(msize);
+        ef_v = size_t(policy.has[b] ? policy.ef[b] : policy.fallback);
+      } else if (adaptive_ef) {
         if (msize < 500) ef_v = EF / 2;
         else if (msize < 10000) ef_v = (EF * 2) / 3;
       }
@@ -651,6 +702,7 @@ int main(int argc, char** argv) {
     std::vector<double> timings(nq, 0.0);
 
     double best_per_repeat = 1e300;
+    double best_sum = 1e300;
     for (int rep = 0; rep < args.repeats; ++rep) {
       std::fill(timings.begin(), timings.end(), 0.0);
       for (int qi = 0; qi < nq; ++qi) parts[qi].clear();
@@ -715,12 +767,19 @@ int main(int argc, char** argv) {
         timings[qi] += std::chrono::duration<double, std::milli>(t1 - t0).count();
       }
       auto rep_end = std::chrono::steady_clock::now();
-      best_per_repeat = std::min(best_per_repeat,
-          std::chrono::duration<double>(rep_end - rep_start).count());
+      const double wall = std::chrono::duration<double>(rep_end - rep_start).count();
+      if (wall < best_per_repeat) {
+        best_per_repeat = wall;
+        double s = 0.0;
+        for (double v : timings) s += v;
+        best_sum = s / 1000.0;
+      }
     }
     write_bin(args.out, ids);
     write_bin(args.timings, timings);
     std::printf("QUERY_SECONDS %.9f\n", best_per_repeat);
+    std::printf("QUERY_SUM_SECONDS %.9f\n", best_sum);
+    std::printf("BATCH_WALL_SECONDS %.9f\n", best_per_repeat);
     return 0;
   }
 

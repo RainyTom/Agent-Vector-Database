@@ -1,0 +1,8 @@
+method psg
+k 10
+fallback 128
+ef 0 10
+ef 1 10
+ef 2 14
+ef 3 40
+ef 4 128
