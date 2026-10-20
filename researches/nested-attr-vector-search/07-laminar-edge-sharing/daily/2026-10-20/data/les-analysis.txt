@@ -1,0 +1,22 @@
+objects 100000, nodes 85, dim 128
+observed_directed_edges 7602554
+unique_directed_edges 3658543
+duplicate_fraction 0.519
+inconsistent_edges 0
+bucket_entries 3822159 (multiplicity 1.045)
+two_segment: exact_entries 1966214 cross_entries 1856024 total 3822238
+direct_members 115847 over 80 nodes (max 5894)
+per_scope_mean_degree: 19.4 18.3 20.1 17.3 17.7 13.0 14.6 20.9
+slice_mean_degree (node: mean over feasible objects):
+  node 0 feasible 100000 slice_mean_deg 36.59
+  node 1 feasible 27860 slice_mean_deg 27.64
+  node 2 feasible 21729 slice_mean_deg 31.75
+  node 3 feasible 33872 slice_mean_deg 25.50
+  node 4 feasible 27519 slice_mean_deg 26.03
+  node 5 feasible 4802 slice_mean_deg 17.27
+  node 6 feasible 9023 slice_mean_deg 18.02
+  node 7 feasible 9619 slice_mean_deg 26.94
+  node 8 feasible 5284 slice_mean_deg 19.31
+  node 9 feasible 5443 slice_mean_deg 22.87
+  node 10 feasible 6211 slice_mean_deg 24.18
+  node 11 feasible 6204 slice_mean_deg 22.58

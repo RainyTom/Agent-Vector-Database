@@ -1,0 +1,3 @@
+mode,method,qps,recall_at_10,p95_ms,index_mb,build_s,note
+subtree,per-scope materialized (B4),74706,0.9641,0.0284,194,57,ef=21; u8 exact distance
+exact,direct-label inverted + exact scan (B0),191914,1.0000,0.0113,51,0,exact scopes p50 126 / p95 396

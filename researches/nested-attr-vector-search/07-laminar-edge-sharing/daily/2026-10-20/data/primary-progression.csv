@@ -1,0 +1,11 @@
+stage,qps,recall_at_10,p95_ms,index_mb,build_s,note
+hybrid_global_filter_scan,3104,0.9987,0.83,64,16,original baseline
+per_subtree_float,17683,0.9948,0.10,275,29,one HNSW per scope; per-query order
+scope_grouped_uint8,63223,0.9732,0.0339,115,22,uint8 exact distances + grouped execution
+pc1_layout,61529,0.9685,0.0321,115,20.3,PC1 internal-id ordering
+m24_efc200_ef21,64624,0.9643,0.0325,142,30.3,M=24, efConstruction=200
+prefetch_2lines,77833,0.9609,0.0304,108,29.9,vector-first blocks + neighbor prefetch
+vec_first_layout,83934,0.9609,0.0252,108,30.0,vector first + 2-line prefetch
+pop_prefetch,85001,0.9609,0.0243,108,30.9,add pop-time adjacency prefetch
+cap_nearest_m_ef22,88338,0.9604,0.0284,83,30.5,store nearest M of 2M links
+cap_nearest_m_ef21,94698,0.9570,0.0209,83,30.8,final primary operating point

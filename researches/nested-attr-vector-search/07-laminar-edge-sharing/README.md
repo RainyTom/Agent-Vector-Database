@@ -415,7 +415,7 @@ return k smallest (δ, id) in top
 
 **当前基准.** 两个工作负载：
 1. 原始 SIFT100k + 85 节点层级（每对象 1–3 个直接标签），用于与既有工程结果对比；
-2. **CCS 形状工作负载**（`prep_ccs.py`）：1365 节点（深度 5、4 叉、1024 叶），每对象 1–5 个直接标签（均值 2.1），25% 的主标签落在中间节点，叶类目按 Zipf(1.1) 偏斜并与 512 个向量中心相关；含 1000 条 Subtree 与 1000 条 Exact 查询及各自 oracle。标签流行度按 PathSeer 数据集的真实元数据校准（Paper 741 类、Zipf 斜率约 -2.4；SIFT1M 为 10/12/100 类、单标签），但树形状与中间节点直属比例仍是显式假设。详见[基线改造研究](../08-baseline-adaptation.md)。
+2. **CCS 形状工作负载**（`prep_ccs.py`）：1365 节点（深度 5、4 叉、1024 叶），每对象 1–5 个直接标签（均值 2.1），25% 的主标签落在中间节点，叶类目按 Zipf(1.1) 偏斜并与 512 个向量中心相关；含 1000 条 Subtree 与 1000 条 Exact 查询及各自 oracle。标签流行度按 PathSeer 数据集的真实元数据校准（Paper 741 类、Zipf 斜率约 -2.4；SIFT1M 为 10/12/100 类、单标签），但树形状与中间节点直属比例仍是显式假设。详见[基线改造研究](baseline-adaptation.md)。
 
 ### 5.2 工作负载
 
@@ -430,7 +430,7 @@ return k smallest (δ, id) in top
 
 ### 5.3 协议与指标
 
-`qps_at_r95`、分类型 Recall@10、空结果正确率、p95、索引字节、构建时间、违规数；索引空间按 level-0 直属段/跨子树段/上界层/向量/偏移分解。所有方法计入后代标签展开、候选合并、去重与临时内存。详见[基准协议](../benchmark-protocol.md)。
+`qps_at_r95`、分类型 Recall@10、空结果正确率、p95、索引字节、构建时间、违规数；索引空间按 level-0 直属段/跨子树段/上界层/向量/偏移分解。所有方法计入后代标签展开、候选合并、去重与临时内存。详见[基准协议](benchmark-protocol.md)。
 
 ### 5.4 需在真实数据上核验的统计
 
@@ -471,7 +471,7 @@ return k smallest (δ, id) in top
 
 空间估算（**仅 level-0 条目 + 共享向量**）：条目约 $3.82\text{M}\times5\text{B}=19.1$ MB，向量 12.8 MB，偏移与元数据约 1.5 MB，合计约 **33 MB**。这不包括上界层、Exact 专属图与树/标签之外的运行时结构，也**不是**与“双语义 B4”可比的完整空间；当前 B4 的 83 MB 只是 Subtree 版本。
 
-### 6.3 CCS 形状工作负载（新增，2026-10-21）
+### 6.3 CCS 形状工作负载（2026-10-20）
 
 同机、单线程、u8 精确距离、ef=21：
 
@@ -480,7 +480,7 @@ return k smallest (δ, id) in top
 | B4 逐作用域物化，Subtree | **74,706** | 0.9641 | 28.4 µs | 194 MB | 57 s |
 | B0 直接标签倒排 + 精确扫描，Exact | **191,914** | 1.0000 | 11.3 µs | 向量 51 MB | 0 |
 
-Exact 作用域 p50/p95/max 为 126/396/6,973，扫描已经非常快：**为 Exact 物化图在此 workload 上没有收益**。这支持“小作用域精确回退”，也说明 LES 的直属桶必须先与扫描比较，而不是与图索引比较。Subtree 作用域 p50/p95/max 为 10,334/49,305/86,699，图搜索仍有明显价值。详细统计与基线改造计划见[基线改造研究](../08-baseline-adaptation.md)。
+Exact 作用域 p50/p95/max 为 126/396/6,973，扫描已经非常快：**为 Exact 物化图在此 workload 上没有收益**。这支持“小作用域精确回退”，也说明 LES 的直属桶必须先与扫描比较，而不是与图索引比较。Subtree 作用域 p50/p95/max 为 10,334/49,305/86,699，图搜索仍有明显价值。详细统计与基线改造计划见[基线改造研究](baseline-adaptation.md)。
 
 ### 6.4 待补实验（论文成立的前提）
 
@@ -511,6 +511,10 @@ B4 每作用域独立构图（hnswlib），查询期自定义紧凑格式：u8 �
 
 消融（交错测量）：分组执行约 +35%；u8 约 +38%；PC1 约 +5%；紧凑块+预取至 86,788 qps；截断与 $ef=21$ 至 94,698 qps。负结果：共享向量、变量长度邻接、小范围扫描、透明大页、两查询交错 beam、多 seed、按作用域分配 $ef$、循环展开。两查询交错实验中发现共享 visited 数组会被并发搜索覆盖 generation，必须私有化。
 
+## 每日进展
+
+按日期的实验记录、数据与构建日志见 [daily/](daily/)。最新一天：2026-10-20。
+
 ## 复现
 
 ```bash
@@ -523,4 +527,4 @@ g++ -O2 -std=c++17 production/nested-attr-vector-search/src/les_analysis.cpp -o 
   --index-dir production/nested-attr-vector-search/work/index
 ```
 
-代码：`production/nested-attr-vector-search/src/{prep.cpp,baseline.cpp,les_analysis.cpp,harness.py}`；协议：[../benchmark-protocol.md](../benchmark-protocol.md)。
+代码：`production/nested-attr-vector-search/src/{prep.cpp,baseline.cpp,les_analysis.cpp,harness.py}`；协议：[benchmark-protocol.md](benchmark-protocol.md)。

@@ -1,0 +1,36 @@
+{
+  "tree_nodes": 1365,
+  "leaves": 1024,
+  "labels_per_object_hist": [
+    0,
+    30146,
+    40109,
+    21912,
+    5817,
+    2016
+  ],
+  "direct_members_by_depth": [
+    0,
+    4941,
+    5628,
+    5529,
+    5737,
+    187613
+  ],
+  "empty_exact_scopes": 1,
+  "subtree_scope_size_p50_p95_max": [
+    10334,
+    49305,
+    86699
+  ],
+  "exact_scope_size_p50_p95_max": [
+    126,
+    396,
+    6973
+  ],
+  "sub_queries": 1000,
+  "exact_queries": 1000,
+  "p_mid": 0.25,
+  "zipf_exp": 0.9,
+  "calibration": "PathSeer HF meta: Paper 741 cats Zipf slope -2.4; SIFT1M flat labels 10/12/100 cats, 1/vector"
+}
