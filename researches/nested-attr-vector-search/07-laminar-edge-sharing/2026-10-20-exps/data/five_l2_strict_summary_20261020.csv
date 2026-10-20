@@ -1,0 +1,6 @@
+dataset,method,index_bytes,recall_r95,qps_r95,recall_r98,qps_r98,note
+sift100k,LES-v3 varint E0,53271828,0.9506,40687,0.9807,25589,adaptive ef24 for r98; fixed ef12 for r95; 7 interleaved blocks median
+sift100k,PSG-shared M12,53583641,0.9717,34506,0.9813,30289,ef48 / ef64; original order
+sift100k,PSG-shared M16,62340883,0.9673,48987,0.9840,37021,ef32 / ef48; original order
+sift100k,PSG-shared M16 adaptive,62340883,0.9559,51957,0.9876,32800,adapt ef32 / ef64; original order
+sift100k,LES-v3 matched-0.963,53271828,0.9625,34699,,,ef14; PSG-M12 ef40 0.9638/32707

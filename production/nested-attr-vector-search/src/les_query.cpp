@@ -241,6 +241,8 @@ int main(int argc, char** argv) {
   std::vector<double> timings(nq, 0.0);
   double best = 1e300;
   std::vector<Cand> cands;
+  std::vector<Cand> top_heap;
+  std::vector<std::pair<float, uint32_t>> cand_heap;
   uint64_t pruned = 0, scanned = 0, distcomp = 0;
 
   for (int rep = 0; rep < a.repeats; ++rep) {
@@ -297,18 +299,32 @@ int main(int argc, char** argv) {
         // Level-0 beam over the union graph's bucket slice.
         if (++gen == 0) { std::fill(visited.begin(), visited.end(), 0); gen = 1; }
         const uint32_t genq = gen;
-        std::priority_queue<Cand, std::vector<Cand>, Worse> top;
-        std::priority_queue<std::pair<float, uint32_t>,
-                            std::vector<std::pair<float, uint32_t>>,
-                            std::greater<std::pair<float, uint32_t>>> cand;
+        top_heap.clear();
+        cand_heap.clear();
+        auto top_push = [&](Cand c) {
+          top_heap.push_back(c);
+          std::push_heap(top_heap.begin(), top_heap.end(), Worse());
+        };
+        auto top_pop = [&]() {
+          std::pop_heap(top_heap.begin(), top_heap.end(), Worse());
+          top_heap.pop_back();
+        };
+        auto cand_push = [&](std::pair<float, uint32_t> c) {
+          cand_heap.push_back(c);
+          std::push_heap(cand_heap.begin(), cand_heap.end(), std::greater<>());
+        };
+        auto cand_pop = [&]() {
+          std::pop_heap(cand_heap.begin(), cand_heap.end(), std::greater<>());
+          cand_heap.pop_back();
+        };
         visited[start] = genq;
-        float ds = u8_l2(q, &base8[size_t(start) * dim], dim);
-        top.push({ds, int(start)});
-        cand.push({ds, start});
-        while (!cand.empty()) {
-          auto cd = cand.top();
-          if (top.size() >= ef_q && cd.first > top.top().d) break;
-          cand.pop();
+        float ds = d;  // same object as start: reuse the descent distance
+        top_push({ds, int(start)});
+        cand_push({ds, start});
+        while (!cand_heap.empty()) {
+          auto cd = cand_heap.front();
+          if (top_heap.size() >= ef_q && cd.first > top_heap.front().d) break;
+          cand_pop();
           uint32_t c = cd.second;
           const float dq_c = cd.first;  // distance from query to c
           const uint32_t r0 = run_offsets[c], r1 = run_offsets[size_t(c) + 1];
@@ -318,8 +334,8 @@ int main(int argc, char** argv) {
           const uint32_t last = uint32_t(hi_it - run_act.data());
           const size_t s0 = first < r1 ? run_start[first] : offs[size_t(c) + 1];
           const size_t s1 = last < r1 ? run_start[last] : offs[size_t(c) + 1];
-          const bool full = (top.size() >= ef_q);
-          const float tau = full ? top.top().d : 0.f;
+          const bool full = (top_heap.size() >= ef_q);
+          const float tau = full ? top_heap.front().d : 0.f;
           if (varint_layout) {
             for (uint32_t r = first; r < last; ++r) {
               const uint8_t* p = nbr_varint.data() + run_start[r];
@@ -341,10 +357,10 @@ int main(int argc, char** argv) {
                 ++distcomp;
                 visited[nb] = genq;
                 float dn = u8_l2(q, &base8[size_t(nb) * dim], dim);
-                if (top.size() < ef_q || dn < top.top().d) {
-                  cand.push({dn, nb});
-                  top.push({dn, int(nb)});
-                  if (top.size() > ef_q) top.pop();
+                if (top_heap.size() < ef_q || dn < top_heap.front().d) {
+                  cand_push({dn, nb});
+                  top_push({dn, int(nb)});
+                  if (top_heap.size() > ef_q) top_pop();
                 }
               }
             }
@@ -364,15 +380,15 @@ int main(int argc, char** argv) {
               ++distcomp;
               visited[nb] = genq;
               float dn = u8_l2(q, &base8[size_t(nb) * dim], dim);
-              if (top.size() < ef_q || dn < top.top().d) {
-                cand.push({dn, nb});
-                top.push({dn, int(nb)});
-                if (top.size() > ef_q) top.pop();
+              if (top_heap.size() < ef_q || dn < top_heap.front().d) {
+                cand_push({dn, nb});
+                top_push({dn, int(nb)});
+                if (top_heap.size() > ef_q) top_pop();
               }
             }
           }
         }
-        while (!top.empty()) { cands.push_back(top.top()); top.pop(); }
+        while (!top_heap.empty()) { cands.push_back(top_heap.front()); top_pop(); }
       }
       std::sort(cands.begin(), cands.end(), [](const Cand& a, const Cand& b) {
         return a.d < b.d || (a.d == b.d && a.id < b.id);

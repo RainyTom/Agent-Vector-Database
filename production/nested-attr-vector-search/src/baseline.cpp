@@ -656,21 +656,43 @@ int main(int argc, char** argv) {
       for (int qi = 0; qi < nq; ++qi) parts[qi].clear();
       auto rep_start = std::chrono::steady_clock::now();
       std::vector<Cand> res;
-      for (int v = 0; v < m.nodes; ++v) {
-        const bool narrow = (ci16[v].m != 0);
-        if (!narrow && ci32[v].m == 0) continue;
-        for (const auto& qs : node_qs[v]) {
-          int qi = qs.first;
+      const char* order_env = std::getenv("GRAPH_QUERY_ORDER");
+      const bool original_order = order_env && std::string(order_env) == "original";
+      if (original_order) {
+        for (int qi = 0; qi < nq; ++qi) {
           const uint8_t* q = &queries[size_t(qi) * m.dim];
-          auto t0 = std::chrono::steady_clock::now();
-          if (narrow) search_inline<uint16_t>(ci16[v], q, node_ef[v], k, res,
-              shared_base.empty() ? nullptr : shared_base.data(), m.dim);
-          else search_inline<uint32_t>(ci32[v], q, node_ef[v], k, res,
-              shared_base.empty() ? nullptr : shared_base.data(), m.dim);
-          auto t1 = std::chrono::steady_clock::now();
-          timings[qi] += std::chrono::duration<double, std::milli>(t1 - t0).count();
-          auto& dst = parts[qi];
-          for (const Cand& c : res) dst.push_back(c);
+          for (int slot = 0; slot < int(qnodes[qi].size()); ++slot) {
+            const int v = qnodes[qi][slot];
+            const bool narrow = (ci16[v].m != 0);
+            if (!narrow && ci32[v].m == 0) continue;
+            auto t0 = std::chrono::steady_clock::now();
+            if (narrow) search_inline<uint16_t>(ci16[v], q, node_ef[v], k, res,
+                shared_base.empty() ? nullptr : shared_base.data(), m.dim);
+            else search_inline<uint32_t>(ci32[v], q, node_ef[v], k, res,
+                shared_base.empty() ? nullptr : shared_base.data(), m.dim);
+            auto t1 = std::chrono::steady_clock::now();
+            timings[qi] += std::chrono::duration<double, std::milli>(t1 - t0).count();
+            auto& dst = parts[qi];
+            for (const Cand& c : res) dst.push_back(c);
+          }
+        }
+      } else {
+        for (int v = 0; v < m.nodes; ++v) {
+          const bool narrow = (ci16[v].m != 0);
+          if (!narrow && ci32[v].m == 0) continue;
+          for (const auto& qs : node_qs[v]) {
+            int qi = qs.first;
+            const uint8_t* q = &queries[size_t(qi) * m.dim];
+            auto t0 = std::chrono::steady_clock::now();
+            if (narrow) search_inline<uint16_t>(ci16[v], q, node_ef[v], k, res,
+                shared_base.empty() ? nullptr : shared_base.data(), m.dim);
+            else search_inline<uint32_t>(ci32[v], q, node_ef[v], k, res,
+                shared_base.empty() ? nullptr : shared_base.data(), m.dim);
+            auto t1 = std::chrono::steady_clock::now();
+            timings[qi] += std::chrono::duration<double, std::milli>(t1 - t0).count();
+            auto& dst = parts[qi];
+            for (const Cand& c : res) dst.push_back(c);
+          }
         }
       }
       for (int qi = 0; qi < nq; ++qi) {
