@@ -1,0 +1,40 @@
+{
+  "status": "offline_audit_not_new_benchmark",
+  "source": "five_l2_strict_blocks_20261020.csv",
+  "rows": 42,
+  "configs": [
+    "les_var_adapt24",
+    "les_var_fixed12",
+    "psg_adapt32",
+    "psg_adapt64",
+    "psg_fixed32",
+    "psg_fixed48"
+  ],
+  "psg_m12_present": false,
+  "comparisons": [
+    {
+      "numerator": "les_var_fixed12",
+      "denominator": "psg_fixed32",
+      "blocks": 7,
+      "median_paired_ratio": 0.842345973341848,
+      "ratio_of_medians": 0.8305541166079722,
+      "timing_boundary_aligned": false
+    },
+    {
+      "numerator": "les_var_adapt24",
+      "denominator": "psg_fixed48",
+      "blocks": 7,
+      "median_paired_ratio": 0.7208469194072188,
+      "ratio_of_medians": 0.6911943663580697,
+      "timing_boundary_aligned": false
+    },
+    {
+      "numerator": "les_var_fixed12",
+      "denominator": "psg_adapt32",
+      "blocks": 7,
+      "median_paired_ratio": 0.7830861381418974,
+      "ratio_of_medians": 0.7830861381418974,
+      "timing_boundary_aligned": false
+    }
+  ]
+}

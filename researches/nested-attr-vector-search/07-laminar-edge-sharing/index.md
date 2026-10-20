@@ -148,6 +148,8 @@ SIFT 25k/50k/100k、MNIST 25k、Fashion-MNIST 25k（合成 1365 节点层级，�
 
 ## 5. 导航
 
+当前下一轮：[同空间证据补齐与作用域 ef 预算策略](2026-10-20-exps/experiments/remote-round2-budget-policy.md)。E0已由远端实现，S1全量列表字典关闭；M12尚缺已入库的配对逐轮记录，计时边界仍需统一。优先验证B1预算表，anchor按诊断条件启动。
+
 下一轮远端执行入口：[LES-v3 实验指导](2026-10-20-exps/experiments/remote-next-round.md)。状态：待执行；先校正严格 recall 门槛、查询调度与计时口径，再做成本归因和相近空间对照。
 
 方案改进：[实现规格与取舍](2026-10-20-exps/experiments/les-improvement-plan.md)。优先搜索内存复用与保留作用域邻接的共享表示；按条件验证并集补充搜索或多入口，均为待实现假设。
