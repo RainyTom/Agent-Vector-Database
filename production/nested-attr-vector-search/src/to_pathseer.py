@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Convert fixtures_ccs into the PathSeer/FAISS filtered-ANN layout.
+"""Convert five-slot CCS-shaped fixtures into the PathSeer/FAISS layout.
 
 Outputs:
-  load/load.bin                    u32 n, u32 d, n*d float32 (raw SIFT, no
-                                   normalization; SIFT values are integers)
+  load/load.bin                    u32 n, u32 d, n*d float32 (raw integer-valued
+                                   vectors in [0,255], no normalization)
   query/query.bin                  u32 nq, u32 d, nq*d float32
   query/query_sub.bv               nq * ceil(n/8) bytes, bit i = object i is
                                    feasible for Subtree query q (LSB first,

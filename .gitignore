@@ -172,3 +172,5 @@ core.*
 
 # Autoresearch benchmark scratch (fixtures, binaries, index)
 production/nested-attr-vector-search/work/
+
+*.ids

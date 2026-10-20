@@ -1,0 +1,11 @@
+dataset,variant,graph_M,index_bytes,ef,recall_at_10,qps,violations
+sift100k,psg_shared_m12,12,53583641,16,0.8781,80676,0
+sift100k,psg_shared_m12,12,53583641,24,0.9243,65274,0
+sift100k,psg_shared_m12,12,53583641,32,0.9487,49094,0
+sift100k,psg_shared_m12,12,53583641,48,0.9717,40321,0
+sift100k,psg_shared_m16,16,62340883,24,0.9494,53256,0
+sift100k,psg_shared_m16,16,62340883,32,0.9673,50069,0
+sift100k,psg_shared_m16,16,62340883,48,0.9840,36180,0
+sift100k,psg_shared_m16,16,62340883,64,0.9904,30031,0
+sift100k,psg_shared_converted_m16,16,62340361,24,0.9494,60538,0
+sift100k,psg_shared_converted_m16,16,62340361,32,0.9673,48833,0

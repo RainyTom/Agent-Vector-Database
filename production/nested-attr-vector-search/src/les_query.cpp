@@ -24,6 +24,7 @@ struct Args {
   std::string mode = "subtree";
   int k = 10, repeats = 3;
   size_t ef = 64;
+  bool adaptive = false;
 };
 
 Args parse(int argc, char** argv) {
@@ -40,6 +41,7 @@ Args parse(int argc, char** argv) {
     else if (f == "--k") a.k = std::stoi(next());
     else if (f == "--ef") a.ef = std::stoull(next());
     else if (f == "--repeats") a.repeats = std::stoi(next());
+    else if (f == "--adaptive") a.adaptive = true;
     else { std::cerr << "unknown " << f << "\n"; std::exit(2); }
   }
   return a;
@@ -52,6 +54,16 @@ std::vector<T> read_bin(const std::string& path, size_t count) {
   if (!in) { std::cerr << "cannot open " << path << "\n"; std::exit(2); }
   in.read(reinterpret_cast<char*>(v.data()), count * sizeof(T));
   if (!in) { std::cerr << "short read " << path << "\n"; std::exit(2); }
+  return v;
+}
+
+std::vector<uint8_t> read_bytes(const std::string& path) {
+  std::ifstream in(path, std::ios::binary | std::ios::ate);
+  if (!in) { std::cerr << "cannot open " << path << "\n"; std::exit(2); }
+  size_t bytes = size_t(in.tellg());
+  in.seekg(0);
+  std::vector<uint8_t> v(bytes);
+  in.read(reinterpret_cast<char*>(v.data()), bytes);
   return v;
 }
 
@@ -125,9 +137,27 @@ int main(int argc, char** argv) {
   std::vector<int> tout = read_bin<int>(a.outdir + "/tout.bin", nodes);
   std::vector<int32_t> seed = read_bin<int32_t>(a.outdir + "/seed.bin", nodes);
   std::vector<uint32_t> offs = read_bin<uint32_t>(a.outdir + "/offsets.bin", size_t(n) + 1);
-  std::vector<uint32_t> nbr = read_bin<uint32_t>(a.outdir + "/nbr.bin", nentries);
-  std::vector<uint16_t> act = read_bin<uint16_t>(a.outdir + "/act.bin", nentries);
-  std::vector<uint8_t> dflag = read_bin<uint8_t>(a.outdir + "/dflag.bin", nentries);
+  const bool varint_layout = std::ifstream(a.outdir + "/layout_varint").good();
+  std::vector<uint32_t> nbr;
+  std::vector<uint8_t> nbr_varint;
+  if (varint_layout) {
+    nbr_varint = read_bytes(a.outdir + "/nbr_varint.bin");
+  } else {
+    nbr = read_bin<uint32_t>(a.outdir + "/nbr.bin", nentries);
+  }
+  std::vector<uint32_t> run_offsets = read_bin<uint32_t>(a.outdir + "/run_offsets.bin", size_t(n) + 1);
+  const size_t nruns = run_offsets[n];
+  std::vector<uint32_t> run_start = read_bin<uint32_t>(
+      a.outdir + "/run_start.bin", nruns + (varint_layout ? 1 : 0));
+  std::vector<uint16_t> run_act = read_bin<uint16_t>(a.outdir + "/run_act.bin", nruns);
+  std::vector<uint8_t> dflag;
+  {
+    std::ifstream probe(a.outdir + "/dflag.bin", std::ios::binary);
+    if (probe.good()) {
+      probe.close();
+      dflag = read_bin<uint8_t>(a.outdir + "/dflag.bin", nentries);
+    }
+  }
   // Labels are needed to verify exact membership for exact_strict mode.
   std::vector<int32_t> labels;
   int labL = 0;
@@ -145,7 +175,22 @@ int main(int argc, char** argv) {
       if (labels[size_t(i) * labL + j] == u) return true;
     return false;
   };
-  std::vector<uint16_t> dist16 = read_bin<uint16_t>(a.outdir + "/dist16.bin", nentries);
+  std::vector<uint16_t> dist16;
+  {
+    std::ifstream probe(a.outdir + "/dist16.bin", std::ios::binary);
+    if (probe.good()) {
+      probe.close();
+      dist16 = read_bin<uint16_t>(a.outdir + "/dist16.bin", nentries);
+    }
+  }
+  std::vector<uint32_t> counts;
+  {
+    std::ifstream probe(a.outdir + "/counts.bin", std::ios::binary);
+    if (probe.good()) {
+      probe.close();
+      counts = read_bin<uint32_t>(a.outdir + "/counts.bin", nodes);
+    }
+  }
   std::vector<uint8_t> base8 = read_bin<uint8_t>(a.outdir + "/base_u8.bin", size_t(n) * dim);
 
   std::ifstream qf(a.queries, std::ios::binary);
@@ -203,6 +248,14 @@ int main(int argc, char** argv) {
     for (int qi = 0; qi < nq; ++qi) {
       auto t0 = std::chrono::steady_clock::now();
       const uint8_t* q = &queries[size_t(qi) * dim];
+      size_t ef_q = a.ef;
+      if (a.adaptive && !counts.empty()) {
+        size_t size = 0;
+        for (int u : qnodes[qi]) size += counts[size_t(u)];
+        if (size < 500) ef_q = std::max<size_t>(a.k, a.ef / 2);
+        else if (size < 10000) ef_q = std::max<size_t>(a.k, (a.ef * 2) / 3);
+        else ef_q = a.ef;
+      }
       cands.clear();
       for (int u : qnodes[qi]) {
         if (seed[u] < 0) continue;
@@ -254,37 +307,68 @@ int main(int argc, char** argv) {
         cand.push({ds, start});
         while (!cand.empty()) {
           auto cd = cand.top();
-          if (top.size() >= a.ef && cd.first > top.top().d) break;
+          if (top.size() >= ef_q && cd.first > top.top().d) break;
           cand.pop();
           uint32_t c = cd.second;
           const float dq_c = cd.first;  // distance from query to c
-          uint32_t b0 = offs[c], b1 = offs[size_t(c) + 1];
-          // binary search the activation range
-          auto lo_it = std::lower_bound(act.data() + b0, act.data() + b1, uint16_t(lo));
-          auto hi_it = std::upper_bound(act.data() + b0, act.data() + b1, uint16_t(hi));
-          size_t s0 = size_t(lo_it - act.data());
-          size_t s1 = size_t(hi_it - act.data());
-          const bool full = (top.size() >= a.ef);
+          const uint32_t r0 = run_offsets[c], r1 = run_offsets[size_t(c) + 1];
+          auto lo_it = std::lower_bound(run_act.data() + r0, run_act.data() + r1, uint16_t(lo));
+          auto hi_it = std::upper_bound(lo_it, run_act.data() + r1, uint16_t(hi));
+          const uint32_t first = uint32_t(lo_it - run_act.data());
+          const uint32_t last = uint32_t(hi_it - run_act.data());
+          const size_t s0 = first < r1 ? run_start[first] : offs[size_t(c) + 1];
+          const size_t s1 = last < r1 ? run_start[last] : offs[size_t(c) + 1];
+          const bool full = (top.size() >= ef_q);
           const float tau = full ? top.top().d : 0.f;
-          for (size_t t = s0; t < s1; ++t) {
-            ++scanned;
-            if (exact_edges && dflag[t] == 0) continue;
-            uint32_t nb = nbr[t];
-            if (visited[nb] == genq) continue;
-            // Exact triangle-inequality pruning:
-            // d(q,nb) >= dist16[t] - dq_c; if that exceeds the current top-ef
-            // bound tau, nb cannot improve the result. Exact, no approximation.
-            if (full && float(dist16[t]) - dq_c > tau) {
-              ++pruned;
-              continue;
+          if (varint_layout) {
+            for (uint32_t r = first; r < last; ++r) {
+              const uint8_t* p = nbr_varint.data() + run_start[r];
+              const uint8_t* pe = nbr_varint.data() + run_start[r + 1];
+              uint32_t prev = 0;  // each run restarts its delta chain
+              while (p < pe) {
+                uint32_t delta = 0;
+                int shift = 0;
+                while (true) {
+                  uint8_t b = *p++;
+                  delta |= uint32_t(b & 0x7f) << shift;
+                  if (!(b & 0x80)) break;
+                  shift += 7;
+                }
+                prev += delta;
+                ++scanned;
+                uint32_t nb = prev;
+                if (visited[nb] == genq) continue;
+                ++distcomp;
+                visited[nb] = genq;
+                float dn = u8_l2(q, &base8[size_t(nb) * dim], dim);
+                if (top.size() < ef_q || dn < top.top().d) {
+                  cand.push({dn, nb});
+                  top.push({dn, int(nb)});
+                  if (top.size() > ef_q) top.pop();
+                }
+              }
             }
-            ++distcomp;
-            visited[nb] = genq;
-            float dn = u8_l2(q, &base8[size_t(nb) * dim], dim);
-            if (top.size() < a.ef || dn < top.top().d) {
-              cand.push({dn, nb});
-              top.push({dn, int(nb)});
-              if (top.size() > a.ef) top.pop();
+          } else {
+            const size_t s0 = first < r1 ? run_start[first] : offs[size_t(c) + 1];
+            const size_t s1 = last < r1 ? run_start[last] : offs[size_t(c) + 1];
+            for (size_t t = s0; t < s1; ++t) {
+              ++scanned;
+              if (exact_edges && !dflag.empty() && dflag[t] == 0) continue;
+              uint32_t nb = nbr[t];
+              if (visited[nb] == genq) continue;
+              if (full && !dist16.empty() &&
+                  float(dist16[t]) - dq_c > tau) {
+                ++pruned;
+                continue;
+              }
+              ++distcomp;
+              visited[nb] = genq;
+              float dn = u8_l2(q, &base8[size_t(nb) * dim], dim);
+              if (top.size() < ef_q || dn < top.top().d) {
+                cand.push({dn, nb});
+                top.push({dn, int(nb)});
+                if (top.size() > ef_q) top.pop();
+              }
             }
           }
         }

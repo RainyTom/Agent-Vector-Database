@@ -74,3 +74,11 @@ production/nested-attr-vector-search/work/bin/dir_dsm \
 ```
 
 代码：`production/nested-attr-vector-search/src/dir_representations.cpp`、`dir_dsm.cpp`。
+
+## 7. 历史数据的适用条件与方法名更正（追加）
+
+以上 §2 的 non-recursive 时间是**实现路径计时**，不是对多标签 Exact 正确性的证明。`dir_representations.cpp` 只检查了首条查询的 recursive 候选集；PE-OFFLINE / TrieHI 的 `Inc(u) & ~OR(Inc(children))` 对 $L_i=\{u,v\}$、$v$ 为 $u$ 子节点会漏掉本应属于 Exact$(u)$ 的 $i$。递归结果仍适用于多标签 OR 作用域。多标签 Exact 应取 $\mathrm{Local}(u)=\{i:u\in L_i\}$，并对所有查询与直接标签 oracle 比对后重新测时；历史 non-recursive 数字不作为有效 Exact 性能。
+
+§3 中 `dir_dsm.cpp` 的 TrieHI 路径用 `inc[v] & ~moved` 去旧祖先集合，未处理某对象同时经未移动分支仍属于同一祖先的情形；PE 路径也未对每种 MOVE/MERGE 冲突执行结果级核验。因此 7.35 ms / 10.79 µs 等为演示实现的**路径计时**，不是多标签维护的正确实现性能或原论文正式复现；且构建索引、向量索引与 ANN 查询不在该计时内。
+
+§4 的 `PE-Online = B0`、`PE-Offline = B4` 仅在“先生成候选集”的局部操作上有表面类似性，不能视为基线等价。论文改以 PFS（posting 后扫描）、PSG（逐作用域 HNSW）命名向量执行器；PE-ONLINE/PE-OFFLINE/TRIEHI 是 [Directory-Aware 原论文](https://arxiv.org/pdf/2606.16903v1)的目录元数据索引。用户所需的强基线是 TRIEHI + 同一过滤 ANN 后端的端到端 Recall@k/QPS/索引字节，仍需实测，见 [paper.md §5.5](../../paper.md)。

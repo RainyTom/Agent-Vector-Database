@@ -195,7 +195,8 @@ struct InlineGraph {
 
 template <typename T>
 void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
-                        uint32_t M, uint32_t dim, const std::string& path) {
+                        uint32_t M, uint32_t dim, bool share_vectors,
+                        const std::string& path) {
   InlineGraph<T> g;
   // Store only the M nearest of the 2M level-0 links: the extra slots were
   // mostly empty (mean degree 21) and the farthest links add little.
@@ -204,7 +205,7 @@ void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
   g.m = m; g.M = uint32_t(cap); g.dim = dim;
   g.maxlevel = uint32_t(idx.maxlevel_ < 0 ? 0 : idx.maxlevel_);
   g.enter = uint32_t(idx.enterpoint_node_ < 0 ? 0 : idx.enterpoint_node_);
-  g.stride = sizeof(T) + cap * sizeof(T) + dim;
+  g.stride = sizeof(T) + cap * sizeof(T) + (share_vectors ? 0 : dim);
   g.gid.resize(m);
   g.lv.resize(m);
   g.upper_off.assign(m, 0);
@@ -218,8 +219,8 @@ void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
     auto* ids = reinterpret_cast<uint32_t*>(lk + 1);
     const uint8_t* self = reinterpret_cast<const uint8_t*>(idx.getDataByInternalId(t));
     uint32_t keep = cnt < cap ? cnt : uint32_t(cap);
-    std::memcpy(blk, self, dim);
-    T* slot = reinterpret_cast<T*>(blk + dim);
+    if (!share_vectors) std::memcpy(blk, self, dim);
+    T* slot = reinterpret_cast<T*>(blk + (share_vectors ? 0 : dim));
     slot[0] = T(keep);
     if (nearest && cnt > 1) {
       std::vector<std::pair<float, uint32_t>> ord(cnt);
@@ -244,7 +245,8 @@ void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
     }
   }
   std::ofstream out(path, std::ios::binary);
-  uint32_t hdr[7] = {m, g.maxlevel, g.enter, uint32_t(cap), dim, uint32_t(g.stride), uint32_t(sizeof(T))};
+  uint32_t hdr[7] = {m, g.maxlevel, g.enter, uint32_t(cap),
+                     share_vectors ? 0u : dim, uint32_t(g.stride), uint32_t(sizeof(T))};
   out.write(reinterpret_cast<char*>(hdr), sizeof(hdr));
   out.write(reinterpret_cast<char*>(g.gid.data()), g.gid.size() * 4);
   out.write(reinterpret_cast<char*>(g.lv.data()), g.lv.size());
@@ -292,7 +294,8 @@ inline const T* inline_upper_block(const InlineGraph<T>& g, uint32_t id, int lev
 
 template <typename T>
 void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
-                   std::vector<Cand>& out) {
+                   std::vector<Cand>& out, const uint8_t* shared_base = nullptr,
+                   int shared_dim = 0) {
   if (g.m == 0) return;
   if (++g.gen == 0) {
     std::fill(g.visited.begin(), g.visited.end(), 0);
@@ -307,8 +310,12 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
   // Its adjacency (count + ids) lives in the next two lines; fetch them while
   // the candidate is still in the heap.
   constexpr int pop_prefetch = 2;
+  auto vec = [&](uint32_t id) {
+    return shared_base ? shared_base + size_t(g.gid[id]) * shared_dim
+                       : &g.blocks[size_t(id) * g.stride];
+  };
   auto dist = [&](uint32_t id) {
-    return u8_l2(q, &g.blocks[size_t(id) * g.stride], g.dim);
+    return u8_l2(q, vec(id), shared_base ? shared_dim : g.dim);
   };
 
   uint32_t ep = g.enter;
@@ -351,21 +358,22 @@ void search_inline(InlineGraph<T>& g, const uint8_t* q, size_t ef, int k,
     auto cd = cand.front();
     if (top.size() >= ef && cd.first > top.front().d) break;
     if (pop_prefetch) {
-      const uint8_t* nb = &g.blocks[size_t(cd.second) * g.stride];
-      __builtin_prefetch(nb + 128, 0, 1);
-      if (pop_prefetch >= 2) __builtin_prefetch(nb + 192, 0, 1);
+      const uint8_t* nb = vec(cd.second);
+      __builtin_prefetch(nb + 0, 0, 1);
+      if (pop_prefetch >= 2)
+        __builtin_prefetch(nb + (shared_base ? 64 : 128), 0, 1);
     }
     cand_pop();
     uint32_t c = cd.second;
     const uint8_t* cb = &g.blocks[size_t(c) * g.stride];
-    const T* slot = reinterpret_cast<const T*>(cb + g.dim);
+    const T* slot = reinterpret_cast<const T*>(cb + (shared_base ? 0 : g.dim));
     uint32_t cnt = slot[0];
     if (prefetch) {
       for (uint32_t j = 0; j < cnt; ++j) {
         uint32_t nb = slot[1 + j];
-        const uint8_t* bp = &g.blocks[size_t(nb) * g.stride];
+        const uint8_t* bp = vec(nb);
         __builtin_prefetch(bp, 0, 1);
-        __builtin_prefetch(bp + 64, 0, 1);
+        if (!shared_base) __builtin_prefetch(bp + 64, 0, 1);
       }
     }
     for (uint32_t j = 0; j < cnt; ++j) {
@@ -471,6 +479,11 @@ int main(int argc, char** argv) {
         order_key[i] = uint32_t((p1[i] - lo) / span * 1e6f);
     }
 
+    const bool share_vectors = std::getenv("GRAPH_SHARE_VECTORS") != nullptr;
+    if (share_vectors) {
+      std::ofstream bf(args.index_dir + "/base_u8.bin", std::ios::binary);
+      bf.write(reinterpret_cast<const char*>(base.data()), base.size());
+    }
     U8L2Space space(m.dim);
     for (int v = 0; v < m.nodes; ++v) {
       auto& mem = members[v];
@@ -487,9 +500,9 @@ int main(int argc, char** argv) {
       for (uint32_t id : mem) index.addPoint(&base[size_t(id) * m.dim], hnswlib::labeltype(id));
       std::string cpath = args.index_dir + "/c_" + std::to_string(v) + ".bin";
       if (mem.size() <= 65535)
-        write_inline_graph<uint16_t>(index, uint32_t(mem.size()), uint32_t(M), uint32_t(m.dim), cpath);
+        write_inline_graph<uint16_t>(index, uint32_t(mem.size()), uint32_t(M), uint32_t(m.dim), share_vectors, cpath);
       else
-        write_inline_graph<uint32_t>(index, uint32_t(mem.size()), uint32_t(M), uint32_t(m.dim), cpath);
+        write_inline_graph<uint32_t>(index, uint32_t(mem.size()), uint32_t(M), uint32_t(m.dim), share_vectors, cpath);
       std::vector<uint32_t>().swap(mem);
     }
     std::cout << "BUILD_OK\n";
@@ -590,6 +603,7 @@ int main(int argc, char** argv) {
     std::vector<InlineGraph<uint16_t>> ci16(m.nodes);
     std::vector<InlineGraph<uint32_t>> ci32(m.nodes);
     std::vector<size_t> node_ef(m.nodes, EF);
+    const bool adaptive_ef = std::getenv("GRAPH_ADAPTIVE") != nullptr;
     for (int v = 0; v < m.nodes; ++v) {
       std::string cp = args.index_dir + "/c_" + std::to_string(v) + ".bin";
       std::ifstream probe(cp, std::ios::binary);
@@ -599,7 +613,13 @@ int main(int argc, char** argv) {
       probe.close();
       if (hdr[6] == 2) load_inline_graph<uint16_t>(cp, ci16[v]);
       else load_inline_graph<uint32_t>(cp, ci32[v]);
-      node_ef[v] = std::max<size_t>(EF, k);
+      size_t ef_v = EF;
+      if (adaptive_ef) {
+        const size_t msize = ci16[v].m ? ci16[v].m : ci32[v].m;
+        if (msize < 500) ef_v = EF / 2;
+        else if (msize < 10000) ef_v = (EF * 2) / 3;
+      }
+      node_ef[v] = std::max<size_t>(ef_v, k);
     }
 
     int loaded = 0;
@@ -617,6 +637,12 @@ int main(int argc, char** argv) {
       for (int slot = 0; slot < int(qnodes[qi].size()); ++slot) {
         node_qs[qnodes[qi][slot]].push_back({qi, slot});
       }
+    }
+    std::vector<uint8_t> shared_base;
+    const bool share_vectors = std::getenv("GRAPH_SHARE_VECTORS") != nullptr;
+    if (share_vectors) {
+      shared_base = read_bin<uint8_t>(args.index_dir + "/base_u8.bin",
+                                      size_t(m.n) * m.dim);
     }
     std::vector<std::vector<Cand>> parts(nq);
     for (int qi = 0; qi < nq; ++qi) parts[qi].reserve(qnodes[qi].size() * k);
@@ -637,8 +663,10 @@ int main(int argc, char** argv) {
           int qi = qs.first;
           const uint8_t* q = &queries[size_t(qi) * m.dim];
           auto t0 = std::chrono::steady_clock::now();
-          if (narrow) search_inline<uint16_t>(ci16[v], q, node_ef[v], k, res);
-          else search_inline<uint32_t>(ci32[v], q, node_ef[v], k, res);
+          if (narrow) search_inline<uint16_t>(ci16[v], q, node_ef[v], k, res,
+              shared_base.empty() ? nullptr : shared_base.data(), m.dim);
+          else search_inline<uint32_t>(ci32[v], q, node_ef[v], k, res,
+              shared_base.empty() ? nullptr : shared_base.data(), m.dim);
           auto t1 = std::chrono::steady_clock::now();
           timings[qi] += std::chrono::duration<double, std::milli>(t1 - t0).count();
           auto& dst = parts[qi];

@@ -115,3 +115,55 @@
 - 数据：[`data/primary-progression.csv`](data/primary-progression.csv)、[`data/les-analysis.txt`](data/les-analysis.txt)、[`data/ccs-stats.json`](data/ccs-stats.json)、[`data/ccs-results.csv`](data/ccs-results.csv)
 - 实验记录：[`experiments/faiss-build.md`](experiments/faiss-build.md)
 - 长期文档：[研究草案](../README.md)、[基线改造](../baseline-adaptation.md)、[基准协议](../benchmark-protocol.md)
+
+## 8. 术语与任务审计、激活 run 索引复测（追加）
+
+**问题定义修正。** `paper.md` 中任务明确为“给定查询向量、树节点反链、Exact/Subtree 谓词的过滤 top-$k$ 向量 ANN”，非 vector join。精确 oracle 来自原始 float32 SIFT 的平方欧氏距离（`prep_ccs.py:245-254`），搜索将向量舍入到 u8；真实 CCS 数据集未用到。多标签对象的子树可行集不是 laminar family，故删除布尔区间编译定理；MAF、HALA、Hybrid Switch 等旧称谓不视为向量检索既有术语。§4 的边归属命题只证明单节点 Subtree 下有向边端点的资格，不证明搜索复杂度或邻接与每作用域基础图相同。
+
+**设置。** H2 的已构建 1365 节点、SIFT100k、1000 个 Subtree 查询；复用原 `work/index_ccs/` 逐作用域底图。修改 `les_build.cpp` 将逐边 `act.bin` 改为每对象 `run_offsets.bin` 与每 run 的 `run_start.bin`、`run_act.bin`，`les_query.cpp` 在 run 值上二分定位邻接切片。重新编译两个 C++ 程序、构建 `work/les_ccs_rle`，查询 `ef=32,k=10,repeats=3`；旧索引文件为 `work/les_ccs`。当前脚本及绘图代码见 `production/nested-attr-vector-search/src/`；原始统计汇总见 [`data/activation-run-index.csv`](data/activation-run-index.csv)。
+
+| 指标 | 原逐边激活 | run 索引 | 判断 |
+|---|---:|---:|---|
+| 桶条目 / run | 13,387,704 / 1,015,143 | 相同 | 已测 |
+| 激活元数据 | 26,775,408 B | 6,490,862 B | 已测，含对象偏移和 run 起点 |
+| 当前完整目录 | 144,313,905 B | 124,029,359 B | 已测，`du -sb`；与旧 CSV“104 MB”不一致 |
+| Subtree ef32 QPS / Recall@10 | 历史 15,694 / 0.9967 | 本次 12,898 / 0.9967 | 已测，但不构成同次配对加速比 |
+| 本次归并构建 wall time | 历史 4.5 s | 5.42 s | 已测；底图构建复用，完整构建未测 |
+
+**验证。** 在 13,387,704 条目上逐条解码 run 并与旧 `act.bin` 比较，完全相同；本次查询 10,000/10,000 返回 id 作用域合法、每查询无重复，Recall@10=0.9967。原图诊断吞吐的 QPS 单位错误已修正：旧 `exact_edges` 的查询时间 0.02680258 s 对应 37,310 QPS，`exact_strict` 的 0.02218390 s 对应 45,078 QPS，不是 37/45 QPS；B0 Exact 的 191,914 QPS 属独立扫描基线。旧两段桶计数 3,822,238 与同一 `les-analysis.txt` 的 `bucket_entries=3,822,159` 有 79 的口径差，需重新统计。
+
+**局限/下一步。** 对新旧激活索引做交错多次同机计时并测 cache misses；对齐 B4 与 LES 的全部索引文件组成、底图构建与归并构建时间；在多标签真实层级上复核范围归属收益。实现严格 `|F|<k` 扫描补足及 Exact 正确路径前，不能宣称完整过滤 top-$k$ 接口。
+
+## 9. 追加：五个现有向量负载与 Directory-Aware 端到端对照
+
+**选择。** 五个评估点：SIFT 前 25k/50k/100k（同一语料的前缀嵌套子集）、MNIST 前 25k、Fashion-MNIST 前 25k；层级与查询沿用合成的 1365 节点 4 叉深度 5 生成器（seed 20261021），不是真实层级标注。所有向量值为 [0,255] 整数，u8 与 float32 的平方 L2 排序一致。
+
+**设置。** 每点 1000 条 Subtree 查询、k=10、单线程、2 次重复取最好。PSG M=24/efC=200/ef=21；LES ef=32（扫描 8/16/24）；BF-HNSW M=32/efC=200/ef=384（扫描 512/768）；PFS 精确扫描；PathSeer native M_exp=64、ef=384、M_exp_search=16；TRIEHI 目录层在查询计时内解析候选，复用同一份序列化 BF-HNSW 图。
+
+**结果（原始数据 `data/five_l2_20261020T104139Z-68414a0f.csv`、`data/five_l2_sweep_20261020T104139Z-68414a0f.csv`）：**
+
+| 数据点 | PSG ef21 | LES ef32 | BF-HNSW ef384 | PFS | TRIEHI+HNSW |
+|---|---|---|---|---|---|
+| sift25k | 0.9784 / 113,003 | 0.9992 / 22,569 | 0.9730 / 2,355 | 1.0 / 16,054 | 0.9730 / 2,558 |
+| sift50k | 0.9714 / 95,347 | 0.9984 / 21,243 | 0.9654 / 2,191 | 1.0 / 7,829 | 0.9654 / 2,230 |
+| sift100k | 0.9564 / 74,304 | 0.9970 / 14,471 | 0.9534 / 1,654 | 1.0 / 2,222 | 0.9534 / 1,644 |
+| mnist25k | 0.9882 / 45,944 | 0.9996 / 6,751 | 0.9524 / 1,154 | 1.0 / 2,343 | 0.9524 / 1,112 |
+| fashion-mnist25k | 0.9953 / 48,790 | 0.9995 / 7,824 | 0.9442 / 1,375 | 1.0 / 2,002 | 0.9442 / 1,456 |
+
+同召回（五个点）：sift25k PSG ef32 0.9920 / 84,131 vs LES ef16 0.9913 / 51,123（1.65×）；sift50k 0.9878 / 69,750 vs 0.9871 / 39,037（1.79×）；sift100k 0.9801 / 51,904 vs 0.9802 / 18,142（2.86×）；sift100k 高召回侧 0.9912 / 43,096 vs 0.9925 / 13,658（3.16×）；mnist 0.9953 / 39,028 vs 0.9959 / 10,865（3.59×）；fashion 0.9953 / 48,790 vs 0.9953 / 17,811（2.74×）。r95/r98 门槛吞吐见 `data/five_l2_summary_20261020T104139Z-68414a0f.csv`。
+
+度数裁剪诊断（sift100k）：全局 top-24 保留 2.39M 条、Recall 0.33–0.40、仅 710/1000 填满；每桶 top-8/16/24 保留 6.9M/10.6M/12.3M 条，Recall 0.978–0.997；每桶 top-16 在 r95 上 29,973 QPS（无裁剪 25,179，+19%）、索引 104.5 MB，仍为 PSG r95 的 0.40×。原始数据 `data/five_l2_les_degree_20261020T104139Z-68414a0f.csv`。
+
+空间构成：PSG M=6/12/16 的索引为 160.5/173.2/182.0 MB，线性拟合截距约 146.8 MB、斜率 2.2 MB/M，即约 147 MB 是逐作用域重复的 u8 向量；M=6 ef32 只有 0.821 召回。进一步实现共享向量 PSG（`GRAPH_SHARE_VECTORS=1`）：M=16 索引 **62.3 MB**，ef24 0.9494/53,256、ef48 0.9840/36,180、ef64 0.9904/30,031；M=12 索引 53.6 MB，ef48 0.9717/40,321。共享 M16 与重复向量 M16 在 ef24/32 召回完全一致（0.9494/0.9673），验证布局改动不改变语义。相对 LES（124.1 MB，r95 25,179，r98 18,142），共享 M16 只占 0.50× 空间而快 2.12×/1.99×，在 sift100k 上 **LES 被严格支配**。原始数据 `data/five_l2_psg_space_20261020T104139Z-68414a0f.csv`、`data/five_l2_psg_shared_20261020T104139Z-68414a0f.csv`。
+
+**LES-v2 优化。** 底图 M24→16、删除 `dist16`/`dflag`（约 40 MB；三角剪枝实测 0% 命中）、按桶限 16：索引 124.1→73.6 MB（无桶限）/69.0 MB（桶限）；r95 25,179→35,084（+39%），r98 18,142→23,504（+30%）。仍落后共享 PSG（53,256/36,180，62.3 MB），差距 2.1×→约 1.5×，空间 1.11–1.18×。旧索引回归 0.9729；LES-v2 无违规、全部填满 k。数据 `data/five_l2_les_v2_20261020T104139Z-68414a0f.csv`。
+
+**全部稠密语料（11 个，n=25k，M=16）。** SIFT/MNIST/Fashion 原生 u8 L2；glove25/50/100/200、coco-i2i/t2i、nytimes、lastfm 统一 min–max 量化到 [0,255] 后按平方 L2 评测（非原生度量）；kosarak/movielens 稀疏 jaccard 排除。PSG 与 LES 的 ef 分别扫到 512/192。结果**并非全败**：LES-v2 在 glove100（1.29×，空间 0.94×）、glove200（1.90×，空间 0.77×）反超；nytimes 上 PSG 到 ef=512 也只有 0.891 召回，LES 在 ef=64 达到 r95（10,306 QPS）；lastfm 在 r98 为 1.17×。其余 8 个 r95 落后（0.36–0.78×），**所有原生 L2 语料全败**。反超只出现在量化代理语料，需按维数/选择率定位；不足以支撑 SOTA。数据 `data/all_datasets_20261020.csv`、`data/all_datasets_ext_20261020.csv`、`data/all_datasets_20261020_summary.csv`；图 `figures/fig_all_datasets.png`。
+
+**LES-v3：文献启发的新布局。** alphaXiv 检索到 JAG（联合属性图，2602.10258）、Fiber-Navigable（fiber + anchor atlas，2604.00102）、Uemura 等边标签（2607.24173）、BOA 自适应 beam（2609.16175）。落地两项：① per-run delta-varint 邻接（run 内 id 升序），索引 73.6→**53.3 MB**，同 ef 输出与 u32 布局逐位相同，1,010,797 个 run 全量解码核验；② 按作用域基数自适应 beam（`counts.bin` + `--adaptive`），ef24 下 r98 22,646→**27,666 QPS**（+22%），r95 为 ef12 34,313。同会话重测共享 PSG：r95 69,244、r98 41,907、62.3 MB；差距 r95 0.50×、r98 0.66×、空间 0.86×，仍未反超。负结果：邻居预取（45.2→56.3 ms）与“小作用域走扫描”混合规划（31.0 vs 30.4 ms）均无收益。数据 `data/five_l2_les_v3_20261020T104139Z-68414a0f.csv`。
+
+**结论。** ① 相对**重复向量**的 PSG，LES 索引更小（0.62×–0.18×），但同召回吞吐低 1.65–3.59×；共享向量 PSG 在 sift100k 上以更小空间仍更快；LES-v3（varint + 自适应 beam）把索引压到 53.3 MB、r98 提到 27,666 QPS，与同会话共享 PSG（69,244/41,907，62.3 MB）的差距为 r95 0.50×、r98 0.66×、空间 0.86×，仍未反超。绝对 QPS 跨 run 波动约 30%，比值只用同会话配对。② PFS 精确扫描在 100k 或 784 维降至约 2.0–2.3k QPS，图路径仍必要。③ TRIEHI 目录层与 BF-HNSW 同图同参时 Recall 逐位相同，QPS 变化 −3.7%～+8.6%（每查询时间 −8.0%～+3.8%），目录构建一次性 3.1–13.5 ms，候选解析不是瓶颈；Directory-Aware 与 LES 不在同一层，前者不能替代后者，反之亦然。④ 这是对 LES 的负结果，不能把“QPS 高于 BF-HNSW 的固定工作点”当作整体优势。
+
+**局限。** 五个点只有三个独立语料；层级/查询合成；只测 Subtree 与静态负载；未对齐同内存预算与构建资源；TRIEHI 为静态解析器（无路径字符串、DSM、OpenViking），PathSeer 为固定 M_exp 配置。详见 [`experiments/five-l2-benchmark.md`](experiments/five-l2-benchmark.md)。
+
+**代码与工具变更。** `prep_ccs.py` 增加 `--dim`；新增 `export_five_l2.py`、`run_five_l2.py`、`run_five_l2_sweep.py`、`plot_five_l2.py`；`faiss_filtered.cpp` 增加 `pathseer`、`triehi-hnsw`、`--index-in/--index-out`、`--ids/--timings`、高精度 `query_seconds`。图：`figures/fig_five_l2.png`（图 11）。

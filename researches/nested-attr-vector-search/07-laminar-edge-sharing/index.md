@@ -125,6 +125,19 @@ Exact 作用域很小（p50/p95/max = 126/396/6,973），**为 Exact 物化图�
 - **距离序邻接 + 三角不等式剪枝**：精确（Recall 不变），但 `PRUNED 0/5.7M = 0.00%`；HNSW 图的邻居贴近 source，界几乎不触发。
 - **Exact 用共享 direct-direct 边**：中高层（深度 1–2）direct 对象只有 **73–90%** 能被 direct-direct 边连到；beam 漏掉孤立 direct 对象。**Exact 是节点集合问题，共享边不能替代 direct 标签倒排**。
 
+### 3.6 五个补充负载：LES 省空间但不省时间
+
+SIFT 25k/50k/100k、MNIST 25k、Fashion-MNIST 25k（合成 1365 节点层级，统一 1000 条 Subtree 查询）：
+
+- LES 目录为 PSG 的 **0.62×–0.18×**，但同召回下 PSG 快 **1.65–3.59×**（sift100k：0.980 召回，PSG 51,904 QPS vs LES 18,142 QPS）；按 r95 门槛，sift100k PSG 74,304 vs LES 25,179。
+- 度数裁剪：全局 top-24 把 Recall 打到 0.40（710/1000 填满）；每桶 top-16 保住 0.989 召回、r95 提到 29,973（+19%），仍只有 PSG 的 0.40×。差距来自跨作用域并图的局部性，不只是度数。
+- 空间构成：PSG 索引约 147 MB 是逐作用域重复的 u8 向量。共享向量 PSG（M=16）为 **62.3 MB**；同会话重测 r95 69,244 QPS、r98 41,907 QPS（早先单独运行得到 53,256/36,180，跨 run 波动约 30%，比值只用同会话配对）。
+- LES-v3（per-run varint + 自适应 beam，借鉴 BOA/PathSeer）：索引 73.6→**53.3 MB**（低于共享 PSG 62.3 MB），同 ef 输出逐位相同；r95 34,313、r98 **27,666**（自适应 ef24，+22%）。共享 PSG 重测 r95 69,244、r98 41,907，差距 r95 0.50×、r98 0.66×、空间 0.86×，仍未反超。预取与“小作用域走扫描”的混合规划均为负结果。
+- 全部稠密语料（11 个，n=25k，统一 M=16）：LES-v2 在 **glove100（1.29×，空间 0.94×）、glove200（1.90×，空间 0.77×）** 反超；nytimes 上 PSG 到 ef=512 也只有 0.891 召回，LES 达标；lastfm 在 r98 为 1.17×。其余 8 个落后，**所有原生 L2 语料全败**。8 个非原生度量语料为 min–max 量化代理，不是原生任务。
+- TRIEHI 目录层 + **同一** BF-HNSW 图：Recall 逐位相同，QPS 变化 −3.7%～+8.6%，元数据 4.27–17.07 MB。候选解析不是瓶颈，Directory-Aware 与 LES 作用于不同层。
+
+原始数据：`2026-10-20-exps/data/five_l2_20261020T104139Z-68414a0f.csv` 与 `five_l2_sweep_20261020T104139Z-68414a0f.csv`；记录见 [five-l2-benchmark.md](2026-10-20-exps/experiments/five-l2-benchmark.md)。
+
 ## 4. 局限与开放问题
 
 - **分层语义未完全解决**：LES v1 只共享 level-0；共享上界层需要 S1（全局层高）、S2（作用域层级资格）或 S3（重新定义共享图）之一并重新证明不变量。
@@ -144,6 +157,7 @@ Exact 作用域很小（p50/p95/max = 126/396/6,973），**为 Exact 物化图�
 | Directory-Aware DSQ/DSM 复现记录 | [2026-10-20-exps/experiments/directory-aware-reproduction.md](2026-10-20-exps/experiments/directory-aware-reproduction.md) |
 | LES 原型实现记录 | [2026-10-20-exps/experiments/les-prototype.md](2026-10-20-exps/experiments/les-prototype.md) |
 | Exact 缺口与两项创新验证 | [2026-10-20-exps/experiments/exact-gap.md](2026-10-20-exps/experiments/exact-gap.md) |
+| 五个补充负载（固定工作点与同召回） | [2026-10-20-exps/experiments/five-l2-benchmark.md](2026-10-20-exps/experiments/five-l2-benchmark.md) |
 
 ## 6. 复现
 
@@ -157,4 +171,4 @@ g++ -O2 -std=c++17 production/nested-attr-vector-search/src/les_analysis.cpp -o 
   --index-dir production/nested-attr-vector-search/work/index
 ```
 
-代码：`production/nested-attr-vector-search/src/{prep.cpp,prep_ccs.py,baseline.cpp,les_analysis.cpp,les_build.cpp,les_query.cpp,dir_representations.cpp,dir_dsm.cpp,faiss_filtered.cpp,to_pathseer.py,eval_ccs.py,harness.py}`。
+代码：`production/nested-attr-vector-search/src/{prep.cpp,prep_ccs.py,export_five_l2.py,baseline.cpp,les_analysis.cpp,les_build.cpp,les_query.cpp,dir_representations.cpp,dir_dsm.cpp,faiss_filtered.cpp,to_pathseer.py,run_five_l2.py,run_five_l2_sweep.py,analyze_five_l2.py,plot_five_l2.py,shrink_psg_vectors.py,eval_ccs.py,harness.py}`。

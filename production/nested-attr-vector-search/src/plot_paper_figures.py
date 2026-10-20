@@ -45,32 +45,32 @@ les = read_csv("ccs-les.csv")
 base = read_csv("ccs-baselines.csv")
 
 series = {
-    "LES (level-0 sharing)": [],
-    "Filtered-HNSW": [],
-    "B4 per-scope materialization": [],
-    "B0 exact scan": [],
+    "LES-Plain": [],
+    "BF-HNSW": [],
+    "PSG": [],
+    "PFS (Subtree)": [],
 }
 for r in les:
     if r["method"] == "LES_prototype":
-        series["LES (level-0 sharing)"].append(
+        series["LES-Plain"].append(
             (float(r["recall_at_10"]), float(r["qps"])))
 for r in base:
     if r["method"] == "filtered_hnsw":
-        series["Filtered-HNSW"].append(
+        series["BF-HNSW"].append(
             (float(r["recall_at_10"]), float(r["qps"])))
     elif r["method"] == "B4_per_scope":
-        series["B4 per-scope materialization"].append(
+        series["PSG"].append(
             (float(r["recall_at_10"]), float(r["qps"])))
     elif r["method"] == "B0_subtree_scan":
-        series["B0 exact scan"].append(
+        series["PFS (Subtree)"].append(
             (float(r["recall_at_10"]), float(r["qps"])))
 
 fig, ax = plt.subplots(figsize=(4.6, 3.0))
 styles = {
-    "LES (level-0 sharing)": ("o", "-", "#1f77b4"),
-    "Filtered-HNSW": ("s", "--", "#d62728"),
-    "B4 per-scope materialization": ("^", ":", "#2ca02c"),
-    "B0 exact scan": ("D", ":", "#7f7f7f"),
+    "LES-Plain": ("o", "-", "#1f77b4"),
+    "BF-HNSW": ("s", "--", "#d62728"),
+    "PSG": ("^", ":", "#2ca02c"),
+    "PFS (Subtree)": ("D", ":", "#7f7f7f"),
 }
 for name, pts in series.items():
     if not pts:
@@ -95,16 +95,18 @@ plt.close(fig)
 # Operating-point QPS vs index footprint (Subtree).
 fig, ax = plt.subplots(figsize=(4.2, 2.8))
 points = [
-    ("B0 scan", 3008.5, 51.0, "#7f7f7f", "D"),
-    ("B4", 74706.0, 194.0, "#2ca02c", "^"),
-    ("Filtered-HNSW ef384", 1282.0, 75.0, "#d62728", "s"),
-    ("LES ef32", 15694.0, 104.0, "#1f77b4", "o"),
-    ("LES ef64", 9940.0, 104.0, "#1f77b4", "o"),
-    ("LES ef128", 5764.0, 104.0, "#1f77b4", "o"),
+    ("PFS", 3008.5, 51.0, "#7f7f7f", "D"),
+    ("PSG", 74706.0, 194.0, "#2ca02c", "^"),
+    ("BF-HNSW ef384", 1282.0, 75.0, "#d62728", "s"),
+    ("LES-Plain ef32", 15694.0, 144.314, "#1f77b4", "o"),
+    ("LES-Plain ef64", 9940.0, 144.314, "#1f77b4", "o"),
+    ("LES-Plain ef128", 5764.0, 144.314, "#1f77b4", "o"),
+    ("LES-Run ef32", 12898.0, 124.029, "#9467bd", "P"),
 ]
 for label, qps, mb, color, mk in points:
     ax.scatter(mb, qps, color=color, marker=mk, s=36)
-    ax.annotate(label, (mb, qps), textcoords="offset points", xytext=(5, 4),
+    pos = (-90, -16) if label == "LES-Run ef32" else (5, 4)
+    ax.annotate(label, (mb, qps), textcoords="offset points", xytext=pos,
                 fontsize=6.5)
 ax.set_xlabel("Index size (MB)")
 ax.set_ylabel("QPS (queries/s)")
@@ -116,30 +118,20 @@ fig.savefig(os.path.join(OUT, "fig_qps_space.png"))
 fig.savefig(os.path.join(OUT, "fig_qps_space.pdf"))
 plt.close(fig)
 
-# ---------------------------------------------------------------- Figure 4
-# Build time decomposition. LES base-graph time is reused from the FAISS
-# single-thread run and is therefore drawn hatched (not an independent
-# measurement of the LES build).
+# ---------------------------------------------------------------- Build times
+# LES base-graph construction is not measured in the LES run. A time from
+# another method cannot be added to the LES dedup time.
 fig, ax = plt.subplots(figsize=(4.4, 2.6))
-labels = ["B4\n(single thread)", "Filtered-HNSW\n(OMP=1)",
-          "Filtered-HNSW\n(default threads)", "LES\n(dedup on reused base)"]
-base_t = [57.0, 28.31, 4.8, 28.31]
-dedup_t = [0.0, 0.0, 0.0, 4.5]
-x = range(len(labels))
-b1 = ax.bar(x, base_t, color="#bbbbbb", label="base graph build")
-b2 = ax.bar(x, dedup_t, bottom=base_t, color="#1f77b4",
-            label="LES edge dedup")
-# hatch the reused (not independently measured) base-graph bar
-b1[3].set_hatch("//")
-b1[3].set_facecolor("#dddddd")
-for i, (a, b) in enumerate(zip(base_t, dedup_t)):
-    ax.text(i, a + b + 1.2, f"{a + b:.1f}s", ha="center", fontsize=7)
-ax.set_xticks(list(x))
-ax.set_xticklabels(labels, fontsize=7)
-ax.set_ylabel("Build time (s)")
-ax.set_title("Build-time decomposition (hatched = reused base graph)",
-             fontsize=8.5)
-ax.legend(frameon=False, fontsize=7)
+labels = ["PSG total\n(single thread)", "BF-HNSW\n(OMP=1)",
+          "BF-HNSW\n(default threads)", "LES-Plain dedup\n(base reused)"]
+times = [57.0, 28.31, 4.8, 4.5]
+bars = ax.bar(labels, times, color=["#2ca02c", "#d62728", "#d62728", "#1f77b4"])
+for bar, value in zip(bars, times):
+    ax.text(bar.get_x() + bar.get_width() / 2, value + 1.0,
+            f"{value:g}s", ha="center", fontsize=7)
+ax.set_ylabel("Observed elapsed time (s)")
+ax.set_title("LES base-graph build not measured in this run", fontsize=8.5)
+ax.tick_params(axis="x", labelsize=7)
 fig.tight_layout()
 fig.savefig(os.path.join(OUT, "fig_build_time.png"))
 fig.savefig(os.path.join(OUT, "fig_build_time.pdf"))
@@ -176,14 +168,14 @@ ax.bar(["duplicate\nfraction"], [red * 100], color="#1f77b4", width=0.45)
 ax.text(0, red * 100 + 1, f"{red*100:.1f}%", ha="center", fontsize=9)
 ax.set_ylim(0, 70)
 ax.set_ylabel("percent of observed edges")
-ax.set_title("Redundancy removed by MA dedup", fontsize=8.5)
+ax.set_title("Redundancy removed by edge dedup", fontsize=8.5)
 fig.tight_layout()
 fig.savefig(os.path.join(OUT, "fig_dedup.png"))
 fig.savefig(os.path.join(OUT, "fig_dedup.pdf"))
 plt.close(fig)
 
 # ---------------------------------------------------------------- Figure 6
-# B4 optimization progression (85-node hierarchy): throughput vs stage.
+# PSG optimization progression (85-node hierarchy): throughput vs stage.
 rows = read_csv("primary-progression.csv")
 stages = [r["stage"].replace("_", "\n") for r in rows]
 qps = [float(r["qps"]) for r in rows]
@@ -202,7 +194,7 @@ ax2.tick_params(axis="y", labelcolor="#d62728")
 ax2.grid(False)
 ax1.set_xticks(list(x))
 ax1.set_xticklabels(stages, fontsize=6.2)
-ax1.set_title("Per-scope materialization baseline: measured progression",
+ax1.set_title("PSG: measured optimization stages",
               fontsize=9)
 fig.tight_layout()
 fig.savefig(os.path.join(OUT, "fig_progression.png"))
@@ -214,17 +206,17 @@ for name in sorted(os.listdir(OUT)):
     print(" ", name)
 
 # ---------------------------------------------------------------- Figure 7
-# Activation-array encoding (measured on the 1365-node LES index).
+# Run metadata includes offsets and starts; 3B/run omitted access metadata.
 fig, ax = plt.subplots(figsize=(3.6, 2.5))
-names = ["u16\n(current)", "RLE\n(measured)", "entropy\nbound"]
-vals_mb = [26.78, 3.05, 1.15]
+names = ["LES-Plain\n(u16)", "LES-Run\n(index)", "entropy\nreference"]
+vals_mb = [26.775408, 6.490862, 1.148]
 colors = ["#bbbbbb", "#1f77b4", "#2ca02c"]
 bars = ax.bar(names, vals_mb, color=colors)
 for b, v in zip(bars, vals_mb):
     ax.text(b.get_x() + b.get_width() / 2, v + 0.7, f"{v:.2f} MB",
             ha="center", fontsize=7)
-ax.set_ylabel("act array size (MB)")
-ax.set_title("Activation array encoding", fontsize=8.5)
+ax.set_ylabel("activation metadata (MB, decimal)")
+ax.set_title("H2 activation metadata, measured vs reference", fontsize=8)
 fig.tight_layout()
 fig.savefig(os.path.join(OUT, "fig_act_rle.png"))
 fig.savefig(os.path.join(OUT, "fig_act_rle.pdf"))
@@ -281,7 +273,7 @@ ax.set_xticks(x)
 ax.set_xticklabels(labels[:len(centers)], fontsize=7)
 ax.set_xlabel("feasible-set size (sum over queried nodes)")
 ax.set_ylabel("per-query latency (us)")
-ax.set_title("Latency grows sublinearly with scope size (LES ef=32)",
+ax.set_title("Measured latency by scope-size bin (LES-Plain ef=32)",
              fontsize=8.5)
 ax.legend(frameon=False, fontsize=7)
 fig.tight_layout()
@@ -294,15 +286,16 @@ print("latency figure written")
 # Exact semantics: scan vs shared-graph search (measured, ef=32, single run).
 fig, axes = plt.subplots(1, 2, figsize=(5.6, 2.4))
 ax = axes[0]
-labels_e = ["B0 exact scan", "LES exact graph\n(strict)"]
-qps_e = [191914, 45]
+labels_e = ["PFS (Exact)", "diagnostic exact graph\n(post-filter)"]
+qps_e = [191914, 45078]
 bars = ax.bar(labels_e, qps_e, color=["#2ca02c", "#d62728"])
 ax.set_yscale("log")
+ax.set_ylim(3e4, 4e5)
 ax.set_ylabel("QPS (log)")
 for b, v in zip(bars, qps_e):
     ax.text(b.get_x() + b.get_width() / 2, v * 1.25, f"{v:,}", ha="center",
             fontsize=7)
-ax.set_title("Exact: scan dominates", fontsize=8.5)
+ax.set_title("Exact: PFS vs diagnostic graph", fontsize=8.5)
 ax.tick_params(axis="x", labelsize=6.8)
 ax = axes[1]
 labels_v = ["no post-filter", "with post-filter"]

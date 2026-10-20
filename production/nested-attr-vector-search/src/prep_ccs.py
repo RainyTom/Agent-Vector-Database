@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Generate a CCS-shaped hierarchical workload on SIFT100k.
+"""Generate a synthetic CCS-shaped hierarchical workload on supplied vectors.
 
 Calibration sources (measured from the PathSeer dataset, see
 researches/nested-attr-vector-search/08-baseline-adaptation.md):
   * category popularity is highly skewed (Paper metadata: 741 categories,
-    Zipf slope ~ -2.4); we use a configurable Zipf-like leaf popularity.
+    Zipf slope ~ -2.4); this generator uses Zipf exponent 1.1 for leaves.
   * real filter datasets in that corpus are flat and mostly single-label
     (SIFT1M variants: 10/12/100 categories, 1 label per vector).
 CCS structure is not available locally, so the tree shape and the fraction
@@ -17,7 +17,7 @@ These assumptions are parameters and must be validated on real CCS data.
 Outputs (same formats as the main fixture, plus an Exact workload):
   base.f32, test.f32, tree.txt, labels.bin, labels_meta.txt, meta.txt
   workload_sub.txt, gt_sub.bin, workload_exact.txt, gt_exact.bin
-  stats_ccs.txt
+  stats_ccs.json
 """
 
 from __future__ import annotations
@@ -76,15 +76,18 @@ def main():
     ap.add_argument("--out", required=True)
     ap.add_argument("--n", type=int, default=N)
     ap.add_argument("--nq", type=int, default=NQ)
+    ap.add_argument("--dim", type=int, default=DIM)
     args = ap.parse_args()
+    if args.dim <= 0:
+        ap.error("--dim must be positive")
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     fix = Path(args.fixtures)
 
     rng = np.random.default_rng(SEED)
-    base = np.fromfile(fix / "base.f32", dtype=np.float32).reshape(-1, DIM)[: args.n]
+    base = np.fromfile(fix / "base.f32", dtype=np.float32).reshape(-1, args.dim)[: args.n]
     n = base.shape[0]
-    test = np.fromfile(fix / "test.f32", dtype=np.float32).reshape(-1, DIM)
+    test = np.fromfile(fix / "test.f32", dtype=np.float32).reshape(-1, args.dim)
     queries = test[rng.choice(len(test), args.nq, replace=False)]
 
     parent, level_start, level_size = build_tree()
@@ -275,7 +278,7 @@ def main():
     write_wl(out / "workload_sub.txt", sub_nodes)
     write_wl(out / "workload_exact.txt", exact_nodes)
     words = (n + 63) // 64
-    (out / "meta.txt").write_text(f"{n} {DIM} {args.nq} {K} {nodes} {words}\n")
+    (out / "meta.txt").write_text(f"{n} {args.dim} {args.nq} {K} {nodes} {words}\n")
 
     # stats
     dep = np.zeros(DEPTH + 1, dtype=np.int64)
@@ -296,7 +299,7 @@ def main():
                                          int(np.percentile(exact_sizes, 95)),
                                          int(np.max(exact_sizes))],
         "sub_queries": len(sub_nodes), "exact_queries": len(exact_nodes),
-        "p_mid": P_MID, "zipf_exp": 0.9,
+        "p_mid": P_MID, "zipf_exp": 1.1,
         "calibration": "PathSeer HF meta: Paper 741 cats Zipf slope -2.4; "
                        "SIFT1M flat labels 10/12/100 cats, 1/vector",
     }

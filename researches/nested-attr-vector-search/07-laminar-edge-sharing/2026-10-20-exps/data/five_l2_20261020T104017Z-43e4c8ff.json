@@ -1,0 +1,421 @@
+{
+  "run_id": "20261020T104017Z-43e4c8ff",
+  "status": "failed",
+  "input_root": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/inputs",
+  "work_root": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2",
+  "data_root": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data",
+  "raw_logs_root": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff",
+  "dataset_order": [
+    "sift25k"
+  ],
+  "nq_requested": 1000,
+  "k": 10,
+  "repeats": 2,
+  "with_pathseer": true,
+  "with_triehi": true,
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "query_time_policy": "best of two timed query repetitions; fixture generation excluded. BF-HNSW/PathSeer use precomputed query bitmaps, while triehi-hnsw resolves its candidate bitmap online inside query timing",
+  "hierarchy": "synthetic prep_ccs 4-ary depth-5, 1365 nodes, seed 20261021; not an original hierarchy dataset",
+  "provenance": "sift25k/sift50k/sift100k are overlapping nested prefixes of one SIFT HDF5 corpus; MNIST and Fashion-MNIST use distinct HDF5 corpora",
+  "metric": "squared L2 on integer-valued [0,255] vectors (u8 and float32 preserve distance)",
+  "comparability": "Fixed search breadth, not matched recall, build threads or memory. PSG directory bytes exclude fixture vectors and labels; LES directory includes base_u8 and upper levels; FAISS serialized index includes float32 vectors. TRIEHI scope metadata bytes are in-memory only and NOT included in serialized graph disk bytes. FAISS bitmap construction and PFS posting construction are separate from timed search. Native IndexPathSeerFlat with a bitmap selector does not reproduce the full PathSeer recipe; virtual-overhead effects are not isolated. No same-recall superiority is implied.",
+  "datasets": {
+    "sift25k": {
+      "name": "sift25k",
+      "source": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/inputs/sift25k",
+      "fixture": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k",
+      "pathseer_dataset": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/pathseer/sift25k",
+      "index_dir": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k",
+      "commands": [
+        {
+          "argv": [
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/venv/bin/python",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/src/prep_ccs.py",
+            "--fixtures",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/inputs/sift25k",
+            "--dim",
+            "128",
+            "--n",
+            "25000",
+            "--nq",
+            "1000",
+            "--out",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k"
+          ],
+          "shell": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/venv/bin/python /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/src/prep_ccs.py --fixtures /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/inputs/sift25k --dim 128 --n 25000 --nq 1000 --out /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k",
+          "environment_overrides": {
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1"
+          },
+          "log": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/prep.log",
+          "returncode": 0,
+          "wall_seconds": 4.272741531996871,
+          "log_sha256": "a9789467743b0d124733ffaf792a74eefc2d357d4e35e941405d695882d00545"
+        },
+        {
+          "argv": [
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/venv/bin/python",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/src/to_pathseer.py",
+            "--fixtures",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k",
+            "--out",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/pathseer/sift25k"
+          ],
+          "shell": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/venv/bin/python /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/src/to_pathseer.py --fixtures /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k --out /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/pathseer/sift25k",
+          "environment_overrides": {
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1"
+          },
+          "log": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pathseer_conversion.log",
+          "returncode": 0,
+          "wall_seconds": 1.3069619689922547,
+          "log_sha256": "fa2865847b9874978eb44444e07eaf561c700a3684382bb73705fc078fcdea44"
+        },
+        {
+          "argv": [
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/candidate",
+            "query",
+            "--mode",
+            "subtree_scan",
+            "--base",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/base.f32",
+            "--tree",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/tree.txt",
+            "--labels",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/labels.bin",
+            "--meta",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/meta.txt",
+            "--queries",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32",
+            "--workload",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt",
+            "--out",
+            "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pfs_ids.bin",
+            "--timings",
+            "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pfs_timings.f64",
+            "--repeats",
+            "2"
+          ],
+          "shell": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/candidate query --mode subtree_scan --base /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/base.f32 --tree /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/tree.txt --labels /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/labels.bin --meta /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/meta.txt --queries /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32 --workload /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt --out /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pfs_ids.bin --timings /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pfs_timings.f64 --repeats 2",
+          "environment_overrides": {
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1"
+          },
+          "log": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pfs_query.log",
+          "returncode": 0,
+          "wall_seconds": 0.14082801699987613,
+          "log_sha256": "09ed460b99443a32d51568b1ae728bb5fc0ec2ba641adfef9a165f7069b86ff0"
+        },
+        {
+          "argv": [
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/candidate",
+            "build",
+            "--base",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/base.f32",
+            "--tree",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/tree.txt",
+            "--labels",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/labels.bin",
+            "--meta",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/meta.txt",
+            "--index-dir",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/psg"
+          ],
+          "shell": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/candidate build --base /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/base.f32 --tree /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/tree.txt --labels /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/labels.bin --meta /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/meta.txt --index-dir /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/psg",
+          "environment_overrides": {
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "GRAPH_M": "24",
+            "GRAPH_EFC": "200"
+          },
+          "log": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_build.log",
+          "returncode": 0,
+          "wall_seconds": 12.1315559020004,
+          "log_sha256": "85cf56146df8ab4732860c3e4155a95f6d873f168423100bd8c0c227e8a0a034"
+        },
+        {
+          "argv": [
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/candidate",
+            "query",
+            "--base",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/base.f32",
+            "--tree",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/tree.txt",
+            "--meta",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/meta.txt",
+            "--index-dir",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/psg",
+            "--queries",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32",
+            "--workload",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt",
+            "--mode",
+            "subtree",
+            "--out",
+            "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_ids.bin",
+            "--timings",
+            "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_timings.f64",
+            "--repeats",
+            "2"
+          ],
+          "shell": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/candidate query --base /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/base.f32 --tree /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/tree.txt --meta /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/meta.txt --index-dir /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/psg --queries /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32 --workload /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt --mode subtree --out /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_ids.bin --timings /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_timings.f64 --repeats 2",
+          "environment_overrides": {
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1",
+            "GRAPH_EF": "21"
+          },
+          "log": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_query.log",
+          "returncode": 0,
+          "wall_seconds": 0.06780664800317027,
+          "log_sha256": "1c895bbb8895dcce27b1db522bdb9952e4d1aefb7b37ab4c18a7d308e7e10c4a"
+        },
+        {
+          "argv": [
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_build",
+            "--fixtures",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k",
+            "--index-dir",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/psg",
+            "--out",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/les"
+          ],
+          "shell": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_build --fixtures /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k --index-dir /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/psg --out /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/les",
+          "environment_overrides": {
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1"
+          },
+          "log": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les_build.log",
+          "returncode": 0,
+          "wall_seconds": 1.0507120029942598,
+          "log_sha256": "2d666ec52f5e630ec370513678c3dd4a4a0a718296f7ce365b8e9a6b22a8ecf1"
+        },
+        {
+          "argv": [
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_query",
+            "--out-dir",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/les",
+            "--queries",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32",
+            "--workload",
+            "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt",
+            "--mode",
+            "subtree",
+            "--k",
+            "10",
+            "--ef",
+            "32",
+            "--repeats",
+            "2",
+            "--out",
+            "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_ids.bin",
+            "--timings",
+            "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_timings.f64"
+          ],
+          "shell": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_query --out-dir /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/les --queries /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32 --workload /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt --mode subtree --k 10 --ef 32 --repeats 2 --out /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_ids.bin --timings /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_timings.f64",
+          "environment_overrides": {
+            "OMP_NUM_THREADS": "1",
+            "OPENBLAS_NUM_THREADS": "1"
+          },
+          "log": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_query.log",
+          "returncode": -6,
+          "wall_seconds": 0.017930759000591934,
+          "log_sha256": "209d6cb5eaa6c1b625002061347caa5a3ed3ba4eab0bd2a160853bf51eb7a642"
+        }
+      ],
+      "status": "failed",
+      "input_files": {
+        "base.f32": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/inputs/sift25k/base.f32",
+          "sha256": "a40e66ca1bb062587acc70bc52d448d5790a48b6367adde93f0445f779a87646"
+        },
+        "test.f32": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/inputs/sift25k/test.f32",
+          "sha256": "bf4c4c9db385017e63e7b0a9ccd8e3aab3744a02e053c135e000fa0b1dea2d6f"
+        },
+        "meta.json": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/inputs/sift25k/meta.json",
+          "sha256": "048b9546c0d5f760a03c956a86643d95f4eb5364cad6795e2bf032488423dfd5"
+        }
+      },
+      "input_metadata": {
+        "name": "sift25k",
+        "source_file": "datasets/sift-128-euclidean.hdf5",
+        "source_n": 1000000,
+        "selected_n": 25000,
+        "selection": "first 25000 train vectors",
+        "test_n": 10000,
+        "test_selection": "all test vectors",
+        "d": 128,
+        "output_dtype": "float32",
+        "value_validation": "source train prefix and full test: finite integer values in [0,255]",
+        "metric": "squared_l2",
+        "sift_subsets_overlap": true,
+        "hierarchy": "not present in source; labels/scopes generated by prep_ccs.py",
+        "shared_corpus": "sift-128-euclidean.hdf5; 25k/50k/100k are nested prefixes"
+      },
+      "fixture_files": {
+        "meta.txt": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/meta.txt",
+          "sha256": "4e6e04a72d5aa684706dc9169612e0c43636a1713c0b29c385f4ed64e6e8a78a"
+        },
+        "tree.txt": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/tree.txt",
+          "sha256": "bf5406d28eae36ea5524b704ddd663cd55320af8848174585cbc5906302a93c1"
+        },
+        "labels.bin": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/labels.bin",
+          "sha256": "3f1fdecff23bfb35855ba67b63682595b1282c99e43728f58e7a9334b1c453b1"
+        },
+        "workload_sub.txt": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt",
+          "sha256": "a7b0dbf27c4d967c07807663a3aa6c3acfc47a2f0d9e199b56c1bd9763075945"
+        },
+        "gt_sub.bin": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/gt_sub.bin",
+          "sha256": "64fa4168ef16426cd7fbf9411cbefc766e5a6822d9fca19160b74eded98c0c2e"
+        },
+        "test.f32": {
+          "path": "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32",
+          "sha256": "6683593c67a7b302b7f19cfe525a7ea9fac94868ed2044b5f52d103b9cc69a67"
+        }
+      },
+      "pathseer_checks": {
+        "n": 25000,
+        "dim": 128,
+        "nq": 1000,
+        "k": 10,
+        "nbytes": 3125,
+        "sub_bitmap_build_s_from_labels": 0.8942059170076391,
+        "exact_bitmap_build_s_from_labels": 0.10764749599911738,
+        "sub_bitmap_build_s_precomputed": 0.004126751999137923,
+        "exact_bitmap_build_s_precomputed": 0.004575922997901216,
+        "sub": {
+          "scope_size_min": 78,
+          "scope_size_max": 18965,
+          "popcount_matches": true,
+          "golden_id_range": [
+            2,
+            24999
+          ],
+          "golden_feasible": true,
+          "queries_checked": 1000
+        },
+        "exact": {
+          "scope_size_min": 64,
+          "scope_size_max": 3595,
+          "popcount_matches": true,
+          "golden_id_range": [
+            1,
+            24999
+          ],
+          "golden_feasible": true,
+          "queries_checked": 1000
+        },
+        "failures": []
+      },
+      "subtree_bitmap_sha256": "ed14831cd2bfd8c580ffcb241ed18d849ff1c51b5b211350d4a161600e038315",
+      "failed_stage": "les_query",
+      "error": "RuntimeError: /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_query --out-dir /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/les --queries /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32 --workload /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt --mode subtree --k 10 --ef 32 --repeats 2 --out /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_ids.bin --timings /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_timings.f64 exited -6; see /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_query.log"
+    }
+  },
+  "results": [
+    {
+      "dataset": "sift25k",
+      "method": "pfs_subtree_scan",
+      "status": "ok",
+      "n": 25000,
+      "dim": 128,
+      "nq": 1000,
+      "k": 10,
+      "config": {
+        "mode": "subtree_scan",
+        "repeats": 2,
+        "distance": "u8 squared L2"
+      },
+      "query_seconds": 0.057391085,
+      "qps": 17424.309019423486,
+      "index_bytes_definition": "No persisted ANN index; direct-label postings and u8 base built in process outside timed query loop",
+      "recall_at_10": 1.0,
+      "violations": 0,
+      "feasibility_violations": 0,
+      "duplicate_queries": 0,
+      "duplicate_ids": 0,
+      "invalid_ids": 0,
+      "unique_ids_total": 10000,
+      "unique_ids_global": 7124,
+      "unique_ids_mean_per_query": 10.0,
+      "full_k_queries": 1000,
+      "filled_slots": 10000,
+      "empty_queries": 0,
+      "p95_ms": 0.18010215,
+      "ids_path": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pfs_ids.bin",
+      "ids_sha256": "64fa4168ef16426cd7fbf9411cbefc766e5a6822d9fca19160b74eded98c0c2e",
+      "timings_path": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/pfs_timings.f64",
+      "timings_sha256": "1243fac215832ed6d043973edb312328518a286c52fbd18ce9daa626fcb58341"
+    },
+    {
+      "dataset": "sift25k",
+      "method": "psg",
+      "status": "ok",
+      "n": 25000,
+      "dim": 128,
+      "nq": 1000,
+      "k": 10,
+      "config": {
+        "graph_m": 24,
+        "graph_efc": 200,
+        "graph_ef": 21,
+        "repeats": 2
+      },
+      "query_seconds": 0.008905239,
+      "qps": 112293.44883388306,
+      "base_graph_build_seconds": 12.1315559020004,
+      "build_seconds": 12.1315559020004,
+      "index_bytes": 48709500,
+      "index_bytes_definition": "PSG c_*.bin disk bytes incl local u8 vectors, excluding separate fixture labels/base",
+      "recall_at_10": 0.9784,
+      "violations": 0,
+      "feasibility_violations": 0,
+      "duplicate_queries": 0,
+      "duplicate_ids": 0,
+      "invalid_ids": 0,
+      "unique_ids_total": 10000,
+      "unique_ids_global": 7098,
+      "unique_ids_mean_per_query": 10.0,
+      "full_k_queries": 1000,
+      "filled_slots": 10000,
+      "empty_queries": 0,
+      "p95_ms": 0.019024149999999993,
+      "ids_path": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_ids.bin",
+      "ids_sha256": "fa8f6111fb2e36994acbf39662dd457732dcb1086cb317acb8a9c7e25d749cec",
+      "timings_path": "/home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/psg_timings.f64",
+      "timings_sha256": "bff09e199bf5f98e3d7f3020913e7771ca457998c683533aab8c91b7e2071057"
+    },
+    {
+      "dataset": "sift25k",
+      "method": "les_query",
+      "status": "failed",
+      "n": 25000,
+      "dim": 128,
+      "nq": 1000,
+      "k": 10,
+      "error": "RuntimeError: /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_query --out-dir /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/les --queries /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32 --workload /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt --mode subtree --k 10 --ef 32 --repeats 2 --out /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_ids.bin --timings /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_timings.f64 exited -6; see /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_query.log"
+    }
+  ],
+  "tool_artifacts": {
+    "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/src/run_five_l2.py": "04f7b2e427b374cad168b4440165bbda305763d319da501c093683666e0243e3",
+    "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/src/prep_ccs.py": "09a01a0b9f3d86b4c00e0d9c135ec63d6ddbbda30e012f6b9b59eeeadf176cdb",
+    "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/src/to_pathseer.py": "702ccf2852c708ec70dee3e271a8f50592fd8bea1bd40827637cf0efca793431",
+    "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/candidate": "1841a31d02d41e558cc57c6d6dcafb85f3ad4cfcb82692b56fcc5779fa2b70ce",
+    "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_build": "89a196b32fc97033e3be9d873063c1382167a842cc5c26c9bad1e0b05c4aa5df",
+    "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_query": "f13aa19090915d4230314c8e73ef77e6c9d50e23857c11584634260f065cb016",
+    "/home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/faiss_filtered": "d25db20cf9c6695c6aa4883ecab49f56aadeef09c741e254c29ecd43ed9f26ce",
+    "/home/yiming/projects/scholar-workspace/vector-database/deps/PathSeer/faiss/build/faiss/libfaiss.so": "784cd5acfeb31fa4ae23e140daf491fe09aa9e9c5234ef7ca501d479c62e3041"
+  },
+  "error": "RuntimeError: /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/bin/les_query --out-dir /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/runs/20261020T104017Z-43e4c8ff/sift25k/les --queries /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/test.f32 --workload /home/yiming/projects/scholar-workspace/vector-database/production/nested-attr-vector-search/work/five_l2/fixtures/sift25k/workload_sub.txt --mode subtree --k 10 --ef 32 --repeats 2 --out /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_ids.bin --timings /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_timings.f64 exited -6; see /home/yiming/projects/scholar-workspace/vector-database/researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/experiments/five_l2/20261020T104017Z-43e4c8ff/sift25k/les32_query.log",
+  "failed_dataset": "sift25k",
+  "failed_stage": "les_query"
+}

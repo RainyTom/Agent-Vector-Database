@@ -5,10 +5,11 @@
 //   base_u8.bin                shared uint8 vectors (one copy per object)
 //   tin.bin / tout.bin         DFS preorder intervals
 //   seed.bin                   one feasible member per node
-//   buckets/offsets.bin        per-object level-0 bucket offsets (u32)
-//   buckets/nbr.bin            neighbour ids (u32)
-//   buckets/act.bin            activation preorder (u16)
-//   upper/up_<v>.bin           per-scope upper-level structure
+//   offsets.bin                per-object level-0 bucket offsets (u32)
+//   nbr.bin                    neighbour ids (u32)
+//   run_offsets.bin            per-object activation-run offsets (u32)
+//   run_start.bin              first global edge position of each run (u32)
+//   run_act.bin                activation preorder of each run (u16)
 //
 // A directed edge (i,j) is stored at its minimal activation node(s):
 // min(A_i & A_j). Query at u scans the bucket slice tin(u)..tout(u).
@@ -31,6 +32,10 @@ namespace {
 
 struct Args {
   std::string fixtures, index_dir, out;
+  size_t max_degree = 0;  // 0 = keep every deduped edge (default)
+  size_t max_bucket_degree = 0;  // cap within each (source, activation)
+  bool drop_aux = false;  // omit dist16/dflag (measured 0% pruning, diagnostics only)
+  bool varint_layout = false;  // delta-varint adjacency per activation run
 };
 
 template <typename T>
@@ -111,6 +116,10 @@ int main(int argc, char** argv) {
     if (f == "--fixtures") a.fixtures = next();
     else if (f == "--index-dir") a.index_dir = next();
     else if (f == "--out") a.out = next();
+    else if (f == "--max-degree") a.max_degree = std::stoull(next());
+    else if (f == "--max-bucket-degree") a.max_bucket_degree = std::stoull(next());
+    else if (f == "--drop-aux") a.drop_aux = true;
+    else if (f == "--varint") a.varint_layout = true;
     else { std::cerr << "unknown " << f << "\n"; std::exit(2); }
   }
 
@@ -166,6 +175,7 @@ int main(int argc, char** argv) {
   std::vector<uint64_t> anc(size_t(n) * W, 0);
   auto Atest = [&](int i, int u) { return (anc[size_t(i) * W + (u >> 6)] >> (u & 63)) & 1ull; };
   std::vector<int32_t> seed(nodes, -1);
+  std::vector<uint32_t> feasible_count(nodes, 0);
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < L; ++j) {
       int l = labels[size_t(i) * L + j];
@@ -173,6 +183,14 @@ int main(int argc, char** argv) {
       for (int v = l; v >= 0; v = parent[v]) {
         anc[size_t(i) * W + (v >> 6)] |= 1ull << (v & 63);
         if (seed[v] < 0) seed[v] = i;
+      }
+    }
+    for (size_t w = 0; w < W; ++w) {
+      uint64_t m = anc[size_t(i) * W + w];
+      while (m) {
+        int b = __builtin_ctzll(m);
+        m &= m - 1;
+        ++feasible_count[size_t(w * 64 + b)];
       }
     }
   }
@@ -280,26 +298,145 @@ int main(int argc, char** argv) {
   std::printf("unique bucket entries %zu (dup %llu)\n",
               entries.size(), (unsigned long long)dup);
 
-  // offsets per object
+  // Optional diagnostic: cap each object's shared out-degree by keeping its
+  // nearest neighbours across activation buckets. This is NOT part of the
+  // default LES index; it tests whether degree inflation explains the
+  // throughput gap. Slices remain exact w.r.t. the retained edge subset.
+  if (a.max_degree > 0) {
+    std::vector<Entry> kept;
+    kept.reserve(entries.size());
+    size_t dropped = 0;
+    for (size_t s = 0; s < entries.size();) {
+      size_t e = s + 1;
+      while (e < entries.size() && entries[e].i == entries[s].i) ++e;
+      const size_t count = e - s;
+      if (count <= a.max_degree) {
+        kept.insert(kept.end(), entries.begin() + s, entries.begin() + e);
+      } else {
+        std::vector<std::pair<float, Entry>> scored;
+        scored.reserve(count);
+        for (size_t t = s; t < e; ++t) {
+          float d = u8_l2(&base8[size_t(entries[t].i) * dim],
+                          &base8[size_t(entries[t].j) * dim], dim);
+          scored.push_back({d, entries[t]});
+        }
+        std::partial_sort(scored.begin(), scored.begin() + a.max_degree,
+                          scored.end(), [](const auto& x, const auto& y) {
+                            if (x.first != y.first) return x.first < y.first;
+                            if (x.second.act != y.second.act)
+                              return x.second.act < y.second.act;
+                            return x.second.j < y.second.j;
+                          });
+        std::vector<Entry> chosen;
+        chosen.reserve(a.max_degree);
+        for (size_t t = 0; t < a.max_degree; ++t) chosen.push_back(scored[t].second);
+        std::sort(chosen.begin(), chosen.end());
+        kept.insert(kept.end(), chosen.begin(), chosen.end());
+        dropped += count - a.max_degree;
+      }
+      s = e;
+    }
+    entries.swap(kept);
+    std::printf("degree cap %zu: entries %zu, dropped %zu\n",
+                a.max_degree, entries.size(), dropped);
+  }
+
+  // Cap each (source, activation) bucket independently. Unlike the global cap,
+  // this keeps every scope's own local edges and only trims buckets that
+  // received more than the per-scope build degree through dedup.
+  if (a.max_bucket_degree > 0) {
+    std::vector<Entry> kept;
+    kept.reserve(entries.size());
+    size_t dropped = 0;
+    for (size_t s = 0; s < entries.size();) {
+      size_t e = s + 1;
+      while (e < entries.size() && entries[e].i == entries[s].i &&
+             entries[e].act == entries[s].act)
+        ++e;
+      const size_t count = e - s;
+      if (count <= a.max_bucket_degree) {
+        kept.insert(kept.end(), entries.begin() + s, entries.begin() + e);
+      } else {
+        std::vector<std::pair<float, Entry>> scored;
+        scored.reserve(count);
+        for (size_t t = s; t < e; ++t) {
+          float d = u8_l2(&base8[size_t(entries[t].i) * dim],
+                          &base8[size_t(entries[t].j) * dim], dim);
+          scored.push_back({d, entries[t]});
+        }
+        std::partial_sort(scored.begin(), scored.begin() + a.max_bucket_degree,
+                          scored.end(), [](const auto& x, const auto& y) {
+                            if (x.first != y.first) return x.first < y.first;
+                            return x.second.j < y.second.j;
+                          });
+        std::vector<Entry> chosen;
+        chosen.reserve(a.max_bucket_degree);
+        for (size_t t = 0; t < a.max_bucket_degree; ++t)
+          chosen.push_back(scored[t].second);
+        std::sort(chosen.begin(), chosen.end());
+        kept.insert(kept.end(), chosen.begin(), chosen.end());
+        dropped += count - a.max_bucket_degree;
+      }
+      s = e;
+    }
+    entries.swap(kept);
+    std::printf("bucket cap %zu: entries %zu, dropped %zu\n",
+                a.max_bucket_degree, entries.size(), dropped);
+  }
+
+  if (a.varint_layout) a.drop_aux = true;  // aux arrays index raw entries
   std::vector<uint32_t> nbr;
-  std::vector<uint16_t> act;
+  std::vector<uint8_t> nbr_varint;
+  std::vector<uint32_t> run_start;
+  std::vector<uint16_t> run_act;
+  std::vector<uint32_t> run_offsets(size_t(n) + 1, 0);
   std::vector<uint16_t> dist16;
   std::vector<uint8_t> dflag;
   std::vector<uint32_t> offs(size_t(n) + 1, 0);
   for (const Entry& e : entries) ++offs[size_t(e.i) + 1];
   for (size_t i = 0; i < size_t(n); ++i) offs[i + 1] += offs[i];
-  nbr.reserve(entries.size());
-  act.reserve(entries.size());
-  for (const Entry& e : entries) { nbr.push_back(e.j); act.push_back(e.act); }
-  dist16.resize(nbr.size());
-  dflag.resize(nbr.size());
-  for (size_t t = 0; t < entries.size(); ++t) dflag[t] = entries[t].flag;
+  if (a.varint_layout) nbr_varint.reserve(entries.size() * 2);
+  else nbr.reserve(entries.size());
+  for (size_t i = 0; i < size_t(n); ++i) {
+    run_offsets[i] = uint32_t(run_start.size());
+    uint32_t prev = 0;
+    for (size_t t = offs[i]; t < offs[i + 1]; ++t) {
+      if (t == offs[i] || entries[t].act != entries[t - 1].act) {
+        run_start.push_back(a.varint_layout ? uint32_t(nbr_varint.size())
+                                            : uint32_t(nbr.size()));
+        run_act.push_back(entries[t].act);
+        prev = 0;
+      }
+      if (a.varint_layout) {
+        // Entries are sorted by (source, activation, target), so targets inside
+        // one run are strictly increasing: delta-varint is lossless.
+        uint32_t delta = entries[t].j - prev;
+        prev = entries[t].j;
+        while (delta >= 0x80) {
+          nbr_varint.push_back(uint8_t(delta | 0x80));
+          delta >>= 7;
+        }
+        nbr_varint.push_back(uint8_t(delta));
+      } else {
+        nbr.push_back(entries[t].j);
+      }
+    }
+  }
+  run_offsets[n] = uint32_t(run_start.size());
+  // Sentinel: byte/edge offset just past the last run.
+  run_start.push_back(a.varint_layout ? uint32_t(nbr_varint.size())
+                                      : uint32_t(nbr.size()));
+  if (!a.drop_aux) {
+    dist16.resize(entries.size());
+    dflag.resize(entries.size());
+    for (size_t t = 0; t < entries.size(); ++t) dflag[t] = entries[t].flag;
+  }
 
   // Per-entry quantized distance to the source vector (u16, floor of sqrt of
   // squared L2). Entries stay in (act, ...) order for slicing; the distance is
   // used as an exact triangle-inequality bound at query time.
   {
-    for (size_t i = 0; i < size_t(n); ++i) {
+    for (size_t i = 0; i < size_t(n) && !a.drop_aux; ++i) {
       for (size_t t = offs[i]; t < offs[size_t(i) + 1]; ++t) {
         float d = u8_l2(&base8[i * dim], &base8[size_t(nbr[t]) * dim], dim);
         dist16[t] = uint16_t(std::sqrt(d));
@@ -311,11 +448,22 @@ int main(int argc, char** argv) {
   write_bin(outdir + "/tin.bin", tin);
   write_bin(outdir + "/tout.bin", tout);
   write_bin(outdir + "/seed.bin", seed);
+  write_bin(outdir + "/counts.bin", feasible_count);
   write_bin(outdir + "/offsets.bin", offs);
-  write_bin(outdir + "/nbr.bin", nbr);
-  write_bin(outdir + "/act.bin", act);
-  write_bin(outdir + "/dist16.bin", dist16);
-  write_bin(outdir + "/dflag.bin", dflag);
+  if (a.varint_layout) {
+    write_bin(outdir + "/nbr_varint.bin", nbr_varint);
+    std::ofstream flag(outdir + "/layout_varint");
+    flag << "1\n";
+  } else {
+    write_bin(outdir + "/nbr.bin", nbr);
+  }
+  write_bin(outdir + "/run_offsets.bin", run_offsets);
+  write_bin(outdir + "/run_start.bin", run_start);
+  write_bin(outdir + "/run_act.bin", run_act);
+  if (!a.drop_aux) {
+    write_bin(outdir + "/dist16.bin", dist16);
+    write_bin(outdir + "/dflag.bin", dflag);
+  }
 
   std::ofstream f(outdir + "/meta.txt");
   f << n << " " << dim << " " << nodes << " " << entries.size() << "\n";

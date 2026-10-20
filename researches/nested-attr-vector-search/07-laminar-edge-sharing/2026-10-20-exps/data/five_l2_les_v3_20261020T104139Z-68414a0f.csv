@@ -1,0 +1,11 @@
+dataset,variant,layout,adaptive,index_bytes,ef,recall_at_10,qps
+sift100k,les_v3,varint,0,53271828,12,0.9506,34313
+sift100k,les_v3,varint,0,53271828,16,0.9712,26735
+sift100k,les_v3,varint,0,53271828,24,0.9880,22646
+sift100k,les_v3,varint,1,53271828,24,0.9807,27666
+sift100k,les_v3,varint,1,53271828,32,0.9898,17190
+sift100k,psg_shared,fixed,0,62340883,24,0.9494,69244
+sift100k,psg_shared,fixed,0,62340883,32,0.9673,58606
+sift100k,psg_shared,fixed,1,62340883,32,0.9559,68866
+sift100k,psg_shared,fixed,0,62340883,48,0.9840,41907
+sift100k,psg_shared,fixed,1,62340883,48,0.9789,42063

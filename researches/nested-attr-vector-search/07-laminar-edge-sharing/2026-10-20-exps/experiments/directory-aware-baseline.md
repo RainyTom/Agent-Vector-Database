@@ -37,3 +37,9 @@
 ## 5. 结论
 
 **适合作为基线，且语义上是最近的前序。** 推荐把 PE-Online、PE-Offline、TrieHI 三种目录表示与 LES 同协议对照，并补充 OpenViking 的目录路由（dir_index + bitmap 合并）作为系统参考；但**不要**把 OpenViking 的 dir_index 直接命名为 TrieHI——它目前是目录路由 + 集合合并，没有 inclusive-set 物化或 DSM 重连。论文自己的代码未找到独立实现，OpenViking 当前实现与论文声明并不完全一致，需谨慎引用。
+
+## 6. 基线映射与多标签语义更正（追加）
+
+第 2/4 节把 PE-ONLINE 等同旧编号 B0、PE-OFFLINE 等同旧编号 B4，是**不同层次的错误对应**：前者只定义目录候选集如何求出；现在论文中的 PFS 是读取候选后穷举距离，PSG 是按作用域分别构造 HNSW。两类方案能组合，不能视为同一种方法或互相替代。TRIEHI 也只维护目录 trie/候选集合，公平对照应为 TRIEHI 加**相同 ANN 执行器**后的整次向量查询。
+
+第 1 节的 Exact 等价仅对原文“每条目有一个 logical parent directory”成立 [原论文 §II-B、§IV-A](https://arxiv.org/pdf/2606.16903v1)。在多标签 LES 数据中，若对象同时直接标在 $u$ 和其孩子 $v$，$\mathrm{Inc}(u)\setminus\mathrm{Inc}(v)$ 会误删该对象；应保存直接 posting $\mathrm{Local}(u)$。MOVE/MERGE 时也不能对交叠标签无条件从旧祖先的 inclusive bitmap 减去移动集合，可能仍经另一个未移动标签保留成员资格。既有目录层耗时不能充当多标签 Exact 或端到端 ANN 成绩。见 [paper.md §5.5](../../paper.md)。

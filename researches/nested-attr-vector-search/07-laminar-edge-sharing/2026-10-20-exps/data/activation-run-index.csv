@@ -1,0 +1,3 @@
+index,activation_metadata_bytes,full_directory_bytes,entries,runs,subtree_ef32_qps,recall_at_10,query_repeats,qualification
+old_u16,26775408,144313905,13387704,1015143,15694,0.9967,previous_run,historical_query_measured_current_directory_recounted
+run_index,6490862,124029359,13387704,1015143,12898.237,0.9967,3,current_run_measured
