@@ -21,6 +21,7 @@ namespace {
 
 struct Args {
   std::string outdir, queries, workload, out, timings;
+  std::string mode = "subtree";
   int k = 10, repeats = 3;
   size_t ef = 64;
 };
@@ -35,6 +36,7 @@ Args parse(int argc, char** argv) {
     else if (f == "--workload") a.workload = next();
     else if (f == "--out") a.out = next();
     else if (f == "--timings") a.timings = next();
+    else if (f == "--mode") a.mode = next();
     else if (f == "--k") a.k = std::stoi(next());
     else if (f == "--ef") a.ef = std::stoull(next());
     else if (f == "--repeats") a.repeats = std::stoi(next());
@@ -125,6 +127,25 @@ int main(int argc, char** argv) {
   std::vector<uint32_t> offs = read_bin<uint32_t>(a.outdir + "/offsets.bin", size_t(n) + 1);
   std::vector<uint32_t> nbr = read_bin<uint32_t>(a.outdir + "/nbr.bin", nentries);
   std::vector<uint16_t> act = read_bin<uint16_t>(a.outdir + "/act.bin", nentries);
+  std::vector<uint8_t> dflag = read_bin<uint8_t>(a.outdir + "/dflag.bin", nentries);
+  // Labels are needed to verify exact membership for exact_strict mode.
+  std::vector<int32_t> labels;
+  int labL = 0;
+  {
+    std::string fix = a.outdir.substr(0, a.outdir.find("/les_ccs"));
+    if (!fix.empty() && fix != a.outdir) {
+      std::ifstream lm(fix + "/fixtures_ccs/labels_meta.txt");
+      if (lm) { int ln = 0; lm >> ln >> labL; }
+      labels = read_bin<int32_t>(fix + "/fixtures_ccs/labels.bin", size_t(n) * 5);
+    }
+  }
+  auto is_direct_lab = [&](int i, int u) -> bool {
+    if (labels.empty()) return true;
+    for (int j = 0; j < labL; ++j)
+      if (labels[size_t(i) * labL + j] == u) return true;
+    return false;
+  };
+  std::vector<uint16_t> dist16 = read_bin<uint16_t>(a.outdir + "/dist16.bin", nentries);
   std::vector<uint8_t> base8 = read_bin<uint8_t>(a.outdir + "/base_u8.bin", size_t(n) * dim);
 
   std::ifstream qf(a.queries, std::ios::binary);
@@ -175,6 +196,7 @@ int main(int argc, char** argv) {
   std::vector<double> timings(nq, 0.0);
   double best = 1e300;
   std::vector<Cand> cands;
+  uint64_t pruned = 0, scanned = 0, distcomp = 0;
 
   for (int rep = 0; rep < a.repeats; ++rep) {
     double total_s = 0.0;
@@ -184,8 +206,12 @@ int main(int argc, char** argv) {
       cands.clear();
       for (int u : qnodes[qi]) {
         if (seed[u] < 0) continue;
+        const bool exact_strict = (a.mode == "exact_strict");
+        const bool exact_edges = exact_strict || (a.mode == "exact_edges");
+        if (exact_strict && !is_direct_lab(seed[u], u)) continue;
         const Upper& U = ups[u];
         if (U.empty()) continue;
+        const int lo = tin[u], hi = tout[u];
 
         // Upper-level descent within the scope's own graph.
         uint32_t ep = U.enter;
@@ -218,7 +244,6 @@ int main(int argc, char** argv) {
         // Level-0 beam over the union graph's bucket slice.
         if (++gen == 0) { std::fill(visited.begin(), visited.end(), 0); gen = 1; }
         const uint32_t genq = gen;
-        const int lo = tin[u], hi = tout[u];
         std::priority_queue<Cand, std::vector<Cand>, Worse> top;
         std::priority_queue<std::pair<float, uint32_t>,
                             std::vector<std::pair<float, uint32_t>>,
@@ -232,15 +257,28 @@ int main(int argc, char** argv) {
           if (top.size() >= a.ef && cd.first > top.top().d) break;
           cand.pop();
           uint32_t c = cd.second;
+          const float dq_c = cd.first;  // distance from query to c
           uint32_t b0 = offs[c], b1 = offs[size_t(c) + 1];
           // binary search the activation range
           auto lo_it = std::lower_bound(act.data() + b0, act.data() + b1, uint16_t(lo));
           auto hi_it = std::upper_bound(act.data() + b0, act.data() + b1, uint16_t(hi));
           size_t s0 = size_t(lo_it - act.data());
           size_t s1 = size_t(hi_it - act.data());
+          const bool full = (top.size() >= a.ef);
+          const float tau = full ? top.top().d : 0.f;
           for (size_t t = s0; t < s1; ++t) {
+            ++scanned;
+            if (exact_edges && dflag[t] == 0) continue;
             uint32_t nb = nbr[t];
             if (visited[nb] == genq) continue;
+            // Exact triangle-inequality pruning:
+            // d(q,nb) >= dist16[t] - dq_c; if that exceeds the current top-ef
+            // bound tau, nb cannot improve the result. Exact, no approximation.
+            if (full && float(dist16[t]) - dq_c > tau) {
+              ++pruned;
+              continue;
+            }
+            ++distcomp;
             visited[nb] = genq;
             float dn = u8_l2(q, &base8[size_t(nb) * dim], dim);
             if (top.size() < a.ef || dn < top.top().d) {
@@ -259,6 +297,11 @@ int main(int argc, char** argv) {
       std::fill(row, row + a.k, -1);
       int filled = 0;
       for (const Cand& c : cands) {
+        if (a.mode == "exact_strict") {
+          bool ok = false;
+          for (int u : qnodes[qi]) ok = ok || is_direct_lab(c.id, u);
+          if (!ok) continue;
+        }
         bool dup = false;
         for (int t = 0; t < filled; ++t) dup = dup || row[t] == c.id;
         if (dup) continue;
@@ -274,5 +317,8 @@ int main(int argc, char** argv) {
   write_bin(a.out, ids);
   write_bin(a.timings, timings);
   std::printf("QUERY_SECONDS %.9f\n", best);
+  std::printf("PRUNED %llu / SCANNED %llu (%.2f%%), distcomp %llu\n",
+              (unsigned long long)pruned, (unsigned long long)scanned,
+              scanned ? 100.0 * pruned / scanned : 0.0, (unsigned long long)distcomp);
   return 0;
 }

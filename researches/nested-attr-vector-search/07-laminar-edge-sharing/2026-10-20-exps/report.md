@@ -83,6 +83,15 @@
 
 同召回（约 0.964）下 B4 比 Filtered-HNSW 快约 75×，比精确扫描快约 25×；代价是 2.6× 索引字节。ACORN 的位图改造版无法达到 0.95 召回（最高 0.848），必须标注为未使用层级构图的变体。位图预计算 7–8 µs/query。细节与公平性说明见 [`experiments/pathseer-filtered-ann.md`](experiments/pathseer-filtered-ann.md)。
 
+## 4.2 两项创新验证（2026-10-20）
+
+| 创新 | 结果 | 证据 |
+|---|---|---|
+| 距离序邻接 + 三角不等式剪枝 | 精确但 ~0% 跳过 | PRUNED 0/5.7M，Recall 不变（0.9967@ef32） |
+| Exact 用共享 direct-direct 边 | 不完整：73–90% 覆盖（中高层），漏孤立 direct 对象 | 0.922–0.927 召回；[`experiments/exact-gap.md`](experiments/exact-gap.md) |
+
+**结论**：LES 的贡献应在 Subtree（边共享），Exact 的完整路径是节点集合；Exact 用倒排 + 扫描（191.9k qps，1.0）。
+
 ## 5. 当日结论
 
 1. 逐作用域物化是一个强但空间昂贵的基线；紧凑存储与预取把它推到 94.7k qps（85 节点）/ 74.7k qps（1365 节点，Subtree）。

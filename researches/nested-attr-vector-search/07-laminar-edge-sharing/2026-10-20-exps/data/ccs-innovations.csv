@@ -1,0 +1,5 @@
+innovation,result,evidence,verdict
+triangle_inequality_pruning,exact metric bound on distance-ordered adjacency,PRUNED 0/SCANNED 5.7M (0.00%) at ef=32; recall unchanged (0.9967),neighbors are close to source so the bound rarely triggers; exact but ineffective,negative
+exact_edges_on_shared_buckets,beam over direct-direct edges only,recall 0.922 with 739 violations (before strict),mid-level direct objects are disconnected; completeness gap,negative for completeness
+exact_strict (seed+flag filter),0 violations / 0.9269 recall / 59 empty,direct-object connectivity via flagged edges is only 73-90% at mid-level nodes; isolated direct objects missed,negative for completeness
+node_set_completeness_gap,per-node |B_u| vs objects with >=1 direct-direct edge,73-90% coverage at depth 1-2 nodes (documented in experiments/exact-gap.md),Exact is a node-set problem; edge sharing cannot replace postings+scan,finding

@@ -18,7 +18,10 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdio>
+#include <cmath>
 #include <cstring>
+#include <numeric>
+#include <immintrin.h>
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -64,13 +67,33 @@ struct Entry {
   uint32_t i;
   uint16_t act;
   uint32_t j;
+  uint8_t flag;
   bool operator<(const Entry& o) const {
     return i != o.i ? i < o.i : act != o.act ? act < o.act : j < o.j;
   }
   bool operator==(const Entry& o) const {
-    return i == o.i && act == o.act && j == o.j;
+    return i == o.i && act == o.act && j == o.j && flag == o.flag;
   }
 };
+
+inline float u8_l2(const uint8_t* a, const uint8_t* b, size_t d) {
+  __m256i acc = _mm256_setzero_si256();
+  size_t i = 0;
+  for (; i + 15 < d; i += 16) {
+    __m128i xb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(a + i));
+    __m128i yb = _mm_loadu_si128(reinterpret_cast<const __m128i*>(b + i));
+    __m256i x16 = _mm256_cvtepu8_epi16(xb);
+    __m256i y16 = _mm256_cvtepu8_epi16(yb);
+    __m256i diff = _mm256_sub_epi16(x16, y16);
+    acc = _mm256_add_epi32(acc, _mm256_madd_epi16(diff, diff));
+  }
+  __m128i s = _mm_add_epi32(_mm256_castsi256_si128(acc), _mm256_extracti128_si256(acc, 1));
+  s = _mm_hadd_epi32(s, s);
+  s = _mm_hadd_epi32(s, s);
+  int32_t total = _mm_cvtsi128_si32(s);
+  for (; i < d; ++i) { int32_t diff = int32_t(a[i]) - int32_t(b[i]); total += diff * diff; }
+  return float(total);
+}
 
 inline uint8_t to_u8(float v) {
   if (v <= 0.f) return 0;
@@ -162,6 +185,12 @@ int main(int argc, char** argv) {
   std::string udir = outdir + "/upper";
   std::system(("mkdir -p " + outdir + " " + udir).c_str());
 
+  auto is_direct = [&](int i, int u) {
+    for (int j = 0; j < L; ++j)
+      if (labels[size_t(i) * L + j] == u) return true;
+    return false;
+  };
+
   std::vector<Entry> entries;
   entries.reserve(1 << 22);
   uint64_t observed = 0, dup = 0;
@@ -233,7 +262,10 @@ int main(int argc, char** argv) {
             for (int c : children[u]) {
               if (Atest(i, c) && Atest(j, c)) { minimal = false; break; }
             }
-            if (minimal) entries.push_back({i, uint16_t(tin[u]), j});
+            if (minimal) {
+              uint8_t f = (is_direct(int(i), u) && is_direct(int(j), u)) ? 1 : 0;
+              entries.push_back({i, uint16_t(tin[u]), j, f});
+            }
           }
         }
       }
@@ -251,12 +283,29 @@ int main(int argc, char** argv) {
   // offsets per object
   std::vector<uint32_t> nbr;
   std::vector<uint16_t> act;
+  std::vector<uint16_t> dist16;
+  std::vector<uint8_t> dflag;
   std::vector<uint32_t> offs(size_t(n) + 1, 0);
   for (const Entry& e : entries) ++offs[size_t(e.i) + 1];
   for (size_t i = 0; i < size_t(n); ++i) offs[i + 1] += offs[i];
   nbr.reserve(entries.size());
   act.reserve(entries.size());
   for (const Entry& e : entries) { nbr.push_back(e.j); act.push_back(e.act); }
+  dist16.resize(nbr.size());
+  dflag.resize(nbr.size());
+  for (size_t t = 0; t < entries.size(); ++t) dflag[t] = entries[t].flag;
+
+  // Per-entry quantized distance to the source vector (u16, floor of sqrt of
+  // squared L2). Entries stay in (act, ...) order for slicing; the distance is
+  // used as an exact triangle-inequality bound at query time.
+  {
+    for (size_t i = 0; i < size_t(n); ++i) {
+      for (size_t t = offs[i]; t < offs[size_t(i) + 1]; ++t) {
+        float d = u8_l2(&base8[i * dim], &base8[size_t(nbr[t]) * dim], dim);
+        dist16[t] = uint16_t(std::sqrt(d));
+      }
+    }
+  }
 
   write_bin(outdir + "/base_u8.bin", base8);
   write_bin(outdir + "/tin.bin", tin);
@@ -265,6 +314,8 @@ int main(int argc, char** argv) {
   write_bin(outdir + "/offsets.bin", offs);
   write_bin(outdir + "/nbr.bin", nbr);
   write_bin(outdir + "/act.bin", act);
+  write_bin(outdir + "/dist16.bin", dist16);
+  write_bin(outdir + "/dflag.bin", dflag);
 
   std::ofstream f(outdir + "/meta.txt");
   f << n << " " << dim << " " << nodes << " " << entries.size() << "\n";
