@@ -167,3 +167,13 @@
 **局限。** 五个点只有三个独立语料；层级/查询合成；只测 Subtree 与静态负载；未对齐同内存预算与构建资源；TRIEHI 为静态解析器（无路径字符串、DSM、OpenViking），PathSeer 为固定 M_exp 配置。详见 [`experiments/five-l2-benchmark.md`](experiments/five-l2-benchmark.md)。
 
 **代码与工具变更。** `prep_ccs.py` 增加 `--dim`；新增 `export_five_l2.py`、`run_five_l2.py`、`run_five_l2_sweep.py`、`plot_five_l2.py`；`faiss_filtered.cpp` 增加 `pathseer`、`triehi-hnsw`、`--index-in/--index-out`、`--ids/--timings`、高精度 `query_seconds`。图：`figures/fig_five_l2.png`（图 11）。
+
+## 10. 研究侧交接审计与下一轮指导（追加；未运行新实验）
+
+本轮目标是为 Git 同步的远端实验侧提供可执行协议，已检查 LES/PSG 查询源码及 v3 CSV；没有在本机或远端运行新性能实验，新增结果数字为“未测”。
+
+审计勘误：历史共享 PSG ef24 recall=0.9494，不能作为严格 r95 达标点，前述 r95 0.50× 应降格为近似工作点比较；LES 34,313 QPS 对应 varint fixed ef12，不是 adaptive。r98 0.66× 仍是历史工作点比值，但查询调度、计时边界和重复统计尚未对齐。
+
+源码显示 PSG 按 scope 分组执行而 LES 按 qi 执行；总耗时取最好轮、逐查询耗时保存最后轮，且两引擎总耗时边界不同。这些混杂因素需要先排除，不能单凭现有 QPS 把差距全部归因于并图扫描。局部 u16 映射也不会减少扫描边数。
+
+已新增 [远端下一轮实验指导](experiments/remote-next-round.md)：P0 测量契约；P1 layout×beam 消融、严格 r95/r98、同顺序交错重复与分桶计数；P2 共享 PSG M12 相近空间对照，以及按证据决定局部编号/anchor。执行、数据回传、论文相关表格统一修订均待远端完成；本轮仅交接文档，不新增实验数据。
