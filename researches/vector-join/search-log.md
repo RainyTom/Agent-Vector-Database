@@ -205,3 +205,11 @@
 决定：D0/D1/D3/D5停止独立立项；D2/D4暂停、冻结原MVP。没有方案通过新颖性门槛，不开始实现或实验。排除伪重合：2502.13245是几何半径range retrieval，2607.22922是PQ codebook，不作为同名范围/instance编译判重。alphaXiv历史授权/IVM命中有限，未形成引用闭包，完整组合均未被认证为某一论文完全等价。未知不转成新意。
 
 新增候选仅登记在审计与日期化证据，书目/全文未完成者不伪装成完整论文记录；已有Directory-Aware、Curator、iRangeGraph补项目判断，主索引仍21篇/22关系。没有性能实验。
+
+## 2026-10-20 LES合理性与SOTA声明核对
+
+先检查总论文/关系索引及LES正文、归档，再检索 `"vector similarity join" "high-dimensional"` 与 `"filtered approximate nearest neighbor" ACORN PathSeer`。此次仅为任务分类与评测门槛的定向核对，未完成vector join各同义词、引用链及全部最新filtered ANN的系统覆盖，不声称找到当前最强方法。
+
+复核已有ACORN记录的原始摘要：https://arxiv.org/abs/2403.04871。新候选 https://arxiv.org/abs/2509.07789 （Filtered Approximate Nearest Neighbor Search: A Unified Benchmark and Systematic Experimental Study [Experiment, Analysis & Benchmark]）仅阅读原始摘要，正式venue及正文实验未核实，暂不建完整论文记录；迁移价值为统一参数调优和过滤语义的评测协议，归类B、可迁移借鉴，不能称其直接支持vector join。搜索另命中 https://arxiv.org/abs/2507.21989 ，未精读，留待办。直接join检索命中Ma等PAA/SAX论文及DiskJoin，未据搜索摘要更新其算法记录。
+
+本轮判定写入 `researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/report.md` §15：LES表示机制合理，但当前实验和基线覆盖不能支持SOTA。无新增性能实验，不重启已收束路线。
