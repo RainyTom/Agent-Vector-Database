@@ -213,3 +213,9 @@
 复核已有ACORN记录的原始摘要：https://arxiv.org/abs/2403.04871。新候选 https://arxiv.org/abs/2509.07789 （Filtered Approximate Nearest Neighbor Search: A Unified Benchmark and Systematic Experimental Study [Experiment, Analysis & Benchmark]）仅阅读原始摘要，正式venue及正文实验未核实，暂不建完整论文记录；迁移价值为统一参数调优和过滤语义的评测协议，归类B、可迁移借鉴，不能称其直接支持vector join。搜索另命中 https://arxiv.org/abs/2507.21989 ，未精读，留待办。直接join检索命中Ma等PAA/SAX论文及DiskJoin，未据搜索摘要更新其算法记录。
 
 本轮判定写入 `researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/report.md` §15：LES表示机制合理，但当前实验和基线覆盖不能支持SOTA。无新增性能实验，不重启已收束路线。
+
+## 2026-10-20 属性集等价与包含的双语义核查
+
+先查总论文/关系索引、containment逐篇笔记和本地全文；用户确认Lx=Q、Q⊆Lx。先检索vector similarity join + set containment，再检索filtered nearest neighbor label-set equality、Unified Navigating Graph equality containment、原题名和ELI equality appendix。重点阅读LSSG v1 HTML §2.1/3/6.3、UNG作者README与已有源码、ACORN v1 §3.1/5、ELI v2 §2.1 Remark，以及本地PathSeer p.2和RWalks §2.1原文。
+
+结论与原始链接见[报告](../containment-filtered-vector-search/2026-10-20-exps/report.md)。UNG原文全文仍缺，ELI所需equality附录/代码未核；UniFilter/Curator完整集合相等能力本轮未核，不凭第三方比较表收录为已证支持。PathSeer/RWalks原始PDF在线重取失败，使用已存原始全文和可读官方仓库。未声称穷尽最新文献，无新实验。

@@ -131,3 +131,10 @@
 - 六个README增加当前决定，directions及所有主要入口撤销原实施优先级；保留历史方案与证据。
 - 补Directory-Aware、Curator、iRangeGraph的项目判断，不改作者方法/理论；其他新候选书目与全文未完核，未新增完整论文条目，仍21篇/22关系。
 - 无算法实现或性能实验；完整组合是否等价与核心是否已有前序分开记录，历史授权/IVM及图增广引用闭包仍待补。
+
+## 2026-10-20 完整属性集 equality / containment 能力核查
+
+- 用户明确equality为Lx=Q、containment为Q⊆Lx；新增containment研究目录当日报告与六方法证据。
+- 修订LSSG、ACORN、PathSeer、ELI、RWalks五条既有索引的支持层次；LSSG补已核官方代码入口。UNG保留作者产物证据候选，不补造未取得的全文记录；论文总数/关系数不变。
+- 明确UNG general/equality分构建模式；RWalks名为Equality的公式只要求包含；ACORN/PathSeer的双集合能力是通用predicate实例化，ELI具体equality扩展实现待核。
+- 旧Exact/Subtree与完整集合谓词不同，帕累托计划追加语义校正及核心基线优先级。无新性能实验。

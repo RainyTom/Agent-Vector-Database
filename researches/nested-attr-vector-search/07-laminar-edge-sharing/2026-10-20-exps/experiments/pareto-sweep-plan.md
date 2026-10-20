@@ -1,5 +1,7 @@
 # 重启实验：参数扫描与帕累托前沿
 
+后续语义确认（2026-10-20）：目标为完整集合equality `Lx=Q` 与containment `Q⊆Lx`，参见[文献核查](../../../../containment-filtered-vector-search/2026-10-20-exps/report.md)。执行本计划前须分别生成两种GT和曲线，优先纳入LSSG、UNG、ACORN，再加入PathSeer/ELI核实路径；现有node-Exact/Subtree不是这两种集合谓词，历史B1图不得改名充当新任务结果。UNG若分模式部署两份索引，mixed-workload预算需计算双份成本。
+
 日期：2026-10-20。状态：**规划待远端执行；现有B1数据的探索图已生成**。用户明确以效率–recall trade-off 的帕累托前沿作为本轮SOTA判据，因此重新开启系统参数评测，替代此前“本轮不再新增实验”的执行状态。本轮不要求LES全面胜出，也不直接启动A1/联合构图。
 
 ## 1. 判据与比较域
