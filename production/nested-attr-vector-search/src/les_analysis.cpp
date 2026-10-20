@@ -105,11 +105,16 @@ int main(int argc, char** argv) {
   }
   std::vector<int32_t> labels = read_bin<int32_t>(a.labels, size_t(n) * L);
 
-  // Per-object ancestor closure (upward-closed feasible-node set).
-  std::vector<Mask> anc(n);
+  // Per-object ancestor closure (upward-closed feasible-node set) and the
+  // direct-label mask (exact-mode membership).
+  std::vector<Mask> anc(n), direct(n);
+  std::vector<uint32_t> direct_count(nodes, 0);
   for (int i = 0; i < n; ++i) {
     for (int j = 0; j < L; ++j) {
       int v = labels[size_t(i) * L + j];
+      if (v < 0) continue;
+      direct[i].set(v);
+      ++direct_count[v];
       for (; v >= 0; v = parent[v]) anc[i].set(v);
     }
   }
@@ -125,6 +130,7 @@ int main(int argc, char** argv) {
   std::unordered_set<uint64_t> unique_edges;
   unique_edges.reserve(1 << 22);
   uint64_t observed = 0, bad_edges = 0, dup = 0, bucket_entries = 0;
+  uint64_t exact_entries = 0, cross_entries = 0;
   std::vector<uint64_t> per_scope_deg_sum(nodes, 0);
   std::vector<uint32_t> per_scope_elems(nodes, 0);
 
@@ -168,6 +174,8 @@ int main(int argc, char** argv) {
         if (inter.popcount() == 0) { ++bad_edges; continue; }
         uint64_t key = (uint64_t(i) << 32) | j;
         if (!unique_edges.insert(key).second) { ++dup; continue; }
+        Mask dl = direct[i] & direct[j];
+        exact_entries += dl.popcount();
         for (int u = 0; u < nodes; ++u) {
           if (!inter.test(u)) continue;
           ++deg[size_t(u) * n + i];
@@ -175,7 +183,12 @@ int main(int argc, char** argv) {
           for (int c : children[u]) {
             if (inter.test(c)) { minimal = false; break; }
           }
-          if (minimal) ++bucket_entries;
+          if (minimal) {
+            ++bucket_entries;
+            // Two-segment rule: if the edge is exact at u, its exact segment
+            // already covers subtree(u); no separate cross entry at u.
+            if (!dl.test(u)) ++cross_entries;
+          }
         }
       }
     }
@@ -191,6 +204,20 @@ int main(int argc, char** argv) {
               (unsigned long long)bucket_entries,
               unique_edges.empty() ? 0.0
                                    : double(bucket_entries) / unique_edges.size());
+  std::printf("two_segment: exact_entries %llu cross_entries %llu total %llu\n",
+              (unsigned long long)exact_entries,
+              (unsigned long long)cross_entries,
+              (unsigned long long)(exact_entries + cross_entries));
+  uint64_t direct_members = 0, nodes_with_direct = 0;
+  uint32_t max_direct = 0;
+  for (int u = 0; u < nodes; ++u) {
+    direct_members += direct_count[u];
+    if (direct_count[u]) ++nodes_with_direct;
+    max_direct = std::max(max_direct, direct_count[u]);
+  }
+  std::printf("direct_members %llu over %llu nodes (max %u)\n",
+              (unsigned long long)direct_members,
+              (unsigned long long)nodes_with_direct, max_direct);
   std::printf("per_scope_mean_degree:");
   for (int v = 0; v < nodes; ++v) {
     if (!per_scope_elems[v]) continue;
