@@ -1,0 +1,104 @@
+# 层级属性向量检索：Exact/Subtree 双语义与 Laminar Edge Sharing（研究进展，2026-10-20）
+
+本目录是本方向的研究摘要与导航。它描述当前问题定义、Laminar Edge Sharing（LES）方案、已测结果与局限，并链接到逐日实验记录、基线调研与评测协议。
+
+## 1. 问题定义
+
+对象带多个层级标签（如 ACM CCS），标签沿祖先继承。查询有两种模式：
+
+- **Subtree（递归）**：在指定节点 $u$ 的整棵子树中检索，可行集 $\mathcal D_u=\{i\mid L_i\cap\operatorname{Desc}^{+}(u)\neq\varnothing\}$；
+- **Exact（非递归）**：只检索直接标注于 $u$ 的对象，可行集 $\mathcal B_u=\{i\mid u\in L_i\}$。
+
+在直接标签表示下，两者都是 overlap 过滤（Subtree 用后代标签集，Exact 用单标签），因此本文不主张“多标签过滤无法表达层级语义”。真正的问题在执行：直接标签编码让 Subtree 需要展开后代标签并做多索引合并；祖先闭包编码让 Exact 退化为大规模差集；过滤图搜索仍需在遍历中判定谓词；双语义逐作用域物化使索引数量与空间翻倍。研究问题：能否用一套共享邻接同时服务两种模式，在保持过滤精确的同时降低空间与执行开销，并给出可验证的分层搜索语义。
+
+## 2. 方案：Laminar Edge Sharing（LES）
+
+LES 用一套按最小激活节点去重的 level-0 边同时服务 Exact 与 Subtree：
+
+- 每条边 $(i,j)$ 按其最小激活节点 $\min(A_i\cap A_j)$ 存一次；Exact 的激活是共同直接标签，Subtree 的激活是共同可行祖先的极小元；
+- 对象维护按 DFS 先序排序的桶表，同一节点分**直属桶** $B_{\text{exact}}$ 与**跨子树桶** $B_{\text{cross}}$；
+- 查询只做区间切片：Exact$(u)$ 读 $u$ 的直属段，Subtree$(u)$ 读 $[\mathrm{tin}(u),\mathrm{tout}(u)]$ 的整段；antichain 按节点分别执行后合并；
+- **LES v1 只共享 level-0 边**；上界层与入口按作用域保留，避免跨图合并层的非法问题。
+
+正确性由两条引理与一条命题支撑（直属段切片 = Exact 作用域边集；子树区间切片 = Subtree 作用域边集；切片包含 B4 的全部 level-0 边）。空间分析：85 节点层级下，逐作用域物化 level-0 有 760 万条有向边，LES 去重后为 366 万条唯一边、两段桶 382 万条（多重度 1.045），仅 level-0 条目与共享向量估算约 33 MB；代价是根作用域平均切片出度从 19.4 升到 36.6。
+
+## 3. 已测结果（当前配置，非算法定论）
+
+### 3.1 主基准：Subtree 合成工作负载（85 节点）
+
+| 方法 | qps | Recall@10 | p95 | 索引 | 构建 |
+|---|---:|---:|---:|---:|---:|
+| B0 精确扫描（Subtree） | ≈1,400 | 1.0 | ms 级 | 64 MB | 0 |
+| B1/B2 全局 HNSW + 过滤/扫描 | 3,104 | 0.9987 | 0.83 ms | 64 MB | 16 s |
+| **B4 逐作用域物化（仅 Subtree）** | **94,698** | 0.9570 | 20.9 µs | 83 MB | 30.8 s |
+
+### 3.2 CCS 形状工作负载（1365 节点，Subtree + Exact）
+
+| 模式 | 方法 | qps | Recall@10 | p95 | 索引 | 构建 |
+|---|---|---:|---:|---:|---:|---:|
+| Subtree | B4 逐作用域物化 | **74,706** | 0.9641 | 28.4 µs | 194 MB | 57 s |
+| Exact | B0 直接标签倒排 + 精确扫描 | **191,914** | 1.0000 | 11.3 µs | 51 MB | 0 |
+
+Exact 作用域很小（p50/p95/max = 126/396/6,973），**为 Exact 物化图在此 workload 上没有收益**；LES 的直属桶必须先与扫描比较。
+
+### 3.3 Filtered-HNSW / ACORN 对照（同 1000 条 Subtree 查询）
+
+| 方法 | ef | qps | Recall@10 | p95 | 索引 | 构建 |
+|---|---:|---:|---:|---:|---:|---:|
+| B0 Subtree 精确扫描 | – | 3,008 | 1.0000 | 1.16 ms | 51 MB | 0 |
+| B4 逐作用域物化 | 21 | **74,706** | 0.9641 | 28 µs | 194 MB | 57 s（单线程） |
+| Filtered-HNSW（FAISS HNSW + 位图 selector） | 384 | **1,282** | **0.9524** | 1.07 ms | 75 MB | 4.8 s（多线程） |
+| Filtered-HNSW | 512 | 991 | 0.9642 | 1.53 ms | 75 MB | 5.0 s |
+| ACORN（占位 metadata，filter-agnostic） | 1024 | 394 | 0.8479 | 3.85 ms | 70 MB | 0.8 s |
+| ACORN（主标签 metadata，单标签编码） | 512 | 620 | 0.8395 | 2.48 ms | 70 MB | 0.9 s |
+
+同召回下 B4 约为 Filtered-HNSW 的 75×、精确扫描的 25×，代价是 2.6× 索引字节；构建线程与内存预算尚未完全对齐，ACORN 变体未达到目标召回，故为**当前配置下的基线结果**。
+
+### 3.4 LES 原型（仅 Subtree）
+
+| 方法 | ef | qps | Recall@10 | p95 | 索引 | 构建 |
+|---|---:|---:|---:|---:|---:|---:|
+| LES 原型 | 32 | 15,694 | 0.9967 | 0.17 ms | 104 MB | 4.5 s |
+| LES 原型 | 48 | 11,908 | 0.9992 | 0.23 ms | 104 MB | 4.5 s |
+| LES 原型 | 64 | 9,940 | 0.9999 | 0.23 ms | 104 MB | 4.5 s |
+
+同召回下 LES 约为 B4 的 0.21× 吞吐、Filtered-HNSW 的 8–12×；并图度数更高、召回更高，吞吐/召回曲线需按各自 ef 分别对齐后再比较。
+
+### 3.5 两项创新的实测负结果
+
+- **距离序邻接 + 三角不等式剪枝**：精确（Recall 不变），但 `PRUNED 0/5.7M = 0.00%`；HNSW 图的邻居贴近 source，界几乎不触发。
+- **Exact 用共享 direct-direct 边**：中高层（深度 1–2）direct 对象只有 **73–90%** 能被 direct-direct 边连到；beam 漏掉孤立 direct 对象。**Exact 是节点集合问题，共享边不能替代 direct 标签倒排**。
+
+## 4. 局限与开放问题
+
+- **分层语义未完全解决**：LES v1 只共享 level-0；共享上界层需要 S1（全局层高）、S2（作用域层级资格）或 S3（重新定义共享图）之一并重新证明不变量。
+- **双语义未完成评测**：Exact 工作负载、空/小作用域回退、两段式查询与 LES 原型尚未全部实现；33 MB 只是 level-0 条目估算，不能与双语义 B4 直接比较。
+- **假设 H1 未验证**：标签位置与论文体裁的关系未知；Exact 的定义仅为直接标注，不能反推综述。
+- **新颖性未确认**：LES 与 iRangeGraph、UNG、LSSG、JAG 在目标上相近；需逐机制对照后才能判断“两段桶 + 区间切片 + level-0 共享”是否有独立贡献。
+- **规模与更新**：仅 100k、静态、单线程；1M 与目录调整的重建成本未测；距离限平方 L2。
+
+## 5. 导航
+
+| 内容 | 位置 |
+|---|---|
+| 逐日实验记录与数据 | [2026-10-20-exps/](2026-10-20-exps/) |
+| 基线改造评估（ACORN / Filtered-HNSW / LSSG / iRangeGraph / PathSeer） | [baseline-adaptation.md](baseline-adaptation.md) |
+| 评测协议 | [benchmark-protocol.md](benchmark-protocol.md) |
+| Directory-Aware / TrieHI 基线评估 | [2026-10-20-exps/experiments/directory-aware-baseline.md](2026-10-20-exps/experiments/directory-aware-baseline.md) |
+| Directory-Aware DSQ/DSM 复现记录 | [2026-10-20-exps/experiments/directory-aware-reproduction.md](2026-10-20-exps/experiments/directory-aware-reproduction.md) |
+| LES 原型实现记录 | [2026-10-20-exps/experiments/les-prototype.md](2026-10-20-exps/experiments/les-prototype.md) |
+| Exact 缺口与两项创新验证 | [2026-10-20-exps/experiments/exact-gap.md](2026-10-20-exps/experiments/exact-gap.md) |
+
+## 6. 复现
+
+```bash
+bash autoresearch.sh
+# LES 静态分析
+g++ -O2 -std=c++17 production/nested-attr-vector-search/src/les_analysis.cpp -o /tmp/les_analysis
+/tmp/les_analysis --meta production/nested-attr-vector-search/work/fixtures/meta.txt \
+  --tree production/nested-attr-vector-search/work/fixtures/tree.txt \
+  --labels production/nested-attr-vector-search/work/fixtures/labels.bin \
+  --index-dir production/nested-attr-vector-search/work/index
+```
+
+代码：`production/nested-attr-vector-search/src/{prep.cpp,prep_ccs.py,baseline.cpp,les_analysis.cpp,les_build.cpp,les_query.cpp,dir_representations.cpp,dir_dsm.cpp,faiss_filtered.cpp,to_pathseer.py,eval_ccs.py,harness.py}`。
