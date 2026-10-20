@@ -1,208 +1,379 @@
-# 层级属性向量检索的 Laminar Edge Sharing 索引（研究草案）
+# 层级属性上的向量检索：Laminar Edge Sharing 索引（研究草案 v2）
 
-状态：研究草案（2026-10-20），取代此前的工程记录。本文给出问题定义、研究假设、提出的索引结构与搜索算法、强基线及初步测量。LES（Laminar Edge Sharing）目前完成了空间/度数分析，端到端搜索原型尚未评测；除注明外，不主张新颖性成立。此前的“每节点物化图”实现降级为强基线 B4，其工程细节只作为基线记录。
+状态：研究草案（2026-10-20）。本文给出应用背景、形式化问题定义、提出的索引结构与搜索算法、强基线及当前实证。**LES 已完成结构、正确性证明与空间/度数分析；端到端搜索原型尚未实现，因此本文不把 LES 的查询性能当作已验证结果，也不主张新颖性成立。** 逐作用域物化实现（B4）降级为强基线，其工程细节见附录 A。
 
-## 1. 问题定义
+---
 
-### 1.1 层级与数据
+## 摘要
 
-**定义 1（属性层级）** 有限有根树 $T=(V,E,r)$，$|V|=m$，节点代表类别，子节点是父类别的细分。$\operatorname{Desc}^{+}(u)=\{v\mid v=u\ \lor\ u\leadsto v\}$，$\operatorname{Anc}^{+}(u)$ 为含自身的祖先集。
+向量检索系统越来越多地需要在层级分类（目录树）的任意子树范围内做 top-k。查询既可以指定粗类目，也可以指定若干并列类目；对象可同时属于多个类目，且类目成员沿祖先继承。把层级退化为标量过滤会破坏继承语义并在低选择率下失效；为每个子树单独建图则使索引空间按 $\sum_u|\mathcal D_u|$ 膨胀。本文形式化这一“层状作用域上的向量 top-k”问题，提出 Laminar Edge Sharing（LES）：每条图边只按其在层级上的**最小激活节点**存储一次，查询节点 $u$ 通过 DFS 先序区间扫描 $\operatorname{subtree}(u)$ 内的桶，从而在**查询期不做任何谓词判定**的情况下精确还原 $u$ 的邻接。我们证明区间切片与作用域边集的等价性，并给出空间/度数边界。在 SIFT100k 的 85 节点层级上，逐作用域物化需要 760 万条有向边、83 MB；LES 只需 366 万条唯一边、382 万条桶条目（激活多重度 1.045），估算常驻空间约 33 MB，代价是根作用域每跳平均扫描度数从 19.4 升到 36.6。强基线 B4 在 Recall@10 0.9570 时达到 94,698 qps。LES 的端到端查询评测、逐标签基线与段树共享基线列为待补实验。
 
-**定义 2（带层级标签的数据集）** $\mathcal D=\{o_i=(\mathbf x_i,L_i)\}_{i=1}^{n}$，$\mathbf x_i\in\mathbb R^d$，$L_i\subseteq V$ 为直接标签集（对象可多标签，标签可在任意深度）。类别成员沿祖先继承：对象属于 $u$ 当且仅当其某个直接标签位于 $\operatorname{Desc}^{+}(u)$。ID 唯一，重复向量仍是不同对象。
+---
 
-**定义 3（激活集与可行集）** 对象 $i$ 的激活集 $A_i=\bigcup_{v\in L_i}\operatorname{Anc}^{+}(v)$，是向上封闭的节点集合。查询节点 $u$ 的可行集
+## 1 应用背景
+
+### 1.1 三类真实检索场景
+
+**（A）企业知识库上的 RAG。** 文档与文档块被标注到组织结构或产品目录的多个节点：一个块可能同时属于“售后/退款”和“支付/风控”。用户问题既可以落在某个部门的整棵子树（“查所有与支付相关的内容”），也可以落在若干并列部门（“支付或风控下的退款政策”），还可能细化到叶类目。系统需要返回与查询向量最接近的 $k$ 个块；同一条块即使命中多个标签也只能返回一次。目录会随组织调整而变化，但本工作先处理静态目录。
+
+**（B）学术检索。** SciHTC 等工作把论文按 ACM CCS 构造为层级多标签数据：一篇论文可以同时属于“信息检索”和“机器学习”，查询可以是“信息检索整棵子树”或“人机交互或图形学”（一个 antichain）。用户既可能浏览粗粒度主题，也可能直接下钻到叶子；结果按语义向量排序，按论文 ID 去重。
+
+**（C）商品目录。** 商品可同时挂在“手机”与“数码配件”下；查询“手机或平板”是两个并列子树的并，而“电子产品”是它们的共同祖先。粗查询的可行集可达全量，细查询可能只有千级对象。
+
+三类场景共享同一结构：**属性层级是层状（laminar）的，查询是若干子树的并，对象多标签且沿祖先继承，结果按几何距离排序并按对象去重。** 这与任意布尔过滤、数值范围过滤、集合包含查询都不同。
+
+### 1.2 现有方案为什么会失效
+
+| 方案 | 失效方式 |
+|---|---|
+| 全局向量索引 + 标量过滤 | 低选择率作用域中，全局近邻里合格对象很少；固定候选预算无法保证过滤后 top-k。过滤式图搜索（如 ACORN、Filtered-DiskANN、UNG）仍需在遍历中判定谓词，且其终止条件通常按“合格候选数”而非“几何下界”计数，深选择率下退化为近全图遍历 |
+| 每个类目/标签一个索引 | 粗查询要访问子树内全部标签索引并合并，启动与去重开销随分支数增长；对象多标签导致同一向量在多个索引中重复 |
+| 每个子树一个索引（物化） | 索引成员数为 $\sum_u|\mathcal D_u|$，本基准中为 4× 对象数；构建与空间同阶膨胀，目录调整时需要重建大量子树 |
+| 段树/区间图索引（iRangeGraph 风格） | 面向数据顺序上的连续区间；子树作用域由标签决定、且对象多标签使成员集合不是数据序上的区间，直接套用需要额外的映射与去重 |
+| 位图/倒排预过滤 + 精确扫描 | 可行集较大时受内存带宽限制；本基准中 25k 可行对象的精确扫描约 0.7 ms |
+
+### 1.3 由此导出的设计需求
+
+- **R1 过滤精确、去重精确。** 返回对象必须属于查询作用域，且每个对象至多一次。
+- **R2 任意粒度。** 根、中间节点、叶与 antichain 并集都要能服务；不能只优化叶子或只优化粗查询。
+- **R3 查询热路径无谓词。** 逐候选做标签/位图判定会把过滤成本摊到每次距离计算上；理想情况下邻接本身就是“该作用域可用”的。
+- **R4 空间低于逐作用域物化。** 目标是小于 $\sum_u|\mathcal D_u|$ 的边/向量重复。
+- **R5 构建可承受。** 构建可以读层级与标签，但不能读测试查询或真值。
+- **R6 可复现、可度量。** 确定性查询结果；索引字节与构建时间如实计入。
+
+LES 直接针对 R1–R4：把边按层级激活位置去重，查询用区间切片得到与作用域精确对应的邻接，热路径不判定谓词。
+
+---
+
+## 2 问题定义
+
+### 2.1 符号
+
+| 符号 | 含义 |
+|---|---|
+| $T=(V,E,r)$ | 属性层级，$m=\lvert V\rvert$，节点 $u$ 的子树 $\operatorname{Desc}^{+}(u)$、祖先 $\operatorname{Anc}^{+}(u)$ |
+| $\mathcal D=\{(\mathbf x_i,L_i)\}_{i=1}^{n}$ | 对象、$d$ 维向量、直接标签集 $L_i\subseteq V$ |
+| $A_i$ | 激活集 $\bigcup_{v\in L_i}\operatorname{Anc}^{+}(v)$ |
+| $\mathcal D_u$ | 查询节点 $u$ 的可行集 $\{i\mid u\in A_i\}$ |
+| $U$ | 查询节点集合，要求为 antichain |
+| $\mathcal D_U$ | $\bigcup_{u\in U}\mathcal D_u$ |
+| $\delta$ | 距离函数（本文为平方 L2） |
+| $s_Q(i)$ | 排序键 $(\delta(\mathbf q,\mathbf x_i),\mathrm{id}_i)$ |
+| $k_Q$ | $\min(k,\lvert\mathcal D_U\rvert)$ |
+| $I,\pi$ | 索引与查询计划 |
+| $M(I)$ | 常驻索引字节 |
+| $\mu(U)$ | 对象交叠度 $\sum_{u\in U}\lvert\mathcal D_u\rvert/\lvert\mathcal D_U\rvert$ |
+
+### 2.2 定义
+
+**定义 1（属性层级）** 有限有根树 $T=(V,E,r)$。$v\in\operatorname{Desc}^{+}(u)$ 表示 $v=u$ 或存在 $u\leadsto v$ 的有向路径；$\operatorname{Anc}^{+}(v)$ 对偶定义。子节点是父类别的细分。
+
+**定义 2（带层级标签的数据集）** 对象 $o_i=(\mathbf x_i,L_i)$，$\mathbf x_i\in\mathbb R^d$，$\varnothing\ne L_i\subseteq V$。标签可位于任意深度；对象具有内部节点标签不蕴含它属于该节点的任一特定后代。ID 唯一；向量相同但 ID 不同视为不同对象。
+
+**定义 3（继承成员关系与激活集）** 对象 $i$ 属于类别 $u$ 当且仅当 $L_i\cap\operatorname{Desc}^{+}(u)\ne\varnothing$，等价地 $u\in A_i=\bigcup_{v\in L_i}\operatorname{Anc}^{+}(v)$。$A_i$ 向上封闭：$u\in A_i\Rightarrow\operatorname{Anc}^{+}(u)\subseteq A_i$。
+
+*例.* 树为 $r\to\{A,B\}$，$A\to\{A_1,A_2\}$，$B\to\{B_1,B_2\}$。标签 $L_i=\{A_1\}$ 的对象满足 $A_i=\{A_1,A,r\}$；$L_j=\{B_1\}$ 的对象满足 $A_j=\{B_1,B,r\}$。$L_k=\{A_1,B_1\}$ 的对象 $A_k=\{A_1,A,B_1,B,r\}$。
+
+**定义 4（可行集）** $\mathcal D_u=\{o_i\mid u\in A_i\}$。由向上封闭性，$v\in\operatorname{Desc}^{+}(u)\Rightarrow\mathcal D_v\subseteq\mathcal D_u$；$\mathcal D_r=\mathcal D$。多标签对象在并集中只出现一次。
+
+**定义 5（紧凑层级查询）** 查询节点集合 $U\subseteq V$ 非空且为 antichain（任意两节点互非祖先）。覆盖标签集 $F_T(U)=\bigcup_{u\in U}\operatorname{Desc}^{+}(u)$，可行集
 
 $$
-\mathcal D_u=\{o_i\in\mathcal D\mid u\in A_i\}.
+\mathcal D_U=\{o_i\mid L_i\cap F_T(U)\ne\varnothing\}=\bigcup_{u\in U}\mathcal D_u.
 $$
 
-向上封闭性给出核心结构性质：$v\in A_i \Rightarrow \operatorname{Anc}^{+}(v)\subseteq A_i$；若 $v\in\operatorname{Desc}^{+}(u)$ 则 $\mathcal D_v\subseteq\mathcal D_u$。
+任一非空节点集合可删除被祖先覆盖的后代化为 antichain 而不改变覆盖范围；$|U|=1$ 时退化为单节点查询。对象交叠度 $\mu(U)=\sum_{u\in U}|\mathcal D_u|/|\mathcal D_U|\in[1,|U|]$ 刻画多标签造成的跨分支重叠。
 
-**定义 4（紧凑层级查询）** 查询节点集合 $U\subseteq V$ 为非空 antichain（互非祖先），其覆盖标签集 $F_T(U)=\bigcup_{u\in U}\operatorname{Desc}^{+}(u)$，可行集
+**定义 6（查询与精确结果）** $Q=(\mathbf q,U,k)$。排序键 $s_Q(o_i)=(\delta(\mathbf q,\mathbf x_i),\mathrm{id}_i)$ 字典序；$k_Q=\min(k,|\mathcal D_U|)$；精确结果 $R^*(Q)$ 为 $\mathcal D_U$ 中按 $s_Q$ 升序的前 $k_Q$ 个不同对象。$\mathcal D_U=\varnothing$ 时结果为空。
 
-$$
-\mathcal D_U=\bigcup_{u\in U}\mathcal D_u=\{o_i\mid A_i\cap U\neq\varnothing\}.
-$$
+**定义 7（近似结果与召回）** $\widehat R(Q)\subseteq\mathcal D_U$、$|\widehat R(Q)|\le k_Q$、无重复。$k_Q>0$ 时 $\operatorname{Recall@k}(Q)=|\widehat R(Q)\cap R^*(Q)|/k_Q$；$k_Q=0$ 时要求返回空集，该查询不计入平均召回。给定工作组 $\mathcal W$，平均召回只在 $k_Q>0$ 的查询上取平均。近似性仅允许最近邻遗漏，过滤、去重与数量必须精确。
 
-$|U|=1$ 退化为单节点查询；任一非空节点集合可通过删除被祖先覆盖的后代化为 antichain，覆盖范围不变。
+**定义 8（索引与代价模型）** 索引 $I$ 由 $\mathcal D,T$ 构建，构建期不得读取测试查询或真值。常驻空间 $M(I)$ 包括：向量（每个对象只计一次）、各层邻接条目、激活标记、对象桶偏移、层级/标签、每个查询节点的入口与高度；共享数据只计一次。构建时间 $T_{\text{build}}$ 包括构图、边归属、排序与落盘。查询时间 $T_{I,\pi}(Q)$ 从接收 $(\mathbf q,U,k)$ 开始，包括谓词解析（LES 中为空）、候选生成、图搜索、距离计算、去重与合并；并发临时结构另计峰值内存。工作负载可含未物化的节点组合。
 
-**定义 5（查询与精确结果）** 查询 $Q=(\mathbf q,U,k)$，距离 $\delta$（本文为平方 L2），排序键 $s_Q(o_i)=(\delta(\mathbf q,\mathbf x_i),\mathrm{id}_i)$ 字典序。$k_Q=\min(k,|\mathcal D_U|)$，精确结果 $R^*(Q)$ 为 $\mathcal D_U$ 中按 $s_Q$ 升序的前 $k_Q$ 个不同对象。
-
-**定义 6（近似结果与召回）** $\widehat R(Q)\subseteq\mathcal D_U$、$|\widehat R(Q)|\le k_Q$ 且无重复。当 $k_Q>0$，
-
-$$
-\operatorname{Recall@k}(Q)=\frac{|\widehat R(Q)\cap R^*(Q)|}{k_Q}.
-$$
-
-近似只允许最近邻遗漏；过滤、去重与数量必须精确。$k_Q=0$ 的查询不计入平均召回。
-
-**定义 7（索引、空间与时间）** 索引 $I$ 由静态数据与 $T$ 构建，构建期不得读取查询集或真值。$M(I)$ 为常驻字节（向量、邻接、标签、树、入口、偏移；共享数据只计一次），$T_{I,\pi}(Q)$ 为查询时间（谓词解析、候选生成、搜索、去重、合并）。峰值内存另计。
-
-**定义 8（研究问题）** 给定 $\mathcal D,T,\delta$、查询分布 $\mathcal P$、召回目标 $\rho\in(0,1]$ 与内存预算 $B$，设计 $I,\pi$ 使
+**定义 9（研究问题）** 给定 $\mathcal D,T,\delta$、查询分布 $\mathcal P$、召回目标 $\rho\in(0,1]$ 与内存预算 $B$，
 
 $$
 \min_{I,\pi}\ \mathbb E_{Q\sim\mathcal P}[T_{I,\pi}(Q)]
 \quad\text{s.t.}\quad
 M(I)\le B,\quad
-\mathbb E[\operatorname{Recall@k}(Q)]\ge\rho,\quad
-\widehat R(Q)\subseteq\mathcal D_U,\ \text{无重复}.
+\mathbb E_{\mathcal P\mid k_Q>0}[\operatorname{Recall@k}_{I,\pi}(Q)]\ge\rho,
 $$
 
-本文固定 $\delta$ 为平方 L2、$k=10$、$\rho=0.95$，测量端到端吞吐（$\text{qps}=1/\mathbb E[T]$）与 $M(I)$、构建时间。
+且对每个查询 $\widehat R(Q)\subseteq\mathcal D_U$、无重复、数量为 $\min(k,|\mathcal D_U|)$（不足时返回全部）。
 
-### 1.2 为什么这是一个独立问题
+### 2.3 边界情形
 
-- 谓词族是**层状（laminar）**的：每个查询是若干子树的并，且 $T$ 在构建期已知；这与任意布尔过滤、范围过滤、集合包含均不同。
-- 对象**多标签**使不同分支的可行集重叠；同一对象在一次查询中只能返回一次。重叠不是重复存储的理由，而是共享机会。
-- 查询覆盖粗到细：根、深度 1、深度 2、叶与 antichain 并存，单一固定粒度的索引必然在某些粒度上退化。
+- **空作用域**：$\mathcal D_U=\varnothing$ 必须返回空；延迟计入，召回不计。
+- **不足 $k$**：$|\mathcal D_U|<k$ 时返回全部可行对象；召回分母为 $|\mathcal D_U|$，欠填不能缩小分母。
+- **多标签重复**：对象通过多个标签满足同一查询时只返回一次；去重按对象 ID，不按向量值。
+- **内部节点标签**：对象只有内部节点标签时，不能推断它属于任意特定后代；只有后代查询才不可行。
+- **距离并列**：以 ID 升序打破，保证结果确定。
+- **antichain 宽度**：可用 $|U|\le b$ 限定工作组；本文评测 $b=3$。
 
-## 2. 背景与相关工作
+### 2.4 指标
 
-**应用背景。** 检索增强生成、企业知识库与学术检索中，文档同时属于多个层级分类（如 ACM CCS、商品类目、组织目录）；用户查询既可能指定粗类目，也可能指定细类目或若干并列类目。把层级当作标量过滤会丢失继承语义，把每个类目单独建索引会重复存储并在粗查询上合并爆炸。
+- **主指标 `qps_at_r95`**：当平均 Recall@10 ≥ 0.95 且过滤违规为 0 时，取查询循环吞吐；否则为 0。
+- **Recall@10**：按定义 7 逐查询计算后平均；零结果查询单独统计空结果正确率。
+- **p95 延迟**、**索引字节 `index_mb`**、**构建时间 `build_s`**、**违规数**（不可行 ID、重复、数量错误）。
+- 计时由候选在单进程内重复 3 次取最小值（预热与索引加载不计），构建时间单独用墙钟测量。
 
-**相关工作与差异。** 过滤 ANN 系统（Filtered-DiskANN、ACORN、UNG、Curator）研究“向量 + 谓词”的联合导航；其中 UNG 用标签导航图，ACORN 用谓词无关的子图遍历，Curator 按谓词构造临时索引。范围/嵌套索引（iRangeGraph）利用 segment-tree 单元图在范围查询间复用边。JAG 研究多属性尺度的共享导航边。它们证明了“共享图”在过滤器与范围上的价值，但：
+### 2.5 假设与范围
 
-- 多数方法仍需在查询期判定谓词或过滤候选；
-- 面向层状子树并集、且对象多标签重叠的**边级去重**与**查询期无谓词判定**的表示，未被系统刻画；
-- 共享带来的度数膨胀与空间节省之间的定量边界缺少测量。
+静态层级与静态向量；单机、内存驻留、单线程查询；$T$ 与标签在构建期已知；查询分布任意且构建期不可见；距离为平方 L2（u8 编码用于 SIFT 的整数值，保持精确）；不处理更新、删除、并发、权限与多版本。这些边界在 §7 讨论。
 
-本文不声称首次提出“共享图”；LES 的候选增量是：把每条边按其**最小激活节点**分桶，使查询 $u$ 只需扫描 preorder 区间 $\operatorname{subtree}(u)$ 内的桶，从而在无查询期谓词判定的前提下精确还原每个作用域的图。是否足以构成独立贡献，需与 iRangeGraph/UNG 逐机制对照后确认（尚未完成）。
+---
 
-**研究问题。**
-- RQ1：一条边集能否同时服务所有层状作用域，且每个作用域的诱导图与原独立图等价？
-- RQ2：去重带来的空间收益与度数膨胀带来的查询代价之间，边界在哪里？
-- RQ3：在固定召回下，LES 是否优于全局过滤与逐作用域物化？
+## 3 方案：Laminar Edge Sharing（LES）
 
-## 3. 提出的索引：Laminar Edge Sharing（LES）
+### 3.1 设计目标与概览
 
-### 3.1 边的激活集
+LES 把“每个作用域一张图”改为“**一套按层级激活位置去重的边**”：
 
-设边 $e=(i,j)$。它在作用域 $u$ 中可用当且仅当 $i,j\in\mathcal D_u$，即 $u\in A_i\cap A_j$。由于 $A_i,A_j$ 向上封闭，$M_e=A_i\cap A_j$ 也向上封闭，其极小元构成一个 antichain $\min(M_e)$（两对象标签对的最小公共祖先集合，$|L_i|,|L_j|\le3$ 时规模 ≤9，通常为 1）。
+1. 构建期对每条有向边 $e=(i,j)$ 计算激活集 $M_e=A_i\cap A_j$；
+2. 取 $M_e$ 的极小元（最小公共祖先集合），把边存入对象 $i$ 在对应节点下的桶；
+3. 查询节点 $u$ 只扫描激活节点落在 $\operatorname{subtree}(u)$ 的桶。由于先序编号使子树成为连续区间，这就是一次区间切片；
+4. 切片得到的邻居恰好是“两个端点都在 $\mathcal D_u$ 中”的边，查询期无需谓词判定。
 
-**存储规则。** 每条有向边在 $\min(M_e)$ 的每个节点下存一次，记入对象 $i$ 的桶。节点按 DFS 先序编号，则 $\operatorname{subtree}(u)$ 是连续区间 $[\mathrm{tin}(u),\mathrm{tout}(u)]$；对象 $i$ 的桶表按 $\mathrm{tin}$ 排序。
+设计目标：G1 过滤/去重精确；G2 任意粒度；G3 热路径无谓词；G4 空间低于物化；G5 构建只依赖静态数据。
 
-**引理 1（区间切片精确还原作用域图）** 对任意 $u$，对象 $i$ 在 $u$ 下可扫描的邻居集合恰为
+### 3.2 激活集与边的激活集
+
+$A_i$ 在构建期计算：对每个直接标签沿父链标记，得到向上封闭的节点集合。$m=85$ 时用两个 64 位字表示；更大的树可用有序祖先列表（大小 $\le|L_i|\cdot\text{depth}$）或 Roaring 位图。
+
+对边 $e=(i,j)$：
 
 $$
-\Gamma_u(i)=\{j\mid \exists m\in\min(M_{(i,j)}): m\in\operatorname{subtree}(u)\}.
+M_e=A_i\cap A_j
+=\{u\mid i,j\in\mathcal D_u\}.
 $$
 
-*证明.* ($\subseteq$) 若 $m\in\operatorname{subtree}(u)$，则 $u\in\operatorname{Anc}^{+}(m)\subseteq M_{(i,j)}$（向上封闭），故 $i,j\in\mathcal D_u$。( $\supseteq$) 若 $i,j\in\mathcal D_u$，则 $u\in M_{(i,j)}$；$M$ 向上封闭且非空，其极小元中必有某个 $m$ 满足 $u\in\operatorname{Anc}^{+}(m)$，即 $m\in\operatorname{subtree}(u)$。$\square$
+$M_e$ 向上封闭：若 $u\in M_e$，则 $\operatorname{Anc}^{+}(u)\subseteq M_e$。
 
-因此查询 $u$ 无需求值谓词、无需过滤候选：对每个弹出的对象，二分定位区间并扫描桶内邻居即可。共享边的语义与“为 $u$ 单独构图”在边集上一致；若每个作用域的独立图由相同构图过程产生，则 LES 的诱导图就是这些图的并。
+*例（续 2.2）.* $i=\{A_1\}$，$j=\{A_2\}$：$M_e=\{A,r\}$，极小元 $\{A\}$。$i=\{A_1\}$，$j=\{A_1,B_1\}$：$M_e=\{A_1,A,r\}$，极小元 $\{A_1\}$。$i=\{A_1,B_1\}$，$j=\{A_2\}$：$M_e=\{A,r\}$，极小元 $\{A\}$。
 
-### 3.2 空间与度数
+### 3.3 最小激活分桶
 
-设独立物化时所有作用域的边总数为 $E_{\text{obs}}=\sum_u |E(G_u)|$，去重后唯一有向边为 $E_{\text{uniq}}$，桶条目为 $E_{\text{bucket}}=\sum_e |\min(M_e)|$（通常 $E_{\text{bucket}}\approx E_{\text{uniq}}$）。
+**定义 10（最小激活集）** $\min(M_e)=\{u\in M_e\mid \nexists v\in M_e,\ v\in\operatorname{Desc}^{+}(u),\ v\ne u\}$，即 $M_e$ 中没有后代也在 $M_e$ 的节点。它是 antichain，规模不超过 $|L_i|\cdot|L_j|$（本文 ≤9，通常为 1）。
 
-- 空间：$O(E_{\text{bucket}})$ 条邻接 + $O(n)$ 个向量（每个对象只存一次）+ 每个对象的桶偏移；对比物化的 $O(E_{\text{obs}})$ 条邻接与 $O(\sum_u|\mathcal D_u|)$ 份向量。
-- 查询：弹出对象 $i$ 时扫描度数为
+**存储规则.** 对每条有向边 $(i,j)$ 与每个 $m\in\min(M_e)$，在对象 $i$ 的层 $\ell$ 桶表中追加条目（激活先序 $\mathrm{tin}(m)$，邻居 $j$）。同一对象内对 $(m,j)$ 去重。
+
+*例（多极小元）.* $i=\{A_1,B_1\}$，$j=\{A_1,B_1\}$：$M_e=\{A_1,A,B_1,B,r\}$，极小元 $\{A_1,B_1\}$，边存两份。查询 $A$ 的区间含 $A_1$ 而不含 $B_1$，仍能找到；查询 $A_2$ 两者都不含，正确地找不到（$j$ 在 $A_2$ 下不可行）。
+
+**先序区间.** 对树做 DFS，记录 $\mathrm{tin}(u)$ 与 $\mathrm{tout}(u)$；$\operatorname{subtree}(u)$ 对应 $[\mathrm{tin}(u),\mathrm{tout}(u)]$。对象桶表按 $\mathrm{tin}$ 升序排序，则查询 $u$ 的可用邻居是表中该区间的连续切片。
+
+**构建步骤.**
+
+1. 对 $T$ 做 DFS，得到先序编号、$\mathrm{tin}/\mathrm{tout}$ 与父子关系。
+2. 对每个对象计算 $A_i$（祖先闭包），存为位集或有序祖先表。
+3. 对每个作用域 $u$ 用选定的图构造器（本文为 HNSW，$M=24$、$efC=200$、level-0 截断到最近 24）构图，记录每个对象的出边与层高；记录一个成员作为入口 $\mathrm{seed}(u)$ 与高度 $h(u)$。
+4. 遍历所有作用域的所有有向边。对每对 $(i,j)$ 只处理一次：计算 $M_{(i,j)}=A_i\cap A_j$ 与 $\min(M_{(i,j)})$；若边在多个作用域图中出现，激活集相同，去重后只生成一份条目。对每个 $m\in\min(M)$，在对象 $i$ 的层 $\ell$ 桶中追加 $(\mathrm{tin}(m), j)$。
+5. 对每个对象的每一层，按 $\mathrm{tin}$ 排序并对 $(\mathrm{tin},j)$ 去重；计算全局条目数组与前缀偏移。
+6. 写共享向量数组（u8 或 float）、各层条目与偏移、每节点入口/高度、树与标签。
+
+步骤 4 与构图解耦：可以把任意来源的边（不同构造器、不同参数）作为输入，只要边的端点与层已知；这使得 LES 可以与 B3/B4/B5 共享同一套边归属逻辑做公平对照。
+
+### 3.4 存储布局
+
+对每个层级 $\ell\in[0,L_{\max}]$：
+
+```
+对象 i 的层 ℓ 桶表：  [ (tin_1, j_1), (tin_2, j_2), ... ]   按 tin 升序
+全局条目数组 E_ℓ：    所有对象的条目按对象顺序拼接
+偏移 O_ℓ[n+1]：        对象 i 的条目区间 [O_ℓ[i], O_ℓ[i+1])
+```
+
+条目编码（m ≤ 256 时）：邻居 ID 4 B + 激活先序 1 B = 5 B；m ≤ 65536 用 2 B 激活。另存：
+
+- 共享向量数组：$n\times d$ 字节（SIFT 用 u8，$12.8$ MB）；
+- 每个查询节点 $u$：入口对象 $\mathrm{seed}(u)$、高度 $h(u)$（$O(m)$，可忽略）；
+- 层级、标签、树与每对象标签表。
+
+空间公式：
+
 $$
-\deg_u(i)=\bigl|\{e\ \text{incident to } i:\ M_e\cap\operatorname{subtree}(u)\neq\varnothing\}\bigr|,
+M_{\text{LES}} \approx \underbrace{n d}_{\text{向量}}
++ \sum_{\ell} E_{\text{bucket},\ell}\cdot(4+\lceil\log_2 m\rceil/8)
++ 4n(L_{\max}+1)
++ O(n+m),
 $$
-满足 $\deg_u(i)\le\sum_{m\in\operatorname{subtree}(u)}\deg_m(i)$。粗作用域扫描并集边，细作用域只扫自己的桶。
 
-这是 LES 的核心权衡：空间按去重率下降，粗查询的每跳代价按度数膨胀上升；细查询（叶、深度 2）几乎不受影响。
+对比物化 B4 的邻接 $\sum_u\sum_{i\in\mathcal D_u} \deg_u(i)$ 条条目与 $\sum_u|\mathcal D_u|$ 份向量。
 
-### 3.3 搜索算法
+### 3.5 查询算法
 
-对查询 $u$：从 $u$ 的入口对象（任一成员，构建期记录）开始，执行与 HNSW 相同的上界层贪心 + level-0 beam。区别仅在邻居枚举：`neighbors(i,u)` 读取 $i$ 的桶表中 $\mathrm{tin}\in[\mathrm{tin}(u),\mathrm{tout}(u)]$ 的连续切片。距离在共享的 uint8 向量数组上计算；visited 以全局对象 ID 标记。停止条件与 HNSW 相同（最近候选超过当前第 ef 个保留距离）。由于切片精确等于 $G_u$ 的邻接，算法语义与“在 $G_u$ 上搜索”一致；差异仅来自 $G_u$ 本身是并图，度数更大。
+单节点查询 `Search(u, q, k, ef)`：
 
-复杂度：每次弹出 $O(\log d_i+\deg_u(i))$，其中 $d_i$ 为对象桶表长度；总代价 $O(\sum \deg_u(i))$ 次距离计算，与独立图相同阶，但度数不同。
+```
+ep ← seed[u];  d ← δ(q, x_ep)
+for ℓ = h(u) down to 1:                       # 上界层贪心
+    changed ← true
+    while changed:
+        changed ← false
+        for j in Slice(ep, u, ℓ):             # 区间切片
+            dj ← δ(q, x_j)
+            if (dj, j) < (d, ep): ep ← j; d ← dj; changed ← true
+visited ← {ep}; top ← max-heap{(d, ep)}; cand ← min-heap{(d, ep)}
+while cand ≠ ∅:
+    (dc, c) ← pop-min(cand)
+    if |top| = ef and dc > max(top): break     # HNSW 终止条件
+    for j in Slice(c, u, 0):
+        if j ∈ visited: continue
+        visited ← visited ∪ {j}
+        dj ← δ(q, x_j)
+        if |top| < ef or dj < max(top):
+            push(cand, (dj, j)); push(top, (dj, j))
+            if |top| > ef: pop-max(top)
+return the k smallest (δ, id) in top
+```
 
-## 4. 基线
+`Slice(c, u, ℓ)` 在对象 $c$ 的层 $\ell$ 桶表中二分查找 $[\mathrm{tin}(u),\mathrm{tout}(u)]$ 的条目并返回邻居；同一邻居可能因多极小元出现多次，`visited` 会在搜索层去重。
 
-| 编号 | 基线 | 说明 |
+**antichain 查询.** 对 $U$ 中每个节点独立执行 `Search`，把结果按对象 ID 合并去重后取前 $k$。不能把 $U$ 的切片并起来做一次搜索：对象 $i$ 可能只在 $u_1$ 可行、对象 $j$ 只在 $u_2$ 可行，二者都在 $\mathcal D_U$ 中，但边 $(i,j)$ 的激活集不含 $u_1,u_2$，并集搜索会错误地排除它。逐节点搜索 + 合并保持正确性；$U$ 是 antichain，节点间无包含关系，但对象可重叠，合并按 ID 去重。
+
+**入口与高度.** 每个节点 $u$ 构建期记录一个成员作为入口，以及该作用域图的最大层高；上界层与 level-0 使用同一套区间切片。工程上可按作用域分组执行查询以复用缓存（B4 的做法），LES 同样适用。
+
+### 3.6 正确性
+
+**引理 1（切片精确性）** 对任意节点 $u$ 与对象 $i$，
+
+$$
+\{j\mid (\mathrm{tin}(u)\le \mathrm{tin}(m)\le \mathrm{tout}(u))\ \text{for some entry } (m,j)\ \text{of } i\}
+=\{j\mid i,j\in\mathcal D_u\}.
+$$
+
+*证明.* （$\subseteq$）条目 $(m,j)$ 存在说明 $m\in\min(M_{(i,j)})\subseteq A_i\cap A_j$。$m\in\operatorname{subtree}(u)$ 即 $u\in\operatorname{Anc}^{+}(m)$；由向上封闭性 $u\in A_i\cap A_j$，故 $i,j\in\mathcal D_u$。
+（$\supseteq$）若 $i,j\in\mathcal D_u$，则 $u\in M_{(i,j)}$。从 $u$ 出发不断走向仍在 $M_{(i,j)}$ 中的子节点，必停在某个极小元 $m\in\operatorname{Desc}^{+}(u)$；于是该边被存入 $m$ 的桶，且 $\mathrm{tin}(m)\in[\mathrm{tin}(u),\mathrm{tout}(u)]$。$\square$
+
+**引理 2（无假阳性）** 搜索中对任意弹出的对象 $c$，`Slice(c,u,0)` 返回的每个邻居 $j$ 都满足 $j\in\mathcal D_U$（单节点时 $j\in\mathcal D_u$）。
+
+由引理 1 直接得到。
+
+**定理 1（查询语义）** 单节点查询在 LES 上执行的 beam search，与在“边集为所有已构建边中两端都在 $\mathcal D_u$ 的边”的图上执行同参数 beam search 得到相同候选访问序列；antichain 查询的结果是各 $u\in U$ 搜索结果的并集去重。过滤与去重精确，近似只来自 beam 的 $ef$ 截断。
+
+*证明.* 由引理 1，每次弹出的邻居集合相同，距离与堆操作相同，故访问序列一致。antichain 情形：$\mathcal D_U=\bigcup_u\mathcal D_u$，逐节点搜索覆盖各自的可行集，合并按 ID 去重后覆盖并集；每条结果都满足某个 $u$ 的可行性，故满足 $\mathcal D_U$。$\square$
+
+**注.** LES 的图 $G_u$ 是“所有已构建边中在 $u$ 可行的边”的并，通常比“为 $u$ 单独构图”的 $G_u^{B4}$ 度数更大（§6.2 实测 1.0–1.9×）。因此定理保证的是 LES 自身图上的搜索语义，与 B4 的召回差异是经验问题，不是正确性问题。
+
+### 3.7 复杂度
+
+**构建.** 设 $E_{\text{obs}}=\sum_u|E(G_u)|$ 为各作用域独立图的边数。LES 构建包括：逐作用域构图（可用任意图构造器，本工作用 HNSW）；对每条观测边计算 $A_i\cap A_j$ 与极小元（$O(|A_i|+|A_j|)$ 或位运算 $O(m/64)$）；按对象排序去重（$\sum_i d_i\log d_i$）。总时间 $O(\text{构图}+E_{\text{obs}}\cdot m/64+\sum d_i\log d_i)$。
+
+**空间.** 见 §3.4 公式。关键量是桶条目数 $E_{\text{bucket}}=\sum_{e\in E_{\text{uniq}}}|\min(M_e)|$；多重度通常接近 1（实测 1.045）。
+
+**查询.** 每次弹出：一次二分（$O(\log d_i)$）+ 扫描 $\deg_u(i)$ 个条目；距离计算次数等于访问对象数。度数上界
+
+$$
+\deg_u(i)\le\sum_{m\in\operatorname{subtree}(u)}\deg_m(i),
+$$
+
+最坏为子树内所有作用域度数之和；叶查询只扫自身桶，粗查询扫并集。
+
+### 3.8 与基线的结构对比
+
+| 维度 | 全局过滤 B2 | 逐标签 B3 | 逐作用域物化 B4 | LES |
+|---|---|---|---|---|
+| 查询期谓词 | 有 | 有（多索引合并） | 无 | 无 |
+| 边重复 | 无 | 对象跨标签重复 | 每个祖先作用域重复 | 按最小激活去重 |
+| 向量重复 | 1× | 每标签 1× | 每作用域 1× | 1× |
+| 粗查询代价 | 选择率低时退化 | 索引数 × 搜索 | 一次搜索 | 一次搜索，度数更大 |
+| 细查询代价 | 候选浪费 | 一次搜索 | 一次搜索 | 一次搜索，度数接近 |
+| antichain | 过滤并集 | 多索引合并 | 多索引合并 | 多索引合并 |
+
+### 3.9 参数与实现选择
+
+- **边来源.** LES 的边可以从任意作用域图构造器获得；本文用 B4 的 HNSW 图（$M=24$、$efC=200$、level-0 截断到最近 24 条），以便与最强基线直接对照。
+- **层.** 上界层同样按激活分桶；层高与入口按作用域记录。上界层条目很少，仍计入空间。
+- **$ef$.** LES 的度数比 B4 大，达到同样召回所需 $ef$ 可能不同；需按召回-吞吐曲线选择，而不是沿用 B4 的 21。
+- **距离核.** SIFT 用 uint8 精确平方 L2；通用浮点数据可直接存 float，结构不变。
+- **大树的位集.** $m$ 很大时，$A_i$ 用有序祖先列表或压缩位图，$M_e$ 的交集与极小元提取按小集合做；桶条目的激活先序用 2–4 B。
+
+---
+
+## 4 基线
+
+| 编号 | 基线 | 为什么是强基线 |
 |---|---|---|
-| B1 | 精确扫描 | 倒排/位图得到 $\mathcal D_U$，逐点计算距离；召回 1.0，代价随 $\vert\mathcal D_U\vert$ 线性 |
-| B2 | 全局 HNSW + 后过滤 | 单图 + 谓词过滤；`ef` 随选择率放大；低选择率退化 |
-| B3 | 逐标签 HNSW + 合并 | 每个直接标签一个索引，查询子树内全部标签索引并合并；粗查询启动次数多 |
-| B4 | 逐作用域物化 HNSW | 每个树节点一个独立图，无查询期过滤；本文的强基线（原工程实现） |
-| B5 | 段树共享图（iRangeGraph 风格） | 计划中；用于检验 LES 与已有共享机制的区别 |
+| B1 | 精确扫描 | 召回 1.0；可行集不大时非常快；检验近似方法是否值得 |
+| B2 | 全局 HNSW + 过滤/小范围扫描 | 工业常见做法；小范围精确、粗范围图搜索 |
+| B3 | 逐标签 HNSW + 合并 | 直接利用标签分区；粗查询扇出是其主要成本 |
+| B4 | 逐作用域物化 HNSW | 与 LES 同语义的无过滤图搜索；当前最强（94,698 qps） |
+| B5 | 段树共享图（iRangeGraph 风格） | 与 LES 最接近的共享机制，用于界定 LES 的增量 |
 
-B4 的工程实现（uint8 精确距离、PC1 布局、向量前置紧凑块、最近 M 截断、预取）只作为基线效率，不作为贡献。
+B4 的工程优化（uint8、紧凑块、预取）只用于让基线足够强，不作为方法贡献。
 
-## 5. 实验协议
+## 5 实验协议
 
-固定 SIFT100k、85 节点 4 叉深度 3 的层级、每对象 1–3 个直接标签（属性与几何相关）、1000 条混合查询（8% 根、20% 深度 1、38% 深度 2、16% 叶、18% 双/三节点 antichain）、k=10。精确 oracle 离线计算；返回 ID 必须可行、无重复。指标：`qps_at_r95`（Recall@10 ≥ 0.95 且零违规时的吞吐）、Recall@10、p95、索引字节、构建时间。详见[基准协议](../benchmark-protocol.md)。
+固定 SIFT100k、85 节点 4 叉深度 3 层级、每对象 1–3 个直接标签（属性与几何相关）、1000 条查询（8% 根、20% 深度 1、38% 深度 2、16% 叶、18% 双/三节点 antichain）、$k=10$。精确 oracle 离线计算；返回 ID 必须可行、无重复。指标见 §2.4。详见[基准协议](../benchmark-protocol.md)。
 
-## 6. 结果
+## 6 当前结果
 
 ### 6.1 基线（已测）
 
 | 方法 | qps | Recall@10 | p95 | 索引 | 构建 |
 |---|---:|---:|---:|---:|---:|
 | B1 精确扫描 | ≈1,400 | 1.0 | ms 级 | 64 MB | 0 |
-| B2 全局 HNSW + 过滤/小范围扫描 | 3,104 | 0.9987 | 0.83 ms | 64 MB | 16 s |
-| B4 逐作用域物化 HNSW | **94,698** | 0.9570 | 20.9 µs | 83 MB | 30.8 s |
+| B2 全局 HNSW + 过滤/扫描 | 3,104 | 0.9987 | 0.83 ms | 64 MB | 16 s |
+| B4 逐作用域物化 | **94,698** | 0.9570 | 20.9 µs | 83 MB | 30.8 s |
 
-B4 的数字为确定性查询结果，主机吞吐抖动 ±5%。B3 与 B5 尚未实现；这是本文当前的主要缺口。
+B4 为确定性结果，主机吞吐抖动 ±5%。B3、B5 与 LES 查询原型尚未实现。
 
-### 6.2 LES 的空间/度数分析（已测）
+### 6.2 LES 空间/度数分析（已测）
 
-在 B4 的 85 个作用域图上（每作用域按最近 24 条截断），用 `les_analysis.cpp` 计算：
+用 `les_analysis.cpp` 在 B4 的 85 个作用域图（level-0 截断到最近 24）上统计：
 
 | 指标 | 数值 |
 |---|---:|
 | 观测有向边（各作用域之和） | 7,602,554 |
-| 去重后有向边 | 3,658,543 |
+| 唯一有向边 | 3,658,543 |
 | 重复比例 | 51.9% |
+| 桶条目（按最小激活） | 3,822,159 |
+| 激活多重度 | 1.045 |
 | 每作用域平均出度 | 13.0–20.9 |
-| 根作用域切片平均出度 | 36.59（膨胀 1.9×） |
+| 根切片平均出度 | 36.59（1.9×） |
 | 深度 1 切片平均出度 | 25.5–31.8（1.3–1.6×） |
-| 深度 2 / 叶 | 约 17–27 / 与独立图接近 |
+| 深度 2 / 叶 | 约 17–27 / 接近独立图 |
 
-即：边存储可减半，向量从按成员重复（约 51 MB）降为每对象一份（12.8 MB）；代价是根查询每跳扫描约 1.9× 邻居。考虑桶表偏移与激活标记，LES 的常驻空间估算约 30–35 MB（B4 为 83 MB）。端到端 qps/召回尚未测量。
+空间估算：条目 $3.82\text{M}\times5\text{B}\approx19.1$ MB，向量 12.8 MB，偏移约 0.4 MB，树/标签/入口约 1 MB，合计约 **33 MB**，对比 B4 的 83 MB。代价是根作用域每跳平均多扫约 17 个邻居。
 
 ### 6.3 待补实验
 
-1. 实现 LES 构建（边→桶、preorder 区间）与查询原型，测 `qps_at_r95` 与 Recall；
+1. 实现 LES 构建（边→最小激活桶、按对象排序）与查询原型，测 `qps_at_r95`；
 2. 实现 B3（逐标签）与 B5（段树共享）作为强对照；
-3. 用相同 ef 扫描比较 B4/LES 的召回-吞吐曲线，验证“空间减半、粗查询变慢”的边界；
+3. 在同一召回门限下比较 B4/LES 的召回-吞吐曲线，验证“空间约减半、粗查询变慢”的边界；
 4. 1M 规模复核空间与构建时间。
 
-## 7. 讨论与局限
+## 7 效度威胁与局限
 
-- LES 与 iRangeGraph/UNG 的关系需要逐机制对照；当前不能声称新颖性成立。
-- “并图”会使粗作用域的度数高于独立图，可能提高召回但增加每跳代价；净效果取决于查询混合比例，这正是 RQ2。
-- 本文当前只有 B1/B2/B4 的完整测量与 LES 的空间分析；LES 搜索、B3/B5 是未完成部分，不应在论文中当作已验证结果。
-- 单机单线程、静态数据、合成属性；未覆盖更新、并发、缓存与真实目录数据。
+- **未完成的评测。** LES 只有空间/度数分析，没有端到端查询结果；B3/B5 未实现。本文不能据此宣称 LES 更快或更优。
+- **新颖性未确认。** LES 与 iRangeGraph 的段树单元图、UNG 的标签导航图在“共享边”上目标相近；必须先做逐机制对照，才能判断区间切片 + 最小激活分桶是否有独立贡献。
+- **合成层级。** 属性由向量分布导出，与真实目录的标签相关性可能不同；重叠度 $\mu$ 与工作负载混合比例会改变 LES 的收益。
+- **规模。** 仅 100k；LES 的构建需要枚举各作用域图的全部边，1M 规模下构建时间与内存需实测。
+- **单线程、静态。** 未覆盖并发、更新、删除与缓存；这些会改变空间与维护成本。
+
+## 8 相关工作定位（简）
+
+过滤 ANN：Filtered-DiskANN、ACORN、UNG、Curator 研究谓词与几何的联合导航。范围/嵌套索引：iRangeGraph 用 segment-tree 单元图在范围查询间复用边。多属性图：JAG 共享导航边。LES 的差异候选是：面向层状子树并集与多标签去重，按最小激活节点做**边级**去重，并以先序区间切片实现**查询期零谓词**的精确邻接。该差异是否构成独立贡献，需完成 §6.3 的对照实验后再判断。
+
+---
 
 ## 附录 A：强基线 B4 的实现与消融摘要
 
-B4 的工程细节仅用于说明基线强度，不构成方法贡献。每作用域独立图在构建期由 hnswlib 生成，查询期使用自定义紧凑格式：
+B4 每作用域独立构图（hnswlib），查询期使用自定义紧凑格式：u8 精确距离（SIFT 整数值，元素块 656→226 B）、向量前置块布局、level-0 截断到最近 24 条（226→178 B，索引 108→83 MB）、作用域分组执行、邻居块与弹出候选两处预取。参数 $M=24$、$efC=200$、$ef=21$。
 
-- uint8 精确距离：SIFT 取值为 0–255 的整数，int32 累加平方 L2 上界 $128\cdot255^2<2^{24}$，float 转换精确；元素块从 656 B 降到 226 B。
-- 向量前置块布局：向量 128 B 在块首，随后是 uint16 计数与邻居；距离所需缓存行与块首重合。
-- 最近 M 条邻居：level-0 平均出度 21.2（2M=48 槽），按距离排序后只存最近 24 条，块 226→178 B，索引 108→83 MB。
-- 作用域分组执行与两处软件预取（邻居向量行、弹出候选的邻接行）。
-- 参数 M=24、efC=200、ef=21。
+消融（交错测量，同一工作组）：分组执行约 +35%；u8 约 +38%；PC1 布局约 +5%；紧凑块 + 预取至 86,788 qps；截断与 $ef=21$ 至 94,698 qps。负结果：共享向量、变量长度邻接、小范围扫描、透明大页、两查询交错 beam、多 seed、按作用域分配 $ef$、循环展开，均中性或更差。两查询交错实验中发现共享 visited 数组会被并发搜索覆盖 generation，必须使用私有 visited；最终实现为单查询顺序执行。
 
-消融（交错测量，同一 SIFT100k 工作组）：
+## 复现
 
-| 变更 | 吞吐 | 召回 | 结论 |
-|---|---:|---:|---|
-| 全局过滤 + 小范围扫描 | 3,104 | 0.9987 | 基线 |
-| 逐作用域物化（float，逐查询） | 17,683 | 0.9948 | 物化本身收益大 |
-| + 作用域分组执行 | ≈+35% | 不变 | 缓存局部性 |
-| + uint8 精确距离 | ≈+38% | 不变 | 带宽与核 |
-| + PC1 内部 ID 布局 | ≈+5% | 不变 | 地址局部性 |
-| + 紧凑块 + 预取 | 86,788 | 0.9609 | 系统优化 |
-| + 最近 M 截断、ef=21 | 94,698 | 0.9570 | 最终基线 |
+```bash
+# 基准
+bash autoresearch.sh
 
-负结果：共享向量（第二随机流）、变量长度邻接（偏移间接）、小范围扫描、transparent huge pages、两查询交错 beam、多 seed、按作用域分配 ef、2 路循环展开，均中性或更差。两查询交错实验中发现共享 visited 数组会被并发搜索互相覆盖 generation，必须使用私有 visited；最终实现为单查询顺序执行。
+# LES 分析
+g++ -O2 -std=c++17 production/nested-attr-vector-search/src/les_analysis.cpp -o /tmp/les_analysis
+/tmp/les_analysis --meta production/nested-attr-vector-search/work/fixtures/meta.txt \
+  --tree production/nested-attr-vector-search/work/fixtures/tree.txt \
+  --labels production/nested-attr-vector-search/work/fixtures/labels.bin \
+  --index-dir production/nested-attr-vector-search/work/index
+```
 
-## 8. 代码与复现
-
-- `production/nested-attr-vector-search/src/prep.cpp`：层级、标签、工作组与精确 oracle。
-- `production/nested-attr-vector-search/src/baseline.cpp`：B2/B4 候选（构建 = 逐作用域构图 + 紧凑导出；查询 = 分组 beam + 预取）。
-- `production/nested-attr-vector-search/src/les_analysis.cpp`：LES 边去重与切片度数分析。
-- `production/nested-attr-vector-search/src/harness.py`：固定基准、计时、oracle 复核。
-- 入口：`bash autoresearch.sh`；分析工具：
-  ```bash
-  g++ -O2 -std=c++17 production/nested-attr-vector-search/src/les_analysis.cpp -o /tmp/les_analysis
-  /tmp/les_analysis --meta production/nested-attr-vector-search/work/fixtures/meta.txt \
-    --tree production/nested-attr-vector-search/work/fixtures/tree.txt \
-    --labels production/nested-attr-vector-search/work/fixtures/labels.bin \
-    --index-dir production/nested-attr-vector-search/work/index
-  ```
+代码：`production/nested-attr-vector-search/src/{prep.cpp,baseline.cpp,les_analysis.cpp,harness.py}`；协议：[../benchmark-protocol.md](../benchmark-protocol.md)。

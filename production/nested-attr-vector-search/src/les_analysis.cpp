@@ -92,11 +92,16 @@ int main(int argc, char** argv) {
     g >> labels_n >> L;
   }
   std::vector<int> parent(nodes, -1);
+  std::vector<std::vector<int>> children(nodes);
   {
     std::ifstream f(a.tree);
     int m;
     f >> m;
-    for (int i = 0; i < m; ++i) { int id, p; f >> id >> p; parent[id] = p; }
+    for (int i = 0; i < m; ++i) {
+      int id, p; f >> id >> p;
+      parent[id] = p;
+      if (p >= 0) children[p].push_back(id);
+    }
   }
   std::vector<int32_t> labels = read_bin<int32_t>(a.labels, size_t(n) * L);
 
@@ -119,7 +124,7 @@ int main(int argc, char** argv) {
 
   std::unordered_set<uint64_t> unique_edges;
   unique_edges.reserve(1 << 22);
-  uint64_t observed = 0, bad_edges = 0, dup = 0;
+  uint64_t observed = 0, bad_edges = 0, dup = 0, bucket_entries = 0;
   std::vector<uint64_t> per_scope_deg_sum(nodes, 0);
   std::vector<uint32_t> per_scope_elems(nodes, 0);
 
@@ -163,8 +168,15 @@ int main(int argc, char** argv) {
         if (inter.popcount() == 0) { ++bad_edges; continue; }
         uint64_t key = (uint64_t(i) << 32) | j;
         if (!unique_edges.insert(key).second) { ++dup; continue; }
-        for (int u = 0; u < nodes; ++u)
-          if (inter.test(u)) ++deg[size_t(u) * n + i];
+        for (int u = 0; u < nodes; ++u) {
+          if (!inter.test(u)) continue;
+          ++deg[size_t(u) * n + i];
+          bool minimal = true;
+          for (int c : children[u]) {
+            if (inter.test(c)) { minimal = false; break; }
+          }
+          if (minimal) ++bucket_entries;
+        }
       }
     }
   }
@@ -175,6 +187,10 @@ int main(int argc, char** argv) {
   std::printf("duplicate_fraction %.3f\n",
               observed ? double(dup) / double(observed) : 0.0);
   std::printf("inconsistent_edges %llu\n", (unsigned long long)bad_edges);
+  std::printf("bucket_entries %llu (multiplicity %.3f)\n",
+              (unsigned long long)bucket_entries,
+              unique_edges.empty() ? 0.0
+                                   : double(bucket_entries) / unique_edges.size());
   std::printf("per_scope_mean_degree:");
   for (int v = 0; v < nodes; ++v) {
     if (!per_scope_elems[v]) continue;
