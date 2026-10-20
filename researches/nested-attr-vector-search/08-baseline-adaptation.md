@@ -72,8 +72,22 @@ PathSeer 的 benchmark 已有 build/search 循环，但数据集与谓词名是�
 
 ### 3.3 构建与验证
 
-- FAISS fork 需要 CMake + BLAS；本机有 g++ 15、CMake 4.2、10 核，构建可行但耗时。
-- Rust DiskANN 需要先安装 `cargo`；不优先。
+**FAISS fork 已在本机构建成功（2026-10-21）**：
+
+```bash
+cd .tmp/PathSeer/faiss
+# CMake 4.x 需要兼容旧依赖的 policy；NaviX.cpp 缺少 <array> include，需在克隆中补一行
+cmake -DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF -DBUILD_TESTING=OFF \
+      -DBUILD_SHARED_LIBS=ON -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_CXX_FLAGS="-march=native" -B build
+make -C build -j10 faiss          # -> build/faiss/libfaiss.so
+```
+
+构建修复只涉及克隆副本，不修改本研究仓库：CMake 兼容参数 + 在 `faiss/impl/NaviX.cpp` 顶部补 `#include <array>`。
+
+**过滤接口已确认**：ACORN 的 `SearchParametersACORN` 与 FAISS HNSW 的 `SearchParameters` 都接受 `IDSelector*`；`IDSelectorBitmap(size_t n, const uint8_t*)` 在 `faiss/impl/IDSelector.h` 中。因此两种模式只需为每个查询提供一个可行位图，**无需改算法或标签编码**。`IndexACORNFlat(d, M, gamma, metadata, M_beta, METRIC_L2)` 的 `metadata` 是构图用的每向量整数标签；若只用位图谓词，可用占位 metadata（构造出的图不做过滤感知剪枝），这会在结果中标注为“filter-agnostic ACORN”而不是完整复现。
+
+- Rust DiskANN 需要先安装 `cargo`；当前环境没有，不优先。
 - 每个基线的召回必须用我们的 oracle 复核；PathSeer 的 golden 只作交叉检查。
 - 过滤成本口径：位图构造时间单独报告；系统内部的谓词求值计入查询时间。
 
@@ -90,7 +104,7 @@ PathSeer 的 benchmark 已有 build/search 循环，但数据集与谓词名是�
 
 **未完成**
 
-- ACORN / Filtered-HNSW / NaviX / PathSeer 的 FAISS 构建与驱动；
+- ACORN / Filtered-HNSW / NaviX / PathSeer 的**驱动与测量**（FAISS 已构建；下一步写一个最小驱动，用 `IDSelectorBitmap` 传入我们的可行位图，在 1000 条 Subtree 查询上跑 ACORN 与 FAISS-HNSW）；
 - iRangeGraph、ELI、RWalks 的适配；
 - 位图构造时间、峰值内存与后代标签展开成本的独立计量；
 - 真实 CCS/SciHTC 标签（当前为校准后的合成标签）。
