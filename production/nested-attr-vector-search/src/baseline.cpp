@@ -28,6 +28,7 @@ namespace {
 
 struct Args {
   std::string mode, base, tree, labels, meta, index_dir, queries, workload, out, timings;
+  std::string query_mode = "subtree";
   int repeats = 1;
 };
 
@@ -48,6 +49,7 @@ Args parse(int argc, char** argv) {
     else if (f == "--out") a.out = next();
     else if (f == "--timings") a.timings = next();
     else if (f == "--repeats") a.repeats = std::stoi(next());
+    else if (f == "--mode") a.query_mode = next();
     else { std::cerr << "unknown arg " << f << "\n"; std::exit(2); }
   }
   return a;
@@ -402,7 +404,14 @@ int main(int argc, char** argv) {
     Meta m = read_meta(args.meta);
     TreeData tree;
     tree.load(args.tree);
-    std::vector<int32_t> labels = read_bin<int32_t>(args.labels, size_t(m.n) * 3);
+    int L = 3;
+    {
+      std::string lm = args.labels;
+      auto slash = lm.find_last_of('/');
+      std::ifstream lf(lm.substr(0, slash + 1) + "labels_meta.txt");
+      if (lf) { int ln = 0; lf >> ln >> L; }
+    }
+    std::vector<int32_t> labels = read_bin<int32_t>(args.labels, size_t(m.n) * L);
     std::vector<float> base_f = read_bin<float>(args.base, size_t(m.n) * m.dim);
     std::vector<uint8_t> base(size_t(m.n) * m.dim);
     for (size_t i = 0; i < base.size(); ++i) base[i] = to_u8(base_f[i]);
@@ -410,8 +419,8 @@ int main(int argc, char** argv) {
     // Exact feasible set per node: walk each direct label up to the root.
     std::vector<std::vector<uint32_t>> members(m.nodes);
     for (int i = 0; i < m.n; ++i) {
-      for (int j = 0; j < 3; ++j) {
-        int l = labels[size_t(i) * 3 + j];
+      for (int j = 0; j < L; ++j) {
+        int l = labels[size_t(i) * L + j];
         for (int v = l; v >= 0; v = tree.parent[v]) members[v].push_back(uint32_t(i));
       }
     }
@@ -504,6 +513,67 @@ int main(int argc, char** argv) {
       wf >> w;
       qnodes[qi].resize(w);
       for (int t = 0; t < w; ++t) wf >> qnodes[qi][t];
+    }
+
+    if (args.query_mode == "exact") {
+      // Exact mode: direct-label postings + exact scan. Pure baseline, no graph.
+      int L = 3;
+      {
+        std::string lm = args.labels;
+        auto slash = lm.find_last_of('/');
+        std::ifstream lf2(lm.substr(0, slash + 1) + "labels_meta.txt");
+        if (lf2) { int ln = 0; lf2 >> ln >> L; }
+      }
+      std::vector<int32_t> lab = read_bin<int32_t>(args.labels, size_t(m.n) * L);
+      std::vector<std::vector<uint32_t>> post(m.nodes);
+      for (int i = 0; i < m.n; ++i)
+        for (int j = 0; j < L; ++j) {
+          int l = lab[size_t(i) * L + j];
+          if (l >= 0) post[l].push_back(uint32_t(i));
+        }
+      std::vector<float> base_f = read_bin<float>(args.base, size_t(m.n) * m.dim);
+      std::vector<uint8_t> base8(base_f.size());
+      for (size_t t = 0; t < base_f.size(); ++t) base8[t] = to_u8(base_f[t]);
+      std::vector<uint32_t> stamp(m.n, 0);
+      uint32_t gen = 0;
+      std::vector<int32_t> ids(size_t(nq) * k, -1);
+      std::vector<double> timings(nq, 0.0);
+      double best = 1e300;
+      for (int rep = 0; rep < args.repeats; ++rep) {
+        auto rep_start = std::chrono::steady_clock::now();
+        for (int qi = 0; qi < nq; ++qi) {
+          if (++gen == 0) { std::fill(stamp.begin(), stamp.end(), 0); gen = 1; }
+          auto t0 = std::chrono::steady_clock::now();
+          const uint8_t* q = &queries[size_t(qi) * m.dim];
+          std::priority_queue<Cand, std::vector<Cand>, Worse> heap;
+          for (int u : qnodes[qi]) {
+            for (uint32_t id : post[u]) {
+              if (stamp[id] == gen) continue;
+              stamp[id] = gen;
+              float d = u8_l2(q, &base8[size_t(id) * m.dim], m.dim);
+              if (int(heap.size()) < k) heap.push({d, int(id)});
+              else {
+                Cand w = heap.top();
+                if (d < w.d || (d == w.d && int(id) < w.id)) { heap.pop(); heap.push({d, int(id)}); }
+              }
+            }
+          }
+          std::vector<Cand> out;
+          while (!heap.empty()) { out.push_back(heap.top()); heap.pop(); }
+          std::reverse(out.begin(), out.end());
+          int32_t* row = &ids[size_t(qi) * k];
+          std::fill(row, row + k, -1);
+          for (int t = 0; t < k && t < int(out.size()); ++t) row[t] = out[t].id;
+          auto t1 = std::chrono::steady_clock::now();
+          timings[qi] = std::chrono::duration<double, std::milli>(t1 - t0).count();
+        }
+        auto rep_end = std::chrono::steady_clock::now();
+        best = std::min(best, std::chrono::duration<double>(rep_end - rep_start).count());
+      }
+      write_bin(args.out, ids);
+      write_bin(args.timings, timings);
+      std::printf("QUERY_SECONDS %.9f\n", best);
+      return 0;
     }
 
     std::vector<InlineGraph<uint16_t>> ci16(m.nodes);

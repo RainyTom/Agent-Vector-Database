@@ -2,7 +2,7 @@
 
 ## 基准与实现结果
 
-当前测量入口见[基准协议](benchmark-protocol.md)；研究草案、问题定义与提出的共享索引见[Laminar Edge Sharing](07-laminar-edge-sharing/README.md)。该结果不改变下方六个方向的停止/暂停决定。
+当前测量入口见[基准协议](benchmark-protocol.md)；研究草案、问题定义与提出的共享索引见[Laminar Edge Sharing](07-laminar-edge-sharing/README.md)；开源过滤 ANN 基线的改造评估见[基线改造](08-baseline-adaptation.md)。该结果不改变下方六个方向的停止/暂停决定。
 
 ## 子方向方案入口
 
