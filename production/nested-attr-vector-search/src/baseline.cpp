@@ -515,7 +515,7 @@ int main(int argc, char** argv) {
       for (int t = 0; t < w; ++t) wf >> qnodes[qi][t];
     }
 
-    if (args.query_mode == "exact") {
+    if (args.query_mode == "exact" || args.query_mode == "subtree_scan") {
       // Exact mode: direct-label postings + exact scan. Pure baseline, no graph.
       int L = 3;
       {
@@ -546,7 +546,18 @@ int main(int argc, char** argv) {
           auto t0 = std::chrono::steady_clock::now();
           const uint8_t* q = &queries[size_t(qi) * m.dim];
           std::priority_queue<Cand, std::vector<Cand>, Worse> heap;
-          for (int u : qnodes[qi]) {
+          std::vector<int> scope_nodes;
+          if (args.query_mode == "subtree_scan") {
+            std::vector<int> st = qnodes[qi];
+            while (!st.empty()) {
+              int v = st.back(); st.pop_back();
+              scope_nodes.push_back(v);
+              for (int c : tree.children[v]) st.push_back(c);
+            }
+          } else {
+            scope_nodes = qnodes[qi];
+          }
+          for (int u : scope_nodes) {
             for (uint32_t id : post[u]) {
               if (stamp[id] == gen) continue;
               stamp[id] = gen;

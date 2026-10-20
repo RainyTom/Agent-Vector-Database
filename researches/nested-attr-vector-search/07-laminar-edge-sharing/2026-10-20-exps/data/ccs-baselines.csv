@@ -1,0 +1,18 @@
+method,config,ef,build_s,qps,recall_at_10,p95_ms,index_mb,threads,note
+B0_subtree_scan,exact,0,0,3008.5,1.0000,1.1565,51,1,exact scan over descendant labels
+B4_per_scope,M24/efc200,21,57.0,74706,0.9641,0.0284,194,1,per-scope materialized graphs
+filtered_hnsw,M32/efc200,64,5.33,5020,0.7986,0.3167,74.8,multi-build,FAISS HNSW + bitmap selector
+filtered_hnsw,M32/efc200,128,5.10,3050,0.8730,0.4736,74.8,multi-build,
+filtered_hnsw,M32/efc200,256,4.86,1912,0.9281,0.7548,74.8,multi-build,
+filtered_hnsw,M32/efc200,320,5.21,1460,0.9390,0.9915,74.8,multi-build,
+filtered_hnsw,M32/efc200,384,4.83,1282,0.9524,1.0686,74.8,multi-build,lowest ef passing 0.95
+filtered_hnsw,M32/efc200,448,4.99,1136,0.9592,1.2595,74.8,multi-build,
+filtered_hnsw,M32/efc200,512,4.99,991,0.9642,1.5339,74.8,multi-build,matched recall with B4
+filtered_hnsw,M32/efc200,1024,4.86,537,0.9844,2.6345,74.8,multi-build,
+acorn_placeholder,M32/g1/b4,128,0.93,2021,0.8152,0.7458,70.2,multi-build,metadata all zero: filter-agnostic construction
+acorn_placeholder,M32/g1/b4,256,0.89,1170,0.8231,1.2994,70.2,multi-build,
+acorn_placeholder,M32/g1/b4,512,0.81,659,0.8415,2.3264,70.2,multi-build,
+acorn_placeholder,M32/g1/b4,1024,0.81,394,0.8479,3.8488,70.2,multi-build,cannot reach 0.95
+acorn_primary_meta,M32/g1/b4,128,0.90,1956,0.8131,0.7705,70.2,multi-build,primary direct label as metadata (single-label encoding)
+acorn_primary_meta,M32/g1/b4,512,0.89,620,0.8395,2.4774,70.2,multi-build,single-label metadata does not recover recall
+B0_exact_scan,exact,0,0,191914,1.0000,0.0113,51,1,exact mode; direct-label postings

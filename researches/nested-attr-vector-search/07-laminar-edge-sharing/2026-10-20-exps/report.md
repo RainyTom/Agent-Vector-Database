@@ -1,6 +1,6 @@
 # 研究日志 2026-10-20：层级 Exact/Subtree 检索与 LES
 
-方向：`07-laminar-edge-sharing`（层级属性过滤向量检索）。本文记录当日的实验、数据与结论；长期方案见[研究草案](../../README.md)，基线调研见[基线改造](../../baseline-adaptation.md)，评测协议见[基准协议](../../benchmark-protocol.md)。
+方向：`07-laminar-edge-sharing`（层级属性过滤向量检索）。本文记录当日的实验、数据与结论；长期方案见[研究草案](../README.md)，基线调研见[基线改造](../baseline-adaptation.md)，评测协议见[基准协议](../benchmark-protocol.md)。
 
 ## 0. 当日目标
 
@@ -66,9 +66,22 @@
 
 结论：Exact/Subtree 都能归约为“每查询可行位图”；ACORN 与 FAISS HNSW 的 `SearchParameters` 接受 `IDSelector*`，`IDSelectorBitmap` 直接可用。因此主要工作是把我们的标签/树转换成位图，而不是改算法。
 
-已核验代码：ACORN、Filtered-DiskANN（本地 Rust）、Filtered-HNSW/NaviX/PathSeer（PathSeer FAISS fork）、iRangeGraph、ELI/LabelANN、RWalks、DLH；LSSG/Curator/Packing/Tag-filtered 未找到公开代码。完整表与优先级见[基线改造](../../baseline-adaptation.md)。
+已核验代码：ACORN、Filtered-DiskANN（本地 Rust）、Filtered-HNSW/NaviX/PathSeer（PathSeer FAISS fork）、iRangeGraph、ELI/LabelANN、RWalks、DLH；LSSG/Curator/Packing/Tag-filtered 未找到公开代码。完整表与优先级见[基线改造](../baseline-adaptation.md)。
 
 已在本机构建 PathSeer 的 FAISS fork（`libfaiss.so`），构建修复与接口记录见 [`experiments/faiss-build.md`](experiments/faiss-build.md)。ACORN/Filtered-HNSW 的驱动尚未完成。
+
+### 4.1 实测：Filtered-HNSW 与 ACORN（同 1000 条 Subtree 查询）
+
+| 方法 | ef | qps | Recall@10 | p95 | 索引 | 构建 |
+|---|---:|---:|---:|---:|---:|---:|
+| B0 Subtree 精确扫描 | – | 3,008 | 1.0000 | 1.16 ms | 51 MB | 0 |
+| B4 逐作用域物化 | 21 | **74,706** | 0.9641 | 28 µs | 194 MB | 57 s |
+| Filtered-HNSW | 384 | **1,282** | **0.9524** | 1.07 ms | 75 MB | 4.8 s（多线程） |
+| Filtered-HNSW | 512 | 991 | 0.9642 | 1.53 ms | 75 MB | 5.0 s |
+| ACORN（占位 metadata） | 1024 | 394 | 0.8479 | 3.85 ms | 70 MB | 0.8 s |
+| ACORN（主标签 metadata） | 512 | 620 | 0.8395 | 2.48 ms | 70 MB | 0.9 s |
+
+同召回（约 0.964）下 B4 比 Filtered-HNSW 快约 75×，比精确扫描快约 25×；代价是 2.6× 索引字节。ACORN 的位图改造版无法达到 0.95 召回（最高 0.848），必须标注为未使用层级构图的变体。位图预计算 7–8 µs/query。细节与公平性说明见 [`experiments/pathseer-filtered-ann.md`](experiments/pathseer-filtered-ann.md)。
 
 ## 5. 当日结论
 
@@ -76,6 +89,7 @@
 2. Exact 语义在小作用域下不需要图：精确扫描 191.9k qps、召回 1.0。双语义设计必须采用自适应执行（小作用域扫描/大作用域图）。
 3. LES 的边去重可减半 level-0 存储，但会增加粗作用域的度数；端到端收益未测。
 4. 合并不同作用域的上界层会破坏分层不变量；LES v1 只共享 level-0，这是必须写进论文的正确性边界。
+5. 开源过滤 ANN 对照已跑通：Filtered-HNSW 在 0.9524 召回时 1,282 qps；filter-agnostic ACORN 达不到门槛。B4 的优势需要补同内存预算对照。
 5. “综述直属中间节点”只是待验证假设；Exact 的定义仅为直接标注，不能反推体裁。
 
 ## 6. 下一步
@@ -90,4 +104,4 @@
 - 代码：`production/nested-attr-vector-search/src/{prep.cpp,prep_ccs.py,baseline.cpp,les_analysis.cpp,eval_ccs.py,harness.py}`
 - 数据：[`data/primary-progression.csv`](data/primary-progression.csv)、[`data/les-analysis.txt`](data/les-analysis.txt)、[`data/ccs-stats.json`](data/ccs-stats.json)、[`data/ccs-results.csv`](data/ccs-results.csv)
 - 实验记录：[`experiments/faiss-build.md`](experiments/faiss-build.md)
-- 长期文档：[研究草案](../../README.md)、[基线改造](../../baseline-adaptation.md)、[基准协议](../../benchmark-protocol.md)
+- 长期文档：[研究草案](../README.md)、[基线改造](../baseline-adaptation.md)、[基准协议](../benchmark-protocol.md)

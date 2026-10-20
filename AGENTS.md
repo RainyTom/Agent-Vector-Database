@@ -35,7 +35,7 @@
 ## 研究进展记录
 
 - 每个方向的相关文档（协议、基线调研、方案、实验记录）统一放在 `researches/<方向>/` 内，不新增顶层独立文件；`researches/nested-attr-vector-search/index.md` 只做导航。
-- 每轮研究结束前，在 `researches/<方向>/daily/<YYYY-MM-DD>/` 写 `report.md`：当日目标、实验设置、结果数字、结论、局限、下一步。
+- 每轮研究结束前，在 `researches/<方向>/<YYYY-MM-DD>-exps/` 写 `report.md`：当日目标、实验设置、结果数字、结论、局限、下一步。
 - 同目录 `data/` 存汇总数据（CSV/JSON/原始日志），`experiments/` 存命令、构建记录与复现说明。
 - 只写已运行的实验；未完成、未核实或失败的结论必须标注。每日目录只追加，不覆盖历史记录。
 
