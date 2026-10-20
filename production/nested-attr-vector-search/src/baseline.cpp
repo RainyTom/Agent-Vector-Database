@@ -192,9 +192,6 @@ struct InlineGraph {
 };
 
 template <typename T>
-size_t inline_vec_off(uint32_t M) { return sizeof(T) + size_t(2 * M) * sizeof(T); }
-
-template <typename T>
 void write_inline_graph(const hnswlib::HierarchicalNSW<float>& idx, uint32_t m,
                         uint32_t M, uint32_t dim, const std::string& path) {
   InlineGraph<T> g;
@@ -519,15 +516,9 @@ int main(int argc, char** argv) {
       uint32_t hdr[7];
       probe.read(reinterpret_cast<char*>(hdr), sizeof(hdr));
       probe.close();
-      size_t sz = hdr[0];
       if (hdr[6] == 2) load_inline_graph<uint16_t>(cp, ci16[v]);
       else load_inline_graph<uint32_t>(cp, ci32[v]);
-      size_t ef_v = EF;
-      if (sz > 50000) { if (const char* e = std::getenv("GRAPH_EF_ROOT")) ef_v = std::strtoull(e, nullptr, 10); }
-      else if (sz > 10000) { if (const char* e = std::getenv("GRAPH_EF_D1")) ef_v = std::strtoull(e, nullptr, 10); }
-      else if (sz > 4000) { if (const char* e = std::getenv("GRAPH_EF_D2")) ef_v = std::strtoull(e, nullptr, 10); }
-      else { if (const char* e = std::getenv("GRAPH_EF_SMALL")) ef_v = std::strtoull(e, nullptr, 10); }
-      node_ef[v] = std::max<size_t>(ef_v, k);
+      node_ef[v] = std::max<size_t>(EF, k);
     }
 
     int loaded = 0;

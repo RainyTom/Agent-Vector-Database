@@ -2,7 +2,7 @@
 
 ## 基准与实现结果
 
-当前测量入口见[基准协议](benchmark-protocol.md)；每节点物化 HNSW 的实现、消融与负结果见[每节点物化 HNSW](07-materialized-scope-graphs.md)。该结果不改变下方六个方向的停止/暂停决定。
+当前测量入口见[基准协议](benchmark-protocol.md)；每节点物化图的实现、消融与负结果见[物化作用域图](07-materialized-scope-graphs/README.md)。该结果不改变下方六个方向的停止/暂停决定。
 
 ## 子方向方案入口
 
