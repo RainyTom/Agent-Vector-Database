@@ -1,0 +1,54 @@
+{
+  "status": "post-hoc single runs after test; no block logs",
+  "note": "excluded from the 225 frozen blocks and from main conclusions",
+  "rows": [
+    {
+      "config": "m12_ef72",
+      "recall": 0.9853,
+      "reported_qps": 23029,
+      "ids_sha256": "f2a2baa3d6ce1e21f431985ea61a9d0206e8cc0ee35b57075eab6a1e308cc8a0",
+      "timings_sha256": "e3b6c49168d4616c43db6df711749432088fd6a5341b7ac17a71a50427c927ff",
+      "command": "GRAPH_SHARE_VECTORS=1 GRAPH_QUERY_ORDER=original GRAPH_EF=72 candidate query ... test split"
+    },
+    {
+      "config": "m12_ef80",
+      "recall": 0.987,
+      "reported_qps": 22997,
+      "ids_sha256": "7e7d6b267b5adf5753dc2859ecbb4129a47f32418d70ef5e2f161c28c54ada30",
+      "timings_sha256": "c01ec1e3c218f0dda1c295e8b4e9e2206e5b922543a21ed4a17756d54eb209c6",
+      "command": "GRAPH_SHARE_VECTORS=1 GRAPH_QUERY_ORDER=original GRAPH_EF=80 candidate query ... test split"
+    },
+    {
+      "config": "m12_ef96",
+      "recall": 0.9917,
+      "reported_qps": 20897,
+      "ids_sha256": "34adbe9295d399f03c0f49af5fa6e77e05fd581013053fa366a77dfa25ad6ae5",
+      "timings_sha256": "1c29ba04fc1c22105fd44e58a4a1dc68ef62835375487ede349ab94eb0d070ff",
+      "command": "GRAPH_SHARE_VECTORS=1 GRAPH_QUERY_ORDER=original GRAPH_EF=96 candidate query ... test split"
+    },
+    {
+      "config": "m12_ef128",
+      "recall": 0.9947,
+      "reported_qps": 14409,
+      "ids_sha256": "ca1bede71caf66ef27265c47c280fe15b924d51413ab66650c52fade31b384ec",
+      "timings_sha256": "fbc3d4304ba7efbb5cc4138dae88747299137537491df28e3331ca1dc2c09f4f",
+      "command": "GRAPH_SHARE_VECTORS=1 GRAPH_QUERY_ORDER=original GRAPH_EF=128 candidate query ... test split"
+    },
+    {
+      "config": "les_ef28",
+      "recall": 0.989,
+      "reported_qps": 18996,
+      "ids_sha256": "65906e66fa43f4f5d9b2b77affe5056794af37fa4ccb57649161943a56cc2b7b",
+      "timings_sha256": "63b50c669d835821893e34a154fb2257b544195c5052559235a9c8dda55182a7",
+      "command": "les_query --ef 28 ... test split"
+    },
+    {
+      "config": "les_ef32",
+      "recall": 0.992,
+      "reported_qps": 17244,
+      "ids_sha256": "3deb6e94e28231765bc6b2d29bd2c6e77795512715ffaa4518c1b1f937c46f87",
+      "timings_sha256": "49a3bdfc470366247d68c45afe6e07614a7ef7a63cb963f99238c0050834048e",
+      "command": "les_query --ef 32 ... test split"
+    }
+  ]
+}

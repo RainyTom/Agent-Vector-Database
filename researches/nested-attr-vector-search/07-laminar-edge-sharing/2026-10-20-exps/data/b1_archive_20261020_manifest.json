@@ -1,0 +1,247 @@
+{
+  "commit": "f1d848d523da3267836f913c4b4859744ee97095",
+  "binaries": {
+    "les_query": {
+      "path": "production/nested-attr-vector-search/work/bin/les_query",
+      "sha256": "b1c71f6bc55ffd1d7d562b10b3576996cec80e36c841aacb86af5a6a5828ff4d",
+      "bytes": 65120
+    },
+    "candidate": {
+      "path": "production/nested-attr-vector-search/work/bin/candidate",
+      "sha256": "cddb5772acdae8375f50d014662e41ad0486402c0ad8550536c7fd8137534a07",
+      "bytes": 196872
+    }
+  },
+  "indexes": {
+    "les_var": {
+      "path": "/tmp/les_var",
+      "digest": "7c37de3dda18cb24be6039f9edb5416232b89525a291be6b385500a94174db33"
+    },
+    "psg_m16_shared": {
+      "path": "/tmp/psg_sh100",
+      "digest": "8e77f18e2a337e391954e0d4185c1e77745224eb79814d3133e38c42df9ef098"
+    },
+    "psg_m12_shared": {
+      "path": "/tmp/psg_shared12",
+      "digest": "46716824bfbe7a0d982f30c07f0e5dd131e43c488c9e18f4d3e821165a7e4099"
+    }
+  },
+  "inputs": {
+    "base.f32": {
+      "path": "production/nested-attr-vector-search/work/five_l2/fixtures/sift100k/base.f32",
+      "sha256": "d0ad618c42429e9e2261e37e7ecaf042af58e47117ad62d5935457e129d0ab21",
+      "bytes": 51200000
+    },
+    "test.f32": {
+      "path": "production/nested-attr-vector-search/work/five_l2/fixtures/sift100k/test.f32",
+      "sha256": "6683593c67a7b302b7f19cfe525a7ea9fac94868ed2044b5f52d103b9cc69a67",
+      "bytes": 512000
+    },
+    "tree.txt": {
+      "path": "production/nested-attr-vector-search/work/five_l2/fixtures/sift100k/tree.txt",
+      "sha256": "bf5406d28eae36ea5524b704ddd663cd55320af8848174585cbc5906302a93c1",
+      "bytes": 10739
+    },
+    "labels.bin": {
+      "path": "production/nested-attr-vector-search/work/five_l2/fixtures/sift100k/labels.bin",
+      "sha256": "a249e09d4066f471bac53788934b442ed0e3fec64342ff53537d3d2c24aacd89",
+      "bytes": 2000000
+    },
+    "meta.txt": {
+      "path": "production/nested-attr-vector-search/work/five_l2/fixtures/sift100k/meta.txt",
+      "sha256": "6b0ee0c4c3d5d9325fcf64bb739d9ffd44db6f51cfa3d900fbbe882abd79595e",
+      "bytes": 29
+    },
+    "workload_sub.txt": {
+      "path": "production/nested-attr-vector-search/work/five_l2/fixtures/sift100k/workload_sub.txt",
+      "sha256": "4ed682e859241f19d0b607338de1b6186421741780ea3bdde77a3cf8f094941d",
+      "bytes": 6082
+    },
+    "gt_sub.bin": {
+      "path": "production/nested-attr-vector-search/work/five_l2/fixtures/sift100k/gt_sub.bin",
+      "sha256": "1679044d25d89073e470c78d63c0aab3722e86a3d112d6c88cd045cc39d5d1cf",
+      "bytes": 40000
+    }
+  },
+  "pathseer": {
+    "query/query.bin": {
+      "path": "production/nested-attr-vector-search/work/five_l2/pathseer/sift100k/query/query.bin",
+      "sha256": "52dd3c4699f213373ea0185227a299336badfe8e596b385833ed7ca60781f34e",
+      "bytes": 512008
+    },
+    "query/query_sub.bv": {
+      "path": "production/nested-attr-vector-search/work/five_l2/pathseer/sift100k/query/query_sub.bv",
+      "sha256": "3b1a75ed1f5fd00ed1c2b88de0a07289ebfb031367fb40bab61334b7ebfab939",
+      "bytes": 12500000
+    }
+  },
+  "splits_manifest": {
+    "path": "production/nested-attr-vector-search/work/five_l2/splits/manifest.json",
+    "sha256": "729d7f7e7fe8777dea5eb3aeded292df4ec81fcd2f137ec17e1777731890e6d4",
+    "bytes": 14884
+  },
+  "policies": {
+    "policy_les_r95.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r95.txt",
+      "sha256": "dc58672756122780466d9c5c22e1d1f0f2fa1602442bc9da12886ad17c3ca7e9",
+      "bytes": 68
+    },
+    "policy_les_r95_cand0.95.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r95_cand0.95.txt",
+      "sha256": "511cc3dd93a7846b3213d3e177254c18f45b98ab7ea17e95081b91a992f0902e",
+      "bytes": 68
+    },
+    "policy_les_r95_cand0.952.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r95_cand0.952.txt",
+      "sha256": "511cc3dd93a7846b3213d3e177254c18f45b98ab7ea17e95081b91a992f0902e",
+      "bytes": 68
+    },
+    "policy_les_r95_cand0.955.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r95_cand0.955.txt",
+      "sha256": "dc58672756122780466d9c5c22e1d1f0f2fa1602442bc9da12886ad17c3ca7e9",
+      "bytes": 68
+    },
+    "policy_les_r98.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r98.txt",
+      "sha256": "acabdf56952fc08256d30104309cb0d2f9bf1cb42feaee39a942b746121f740d",
+      "bytes": 68
+    },
+    "policy_les_r98_cand0.98.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r98_cand0.98.txt",
+      "sha256": "69373916c4f24e4f5234a5b7d5b0b64771a05d4b2cef25fbcad524dfc948ba71",
+      "bytes": 68
+    },
+    "policy_les_r98_cand0.982.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r98_cand0.982.txt",
+      "sha256": "acabdf56952fc08256d30104309cb0d2f9bf1cb42feaee39a942b746121f740d",
+      "bytes": 68
+    },
+    "policy_les_r98_cand0.985.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_les_r98_cand0.985.txt",
+      "sha256": "cd281a5bf52057e924f1f0a5edce842694f6c795947973326501a3bbb405124e",
+      "bytes": 68
+    },
+    "policy_psg_m12_r95.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r95.txt",
+      "sha256": "37412ee59354850ccfc9d13f2fe76e04e31ffee17f161be10ff4a0efcda12098",
+      "bytes": 68
+    },
+    "policy_psg_m12_r95_cand0.95.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r95_cand0.95.txt",
+      "sha256": "11f2504b994cdea0f854bb36a9ea2f3de667256c018cfd7ae196a005b93c60b9",
+      "bytes": 68
+    },
+    "policy_psg_m12_r95_cand0.952.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r95_cand0.952.txt",
+      "sha256": "b8f27fa5c1d61a1ee056757ce8aee3eb11a22f956a6f4342b3715f8b6ec7a4d5",
+      "bytes": 68
+    },
+    "policy_psg_m12_r95_cand0.955.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r95_cand0.955.txt",
+      "sha256": "37412ee59354850ccfc9d13f2fe76e04e31ffee17f161be10ff4a0efcda12098",
+      "bytes": 68
+    },
+    "policy_psg_m12_r98.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r98.txt",
+      "sha256": "d708076aca2063dd7564c2b524937e0a02db6a115875ee6d11c0f43726c4b4f9",
+      "bytes": 68
+    },
+    "policy_psg_m12_r98_cand0.98.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r98_cand0.98.txt",
+      "sha256": "9774782da59cbe1261b9a9d8bd6e4b64fa10af6e3798a6eefcdd0ee68dc20546",
+      "bytes": 68
+    },
+    "policy_psg_m12_r98_cand0.982.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r98_cand0.982.txt",
+      "sha256": "d708076aca2063dd7564c2b524937e0a02db6a115875ee6d11c0f43726c4b4f9",
+      "bytes": 68
+    },
+    "policy_psg_m12_r98_cand0.985.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m12_r98_cand0.985.txt",
+      "sha256": "62bca3a1508009fa3337e70759aeabd9d31c90cb51d053905a2749c6a9ece4c6",
+      "bytes": 70
+    },
+    "policy_psg_m16_r95.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r95.txt",
+      "sha256": "1f94c47f14f7045562a9dd89680c0b2dcec84b4ea6b014554f54196d3f31bb39",
+      "bytes": 68
+    },
+    "policy_psg_m16_r95_cand0.95.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r95_cand0.95.txt",
+      "sha256": "1f94c47f14f7045562a9dd89680c0b2dcec84b4ea6b014554f54196d3f31bb39",
+      "bytes": 68
+    },
+    "policy_psg_m16_r95_cand0.952.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r95_cand0.952.txt",
+      "sha256": "82fab2983ff3bf334ddceb443bd7bde64cce035108d721c61c68270978b514be",
+      "bytes": 68
+    },
+    "policy_psg_m16_r95_cand0.955.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r95_cand0.955.txt",
+      "sha256": "477192391b32f68a1f3437de0d6a7dea2404e69aab6ceb2766fab6598875d31e",
+      "bytes": 68
+    },
+    "policy_psg_m16_r98.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r98.txt",
+      "sha256": "fe1b540403b37e7f7f401fbda73315b86fb5ae90dc97e181b54b272a626e8fe8",
+      "bytes": 68
+    },
+    "policy_psg_m16_r98_cand0.98.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r98_cand0.98.txt",
+      "sha256": "40db7361a685a7da69c14bea0c900f7eb8f2e0932d56eeaa58fc68d46aab44ca",
+      "bytes": 68
+    },
+    "policy_psg_m16_r98_cand0.982.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r98_cand0.982.txt",
+      "sha256": "fe1b540403b37e7f7f401fbda73315b86fb5ae90dc97e181b54b272a626e8fe8",
+      "bytes": 68
+    },
+    "policy_psg_m16_r98_cand0.985.txt": {
+      "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_policies/b1_20261020/policy_psg_m16_r98_cand0.985.txt",
+      "sha256": "6e8cc2a8ee22d96851705cd0d413de0cc29271322febd106ba75535deaf4da27",
+      "bytes": 68
+    }
+  },
+  "runs_csv": {
+    "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_archive_20261020_runs.csv",
+    "sha256": "3d7ea09b4dca9689b0a5539ff9a6cc9c372250c8ab63bd69c1f9da248609de41",
+    "bytes": 54355
+  },
+  "per_query_csv": {
+    "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_archive_20261020_per_query_block01.csv",
+    "sha256": "35ed4ba866ea0c4bc02b46b9ce5164358a9ff30d16fe78d96f6ccfb1f6d47301",
+    "bytes": 215806
+  },
+  "buckets_csv": {
+    "path": "researches/nested-attr-vector-search/07-laminar-edge-sharing/2026-10-20-exps/data/b1_archive_20261020_buckets.csv",
+    "sha256": "329717b002ca9314c328bb6a801f9c648cb76fe0d70727b4fc9ffac5053e412f",
+    "bytes": 2855
+  },
+  "blocks": 15,
+  "configs": [
+    "les_adapt24",
+    "les_fixed12",
+    "les_fixed14",
+    "les_pol_r95",
+    "les_pol_r98",
+    "m12_fixed40",
+    "m12_fixed48",
+    "m12_fixed64",
+    "m12_pol_r95",
+    "m12_pol_r98",
+    "m16_adapt64",
+    "m16_fixed32",
+    "m16_fixed48",
+    "m16_pol_r95",
+    "m16_pol_r98"
+  ],
+  "posthoc_excluded": [
+    "m12_ef72",
+    "m12_ef80",
+    "m12_ef96",
+    "m12_ef128",
+    "les_ef28",
+    "les_ef32"
+  ],
+  "note": "ids/timings are local-only; hashes above allow independent recall checks."
+}

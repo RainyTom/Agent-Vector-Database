@@ -390,7 +390,7 @@ QPS 由 `QUERY_SECONDS` 以 $1000/\mathrm{seconds}$ 计算；以前把毫秒总�
 
 相近空间（53.3 vs 53.6 MB）下，M12 fixed40与LES fixed14均为0.958333召回，QPS中位数之比为1.242；相对LES policy r95（0.955333），该比值为1.129。M12 policy r98及fixed64只有0.979，不能作r98达标对照；回传ef72的23,029 QPS反而低于LES policy r98的24,641，且缺配对记录，故删除“r98快1.21×”及“全档支配”结论。B1只在本次LES留出集达到r95/r98，不保证泛化；M16 policy r95仅0.945333、M12 policy r98仅0.979。
 
-**第二轮证据状态。** 已入库225条记录为15配置×15block，主表用batch wall；每轮重复同一批300条查询。无M12 fixed72，旧0.963点在新子集上对应的recall已改变。未绑核/预热、计数缺失和历史数据重用限制仍在。配对倍率、哈希回传要求与路线收束见 [ee90400复核](2026-10-20-exps/experiments/les-closeout-ee90400.md)。
+**归档审计。** 对 225 轮逐文件重算：无非法/重复/空结果，每轮 3,000 个槽全部填满；ids/timings 未入库但哈希与逐查询 hits/合法性记录在 `data/b1_archive_20261020_manifest.json`、`b1_archive_20261020_runs.csv`、`b1_archive_20261020_per_query_block01.csv`。**聚合达标掩盖了桶差异**：LES policy r95 在最大桶（$\ge10000$，148 条查询）召回仅 **0.939**，M12 fixed40 同桶为 0.941；两者都不满足该桶的 r95。B1 的目标是聚合命中数，不是每桶保证。15 个 block 是同一批 300 条查询的计时重复，不是 15 个独立查询样本；split 是历史 1000 条查询的本轮留出划分，不是全新查询集。post-hoc 的 M12 ef72/80/96/128 与 LES ef28/32 单次运行单独存于 `experiments/b1/posthoc/`，不进入主表。
 
 **S1 静态分析（未实现查询引擎）。** 对 M16 底图的每个 $(u,\text{local source})$ 提取有序全局邻接并做 exact interning：$N_{\rm ref}=1,034,631$，唯一列表 1,019,476（唯一率 **0.985**），平均长度 12.8。字节构成：引用 4.14 MB、offsets 8.16 MB、targets 52.11 MB、gid 4.14 MB、upper 1.61 MB、base_u8 12.80 MB，合计 **82.99 MB**，高于共享 PSG 的 62.34 MB 与 LES-v3 的 53.27 MB。按计划中的空间门槛，全量字典**不实现**；该负结果仅否决完整有序列表 exact interning，不证明块共享或少数 scope 覆盖无效。82.99 MB是已统计组件小计，尚未包含lv、upper_off和global→local lookup等，完整部署空间更大，否决决定不变。
 

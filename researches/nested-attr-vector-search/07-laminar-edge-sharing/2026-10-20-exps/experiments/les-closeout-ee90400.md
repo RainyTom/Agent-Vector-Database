@@ -42,3 +42,11 @@ M12 fixed64同样只有0.979；已入库225行=15配置×15block，没有fixed72
 ## 已保留的贡献与未完成项
 
 保留：无损varint及全量解码验证、E0语义不变、S1 full-list interning空间负结果、预算表的达标与失败案例、共享向量PSG作为必要对照。未完成：真实多标签层级、Exact/antichain、1M、逐查询成本归因和真正新查询上的泛化。该范围不足以宣称SOTA，也不等于共享邻接机制在任何任务上都无价值。
+
+## 远端回传结果（2026-10-20 执行）
+
+1. **fixed72/1.21× 处理**：225 行冻结数据无 fixed72；M12 fixed64 与 policy r98 均为 0.9790。post-hoc ef72（0.9853/23,029）低于 LES policy r98（0.9813/24,641），且无配对 block；1.21× 已从主结论撤回。post-hoc 六个工作点与其 ids/timings 哈希存于 `b1/posthoc/posthoc.json`，不进入主表。
+2. **归档 manifest**：`data/b1_archive_20261020_manifest.json` 记录 commit、两引擎二进制、三个索引目录 digest、fixture/pathseer/split/policy 哈希；`b1_archive_20261020_runs.csv` 为 225 轮的 recall/违规/重复/填满与逐文件哈希；`b1_archive_20261020_per_query_block01.csv` 与 `b1_archive_20261020_buckets.csv` 提供逐查询与分桶明细。审计结果：0 违规、0 重复、0 空结果，每轮 3000 槽填满。
+3. **配置冻结时间**：15 个 block 配置在 test 前写入；ef72/80/96/128 与 LES ef28/32 为 test 后单次补充。见 `b1/PROVENANCE.md`。
+4. **新增勘误**：B1 只对聚合目标负责；LES policy r95 在最大桶（≥10000，148 条）recall 0.939，M12 fixed40 为 0.941，均未达该桶 r95。15 block 是计时重复，split 是历史查询的本轮留出划分；不能称全新 test 或泛化保证。
+5. **路线状态**：按本文决定收束性能优化，未启动 A1 或新 ef 扫描；保留 E0、varint、B1、S1 负结果与共享 PSG 对照。
