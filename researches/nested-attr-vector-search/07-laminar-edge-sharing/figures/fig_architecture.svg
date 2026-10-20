@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 380" font-family="system-ui, sans-serif" font-size="13">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#444444"/>
+    </marker>
+  </defs>
+  <rect x="0" y="0" width="900" height="380" fill="#ffffff"/>
+
+  <!-- left: hierarchy -->
+  <text x="20" y="26" font-size="12" fill="#666666">(a) attribute tree T</text>
+  <g stroke="#444444" stroke-width="1.4" fill="none">
+    <line x1="90" y1="64" x2="45" y2="114"/>
+    <line x1="90" y1="64" x2="135" y2="114"/>
+    <line x1="45" y1="114" x2="25" y2="164"/>
+    <line x1="45" y1="114" x2="70" y2="164"/>
+    <line x1="135" y1="114" x2="115" y2="164"/>
+    <line x1="135" y1="114" x2="160" y2="164"/>
+  </g>
+  <path d="M 40 108 L 18 172 L 76 172 L 76 172 L 20 172 L 20 172 Z" fill="#3b82f6" opacity="0.18"/>
+  <path d="M 40 108 L 18 172 L 78 172 L 78 172 L 20 172 Z" fill="#3b82f6" opacity="0.0"/>
+  <g fill="#ffffff" stroke="#444444" stroke-width="1.4">
+    <circle cx="90" cy="64" r="11"/>
+    <circle cx="45" cy="114" r="10"/>
+    <circle cx="135" cy="114" r="10"/>
+    <circle cx="25" cy="164" r="9"/>
+    <circle cx="70" cy="164" r="9"/>
+    <circle cx="115" cy="164" r="9"/>
+    <circle cx="160" cy="164" r="9"/>
+  </g>
+  <text x="90" y="48" text-anchor="middle" font-size="11" fill="#222266">r</text>
+  <text x="45" y="102" text-anchor="middle" font-size="11" fill="#222266">u1</text>
+  <text x="135" y="102" text-anchor="middle" font-size="11" fill="#222266">u2</text>
+  <text x="20" y="200" font-size="11" fill="#666666">subtree(u1) maps to [tin, tout]</text>
+
+  <!-- arrow -->
+  <line x1="200" y1="120" x2="252" y2="120" stroke="#444444" stroke-width="1.4" marker-end="url(#ar)"/>
+  <text x="226" y="110" text-anchor="middle" font-size="11" fill="#666666">DFS</text>
+
+  <!-- middle: graph -->
+  <text x="270" y="26" font-size="12" fill="#666666">(b) level-l navigation graph</text>
+  <g stroke="#9aa4b2" stroke-width="0.9" opacity="0.9">
+    <line x1="300" y1="84" x2="345" y2="64"/><line x1="345" y1="64" x2="395" y2="89"/>
+    <line x1="395" y1="89" x2="440" y2="69"/><line x1="440" y1="69" x2="480" y2="99"/>
+    <line x1="300" y1="84" x2="330" y2="129"/><line x1="330" y1="129" x2="380" y2="144"/>
+    <line x1="380" y1="144" x2="430" y2="124"/><line x1="430" y1="124" x2="480" y2="99"/>
+    <line x1="345" y1="64" x2="380" y2="144"/><line x1="395" y1="89" x2="430" y2="124"/>
+  </g>
+  <g fill="#ffffff" stroke="#2563eb" stroke-width="1.6">
+    <circle cx="300" cy="84" r="5"/><circle cx="345" cy="64" r="5"/>
+    <circle cx="395" cy="89" r="5"/><circle cx="440" cy="69" r="5"/>
+    <circle cx="480" cy="99" r="5"/><circle cx="330" cy="129" r="5"/>
+    <circle cx="380" cy="144" r="5"/><circle cx="430" cy="124" r="5"/>
+  </g>
+  <text x="286" y="176" font-size="11" fill="#666666">edge (i,j) stored once at min(Ai and Aj)</text>
+
+  <!-- right: storage -->
+  <text x="556" y="26" font-size="12" fill="#666666">(c) interval-sliced CSR</text>
+  <rect x="556" y="44" width="120" height="20" fill="#f1f5f9" stroke="#444444" stroke-width="1"/>
+  <text x="616" y="58" text-anchor="middle" font-size="10" fill="#222266">offsets</text>
+  <rect x="676" y="44" width="204" height="20" fill="#f1f5f9" stroke="#444444" stroke-width="1"/>
+  <text x="778" y="58" text-anchor="middle" font-size="10" fill="#222266">act (preorder, monotone)</text>
+
+  <g font-size="10" fill="#222266">
+    <rect x="556" y="72" width="120" height="22" fill="#f8fafc" stroke="#444444"/>
+    <text x="616" y="87" text-anchor="middle">i=0</text>
+    <rect x="556" y="94" width="120" height="22" fill="#f8fafc" stroke="#444444"/>
+    <text x="616" y="109" text-anchor="middle">i=1</text>
+    <rect x="556" y="116" width="120" height="22" fill="#f8fafc" stroke="#444444"/>
+    <text x="616" y="131" text-anchor="middle">i=2</text>
+    <rect x="556" y="138" width="120" height="22" fill="#f8fafc" stroke="#444444"/>
+    <text x="616" y="153" text-anchor="middle">i=3</text>
+  </g>
+
+  <g stroke="#444444" stroke-width="0.8">
+    <!-- row 0 -->
+    <rect x="676" y="72" width="40" height="22" fill="#93b8f7"/>
+    <rect x="716" y="72" width="40" height="22" fill="#93b8f7"/>
+    <rect x="756" y="72" width="40" height="22" fill="#f6c97a"/>
+    <rect x="796" y="72" width="40" height="22" fill="#f6c97a"/>
+    <rect x="836" y="72" width="44" height="22" fill="#f6c97a"/>
+    <!-- row 1 -->
+    <rect x="676" y="94" width="40" height="22" fill="#93b8f7"/>
+    <rect x="716" y="94" width="40" height="22" fill="#f6c97a"/>
+    <rect x="756" y="94" width="40" height="22" fill="#f6c97a"/>
+    <rect x="796" y="94" width="40" height="22" fill="#f8fafc"/>
+    <rect x="836" y="94" width="44" height="22" fill="#f8fafc"/>
+    <!-- row 2 -->
+    <rect x="676" y="116" width="40" height="22" fill="#93b8f7"/>
+    <rect x="716" y="116" width="40" height="22" fill="#93b8f7"/>
+    <rect x="756" y="116" width="40" height="22" fill="#93b8f7"/>
+    <rect x="796" y="116" width="40" height="22" fill="#f6c97a"/>
+    <rect x="836" y="116" width="44" height="22" fill="#f8fafc"/>
+    <!-- row 3 -->
+    <rect x="676" y="138" width="40" height="22" fill="#f6c97a"/>
+    <rect x="716" y="138" width="40" height="22" fill="#f6c97a"/>
+    <rect x="756" y="138" width="40" height="22" fill="#f8fafc"/>
+    <rect x="796" y="138" width="40" height="22" fill="#f8fafc"/>
+    <rect x="836" y="138" width="44" height="22" fill="#f8fafc"/>
+  </g>
+
+  <path d="M 676 168 L 676 178 L 796 178 L 796 168" fill="none" stroke="#2563eb" stroke-width="1.6"/>
+  <text x="736" y="194" text-anchor="middle" font-size="10" fill="#666666">slice [tin(u), tout(u)]</text>
+
+  <g font-size="10" fill="#222266">
+    <rect x="556" y="214" width="16" height="10" fill="#93b8f7" stroke="#444444" stroke-width="0.6"/>
+    <text x="580" y="223">B_exact (direct bucket)</text>
+    <rect x="556" y="234" width="16" height="10" fill="#f6c97a" stroke="#444444" stroke-width="0.6"/>
+    <text x="580" y="243">B_cross (subtree bucket)</text>
+  </g>
+
+  <g font-size="11" fill="#666666">
+    <text x="20" y="232">Subtree(u): one interval slice, no predicate in the hot path</text>
+    <text x="20" y="252">Exact(u): contiguous direct segment, or governed by the scan threshold</text>
+    <text x="20" y="272">Boolean Phi: compiled into disjoint intervals before execution</text>
+  </g>
+</svg>

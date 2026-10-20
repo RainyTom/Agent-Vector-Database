@@ -1,5 +1,12 @@
 # 层级属性向量检索：Exact/Subtree 双语义与 Laminar Edge Sharing（研究进展，2026-10-20）
 
+## 0. 论文与图表
+
+- 系统稿：[paper.md](paper.md)（7 节、8+2 图、全部数值标注 已测/估算/待测）。
+- 审稿记录：[paper_review.md](paper_review.md)（术语、定理、实验主张的逐项审计）。
+- 图：[figures/](figures/)；生成脚本 `production/nested-attr-vector-search/src/plot_paper_figures.py`、`plot_architecture.py`、`measure_act_delta.py`、`measure_subtree_radius.py`。
+- 新增实测：激活数组游程编码 8.8×（`data/act-delta-stats.txt`）；子树覆盖半径比（`data/subtree-radius.csv`）；查询延迟随可行集规模（`data/latency-vs-scope.csv`）；Exact 图搜索对照（37/45 QPS vs 扫描 191,914，违规率 7.4%→0）。
+
 本目录是本方向的研究摘要与导航。它描述当前问题定义、Laminar Edge Sharing（LES）方案、已测结果与局限，并链接到逐日实验记录、基线调研与评测协议。
 
 ## 1. 问题定义
