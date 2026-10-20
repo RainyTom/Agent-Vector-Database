@@ -1,0 +1,16 @@
+method,config,recall,qps,qps_q25,qps_q75,index_bytes,cohort,space_note
+LES-v3 E0,les_adapt24,0.976,24887.27309650936,23916.90823634575,26288.061899177705,53271828,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+LES-v3 E0,les_fixed12,0.9473333333333334,34609.32532119761,31769.36045296748,40395.12943287555,53271828,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+LES-v3 E0,les_fixed14,0.9583333333333334,33371.66625397039,30774.635789138425,35256.073358083515,53271828,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+LES-v3 E0,les_pol_r95,0.9553333333333334,36711.80668835274,31736.508131738185,37949.47167436189,53271896,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+LES-v3 E0,les_pol_r98,0.9813333333333333,24640.94245362513,21962.985668657388,25221.54977022154,53271896,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M12 shared,m12_fixed40,0.9583333333333334,41442.66331552082,37594.713700515866,43173.13780715612,53583641,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M12 shared,m12_fixed48,0.9673333333333334,37062.85291557403,35504.43074323074,38428.694946386546,53583641,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M12 shared,m12_fixed64,0.979,30104.47456854267,28101.41406867429,31597.089591368545,53583641,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M12 shared,m12_pol_r95,0.953,41254.83455092394,35902.45701013687,45878.877931819254,53583709,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M12 shared,m12_pol_r98,0.979,30682.868721402927,27976.805047732585,31093.053680243807,53583709,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M16 shared,m16_adapt64,0.9846666666666667,31414.395458232364,29844.460375968534,31848.712567452898,62340883,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M16 shared,m16_fixed32,0.961,42100.85512450206,39358.68066928,45730.133843412375,62340883,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M16 shared,m16_fixed48,0.9806666666666667,35089.57432603454,33079.53422989735,35872.420081957316,62340883,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M16 shared,m16_pol_r95,0.9453333333333334,54704.94432404291,48449.179703390604,57313.653021434555,62340951,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS
+PSG M16 shared,m16_pol_r98,0.9803333333333333,35133.68072736088,33244.62190437352,36956.22790247503,62340951,b1_historical_holdout300_batchwall_15blocks,archived index bytes plus policy file; not peak RSS

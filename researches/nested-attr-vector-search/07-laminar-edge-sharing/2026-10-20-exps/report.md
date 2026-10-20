@@ -231,3 +231,15 @@
 **外部核对范围。** 本轮仅做定向检索与原始摘要复核，不是全领域最新SOTA普查。ACORN原始摘要明确其研究predicate-agnostic hybrid search与predicate subgraph traversal：[arXiv:2403.04871](https://arxiv.org/abs/2403.04871)。统一FANNS基准摘要强调数据依赖参数、标准化过滤与调参对可比性的影响：[arXiv:2509.07789](https://arxiv.org/abs/2509.07789)。本地未完成这些代表性方法在相同语义/预算/调参协议下的充分评测，不能使用SOTA称谓。
 
 **当前定位。** 层级过滤ANN中的共享邻接压缩原型，以及表示收益、搜索代价和适用边界的实验分析；不是vector join SOTA，也不是已证明的filtered ANN SOTA。新颖性仍未充分排查，限制分析的研究价值不等于已达到新方法论文的贡献门槛。不重启性能路线。
+
+## 16. 用户明确重启：以帕累托前沿为目标的参数扫描
+
+**目标修订。** 用户明确本项目SOTA判据为效率与recall trade-off上的前沿贡献，不要求所有阈值全面领先。因此重新开启系统参数扫描；此前收束是历史状态，不能据少量r95/r98点终止曲线比较。前沿声明仍需明确比较集合、预算和负载。
+
+**本轮已完成。** 新增参数化 `production/nested-attr-vector-search/src/plot_pareto_frontier.py`，将225条冻结B1记录转为15个实测点，按54/64MB预算计算方法前沿、联合前沿和补充三目标标记，输出PNG/PDF及points/frontiers CSV。空间采用归档索引字节加policy文件；未重测RSS。旧post-hoc点和其他会话数据不混入。
+
+**探索结果。** 54MB下联合前沿为M12 fixed40、fixed48、policy r98与LES policy r98；64MB下联合前沿来自M12/M16，现有LES点均被支配。54MB的LES高recall点受M12最高冻结recall仅0.979的覆盖缺口影响，不能据此宣称充分调参后的优势。失败的r95策略按真实recall进入曲线，而不伪装为r95达标点。
+
+**验证。** 运行了旧数据适配与通用CSV两种入口；检查二维支配、严格相等点保留、预算过滤和三目标空间取舍；检查图像布局。竖线为计时IQR，折线只连接离散实测非支配点，不表示中间点已测。图：[PNG](../figures/pareto_b1_observed_20261020.png)、[PDF](../figures/pareto_b1_observed_20261020.pdf)；数据：[points](../figures/pareto_b1_observed_20261020.points.csv)、[frontiers](../figures/pareto_b1_observed_20261020.frontiers.csv)。
+
+**待远端执行。** [扫描规划](experiments/pareto-sweep-plan.md)定义M8/12/16/24/32、efC与查询ef、fixed/adaptive/B1、布局/桶裁剪的分阶段扫描；54/64/80/128MB预算，新查询calibration/validation/test、前沿邻域精化、统一绑核预热15block及多seed验证。随后扩展Filtered-HNSW、ACORN、PathSeer、PFS的公平参数曲线。未运行新性能实验，未启动A1/联合构图。
