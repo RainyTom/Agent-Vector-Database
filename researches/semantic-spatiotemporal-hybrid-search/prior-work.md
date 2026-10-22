@@ -26,6 +26,7 @@
 
 | 工作 | 查询/输出 | 时间 | 序列 | 与本方向的差异 | 证据状态 |
 |---|---|---|---|---|---|
+| **ETQ: Top-k Exemplar Trajectory Queries**, ICDE 2017, [DOI](https://doi.org/10.1109/ICDE.2017.114) | 查询点序列 + 每点关键词 → top-k 轨迹 | 时间戳存在，但不是查询约束 | 是，点级空间+TF-IDF 聚合；可选顺序敏感扩展 | 不定位连续 episode、无绝对时间窗/持续时间、非稠密 embedding | 已读论文定义 1–7、算法 1–2 与相关工作表；实验未复现 |
 | TISIS / TISIS*, BDA 2024, [arXiv:2409.11301](https://arxiv.org/abs/2409.11301) | 完整查询轨迹 → 相似完整轨迹；LCSS 阈值 | 仅时间戳存在，不用于约束 | 是，POI embedding + 顺序 | 不定位 episode、不支持绝对时间窗、不是 top-k 连续排序 | 已读 HTML 问题定义与算法 1–2；实验未逐项核对 |
 | TrajPrism, [arXiv:2605.10782](https://arxiv.org/abs/2605.10782) | 文本/指令 → 语义轨迹检索 benchmark | 轨迹带时间，但检索协议未以时间窗为核心 | 是 | 整轨迹检索；不做 episode 定位与硬时间窗 | 摘要级 |
 | OmniTraj, KDD 2025, [arXiv:2505.17437](https://arxiv.org/abs/2505.17437) | 多模态（原始轨迹/拓扑/路段/区域）→ 轨迹 | 弱 | 学习表示 | 整轨迹检索；无 episode/时间窗 | 摘要级 |
@@ -60,6 +61,8 @@
 
 ## 6. 待补查
 
+- ETQ 全文（已读定义/算法，实验未复现）：确认其顺序敏感扩展是否覆盖连续 episode 与时间约束。
+- SimSub / 代表子轨迹（ICDE 2024/2025）：确认 top-k 输出语义、时间处理与索引。
 - TANNS 全文：确认其是否支持 interval 内的 top-k、更新成本与索引大小。
 - CubeGraph 全文：确认是否实际处理时间维度，以及空间单元图的查询语义。
 - TrajPrism/OmniTraj 全文：确认检索协议是否已有时间窗或 episode 级评测。

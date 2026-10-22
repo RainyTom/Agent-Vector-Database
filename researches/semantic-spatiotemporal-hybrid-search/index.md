@@ -4,6 +4,10 @@
 
 > **状态：新主线，探索阶段。** 2026-10-22 关闭[层级属性检索](../nested-attr-vector-search/index.md)，暂停[前缀包含](../containment-filtered-vector-search/index.md)与[vector join](../vector-join/roadmap.md)。本方向以高维向量检索为主线，研究带真实语义的时空属性（地点、轨迹、时间戳）如何改变混合搜索的问题定义、索引与执行。
 
+## 新颖性状态
+
+**当前只能称为“候选新问题”，不能声称“别人未曾解决”。** 初步审计见[新颖性审计](novelty-audit.md)：ETQ（ICDE 2017）已做“查询点序列 → top-k 轨迹”，TISIS* 已做语义轨迹 LCSS，SimSub 已做子轨迹 top-k；但尚未发现同时覆盖“稠密语义序列 + 绝对时间窗/持续时间 + 空间范围 + episode 区间 + DTW”的直接工作。下一步必须做系统 proceedings 检索与引用闭包，再决定是“新问题 + 简单基线”还是“ETQ/SimSub 的时间可行扩展 + 外部基线”。
+
 ## 应用背景
 
 本方向不以“合成 workload 上的索引调参”为目标。第一轮问题对应以下真实需求：
