@@ -242,7 +242,8 @@ static int month_key(int64_t ts) {
     std::time_t t = (std::time_t)ts;
     std::tm tm{};
     gmtime_r(&t, &tm);
-    return tm.tm_year * 12 + tm.tm_mon;
+    // Three-month buckets: fewer HNSW searches per 1-year window.
+    return tm.tm_year * 4 + tm.tm_mon / 3;
 }
 
 int main(int argc, char** argv) {
