@@ -145,6 +145,28 @@ struct ScanStats {
     long long feasible_users = 0;
 };
 
+struct HitInfo {
+    int j;
+    int64_t ts;
+    float dist;
+};
+
+// Greedy earliest-timestamp matching: does the user have one ANN hit per query
+// point with strictly increasing timestamps? This is a necessary condition for
+// an order-preserving episode and is used only for candidate ranking.
+static bool ordered_hits(int m, const std::vector<HitInfo>& hs) {
+    int64_t prev = std::numeric_limits<int64_t>::min();
+    for (int j = 0; j < m; ++j) {
+        int64_t best = std::numeric_limits<int64_t>::max();
+        for (const auto& h : hs) {
+            if (h.j == j && h.ts > prev && h.ts < best) best = h.ts;
+        }
+        if (best == std::numeric_limits<int64_t>::max()) return false;
+        prev = best;
+    }
+    return true;
+}
+
 static std::vector<Hit> topk_from_users(const Query& q, const std::vector<Point>& pts,
                                         const std::vector<int32_t>& off,
                                         const std::vector<int32_t>& len,
@@ -350,6 +372,7 @@ int main(int argc, char** argv) {
         // unnormalized DTW and ranks candidates better than a match count.
         std::unordered_map<int, std::array<float, MAXM>> dists;
         std::unordered_map<int, uint8_t> mask;
+        std::unordered_map<int, std::vector<HitInfo>> hits;
         double g0 = now_ms();
         int m0 = month_key(q.ws), m1 = month_key(q.we);
         for (auto it = indexes.lower_bound(m0); it != indexes.end() && it->first <= m1; ++it) {
@@ -362,10 +385,12 @@ int main(int argc, char** argv) {
                         std::cerr << "bad label " << label << " >= " << pts.size() << "\n";
                         continue;
                     }
+                    if (pts[label].ts < q.ws || pts[label].ts > q.we) continue;
                     int u = pts[label].user;
                     if (u == q.source) continue;
                     int64_t key = u;
                     mask[key] |= (uint8_t)(1u << j);
+                    hits[key].push_back({j, pts[label].ts, dist});
                     auto itd = dists.find(key);
                     if (itd == dists.end()) {
                         std::array<float, MAXM> arr;
@@ -378,7 +403,7 @@ int main(int argc, char** argv) {
                 }
             }
         }
-        struct Ranked { float lb; int matches; int64_t key; };
+        struct Ranked { int order_ok; float lb; int matches; int64_t key; };
         std::vector<Ranked> ranked;
         ranked.reserve(mask.size());
         for (auto& [key, mk] : mask) {
@@ -389,9 +414,11 @@ int main(int argc, char** argv) {
                 else lb += 2.0f;  // ranking heuristic: missing query point is bad
             }
             lb /= (float)q.m;
-            ranked.push_back({lb, __builtin_popcount(mk), key});
+            int ord = ordered_hits(q.m, hits[key]) ? 1 : 0;
+            ranked.push_back({ord, lb, __builtin_popcount(mk), key});
         }
         std::sort(ranked.begin(), ranked.end(), [](const Ranked& a, const Ranked& b) {
+            if (a.order_ok != b.order_ok) return a.order_ok > b.order_ok;
             if (a.lb != b.lb) return a.lb < b.lb;
             if (a.matches != b.matches) return a.matches > b.matches;
             return a.key < b.key;
