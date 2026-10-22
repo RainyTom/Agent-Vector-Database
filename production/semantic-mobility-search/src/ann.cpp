@@ -302,20 +302,44 @@ int main(int argc, char** argv) {
         for (int j = 0; j < q.m; ++j) qf.read((char*)q.emb[j].data(), D * 4);
     }
 
-    // Month buckets.
-    std::map<int, std::vector<int>> month_points;
-    for (int i = 0; i < n_points; ++i) month_points[month_key(pts[i].ts)].push_back(i);
-    std::cerr << "months " << month_points.size() << " points " << n_points << " users " << n_users << "\n";
+    // City -> dense user id; optional side file produced by prep.py.
+    std::vector<int32_t> user_city(n_users, 0);
+    int32_t ncity = 1;
+    {
+        std::ifstream ucf(dir + "/user_city.bin", std::ios::binary);
+        if (ucf) {
+            int32_t nu = 0, nc = 0;
+            ucf.read((char*)&nu, 4); ucf.read((char*)&nc, 4);
+            if (nu == n_users && nc > 0) {
+                ncity = nc;
+                for (int i = 0; i < n_users; ++i) ucf.read((char*)&user_city[i], 4);
+            }
+        }
+    }
+    std::vector<float> cminlat(ncity, 1e9f), cmaxlat(ncity, -1e9f);
+    std::vector<float> cminlon(ncity, 1e9f), cmaxlon(ncity, -1e9f);
+    for (const auto& p : pts) {
+        int c = user_city[p.user];
+        cminlat[c] = std::min(cminlat[c], p.lat); cmaxlat[c] = std::max(cmaxlat[c], p.lat);
+        cminlon[c] = std::min(cminlon[c], p.lon); cmaxlon[c] = std::max(cmaxlon[c], p.lon);
+    }
+
+    // (city, quarter) buckets: a 50 km query only touches nearby city indexes.
+    std::map<std::pair<int, int>, std::vector<int>> bucket_points;
+    for (int i = 0; i < n_points; ++i)
+        bucket_points[{user_city[pts[i].user], month_key(pts[i].ts)}].push_back(i);
+    std::cerr << "cities " << ncity << " buckets " << bucket_points.size()
+              << " points " << n_points << " users " << n_users << "\n";
 
     using Index = hnswlib::HierarchicalNSW<float>;
-    std::map<int, std::unique_ptr<Index>> indexes;
+    std::map<std::pair<int, int>, std::unique_ptr<Index>> indexes;
     double build0 = now_ms();
-    for (auto& [mkey, ids] : month_points) {
-        if (only_month != -999999 && mkey != only_month) continue;
+    for (auto& [bkey, ids] : bucket_points) {
+        if (only_month != -999999 && bkey.second != only_month) continue;
         auto* space = new hnswlib::L2Space(D);
         auto idx = std::make_unique<Index>(space, ids.size(), 16, 100);
         idx->setEf(ef);
-        // addPoint is thread-safe in hnswlib; parallel insertion per month.
+        // addPoint is thread-safe in hnswlib; parallel insertion per bucket.
         std::vector<std::thread> workers;
         int nthreads = std::max(1, build_threads);
         int chunk = (ids.size() + nthreads - 1) / nthreads;
@@ -339,7 +363,7 @@ int main(int argc, char** argv) {
             });
         }
         for (auto& w : workers) w.join();
-        indexes[mkey] = std::move(idx);
+        indexes[bkey] = std::move(idx);
     }
     double build_ms = now_ms() - build0;
     std::cerr << "build_ms " << build_ms << "\n";
@@ -376,31 +400,37 @@ int main(int argc, char** argv) {
         std::unordered_map<int, std::vector<HitInfo>> hits;
         double g0 = now_ms();
         int m0 = month_key(q.ws), m1 = month_key(q.we);
-        for (auto it = indexes.lower_bound(m0); it != indexes.end() && it->first <= m1; ++it) {
-            Index* idx = it->second.get();
-            for (int j = 0; j < q.m; ++j) {
-                auto res = idx->searchKnn(q.emb[j].data(), topn);
-                while (!res.empty()) {
-                    auto [dist, label] = res.top(); res.pop();
-                    if (label >= pts.size()) {
-                        std::cerr << "bad label " << label << " >= " << pts.size() << "\n";
-                        continue;
-                    }
-                    if (pts[label].ts < q.ws || pts[label].ts > q.we) continue;
-                    if (!in_bbox(q, pts[label])) continue;
-                    int u = pts[label].user;
-                    if (u == q.source) continue;
-                    int64_t key = u;
-                    mask[key] |= (uint8_t)(1u << j);
-                    hits[key].push_back({j, pts[label].ts, dist});
-                    auto itd = dists.find(key);
-                    if (itd == dists.end()) {
-                        std::array<float, MAXM> arr;
-                        arr.fill(std::numeric_limits<float>::infinity());
-                        arr[j] = dist;
-                        dists.emplace(key, arr);
-                    } else if (dist < itd->second[j]) {
-                        itd->second[j] = dist;
+        for (int c = 0; c < ncity; ++c) {
+            if (q.max_lat < cminlat[c] || q.min_lat > cmaxlat[c] ||
+                q.max_lon < cminlon[c] || q.min_lon > cmaxlon[c]) continue;
+            auto lo = std::make_pair(c, m0), hi = std::make_pair(c, m1);
+            for (auto it = indexes.lower_bound(lo);
+                 it != indexes.end() && it->first <= hi; ++it) {
+                Index* idx = it->second.get();
+                for (int j = 0; j < q.m; ++j) {
+                    auto res = idx->searchKnn(q.emb[j].data(), topn);
+                    while (!res.empty()) {
+                        auto [dist, label] = res.top(); res.pop();
+                        if (label >= pts.size()) {
+                            std::cerr << "bad label " << label << " >= " << pts.size() << "\n";
+                            continue;
+                        }
+                        if (pts[label].ts < q.ws || pts[label].ts > q.we) continue;
+                        if (!in_bbox(q, pts[label])) continue;
+                        int u = pts[label].user;
+                        if (u == q.source) continue;
+                        int64_t key = u;
+                        mask[key] |= (uint8_t)(1u << j);
+                        hits[key].push_back({j, pts[label].ts, dist});
+                        auto itd = dists.find(key);
+                        if (itd == dists.end()) {
+                            std::array<float, MAXM> arr;
+                            arr.fill(std::numeric_limits<float>::infinity());
+                            arr[j] = dist;
+                            dists.emplace(key, arr);
+                        } else if (dist < itd->second[j]) {
+                            itd->second[j] = dist;
+                        }
                     }
                 }
             }

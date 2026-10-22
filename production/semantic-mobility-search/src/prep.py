@@ -181,6 +181,15 @@ def main() -> int:
         for off, ln in zip(user_off, user_len):
             f.write(struct.pack("<ii", off, ln))
 
+    # Write user_city.bin: dense user index -> city id, plus city names.
+    city_names = sorted({u[0] for u in users})
+    city_id = {c: i for i, c in enumerate(city_names)}
+    with (args.out / "user_city.bin").open("wb") as f:
+        f.write(struct.pack("<ii", len(users), len(city_names)))
+        for u in users:
+            f.write(struct.pack("<i", city_id[u[0]]))
+    (args.out / "cities.txt").write_text("\n".join(city_names) + "\n")
+
     # Query generation: same-calendar-day episodes, m=3..6, duration <= 24h.
     rng = random.Random(args.seed)
     candidates: list[tuple[int, int, int]] = []  # (user_idx, start_idx, m)

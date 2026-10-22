@@ -45,7 +45,8 @@ def run(cmd, **kw):
 
 
 def prepare() -> None:
-    if (DATA / "queries.bin").exists() and (DATA / "points.bin").exists():
+    if (DATA / "queries.bin").exists() and (DATA / "points.bin").exists() \
+            and (DATA / "user_city.bin").exists():
         return
     DATA.mkdir(parents=True, exist_ok=True)
     cmd = [sys.executable, str(SRC / "prep.py"), "--out", str(DATA),
@@ -68,7 +69,7 @@ def compile_ann() -> None:
 
 def main() -> int:
     topn = int(os.environ.get("EP_TOPN", "800"))
-    cand = int(os.environ.get("EP_CAND", "1800"))
+    cand = int(os.environ.get("EP_CAND", "1300"))
     ef = int(os.environ.get("EP_EF", "150"))
     threads = int(os.environ.get("EP_THREADS", "4"))
 
