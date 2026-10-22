@@ -70,7 +70,7 @@ def compile_ann() -> None:
 def main() -> int:
     topn = int(os.environ.get("EP_TOPN", "400"))
     cand = int(os.environ.get("EP_CAND", "1100"))
-    ef = int(os.environ.get("EP_EF", "150"))
+    ef = int(os.environ.get("EP_EF", "100"))
     threads = int(os.environ.get("EP_THREADS", "4"))
 
     prepare()
