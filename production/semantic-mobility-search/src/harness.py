@@ -68,8 +68,8 @@ def compile_ann() -> None:
 
 
 def main() -> int:
-    topn = int(os.environ.get("EP_TOPN", "400"))
-    cand = int(os.environ.get("EP_CAND", "1100"))
+    topn = int(os.environ.get("EP_TOPN", "350"))
+    cand = int(os.environ.get("EP_CAND", "1200"))
     ef = int(os.environ.get("EP_EF", "80"))
     threads = int(os.environ.get("EP_THREADS", "4"))
 
