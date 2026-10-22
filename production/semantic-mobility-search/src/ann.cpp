@@ -387,6 +387,7 @@ int main(int argc, char** argv) {
                         continue;
                     }
                     if (pts[label].ts < q.ws || pts[label].ts > q.we) continue;
+                    if (!in_bbox(q, pts[label])) continue;
                     int u = pts[label].user;
                     if (u == q.source) continue;
                     int64_t key = u;

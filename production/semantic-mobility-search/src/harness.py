@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BASEDIR = ROOT / "production" / "semantic-mobility-search"
 SRC = BASEDIR / "src"
 WORK = BASEDIR / "work"
-DATA = WORK / "all6_8760h"
+DATA = WORK / "all6_8760h_s50"
 BIN = WORK / "ann"
 
 N_QUERIES = 500
@@ -49,7 +49,7 @@ def prepare() -> None:
         return
     DATA.mkdir(parents=True, exist_ok=True)
     cmd = [sys.executable, str(SRC / "prep.py"), "--out", str(DATA),
-           "--queries", str(N_QUERIES), "--window-hours", "8760", "--spatial-km", "0"]
+           "--queries", str(N_QUERIES), "--window-hours", "8760", "--spatial-km", "50"]
     for city, path in CITIES:
         if not path.exists():
             raise SystemExit(f"missing dataset: {path}")
