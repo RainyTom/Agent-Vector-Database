@@ -69,6 +69,8 @@
 ## 当前文件
 
 - [问题定义](problem-definition.md)
+- [问题定义对照（本问题 vs 现有论文）](problem-comparison.md)
+- [新颖性审计](novelty-audit.md)
 - [前序工作与证据边界](prior-work.md)
 - [研究问题与最小实验](research-questions.md)
 - [检索日志](search-log.md)
