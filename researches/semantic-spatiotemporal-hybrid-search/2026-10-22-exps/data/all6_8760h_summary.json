@@ -1,0 +1,13 @@
+{
+  "queries": 500,
+  "exact_ms_mean": 99.5767,
+  "exact_ms_p50": 90.5077,
+  "exact_ms_p95": 253.263,
+  "exact_candidates_mean": 37080.4,
+  "exact_dtw_mean": 177976.9,
+  "inv_ms_mean": 60.4257,
+  "inv_ms_p95": 150.205,
+  "inv_recall_mean": 0.8518,
+  "mean_ms_mean": 6.3882,
+  "mean_recall_mean": 0.1856
+}

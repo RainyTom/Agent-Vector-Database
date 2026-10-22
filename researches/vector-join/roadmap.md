@@ -1,5 +1,7 @@
 # Vector Join 学习与实验路线
 
+> **状态：2026-10-22 暂停。** 现有 join 复现与估计器计划保留为背景，不再作为活跃主线；新主线见[语义时空混合搜索](../semantic-spatiotemporal-hybrid-search/index.md)。
+
 ## 第一阶段：建立共同问题定义
 
 1. 阅读 SimJoin（DOI `10.1145/3725403`）第 2–6 节，掌握 join window、window sliding 与 MST order selection。

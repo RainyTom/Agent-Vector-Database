@@ -1,0 +1,16 @@
+{
+  "queries": 500,
+  "ann_ms_mean": 43.9151,
+  "ann_ms_p50": 40.145,
+  "ann_ms_p95": 89.2598,
+  "gen_ms_mean": 18.6121,
+  "verify_ms_mean": 25.303,
+  "recall_mean": 0.9576,
+  "recall_min": 0.4,
+  "ann_dtw_mean": 43282.8,
+  "exact_ms_mean": 94.6422,
+  "exact_ms_p95": 255.127,
+  "ann_qps": 22.8,
+  "exact_qps": 10.6,
+  "speedup": 2.16
+}

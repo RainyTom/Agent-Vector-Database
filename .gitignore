@@ -179,3 +179,8 @@ researches/**/experiments/b1/**/*.ids
 researches/**/experiments/b1/**/*.t
 researches/**/experiments/b1/**/ids.bin
 researches/**/experiments/b1/**/timings.f64
+
+# Semantic mobility benchmark scratch
+production/semantic-mobility-search/work/
+datasets/**/*.csv
+datasets/**/*.jsonl

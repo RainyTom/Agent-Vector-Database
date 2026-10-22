@@ -1,0 +1,36 @@
+{
+  "csv": "[PosixPath('datasets/massive-steps/ny_checkins.csv'), PosixPath('datasets/massive-steps/istanbul_checkins.csv'), PosixPath('datasets/massive-steps/jakarta_checkins.csv'), PosixPath('datasets/massive-steps/petaling_jaya_checkins.csv'), PosixPath('datasets/massive-steps/sao_paulo_checkins.csv'), PosixPath('datasets/massive-steps/moscow_checkins.csv')]",
+  "rows_raw": 2097813,
+  "rows_used": 1838793,
+  "rows_dropped_incomplete": 259020,
+  "points": 1838793,
+  "users": 63084,
+  "cities": [
+    "istanbul",
+    "jakarta",
+    "moscow",
+    "ny",
+    "petaling_jaya",
+    "sao_paulo"
+  ],
+  "city_users": {
+    "istanbul": 23697,
+    "jakarta": 8336,
+    "moscow": 3992,
+    "ny": 6929,
+    "petaling_jaya": 14308,
+    "sao_paulo": 5822
+  },
+  "categories": 724,
+  "dim": 128,
+  "queries": 500,
+  "k": 10,
+  "spatial_km": 0.0,
+  "window_hours": 8760.0,
+  "seed": 20261022,
+  "time_min": 1333476000,
+  "time_max": 1539982380,
+  "user_len_mean": 29.14832604146852,
+  "user_len_median": 16,
+  "user_len_max": 2689
+}

@@ -1,3 +1,5 @@
+> **状态：2026-10-22 关闭。** 本方向的层级 Exact/Subtree 与 LES 实验已完成一轮，结论与限制见[LES 当日报告](07-laminar-edge-sharing/2026-10-20-exps/report.md)；不再作为活跃研究推进。已实现基线、负结果与证据保留，供后续引用。新主线转到[语义时空混合搜索](../semantic-spatiotemporal-hybrid-search/index.md)。
+
 > 当前语义（2026-10-19）：查询属性序列必须是返回对象属性序列的前缀；见[前缀包含过滤文档](../containment-filtered-vector-search/index.md)。下文保留此前层级节点/overlap方案，不能将一般无序集合包含或子树并集直接当作当前前缀定义。
 
 ## 基准与实现结果
