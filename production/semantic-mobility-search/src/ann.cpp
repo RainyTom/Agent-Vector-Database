@@ -56,6 +56,10 @@ struct Hit {
     int user;
     int64_t start_ts, end_ts;
     int a, b;
+    bool operator<(const Hit& o) const {  // max-heap: worst (score, id) on top
+        if (score != o.score) return score < o.score;
+        return user < o.user;
+    }
 };
 
 static inline float sq_l2(const std::array<float, D>& x, const std::array<float, D>& y) {
@@ -64,16 +68,20 @@ static inline float sq_l2(const std::array<float, D>& x, const std::array<float,
     return s;
 }
 
-static float dtw(const Query& q, const Point* pts, int a, int b, float lambda) {
+static float dtw(const Query& q, const Point* pts, int a, int b, float lambda,
+                 float cutoff = std::numeric_limits<float>::infinity()) {
     const int m = q.m;
     const int n = b - a + 1;
     const float INF = std::numeric_limits<float>::infinity();
+    const int norm = std::max(m, n);
+    const float cutoff_raw = std::isfinite(cutoff) ? cutoff * (float)norm : INF;
     std::array<float, 256> prev{}, cur{};
     std::fill(prev.begin(), prev.begin() + n + 1, INF);
     std::fill(cur.begin(), cur.begin() + n + 1, INF);
     prev[0] = 0.0f;
     for (int i = 1; i <= m; ++i) {
         cur[0] = INF;
+        float row_min = INF;
         for (int j = 1; j <= n; ++j) {
             float cost = std::sqrt(sq_l2(q.emb[i - 1], pts[a + j - 1].emb));
             if (lambda > 0.0f) {
@@ -83,10 +91,12 @@ static float dtw(const Query& q, const Point* pts, int a, int b, float lambda) {
             }
             float best = std::min(prev[j], std::min(cur[j - 1], prev[j - 1]));
             cur[j] = cost + best;
+            if (cur[j] < row_min) row_min = cur[j];
         }
+        if (row_min > cutoff_raw) return INF;  // all continuations exceed cutoff
         std::swap(prev, cur);
     }
-    return prev[n] / (float)std::max(m, n);
+    return prev[n] / (float)norm;
 }
 
 static inline bool in_bbox(const Query& q, const Point& p) {
@@ -96,7 +106,8 @@ static inline bool in_bbox(const Query& q, const Point& p) {
 
 static Hit best_episode(const Query& q, const std::vector<Point>& pts,
                         int off, int len, float lambda,
-                        long long* dtw_count, bool* has_window_points) {
+                        long long* dtw_count, bool* has_window_points,
+                        float cutoff = std::numeric_limits<float>::infinity()) {
     Hit best{std::numeric_limits<float>::infinity(), -1, 0, 0, -1, -1};
     *has_window_points = false;
     if (len <= 0) return best;
@@ -120,7 +131,7 @@ static Hit best_episode(const Query& q, const std::vector<Point>& pts,
             bool ok = true;
             for (int k = a; k <= b; ++k) if (!in_bbox(q, pts[k])) { ok = false; break; }
             if (!ok) continue;
-            float s = dtw(q, pts.data(), a, b, lambda);
+            float s = dtw(q, pts.data(), a, b, lambda, cutoff);
             ++*dtw_count;
             if (s < best.score) best = {s, pts[a].user, pts[a].ts, pts[b].ts, a, b};
         }
@@ -153,6 +164,51 @@ static std::vector<Hit> topk_from_users(const Query& q, const std::vector<Point>
     });
     if ((int)hits.size() > k) hits.resize(k);
     return hits;
+}
+
+static void heap_update(std::priority_queue<Hit>& heap, const Hit& h, int k) {
+    if (h.user < 0) return;
+    if ((int)heap.size() < k) heap.push(h);
+    else if (h.score < heap.top().score ||
+             (h.score == heap.top().score && h.user < heap.top().user)) {
+        heap.pop();
+        heap.push(h);
+    }
+}
+
+// Candidates must be sorted by their DTW lower bound. Once the heap is full,
+// all remaining candidates have LB >= the heap's worst score and can be
+// skipped without changing the top-k within the candidate set.
+static std::vector<Hit> verify_sorted(const Query& q, const std::vector<Point>& pts,
+                                      const std::vector<int32_t>& off,
+                                      const std::vector<int32_t>& len,
+                                      const std::vector<std::pair<float, int>>& cand,
+                                      float lambda, int k, ScanStats* stats,
+                                      long long* verified) {
+    std::priority_queue<Hit> heap;
+    for (auto& [lb, u] : cand) {
+        (void)lb;  // ordering heuristic only; not a valid per-user DTW bound
+        float cutoff = ((int)heap.size() >= k)
+                           ? heap.top().score
+                           : std::numeric_limits<float>::infinity();
+        bool has_points = false;
+        Hit h = best_episode(q, pts, off[u], len[u], lambda, &stats->dtw,
+                             &has_points, cutoff);
+        ++*verified;
+        if (has_points) ++stats->candidate_users;
+        if (h.user >= 0) {
+            ++stats->feasible_users;
+            heap_update(heap, h, k);
+        }
+    }
+    std::vector<Hit> out;
+    out.reserve(heap.size());
+    while (!heap.empty()) { out.push_back(heap.top()); heap.pop(); }
+    std::sort(out.begin(), out.end(), [](const Hit& x, const Hit& y) {
+        if (x.score != y.score) return x.score < y.score;
+        return x.user < y.user;
+    });
+    return out;
 }
 
 static double now_ms() {
@@ -267,7 +323,7 @@ int main(int argc, char** argv) {
 
     std::ofstream out(dir + "/ann_results.csv");
     out << "qid,m,exact_us,exact_dtw,exact_hits,"
-        << "ann_us,ann_gen_us,ann_verify_us,ann_candidates,ann_dtw,ann_hits,recall_ann\n";
+        << "ann_us,ann_gen_us,ann_verify_us,ann_candidates,ann_verified,ann_dtw,ann_hits,recall_ann\n";
 
     double sum_exact = 0, sum_ann = 0, sum_recall = 0, sum_gen = 0, sum_verify = 0;
     long long sum_dtw_exact = 0, sum_dtw_ann = 0;
@@ -330,7 +386,7 @@ int main(int argc, char** argv) {
             float lb = 0.0f;
             for (int j = 0; j < q.m; ++j) {
                 if (std::isfinite(arr[j])) lb += arr[j];
-                else lb += 2.0f;  // missing query point: large but finite penalty
+                else lb += 2.0f;  // ranking heuristic: missing query point is bad
             }
             lb /= (float)q.m;
             ranked.push_back({lb, __builtin_popcount(mk), key});
@@ -341,7 +397,7 @@ int main(int argc, char** argv) {
             return a.key < b.key;
         });
         if ((int)ranked.size() > cand_cap) ranked.resize(cand_cap);
-        std::vector<int> cand;
+        std::vector<std::pair<float, int>> cand;
         std::unordered_set<int> seen;
         cand.reserve(ranked.size());
         for (auto& r : ranked) {
@@ -350,13 +406,14 @@ int main(int argc, char** argv) {
                 std::cerr << "bad candidate user " << u << " n_users " << n_users << "\n";
                 continue;
             }
-            if (seen.insert(u).second) cand.push_back(u);
+            if (seen.insert(u).second) cand.push_back({r.lb, u});
         }
         double g1 = now_ms();
 
         ScanStats as;
+        long long verified = 0;
         double v0 = now_ms();
-        auto ann = topk_from_users(q, pts, off, len, cand, lambda, k, &as);
+        auto ann = verify_sorted(q, pts, off, len, cand, lambda, k, &as, &verified);
         double v1 = now_ms();
         std::unordered_set<int> exact_set;
         for (const auto& h : exact) exact_set.insert(h.user);
@@ -372,7 +429,7 @@ int main(int argc, char** argv) {
         out << qi << "," << q.m << ","
             << (t1 - t0) << "," << es.dtw << "," << exact.size() << ","
             << (v1 - g0) << "," << (g1 - g0) << "," << (v1 - v0) << ","
-            << cand.size() << "," << as.dtw << "," << ann.size() << "," << recall << "\n";
+            << cand.size() << "," << verified << "," << as.dtw << "," << ann.size() << "," << recall << "\n";
     }
     out.close();
     std::cerr << "valid " << valid << "/" << n_queries << "\n";
