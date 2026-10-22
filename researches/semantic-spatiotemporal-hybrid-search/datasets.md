@@ -4,6 +4,8 @@
 
 ## 主数据集：Massive-STEPS
 
+> **应用定位**：这是真实签到轨迹，但不是交通/网约车/公交刷卡级别的完整出行日志。它适合验证“地点+时间+语义序列”的检索协议与索引，不足以单独证明领域生产价值。真实应用需要更高采样率、交通方式、完整 OD 与授权数据；见[问题定义 §0](problem-definition.md)与[RQ4](research-questions.md)。
+
 - 论文：Wilson Wongso, Hao Xue, Flora D. Salim. *Massive-STEPS: Massive Semantic Trajectories for Understanding POI Check-ins — Dataset and Benchmarks.* SIGSPATIAL 2026；[arXiv:2505.11239](https://arxiv.org/abs/2505.11239)。
 - 来源：[GitHub](https://github.com/cruiseresearchgroup/Massive-STEPS)、[Hugging Face collection](https://huggingface.co/collections/CRUISEResearchGroup/massive-steps-point-of-interest-check-in-dataset-682716f625d74c2569bc7a73)。
 - 构造：Semantic Trails 签到数据 + Foursquare Open Source Places 的 POI 元数据；15 个城市，2012–2013 与 2017–2018 两段。
