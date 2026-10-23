@@ -1,12 +1,12 @@
 # 语义时空混合向量搜索
 
-更新日期：2026-10-22（Asia/Shanghai）。
+更新日期：2026-10-23（Asia/Shanghai）。
 
 > **状态：新主线，探索阶段。** 2026-10-22 关闭[层级属性检索](../nested-attr-vector-search/index.md)，暂停[前缀包含](../containment-filtered-vector-search/index.md)与[vector join](../vector-join/roadmap.md)。本方向以高维向量检索为主线，研究带真实语义的时空属性（地点、轨迹、时间戳）如何改变混合搜索的问题定义、索引与执行。
 
 ## 新颖性状态
 
-**当前只能称为“候选新问题”，不能声称“别人未曾解决”。** 初步审计见[新颖性审计](novelty-audit.md)：ETQ（ICDE 2017）已做“查询点序列 → top-k 轨迹”，TISIS* 已做语义轨迹 LCSS，SimSub 已做子轨迹 top-k；但尚未发现同时覆盖“稠密语义序列 + 绝对时间窗/持续时间 + 空间范围 + episode 区间 + DTW”的直接工作。下一步必须做系统 proceedings 检索与引用闭包，再决定是“新问题 + 简单基线”还是“ETQ/SimSub 的时间可行扩展 + 外部基线”。
+**当前更接近“constrained semantic TRSSQ”，不能再称为尚无输出前序的新问题。** [新颖性审计](novelty-audit.md)已确认：GTRSS/TRSSQ 做“每条轨迹的最佳连续子轨迹 → 全局 top-k”，已经覆盖 episode 定位、轨迹级去重和片段返回；TISIS* 覆盖 POI embedding 序列匹配；ST2Vec 覆盖时间感知完整轨迹相似度；Quantum Range Query 覆盖轨迹段上的时空混合范围查询。尚未核到的是“稠密语义序列 + 绝对时间窗/持续时间 + 空间硬约束”的同一实现。下一步必须对比 `hard filter → TRSSQ`，并精读 ICDE 2024 TRSSQ 前序；只有硬约束导致新的算法结构或显著收益，独立贡献才成立。
 
 ## 应用背景
 
@@ -32,17 +32,18 @@
 
 给定长轨迹（用户在城市中的签到序列）和一条短查询 episode（若干带相对时间的语义停留点），在指定绝对时间窗与空间范围内，找 top-k 条轨迹中包含的、语义序列最相似的连续 episode。形式定义见[问题定义](problem-definition.md)。
 
-与最接近工作的差异（详见[前序工作](prior-work.md)）：
+与最接近工作的差异（详见[前序工作](prior-work.md)与[场景化问题对照](problem-comparison.md)）：
 
-| 工作 | 查询 | 返回 | 时间约束 | 序列对齐 | 本问题的差异 |
-|---|---|---|---|---|---|
-| ETQ | 点序列 + 每点关键词 | top-k 轨迹 | 无查询时间窗 | 点级最佳匹配聚合 | 不要求连续 episode，不返回可行区间 |
-| TISIS* | 完整轨迹 | 完整轨迹 | 无 | LCSS + POI embedding | 本问题定位 episode、带绝对时间窗与 top-k |
-| TrajPrism / OmniTraj | 文本/多模态 | 完整轨迹 | 弱 | 学习表示 | 不做 episode 定位与时间可行性 |
-| 子轨迹相似搜索 | 轨迹 | 子轨迹 | 无/道路网络 | 几何距离 | 非语义 embedding，无绝对时间窗 |
-| STKST-I | 关键词 + 时间 + 位置 | top-k 语义轨迹 | 时间相关性 | 关键词聚合 | 不做稠密语义序列对齐与 episode 定位 |
+| 工作 | 用户问题 | 返回 | 已覆盖本问题的部分 | 剩余差异 |
+|---|---|---|---|---|
+| **GTRSS/TRSSQ** | 每条长轨迹中哪段几何路线最像查询路线？ | 每轨迹最佳连续子轨迹，再取 top-k | **连续片段、轨迹级去重、全局 top-k、区间** | 无语义 POI/text 与绝对时间/时长/空间硬约束 |
+| ETQ | 哪些轨迹包含这些地点和活动？ | top-k 完整轨迹 | 语义点序列到 top-k | 匹配点可分散；无 episode 可行性 |
+| TISIS* | 哪些完整 POI 序列足够相似？ | 阈值内完整轨迹 | Word2Vec POI 匹配 + LCSS | 非 top-k；不定位 episode |
+| ST2Vec | 哪些完整路线在空间和时间节奏上相似？ | 完整轨迹 embedding/top-k | 时间进入软相似度 | 无语义 episode 与硬窗口 |
+| Quantum Range Query | 哪些轨迹段落入给定时空窗口？ | 全部精确匹配段/量子叠加态 | 轨迹+时间戳的混合范围访问 | range reporting，非相似度 top-k；semantic 未实测 |
+| REPOSE / N-tree | 哪些完整轨迹最近或落入距离范围？ | 完整轨迹 | 分布式 top-k / exact metric index | 不做连续 episode |
 
-ACORN 等单对象过滤检索已明确排除出问题新颖性审计。当前候选增量只能相对 ETQ、TISIS*、SimSub、STKST-I 等轨迹/子轨迹工作判断：**时间可行的连续语义 episode 检索，并返回可解释区间**。是否成立取决于系统查重，而不是与过滤 ANN 的表面差异。
+ACORN 等单对象过滤检索仍排除出问题新颖性审计。当前候选增量只有：**在绝对时间窗、持续时间和空间范围硬可行域内，按稠密语义序列距离选择 representative subtrajectory，并联合执行约束与相似度搜索。** 这必须相对 GTRSS/TRSSQ + filter 证明，而不是相对 filtered ANN 的表面差异。
 
 ## 首轮结果（2026-10-22）
 
@@ -60,7 +61,7 @@ ACORN 等单对象过滤检索已明确排除出问题新颖性审计。当前�
 
 0. **领域验证前置（进行中）**：先用 5–10 个真实出行/分析查询验证 episode 定义、时间窗/空间粒度与返回字段；如果领域用户只需要整轨迹相似度或单一分数，就收缩问题，不继续堆索引。详见[RQ4](research-questions.md)。
 1. **基准与瓶颈测量（已完成首轮）**：用 Massive-STEPS 真实签到轨迹构造 episode 查询与精确 oracle，测全扫描 DTW、时间/空间过滤、倒排索引、整轨迹表示 kNN 的延迟与候选规模。首轮结论见[报告](2026-10-22-exps/report.md)。
-2. **索引**：多粒度时间分段 + 语义 sketch + 时间/空间访问路径；研究可证明的 DTW/LCSS 下界剪枝，区分精确与近似。
+2. **直接基线与瓶颈测量**：补 `hard filter → exact/approximate TRSSQ`、GTRSS/TRSSQ 适配、ETQ-embedding 与 TISIS*-LCSS；在相同语义距离、硬可行性和召回定义下对比候选规模、延迟与内存。
 3. **执行计划**：在轨迹谓词、时间窗、空间范围与向量 sketch 之间做代价选择；对齐召回定义与预算。
 4. **跨领域验证**：与 mobility/urban 数据或研究问题结合，验证查询是否有实际用途，而不是只做合成 workload。
 

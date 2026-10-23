@@ -131,3 +131,11 @@
 - 六个README增加当前决定，directions及所有主要入口撤销原实施优先级；保留历史方案与证据。
 - 补Directory-Aware、Curator、iRangeGraph的项目判断，不改作者方法/理论；其他新候选书目与全文未完核，未新增完整论文条目，仍21篇/22关系。
 - 无算法实现或性能实验；完整组合是否等价与核心是否已有前序分开记录，历史授权/IVM及图增广引用闭包仍待补。
+
+## 2026-10-23（Asia/Shanghai）轨迹检索问题边界修正
+
+- 新增 `trajectory-search` 主主题及 Quantum Range Query、TISIS、REPOSE、N-tree、ST2Vec、GTRSS、TKDE trajectory similarity survey 共7条记录；保存 arXiv 原始 PDF、日期化元数据与逐篇证据。
+- 核实 GTRSS/TRSSQ 已定义“每条轨迹的最佳连续子轨迹，再做全局 top-k”，修正将 episode 定位、轨迹级去重和区间输出视为候选新意的旧判断。
+- 将 Quantum Range Query 从单对象过滤边界中纠正为“同一轨迹混合数据域、不同 range-reporting 算子”；其形式模型含 semantic，但 Table 1 未实测 semantic，结论仍将其列为 future work。
+- 核实 TISIS* 使用 Word2Vec POI embedding + LCSS threshold；REPOSE/N-tree/ST2Vec 分别提供分布式完整轨迹 top-k、exact metric kNN/range、时空软相似度前序。
+- 新增 survey→REPOSE、survey→ST2Vec、GTRSS→REPOSE 三条有正文证据的关系。总索引现为 **28篇/25关系**；本轮未运行性能实验，不作新颖性确认。

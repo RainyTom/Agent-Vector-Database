@@ -1,0 +1,26 @@
+{
+  "source": "arxiv",
+  "query": "id:2609.29612",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/2609.29612v1",
+      "title": "Towards Quantum Range Query for Spatial-Temporal-Semantic Trajectory Data",
+      "summary": "Range query is a fundamental task in geospatial data search and many other downstream applications. Classic range queries often rely on tree-based spatial indexes, of which the query speed depends on the number of indexed points $k$ within the queried range. For instance, a classical B+ tree answers a range query in O(log N+k). For a long time, this speed has long been considered asymptotically optimal in classic database systems, until the recent emergence of quantum computing, where a quantum B+ tree may requires only O(log_B N). This paper presents Quantum Range Query (QRQ) via a hybrid quantum-classic algorithm to return the range query results in quantum superpositions. In this context, QRQ is designed to accelerate classic range query on spatial-temporal-semantic trajectory geodata using quantum algorithms. Specifically, QRQ develops quantum variants of R-tree, TB-tree and KD-tree, where the physical slots of a node, including unused padding slots, are treated as an array that a quantum random-access memory (QRAM) can read in superpositions. Evaluations on three common trajectory datasets, namely GeoLife, T-Drive, and GDP Drifter, and 10,000 queries per setting, the QRQ speedup at 1% target selectivity ranges from 2.03 times) to 64.70 times. More importantly, QRQ shows a great potential in optimizing existing trajectory range query, so it becomes the shared primitive on which human mobility analysis, and later searches specified by large language models (LLMs) and geo-foundation models (GeoFMs), can rest.",
+      "published": "2026-08-28T08:33:07Z",
+      "updated": "2026-08-28T08:33:07Z",
+      "authors": [
+        "Hao Li",
+        "Zhihang Liu",
+        "Liwei Zou",
+        "Jinlin Wu",
+        "Wufan Zhao"
+      ],
+      "categories": [
+        "cs.DB"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/2609.29612v1"
+    }
+  ],
+  "downloaded_pdf": "papers/trajectory-search/2609.29612-quantum-range-query/paper.pdf"
+}

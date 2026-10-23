@@ -5,80 +5,93 @@
 1. 当前问题是否已经有直接同问题工作？
 2. 如果没有，是否只需要自建简单基线，而不必改造他人方案？
 
-结论先行：**目前只能称为“候选新问题”，不能声称“别人未曾解决”。** 初步检索未发现同时覆盖“稠密语义序列 + 绝对时间窗/持续时间 + 空间范围 + top-k episode 区间 + DTW 排序”的直接工作；ETQ（ICDE 2017）在“查询点序列 → top-k 轨迹”上最接近。审计只比较共享轨迹、序列或子轨迹查询语义的工作；单对象过滤检索不参与新颖性判定。
+结论先行：**当前不能再按“全新问题”定位，更稳妥的描述是“带语义与硬时间可行性的 representative subtrajectory query”。** GTRSS/TRSSQ 已经定义“每条数据轨迹取一个最佳连续子轨迹，再做全局 top-k”，与本问题的输出语义基本同形；ETQ 与 TISIS* 已覆盖语义轨迹匹配；ST2Vec 已把时间戳纳入完整轨迹相似度。尚未发现的是这些能力与绝对时间窗、持续时间、空间范围硬约束的同一组合，但“组件组合未命中”不等于独立新问题。
 
-## 1. 直接问题家族逐篇对照
+## 1. 轨迹检索问题族
 
-| 工作 | 查询 | 数据表示 | 时间语义 | 空间语义 | 输出 | 排序/匹配 | 与本问题的差距 |
-|---|---|---|---|---|---|---|---|
-| **ETQ** (ICDE 2017) | 点序列 + 每点关键词 | 轨迹点 + 关键词权重 | 无查询时间窗；时间戳仅存在于数据 | 欧氏距离 | top-k 轨迹；可返回代表点子集 | 每查询点取最佳点，空间+TF-IDF 聚合 | 非稠密 embedding；无绝对时间窗/持续时间；不要求连续 episode；不返回硬可行 episode 区间 |
-| **STKST-I** (ESWA 2023) | 关键词 + 时间 + 位置 | 语义轨迹 | 关键词的时间相关性 | 查询位置邻近 | top-k 语义轨迹 | 关键词/时间/空间匹配 | 非 embedding 序列 DTW；无 episode 定位与持续时间约束；摘要级证据 |
-| **TISIS\*** (BDA 2024) | 完整查询轨迹 | POI embedding 序列 | 无时间窗 | 无/POI 顺序 | 阈值内完整轨迹 | LCSS + POI embedding | 不定位 episode；无绝对时间窗/持续时间；不是 top-k 连续排序 |
-| **SimSub / 代表子轨迹** (PVLDB 2023; ICDE 2024/2025) | 查询轨迹 | 坐标轨迹/学习表示 | 无绝对时间窗；几何时间可能参与 | 轨迹几何 | 最相似子轨迹 / top-k 代表子轨迹 | Fréchet/EDR/学习距离 | 非稠密语义 embedding；无时间窗/持续时间硬约束；不返回 top-k 轨迹级 episode |
-| **Top-k (Sub-)Trajectories** (Zheng et al.) | 关键词/点 | 轨迹 + 关键词 | 弱 | 欧氏 | top-k 轨迹/子轨迹 | 编辑距离/关键词 | 非稠密语义；无时间窗/持续时间 |
+### 1.1 相似检索与子轨迹检索
 
-**明确排除**：ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 等检索单个向量或对象，输入输出单位与 episode 检索不同。它们既不能证明本问题新颖，也不是问题级基线；仅在实现设计中作为过滤图搜索、时间分区或空间分区的机制参考。Quantum Range Query 是范围报告问题，也不进入 top-k episode 对照。
-
-## 2. 直接问题差异矩阵
-
-| 维度 | ETQ | TISIS* | SimSub | STKST-I | 本问题 |
+| 工作 | 查询/输出 | 相似度中的时间 | 语义 | 连续片段 | 与本问题的关系 |
 |---|---|---|---|---|---|
-| 查询是序列 | 是（点+关键词） | 是（完整轨迹） | 是（查询轨迹） | 否（关键词+时间+位置） | 是（语义 episode） |
-| 稠密 embedding | 否（TF-IDF） | 是（POI embedding） | 部分（学习表示） | 否/未核实 | 是 |
-| 绝对时间窗 | 否 | 否 | 否 | 未核实为硬约束 | **是** |
-| 持续时间容差 | 否 | 否 | 否 | 否 | **是** |
-| 空间范围硬约束 | 点级邻近 | 否 | 几何轨迹 | 查询位置邻近 | **是** |
-| 连续 episode 定位 | 否（代表点集） | 否 | 是（几何子轨迹） | 否 | **是（语义+时间可行）** |
-| 返回 episode 区间 | 否 | 否 | 子轨迹区间 | 否 | **是** |
-| top-k 轨迹 + 区间 | top-k 轨迹 | 阈值集合 | top-k 子轨迹 | top-k 轨迹 | **是** |
-| 序列 DTW 排序 | 否（点级聚合） | LCSS | 几何/学习距离 | 关键词聚合 | **是** |
+| **GTRSS / TRSSQ** (arXiv 2025；问题源自 ICDE 2024) | 查询轨迹 → 每条轨迹一个最佳子轨迹 → 全局 top-k | 点含 timestamp，但所用 DTW/EDR/ERP 主要比较几何序列 | 无 | **有** | **输出语义最近**；已覆盖 episode 定位、轨迹级去重与 top-k |
+| **ETQ** (ICDE 2017) | 点序列+关键词 → top-k 轨迹 | 无查询时间窗 | TF-IDF 关键词 | 否，代表点可分散 | 语义 top-k 最近，但不要求连续 |
+| **TISIS / TISIS\*** (BDA 2024) | POI 序列+阈值 → 完整轨迹集合 | timestamp 只确定顺序 | TISIS* 用 Word2Vec POI embedding | 否 | 语义序列最近，但不是 top-k/episode |
+| **ST2Vec** (KDD 2022) | 完整路网轨迹 → embedding；top-k 为 case study | **空间+时间软相似度** | 无 POI/text 语义 | 否 | 证明 timestamp 已进入轨迹相似学习 |
+| **N-tree / DistanceAvg** (ACM T-SAS 2025) | 完整轨迹 → exact kNN / metric range | **连续时空距离** | 无 | 否 | 精确时空轨迹索引；不是 episode |
+| **REPOSE** (ICDE 2021) | 查询轨迹 → top-k 完整轨迹 | 依所选距离；主数据为几何轨迹 | 无 | 否 | 分布式完整轨迹 top-k 索引 |
+| **STKST-I** (ESWA 2023) | 关键词+时间+位置 → top-k 语义轨迹 | 时间相关性 | 关键词 | 否 | 同时有语义/时间/位置，但不做 episode |
+| **SimSub 家族** | 查询轨迹 → 最相似或 top-k 子轨迹 | 通常无绝对时间窗 | 通常无 POI/text 语义 | 有 | 子轨迹检索直接前序 |
+
+### 1.2 同一轨迹数据域、不同查询算子
+
+**Towards Quantum Range Query for Spatial-Temporal-Semantic Trajectory Data**（arXiv:2609.29612v1）不能与 ACORN 一起排除为“单对象过滤”。它处理轨迹段记录，并在形式模型中包含 temporal、spatial、semantic 分量；查询是多维窗口，输出窗口内精确匹配段的量子叠加态。
+
+但它与本问题仍有三项算子差异：
+
+1. QRQ 是 **range reporting**，不按相似度 top-k；
+2. 返回轨迹段记录集合/叠加态，不为每条轨迹寻找最佳 episode；
+3. Table 1 只评测 Time、Space、Space-time；结论把 semantic key 扩展列为 future work。因此标题中的 semantic 不能写成“已实测完整语义检索”。
+
+### 1.3 非轨迹问题
+
+ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 仍属于单向量或单对象检索。它们只作为过滤图、时间/空间分区等执行机制参考，不参与轨迹问题新颖性判定。
+
+## 2. 最近邻差异矩阵
+
+| 维度 | GTRSS/TRSSQ | ETQ | TISIS* | ST2Vec | Quantum Range Query | 本问题 |
+|---|---|---|---|---|---|---|
+| 查询单位 | 查询轨迹 | 点+关键词序列 | 完整 POI 轨迹 | 完整路网轨迹 | 多维属性窗口 | 语义 episode |
+| 输出单位 | **每轨迹最佳子轨迹的 top-k** | top-k 轨迹 | 阈值内完整轨迹 | 完整轨迹 embedding/top-k | 窗口内轨迹段 | **每轨迹最佳 episode 的 top-k** |
+| 连续片段定位 | **是** | 否 | 否 | 否 | 相交段，不做最佳片段 | **是** |
+| 语义 | 无 | TF-IDF | POI embedding 匹配 | 无 | 形式模型有；实验未实现 | 稠密语义序列 |
+| 时间 | timestamp 非主 score | 无查询约束 | 只保序 | 软时间相似度 | 时间范围硬约束 | 绝对窗+持续时间硬约束 |
+| 空间范围硬约束 | 无 | 点级邻近 | 无 | 路网 | 有 | 有 |
+| 排序/选择 | DTW/EDR/ERP top-k | 聚合 top-k | LCSS threshold | learned distance | range membership | 语义 DTW top-k |
 
 ## 3. 判定
 
-**支持“新问题”的证据**：
+**已经被覆盖的部分**：
 
-- 没有一篇工作同时要求“绝对时间窗 + 持续时间容差 + 空间范围”下，对**连续语义 episode** 做 top-k DTW 检索并返回区间。
-- ETQ 的查询是点序列+关键词，时间不是查询约束；TISIS* 不做 episode 定位与时间窗；SimSub 不做稠密语义+时间窗。
+- GTRSS/TRSSQ 已覆盖“连续子轨迹定位 + 每条轨迹一个代表片段 + 全局 top-k”；不能再把 episode 区间或轨迹级去重写成新意。
+- TISIS* 已覆盖 POI embedding 序列匹配；ETQ 已覆盖语义点序列到 top-k 轨迹。
+- ST2Vec 与 DistanceAvg 已覆盖时间戳参与完整轨迹相似度。
+- Quantum Range Query 已覆盖轨迹段上的时空混合范围访问，但不是相似度 top-k，且 semantic 尚未实测。
 
-**反对“全新”的证据**：
+**仍待证明的候选增量**：
 
-- ETQ 已经形式化“查询点序列 → top-k 轨迹”的点级匹配与 top-k 聚合；如果只把关键词换成 embedding，容易被审稿人视为 ETQ 的 embedding 变体。
-- SimSub 已经研究“查询轨迹 → 子轨迹”的 top-k/代表子轨迹；只是几何/学习距离，不是时间窗语义 episode。
-- STKST-I 与 Top-k (Sub-)Trajectories 已分别组合语义/时间/位置和轨迹/子轨迹 top-k；不能靠组件清单宣称“全新”，必须证明查询约束与输出语义共同改变了问题。
-- 当前索引（城市+季度 HNSW + 候选验证）是系统实现，不是新的 ANN 理论。
+- 绝对时间窗、持续时间、空间范围作为不可放宽的 episode 可行性约束；
+- 在该可行域内做语义序列距离排序；
+- 为这组约束设计比“先过滤再执行 TRSSQ”更有效的访问路径。
 
-**结论**：当前应定位为 **“时间可行、可解释的语义 episode 检索”**。新意候选是轨迹问题内部的时间可行性与 episode 定位，而不是与单对象过滤 ANN 的差异。必须通过系统查重证明 ETQ、SimSub、TISIS*、STKST-I 等直接问题家族不能表达这些约束；否则应收缩为现有轨迹检索上的时间可行性扩展。
+**当前结论**：这更像 **constrained semantic TRSSQ 的系统扩展**，而不是可以直接宣布的新检索问题。只有证明硬约束改变了算法结构、复杂度或执行计划，并显著优于 GTRSS/TRSSQ + filter 的直接适配，才有独立贡献。
 
-## 4. 基线策略（按“新问题”假设）
+## 4. 基线策略
 
-如果审计确认没有直接同问题工作，**不需要改造所有他人方案**。合理基线是：
+1. **精确 oracle**：枚举时间/空间/持续时间可行 episode，再做语义 DTW。
+2. **Filter → exact TRSSQ**：先按硬约束裁剪，再为每条轨迹求最佳连续子轨迹；这是最重要的直接基线。
+3. **GTRSS/TRSSQ 适配**：使用相同语义距离与可行性验证；若无代码，至少复现问题等价的 filter-validate 版本。
+4. **ETQ-embedding**：检验“不要求连续”的语义轨迹 top-k 与本问题差异。
+5. **TISIS*-LCSS**：语义 POI 匹配的序列距离消融。
+6. **ST2Vec/整轨迹 embedding + verify**：完整轨迹表示基线。
+7. **当前点级 ANN + episode verify**及分区/early-abandon 消融。
 
-1. **精确 oracle**：全用户扫描 + 枚举可行 episode + DTW。必须。
-2. **时间/空间过滤 + 扫描**：证明索引不是靠过滤本身取得的收益。
-3. **类别倒排 + 精确验证**：硬过滤基线。
-4. **整轨迹均值 kNN + 精确验证**：粗表示基线。
-5. **点级 ANN + 精确验证**：当前最强简单基线。
-6. **消融**：城市/季度分区、有序命中排序、DTW early abandon。
-
-外部方法只在两种情况下需要：
-
-- 审计发现直接同问题工作，此时必须至少一个外部对照；
-- 直接问题家族可以被无歧义地映射到本查询，例如 ETQ-embedding 变体，且不会引入不公平的调参。
-
-ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 不属于上述两类，不能为了“看起来完整”而列为问题基线。TISIS* 风格 LCSS 可以作为序列打分消融，但其阈值式整轨迹输出不能冒充同问题系统。
+Quantum Range Query、ACORN、REPOSE、N-tree 的原系统不应硬改成同题基线；分别属于 range reporting、单对象过滤、完整轨迹分布式检索和 metric whole-trajectory search。可迁移其机制，但实验标签必须写清。
 
 ## 5. 下一步（查重门槛）
 
-1. 系统检索 SIGMOD、VLDB、ICDE、SIGSPATIAL、CIKM、WSDM、KDD 2017–2026 的 proceedings；对 ETQ、SimSub、TISIS*、STKST-I 做前后向引用闭包。
-2. 检索同义术语：`trajectory episode retrieval`、`time-constrained subtrajectory search`、`semantic trajectory segment search`、`temporal trajectory top-k`、`activity trajectory search`。
-3. 把候选工作填入第 1 节矩阵；若出现一行同时满足“时间窗 + 持续时间 + 空间 + episode 区间 + 稠密语义”，则当前问题不是新问题，必须 pivot。
-4. 若没有，冻结问题定义，按第 4 节基线写“问题 + 基准 + 系统”论文；不要声称“首次提出轨迹检索”或“首次使用 ANN”。
+1. 优先精读 **Efficient Learning-based Top-k Representative Similar Subtrajectory Query**（ICDE 2024）及其引用链；GTRSS 明确称其为当前 TRSSQ 直接前序。
+2. 对 GTRSS/TRSSQ、ETQ、TISIS*、STKST-I 做前后向引用闭包。
+3. 检索 `constrained representative subtrajectory query`、`semantic subtrajectory retrieval`、`time-windowed subtrajectory top-k`、`activity trajectory episode search`。
+4. 若已有方法支持语义距离及时间/空间/持续时间硬约束，则 pivot；若没有，冻结为 constrained semantic TRSSQ，不再用“首次 episode 检索”表述。
 
 ## 6. 证据状态
 
-- ETQ：已读 ICDE 2017 论文前 7 页（定义 1–7、算法 1–2、相关工作表）。
-- TISIS*：已读 arXiv HTML 问题定义与算法 1–2；实验未逐项核对。
-- SimSub：摘要/相关工作报告级；ICDE 2024/2025 全文未读。
-- STKST-I：摘要级；正式 DOI/实验未核对。
-- ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST、Quantum Range Query：已从直接问题审计排除；其全文状态不阻塞本问题的新颖性判定。
-- 本审计不是系统综述，不能作为“无人研究”的最终证据。
+- Quantum Range Query：已核 arXiv v1 全文4页；形式模型包含 semantic，实验只做 time/space/space-time，semantic extension 是 future work。
+- TISIS/TISIS*：已核 arXiv v2 问题定义与 embedding 章节；全文明确 TISIS* 使用 Word2Vec POI embeddings。
+- REPOSE：已核 Definition 3 与 Crossref 正式书目。
+- N-tree：已核 exact kNN/range、DistanceAvg 与正式 DOI。
+- ST2Vec：已核时空学习目标与 KDD DOI；完整轨迹，不含 POI/text 语义。
+- GTRSS：已核 Definitions 1–4 与距离；它是当前输出语义最近工作。
+- TKDE 2024 survey：已核 taxonomy；它不以语义 POI/text 为主要分类轴。
+- ETQ：已读定义 1–7、算法 1–2；实验未复现。STKST-I 与 ICDE 2024 TRSSQ 仍需精读。
+- 本审计仍不是完整系统综述，不能据此声称“无人研究”。

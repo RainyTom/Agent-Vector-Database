@@ -1,0 +1,28 @@
+{
+  "source": "arxiv",
+  "query": "id:2112.09339",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/2112.09339v2",
+      "title": "Deep Spatially and Temporally Aware Similarity Computation for Road Network Constrained Trajectories",
+      "summary": "Trajectory similarity computation has drawn massive attention, as it is core functionality in a wide range of applications such as ride-sharing, traffic analysis, and social recommendation. Motivated by the recent success of deep learning technologies, researchers start devoting efforts to learning-based similarity analyses to overcome the limitations (i.e., high cost and poor adaptability) of traditional methods. Specifically, deep trajectory similarity computation aims to learn a distance function that can evaluate how similar two trajectories are via neural networks. However, existing learning-based methods focus on spatial similarity but ignore the time dimension of trajectories, which is suboptimal for time-aware applications. Besides, they tend to disregard the embedding of trajectories into road networks, restricting their applicability in real scenarios. In this paper, we propose an effective learning-based framework, called ST2Vec, to perform efficient spatially and temporally aware trajectory similarity computation in road networks. Finally, extensive experimental evaluation using three real trajectory data sets shows that ST2Vec outperforms all the state-of-the-art approaches substantially.",
+      "published": "2021-12-17T06:18:04Z",
+      "updated": "2022-02-27T03:38:30Z",
+      "authors": [
+        "Ziquan Fang",
+        "Yuntao Du",
+        "Xinjun Zhu",
+        "Lu Chen",
+        "Yunjun Gao",
+        "Christian S. Jensen"
+      ],
+      "categories": [
+        "cs.LG",
+        "cs.DB"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/2112.09339v2"
+    }
+  ],
+  "downloaded_pdf": "papers/trajectory-search/2112.09339-st2vec/paper.pdf"
+}

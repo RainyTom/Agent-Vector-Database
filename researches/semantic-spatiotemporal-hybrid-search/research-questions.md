@@ -1,6 +1,6 @@
 # 研究问题与最小实验
 
-更新日期：2026-10-22。以下为研究者基于文献与数据特征提出的假设，不是作者原话；新颖性尚未充分排查。
+更新日期：2026-10-23。以下为研究者基于文献与数据特征提出的假设，不是作者原话；当前定位是 constrained semantic TRSSQ，独立新颖性尚未证明。
 
 ## 2026-10-22 实测更新
 
@@ -8,19 +8,20 @@
 - **RQ2 的部分机制已验证**：时间分季度 + 城市分区的 HNSW 候选生成 + 精确 DTW 验证，在 50 km workload 达到 93.25 qps、Recall@10 0.9522、p95 24.5 ms；但尚未实现段级 sketch 或可证明下界，当前贡献是“分区 + 候选排序 + early abandon”，不是序列索引理论。
 - **RQ3 仅做了固定计划消融**：城市/季度分区、topn、cand、ef 的交叉点已测；没有实现代价模型或自适应计划。
 - **RQ4 未做**：还没有真实领域查询或合作者访谈；查询仍是采样 episode。
+- **文献边界已收缩**：GTRSS/TRSSQ 已覆盖连续子轨迹、每轨迹一个代表片段和全局 top-k；Quantum Range Query 已覆盖轨迹段时空范围访问。RQ1–RQ3 必须相对 `hard filter → TRSSQ` 检验，不能把 episode 输出本身写成贡献。
 
 ## RQ1：时间窗约束的 episode 检索是否构成系统瓶颈？
 
 **问题**：在真实用户级签到轨迹上，给定短语义 episode、绝对时间窗与空间范围，精确 top-k 是否已经被“时间/空间过滤 + 全扫描 DTW”充分解决，还是仍需要新的序列索引？
 
-**现有不足**：TISIS* 只做整轨迹 LCSS 阈值查询；过滤 ANN 不支持序列；整轨迹 kNN 丢失 episode 定位。没有工作在同一 workload 上比较这些执行方式。
+**现有不足（待完整查重）**：GTRSS/TRSSQ 已支持每条轨迹的 representative subtrajectory top-k，TISIS* 支持 POI embedding + LCSS，ST2Vec 支持时空软相似度；尚未核到同一系统把绝对时间窗、持续时间与空间范围作为硬可行性，再按稠密语义序列排序。真正待测的是联合执行是否优于 `hard filter → exact/approximate TRSSQ`。
 
 **可检验假设 H1**：当时间窗选择性较高（如 1 天）且空间范围较小时，过滤 + 扫描的 P95 已低于 10 ms，索引收益有限；当时间窗放宽到 1 个月/1 个季度，或数据规模扩大到 10^5–10^6 轨迹时，序列 sketch 剪枝能显著减少 DTW 计算。
 
 **最小实验**：
 - 数据：Massive-STEPS New York 用户级轨迹（6,929 条，272,368 签到）；Istanbul/Jakarta 作为扩展。
 - 查询：1,000 条采样 episode，长度 3–6，来自不同用户/日期；时间窗取 1 天、1 周、1 月、1 季；空间范围取无约束、5 km、2 km。
-- 基线：全扫描 DTW、时间过滤 + 扫描、空间过滤 + 扫描、倒排（共享类别）+ 验证、整轨迹均值 kNN + 验证、TISIS* 风格 LCSS。
+- 基线：全扫描 DTW oracle、`hard filter → exact TRSSQ`、GTRSS/TRSSQ 适配、ETQ-embedding、TISIS*-LCSS、整轨迹 ST2Vec/均值 kNN + verify、当前点级 ANN + episode verify。
 - 指标：Recall@10、P50/P95、候选数、DTW 次数、索引字节。
 - 判定：若所有宽松窗口下全扫描 P95 < 10 ms，RQ1 不成立，应转向更难的查询（多用户/跨城市/流式）。
 

@@ -10,36 +10,58 @@
 
 本轮是文献分类纠正，没有运行新的性能实验，也没有新增结果数字。
 
+## 本轮新增核查
+
+用户指出 Quantum Range Query 属于轨迹+时间戳混合搜索，并提供六篇轨迹相似检索论文。下载并逐篇核对原始 PDF；书目信息以 arXiv 与 Crossref 正式记录交叉确认。
+
+| 工作 | 核查结果 | 对当前问题的影响 |
+|---|---|---|
+| Towards Quantum Range Query…，arXiv:2609.29612v1 | 轨迹段记录含 temporal/spatial/semantic 分量；窗口内精确 range reporting；实验只做 Time/Space/Space-time | 从“非轨迹过滤”纠正为“同数据域、不同算子”；semantic 实现仍不能确认 |
+| TISIS / TISIS*，arXiv:2409.11301v2 | POI 轨迹 LCSS threshold；TISIS* 明确使用 Word2Vec POI embeddings | 语义序列匹配已有直接前序，但无 episode/top-k/时间硬约束 |
+| REPOSE，ICDE 2021 | 分布式完整轨迹 top-k，支持多种轨迹距离 | 扩展性/索引参考，不是 episode 输出 |
+| N-tree，ACM T-SAS 2025 | exact whole-trajectory kNN/range；DistanceAvg 为时空 metric | 时间感知精确轨迹检索前序 |
+| ST2Vec，KDD 2022 | 学习完整路网轨迹的空间+时间软相似度 | “时间进入轨迹相似度”不能作为新意 |
+| GTRSS，arXiv:2507.05542v1 | 每条数据轨迹先取最佳连续子轨迹，再对不同轨迹做 top-k | **输出语义与当前问题同形**；episode 定位、轨迹级去重和 top-k 已有 |
+| TKDE 2024 trajectory similarity survey | 25种 measure taxonomy 与统一评测维度 | 用于距离/benchmark 设计，不是直接方法 |
+
 ## 纠正结果
 
-直接问题家族保留：
+直接问题家族现在分三层：
 
-- ETQ：查询点序列到 top-k 轨迹；
-- TISIS*：完整语义轨迹相似搜索；
-- SimSub 与 Top-k (Sub-)Trajectories：子轨迹搜索；
-- STKST-I：关键词、时间与位置约束下的语义轨迹 top-k；
-- TrajPrism/OmniTraj：整轨迹语义检索，继续补查查询协议。
+1. **输出语义直接前序**：GTRSS/TRSSQ。已覆盖查询轨迹到 representative subtrajectory、每轨迹一个结果、全局 top-k。
+2. **语义/时间组件前序**：ETQ、TISIS*、ST2Vec、STKST-I。分别覆盖语义点序列、POI embedding+LCSS、时空软相似度、关键词+时间+位置。
+3. **同数据域但不同算子**：Quantum Range Query。它解决轨迹段时空范围查询，不解决语义相似度 top-k。
 
-从问题新颖性对照中排除：
+ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 仍是单对象检索，只作为执行机制参考。
 
-- ACORN、Filtered-DiskANN：属性过滤下的单向量 ANN；
-- TANNS/TANGO：有效期或新鲜度下的单向量检索；
-- CubeGraph/LIST：空间或空间文本约束下的单对象检索。
+## 对研究判断的影响
 
-这些工作只保留为过滤图搜索、时间分区、空间分区和路由机制的实现参考，不作为直接相关工作、问题级基线或“本问题尚未解决”的证据。
+此前“连续 episode + 轨迹级去重 + episode 区间”候选增量被 GTRSS/TRSSQ 否定。当前可检验增量收缩为：
 
-## 结论
+- 绝对时间窗、持续时间与空间范围的硬 episode 可行性；
+- 在该可行域内进行稠密语义序列排序；
+- 比 `hard filter → exact/approximate TRSSQ` 更有效的联合访问路径。
 
-当前新颖性问题应只相对轨迹与子轨迹工作判断：ETQ 已覆盖“查询点序列 → top-k 轨迹”，SimSub 已覆盖子轨迹定位，TISIS* 已覆盖 POI embedding 序列匹配。候选增量必须是**绝对时间窗与持续时间约束下的连续语义 episode 检索，并返回可解释区间**，而不能来自与过滤 ANN 的表面差异。
+因此当前方向应称为 **constrained semantic representative subtrajectory query**。不能宣称“首次 episode 检索”；若硬约束没有改变算法或不能优于直接适配，应 pivot。
+
+## 持久化
+
+- 新增 `papers/trajectory-search/` 主题与7条结构化论文记录；
+- 保存7份原始 PDF、日期化元数据与逐篇问题定义证据；
+- 更新问题对照、新颖性审计、前序工作、检索日志和研究入口；
+- 新增 survey→REPOSE、survey→ST2Vec、GTRSS→REPOSE 三条原文关系。
 
 ## 局限
 
-- ETQ 的后续引用闭包尚未完成；
-- SimSub ICDE 2024/2025、STKST-I、TrajPrism/OmniTraj 仍有摘要级证据；
-- 当前仍不能声称“别人未曾解决”。
+- 没有运行新性能实验，也未复核论文报告的性能数字；
+- ICDE 2024 `Efficient Learning-based Top-k Representative Similar Subtrajectory Query` 原文尚未获取/精读；
+- GTRSS/TRSSQ、ETQ、TISIS* 的完整前后向引用闭包尚未完成；
+- Quantum Range Query 当前为 arXiv v1，正式发表状态未核实；
+- 当前仍不能声称完整组合无人研究或足以构成独立问题。
 
 ## 下一步
 
-1. 对 ETQ、SimSub、TISIS*、STKST-I 做前后向引用闭包；
-2. 检索 `trajectory episode retrieval`、`time-constrained subtrajectory search`、`semantic trajectory segment search`；
-3. 若直接工作已经支持时间窗、持续时间、连续 episode 与区间输出，则 pivot；否则冻结问题定义并实现 ETQ-embedding 直接基线。
+1. 获取并精读 ICDE 2024 TRSSQ 原文，核对 learned distance、输出去重、约束接口、代码与 DOI；
+2. 实现/复现 `hard filter → exact TRSSQ`，再评估 GTRSS 式近似搜索；
+3. 用相同语义距离、硬可行性、global trajectory recall 与资源预算对比当前方案；
+4. 做 GTRSS/TRSSQ、ETQ、TISIS*、STKST-I 引用闭包；若发现全覆盖工作则 pivot。

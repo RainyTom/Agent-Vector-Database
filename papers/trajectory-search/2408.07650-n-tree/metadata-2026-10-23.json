@@ -1,0 +1,27 @@
+{
+  "source": "arxiv",
+  "query": "id:2408.07650",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/2408.07650v1",
+      "title": "Exact Trajectory Similarity Search With N-tree: An Efficient Metric Index for kNN and Range Queries",
+      "summary": "Similarity search is the problem of finding in a collection of objects those that are similar to a given query object. It is a fundamental problem in modern applications and the objects considered may be as diverse as locations in space, text documents, images, twitter messages, or trajectories of moving objects.   In this paper we are motivated by the latter application. Trajectories are recorded movements of mobile objects such as vehicles, animals, public transportation, or parts of the human body. We propose a novel distance function called DistanceAvg to capture the similarity of such movements. To be practical, it is necessary to provide indexing for this distance measure.   Fortunately we do not need to start from scratch. A generic and unifying approach is metric space, which organizes the set of objects solely by a distance (similarity) function with certain natural properties. Our function DistanceAvg is a metric.   Although metric indexes have been studied for decades and many such structures are available, they do not offer the best performance with trajectories. In this paper we propose a new design, which outperforms the best existing indexes for kNN queries and is equally good for range queries. It is especially suitable for expensive distance functions as they occur in trajectory similarity search. In many applications, kNN queries are more practical than range queries as it may be difficult to determine an appropriate search radius. Our index provides exact result sets for the given distance function.",
+      "published": "2024-08-14T16:21:28Z",
+      "updated": "2024-08-14T16:21:28Z",
+      "authors": [
+        "Ralf Hartmut Güting",
+        "Suvam Kumar Das",
+        "Fabio Valdés",
+        "Suprio Ray"
+      ],
+      "categories": [
+        "cs.DB",
+        "cs.DS",
+        "cs.IR"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/2408.07650v1"
+    }
+  ],
+  "downloaded_pdf": "papers/trajectory-search/2408.07650-n-tree/paper.pdf"
+}

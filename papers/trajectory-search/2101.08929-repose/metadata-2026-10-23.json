@@ -1,0 +1,27 @@
+{
+  "source": "arxiv",
+  "query": "id:2101.08929",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/2101.08929v2",
+      "title": "REPOSE: Distributed Top-k Trajectory Similarity Search with Local Reference Point Tries",
+      "summary": "Trajectory similarity computation is a fundamental component in a variety of real-world applications, such as ridesharing, road planning, and transportation optimization. Recent advances in mobile devices have enabled an unprecedented increase in the amount of available trajectory data such that efficient query processing can no longer be supported by a single machine. As a result, means of performing distributed in-memory trajectory similarity search are called for. However, existing distributed proposals suffer from either computing resource waste or are unable to support the range of similarity measures that are being used. We propose a distributed in-memory management framework called REPOSE for processing top-k trajectory similarity queries on Spark. We develop a reference point trie (RP-Trie) index to organize trajectory data for local search. In addition, we design a novel heterogeneous global partitioning strategy to eliminate load imbalance in distributed settings. We report on extensive experiments with real-world data that offer insight into the performance of the solution, and show that the solution is capable of outperforming the state-of-the-art proposals.",
+      "published": "2021-01-22T03:27:21Z",
+      "updated": "2021-01-26T09:49:11Z",
+      "authors": [
+        "Bolong Zheng",
+        "Lianggui Weng",
+        "Xi Zhao",
+        "Kai Zeng",
+        "Xiaofang Zhou",
+        "Christian S. Jensen"
+      ],
+      "categories": [
+        "cs.DB"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/2101.08929v2"
+    }
+  ],
+  "downloaded_pdf": "papers/trajectory-search/2101.08929-repose/paper.pdf"
+}

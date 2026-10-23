@@ -1,0 +1,26 @@
+{
+  "source": "arxiv",
+  "query": "id:2507.05542",
+  "count": 1,
+  "candidates": [
+    {
+      "id": "http://arxiv.org/abs/2507.05542v1",
+      "title": "GTRSS: Graph-based Top-$k$ Representative Similar Subtrajectory Query",
+      "summary": "Trajectory mining has attracted significant attention. This paper addresses the Top-k Representative Similar Subtrajectory Query (TRSSQ) problem, which aims to find the k most representative subtrajectories similar to a query. Existing methods rely on costly filtering-validation frameworks, resulting in slow response times. Addressing this, we propose GTRSS, a novel Graph-based Top-k Representative Similar Subtrajectory Query framework. During the offline phase, GTRSS builds a dual-layer graph index that clusters trajectories containing similar representative subtrajectories. In the online phase, it efficiently retrieves results by navigating the graph toward query-relevant clusters, bypassing full-dataset scanning and heavy computation. To support this, we introduce the Data Trajectory Similarity Metric (DTSM) to measure the most similar subtrajectory pair. We further combine R-tree and grid filtering with DTSM pruning rules to speed up index building. To the best of our knowledge, GTRSS is the first graph-based solution for top-k subtrajectory search. Experiments on real datasets demonstrate that GTRSS significantly enhances both efficiency and accuracy, achieving a retrieval accuracy of over 90 percent and up to two orders of magnitude speedup in query performance.",
+      "published": "2025-07-07T23:50:17Z",
+      "updated": "2025-07-07T23:50:17Z",
+      "authors": [
+        "Mingchang Ge",
+        "Liping Wang",
+        "Xuemin Lin",
+        "Yuang Zhang",
+        "Kunming Wang"
+      ],
+      "categories": [
+        "cs.DB"
+      ],
+      "pdf_url": "https://arxiv.org/pdf/2507.05542v1"
+    }
+  ],
+  "downloaded_pdf": "papers/trajectory-search/2507.05542-gtrss/paper.pdf"
+}

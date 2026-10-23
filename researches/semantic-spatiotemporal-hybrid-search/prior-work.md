@@ -1,6 +1,6 @@
 # 前序工作与证据边界
 
-更新日期：2026-10-22。本文只记录已核对到摘要或正文片段的工作；未精读全文的条目明确标注。`未核实` 表示书目/版本/实验尚未核对，`未提供` 表示原文没有该内容。
+更新日期：2026-10-23。本文只记录已核对到摘要或正文片段的工作；未精读全文的条目明确标注。`未核实` 表示书目/版本/实验尚未核对，`未提供` 表示原文没有该内容。
 
 ## 1. 单对象过滤/时空检索：执行机制参考，不参与问题新颖性对照
 
@@ -26,49 +26,58 @@
 | Re3, ACL 2026, [ACL Anthology](https://aclanthology.org/2026.acl-long.1180/) | 相关性 + 新近性检索，面向 temporal IR/RAG | 文档级时间信号；不是轨迹/episode | 摘要级 |
 | LiveVectorLake, [arXiv:2601.05270](https://arxiv.org/abs/2601.05270) | 版本化向量知识库、流式更新与时间检索 | 单向量版本管理；不做序列 | 摘要级 |
 
-## 3. 语义轨迹检索
+## 3. 轨迹相似检索
 
-| 工作 | 查询/输出 | 时间 | 序列 | 与本方向的差异 | 证据状态 |
+| 工作 | 查询/输出 | 时间 | 语义 | 与本方向的差异 | 证据状态 |
 |---|---|---|---|---|---|
-| **ETQ: Top-k Exemplar Trajectory Queries**, ICDE 2017, [DOI](https://doi.org/10.1109/ICDE.2017.114) | 查询点序列 + 每点关键词 → top-k 轨迹 | 时间戳存在，但不是查询约束 | 是，点级空间+TF-IDF 聚合；可选顺序敏感扩展 | 不定位连续 episode、无绝对时间窗/持续时间、非稠密 embedding | 已读论文定义 1–7、算法 1–2 与相关工作表；实验未复现 |
-| TISIS / TISIS*, BDA 2024, [arXiv:2409.11301](https://arxiv.org/abs/2409.11301) | 完整查询轨迹 → 相似完整轨迹；LCSS 阈值 | 仅时间戳存在，不用于约束 | 是，POI embedding + 顺序 | 不定位 episode、不支持绝对时间窗、不是 top-k 连续排序 | 已读 HTML 问题定义与算法 1–2；实验未逐项核对 |
-| TrajPrism, [arXiv:2605.10782](https://arxiv.org/abs/2605.10782) | 文本/指令 → 语义轨迹检索 benchmark | 轨迹带时间，但检索协议未以时间窗为核心 | 是 | 整轨迹检索；不做 episode 定位与硬时间窗 | 摘要级 |
-| OmniTraj, KDD 2025, [arXiv:2505.17437](https://arxiv.org/abs/2505.17437) | 多模态（原始轨迹/拓扑/路段/区域）→ 轨迹 | 弱 | 学习表示 | 整轨迹检索；无 episode/时间窗 | 摘要级 |
-| STKST-I, Expert Systems with Applications 2023, [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S0957417423005663) | 关键词 + 时间 + 位置 → 语义轨迹 top-k | 有 | 语义关键词 | 关键词匹配，不是 embedding 序列对齐；不定位 episode | 摘要级；正式 DOI/卷期待复核 |
-| Distributed Semantic Trajectory Similarity Search, 2025, [IEEE](https://ieeexplore.ieee.org/document/11207137) | 空间邻近 + 语义相似 → 轨迹 | 弱 | 是 | 分布式整轨迹检索；非 episode/时间窗 | 摘要级 |
-| DASS, IJCAI 2025, [PDF](https://www.ijcai.org/proceedings/2025/0833.pdf) | 学习轨迹相似度 | 时空相邻关系 | 学习表示 | 相似度学习，不是索引/查询执行 | 摘要级 |
+| **ETQ: Top-k Exemplar Trajectory Queries**, ICDE 2017, [DOI](https://doi.org/10.1109/ICDE.2017.114) | 查询点序列 + 每点关键词 → top-k 轨迹 | 时间戳不是查询约束 | TF-IDF 关键词 | 不定位连续 episode；无绝对时间窗/持续时间 | 已读定义 1–7、算法 1–2；实验未复现 |
+| **TISIS / TISIS\***, BDA 2024, [arXiv:2409.11301](https://arxiv.org/abs/2409.11301) | POI 查询轨迹 + 阈值 → 完整轨迹集合 | 只用于序列顺序 | TISIS* 用 Word2Vec POI embedding + $\epsilon$ 匹配 | LCSS threshold；不定位 episode，不是 top-k | 已核 arXiv v2 问题定义与 contextual POI 章节 |
+| **ST2Vec**, KDD 2022, [DOI](https://doi.org/10.1145/3534678.3539375) | 完整路网轨迹 → learned distance；top-k 为 case study | 空间与时间共同进入软相似度 | 无 POI/text 语义 | 整轨迹表示；无硬时间窗/episode | 已核正文目标与正式 DOI；arXiv 题名是早期版本 |
+| **REPOSE**, ICDE 2021, [DOI](https://doi.org/10.1109/ICDE51399.2021.00067) | 查询轨迹 → 分布式 top-k 完整轨迹 | 依所选轨迹距离；无绝对窗口 | 无 | 支持多种几何/序列距离，但不是语义 episode | 已核 Definition 3、索引结构与正式书目 |
+| **N-tree**, ACM T-SAS 2025, [DOI](https://doi.org/10.1145/3716825) | exact kNN / metric range 完整轨迹 | DistanceAvg 是连续时空 metric | 无 | 精确整轨迹 metric index；不做 episode | 已核定义、精确查询与正式 DOI |
+| **STKST-I**, ESWA 2023, [ScienceDirect](https://www.sciencedirect.com/science/article/pii/S0957417423005663) | 关键词 + 时间 + 位置 → 语义轨迹 top-k | 有时间相关性 | 关键词 | 不做稠密序列对齐与 episode 定位 | 摘要级；正式 DOI/卷期待复核 |
+| TrajPrism, [arXiv:2605.10782](https://arxiv.org/abs/2605.10782) | 文本/指令 → 语义轨迹 benchmark | 轨迹带时间 | 多模态/文本 | 整轨迹协议是否含硬窗口待核 | 摘要级 |
+| OmniTraj, KDD 2025, [arXiv:2505.17437](https://arxiv.org/abs/2505.17437) | 多模态轨迹 → 轨迹 | 弱 | 学习表示 | 整轨迹；无已核 episode 协议 | 摘要级 |
+| Distributed Semantic Trajectory Similarity Search, 2025, [IEEE](https://ieeexplore.ieee.org/document/11207137) | 空间邻近 + 语义相似 → 轨迹 | 弱 | 有 | 分布式整轨迹检索；非 episode/时间窗 | 摘要级 |
+| **Spatio-Temporal Trajectory Similarity Measures: A Comprehensive Survey and Quantitative Study**, TKDE 2024, [DOI](https://doi.org/10.1109/TKDE.2023.3323535) | 25种轨迹 measure 的 taxonomy 与 benchmark | 系统比较时空 measure | POI/text 语义不是主分类轴 | 距离与评测框架，不是查询方法 | 已核 taxonomy、Table 1 与正式书目 |
 
-## 4. 子轨迹与序列搜索
+## 4. 子轨迹与 representative subtrajectory 搜索
 
 | 工作 | 问题 | 与本方向的差异 | 证据状态 |
 |---|---|---|---|
-| Efficient Non-Learning Similar Subtrajectory Search, PVLDB 16, [PDF](https://www.vldb.org/pvldb/vol16/p3111-cheng.pdf) | 几何子轨迹相似搜索 | 坐标距离，非语义 embedding；无绝对时间窗 | 摘要级 |
-| SimSub / deep RL, [arXiv:2003.02542](https://arxiv.org/abs/2003.02542) | 查询轨迹 → 最相似子轨迹 | 几何/学习表示；非 top-k 多轨迹 episode 检索 | 摘要级 |
-| Fast Subtrajectory Similarity Search in Road Networks, PVLDB 13, [PDF](http://www.vldb.org/pvldb/vol13/p2188-koide.pdf) | 路网加权编辑距离下的子轨迹 | 路网几何；无 embedding/时间窗 | 摘要级 |
-| Trajectory Similarity Measurement: An Efficiency Perspective, PVLDB 17, [PDF](https://www.vldb.org/pvldb/vol17/p2293-qi.pdf) | 轨迹相似度效率综述 | 提供基线与度量分类 | 摘要级 |
+| **GTRSS: Graph-based Top-k Representative Similar Subtrajectory Query**, arXiv 2025, [arXiv:2507.05542](https://arxiv.org/abs/2507.05542) | 对每条数据轨迹求与查询最相似的连续子轨迹，再在不同轨迹间取 top-k；GARI + CNDI 近似图搜索 | **输出语义与本方向同形**；原距离为几何 DTW/EDR/ERP，无语义 POI/text、绝对时间窗、持续时间与空间硬约束 | 已核 Definitions 1–4、距离与算法框架 |
+| Efficient Learning-based Top-k Representative Similar Subtrajectory Query, ICDE 2024 | TRSSQ 的直接前序 | 必须核对 learned distance、输出去重及约束接口 | GTRSS 正文明确引用；原文待获取/精读 |
+| Efficient Non-Learning Similar Subtrajectory Search, PVLDB 16, [PDF](https://www.vldb.org/pvldb/vol16/p3111-cheng.pdf) | 几何子轨迹相似搜索 | 坐标距离；无语义 embedding/绝对时间窗 | 摘要级 |
+| SimSub / deep RL, [arXiv:2003.02542](https://arxiv.org/abs/2003.02542) | 查询轨迹 → 最相似子轨迹 | 几何/学习表示；输出范围需按具体变体区分 | 摘要级 |
+| Fast Subtrajectory Similarity Search in Road Networks, PVLDB 13, [PDF](http://www.vldb.org/pvldb/vol13/p2188-koide.pdf) | 路网加权编辑距离下的子轨迹 | 路网几何；无 semantic/time-window 可行性 | 摘要级 |
 
-## 5. 初步差异判断
+## 5. 轨迹混合范围查询：同一数据域、不同算子
 
-**可检验的差异候选**：
+| 工作 | 问题 | 与本方向的关系 | 证据状态 |
+|---|---|---|---|
+| **Towards Quantum Range Query for Spatial-Temporal-Semantic Trajectory Data**, arXiv:2609.29612v1 | 将轨迹段表示为 temporal/spatial/semantic 多维记录；窗口查询返回全部精确匹配段的量子叠加态 | 属于轨迹+时间戳混合查询，不能按 ACORN 式单对象过滤排除；但它是 range reporting，不做 top-k 相似度、每轨迹最佳 episode 或去重 | 已核全文4页；Table 1 只实测 Time/Space/Space-time，结论将 semantic keys 列为 future work |
 
-1. 查询是**语义序列**而非单个向量；候选是**轨迹中的连续 episode**而非整条轨迹。
-2. episode 必须满足**绝对时间窗、持续时间和空间范围**三个硬约束；近似只作用于距离排序。
-3. 返回**轨迹级 top-k + episode 区间**，而不是阈值内的全部轨迹或单点近邻。
-4. 若系统继续使用点级 ANN 生成候选，可借鉴过滤图、时间分区与空间分区；这些只是执行原语，不是问题级对照。
+## 6. 差异判断
 
-**不能声称的**：
+**已经被覆盖**：
 
-- 不能把单对象过滤/时空向量检索与语义轨迹检索统称为“直接工作”；本问题的新颖性只能相对后者和子轨迹检索判断。
-- 不能把 TISIS* 的 LCSS 直接当作本问题的基线而不说明其不支持时间窗/episode 定位。
-- 不能把 CubeGraph 的“空间单元图”与轨迹 episode 索引混为一谈。
-- 不能在没有实测的情况下声称本问题一定比全扫描更值得索引；时间窗选择性可能让扫描足够快。
+1. GTRSS/TRSSQ 已覆盖连续子轨迹定位、每条轨迹一个代表片段和全局 top-k；不能把 episode 区间或轨迹级去重作为新意。
+2. TISIS* 已覆盖 POI embedding 序列匹配，ETQ 已覆盖语义点序列到 top-k 轨迹。
+3. ST2Vec 与 DistanceAvg 已让时间进入整轨迹相似度；Quantum Range Query 已处理轨迹段上的时空范围约束。
 
-## 6. 待补查
+**仍待验证的候选增量**：
 
-- ETQ 全文（已读定义/算法，实验未复现）：确认其顺序敏感扩展是否覆盖连续 episode 与时间约束。
-- SimSub / 代表子轨迹（ICDE 2024/2025）：确认 top-k 输出语义、时间处理与索引。
-- ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 已排除出问题新颖性审计；只有在采用其执行机制时才需要补读实现细节。
-- TrajPrism/OmniTraj 全文：确认检索协议是否已有时间窗或 episode 级评测。
-- STKST-I 正式 DOI/作者/实验。
-- 语义轨迹 join（REST 等）与 episode 检索的边界。
-- 时空关键词搜索（STKS）与路线约束检索的先前工作。
+1. 绝对时间窗、持续时间与空间范围作为不可放宽的 episode 可行性；
+2. 在该可行域内按稠密语义序列距离排序；
+3. 比 `hard filter → exact/approximate TRSSQ` 更有效的联合访问路径。
+
+因此当前定位应是 **constrained semantic representative subtrajectory query**，不是“首次 episode 检索”。单对象 filtered ANN 仍只提供执行原语。
+
+## 7. 待补查
+
+- ICDE 2024 `Efficient Learning-based Top-k Representative Similar Subtrajectory Query` 全文与引用闭包；这是最高优先级。
+- ETQ、GTRSS、TISIS*、STKST-I 的前后向引用闭包。
+- TrajPrism/OmniTraj 的时间窗与 episode 评测协议。
+- `constrained representative subtrajectory query`、`semantic subtrajectory retrieval`、`time-windowed subtrajectory top-k`。
+- 语义轨迹 join（REST 等）与单查询 episode top-k 的边界。
+- 当前仍不能声称“无人研究”；若已有方法覆盖全部约束，应 pivot。
