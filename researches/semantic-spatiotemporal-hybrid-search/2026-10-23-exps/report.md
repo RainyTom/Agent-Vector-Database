@@ -70,6 +70,23 @@ GTRSS 在正文中把 TRSSQ 归给 Wang et al.（ICDE 2024），并称其为“t
 
 新增文件 `evidence/trssq-2026-10-23.md` 记录书目、摘要残段、GTRSS 原话、获取尝试与未核实清单；该文**不进入** `papers.jsonl`（全文缺失），总数仍为 28 篇/25 关系。
 
+### 全文核对（同日，用户提供正式版 PDF）
+
+用户提供 13 页 IEEE 正式版 PDF（本地 sha256 `99e38b36…`），已入库并逐节核对。上文“全文未获取”与“总数仍为 28 篇/25 关系”**作废**，以本节为准：
+
+| 项 | 全文核对结果 |
+|---|---|
+| 问题定义 | Definitions 1–4：每轨取 Θ 最大的连续子轨迹，再跨轨迹取 top-k |
+| 度量 | DTW、EDR、ERP、LCSS（LCSS 用距离形式） |
+| 时间 | 点含 $t_i$，§II-A 明言省略；无时间窗、持续时间或空间范围约束 |
+| 语义 | 无 POI/text embedding |
+| 方法 | RSSE：Bi-GRU + 点级 attention + interaction + pooling + 3 层 FC；MSE + 排序损失；层次化采样率 $r$ |
+| 保证 | 无端到端精确/召回保证；RSSE 取 top-$M$ 后仅在候选内用 ExactS 验证 |
+| 实验 | Xi'an 85,802 / Chengdu 221,781 / Porto 1,252,547；30k 数据 + 2k 查询；RSSE 全面优于 SRN/T3S/TMN；LBF 在 ExactS 验证下 RR 多数最优 |
+| 索引 | 转正为第 29 篇；关系 27 条（新增 GTRSS→TRSSQ、TRSSQ→REPOSE） |
+
+结论不变且更强：episode 定位、轨迹级去重、top-k 与学习型候选过滤均已有前序；本方向只剩“语义序列距离 + 绝对时间窗/持续时间/空间硬可行性”的组合及其执行优势。更新后的下一步：复现 `hard filter → RSSE + ExactS` 作为基线，再做引用闭包。
+
 ## 局限
 
 - 没有运行新性能实验，也未复核论文报告的性能数字；

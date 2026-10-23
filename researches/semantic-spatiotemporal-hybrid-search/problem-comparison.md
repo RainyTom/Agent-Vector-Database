@@ -263,11 +263,11 @@ $$
 
 ---
 
-## 3. GTRSS：Graph-based Top-k Representative Similar Subtrajectory Query（arXiv 2025）
+## 3. TRSSQ（ICDE 2024）与 GTRSS（arXiv 2025）：representative subtrajectory top-k
 
 **证据级别：已核 Definitions 1–4、距离定义、GARI/CNDI 框架与 related work。**
 
-该问题**不是 GTRSS 首次提出**：TRSSQ 由 Wang et al.（ICDE 2024, pp. 4396–4408, [DOI](https://doi.org/10.1109/ICDE60146.2024.00335)）定义，其方法是 RSSE：GRU 点级匹配 + 轨迹编码对齐 + 局部相似度计算，走 filter-validate；GTRSS 明确称其为“the only approach directly targeting the TRSSQ problem”。TRSSQ 全文付费墙未获取，以下形式化依据 GTRSS 的 Definition 2–4 与转述；TRSSQ 自身公式、度量集合与保证未核实（见[候选证据](evidence/trssq-2026-10-23.md)）。
+该问题**不是 GTRSS 首次提出**：TRSSQ 由 Wang et al.（ICDE 2024, pp. 4396–4408, [DOI](https://doi.org/10.1109/ICDE60146.2024.00335)）定义。方法为 RSSE：Bi-GRU 编码 + 点级 attention 匹配 + embedding interaction，Siamese 训练（MSE + 排序损失）；RSSE 对全库打分取 top-$M$，再用 ExactS（或 PSS/RLS）在候选内求代表片段与 top-k。评测度量为 DTW、EDR、ERP、LCSS；点模型含 timestamp 但 §II-A 明言省略时间维；无绝对时间窗、持续时间、空间范围或语义约束；无端到端精确性保证。**全文13页已核**（[论文记录](../../papers/trajectory-search/10.1109-icde60146.2024.00335-trssq/)）。
 
 给定查询轨迹 $Q$ 与数据轨迹 $T_i$，候选是连续子轨迹
 
@@ -378,7 +378,7 @@ ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 都以单个向量或�
 | 工作 | 算子 | 相似对象 | 语义 | 时间角色 | 硬时空约束 | 返回 |
 |---|---|---|---|---|---|---|
 | **本问题** | top-k exact/approx | 查询 episode vs 连续子轨迹 | 稠密向量序列 DTW | 相对时间进 score；绝对窗/时长为硬约束 | **时间窗+时长+空间** | **每轨迹最佳可行 episode** |
-| **TRSSQ 2024** | learning-based filter + validate | 查询轨迹 vs 连续子轨迹 | 无 | 摘要未提 | 无 | 每轨迹代表子轨迹 top-k |
+| **TRSSQ 2024** | learning-based filter + validate | 查询轨迹 vs 连续子轨迹 | 无 | 建模省略时间；无约束 | 无 | 每轨迹代表子轨迹 top-k |
 | **GTRSS 2025** | approximate top-k | 查询轨迹 vs 连续子轨迹 | 无 | timestamp 非主 score | 无 | **每轨迹最佳子轨迹** |
 | Quantum Range Query | exact range reporting | 窗口 vs 轨迹段记录 | 形式模型有；实验未实现 | 范围维度 | **时间+空间** | 全部匹配段/叠加态 |
 | ETQ 2017 | top-k | exemplar points vs 完整轨迹 | TF-IDF 关键词 | 无查询时间窗 | 空间为点级软相似 | top-k 完整轨迹 |
@@ -398,4 +398,4 @@ ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 都以单个向量或�
 - **候选增量**：在绝对时间窗、持续时间和空间范围的硬可行域内，用稠密语义序列距离选择 representative subtrajectory，并设计联合执行。
 - **最危险审稿意见**：这是否只是 `hard filter → GTRSS/TRSSQ`，再把几何点距离换成 semantic embedding distance？
 - **成立门槛**：证明硬约束改变候选生成、剪枝或复杂度；与同距离、同可行性、同召回定义的 filter-then-TRSSQ 比较。
-- **下一步**：通过机构访问/作者索取取得 TRSSQ（ICDE 2024）全文并核对度量与保证；再做 GTRSS、ETQ、TISIS*、STKST-I 引用闭包。若已有方法覆盖全部约束，则 pivot。
+- **下一步**：TRSSQ 已精读；优先复现其 filter-validate（RSSE + ExactS）作为 `hard filter → TRSSQ` 基线，并做 GTRSS、ETQ、TISIS*、STKST-I 引用闭包。若已有方法覆盖全部约束，则 pivot。

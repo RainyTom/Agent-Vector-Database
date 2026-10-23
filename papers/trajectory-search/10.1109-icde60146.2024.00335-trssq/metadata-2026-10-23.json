@@ -1,0 +1,33 @@
+{
+  "source": "crossref+ieee_pdf",
+  "query": "DOI:10.1109/ICDE60146.2024.00335",
+  "count": 1,
+  "candidates": [
+    {
+      "DOI": "10.1109/ICDE60146.2024.00335",
+      "title": "Efficient Learning-based Top-k Representative Similar Subtrajectory Query",
+      "container-title": "2024 IEEE 40th International Conference on Data Engineering (ICDE)",
+      "page": "4396-4408",
+      "published": "2024-05-13",
+      "authors": [
+        "Kunming Wang",
+        "Shiyu Yang",
+        "Jiabao Jin",
+        "Peng Cheng",
+        "Jianye Yang",
+        "Xuemin Lin"
+      ],
+      "affiliations": [
+        "East China Normal University",
+        "Guangzhou University",
+        "Shanghai Jiao Tong University"
+      ],
+      "ieee_document_number": "10598106",
+      "crossref_url": "https://api.crossref.org/works/10.1109/ICDE60146.2024.00335"
+    }
+  ],
+  "downloaded_pdf": "papers/trajectory-search/10.1109-icde60146.2024.00335-trssq/paper.pdf",
+  "pdf_pages": 13,
+  "pdf_sha256": "99e38b366a91f8897134442070586c2361f5ead9de47d56a5f5210cbe4b750c7",
+  "provenance": "用户提供的 IEEE Xplore 正式版 PDF（页脚：Authorized licensed use limited to: Nanjing Univ of Post & Telecommunications, downloaded 2026-10-23）。本轮之前付费墙导致未获取；该文件用于全文核对。"
+}

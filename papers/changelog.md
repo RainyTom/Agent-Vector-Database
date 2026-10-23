@@ -140,3 +140,4 @@
 - 核实 TISIS* 使用 Word2Vec POI embedding + LCSS threshold；REPOSE/N-tree/ST2Vec 分别提供分布式完整轨迹 top-k、exact metric kNN/range、时空软相似度前序。
 - 新增 survey→REPOSE、survey→ST2Vec、GTRSS→REPOSE 三条有正文证据的关系。总索引现为 **28篇/25关系**；本轮未运行性能实验，不作新颖性确认。
 - 补核 GTRSS 的直接前序 TRSSQ（ICDE 2024, DOI:10.1109/ICDE60146.2024.00335）：Crossref/OpenAlex 书目一致，OpenAlex 摘要被截断，方法细节仅来自 GTRSS §I–II 转述（RSSE = GRU 点级匹配 + 轨迹编码对齐 + filter-validate）；IEEE/CSDL 付费墙与 202 挑战页导致全文未获取。按全文缺失处理，**不计入论文索引**，证据存 `researches/semantic-spatiotemporal-hybrid-search/evidence/trssq-2026-10-23.md`；28篇/25关系不变。
+- 用户提供 TRSSQ 13 页 IEEE 正式版 PDF 后**转正**：新增 `trajectory-search/10.1109-icde60146.2024.00335-trssq/`（PDF + 日期化元数据 + 全文证据），全文核对度量 DTW/EDR/ERP/LCSS、RSSE 结构与 top-M 候选+ExactS 验证、无端到端精确保证、无时间/空间/语义约束。新增 GTRSS→TRSSQ、TRSSQ→REPOSE 两条原文关系。索引现为 **29篇/27关系**；上述“不计入”条目仅保留历史，不再适用。

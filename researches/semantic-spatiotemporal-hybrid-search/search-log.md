@@ -63,7 +63,7 @@ Quantum Range Query 属于同一轨迹混合数据域，但算子是 range repor
 - 全文尝试：Unpaywall `oa_status=closed`；IEEE `stamp.jsp` 与 `iel8/.../10598106.pdf` 返回 HTTP 202（0 字节）；CSDL 页面无摘要；Crossref 的 xplorestaging 链接返回 HTML；Semantic Scholar 429；arXiv 无此文。
 - 已得替代证据：OpenAlex 摘要（末句被截断）+ GTRSS §I–II 对 TRSSQ/RSSE 的明确转述（GRU 点级匹配、轨迹编码对齐、filter-validate）。
 - 引用闭包：OpenAlex 记录被引 2 次（MATIBL, IJCNN 2025；SimCFT, TKDE 2026），均非受约束/语义 TRSSQ 后续；GTRSS 尚未进入 OpenAlex 引用。
-- 结论：**未获取全文，不写入 `papers.jsonl`**；证据存于 `researches/semantic-spatiotemporal-hybrid-search/evidence/trssq-2026-10-23.md`。
+- 后续：用户提供 13 页 IEEE 正式版 PDF，全文已核并**转正**（`papers/trajectory-search/10.1109-icde60146.2024.00335-trssq/`，第 29 篇）。核对结论：度量 DTW/EDR/ERP/LCSS；RSSE 过滤后仅在 top-M 内用 ExactS 验证，无端到端精确保证；无时间/空间/语义约束。
 
 ## 覆盖限制
 

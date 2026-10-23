@@ -8,9 +8,9 @@
 | filtered-ann | 12 | [过滤 ANN](filtered-ann/README.md)：标签、范围、共享结构、召回控制 |
 | prefix-vector-search | 1 | [前缀与目录检索](prefix-vector-search/README.md)：Directory-Aware/TrieHI |
 | similarity-join | 1 | [一般相似连接](similarity-join/README.md)：多字段 equality/Hamming 等相邻问题 |
-| trajectory-search | 7 | [轨迹检索](trajectory-search/README.md)：完整轨迹/子轨迹 top-k、时空距离与混合范围查询 |
+| trajectory-search | 8 | [轨迹检索](trajectory-search/README.md)：完整轨迹/子轨迹 top-k、时空距离与混合范围查询 |
 
-总计 **28 篇论文、25 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **29 篇论文、27 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -25,9 +25,9 @@ papers/
 └── trajectory-search/<id>-<slug>/
 ```
 
-`paper.pdf` 是原始全文，`paper.md` 是文本提取，`paper.report.md` 是阅读报告。保留原有版本、日期化元数据、图片与 MinerU 产物，不因主题迁移改写论文身份。原有 8 篇有 MinerU 产物、13 篇为 PyMuPDF 文本；本轮 7 篇 trajectory-search 论文保存原始 PDF、日期化元数据与问题定义证据，尚未统一转换全文 Markdown。
+`paper.pdf` 是原始全文，`paper.md` 是文本提取，`paper.report.md` 是阅读报告。保留原有版本、日期化元数据、图片与 MinerU 产物，不因主题迁移改写论文身份。原有 8 篇有 MinerU 产物、13 篇为 PyMuPDF 文本；本轮 8 篇 trajectory-search 论文保存原始 PDF、日期化元数据与问题定义证据，尚未统一转换全文 Markdown。
 
-UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入 28 篇全文记录。获取受限与理论未提供是两种不同状态。
+UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入 29 篇全文记录。获取受限与理论未提供是两种不同状态。
 
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
 

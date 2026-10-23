@@ -13,7 +13,7 @@
 
 | 工作 | 查询/输出 | 相似度中的时间 | 语义 | 连续片段 | 与本问题的关系 |
 |---|---|---|---|---|---|
-| **TRSSQ** (ICDE 2024, Wang et al.) | 查询轨迹 → 每条轨迹一个代表子轨迹 → 全局 top-k；RSSE 学习型 filter-validate | 摘要未提时间约束 | 无 | **有** | **问题定义来源**；已覆盖 episode 定位、轨迹级去重与 top-k，且已用学习模型估计相似度 |
+| **TRSSQ** (ICDE 2024, Wang et al.) | 查询轨迹 → 每条轨迹一个代表子轨迹 → 全局 top-k；RSSE 学习型 filter-validate | 点含 timestamp，但建模省略时间；无窗口约束 | 无 | **有** | **问题定义来源**；已覆盖 episode 定位、轨迹级去重与 top-k，且已用学习模型估计相似度 |
 | **GTRSS** (arXiv 2025) | 同上问题；双层图索引 + DTSM 连接 | 点含 timestamp，但 DTW/EDR/ERP 主要比较几何序列 | 无 | **有** | TRSSQ 的图索引后继；输出语义同形 |
 | **ETQ** (ICDE 2017) | 点序列+关键词 → top-k 轨迹 | 无查询时间窗 | TF-IDF 关键词 | 否，代表点可分散 | 语义 top-k 最近，但不要求连续 |
 | **TISIS / TISIS\*** (BDA 2024) | POI 序列+阈值 → 完整轨迹集合 | timestamp 只确定顺序 | TISIS* 用 Word2Vec POI embedding | 否 | 语义序列最近，但不是 top-k/episode |
@@ -80,7 +80,7 @@ Quantum Range Query、ACORN、REPOSE、N-tree 的原系统不应硬改成同题�
 
 ## 5. 下一步（查重门槛）
 
-1. 取得 **TRSSQ**（ICDE 2024, DOI:10.1109/ICDE60146.2024.00335）全文并核对度量集合、去重实现与保证；书目/摘要/GTRSS 转述已核，全文因付费墙未获取（证据见[候选记录](evidence/trssq-2026-10-23.md)）。
+1. TRSSQ 全文已精读（13 页正式版）：度量 DTW/EDR/ERP/LCSS，RSSE 过滤后仅在 top-M 内用 ExactS 验证，无精确保证，无时间/空间/语义约束。剩余：代码未公开、数字未复现。
 2. 对 GTRSS/TRSSQ、ETQ、TISIS*、STKST-I 做前后向引用闭包。
 3. 检索 `constrained representative subtrajectory query`、`semantic subtrajectory retrieval`、`time-windowed subtrajectory top-k`、`activity trajectory episode search`。
 4. 若已有方法支持语义距离及时间/空间/持续时间硬约束，则 pivot；若没有，冻结为 constrained semantic TRSSQ，不再用“首次 episode 检索”表述。
@@ -94,6 +94,6 @@ Quantum Range Query、ACORN、REPOSE、N-tree 的原系统不应硬改成同题�
 - ST2Vec：已核时空学习目标与 KDD DOI；完整轨迹，不含 POI/text 语义。
 - GTRSS：已核 Definitions 1–4 与距离；它是当前输出语义最近工作。
 - TKDE 2024 survey：已核 taxonomy；它不以语义 POI/text 为主要分类轴。
-- TRSSQ：书目（Crossref/OpenAlex）已核；摘要被 OpenAlex 截断，仅有 GTRSS 的转述（RSSE = GRU 点级匹配 + 轨迹编码对齐 + filter-validate）；全文付费墙未获取，算法/度量/保证均未核实。
+- TRSSQ：全文13页已核（定义为每轨一个代表片段 + 全局 top-k；RSSE = Bi-GRU + 点级 attention + interaction；候选预算 M；ExactS/PSS/RLS 验证；无端到端精确性保证；无时间/空间/语义约束）。
 - ETQ：已读定义 1–7、算法 1–2；实验未复现。STKST-I 仍需精读。
 - 本审计仍不是完整系统综述，不能据此声称“无人研究”。
