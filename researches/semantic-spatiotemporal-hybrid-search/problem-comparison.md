@@ -83,21 +83,16 @@ ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 的输入和输出单�
 
 ## 0. 我们的问题：时间窗约束的语义 Episode 检索（TW-SER）
 
-### 0.1 数据（与[问题定义](problem-definition.md) v2 一致）
+### 0.1 数据（与[问题定义](problem-definition.md) v3 一致）
 
-原始轨迹是带时间戳的采样序列。预处理把连续、近似静止的采样划为**停留段**
-
-$$
-\sigma_k=\bigl(\ell_k,\,[t^{in}_k,t^{out}_k],\ \mathbf e_k\bigr),
-$$
-
-得到压缩语义轨迹 $\tilde T=(\sigma_1,\ldots,\sigma_s)$；不属于任何停留段的采样是 transit 点，**不携带语义向量**。episode 是连续停留段区间
+原始轨迹是带时间戳的采样序列。预处理把轨迹划分为**互不相交、覆盖全轨迹的连续段** $I_k=[l_k,r_k]$，每段一个语义向量：
 
 $$
-\tilde T[u:v]=(\sigma_u,\ldots,\sigma_v),\qquad 1\le u\le v\le s .
+\sigma_k=\bigl(I_k,\ \mathbf e_k\bigr),\qquad
+\tilde T=\Pi(T)=(\sigma_1,\ldots,\sigma_s).
 $$
 
-语义只挂在停留段上；每个采样点自成一停留（$\mathbf e_i$ 逐点给定）是退化特例，不是另一套问题。
+episode 是连续段区间 $\tilde T[u:v]$，其原始点集合为 $X(E)=\bigcup_{k=u}^{v}X_k$。逐点模型（每个采样点自成一段）与“只保留停留段”都是该划分的特例；v3 不区分停留点与 transit 点。
 
 ### 0.2 查询
 
@@ -105,25 +100,25 @@ $$
 Q=\bigl(\mathbf q_1,\ldots,\mathbf q_m;\ \tau_1,\ldots,\tau_m;\ W;\ R;\ \delta_\Delta;\ k\bigr),
 $$
 
-其中 $\mathbf q_i\in\mathbb R^d$ 是查询活动的语义向量，$\tau_i$ 是相对时间偏移（$\tau_1=0$），$W=[w_s,w_e]$ 是绝对时间窗，$R$ 是空间范围，$\delta_\Delta\ge0$ 是持续时间容差，$k>0$。查询时长为 $\Delta_Q=\tau_m$；查询不需要坐标。
+其中 $\mathbf q_i\in\mathbb R^d$ 是查询活动/移动的语义向量，$\tau_i$ 是相对时间偏移（$\tau_1=0$），$W=[w_s,w_e]$ 是绝对时间窗，$R$ 是空间范围，$\delta_\Delta\ge0$ 是持续时间容差，$k>0$。查询时长为 $\Delta_Q=\tau_m$；查询不需要坐标。
 
 ### 0.3 可行 episode
 
 $\tilde T[u:v]$ 关于 $Q$ 可行，当且仅当：
 
 $$
-w_s\le t^{in}_u,\qquad t^{out}_v\le w_e,
+w_s\le t^{s}_u,\qquad t^{e}_v\le w_e,
 $$
 
 $$
-\bigl|(t^{out}_v-t^{in}_u)-\Delta_Q\bigr|\le\delta_\Delta,
+\bigl|(t^{e}_v-t^{s}_u)-\Delta_Q\bigr|\le\delta_\Delta,
 $$
 
 $$
-\ell_u,\ldots,\ell_v\in R\quad(\text{停留口径；路径口径另含 transit 点}),
+X(E)\subseteq R,
 $$
 
-且 episode 连续、不跳停留段，并满足 $\lvert\tilde T[u:v]\rvert\ge m$（保证查询可被全覆盖）。记可行集合为 $\mathcal E_Q(T)$。
+且 $v-u+1\ge m$。记可行集合为 $\mathcal E_Q(T)$。
 
 ### 0.4 分数与精确结果
 
@@ -135,7 +130,7 @@ D(Q,\tilde T[u:v])
 \Bigl(
 \|\mathbf q_i-\mathbf e_j\|_2
 +
-\lambda\,\bigl|\tau_i-(t^{in}_j-t^{in}_u)\bigr|
+\lambda\,\bigl|\tau_i-(t^{s}_j-t^{s}_u)\bigr|
 \Bigr),
 \qquad
 D_{\mathrm{norm}}=\frac{D}{m},
@@ -146,7 +141,7 @@ s_Q(T)=
 \min_{\tilde T[u:v]\in\mathcal E_Q(T)} D_{\mathrm{norm}}(Q,\tilde T[u:v]).
 $$
 
-精确 top-k 为按 $(s_Q(T),\mathrm{id}(T))$ 字典序最小的 $k$ 条不同轨迹，并返回其最佳 episode 的停留区间与时间区间。若可行轨迹少于 $k$，返回全部；若为空，返回空集。归一化分母固定为 $m$，避免“加停留反而降平均分”的病态。
+精确 top-k 为按 $(s_Q(T),\mathrm{id}(T))$ 字典序最小的 $k$ 条不同轨迹，并返回最佳 episode 的段区间与时间区间。若可行轨迹少于 $k$，返回全部；若为空，返回空集。分母固定为 $m$，避免“加段反而降平均分”的病态。
 
 ### 0.5 近似结果
 
@@ -154,7 +149,7 @@ $$
 
 ### 0.6 实现限制（不是形式定义的一部分）
 
-当前 oracle 为控制枚举成本，额外限制 episode 的停留段数 $v-u+1\in[m-2,m+2]$。若正式定义不允许该限制，需要重新生成 oracle。Massive-STEPS 中每次签到即一个停留段，故 $s$ 等于签到数。
+当前 oracle 为控制枚举成本，额外限制 episode 的段数 $v-u+1\in[m-2,m+2]$。若正式定义不允许该限制，需要重新生成 oracle。Massive-STEPS 中每次签到即一个语义段，故 $s$ 等于签到数。
 
 ---
 
