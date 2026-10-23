@@ -70,6 +70,7 @@ ACORN 等单对象过滤检索仍排除出问题新颖性审计。当前候选�
 
 - [问题定义（v4：坐标/时间/段向量集）](problem-definition.md)
 - [问题定义对照（本问题 vs 现有论文）](problem-comparison.md)
+- [基线方案与评测契约](baseline.md)
 - [新颖性审计](novelty-audit.md)
 - [前序工作与证据边界](prior-work.md)
 - [研究问题与最小实验](research-questions.md)
@@ -77,6 +78,7 @@ ACORN 等单对象过滤检索仍排除出问题新颖性审计。当前候选�
 - [数据集与下载状态](datasets.md)
 - [2026-10-22 首轮实验](2026-10-22-exps/report.md)
 - [2026-10-23 问题对照范围纠正](2026-10-23-exps/report.md)
+- [2026-10-24 基线方案与评测契约](2026-10-24-exps/report.md)
 - [TRSSQ (ICDE 2024) 全文记录](../../papers/trajectory-search/10.1109-icde60146.2024.00335-trssq/)
 - [TRSSQ 获取与核对记录](evidence/trssq-2026-10-23.md)
 - 代码：`production/semantic-mobility-search/`
