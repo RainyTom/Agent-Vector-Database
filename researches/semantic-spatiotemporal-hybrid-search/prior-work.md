@@ -46,7 +46,7 @@
 | 工作 | 问题 | 与本方向的差异 | 证据状态 |
 |---|---|---|---|
 | **GTRSS: Graph-based Top-k Representative Similar Subtrajectory Query**, arXiv 2025, [arXiv:2507.05542](https://arxiv.org/abs/2507.05542) | 对每条数据轨迹求与查询最相似的连续子轨迹，再在不同轨迹间取 top-k；GARI + CNDI 近似图搜索 | **输出语义与本方向同形**；原距离为几何 DTW/EDR/ERP，无语义 POI/text、绝对时间窗、持续时间与空间硬约束 | 已核 Definitions 1–4、距离与算法框架 |
-| Efficient Learning-based Top-k Representative Similar Subtrajectory Query, ICDE 2024 | TRSSQ 的直接前序 | 必须核对 learned distance、输出去重及约束接口 | GTRSS 正文明确引用；原文待获取/精读 |
+| **Efficient Learning-based Top-k Representative Similar Subtrajectory Query (TRSSQ)**, ICDE 2024, [DOI](https://doi.org/10.1109/ICDE60146.2024.00335), pp. 4396–4408 | 每条轨迹取最相似子轨迹 → 全局 top-k；RSSE 以 GRU 点级匹配 + 轨迹编码对齐估计相似度，filter-validate | 与本方向同为“每轨迹一个代表片段 + 全局 top-k”；查询为完整轨迹、度量为给定轨迹度量，未见过语义/时间/空间约束（全文未读） | 书目 Crossref/OpenAlex 已核；摘要（截断）与 GTRSS §I–II 描述已核；**全文付费墙未获取** |
 | Efficient Non-Learning Similar Subtrajectory Search, PVLDB 16, [PDF](https://www.vldb.org/pvldb/vol16/p3111-cheng.pdf) | 几何子轨迹相似搜索 | 坐标距离；无语义 embedding/绝对时间窗 | 摘要级 |
 | SimSub / deep RL, [arXiv:2003.02542](https://arxiv.org/abs/2003.02542) | 查询轨迹 → 最相似子轨迹 | 几何/学习表示；输出范围需按具体变体区分 | 摘要级 |
 | Fast Subtrajectory Similarity Search in Road Networks, PVLDB 13, [PDF](http://www.vldb.org/pvldb/vol13/p2188-koide.pdf) | 路网加权编辑距离下的子轨迹 | 路网几何；无 semantic/time-window 可行性 | 摘要级 |
@@ -64,6 +64,7 @@
 1. GTRSS/TRSSQ 已覆盖连续子轨迹定位、每条轨迹一个代表片段和全局 top-k；不能把 episode 区间或轨迹级去重作为新意。
 2. TISIS* 已覆盖 POI embedding 序列匹配，ETQ 已覆盖语义点序列到 top-k 轨迹。
 3. ST2Vec 与 DistanceAvg 已让时间进入整轨迹相似度；Quantum Range Query 已处理轨迹段上的时空范围约束。
+4. TRSSQ（ICDE 2024）已用学习模型 RSSE 做 representative subtrajectory 的候选估计与 filter-validate；“学习型相似度估计 + 代表片段”同样不是新意。
 
 **仍待验证的候选增量**：
 
@@ -75,7 +76,7 @@
 
 ## 7. 待补查
 
-- ICDE 2024 `Efficient Learning-based Top-k Representative Similar Subtrajectory Query` 全文与引用闭包；这是最高优先级。
+- ICDE 2024 `Efficient Learning-based Top-k Representative Similar Subtrajectory Query`（TRSSQ）全文：书目、摘要与 GTRSS 转述已核（见[候选证据](evidence/trssq-2026-10-23.md)），因 IEEE/CSDL 付费墙未取得正文；需通过机构访问或向作者索取，重点核对度量集合、去重实现、保证与是否支持属性约束。
 - ETQ、GTRSS、TISIS*、STKST-I 的前后向引用闭包。
 - TrajPrism/OmniTraj 的时间窗与 episode 评测协议。
 - `constrained representative subtrajectory query`、`semantic subtrajectory retrieval`、`time-windowed subtrajectory top-k`。

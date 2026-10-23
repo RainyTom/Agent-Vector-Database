@@ -6,7 +6,7 @@
 
 ## 新颖性状态
 
-**当前更接近“constrained semantic TRSSQ”，不能再称为尚无输出前序的新问题。** [新颖性审计](novelty-audit.md)已确认：GTRSS/TRSSQ 做“每条轨迹的最佳连续子轨迹 → 全局 top-k”，已经覆盖 episode 定位、轨迹级去重和片段返回；TISIS* 覆盖 POI embedding 序列匹配；ST2Vec 覆盖时间感知完整轨迹相似度；Quantum Range Query 覆盖轨迹段上的时空混合范围查询。尚未核到的是“稠密语义序列 + 绝对时间窗/持续时间 + 空间硬约束”的同一实现。下一步必须对比 `hard filter → TRSSQ`，并精读 ICDE 2024 TRSSQ 前序；只有硬约束导致新的算法结构或显著收益，独立贡献才成立。
+**当前更接近“constrained semantic TRSSQ”，不能再称为尚无输出前序的新问题。** [新颖性审计](novelty-audit.md)已确认：TRSSQ（ICDE 2024）定义“每条轨迹的最佳连续子轨迹 → 全局 top-k”，并用 RSSE（GRU + 轨迹编码）做学习型过滤；GTRSS 只是其图索引后继。TISIS* 覆盖 POI embedding 序列匹配，ST2Vec 覆盖时间感知完整轨迹相似度，Quantum Range Query 覆盖轨迹段上的时空混合范围查询。尚未核到的是“稠密语义序列 + 绝对时间窗/持续时间 + 空间硬约束”的同一实现；TRSSQ 全文付费墙未获取，该结论仍是待核而非已排除。下一步必须对比 `hard filter → TRSSQ`；只有硬约束导致新的算法结构或显著收益，独立贡献才成立。
 
 ## 应用背景
 
@@ -36,7 +36,8 @@
 
 | 工作 | 用户问题 | 返回 | 已覆盖本问题的部分 | 剩余差异 |
 |---|---|---|---|---|
-| **GTRSS/TRSSQ** | 每条长轨迹中哪段几何路线最像查询路线？ | 每轨迹最佳连续子轨迹，再取 top-k | **连续片段、轨迹级去重、全局 top-k、区间** | 无语义 POI/text 与绝对时间/时长/空间硬约束 |
+| **TRSSQ** (ICDE 2024) | 每条长轨迹中哪段最像查询？ | 每轨迹代表子轨迹 top-k；RSSE 学习型过滤 | 连续片段、去重、top-k、区间 | 语义/时间/空间约束未见于摘要与转述 |
+| **GTRSS** (2025) | 同上 | 每轨迹最佳子轨迹，再取 top-k（图索引） | 同上，另加图索引 | 无 POI/text 语义与硬窗口 |
 | ETQ | 哪些轨迹包含这些地点和活动？ | top-k 完整轨迹 | 语义点序列到 top-k | 匹配点可分散；无 episode 可行性 |
 | TISIS* | 哪些完整 POI 序列足够相似？ | 阈值内完整轨迹 | Word2Vec POI 匹配 + LCSS | 非 top-k；不定位 episode |
 | ST2Vec | 哪些完整路线在空间和时间节奏上相似？ | 完整轨迹 embedding/top-k | 时间进入软相似度 | 无语义 episode 与硬窗口 |
@@ -76,6 +77,7 @@ ACORN 等单对象过滤检索仍排除出问题新颖性审计。当前候选�
 - [数据集与下载状态](datasets.md)
 - [2026-10-22 首轮实验](2026-10-22-exps/report.md)
 - [2026-10-23 问题对照范围纠正](2026-10-23-exps/report.md)
+- [TRSSQ (ICDE 2024) 候选证据：全文未获取](evidence/trssq-2026-10-23.md)
 - 代码：`production/semantic-mobility-search/`
 
 ## 边界

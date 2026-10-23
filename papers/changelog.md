@@ -139,3 +139,4 @@
 - 将 Quantum Range Query 从单对象过滤边界中纠正为“同一轨迹混合数据域、不同 range-reporting 算子”；其形式模型含 semantic，但 Table 1 未实测 semantic，结论仍将其列为 future work。
 - 核实 TISIS* 使用 Word2Vec POI embedding + LCSS threshold；REPOSE/N-tree/ST2Vec 分别提供分布式完整轨迹 top-k、exact metric kNN/range、时空软相似度前序。
 - 新增 survey→REPOSE、survey→ST2Vec、GTRSS→REPOSE 三条有正文证据的关系。总索引现为 **28篇/25关系**；本轮未运行性能实验，不作新颖性确认。
+- 补核 GTRSS 的直接前序 TRSSQ（ICDE 2024, DOI:10.1109/ICDE60146.2024.00335）：Crossref/OpenAlex 书目一致，OpenAlex 摘要被截断，方法细节仅来自 GTRSS §I–II 转述（RSSE = GRU 点级匹配 + 轨迹编码对齐 + filter-validate）；IEEE/CSDL 付费墙与 202 挑战页导致全文未获取。按全文缺失处理，**不计入论文索引**，证据存 `researches/semantic-spatiotemporal-hybrid-search/evidence/trssq-2026-10-23.md`；28篇/25关系不变。

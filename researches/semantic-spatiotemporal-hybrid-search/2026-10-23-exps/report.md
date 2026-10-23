@@ -51,6 +51,25 @@ ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 仍是单对象检索�
 - 更新问题对照、新颖性审计、前序工作、检索日志和研究入口；
 - 新增 survey→REPOSE、survey→ST2Vec、GTRSS→REPOSE 三条原文关系。
 
+## 追加：TRSSQ 直接前序核查（同日）
+
+GTRSS 在正文中把 TRSSQ 归给 Wang et al.（ICDE 2024），并称其为“the only approach directly targeting the TRSSQ problem”。据此完成书目与可获取证据核查：
+
+| 项 | 结果 |
+|---|---|
+| 书目 | DOI:10.1109/ICDE60146.2024.00335；ICDE 2024, pp. 4396–4408；Crossref/OpenAlex/官方列表一致 |
+| 方法（转述） | RSSE：GRU 点级匹配 + 轨迹编码对齐 + 局部相似度，filter-validate |
+| 全文 | 未获取：Unpaywall closed；IEEE 202 挑战页；CSDL 无摘要；S2 429；arXiv 无 |
+| 被引 | OpenAlex 2 次（MATIBL 2025、SimCFT 2026），均非受约束 TRSSQ 后续 |
+
+对判断的影响：
+
+1. **问题定义早于 GTRSS**：TRSSQ 2024 已给出“每轨迹代表子轨迹 → 全局 top-k”，GTRSS 只是图索引后继。
+2. **学习型候选估计也不新**：RSSE 已用 GRU 估计相似度并过滤；把“学习/语义打分”当成贡献会被直接对应到 RSSE。
+3. 因全文未读，**不能**断言 TRSSQ 不含时间/空间/语义约束；这是待核项，不是已排除项。
+
+新增文件 `evidence/trssq-2026-10-23.md` 记录书目、摘要残段、GTRSS 原话、获取尝试与未核实清单；该文**不进入** `papers.jsonl`（全文缺失），总数仍为 28 篇/25 关系。
+
 ## 局限
 
 - 没有运行新性能实验，也未复核论文报告的性能数字；

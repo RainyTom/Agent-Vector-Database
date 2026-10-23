@@ -57,6 +57,14 @@
 
 Quantum Range Query 属于同一轨迹混合数据域，但算子是 range reporting；REPOSE、N-tree、ST2Vec 属于完整轨迹相似检索。ACORN、Filtered-DiskANN、TANNS、TANGO、CubeGraph、LIST 是单对象检索，只在采用其执行机制时补读实现细节。
 
+## TRSSQ（ICDE 2024）获取记录
+
+- 书目：[DOI:10.1109/ICDE60146.2024.00335](https://doi.org/10.1109/ICDE60146.2024.00335)，pp. 4396–4408，2024-05-13；作者 Kunming Wang, Shiyu Yang, Jiabao Jin, Peng Cheng, Jianye Yang, Xuemin Lin。Crossref、OpenAlex `W4400909989`、ICDE 2024 官方论文列表三处一致。
+- 全文尝试：Unpaywall `oa_status=closed`；IEEE `stamp.jsp` 与 `iel8/.../10598106.pdf` 返回 HTTP 202（0 字节）；CSDL 页面无摘要；Crossref 的 xplorestaging 链接返回 HTML；Semantic Scholar 429；arXiv 无此文。
+- 已得替代证据：OpenAlex 摘要（末句被截断）+ GTRSS §I–II 对 TRSSQ/RSSE 的明确转述（GRU 点级匹配、轨迹编码对齐、filter-validate）。
+- 引用闭包：OpenAlex 记录被引 2 次（MATIBL, IJCNN 2025；SimCFT, TKDE 2026），均非受约束/语义 TRSSQ 后续；GTRSS 尚未进入 OpenAlex 引用。
+- 结论：**未获取全文，不写入 `papers.jsonl`**；证据存于 `researches/semantic-spatiotemporal-hybrid-search/evidence/trssq-2026-10-23.md`。
+
 ## 覆盖限制
 
 - 未完成 GTRSS/TRSSQ、ETQ、TISIS* 的前后向引用闭包；可能漏掉 constrained/semantic representative-subtrajectory 工作。
