@@ -83,16 +83,15 @@ ACORN、Filtered-DiskANN、TANNS/TANGO、CubeGraph、LIST 的输入和输出单�
 
 ## 0. 我们的问题：时间窗约束的语义 Episode 检索（TW-SER）
 
-### 0.1 数据（与[问题定义](problem-definition.md) v3 一致）
+### 0.1 数据（与[问题定义](problem-definition.md) v4 一致）
 
-原始轨迹是带时间戳的采样序列。预处理把轨迹划分为**互不相交、覆盖全轨迹的连续段** $I_k=[l_k,r_k]$，每段一个语义向量：
+一条语义轨迹是四元组 $T=(X,\tau,E,\beta)$：坐标序列 $X$、时间戳 $\tau$、语义向量集 $E=(\mathbf e_1,\ldots,\mathbf e_s)$，以及采样点到段的归属 $\beta:[1,n]\to[1,s]$。$\beta$ 连续、满射且与查询无关；第 $k$ 段覆盖原始点区间 $I_k=\beta^{-1}(k)=[l_k,r_k]$。
 
 $$
-\sigma_k=\bigl(I_k,\ \mathbf e_k\bigr),\qquad
-\tilde T=\Pi(T)=(\sigma_1,\ldots,\sigma_s).
+X_k=\{x_i:i\in I_k\},\qquad t^{s}_k=t_{l_k},\qquad t^{e}_k=t_{r_k}.
 $$
 
-episode 是连续段区间 $\tilde T[u:v]$，其原始点集合为 $X(E)=\bigcup_{k=u}^{v}X_k$。逐点模型（每个采样点自成一段）与“只保留停留段”都是该划分的特例；v3 不区分停留点与 transit 点。
+episode 是连续段区间 $E_{u:v}=(\mathbf e_u,\ldots,\mathbf e_v)$，覆盖原始点 $X(E)=\bigcup_{k=u}^{v}X_k$ 与时间区间 $[t^{s}_u,t^{e}_v]$。分段算法本身不在定义内，只需满足契约；$s=1$ 与 $s=n$ 分别是整轨迹与逐点特例。
 
 ### 0.2 查询
 
