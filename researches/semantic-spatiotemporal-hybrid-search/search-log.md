@@ -10,11 +10,11 @@
 
 | 检索词 | 主要命中 | 判断 |
 |---|---|---|
-| spatio-temporal filtered approximate nearest neighbor search vector embeddings | Filtered ANN surveys, TANNS, CubeGraph | 时空过滤 ANN 已有多条线；需序列级差异 |
+| spatio-temporal filtered approximate nearest neighbor search vector embeddings | Filtered ANN surveys, TANNS, CubeGraph | 单对象检索；排除出问题新颖性审计，仅保留执行机制参考 |
 | semantic trajectory similarity search vector embedding retrieval | TISIS, DASS, OmniTraj, TrajPrism, semantic trajectory surveys | 语义轨迹检索活跃；多为整轨迹 |
-| time-aware vector search temporal filtered ANN recency ranking | TANGO/TDVS, Re3, TEMPS | 时间衰减/新近性已有直接工作；不能作为新意 |
-| geo-aware approximate nearest neighbor search location filter embeddings | LIST, Location Matters, JAG | 空间感知 embedding/索引已有 |
-| spatio-temporal retrieval augmented generation geospatial vector database mobility embeddings | CubeGraph, DFR-Gemma, MobilityDB | 时空 RAG 已出现；CubeGraph 最接近 |
+| time-aware vector search temporal filtered ANN recency ranking | TANGO/TDVS, Re3, TEMPS | 单对象有效性/新鲜度检索；不是 episode 问题 |
+| geo-aware approximate nearest neighbor search location filter embeddings | LIST, Location Matters, JAG | 单对象空间检索；不是轨迹问题 |
+| spatio-temporal retrieval augmented generation geospatial vector database mobility embeddings | CubeGraph, DFR-Gemma, MobilityDB | 输入输出单位不同；不再称 CubeGraph“最接近” |
 | trajectory vector database nearest neighbor search index learned trajectory embeddings | TISIS, trajectory similarity surveys, TrajCL | 学习轨迹表示成熟；索引多为整轨迹 |
 | spatio-temporal vector similarity join event matching embeddings location time | 传统 trajectory join；无直接“语义+时空”向量 join | 组合可能开放，但本轮不做 |
 | semantic trajectory join similar trajectories POI sequence embedding index | REST, Parallel Semantic Trajectory Similarity Join, TISIS | 语义轨迹 join 已有；与 episode 检索不同 |
@@ -32,20 +32,20 @@
 | semantic trajectory benchmark dataset retrieval evaluation | Massive-STEPS, TrajPrism, OmniTraj | 数据集可用；评测协议未覆盖 episode+时间窗 |
 | subtrajectory query semantic embedding time window episode retrieval mobility | 几何子轨迹、视频子轨迹；无直接命中 | 本问题候选差异 |
 
-## 最近邻工作清单
+## 直接问题家族的补查清单
 
 必须精读/补全的条目：
 
-1. TANNS/TKDE 2026（DOI 10.1109/TKDE.2026.3722749）：全文、interval 查询、更新成本。
-2. CubeGraph（arXiv:2604.06616）：全文，确认时间维度是否实际支持。
-3. TANGO（arXiv:2609.00548）：全文，确认是否支持序列/多向量查询。
-4. TISIS（arXiv:2409.11301）：实验部分、索引结构、复杂度。
-5. TrajPrism（arXiv:2605.10782）：检索协议、是否含时间窗/episode。
-6. OmniTraj（arXiv:2505.17437）：查询类型与索引。
-7. STKST-I（ScienceDirect S0957417423005663）：正式书目、时间约束语义。
-8. SimSub / 子轨迹搜索（PVLDB 16, arXiv:2003.02542）：几何 vs 语义边界。
-9. REST / 语义轨迹 join：与 top-k episode 检索的边界。
-10. 时空关键词搜索（DESKS/KORS/IG-Tree/SemaSK）：路线约束与查询语义。
+1. ETQ（ICDE 2017）：做前后向引用闭包，确认顺序敏感扩展及后续工作。
+2. TISIS（arXiv:2409.11301）：实验部分、索引结构、复杂度。
+3. TrajPrism（arXiv:2605.10782）：检索协议、是否含时间窗/episode。
+4. OmniTraj（arXiv:2505.17437）：查询类型与索引。
+5. STKST-I（ScienceDirect S0957417423005663）：正式书目、时间约束语义。
+6. SimSub / 子轨迹搜索（PVLDB 16, arXiv:2003.02542）：top-k 输出、几何 vs 语义边界。
+7. REST / 语义轨迹 join：与 top-k episode 检索的边界。
+8. 时空关键词搜索（DESKS/KORS/IG-Tree/SemaSK）：路线约束与查询语义。
+
+TANNS、TANGO、CubeGraph、LIST、ACORN、Filtered-DiskANN 已确认为单对象检索，不再作为新颖性阻塞项；只有采用其执行机制时才补读实现细节。
 
 ## 覆盖限制
 
