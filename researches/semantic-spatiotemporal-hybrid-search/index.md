@@ -71,6 +71,8 @@ ACORN 等单对象过滤检索仍排除出问题新颖性审计。当前候选�
 - [问题定义（v4：坐标/时间/段向量集）](problem-definition.md)
 - [问题定义对照（本问题 vs 现有论文）](problem-comparison.md)
 - [基线方案与评测契约](baseline.md)
+- [方法草案：span-aware episode index](approach.md)
+- [2026-10-24 基准与产物布局](2026-10-24-exps/experiments/layout.md)
 - [新颖性审计](novelty-audit.md)
 - [前序工作与证据边界](prior-work.md)
 - [研究问题与最小实验](research-questions.md)
