@@ -69,6 +69,7 @@ struct Args {
     int M = 16;
     int efc = 200;
     int max_ef = 16384;
+    double policy_s = 0.06;
     bool rebuild_index = false;
 };
 
@@ -88,6 +89,7 @@ Args parse(int argc, char** argv) {
         else if (f == "--M") a.M = std::stoi(next());
         else if (f == "--efc") a.efc = std::stoi(next());
         else if (f == "--max-ef") a.max_ef = std::stoi(next());
+        else if (f == "--policy-s") a.policy_s = std::stod(next());
         else if (f == "--rebuild-index") a.rebuild_index = true;
         else throw std::runtime_error("unknown arg " + f);
     }
@@ -1025,7 +1027,15 @@ int main(int argc, char** argv) {
         int pol_valid = 0;
         for (int bi = 0; bi < 7; ++bi) {
             const std::string b = BUCKET_NAMES[bi];
-            const char* want = (bi < 2) ? "exact_list" : "hnsw";
+            double s_bucket = 0;
+            for (const auto& r : rows) {
+                if (r.mode == "random" && r.bucket == b) {
+                    s_bucket = r.s;
+                    break;
+                }
+            }
+            const char* want =
+                (s_bucket < args.policy_s) ? "exact_list" : "hnsw";
             double q = 0;
             for (const auto& r : rows) {
                 if (r.mode == "random" && r.bucket == b && r.ok &&
@@ -1063,6 +1073,7 @@ int main(int argc, char** argv) {
               << ",\"n\":" << n << ",\"d\":" << d << ",\"nq_data\":" << nq_data
               << ",\"k\":" << K << ",\"target_recall\":" << TARGET_RECALL
               << ",\"nq_per_bucket\":" << args.nq_per_bucket
+              << ",\"policy_s\":" << args.policy_s
               << ",\"seed\":" << args.seed << ",\"valid\":"
               << (valid ? "true" : "false") << ",\"frontier\":[";
             for (int bi = 0; bi < 7; ++bi) {
