@@ -153,3 +153,4 @@
 - 在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/` 新增跨集合目录兼容阈值向量连接的 Problem Formulation 与研究记录；原 D0 停止独立立项结论保留。
 - 更新 nested-attr 入口、vector join 问题入口及检索日志；本轮未新增论文或关系记录，未运行算法实验，候选新颖性尚未充分排查。
 - 同日按问题范围修订：将单父文件目录树背景改为共享虚拟目录 DAG，补四种精确基线与逻辑对象去重语义；旧树定义不再适用，原 D1 动态维护方案仍为独立历史方向。
+- 同日再次修订：文件夹快捷方式仍未摆脱文件目录背景，当前 Problem Formulation 改为多维商品目录的跨平台商品连接；基线更新为五种，前两版文件目录定义只作历史记录。

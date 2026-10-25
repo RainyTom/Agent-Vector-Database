@@ -226,3 +226,7 @@
 产出[文件目录约束下跨集合阈值向量连接的 Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)：cross、L2、threshold、exact pairs，目录祖先可比过滤。Directory-Aware 的 DSQ 是单查询 top-k；现有 Fast AVJ/VBASE 是强前序。待查 filtered similarity join、hierarchical/dual-tree join、predicate-aware batch vector join 的直接正文与引用链，以及真实双库目录路径能否支持场景。没有新增已精读论文、关系或性能实验。
 
 同日修订：将背景从单父文件目录树改为可通过共享入口访问同一逻辑目录的**静态虚拟目录 DAG**。参考 [Google Drive 文件夹快捷方式官方说明](https://support.google.com/drive/answer/9700156?hl=en) 的“引用而非复制”现象；DAG 是本项目的抽象限制，未把该产品的实际目录系统或权限实现等同于模型。更新 [Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)，增加 B0 全量成对验证、B1 在线目录范围、B2 物化目录范围、B3 精确向量优先四种基线及 DAG 多路径去重公式。D1 已有支持计数/增量维护前序，本问题暂不研究维护；没有新论文记录或实验。
+
+同日再次修订：Google Drive 快捷方式仍属于文件目录背景，改为[多维商品目录 Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)。[OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/)以商品目录说明品类、品牌、颜色、尺码等多维筛选；将筛选状态建模为部分属性函数与按包含关系组织的目录偏序是本项目的形式化选择，不宣称 OpenSearch 实现了本文连接。新问题为跨平台、部分属性兼容、L2 阈值、精确 pairs；基线 B0–B4。商品匹配、缺失属性下记录连接及 filtered vector join 的最近工作仍需补查，不能以背景不同证明算法新颖。没有新增论文记录或实验。
+
+补充候选：产品实体匹配已有[莱比锡大学研究页](https://old.dbs.uni-leipzig.de/en/publication/title/tailoring_entity_resolution_for_matching_product_offers)讨论缺失/错误属性；[EM-Join 原始论文](https://www.scitepress.org/Papers/2025/134837/134837.pdf)涉及 embedding-based entity matching join。当前只核题名/摘要或入口，未核其完整定义、阈值语义和实验；列为后续精读候选，不把商品匹配场景本身宣称为新增研究问题。
