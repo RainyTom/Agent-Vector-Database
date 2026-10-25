@@ -109,7 +109,8 @@ def main() -> int:
     )
     print(
         f"ASI n={summary['n']} d={summary['d']} k={summary['k']} "
-        f"nq_per_bucket={summary['nq_per_bucket']} seed={summary['seed']}"
+        f"nq_per_bucket={summary['nq_per_bucket']} "
+        f"repeats={summary.get('repeats', 1)} seed={summary['seed']}"
     )
     if not valid:
         print("[harness] validation failed", file=sys.stderr)

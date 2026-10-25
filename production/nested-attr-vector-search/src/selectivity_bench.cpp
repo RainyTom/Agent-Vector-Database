@@ -70,6 +70,7 @@ struct Args {
     int efc = 200;
     int max_ef = 16384;
     double policy_s = 0.06;
+    int repeats = 1;
     bool rebuild_index = false;
 };
 
@@ -90,6 +91,7 @@ Args parse(int argc, char** argv) {
         else if (f == "--efc") a.efc = std::stoi(next());
         else if (f == "--max-ef") a.max_ef = std::stoi(next());
         else if (f == "--policy-s") a.policy_s = std::stod(next());
+        else if (f == "--repeats") a.repeats = std::stoi(next());
         else if (f == "--rebuild-index") a.rebuild_index = true;
         else throw std::runtime_error("unknown arg " + f);
     }
@@ -100,6 +102,7 @@ Args parse(int argc, char** argv) {
         throw std::runtime_error("--nq-per-bucket must be even and >= 2");
     }
     if (a.max_ef < 16) throw std::runtime_error("--max-ef must be >= 16");
+    if (a.repeats < 1) throw std::runtime_error("--repeats must be >= 1");
     return a;
 }
 
@@ -346,6 +349,25 @@ struct EvalOut {
     double resolve_us = 0;
     std::vector<double> times;
 };
+
+template <typename F>
+EvalOut median_eval(F&& f, int repeats) {
+    const int reps = std::max(1, repeats);
+    std::vector<EvalOut> es;
+    es.reserve(size_t(reps));
+    for (int r = 0; r < reps; ++r) {
+        EvalOut e = f();
+        double sec = 0;
+        for (double t : e.times) sec += t / 1e6;
+        e.seconds = sec;
+        es.push_back(std::move(e));
+    }
+    std::sort(es.begin(), es.end(),
+              [](const EvalOut& a, const EvalOut& b) {
+                  return a.seconds < b.seconds;
+              });
+    return std::move(es[es.size() / 2]);
+}
 
 int count_hits(const int* pred, const int* gt) {
     int hits = 0;
@@ -894,30 +916,30 @@ int main(int argc, char** argv) {
                                          half);
                 EvalOut tune = eval_hnsw(*index, g, tree, query_raw.data(),
                                          nq_data, gts[gi], variant, ef, 0, half);
-                const double t0 = now_s();
-                EvalOut e = eval_hnsw(*index, g, tree, query_raw.data(),
-                                      nq_data, gts[gi], variant, ef, half, nq);
-                e.seconds = now_s() - t0;
+                EvalOut e = median_eval([&] {
+                    return eval_hnsw(*index, g, tree, query_raw.data(),
+                                     nq_data, gts[gi], variant, ef, half, nq);
+                }, args.repeats);
                 Row r = make_row(g.mode, g.bucket, g.s_mean, "hnsw", variant,
                                  ef, e, nq - half, &tune);
                 r.recall_tune = double(tune.hits) / double(half * K);
                 rows.push_back(r);
 
-                const double t1 = now_s();
-                EvalOut ex = eval_exact(g, tree, query_raw.data(), nq_data,
-                                        base_raw.data(), n, d, gts[gi], variant,
-                                        false, half, nq);
-                ex.seconds = now_s() - t1;
+                EvalOut ex = median_eval([&] {
+                    return eval_exact(g, tree, query_raw.data(), nq_data,
+                                      base_raw.data(), n, d, gts[gi], variant,
+                                      false, half, nq);
+                }, args.repeats);
                 Row re = make_row(g.mode, g.bucket, g.s_mean, "exact", variant,
                                   0, ex, nq - half, nullptr);
                 rows.push_back(re);
 
                 if (variant == "precomputed") {
-                    const double t2 = now_s();
-                    EvalOut el = eval_exact(g, tree, query_raw.data(), nq_data,
-                                           base_raw.data(), n, d, gts[gi], variant,
-                                           true, half, nq);
-                    el.seconds = now_s() - t2;
+                    EvalOut el = median_eval([&] {
+                        return eval_exact(g, tree, query_raw.data(), nq_data,
+                                          base_raw.data(), n, d, gts[gi],
+                                          variant, true, half, nq);
+                    }, args.repeats);
                     Row rl = make_row(g.mode, g.bucket, g.s_mean, "exact_list",
                                       variant, 0, el, nq - half, nullptr);
                     rows.push_back(rl);
@@ -928,10 +950,10 @@ int main(int argc, char** argv) {
                 const int ef0 = std::min(
                     args.max_ef,
                     std::max(16, int(std::ceil(2.0 * K / g.s_mean))));
-                const double t0 = now_s();
-                EvalOut p = eval_post(*index, g, query_raw.data(), nq_data,
-                                      gts[gi], ef0, args.max_ef, half, nq);
-                p.seconds = now_s() - t0;
+                EvalOut p = median_eval([&] {
+                    return eval_post(*index, g, query_raw.data(), nq_data,
+                                     gts[gi], ef0, args.max_ef, half, nq);
+                }, args.repeats);
                 Row r = make_row(g.mode, g.bucket, g.s_mean, "post", "precomputed",
                                  ef0, p, nq - half, nullptr);
                 rows.push_back(r);
@@ -939,12 +961,11 @@ int main(int argc, char** argv) {
                 // Fixed-ef diagnostics: recall(s) at constant search breadth.
                 for (int fixed_ef : {16, 64, 256, 1024, 4096}) {
                     if (fixed_ef > args.max_ef) continue;
-                    EvalOut fe = eval_hnsw(*index, g, tree, query_raw.data(),
-                                           nq_data, gts[gi], "precomputed",
-                                           fixed_ef, half, nq);
-                    double sec = 0;
-                    for (double t : fe.times) sec += t / 1e6;
-                    fe.seconds = sec;
+                    EvalOut fe = median_eval([&] {
+                        return eval_hnsw(*index, g, tree, query_raw.data(),
+                                         nq_data, gts[gi], "precomputed",
+                                         fixed_ef, half, nq);
+                    }, args.repeats);
                     Row rf = make_row(g.mode, g.bucket, g.s_mean, "hnsw_fixed",
                                       "precomputed", fixed_ef, fe, nq - half,
                                       nullptr);
@@ -1074,6 +1095,7 @@ int main(int argc, char** argv) {
               << ",\"k\":" << K << ",\"target_recall\":" << TARGET_RECALL
               << ",\"nq_per_bucket\":" << args.nq_per_bucket
               << ",\"policy_s\":" << args.policy_s
+              << ",\"repeats\":" << args.repeats
               << ",\"seed\":" << args.seed << ",\"valid\":"
               << (valid ? "true" : "false") << ",\"frontier\":[";
             for (int bi = 0; bi < 7; ++bi) {
