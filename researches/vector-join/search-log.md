@@ -219,3 +219,8 @@
 先查总论文/关系索引、containment逐篇笔记和本地全文；用户确认Lx=Q、Q⊆Lx。先检索vector similarity join + set containment，再检索filtered nearest neighbor label-set equality、Unified Navigating Graph equality containment、原题名和ELI equality appendix。重点阅读LSSG v1 HTML §2.1/3/6.3、UNG作者README与已有源码、ACORN v1 §3.1/5、ELI v2 §2.1 Remark，以及本地PathSeer p.2和RWalks §2.1原文。
 
 结论与原始链接见[报告](../containment-filtered-vector-search/2026-10-20-exps/report.md)。UNG原文全文仍缺，ELI所需equality附录/代码未核；UniFilter/Curator完整集合相等能力本轮未核，不凭第三方比较表收录为已证支持。PathSeer/RWalks原始PDF在线重取失败，使用已存原始全文和可读官方仓库。未声称穷尽最新文献，无新实验。
+## 2026-10-25 Directory-Aware 新问题背景与定义初筛
+
+先查 `papers/papers.jsonl`、`relations.jsonl`、本地 `2606.16903v1` 原文/报告及 nested-attr 的 D0–D5 审计、LES 记录；再查 vector similarity join、vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join 加 hierarchy/prefix/metadata 变体，随后查 filtered ANN 与目录相关组合。核对 [Directory-Aware v1 §II–V](https://arxiv.org/html/2606.16903v1)、[Fast AVJ v2 摘要](https://arxiv.org/abs/2603.16360)及 [VBASE 正式论文 §2,4](https://www.usenix.org/system/files/osdi23-zhang-qianxi_1.pdf)。网页结果中有字符串/集合/semantic join 同名项，未当几何向量 join 证据；检索未形成引用闭包，不能以“无直接命中”证明新颖。
+
+产出仅为[路径可比跨集合阈值向量连接的问题定义](../nested-attr-vector-search/01-directory-aware-acceleration/problem-definition.md)：cross、L2、threshold、exact pairs，目录祖先可比过滤。Directory-Aware 的 DSQ 是单查询 top-k；现有 Fast AVJ/VBASE 是强前序。待查 filtered similarity join、hierarchical/dual-tree join、predicate-aware batch vector join 的直接正文与引用链，以及真实双库目录路径能否支持场景。没有新增已精读论文、关系或性能实验；本服务器后续只做规划。

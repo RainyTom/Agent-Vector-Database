@@ -148,3 +148,7 @@
 - 修订LSSG、ACORN、PathSeer、ELI、RWalks五条既有索引的支持层次；LSSG补已核官方代码入口。UNG保留作者产物证据候选，不补造未取得的全文记录；论文总数/关系数不变。
 - 明确UNG general/equality分构建模式；RWalks名为Equality的公式只要求包含；ACORN/PathSeer的双集合能力是通用predicate实例化，ELI具体equality扩展实现待核。
 - 旧Exact/Subtree与完整集合谓词不同，帕累托计划追加语义校正及核心基线优先级。无新性能实验。
+## 2026-10-25 Directory-Aware 子目录的新问题定义
+
+- 在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/` 新增跨集合目录兼容阈值向量连接的背景、精确定义与研究记录；原 D0 停止独立立项结论保留。
+- 更新 nested-attr 入口、vector join 问题入口及检索日志；本轮未新增论文或关系记录，未运行算法实验。本服务器只做规划，候选新颖性尚未充分排查。
