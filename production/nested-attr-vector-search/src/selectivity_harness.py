@@ -100,11 +100,17 @@ def main() -> int:
     print(f"METRIC build_s={summary['build_s']:.3f}")
     print(f"METRIC index_mb={summary['index_mb']:.3f}")
     print(f"METRIC tree_meta_mb={summary['tree_meta_mb']:.3f}")
+    if summary.get("pathseer"):
+        print(f"METRIC pathseer_index_mb={summary['pathseer_index_mb']:.3f}")
+        print(f"METRIC pathseer_build_s={summary['pathseer_build_s']:.3f}")
     print(f"METRIC valid={1 if valid else 0}")
     print(f"METRIC target_recall={TARGET_RECALL}")
     print(f"ASI frontier={json.dumps(summary['frontier'])}")
     print(f"ASI metric_mode={summary.get('metric_mode', 'random')} "
           f"clusters={summary.get('clusters', 0)}")
+    if summary.get("pathseer"):
+        print(f"ASI pathseer_Mexp={summary.get('pathseer_Mexp')} "
+              f"Mexp_search={summary.get('pathseer_Mexp_search')}")
     print(
         "ASI design=random+CCS-hierarchy predicates; exact/PASS/FAISS-BF-HNSW/post-filter; "
         "single-thread query"

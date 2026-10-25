@@ -97,6 +97,10 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 
 1M 只跑随机谓词；结果见报告的 §5。100k 的主指标与 1M 不可直接比较。
 
+### PathSeer filter-aware 基线
+
+`--pathseer` 在 HNSW 之外再建 `IndexPathSeerFlat`（默认 M=16，M_exp=32，efc=200；索引约 76 MB，构建约 44 s），搜索用 `SearchParametersPathSeer`，`M_exp_search=16`。该 fork 在 `M_exp_search>16` 时触发缓冲区溢出，本实验未扫描更大的搜索度。cluster 完整曲线见报告 §6 与 `data/selectivity_cluster_pathseer_full_20261026.csv`。
+
 ## 7. 已知局限
 
 - 100k 与 1M、单一数据集（SIFT）；10M 未测。100k 的层级/目录模式未在 1M 重跑，1M 只有随机谓词与 M=16 一个 HNSW 构型。交叉点数值不能外推到 10M。

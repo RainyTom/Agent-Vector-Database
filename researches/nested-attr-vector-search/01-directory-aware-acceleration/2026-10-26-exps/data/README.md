@@ -12,6 +12,7 @@
 - `summary_1m_20261026.json`：run #88 的汇总；主指标 3,510.91 QPS，上一轮 run #87 为 3,376.30（差异 4.0%）。单次评估的 run #86 因 s=0.001 冷 gather 离群（2,769.60）被弃用。1M 与 100k 的主指标不可直接比较。
 - `selectivity_cluster_curve_20261026.csv` / `.jsonl` / `summary_cluster_20261026.json`：SIFT100k cluster 模式（k-means k=256，紧凑可行簇，查询独立），200/bucket，3 次评估中位数，run #89；主指标 14,446.65 QPS，policy 0，crossover 桶 0.5。
 - `selectivity_cluster_probe_32768_20261026.csv` / `summary_cluster_probe_32768_20261026.json`：同一 cluster 模式的 ef=32768 探针，50 条/桶、单次评估；用于确认提高 ef 仍不能恢复 r95。
+- `selectivity_cluster_pathseer_full_20261026.csv` / `summary_cluster_pathseer_full_20261026.json`：PathSeer filter-aware 基线（M=16，M_exp=32，M_exp_search=16，ef≤4096），200/bucket、3 次重复；用于确认扩展图在当前参数下未修复远簇召回。
 
 ## CSV 列
 

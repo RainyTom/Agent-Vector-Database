@@ -28,6 +28,7 @@
 #include <faiss/Clustering.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexHNSW.h>
+#include <faiss/IndexPathSeer.h>
 #include <faiss/impl/HNSW.h>
 #include <faiss/impl/IDSelector.h>
 #include <faiss/index_io.h>
@@ -68,6 +69,10 @@ struct Args {
     std::string metric_mode = "random";
     int cluster_k = 256;
     int nq_per_bucket = 200;
+    bool use_pathseer = false;
+    int pathseer_Mexp = 32;
+    int pathseer_Mexp_search = 16;
+    int pathseer_max_ef = 4096;
     uint64_t seed = 20261026;
     int M = 16;
     int efc = 200;
@@ -90,6 +95,10 @@ Args parse(int argc, char** argv) {
         else if (f == "--modes") a.modes = next();
         else if (f == "--metric-mode") a.metric_mode = next();
         else if (f == "--clusters") a.cluster_k = std::stoi(next());
+        else if (f == "--pathseer") a.use_pathseer = true;
+        else if (f == "--pathseer-Mexp") a.pathseer_Mexp = std::stoi(next());
+        else if (f == "--pathseer-Mexp-search") a.pathseer_Mexp_search = std::stoi(next());
+        else if (f == "--pathseer-max-ef") a.pathseer_max_ef = std::stoi(next());
         else if (f == "--nq-per-bucket") a.nq_per_bucket = std::stoi(next());
         else if (f == "--seed") a.seed = std::stoull(next());
         else if (f == "--M") a.M = std::stoi(next());
@@ -503,6 +512,42 @@ EvalOut eval_hnsw(faiss::IndexHNSWFlat& index, const Group& g, const Tree& tree,
     return out;
 }
 
+EvalOut eval_pathseer(faiss::IndexPathSeer& index, const Group& g,
+                        const Tree& tree, const float* queries, int nq_data,
+                        const std::vector<int>& gt, const std::string& variant,
+                        int ef, int mexp_search, int begin, int end) {
+    EvalOut out;
+    const int nb = int(g.qs[0].bm.size());
+    std::vector<uint8_t> scratch(nb);
+    std::vector<int> stack;
+    std::vector<float> D(K);
+    std::vector<faiss::idx_t> I(K);
+    out.times.reserve(end - begin);
+    for (int qi = begin; qi < end; ++qi) {
+        const Query& q = g.qs[qi];
+        const uint8_t* bm = prepare_bitmap(q, tree, variant, scratch, stack,
+                                            out.resolve_us);
+        const double t0 = now_us();
+        std::fill(I.begin(), I.end(), -1);
+        BitmapSel sel(nb, bm);
+        faiss::SearchParametersPathSeer p;
+        p.efSearch = ef;
+        p.M_exp_search = mexp_search;
+        p.sel = &sel;
+        index.search(1, queries + size_t(q.qvec) * index.d, K, D.data(),
+                     I.data(), &p);
+        out.times.push_back(now_us() - t0);
+        int pred[K];
+        for (int t = 0; t < K; ++t) pred[t] = int(I[t]);
+        out.hits += count_hits(pred, gt.data() + size_t(qi) * K);
+        out.violations += count_duplicates(pred);
+        for (int t = 0; t < K; ++t) {
+            if (pred[t] >= 0 && !test_bit(bm, pred[t])) ++out.violations;
+        }
+    }
+    return out;
+}
+
 EvalOut eval_post(faiss::IndexHNSWFlat& index, const Group& g,
                   const float* queries, int nq_data, const std::vector<int>& gt,
                   int ef0, int max_ef, int begin, int end) {
@@ -885,6 +930,24 @@ int choose_ef(faiss::IndexHNSWFlat& index, const Group& g, const Tree& tree,
     return last;
 }
 
+int choose_ef_pathseer(faiss::IndexPathSeer& index, const Group& g,
+                       const Tree& tree, const float* queries, int nq_data,
+                       const std::vector<int>& gt, const std::string& variant,
+                       int max_ef, int tune_end, int mexp_search) {
+    const int efs[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192,
+                       16384};
+    int last = 16;
+    for (int ef : efs) {
+        if (ef > max_ef) break;
+        EvalOut e = eval_pathseer(index, g, tree, queries, nq_data, gt,
+                                  variant, ef, mexp_search, 0, tune_end);
+        last = ef;
+        double recall = double(e.hits) / double(tune_end * K);
+        if (recall >= TARGET_RECALL && e.violations == 0) return ef;
+    }
+    return last;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -1021,6 +1084,38 @@ int main(int argc, char** argv) {
                   << " load_s=" << load_s
                   << " index_mb=" << index_bytes / (1024.0 * 1024.0) << "\n";
 
+        faiss::IndexPathSeerFlat* pidx = nullptr;
+        double ps_build_s = 0, ps_load_s = 0;
+        size_t ps_bytes = 0;
+        if (args.use_pathseer) {
+            const std::string ppath =
+                args.out_dir + "/pathseer_M" + std::to_string(args.M) +
+                "_Mexp" + std::to_string(args.pathseer_Mexp) + "_efc" +
+                std::to_string(args.efc) + "_n" + std::to_string(n) + ".faiss";
+            if (!args.rebuild_index && std::filesystem::exists(ppath)) {
+                const double t0 = now_s();
+                faiss::Index* raw = faiss::read_index(ppath.c_str());
+                pidx = dynamic_cast<faiss::IndexPathSeerFlat*>(raw);
+                if (!pidx || pidx->ntotal != n || pidx->d != d) {
+                    throw std::runtime_error("cached pathseer index mismatch");
+                }
+                ps_load_s = now_s() - t0;
+            } else {
+                const double t0 = now_s();
+                pidx = new faiss::IndexPathSeerFlat(
+                    d, args.M, args.pathseer_Mexp, faiss::METRIC_L2);
+                pidx->pathseer.efConstruction = args.efc;
+                pidx->pathseer.efConstructionExp = args.efc;
+                pidx->add(n, base_raw.data());
+                ps_build_s = now_s() - t0;
+                faiss::write_index(pidx, ppath.c_str());
+            }
+            ps_bytes = std::filesystem::file_size(ppath);
+            std::cerr << "[selectivity] pathseer build_s=" << ps_build_s
+                      << " load_s=" << ps_load_s << " index_mb="
+                      << ps_bytes / (1024.0 * 1024.0) << "\n";
+        }
+
         std::vector<Row> rows;
         const std::string efs_variants[3] = {"precomputed", "triehi", "peonline"};
         for (size_t gi = 0; gi < groups.size(); ++gi) {
@@ -1073,6 +1168,25 @@ int main(int argc, char** argv) {
                     Row rl = make_row(g.mode, g.bucket, g.s_mean, "exact_list",
                                       variant, 0, el, nq - half, nullptr);
                     rows.push_back(rl);
+                }
+
+                if (args.use_pathseer && variant == "precomputed") {
+                    const int pef = choose_ef_pathseer(
+                        *pidx, g, tree, query_raw.data(), nq_data, gts[gi],
+                        variant, args.pathseer_max_ef, half,
+                        args.pathseer_Mexp_search);
+                    EvalOut ptune = eval_pathseer(
+                        *pidx, g, tree, query_raw.data(), nq_data, gts[gi],
+                        variant, pef, args.pathseer_Mexp_search, 0, half);
+                    EvalOut pe = median_eval([&] {
+                        return eval_pathseer(
+                            *pidx, g, tree, query_raw.data(), nq_data, gts[gi],
+                            variant, pef, args.pathseer_Mexp_search, half, nq);
+                    }, args.repeats);
+                    Row rp = make_row(g.mode, g.bucket, g.s_mean, "pathseer",
+                                      variant, pef, pe, nq - half, &ptune);
+                    rp.recall_tune = double(ptune.hits) / double(half * K);
+                    rows.push_back(rp);
                 }
             }
 
@@ -1219,6 +1333,12 @@ int main(int argc, char** argv) {
               << ",\"build_s\":" << build_s
               << ",\"index_load_s\":" << load_s
               << ",\"index_mb\":" << index_bytes / (1024.0 * 1024.0)
+              << ",\"pathseer\":" << (args.use_pathseer ? "true" : "false")
+              << ",\"pathseer_build_s\":" << ps_build_s
+              << ",\"pathseer_load_s\":" << ps_load_s
+              << ",\"pathseer_index_mb\":" << ps_bytes / (1024.0 * 1024.0)
+              << ",\"pathseer_Mexp\":" << args.pathseer_Mexp
+              << ",\"pathseer_Mexp_search\":" << args.pathseer_Mexp_search
               << ",\"tree_meta_mb\":" << tree.meta_bytes() / (1024.0 * 1024.0)
               << ",\"query_bitmap_mb\":" << bitmap_bytes / (1024.0 * 1024.0)
               << ",\"n\":" << n << ",\"d\":" << d << ",\"nq_data\":" << nq_data
