@@ -1,11 +1,14 @@
 # 数据说明：选择率扫描（2026-10-26）
 
-来源：`production/nested-attr-vector-search/src/selectivity_bench.cpp`，autoresearch session
-`filtered-ann-selectivity-sweep`。
+来源：`production/nested-attr-vector-search/src/selectivity_bench.cpp`；100k 为 session
+`filtered-ann-selectivity-sweep`，1M 为 segment `filtered-ann-selectivity-1m-200q`。
 
-- `selectivity_curve_20261026.csv`：run #82 的逐行结果（131 行，表头 1 行）。
+- `selectivity_curve_20261026.csv`：SIFT100k run #82 的逐行结果（131 行，表头 1 行）。
 - `selectivity_20261026.jsonl`：同一结果的 JSONL 版本。
 - `summary_20261026.json`：run #82 的汇总；run #81 的主指标为 22,425.97 QPS（best kept），run #82 复现为 21,839.33 QPS。CSV 来自 #82。
+- `selectivity_1m_curve_20261026.csv`：SIFT1M run #85 的逐行结果（随机谓词，200/bucket）。
+- `selectivity_1m_20261026.jsonl`：同一结果的 JSONL 版本。
+- `summary_1m_20261026.json`：run #85 的汇总；主指标 3,446.45 QPS，上一轮 run #84 为 3,242.58（差异 6.3%）。1M 与 100k 的主指标不可直接比较。
 
 ## CSV 列
 
@@ -34,7 +37,7 @@ python3 production/nested-attr-vector-search/src/analyze_selectivity.py
 python3 production/nested-attr-vector-search/src/plot_selectivity.py
 ```
 
-`work/selectivity/summary.json` 与 `work/selectivity/selectivity.csv` 每次运行会覆盖；本目录保存的是报告对应的快照。
+`work/selectivity*/summary.json` 与 `work/selectivity*/selectivity.csv` 每次运行会覆盖；本目录保存的是报告对应的快照。1M 索引（625.9 MB）与 fixtures 在 `work/`，被 `.gitignore` 排除；用 `export_sift1m.py` 重建。
 
 ## 未持久化
 

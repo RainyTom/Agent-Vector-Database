@@ -50,7 +50,7 @@ $$
 - 每个 (mode,bucket,method,variant) 报告：QPS、Recall@10、p50/p95 µs、平均 resolve µs、ef、nq。
 - `qps_at_r95`：仅当评估半集 Recall@10 ≥ 0.95 且无重复/不可行 ID 时计入。
 - 主指标 `gmean_qps_r95`：`random` 七个桶的 per-bucket 最优 gated QPS 的几何平均。包含 exact scan，故 frontier 总有定义；它衡量“在该选择率下可达到的最好效率”，不是单一索引的普适性能。
-- 次指标 `gmean_policy_qps_r95`：固定策略 `s<0.01` 用 exact、否则用 BF-HNSW 的几何平均，代表一个可部署但未调优的规则。
+- 次指标 `gmean_policy_qps_r95`：固定策略阈值 `--policy-s` 以下用 exact list、以上用 BF-HNSW 的几何平均。100k 分析历史使用 0.01（报告明确指出该阈值偏低）；1M 用 0.02；代码默认 0.06。阈值不是从评估半集调出来的。
 - `crossover_s`：七个桶中 BF-HNSW gated QPS 首次超过 exact 的桶下界；仅作粗定位，不内插。
 - 目录层单独报告 `resolve_us`；端到端 QPS 已包含解析成本（对应 variant）。
 
@@ -81,9 +81,25 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 
 输出：`production/nested-attr-vector-search/work/selectivity/{summary.json,selectivity.jsonl,selectivity.csv}`。
 
+### 1M 规模复测
+
+```bash
+# 用 nested-attr work venv（含 h5py）导出 SIFT1M
+production/nested-attr-vector-search/work/venv/bin/python \
+  production/nested-attr-vector-search/src/export_sift1m.py
+
+# 随机谓词；1M HNSW 冷构建约 500 s，索引 625.9 MB
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_1m \
+  --out-dir production/nested-attr-vector-search/work/selectivity_1m \
+  --modes random --nq-per-bucket 200 --max-ef 8192 --policy-s 0.02
+```
+
+1M 只跑随机谓词；结果见报告的 §5。100k 的主指标与 1M 不可直接比较。
+
 ## 7. 已知局限
 
-- 100k 规模、单一数据集（SIFT）、单一合成层级；交叉点数值不能外推到 1M/10M。
+- 100k 与 1M、单一数据集（SIFT）；10M 未测。100k 的层级/目录模式未在 1M 重跑，1M 只有随机谓词与 M=16 一个 HNSW 构型。交叉点数值不能外推到 10M。
 - `random` 谓词与几何独立；真实属性通常与向量分布相关。层级模式有部分相关性，但不是真实 CCS 标注。
 - 只测单谓词；多节点 OR、AND/NOT 与更新未覆盖。
 - `hnsw` 是 filter-agnostic 的 FAISS selector 路径；ACORN/PathSeer 等属性感知图未进入本轮，不能据此评价它们。
