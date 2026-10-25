@@ -150,5 +150,5 @@
 - 旧Exact/Subtree与完整集合谓词不同，帕累托计划追加语义校正及核心基线优先级。无新性能实验。
 ## 2026-10-25 Directory-Aware 子目录的新问题定义
 
-- 在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/` 新增跨集合目录兼容阈值向量连接的背景、精确定义与研究记录；原 D0 停止独立立项结论保留。
-- 更新 nested-attr 入口、vector join 问题入口及检索日志；本轮未新增论文或关系记录，未运行算法实验。本服务器只做规划，候选新颖性尚未充分排查。
+- 在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/` 新增跨集合目录兼容阈值向量连接的 Problem Formulation 与研究记录；原 D0 停止独立立项结论保留。
+- 更新 nested-attr 入口、vector join 问题入口及检索日志；本轮未新增论文或关系记录，未运行算法实验，候选新颖性尚未充分排查。

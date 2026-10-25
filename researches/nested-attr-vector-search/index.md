@@ -1,4 +1,4 @@
-> **2026-10-25 范围更新：** 在[Directory-Aware 子目录](01-directory-aware-acceleration/problem-definition.md)仅探索新的问题背景与定义：路径可比的跨集合阈值向量连接。本服务器只做规划，不执行实验。此前层级 Exact/Subtree 与 LES 实验已完成一轮，结论与限制见[LES 当日报告](07-laminar-edge-sharing/2026-10-20-exps/report.md)；原 D0–D5 决定不变。语义时空混合搜索的独立进展见[对应入口](../semantic-spatiotemporal-hybrid-search/index.md)。
+> **2026-10-25 范围更新：** 文件目录约束下的跨集合向量连接见 [Problem Formulation](01-directory-aware-acceleration/problem-formulation.md)。此前层级 Exact/Subtree 与 LES 实验已完成一轮，结论与限制见[LES 当日报告](07-laminar-edge-sharing/2026-10-20-exps/report.md)；原 D0–D5 决定不变。语义时空混合搜索的独立进展见[对应入口](../semantic-spatiotemporal-hybrid-search/index.md)。
 
 > 当前语义（2026-10-19）：查询属性序列必须是返回对象属性序列的前缀；见[前缀包含过滤文档](../containment-filtered-vector-search/index.md)。下文保留此前层级节点/overlap方案，不能将一般无序集合包含或子树并集直接当作当前前缀定义。
 
