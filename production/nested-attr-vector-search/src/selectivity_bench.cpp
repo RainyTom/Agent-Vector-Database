@@ -65,7 +65,7 @@ struct Args {
     std::string out_dir;
     int nq_per_bucket = 200;
     uint64_t seed = 20261026;
-    int M = 32;
+    int M = 16;
     int efc = 200;
     int max_ef = 16384;
     bool rebuild_index = false;
@@ -646,6 +646,7 @@ std::vector<Group> make_random_groups(int n, int nb, int nq_data,
             }
             g.qs.push_back(std::move(q));
         }
+        std::shuffle(g.qs.begin(), g.qs.end(), rng);
         groups.push_back(std::move(g));
     }
     return groups;
@@ -693,6 +694,9 @@ std::vector<Group> make_tree_groups(const Tree& tree, int n, int nb,
                 g.qs.push_back(std::move(q));
             }
             g.s_mean = ssum / double(take);
+            std::mt19937_64 qrng(seed + uint64_t(bi) * 977 +
+                                 (scope == "sub" ? 31 : 37));
+            std::shuffle(g.qs.begin(), g.qs.end(), qrng);
             groups.push_back(std::move(g));
         }
     }
@@ -883,6 +887,21 @@ int main(int argc, char** argv) {
                 Row r = make_row(g.mode, g.bucket, g.s_mean, "post", "precomputed",
                                  ef0, p, nq - half, nullptr);
                 rows.push_back(r);
+
+                // Fixed-ef diagnostics: recall(s) at constant search breadth.
+                for (int fixed_ef : {16, 64, 256, 1024, 4096}) {
+                    if (fixed_ef > args.max_ef) continue;
+                    EvalOut fe = eval_hnsw(*index, g, tree, query_raw.data(),
+                                           nq_data, gts[gi], "precomputed",
+                                           fixed_ef, half, nq);
+                    double sec = 0;
+                    for (double t : fe.times) sec += t / 1e6;
+                    fe.seconds = sec;
+                    Row rf = make_row(g.mode, g.bucket, g.s_mean, "hnsw_fixed",
+                                      "precomputed", fixed_ef, fe, nq - half,
+                                      nullptr);
+                    rows.push_back(rf);
+                }
             }
         }
 
@@ -928,7 +947,7 @@ int main(int argc, char** argv) {
             bool hnsw_ok = false;
             for (const auto& r : rows) {
                 if (r.mode != "random" || r.bucket != b) continue;
-                if (r.ok && r.qps > best_qps) {
+                if (r.ok && r.method != "hnsw_fixed" && r.qps > best_qps) {
                     best_qps = r.qps;
                     best_m = r.method;
                 }
