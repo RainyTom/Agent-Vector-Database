@@ -43,6 +43,7 @@
 #include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <iomanip>
 #include <iostream>
 #include <numeric>
@@ -79,6 +80,11 @@ struct Args {
     int max_ef = 16384;
     double policy_s = 0.06;
     double tune_margin = 0.0;
+    bool use_partitioned = false;
+    bool use_part_flat = false;
+    int parts = 128;
+    uint64_t part_seed = 777;
+    int part_max_ef = 1024;
     int repeats = 1;
     bool rebuild_index = false;
 };
@@ -101,6 +107,11 @@ Args parse(int argc, char** argv) {
         else if (f == "--pathseer-Mexp-search") a.pathseer_Mexp_search = std::stoi(next());
         else if (f == "--pathseer-max-ef") a.pathseer_max_ef = std::stoi(next());
         else if (f == "--tune-margin") a.tune_margin = std::stod(next());
+        else if (f == "--partitioned") a.use_partitioned = true;
+        else if (f == "--part-flat") a.use_part_flat = true;
+        else if (f == "--parts") a.parts = std::stoi(next());
+        else if (f == "--part-seed") a.part_seed = std::stoull(next());
+        else if (f == "--part-max-ef") a.part_max_ef = std::stoi(next());
         else if (f == "--nq-per-bucket") a.nq_per_bucket = std::stoi(next());
         else if (f == "--seed") a.seed = std::stoull(next());
         else if (f == "--M") a.M = std::stoi(next());
@@ -799,6 +810,209 @@ Clusters build_clusters(const float* base, int n, int d, int k, uint64_t seed) {
     return c;
 }
 
+struct PartIndex {
+    int size = 0;
+    std::vector<int> gids;
+    std::vector<float> data;  // contiguous partition vectors (flat scan)
+    std::unique_ptr<faiss::IndexHNSWFlat> index;
+};
+
+struct Partitioned {
+    int P = 0;
+    std::vector<int> assign;
+    std::vector<PartIndex> parts;
+};
+
+Partitioned build_partitioned(const Clusters& cl, const float* base, int n,
+                              int d, int M, int efc) {
+    Partitioned pi;
+    pi.P = cl.k;
+    pi.assign = cl.assign;
+    pi.parts.resize(cl.k);
+    std::vector<float> buf;
+    for (int p = 0; p < cl.k; ++p) {
+        const auto& mem = cl.members[p];
+        PartIndex& part = pi.parts[p];
+        part.size = int(mem.size());
+        part.gids = mem;
+        if (part.size == 0) continue;
+        buf.resize(size_t(part.size) * size_t(d));
+        for (int i = 0; i < part.size; ++i) {
+            std::memcpy(buf.data() + size_t(i) * d,
+                        base + size_t(mem[i]) * d, size_t(d) * sizeof(float));
+        }
+        part.index.reset(new faiss::IndexHNSWFlat(d, M, faiss::METRIC_L2));
+        part.index->hnsw.efConstruction = efc;
+        part.index->add(part.size, buf.data());
+    }
+    return pi;
+}
+
+size_t partitioned_est_bytes(int n, int d, int M) {
+    // vectors + level-0 links, plus a small allowance for upper levels
+    return size_t(n) * (size_t(d) * 4 + size_t(M) * 2 * 4 + 16);
+}
+
+struct PartFlat {
+    int P = 0;
+    std::vector<int> assign;
+    std::vector<PartIndex> parts;
+};
+
+PartFlat build_part_flat(const Clusters& cl, const float* base, int n, int d) {
+    PartFlat pf;
+    pf.P = cl.k;
+    pf.assign = cl.assign;
+    pf.parts.resize(cl.k);
+    for (int p = 0; p < cl.k; ++p) {
+        const auto& mem = cl.members[p];
+        PartIndex& part = pf.parts[p];
+        part.size = int(mem.size());
+        part.gids = mem;
+        if (part.size == 0) continue;
+        part.data.resize(size_t(part.size) * size_t(d));
+        for (int i = 0; i < part.size; ++i) {
+            std::memcpy(part.data.data() + size_t(i) * d,
+                        base + size_t(mem[i]) * d, size_t(d) * sizeof(float));
+        }
+    }
+    return pf;
+}
+
+EvalOut eval_part_flat(const PartFlat& pf, const Group& g, const Tree& tree,
+                       const float* queries, int nq_data, int d,
+                       const std::vector<int>& gt, const std::string& variant,
+                       int begin, int end) {
+    EvalOut out;
+    const int nb = int(g.qs[0].bm.size());
+    std::vector<uint8_t> scratch(nb);
+    std::vector<int> stack;
+    std::vector<uint8_t> nonempty(pf.P);
+    out.times.reserve(end - begin);
+    for (int qi = begin; qi < end; ++qi) {
+        const Query& q = g.qs[qi];
+        const double t0 = now_us();
+        const uint8_t* bm = prepare_bitmap(q, tree, variant, scratch, stack,
+                                            out.resolve_us);
+        std::fill(nonempty.begin(), nonempty.end(), 0);
+        for (int id : q.ids) nonempty[pf.assign[id]] = 1;
+        std::array<Cand, K> heap{};
+        int hn = 0;
+        auto consider = [&](float dist, int gid) {
+            Cand c{dist, gid};
+            if (hn < K) {
+                heap[hn++] = c;
+                std::push_heap(heap.begin(), heap.begin() + hn, better);
+            } else if (better(c, heap[0])) {
+                std::pop_heap(heap.begin(), heap.begin() + hn, better);
+                heap[hn - 1] = c;
+                std::push_heap(heap.begin(), heap.begin() + hn, better);
+            }
+        };
+        const float* qvec = queries + size_t(q.qvec) * size_t(d);
+        for (int p = 0; p < pf.P; ++p) {
+            if (!nonempty[p]) continue;
+            const PartIndex& part = pf.parts[p];
+            for (int j = 0; j < part.size; ++j) {
+                const int gid = part.gids[j];
+                if (!test_bit(bm, gid)) continue;
+                consider(l2sq(qvec, part.data.data() + size_t(j) * d, d), gid);
+            }
+        }
+        std::sort(heap.begin(), heap.begin() + hn, better);
+        int pred[K];
+        for (int t = 0; t < K; ++t) pred[t] = t < hn ? heap[t].id : -1;
+        out.times.push_back(now_us() - t0);
+        out.hits += count_hits(pred, gt.data() + size_t(qi) * K);
+        out.violations += count_duplicates(pred);
+        for (int t = 0; t < K; ++t) {
+            if (pred[t] >= 0 && !test_bit(bm, pred[t])) ++out.violations;
+        }
+    }
+    return out;
+}
+
+EvalOut eval_part_hnsw(const Partitioned& pi, const Group& g, const Tree& tree,
+                       const float* queries, int nq_data, int d,
+                       const std::vector<int>& gt, const std::string& variant,
+                       int ef, int begin, int end) {
+    EvalOut out;
+    const int nb = int(g.qs[0].bm.size());
+    std::vector<uint8_t> scratch(nb);
+    std::vector<int> stack;
+    std::vector<uint8_t> nonempty(pi.P);
+    std::vector<uint8_t> loc;
+    out.times.reserve(end - begin);
+    for (int qi = begin; qi < end; ++qi) {
+        const Query& q = g.qs[qi];
+        const double t0 = now_us();
+        const uint8_t* bm = prepare_bitmap(q, tree, variant, scratch, stack,
+                                            out.resolve_us);
+        std::fill(nonempty.begin(), nonempty.end(), 0);
+        for (int id : q.ids) nonempty[pi.assign[id]] = 1;
+        std::array<Cand, K> heap{};
+        int hn = 0;
+        auto consider = [&](float dist, int gid) {
+            Cand c{dist, gid};
+            if (hn < K) {
+                heap[hn++] = c;
+                std::push_heap(heap.begin(), heap.begin() + hn, better);
+            } else if (better(c, heap[0])) {
+                std::pop_heap(heap.begin(), heap.begin() + hn, better);
+                heap[hn - 1] = c;
+                std::push_heap(heap.begin(), heap.begin() + hn, better);
+            }
+        };
+        const float* qvec = queries + size_t(q.qvec) * size_t(d);
+        for (int p = 0; p < pi.P; ++p) {
+            if (!nonempty[p]) continue;
+            const PartIndex& part = pi.parts[p];
+            if (part.size == 0) continue;
+            loc.assign((size_t(part.size) + 7) / 8, 0);
+            for (int j = 0; j < part.size; ++j) {
+                if (test_bit(bm, part.gids[j])) set_bit(loc.data(), j);
+            }
+            std::vector<float> D(K);
+            std::vector<faiss::idx_t> I(K, -1);
+            BitmapSel sel(loc.size(), loc.data());
+            faiss::SearchParametersHNSW sp;
+            sp.efSearch = std::min(ef, part.size);
+            sp.sel = &sel;
+            part.index->search(1, qvec, K, D.data(), I.data(), &sp);
+            for (int t = 0; t < K; ++t) {
+                if (I[t] >= 0) consider(D[t], part.gids[int(I[t])]);
+            }
+        }
+        std::sort(heap.begin(), heap.begin() + hn, better);
+        int pred[K];
+        for (int t = 0; t < K; ++t) pred[t] = t < hn ? heap[t].id : -1;
+        out.times.push_back(now_us() - t0);
+        out.hits += count_hits(pred, gt.data() + size_t(qi) * K);
+        out.violations += count_duplicates(pred);
+        for (int t = 0; t < K; ++t) {
+            if (pred[t] >= 0 && !test_bit(bm, pred[t])) ++out.violations;
+        }
+    }
+    return out;
+}
+
+int choose_ef_part_hnsw(const Partitioned& pi, const Group& g, const Tree& tree,
+                        const float* queries, int nq_data, int d,
+                        const std::vector<int>& gt, const std::string& variant,
+                        int max_ef, int tune_end, double target) {
+    const int efs[] = {8, 16, 32, 64, 128, 256, 512, 1024};
+    int last = 8;
+    for (int ef : efs) {
+        if (ef > max_ef) break;
+        EvalOut e = eval_part_hnsw(pi, g, tree, queries, nq_data, d, gt,
+                                   variant, ef, 0, tune_end);
+        last = ef;
+        double recall = double(e.hits) / double(tune_end * K);
+        if (recall >= target && e.violations == 0) return ef;
+    }
+    return last;
+}
+
 std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
                                        int n, int d, int nq_data,
                                        int nq_per_bucket, uint64_t seed,
@@ -1146,6 +1360,34 @@ int main(int argc, char** argv) {
                       << ps_bytes / (1024.0 * 1024.0) << "\n";
         }
 
+        Partitioned pinfo;
+        PartFlat pflat;
+        double part_build_s = 0, part_flat_build_s = 0;
+        size_t part_est_bytes = 0, part_flat_bytes = 0;
+        if (args.use_partitioned || args.use_part_flat) {
+            const double p0 = now_s();
+            Clusters pcl = build_clusters(base_raw.data(), n, d, args.parts,
+                                          args.part_seed);
+            const double kmeans_s = now_s() - p0;
+            if (args.use_partitioned) {
+                const double b0 = now_s();
+                pinfo = build_partitioned(pcl, base_raw.data(), n, d, args.M,
+                                          args.efc);
+                part_build_s = now_s() - b0;
+                part_est_bytes = partitioned_est_bytes(n, d, args.M);
+            }
+            if (args.use_part_flat) {
+                const double b0 = now_s();
+                pflat = build_part_flat(pcl, base_raw.data(), n, d);
+                part_flat_build_s = now_s() - b0;
+                part_flat_bytes = size_t(n) * size_t(d) * 4 + size_t(n) * 4;
+            }
+            std::cerr << "[selectivity] partitions=" << args.parts
+                      << " kmeans_s=" << kmeans_s
+                      << " hnsw_build_s=" << part_build_s
+                      << " flat_build_s=" << part_flat_build_s << "\n";
+        }
+
         std::vector<Row> rows;
         const std::string efs_variants[3] = {"precomputed", "triehi", "peonline"};
         for (size_t gi = 0; gi < groups.size(); ++gi) {
@@ -1220,6 +1462,35 @@ int main(int argc, char** argv) {
                                       variant, pef, pe, nq - half, &ptune);
                     rp.recall_tune = double(ptune.hits) / double(half * K);
                     rows.push_back(rp);
+                }
+
+                if (args.use_partitioned && variant == "precomputed") {
+                    const int pef = choose_ef_part_hnsw(
+                        pinfo, g, tree, gq, nq_data, d, gts[gi], variant,
+                        args.part_max_ef, half,
+                        TARGET_RECALL + args.tune_margin);
+                    EvalOut ptune = eval_part_hnsw(
+                        pinfo, g, tree, gq, nq_data, d, gts[gi], variant,
+                        pef, 0, half);
+                    EvalOut pe = median_eval([&] {
+                        return eval_part_hnsw(
+                            pinfo, g, tree, gq, nq_data, d, gts[gi], variant,
+                            pef, half, nq);
+                    }, args.repeats);
+                    Row rp = make_row(g.mode, g.bucket, g.s_mean, "part_hnsw",
+                                      variant, pef, pe, nq - half, &ptune);
+                    rp.recall_tune = double(ptune.hits) / double(half * K);
+                    rows.push_back(rp);
+                }
+
+                if (args.use_part_flat && variant == "precomputed") {
+                    EvalOut pf = median_eval([&] {
+                        return eval_part_flat(pflat, g, tree, gq, nq_data, d,
+                                              gts[gi], variant, half, nq);
+                    }, args.repeats);
+                    Row rf = make_row(g.mode, g.bucket, g.s_mean, "part_flat",
+                                      variant, 0, pf, nq - half, nullptr);
+                    rows.push_back(rf);
                 }
             }
 
@@ -1373,6 +1644,14 @@ int main(int argc, char** argv) {
               << ",\"pathseer_index_mb\":" << ps_bytes / (1024.0 * 1024.0)
               << ",\"pathseer_Mexp\":" << args.pathseer_Mexp
               << ",\"pathseer_Mexp_search\":" << args.pathseer_Mexp_search
+              << ",\"partitioned\":" << (args.use_partitioned ? "true" : "false")
+              << ",\"part_flat\":" << (args.use_part_flat ? "true" : "false")
+              << ",\"parts\":" << args.parts
+              << ",\"part_build_s\":" << part_build_s
+              << ",\"part_flat_build_s\":" << part_flat_build_s
+              << ",\"part_index_est_mb\":" << part_est_bytes / (1024.0 * 1024.0)
+              << ",\"part_flat_mb\":" << part_flat_bytes / (1024.0 * 1024.0)
+              << ",\"part_max_ef\":" << args.part_max_ef
               << ",\"tree_meta_mb\":" << tree.meta_bytes() / (1024.0 * 1024.0)
               << ",\"query_bitmap_mb\":" << bitmap_bytes / (1024.0 * 1024.0)
               << ",\"n\":" << n << ",\"d\":" << d << ",\"nq_data\":" << nq_data

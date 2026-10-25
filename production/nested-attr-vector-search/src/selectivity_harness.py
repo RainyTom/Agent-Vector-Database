@@ -103,6 +103,12 @@ def main() -> int:
     if summary.get("pathseer"):
         print(f"METRIC pathseer_index_mb={summary['pathseer_index_mb']:.3f}")
         print(f"METRIC pathseer_build_s={summary['pathseer_build_s']:.3f}")
+    if summary.get("partitioned"):
+        print(f"METRIC part_build_s={summary['part_build_s']:.3f}")
+        print(f"METRIC part_index_est_mb={summary['part_index_est_mb']:.3f}")
+    if summary.get("part_flat"):
+        print(f"METRIC part_flat_build_s={summary['part_flat_build_s']:.3f}")
+        print(f"METRIC part_flat_mb={summary['part_flat_mb']:.3f}")
     print(f"METRIC valid={1 if valid else 0}")
     print(f"METRIC target_recall={TARGET_RECALL}")
     print(f"ASI frontier={json.dumps(summary['frontier'])}")
@@ -111,6 +117,11 @@ def main() -> int:
     if summary.get("pathseer"):
         print(f"ASI pathseer_Mexp={summary.get('pathseer_Mexp')} "
               f"Mexp_search={summary.get('pathseer_Mexp_search')}")
+    if summary.get("partitioned"):
+        print(f"ASI parts={summary.get('parts')} "
+              f"part_max_ef={summary.get('part_max_ef')}")
+    if summary.get("part_flat"):
+        print(f"ASI part_flat=1 parts={summary.get('parts')}")
     print(
         "ASI design=random+CCS-hierarchy predicates; exact/PASS/FAISS-BF-HNSW/post-filter; "
         "single-thread query"
