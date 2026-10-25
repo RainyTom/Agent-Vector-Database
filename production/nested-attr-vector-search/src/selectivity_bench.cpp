@@ -31,6 +31,8 @@
 #include <faiss/impl/IDSelector.h>
 #include <faiss/index_io.h>
 
+#include <immintrin.h>
+
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -217,6 +219,51 @@ void exact_topk(const uint8_t* bm, const float* q, const float* base, int n,
     for (int i = 0; i < K; ++i) out[i] = i < hn ? heap[i].id : -1;
 }
 
+std::vector<int> bitmap_to_ids(const uint8_t* bm, int n) {
+    std::vector<int> ids;
+    ids.reserve(size_t(n) * 0.05);
+    size_t full = size_t(n) / 64;
+    const uint64_t* w = reinterpret_cast<const uint64_t*>(bm);
+    for (size_t i = 0; i < full; ++i) {
+        uint64_t word = w[i];
+        while (word) {
+            int b = __builtin_ctzll(word);
+            ids.push_back(int(i * 64 + size_t(b)));
+            word &= word - 1;
+        }
+    }
+    for (size_t id = full * 64; id < size_t(n); ++id) {
+        if (test_bit(bm, int(id))) ids.push_back(int(id));
+    }
+    return ids;
+}
+
+// Posting-list exact scan. Prefetching the next candidate's first cache line
+// overlaps the sparse random gathers that dominate low-selectivity scans.
+void exact_topk_ids(const int* ids, int m, const float* q, const float* base,
+                    int d, int* out, int pf = 8) {
+    std::array<Cand, K> heap{};
+    int hn = 0;
+    for (int i = 0; i < m; ++i) {
+        if (pf > 0 && i + pf < m) {
+            _mm_prefetch(reinterpret_cast<const char*>(base + size_t(ids[i + pf]) * d),
+                         _MM_HINT_T0);
+        }
+        float dist = l2sq(q, base + size_t(ids[i]) * d, d);
+        Cand c{dist, ids[i]};
+        if (hn < K) {
+            heap[hn++] = c;
+            std::push_heap(heap.begin(), heap.begin() + hn, better);
+        } else if (better(c, heap[0])) {
+            std::pop_heap(heap.begin(), heap.begin() + hn, better);
+            heap[hn - 1] = c;
+            std::push_heap(heap.begin(), heap.begin() + hn, better);
+        }
+    }
+    std::sort(heap.begin(), heap.begin() + hn, better);
+    for (int i = 0; i < K; ++i) out[i] = i < hn ? heap[i].id : -1;
+}
+
 struct Tree {
     int nodes = 0;
     std::vector<int> parent;
@@ -234,6 +281,7 @@ struct Tree {
 
 struct Query {
     std::vector<uint8_t> bm;
+    std::vector<int> ids;  // sorted feasible ids (posting-list representation)
     int node = -1;
     int qvec = 0;
 };
@@ -332,7 +380,7 @@ const uint8_t* prepare_bitmap(const Query& q, const Tree& tree,
 EvalOut eval_exact(const Group& g, const Tree& tree, const float* queries,
                    int nq_data, const float* base, int n, int d,
                    const std::vector<int>& gt, const std::string& variant,
-                   int begin, int end) {
+                   bool use_ids, int begin, int end) {
     EvalOut out;
     const int nb = int(g.qs[0].bm.size());
     std::vector<uint8_t> scratch(nb);
@@ -344,7 +392,12 @@ EvalOut eval_exact(const Group& g, const Tree& tree, const float* queries,
         const uint8_t* bm = prepare_bitmap(g.qs[qi], tree, variant, scratch,
                                             stack, out.resolve_us);
         int pred[K];
-        exact_topk(bm, queries + size_t(g.qs[qi].qvec) * d, base, n, d, pred);
+        if (use_ids) {
+            exact_topk_ids(g.qs[qi].ids.data(), int(g.qs[qi].ids.size()),
+                           queries + size_t(g.qs[qi].qvec) * d, base, d, pred);
+        } else {
+            exact_topk(bm, queries + size_t(g.qs[qi].qvec) * d, base, n, d, pred);
+        }
         times.push_back(now_us() - t0);
         out.hits += count_hits(pred, gt.data() + size_t(qi) * K);
         out.violations += count_duplicates(pred);
@@ -575,15 +628,21 @@ std::vector<Group> make_random_groups(int n, int nb, int nq_data,
             Query q;
             q.bm.assign(nb, 0);
             q.qvec = qi % nq_data;
+            q.ids.resize(m);
             if (m == size_t(n)) {
-                for (int id = 0; id < n; ++id) set_bit(q.bm.data(), id);
+                for (int id = 0; id < n; ++id) {
+                    set_bit(q.bm.data(), id);
+                    q.ids[id] = id;
+                }
             } else {
                 std::iota(pool.begin(), pool.end(), 0);
                 for (size_t i = 0; i < m; ++i) {
                     size_t j = i + size_t(rng() % (size_t(n) - i));
                     std::swap(pool[i], pool[j]);
                     set_bit(q.bm.data(), pool[i]);
+                    q.ids[i] = pool[i];
                 }
+                std::sort(q.ids.begin(), q.ids.end());
             }
             g.qs.push_back(std::move(q));
         }
@@ -627,6 +686,7 @@ std::vector<Group> make_tree_groups(const Tree& tree, int n, int nb,
                 int v = cand[i].first;
                 Query q;
                 q.bm = scope == "sub" ? tree.inc[v] : tree.local[v];
+                q.ids = bitmap_to_ids(q.bm.data(), n);
                 q.node = v;
                 q.qvec = int(i) % nq_data;
                 ssum += cand[i].second;
@@ -794,11 +854,22 @@ int main(int argc, char** argv) {
                 const double t1 = now_s();
                 EvalOut ex = eval_exact(g, tree, query_raw.data(), nq_data,
                                         base_raw.data(), n, d, gts[gi], variant,
-                                        half, nq);
+                                        false, half, nq);
                 ex.seconds = now_s() - t1;
                 Row re = make_row(g.mode, g.bucket, g.s_mean, "exact", variant,
                                   0, ex, nq - half, nullptr);
                 rows.push_back(re);
+
+                if (variant == "precomputed") {
+                    const double t2 = now_s();
+                    EvalOut el = eval_exact(g, tree, query_raw.data(), nq_data,
+                                           base_raw.data(), n, d, gts[gi], variant,
+                                           true, half, nq);
+                    el.seconds = now_s() - t2;
+                    Row rl = make_row(g.mode, g.bucket, g.s_mean, "exact_list",
+                                      variant, 0, el, nq - half, nullptr);
+                    rows.push_back(rl);
+                }
             }
 
             if (g.mode == "random") {
@@ -889,7 +960,7 @@ int main(int argc, char** argv) {
         int pol_valid = 0;
         for (int bi = 0; bi < 7; ++bi) {
             const std::string b = BUCKET_NAMES[bi];
-            const char* want = (bi < 2) ? "exact" : "hnsw";
+            const char* want = (bi < 2) ? "exact_list" : "hnsw";
             double q = 0;
             for (const auto& r : rows) {
                 if (r.mode == "random" && r.bucket == b && r.ok &&
@@ -907,7 +978,9 @@ int main(int argc, char** argv) {
 
         bool valid = true;
         for (const auto& r : rows) {
-            if (r.method == "exact" && r.recall < 0.999) valid = false;
+            if ((r.method == "exact" || r.method == "exact_list") &&
+                r.recall < 0.999)
+                valid = false;
         }
 
         const std::string summary_path = args.out_dir + "/summary.json";
