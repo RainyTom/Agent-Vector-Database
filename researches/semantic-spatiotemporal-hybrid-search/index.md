@@ -72,6 +72,7 @@ ACORN 等单对象过滤检索仍排除出问题新颖性审计。当前候选�
 
 - [问题定义（v4：坐标/时间/段向量集）](problem-definition.md)
 - [问题定义对照（本问题 vs 现有论文）](problem-comparison.md)
+- [点级存在语义 vs 片段语义](point-vs-span.md)
 - [基线方案与评测契约](baseline.md)
 - [方法：Episode Catalog Index](approach.md)
 - [2026-10-24 基准与产物布局](2026-10-24-exps/experiments/layout.md)
