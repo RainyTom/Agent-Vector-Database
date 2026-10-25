@@ -110,7 +110,7 @@ def main() -> int:
         ax.grid(True, which="both", alpha=0.25)
         ax.legend(fontsize=8)
     axes[0].axvline(0.0605, color="0.5", linestyle=":", linewidth=1)
-    axes[0].axvline(0.0193, color="0.5", linestyle=":", linewidth=1)
+    axes[0].axvline(0.0194, color="0.5", linestyle=":", linewidth=1)
     axes[0].text(0.066, 1.2e4, "100k s*≈0.06", fontsize=8, color="0.35")
     axes[0].text(0.021, 2.6e4, "1M s*≈0.019", fontsize=8, color="0.35")
     axes[0].set_title("Throughput: crossover moves left with n")

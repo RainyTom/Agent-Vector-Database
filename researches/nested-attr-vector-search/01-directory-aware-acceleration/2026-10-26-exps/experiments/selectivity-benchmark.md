@@ -92,7 +92,7 @@ production/nested-attr-vector-search/work/venv/bin/python \
 python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --fixtures production/nested-attr-vector-search/work/fixtures_1m \
   --out-dir production/nested-attr-vector-search/work/selectivity_1m \
-  --modes random --nq-per-bucket 200 --max-ef 8192 --policy-s 0.02
+  --modes random --nq-per-bucket 200 --max-ef 8192 --policy-s 0.02 --repeats 3
 ```
 
 1M 只跑随机谓词；结果见报告的 §5。100k 的主指标与 1M 不可直接比较。

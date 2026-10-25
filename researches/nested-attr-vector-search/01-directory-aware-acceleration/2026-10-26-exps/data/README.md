@@ -6,9 +6,9 @@
 - `selectivity_curve_20261026.csv`：SIFT100k run #82 的逐行结果（131 行，表头 1 行）。
 - `selectivity_20261026.jsonl`：同一结果的 JSONL 版本。
 - `summary_20261026.json`：run #82 的汇总；run #81 的主指标为 22,425.97 QPS（best kept），run #82 复现为 21,839.33 QPS。CSV 来自 #82。
-- `selectivity_1m_curve_20261026.csv`：SIFT1M run #85 的逐行结果（随机谓词，200/bucket）。
+- `selectivity_1m_curve_20261026.csv`：SIFT1M run #88 的逐行结果（随机谓词，200/bucket，3 次评估取中位数）。
 - `selectivity_1m_20261026.jsonl`：同一结果的 JSONL 版本。
-- `summary_1m_20261026.json`：run #85 的汇总；主指标 3,446.45 QPS，上一轮 run #84 为 3,242.58（差异 6.3%）。1M 与 100k 的主指标不可直接比较。
+- `summary_1m_20261026.json`：run #88 的汇总；主指标 3,510.91 QPS，上一轮 run #87 为 3,376.30（差异 4.0%）。单次评估的 run #86 因 s=0.001 冷 gather 离群（2,769.60）被弃用。1M 与 100k 的主指标不可直接比较。
 
 ## CSV 列
 
