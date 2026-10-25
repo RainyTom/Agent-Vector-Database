@@ -12,6 +12,8 @@
 
 当前六个方案见[子方向总览](directions.md)：[Directory-Aware加速](01-directory-aware-acceleration/README.md)、[DAG维护](02-dag-incremental-scope/README.md)、[联合索引](03-prefix-coupled-index/README.md)、[渐进导航](04-certified-progressive-routing/README.md)、[版本检索](05-versioned-directory-search/README.md)、[继承权限](06-inherited-acl-search/README.md)。每项已有具体机制、前序差异、最小实验与停止条件；均为待验证提案。以下Introduction和定义保留历史模型，当前单路径定义仍以前述规范入口为准。
 
+选择率诊断（2026-10-26）：[报告](01-directory-aware-acceleration/2026-10-26-exps/report.md)，测量属性过滤层与 ANN 执行器随 $s=|F|/n$ 的成本；不恢复六个方向的独立立项。
+
 # Introduction
 
 向量检索通过表示空间中的距离刻画对象与查询之间的相关性，为文本等非结构化数据提供了检索方式。在实际应用中，用户通常还需要通过结构化属性限定检索范围。因此，查询处理需要同时满足属性条件与向量排序要求：先确定哪些对象有资格进入结果，再从这些对象中返回与查询向量最近的 k 个对象。已有混合检索研究，如 [ACORN](https://arxiv.org/abs/2403.04871)，已将向量相似度与结构化谓词的联合处理作为研究对象。
