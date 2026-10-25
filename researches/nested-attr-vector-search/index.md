@@ -1,4 +1,4 @@
-> **2026-10-25 范围更新：** 多维商品目录中的跨平台向量连接与精确基线见 [Problem Formulation](01-directory-aware-acceleration/problem-formulation.md)。此前层级 Exact/Subtree 与 LES 实验已完成一轮，结论与限制见[LES 当日报告](07-laminar-edge-sharing/2026-10-20-exps/report.md)；原 D0–D5 决定不变。语义时空混合搜索的独立进展见[对应入口](../semantic-spatiotemporal-hybrid-search/index.md)。
+> **2026-10-25 范围更新：** 层级品类与多维属性共同约束的跨平台向量连接及精确基线见 [Problem Formulation](01-directory-aware-acceleration/problem-formulation.md)。此前层级 Exact/Subtree 与 LES 实验已完成一轮，结论与限制见[LES 当日报告](07-laminar-edge-sharing/2026-10-20-exps/report.md)；原 D0–D5 决定不变。语义时空混合搜索的独立进展见[对应入口](../semantic-spatiotemporal-hybrid-search/index.md)。
 
 > 当前语义（2026-10-19）：查询属性序列必须是返回对象属性序列的前缀；见[前缀包含过滤文档](../containment-filtered-vector-search/index.md)。下文保留此前层级节点/overlap方案，不能将一般无序集合包含或子树并集直接当作当前前缀定义。
 

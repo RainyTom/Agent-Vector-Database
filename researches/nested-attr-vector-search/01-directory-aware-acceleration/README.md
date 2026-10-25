@@ -1,6 +1,6 @@
 # Directory Aware的按需块级范围编译与执行加速
 
-> 多维商品目录约束下的跨平台向量连接及精确基线见 [Problem Formulation](problem-formulation.md)。下文为原 D0 方案，其“停止独立立项”结论仍然适用。
+> 层级品类与多维筛选共同约束的跨平台向量连接及精确基线见 [Problem Formulation](problem-formulation.md)。下文为原 D0 方案，其“停止独立立项”结论仍然适用。
 
 > **2026-10-19 alphaXiv查重决定：停止独立立项。** Curator §4.2已经明确提出按搜索子树执行过滤/临时构建及缓存，物理ID块与批量接口尚不足独立新贡献。 见[逐项审计](../alphaxiv-novelty-audit.md)。下文为查重前方案记录，保留用于前序对照，不是当前实施计划；未断言整份组合已被某一论文完全实现。
 

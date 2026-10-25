@@ -17,3 +17,7 @@
 ## 同日再次修订：多维商品目录
 
 文件夹及其快捷方式仍沿用原论文的文件系统场景，不能满足不同应用背景的要求。现将 [Problem Formulation](../problem-formulation.md) 改为跨平台商品匹配：目录状态是品类、品牌、尺码等已知属性构成的部分函数，筛选顺序可交换；两个互不可包含的目录状态仍可能属性兼容。结果为目录范围内兼容且 L2 阈值内的全部跨平台商品 pair。文档列出五种精确基线及冲突 posting 的候选公式。前两版文件目录定义均为历史草案，本次仍未执行实验。
+
+## 同日层级语义修正
+
+前版把所有维度放进平面 facet 偏序，只形成筛选条件的细化关系，未定义真正的商品品类层级。现按 [OpenSearch 官方说明](https://docs.opensearch.org/latest/tutorials/faceted-search/) 区分 hierarchical faceting 与普通品牌/尺码 facet：在 [Problem Formulation](../problem-formulation.md) 中显式给出品类树 `T`、属性部分函数 `σ` 和复合状态 `(c,σ)`。合法 pair 同时要求直接品类祖先可比、已知属性不冲突及 L2 阈值成立；B0–B4 全部同步到该谓词。本次为定义修订，无实验结果。

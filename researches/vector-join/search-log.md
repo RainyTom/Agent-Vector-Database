@@ -230,3 +230,5 @@
 同日再次修订：Google Drive 快捷方式仍属于文件目录背景，改为[多维商品目录 Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)。[OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/)以商品目录说明品类、品牌、颜色、尺码等多维筛选；将筛选状态建模为部分属性函数与按包含关系组织的目录偏序是本项目的形式化选择，不宣称 OpenSearch 实现了本文连接。新问题为跨平台、部分属性兼容、L2 阈值、精确 pairs；基线 B0–B4。商品匹配、缺失属性下记录连接及 filtered vector join 的最近工作仍需补查，不能以背景不同证明算法新颖。没有新增论文记录或实验。
 
 补充候选：产品实体匹配已有[莱比锡大学研究页](https://old.dbs.uni-leipzig.de/en/publication/title/tailoring_entity_resolution_for_matching_product_offers)讨论缺失/错误属性；[EM-Join 原始论文](https://www.scitepress.org/Papers/2025/134837/134837.pdf)涉及 embedding-based entity matching join。当前只核题名/摘要或入口，未核其完整定义、阈值语义和实验；列为后续精读候选，不把商品匹配场景本身宣称为新增研究问题。
+
+同日层级语义修正：核 [OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/) §Hierarchical faceting 与普通 facet 过滤，前者明确 Category→Subcategory→Product type，后者为品牌/颜色/尺码等独立过滤字段。当前 [Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md) 明确定义品类树 × 属性部分函数；整体目录状态并非单父树。前版只有 facet 约束偏序，不能称为明确的品类层级。五种基线已同步新的品类可比条件；未运行实验。
