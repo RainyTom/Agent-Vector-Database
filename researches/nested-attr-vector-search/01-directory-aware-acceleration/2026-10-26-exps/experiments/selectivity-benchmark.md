@@ -40,7 +40,7 @@ $$
 | `exact` + `peonline` | 查询时 DFS 子树、OR 各节点 Local 位图，再枚举 | 目录层解析 | 解析 + 扫描 |
 | `exact` + `local` | `memcpy` 节点的 Local 位图，再枚举 | 目录层解析 | 解析 + 扫描 |
 
-- `hnsw` 的 `ef` 在调参半集上从 `{16,32,64,128,256,512,1024,2048,4096,8192,16384}` 中取满足 Recall@10 ≥ 0.95 的最小值；若都不满足，取最大并标记失败。
+- `hnsw` 的 `ef` 在调参半集上从 `{16,32,64,128,256,512,1024,2048,4096,8192,16384}` 中取满足 Recall@10 ≥ 0.95 的最小值；若都不满足，取最大并标记失败。`--tune-margin 0.01` 把目标提高到 0.96（cluster-near 使用），避免评估半集贴线跌落。
 - `post` 的初始 `ef = max(16, ceil(2k/s))`，不足时 ×4，上限 `max_ef=16384`。
 - `exact` 无参数；它与 oracle 使用同一例程，因此另用 `faiss::IndexFlat + IDSelectorBitmap` 在 s=0.01 与 s=1.0 上做独立逐 ID 校验。
 - 单线程查询；`OMP_NUM_THREADS=1`；HNSW 图构建一次并缓存 `work/selectivity/hnsw_M32_efc200_n100000.faiss`。

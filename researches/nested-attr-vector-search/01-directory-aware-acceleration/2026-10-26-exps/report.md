@@ -11,7 +11,7 @@
 5. **表示方式本身就是选择率相关成本。** 同一可行集，按 posting list 枚举比按 12.5 KB 位图枚举快 2.5×（$s=0.001$）、1.9×（$s=0.01$）；差异主要来自冷内存随机 gather，而不是 popcount。
 6. **目录解析成本与选择率近似无关**：TrieHI 式 inclusive 位图拷贝 0.7–1.6 µs；PE-Online 式子树的逐节点 OR 从 4 µs 增长到 933 µs（$s=0.3$），在高选择率下成为端到端主项。低选择率下解析只占精确扫描的 10–30%。
 7. **交叉点随规模左移。** SIFT1M 上交叉点约 $s^\*\approx0.0194$（100k 为 0.0605）。精确扫描从 100k 到 1M 慢 10.7–13.7×，HNSW 在 $s=1$ 只慢 3.6×；更大规模应更早切到精确枚举。1M 的 ef 前因子从 23.4 增到 50.6，指数仍约 $-0.67$。
-8. **属性-几何相关性会改变甚至消除交叉点。** 紧凑可行簇 + 独立查询时，HNSW 在 $s\le0.3$ 即使 `ef=32768` 也只有 50–87% 召回；精确扫描一直赢到 $s=0.3$，只有 $s=1$ 时 HNSW 胜出。PathSeer（filter-aware）在 ef≤4096 同样未达 r95（31–66%）。随机谓词的 0.06 交叉点不能直接外推到相关属性。
+8. **属性-几何相关性会改变甚至消除交叉点。** 紧凑可行簇 + 独立查询时，HNSW 在 $s\le0.3$ 即使 `ef=32768` 也只有 50–87% 召回；精确扫描一直赢到 $s=0.3$，只有 $s=1$ 时 HNSW 胜出。PathSeer（filter-aware）在 ef≤4096 同样未达 r95（31–66%）。但同一可行集把查询移到簇中心后，HNSW 用 `ef=32` 就在 $s\ge0.03$ 胜出，召回 98–99.5%。**相关性方向，而不只是选择率，决定 HNSW 是否可用**；随机谓词的 0.06 交叉点不能直接外推。
 
 ## 2. 实验设置
 
@@ -152,6 +152,25 @@
 
 **机制。** FAISS HNSW 的 selector 只过滤结果堆，不剪枝遍历；`efSearch` 预算按全部候选计数。当可行簇远离查询时，搜索先在不可行区域消耗预算，直到进入可行簇才可能收集到 k 个结果。把 ef 拉大只能线性扩大全局候选池，无法像属性分区索引那样直接跳到可行区域。因此“选择率 $s$ 决定一切”不成立：**属性与向量的相关性决定了 HNSW 是否可达**。
 
+### 6.1 查询靠近可行区域（cluster-near）
+
+同一批 k-means 可行集，只把查询向量从独立 `test.f32` 换成可行区域的**簇中心**；其余协议不变。近查询下 HNSW 全部用 `ef=32`（0.001–1.0），召回 98.1–99.5%：
+
+| s | exact list QPS | far HNSW ef=16384（召回） | near HNSW ef=32（召回） |
+|---:|---:|---:|---:|
+| 0.001 | 329,491 | 10.5（43.2%） | 19,768（99.0%） |
+| 0.003 | 93,884 | 10.6（50.9%） | 17,300（98.8%） |
+| 0.01 | 21,347 | 10.6（51.1%） | 18,675（99.5%） |
+| 0.03 | 7,002 | 10.5（51.3%） | **18,669**（98.1%） |
+| 0.1 | 2,072 | 10.5（58.1%） | **17,880**（98.5%） |
+| 0.3 | 740 | 10.6（77.2%） | **19,166**（98.7%） |
+| 1.0 | 325 | 17,188（95.4%，ef=32） | **15,662**（99.1%） |
+
+- **主指标**：near `gmean_qps_r95=35,140`，高于 random 22,426 与 far 14,447；`gmean_policy=30,546`。
+- **交叉点**：约 $s^\*\approx0.012$（0.01 与 0.03 对数插值；exact 21,347/7,002，HNSW 18,675/18,669）；汇总桶下界 0.015。far 在 $s<1$ 没有交叉点，random 为 0.0605。
+- **机制**：可行集仍紧凑，但查询落在可行区域内部，HNSW 不需要用 ef 预算穿越大片不可行空间；`ef=32` 足以收集 k 个近邻。far 的失败因此不是“簇紧凑”本身，而是“查询远离可行簇”。
+- **注意**：簇中心查询是相关性的**易端**；真实查询可能落在 near 与 far 之间。near/far 使用同一可行集，只改查询，因此对比是干净的。
+
 **Filter-aware 基线（PathSeer）。** 为检验“换图能否修复”，在同一 cluster 位图上加 PathSeer（M=16，M_exp=32，M_exp_search=16，ef≤4096；索引 76.0 MB，构建 43.5 s）。完整 200/bucket ×3 repeats 结果：ef=4096 时 QPS 112，召回 31.5/42.8/41.2/41.9/52.7/66.4%（$s=0.001\ldots0.3$），低于 HNSW 在 ef=16384 的 43–77%，更远低于精确扫描；$s=1$ 时 14.1k QPS / 97.3%，略慢于 HNSW。PathSeer 的扩展边在当前参数下没有修复远簇可达性。`M_exp_search>16` 会触发该 fork 的缓冲区溢出，未做更大搜索度扫描；这不是对所有 filter-aware 图的否定。数据见 `data/selectivity_cluster_pathseer_full_20261026.csv`。
 
 **注意。** 这是合成压力测试：k-means 簇、查询独立、单 k；真实属性可能既相关又与查询同区域。cluster 可行集的 ID 可能有一定局部性，精确扫描 QPS 不宜与 random 逐点比较；稳健结论是 HNSW 的召回坍塌。post-filter 与本模式的固定 ef 诊断未跑（`hnsw_fixed` 行只对 random 生成），探针用 50 条查询、单次评估；PathSeer 只测 M16/M_exp32/ef≤4096，且 M_exp_search 受 fork 限制。
@@ -159,7 +178,7 @@
 ## 7. 局限
 
 - **数据规模**：100k 与 1M SIFT、单一数据集；10M 未测。100k 有合成层级，1M 只有随机谓词；交叉点与拟合指数不能直接外推到 10M。
-- **谓词相关性**：`random` 与几何独立；`cluster` 是紧凑簇 + 独立查询的合成压力测试；`sub`/`exact` 有部分语义相关性，但不是真实 CCS 标注。相同 $s$ 下，属性与向量的相关性会改变图的可导航性；cluster 的 k-means 簇与查询独立性是强假设，真实属性可能介于三者之间。
+- **谓词相关性**：`random` 与几何独立；`cluster`（查询独立）与 `cluster_near`（查询=簇中心）是同一可行集的两个极端；`sub`/`exact` 有部分语义相关性，但不是真实 CCS 标注。真实属性/查询关系可能处于 near 与 far 之间；k-means 簇与单一 k 是强假设。
 - **方法范围**：只测 FAISS `IndexHNSWFlat + sel`、精确扫描、post-filter；ACORN/PathSeer/NaviX 等属性感知图未进入本轮，不能据此评价它们。IVF 也未测。
 - **单谓词**：未测多节点 AND/OR、否定、更新与并发。
 - **表示成本**：posting list 的构建/更新/空间未计；dense bitmap 元数据 32.5 MB 是简化表示，Roaring 会更小。
@@ -191,9 +210,16 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --modes random --nq-per-bucket 200 --max-ef 8192 --policy-s 0.02
 python3 production/nested-attr-vector-search/src/plot_scale_compare.py
 
-# 100k 相关 cluster 谓词（当前 segment）
+# 100k cluster-near（当前 segment）：查询=可行簇中心
 bash autoresearch.sh
 # 等价于：
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_ccs \
+  --out-dir production/nested-attr-vector-search/work/selectivity_cluster_near \
+  --modes cluster_near --metric-mode cluster_near --nq-per-bucket 200 \
+  --max-ef 16384 --policy-s 0.06 --tune-margin 0.01 --repeats 3 --clusters 256
+
+# cluster-far 对照
 python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --fixtures production/nested-attr-vector-search/work/fixtures_ccs \
   --out-dir production/nested-attr-vector-search/work/selectivity_cluster \
@@ -209,12 +235,12 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --policy-s 0.06 --repeats 1 --clusters 256
 ```
 
-原始数据：100k 为 [`data/selectivity_curve_20261026.csv`](data/selectivity_curve_20261026.csv)、[`data/summary_20261026.json`](data/summary_20261026.json)、[`data/selectivity_20261026.jsonl`](data/selectivity_20261026.jsonl)（run #82，复现 run #81）；1M 为 [`data/selectivity_1m_curve_20261026.csv`](data/selectivity_1m_curve_20261026.csv)、[`data/summary_1m_20261026.json`](data/summary_1m_20261026.json)、[`data/selectivity_1m_20261026.jsonl`](data/selectivity_1m_20261026.jsonl)（run #88，三次评估中位数；run #87 复现）；cluster 为 [`data/selectivity_cluster_curve_20261026.csv`](data/selectivity_cluster_curve_20261026.csv)、[`data/summary_cluster_20261026.json`](data/summary_cluster_20261026.json)（run #89）与 [`data/selectivity_cluster_probe_32768_20261026.csv`](data/selectivity_cluster_probe_32768_20261026.csv)（ef=32768 探针）。
+原始数据：100k 为 [`data/selectivity_curve_20261026.csv`](data/selectivity_curve_20261026.csv)、[`data/summary_20261026.json`](data/summary_20261026.json)、[`data/selectivity_20261026.jsonl`](data/selectivity_20261026.jsonl)（run #82，复现 run #81）；1M 为 [`data/selectivity_1m_curve_20261026.csv`](data/selectivity_1m_curve_20261026.csv)、[`data/summary_1m_20261026.json`](data/summary_1m_20261026.json)、[`data/selectivity_1m_20261026.jsonl`](data/selectivity_1m_20261026.jsonl)（run #88，三次评估中位数；run #87 复现）；cluster-far 为 [`data/selectivity_cluster_curve_20261026.csv`](data/selectivity_cluster_curve_20261026.csv)、[`data/summary_cluster_20261026.json`](data/summary_cluster_20261026.json)（run #89）与 [`data/selectivity_cluster_probe_32768_20261026.csv`](data/selectivity_cluster_probe_32768_20261026.csv)（ef=32768 探针）；cluster-near 为 [`data/selectivity_cluster_near_curve_20261026.csv`](data/selectivity_cluster_near_curve_20261026.csv)、[`data/summary_cluster_near_20261026.json`](data/summary_cluster_near_20261026.json)（run #91）。
 
 ## 9. 下一步
 
-1. 在 cluster 模式上加入属性分区/每簇独立索引与 ACORN/PathSeer，检验属性感知执行器能否把相关谓词的交叉点拉回低 $s$。
-2. 增加“查询落在可行簇内”的 cluster-near 对照，覆盖相关的另一端；当前 cluster 是查询独立的压力测试。
-3. 在 1M/10M 上加入层级与目录模式，确认目录解析成本在高 $n$ 下是否仍可忽略。
-4. 实现“位图 + posting list”双表示与按 $s$ 的切换策略，计入构建/更新/空间成本。
-5. 用真实多标签/属性数据集复核 random、cluster 与层级三种谓词分布。
+1. 在 cluster-far 上加入属性分区/每簇独立索引，检验属性感知执行器能否把交叉点拉回低 $s$；PathSeer 已证明单靠扩展图不够。
+2. 在 1M/10M 上加入层级与目录模式，确认目录解析成本在高 $n$ 下是否仍可忽略。
+3. 实现“位图 + posting list”双表示与按 $s$ 的切换策略，计入构建/更新/空间成本。
+4. 用真实多标签/属性数据集复核 random、cluster-far、cluster-near 与层级四种谓词分布。
+5. 对 near/far 之间的真实查询距离分布做采样，估计实际工作负载落在哪一端。

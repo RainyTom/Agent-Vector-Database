@@ -2,7 +2,8 @@
 
 来源：`production/nested-attr-vector-search/src/selectivity_bench.cpp`；100k random 为 session
 `filtered-ann-selectivity-sweep`，1M 为 segment `filtered-ann-selectivity-1m-200q`，
-100k cluster 为 segment `filtered-ann-selectivity-cluster-100k`。
+100k cluster-far 为 segment `filtered-ann-selectivity-cluster-100k`，cluster-near 为
+`filtered-ann-selectivity-cluster-near-margin`。
 
 - `selectivity_curve_20261026.csv`：SIFT100k run #82 的逐行结果（131 行，表头 1 行）。
 - `selectivity_20261026.jsonl`：同一结果的 JSONL 版本。
@@ -13,6 +14,7 @@
 - `selectivity_cluster_curve_20261026.csv` / `.jsonl` / `summary_cluster_20261026.json`：SIFT100k cluster 模式（k-means k=256，紧凑可行簇，查询独立），200/bucket，3 次评估中位数，run #89；主指标 14,446.65 QPS，policy 0，crossover 桶 0.5。
 - `selectivity_cluster_probe_32768_20261026.csv` / `summary_cluster_probe_32768_20261026.json`：同一 cluster 模式的 ef=32768 探针，50 条/桶、单次评估；用于确认提高 ef 仍不能恢复 r95。
 - `selectivity_cluster_pathseer_full_20261026.csv` / `summary_cluster_pathseer_full_20261026.json`：PathSeer filter-aware 基线（M=16，M_exp=32，M_exp_search=16，ef≤4096），200/bucket、3 次重复；用于确认扩展图在当前参数下未修复远簇召回。
+- `selectivity_cluster_near_curve_20261026.csv` / `.jsonl` / `summary_cluster_near_20261026.json`：SIFT100k cluster-near（同一 k-means 可行集，查询=簇中心；tune margin 0.01），200/bucket、3 次重复，run #91；主指标 35,140.42 QPS，policy 30,546.42，crossover 桶 0.015。与 cluster-far 只差查询向量。
 
 ## CSV 列
 

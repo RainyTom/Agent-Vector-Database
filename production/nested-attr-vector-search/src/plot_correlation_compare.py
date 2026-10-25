@@ -56,27 +56,32 @@ def plot_qps(ax, rows, label, color, marker):
 def main() -> int:
     rnd = load(DATA / "selectivity_curve_20261026.csv", "random")
     clu = load(DATA / "selectivity_cluster_curve_20261026.csv", "cluster")
+    near = load(DATA / "selectivity_cluster_near_curve_20261026.csv", "cluster_near")
     probe = load(DATA / "selectivity_cluster_probe_32768_20261026.csv", "cluster")
 
     fig, axes = plt.subplots(1, 2, figsize=(11.5, 4.6))
     ax = axes[0]
     plot_qps(ax, rnd, "random", "C0", "o")
-    plot_qps(ax, clu, "cluster", "C1", "s")
+    plot_qps(ax, clu, "cluster-far", "C1", "s")
+    plot_qps(ax, near, "cluster-near", "C2", "D")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("filter selectivity s = |feasible| / n")
     ax.set_ylabel("QPS (open = r95 fail)")
-    ax.set_title("Throughput: correlation collapses HNSW")
+    ax.set_title("Throughput: correlation direction decides HNSW")
     ax.grid(True, which="both", alpha=0.25)
     ax.legend(fontsize=7, loc="lower left")
     ax.axvline(0.0605, color="0.5", linestyle=":", linewidth=1)
     ax.text(0.063, 2e4, "random s*≈0.06", fontsize=8, color="0.35")
+    ax.text(0.0105, 3.2e4, "near s*≈0.012", fontsize=8, color="0.35")
+    ax.text(0.07, 3.3e4, "far: no HNSW win below s=1", fontsize=8, color="0.35")
 
     ax = axes[1]
     for rows, label, color, marker, ef in [
         (rnd, "random, tuned ef", "C0", "o", None),
-        (clu, "cluster, ef=16384", "C1", "s", 16384),
-        (probe, "cluster, ef=32768", "C2", "^", 32768),
+        (clu, "far, ef=16384", "C1", "s", 16384),
+        (probe, "far, ef=32768", "C1", "^", 32768),
+        (near, "near, ef=32", "C2", "D", None),
     ]:
         pts = series(rows, "hnsw", "recall", ef=ef)
         if not pts:
@@ -89,7 +94,7 @@ def main() -> int:
     ax.set_xlabel("filter selectivity s")
     ax.set_ylabel("Recall@10")
     ax.set_ylim(0, 1.02)
-    ax.set_title("HNSW recall at fixed / tuned breadth")
+    ax.set_title("HNSW recall: far vs near")
     ax.grid(True, which="both", alpha=0.25)
     ax.legend(fontsize=8, loc="lower right")
 
