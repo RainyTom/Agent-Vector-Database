@@ -109,6 +109,9 @@ def main() -> int:
     if summary.get("part_flat"):
         print(f"METRIC part_flat_build_s={summary['part_flat_build_s']:.3f}")
         print(f"METRIC part_flat_mb={summary['part_flat_mb']:.3f}")
+    if summary.get("part_gather"):
+        print(f"METRIC part_gather_build_s={summary['part_flat_build_s']:.3f}")
+        print(f"METRIC part_gather_mb={summary['part_flat_mb']:.3f}")
     print(f"METRIC valid={1 if valid else 0}")
     print(f"METRIC target_recall={TARGET_RECALL}")
     print(f"ASI frontier={json.dumps(summary['frontier'])}")
@@ -122,6 +125,8 @@ def main() -> int:
               f"part_max_ef={summary.get('part_max_ef')}")
     if summary.get("part_flat"):
         print(f"ASI part_flat=1 parts={summary.get('parts')}")
+    if summary.get("part_gather"):
+        print(f"ASI part_gather=1 parts={summary.get('parts')}")
     print(
         "ASI design=random+CCS-hierarchy predicates; exact/PASS/FAISS-BF-HNSW/post-filter; "
         "single-thread query"

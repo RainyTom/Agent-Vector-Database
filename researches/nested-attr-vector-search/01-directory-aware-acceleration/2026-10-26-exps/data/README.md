@@ -17,6 +17,7 @@
 - `selectivity_cluster_pathseer_full_20261026.csv` / `summary_cluster_pathseer_full_20261026.json`：PathSeer filter-aware 基线（M=16，M_exp=32，M_exp_search=16，ef≤4096），200/bucket、3 次重复；用于确认扩展图在当前参数下未修复远簇召回。
 - `selectivity_cluster_near_curve_20261026.csv` / `.jsonl` / `summary_cluster_near_20261026.json`：SIFT100k cluster-near（同一 k-means 可行集，查询=簇中心；tune margin 0.01），200/bucket、3 次重复，run #91；主指标 35,140.42 QPS，policy 30,546.42，crossover 桶 0.015。与 cluster-far 只差查询向量。
 - `selectivity_cluster_partflat_curve_20261026.csv` / `.jsonl` / `summary_cluster_partflat_20261026.json`：SIFT100k cluster-far 的属性分区 flat 扫描（分区 k=128 seed 777，独立于谓词生成器；49.2 MB 分区副本），200/bucket、3 次重复，run #92；主指标 14,378.20 QPS，只在 s=0.3 略胜精确扫描。
+- `selectivity_cluster_partgather_smoke_20261026.csv` / `summary_cluster_partgather_smoke_20261026.json`：同一分区布局但只 gather 可行点；10 条/桶 smoke，s≤0.1 仍慢于全局 exact list，s=0.3 快 26%。
 
 ## CSV 列
 

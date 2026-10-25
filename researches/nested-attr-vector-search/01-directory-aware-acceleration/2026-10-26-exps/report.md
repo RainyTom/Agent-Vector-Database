@@ -11,7 +11,7 @@
 5. **表示方式本身就是选择率相关成本。** 同一可行集，按 posting list 枚举比按 12.5 KB 位图枚举快 2.5×（$s=0.001$）、1.9×（$s=0.01$）；差异主要来自冷内存随机 gather，而不是 popcount。
 6. **目录解析成本与选择率近似无关**：TrieHI 式 inclusive 位图拷贝 0.7–1.6 µs；PE-Online 式子树的逐节点 OR 从 4 µs 增长到 933 µs（$s=0.3$），在高选择率下成为端到端主项。低选择率下解析只占精确扫描的 10–30%。
 7. **交叉点随规模左移。** SIFT1M 上交叉点约 $s^\*\approx0.0194$（100k 为 0.0605）。精确扫描从 100k 到 1M 慢 10.7–13.7×，HNSW 在 $s=1$ 只慢 3.6×；更大规模应更早切到精确枚举。1M 的 ef 前因子从 23.4 增到 50.6，指数仍约 $-0.67$。
-8. **属性-几何相关性会改变甚至消除交叉点。** 紧凑可行簇 + 独立查询时，HNSW 在 $s\le0.3$ 即使 `ef=32768` 也只有 50–87% 召回；精确扫描一直赢到 $s=0.3$，只有 $s=1$ 时 HNSW 胜出。PathSeer（filter-aware）在 ef≤4096 同样未达 r95（31–66%）。但同一可行集把查询移到簇中心后，HNSW 用 `ef=32` 就在 $s\ge0.03$ 胜出，召回 98–99.5%。**相关性方向，而不只是选择率，决定 HNSW 是否可用**；随机谓词的 0.06 交叉点不能直接外推。属性分区 flat 布局也只在 $s=0.3$ 略胜精确扫描（+15%），不能修复低/中选择率；精确扫描仍是 $s<1$ 的最优执行器。
+8. **属性-几何相关性会改变甚至消除交叉点。** 紧凑可行簇 + 独立查询时，HNSW 在 $s\le0.3$ 即使 `ef=32768` 也只有 50–87% 召回；精确扫描一直赢到 $s=0.3$，只有 $s=1$ 时 HNSW 胜出。PathSeer（filter-aware）在 ef≤4096 同样未达 r95（31–66%）。但同一可行集把查询移到簇中心后，HNSW 用 `ef=32` 就在 $s\ge0.03$ 胜出，召回 98–99.5%。**相关性方向，而不只是选择率，决定 HNSW 是否可用**；随机谓词的 0.06 交叉点不能直接外推。属性分区 flat 布局与只 gather 可行点的分区布局也都只在 $s=0.3$ 略胜精确扫描（+15%/+26%），不能修复低/中选择率；精确扫描仍是 $s<1$ 的最优执行器。
 
 ## 2. 实验设置
 
@@ -192,13 +192,28 @@
 - 主指标 `gmean_qps_r95=14,378`，与 far 的 14,447 持平（低 $s$ 的 exact 噪声导致略低）；没有净收益。
 - **解释**：低/中选择率的主导成本是“要计算多少个可行点距离”，精确 list 已经只扫可行集；分区布局只在可行集接近整个分区时（高 $s$）因连续访问略占优。物理分区不是银弹；要修复 far 的低 $s$，需要分区**局部 posting**、更大的分区或直接在可行集上执行，而不是复制一份分区向量。
 
+**只 gather 可行点（part_gather）。** 为区分“扫了多余分区点”与“分区路由开销”，`part_gather` 仍用连续分区数据，但按 `q.ids` 只把可行 ID 分组到非空分区，再在分区内 gather 这些点（精确召回）。10 条/桶 smoke：
+
+| s | exact list QPS | part_gather QPS | 比值 |
+|---:|---:|---:|---:|
+| 0.001 | 352,162 | 70,056 | 0.20× |
+| 0.003 | 83,725 | 27,830 | 0.33× |
+| 0.01 | 19,377 | 11,951 | 0.62× |
+| 0.03 | 7,105 | 5,092 | 0.72× |
+| 0.1 | 2,477 | 2,127 | 0.86× |
+| 0.3 | 692 | **875** | 1.26× |
+
+- 只在 $s=0.3$ 胜出（+26%，比 part_flat 的 +15% 更好）；$s\le0.1$ 仍慢 1.2–5.0×。
+- 低 $s$ 下每个查询只有约 100–1000 个可行点，128 个分区的清空/路由/列表构造开销超过局部性收益；精确 list 的 per-query 开销只有几微秒。
+- 结论：低/中 $s$ 的瓶颈不只是扫描多余点，分区路由本身也不便宜；分区连续布局只有可行集接近填满分区时（高 $s$）才有净收益。更紧的 flat routing 可能缩小 $s=0.1$ 的差距，但难以翻转低 $s$。
+
 **注意。** 这是合成压力测试：k-means 簇、查询独立、单 k；真实属性可能既相关又与查询同区域。cluster 可行集的 ID 可能有一定局部性，精确扫描 QPS 不宜与 random 逐点比较；稳健结论是 HNSW 的召回坍塌。post-filter 与本模式的固定 ef 诊断未跑（`hnsw_fixed` 行只对 random 生成），探针用 50 条查询、单次评估；PathSeer 只测 M16/M_exp32/ef≤4096，且 M_exp_search 受 fork 限制。
 
 ## 7. 局限
 
 - **数据规模**：100k 与 1M SIFT、单一数据集；10M 未测。100k 有合成层级，1M 只有随机谓词；交叉点与拟合指数不能直接外推到 10M。
 - **谓词相关性**：`random` 与几何独立；`cluster`（查询独立）与 `cluster_near`（查询=簇中心）是同一可行集的两个极端；`sub`/`exact` 有部分语义相关性，但不是真实 CCS 标注。真实属性/查询关系可能处于 near 与 far 之间；k-means 簇与单一 k 是强假设。
-- **分区布局**：part_flat/分区 HNSW 只测 k=128、seed=777 一个构型；part_flat 扫描整个非空分区而非分区局部 posting；49.2 MB 分区副本的空间/更新成本未与收益权衡。
+- **分区布局**：part_flat/part_gather/分区 HNSW 只测 k=128、seed=777 一个构型；part_gather 的 smoke 只 10 条/桶；49.2 MB 分区副本与 local_idx 的空间/更新成本未与收益权衡。
 - **方法范围**：只测 FAISS `IndexHNSWFlat + sel`、精确扫描、post-filter；ACORN/PathSeer/NaviX 等属性感知图未进入本轮，不能据此评价它们。IVF 也未测。
 - **单谓词**：未测多节点 AND/OR、否定、更新与并发。
 - **表示成本**：posting list 的构建/更新/空间未计；dense bitmap 元数据 32.5 MB 是简化表示，Roaring 会更小。
@@ -255,11 +270,11 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --policy-s 0.06 --repeats 1 --clusters 256
 ```
 
-原始数据：100k 为 [`data/selectivity_curve_20261026.csv`](data/selectivity_curve_20261026.csv)、[`data/summary_20261026.json`](data/summary_20261026.json)、[`data/selectivity_20261026.jsonl`](data/selectivity_20261026.jsonl)（run #82，复现 run #81）；1M 为 [`data/selectivity_1m_curve_20261026.csv`](data/selectivity_1m_curve_20261026.csv)、[`data/summary_1m_20261026.json`](data/summary_1m_20261026.json)、[`data/selectivity_1m_20261026.jsonl`](data/selectivity_1m_20261026.jsonl)（run #88，三次评估中位数；run #87 复现）；cluster-far 为 [`data/selectivity_cluster_curve_20261026.csv`](data/selectivity_cluster_curve_20261026.csv)、[`data/summary_cluster_20261026.json`](data/summary_cluster_20261026.json)（run #89）与 [`data/selectivity_cluster_probe_32768_20261026.csv`](data/selectivity_cluster_probe_32768_20261026.csv)（ef=32768 探针）；cluster-near 为 [`data/selectivity_cluster_near_curve_20261026.csv`](data/selectivity_cluster_near_curve_20261026.csv)、[`data/summary_cluster_near_20261026.json`](data/summary_cluster_near_20261026.json)（run #91）；partition-flat 为 [`data/selectivity_cluster_partflat_curve_20261026.csv`](data/selectivity_cluster_partflat_curve_20261026.csv)、[`data/summary_cluster_partflat_20261026.json`](data/summary_cluster_partflat_20261026.json)（run #92）。
+原始数据：100k 为 [`data/selectivity_curve_20261026.csv`](data/selectivity_curve_20261026.csv)、[`data/summary_20261026.json`](data/summary_20261026.json)、[`data/selectivity_20261026.jsonl`](data/selectivity_20261026.jsonl)（run #82，复现 run #81）；1M 为 [`data/selectivity_1m_curve_20261026.csv`](data/selectivity_1m_curve_20261026.csv)、[`data/summary_1m_20261026.json`](data/summary_1m_20261026.json)、[`data/selectivity_1m_20261026.jsonl`](data/selectivity_1m_20261026.jsonl)（run #88，三次评估中位数；run #87 复现）；cluster-far 为 [`data/selectivity_cluster_curve_20261026.csv`](data/selectivity_cluster_curve_20261026.csv)、[`data/summary_cluster_20261026.json`](data/summary_cluster_20261026.json)（run #89）与 [`data/selectivity_cluster_probe_32768_20261026.csv`](data/selectivity_cluster_probe_32768_20261026.csv)（ef=32768 探针）；cluster-near 为 [`data/selectivity_cluster_near_curve_20261026.csv`](data/selectivity_cluster_near_curve_20261026.csv)、[`data/summary_cluster_near_20261026.json`](data/summary_cluster_near_20261026.json)（run #91）；partition-flat 为 [`data/selectivity_cluster_partflat_curve_20261026.csv`](data/selectivity_cluster_partflat_curve_20261026.csv)、[`data/summary_cluster_partflat_20261026.json`](data/summary_cluster_partflat_20261026.json)（run #92）；part_gather 为 [`data/selectivity_cluster_partgather_smoke_20261026.csv`](data/selectivity_cluster_partgather_smoke_20261026.csv)（10 条/桶 smoke）。
 
 ## 9. 下一步
 
-1. 尝试分区局部 posting / 更大分区 / 分区内只扫可行 ID，检验能否把 part_flat 在 $s\le0.1$ 的劣势翻过来；当前分区复制已证明不够。
+1. 用更紧的 flat routing / 更大分区重测 part_gather，确认 $s=0.1$ 的 0.86× 能否翻过 1；低 $s$ 的几微秒差距预计难以翻转。
 2. 在 1M/10M 上加入层级与目录模式，确认目录解析成本在高 $n$ 下是否仍可忽略。
 3. 实现“位图 + posting list”双表示与按 $s$ 的切换策略，计入构建/更新/空间成本。
 4. 用真实多标签/属性数据集复核 random、cluster-far、cluster-near 与层级四种谓词分布。

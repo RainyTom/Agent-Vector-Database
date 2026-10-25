@@ -99,7 +99,9 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 
 ### 属性分区 flat 基线
 
-`--part-flat --parts 128 --part-seed 777`：用独立 k-means（k=128，seed 777）建立连续分区副本；查询时从可行 ID 标记非空分区，只扫描这些分区的连续向量并按全局位图过滤。构建 0.014 s、额外 49.2 MB；精确召回。只在 $s=0.3$ 比全局精确 list 快 15%，低/中选择率更慢。结果见报告 §6.2。
+`--part-flat --parts 128 --part-seed 777`：用独立 k-means（k=128，seed 777）建立连续分区副本；查询时从可行 ID 标记非空分区，只扫描这些分区的连续向量并按全局位图过滤。构建 0.014 s、额外 49.2 MB；精确召回。只在 $s=0.3$ 比全局精确 list 快 15%，低/中选择率更慢。
+
+`--part-gather`：同一分区副本，但只把可行 ID 分组到非空分区，再在分区内 gather 这些点（不扫整个分区）。10 条/桶 smoke 中 $s=0.3$ 快 26%，$s\le0.1$ 仍慢 1.2–5.0×；分区路由开销是低 $s$ 的新瓶颈。
 
 ### PathSeer filter-aware 基线
 
