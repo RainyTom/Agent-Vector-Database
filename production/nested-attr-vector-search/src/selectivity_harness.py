@@ -53,12 +53,27 @@ def compile_binary() -> None:
     subprocess.run(cmd, check=True)
 
 
-def run_benchmark(argv: list[str]) -> dict:
-    out_dir = WORK / "selectivity"
+def parse_paths(argv: list[str]) -> tuple[Path, Path, list[str]]:
+    fixtures, out_dir, rest = FIX, WORK / "selectivity", []
+    i = 0
+    while i < len(argv):
+        if argv[i] == "--fixtures":
+            fixtures = Path(argv[i + 1])
+            i += 2
+        elif argv[i] == "--out-dir":
+            out_dir = Path(argv[i + 1])
+            i += 2
+        else:
+            rest.append(argv[i])
+            i += 1
+    return fixtures, out_dir, rest
+
+
+def run_benchmark(argv: list[str], fixtures: Path, out_dir: Path) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     cmd = [
         str(BIN),
-        "--fixtures", str(FIX),
+        "--fixtures", str(fixtures),
         "--out-dir", str(out_dir),
         *argv,
     ]
@@ -70,13 +85,14 @@ def run_benchmark(argv: list[str]) -> dict:
 
 
 def main() -> int:
-    if not FIX.exists():
+    fixtures, out_dir, rest = parse_paths(sys.argv[1:])
+    if not fixtures.exists():
         raise SystemExit(
-            f"missing fixtures: {FIX}; generate with prep_ccs.py "
-            "(base.f32/test.f32 from SIFT100k)"
+            f"missing fixtures: {fixtures}; generate with prep_ccs.py or "
+            "export base.f32/test.f32/meta.txt"
         )
     compile_binary()
-    summary = run_benchmark(sys.argv[1:])
+    summary = run_benchmark(rest, fixtures, out_dir)
     valid = bool(summary.get("valid", False))
     print(f"METRIC gmean_qps_r95={summary['gmean_qps_r95']:.3f}")
     print(f"METRIC gmean_policy_qps_r95={summary['gmean_policy_qps_r95']:.3f}")

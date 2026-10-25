@@ -63,6 +63,7 @@ constexpr double BUCKET_HI[7] = {0.0015, 0.005, 0.015, 0.05, 0.15, 0.5, 1.01};
 struct Args {
     std::string fixtures;
     std::string out_dir;
+    std::string modes = "all";
     int nq_per_bucket = 200;
     uint64_t seed = 20261026;
     int M = 16;
@@ -81,6 +82,7 @@ Args parse(int argc, char** argv) {
         };
         if (f == "--fixtures") a.fixtures = next();
         else if (f == "--out-dir") a.out_dir = next();
+        else if (f == "--modes") a.modes = next();
         else if (f == "--nq-per-bucket") a.nq_per_bucket = std::stoi(next());
         else if (f == "--seed") a.seed = std::stoull(next());
         else if (f == "--M") a.M = std::stoi(next());
@@ -97,6 +99,34 @@ Args parse(int argc, char** argv) {
     }
     if (a.max_ef < 16) throw std::runtime_error("--max-ef must be >= 16");
     return a;
+}
+
+bool mode_enabled(const std::string& modes, const std::string& name) {
+    if (modes == "all") return true;
+    size_t pos = 0;
+    while (pos <= modes.size()) {
+        size_t next = modes.find(',', pos);
+        std::string tok = modes.substr(
+            pos, next == std::string::npos ? std::string::npos : next - pos);
+        if (tok == name) return true;
+        if (next == std::string::npos) break;
+        pos = next + 1;
+    }
+    return false;
+}
+
+struct FixtureMeta {
+    int n = 0, d = 0, nq = 0, k = 0, nodes = 0;
+};
+
+FixtureMeta read_meta(const std::string& fix) {
+    std::ifstream in(fix + "/meta.txt");
+    FixtureMeta m;
+    if (!(in >> m.n >> m.d >> m.nq >> m.k) || m.n <= 0 || m.d <= 0) {
+        throw std::runtime_error("bad meta.txt");
+    }
+    in >> m.nodes;  // optional; 0 for random-only fixtures
+    return m;
 }
 
 double now_us() {
@@ -729,27 +759,43 @@ int main(int argc, char** argv) {
         const std::string fix = args.fixtures;
         std::cerr << "[selectivity] loading fixtures\n";
 
+        const FixtureMeta meta = read_meta(fix);
+        const int n = meta.n;
+        const int d = meta.d;
+        if (meta.k != K) throw std::runtime_error("fixture k must be 10");
+        const bool want_random = mode_enabled(args.modes, "random");
+        const bool want_tree = mode_enabled(args.modes, "sub") ||
+                               mode_enabled(args.modes, "exact");
+        if (!want_random && !want_tree) {
+            throw std::runtime_error("--modes must include random, sub, or exact");
+        }
         std::vector<float> base_raw = read_f32(fix + "/base.f32");
         std::vector<float> query_raw = read_f32(fix + "/test.f32");
-        // Dimensions are known from the fixture contract; keep them explicit.
-        const int n = 100000;
-        const int d = 128;
         const int nq_data = int(query_raw.size() / d);
-        if (base_raw.size() != size_t(n) * d) {
-            throw std::runtime_error("base.f32 is not 100000x128");
+        if (base_raw.size() != size_t(n) * size_t(d)) {
+            throw std::runtime_error("base.f32 size disagrees with meta.txt");
         }
         const int nb = (n + 7) / 8;
 
-        Tree tree = load_tree(fix, n, nb);
-        std::cerr << "[selectivity] tree_nodes=" << tree.nodes
-                  << " tree_meta_mb=" << tree.meta_bytes() / (1024.0 * 1024.0)
-                  << "\n";
+        Tree tree;
+        if (want_tree) {
+            tree = load_tree(fix, n, nb);
+            std::cerr << "[selectivity] tree_nodes=" << tree.nodes
+                      << " tree_meta_mb="
+                      << tree.meta_bytes() / (1024.0 * 1024.0) << "\n";
+        }
 
-        std::vector<Group> groups =
-            make_random_groups(n, nb, nq_data, args.nq_per_bucket, args.seed);
-        std::vector<Group> tree_groups =
-            make_tree_groups(tree, n, nb, nq_data, args.nq_per_bucket, args.seed);
-        groups.insert(groups.end(), tree_groups.begin(), tree_groups.end());
+        std::vector<Group> groups;
+        if (want_random) {
+            groups = make_random_groups(n, nb, nq_data, args.nq_per_bucket,
+                                        args.seed);
+        }
+        if (want_tree) {
+            std::vector<Group> tree_groups =
+                make_tree_groups(tree, n, nb, nq_data, args.nq_per_bucket,
+                                 args.seed);
+            groups.insert(groups.end(), tree_groups.begin(), tree_groups.end());
+        }
 
         double bitmap_bytes = 0;
         for (const auto& g : groups)
