@@ -81,6 +81,10 @@ ACORN 等单对象过滤检索仍排除出问题新颖性审计。当前候选�
 - [2026-10-22 首轮实验](2026-10-22-exps/report.md)
 - [2026-10-23 问题对照范围纠正](2026-10-23-exps/report.md)
 - [2026-10-24 基线方案与评测契约](2026-10-24-exps/report.md)
+- [2026-10-25 并行探索：查重、下界、规模、嵌入](2026-10-25-exps/report.md)
+- [2026-10-25 规模与空间敏感性](2026-10-25-exps/scale-report.md)
+- [2026-10-25 下界紧致度与成本](2026-10-25-exps/lb-report.md)
+- [2026-10-25 potion 嵌入重建](2026-10-25-exps/data/potion/potion-report.md)
 - [TRSSQ (ICDE 2024) 全文记录](../../papers/trajectory-search/10.1109-icde60146.2024.00335-trssq/)
 - [TRSSQ 获取与核对记录](evidence/trssq-2026-10-23.md)
 - 代码：`production/semantic-mobility-search/`

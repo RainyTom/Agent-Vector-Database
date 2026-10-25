@@ -1,0 +1,10 @@
+workload,window,spatial,method,n,recall_at_10,mean_ms,p95_ms,qps,mean_candidates,mean_verified,mean_dtw_computed,mean_hits,empty_queries,source_csv
+all6_2160h_s50,2160 h (90 d),50 km,gt(e1_time_first),500,1.0000,16.331,28.255,0.06,63084.0,63084.0,5047.0,9.98,0,bench_out_all6_2160h_s50/e1_time_first.csv
+all6_2160h_s50,2160 h (90 d),50 km,space(space_first),500,1.0000,8.955,20.675,0.11,11675.5,11675.5,5047.0,9.98,0,bench_out_all6_2160h_s50/b2_space_first.csv
+all6_2160h_s50,2160 h (90 d),50 km,"catalog(topc300,cap48h)",500,0.9944,5.722,13.592,0.17,25820.3,292.4,292.4,9.98,0,bench_out_all6_2160h_s50/catalog.csv
+all6_8760h_s10,8760 h (1 y),10 km,gt(e1_time_first),500,1.0000,28.579,54.588,0.03,63084.0,63084.0,8940.0,9.99,0,bench_out_all6_8760h_s10/e1_time_first.csv
+all6_8760h_s10,8760 h (1 y),10 km,space(space_first),500,1.0000,15.671,39.876,0.06,11338.4,11338.4,8940.0,9.99,0,bench_out_all6_8760h_s10/b2_space_first.csv
+all6_8760h_s10,8760 h (1 y),10 km,"catalog(topc300,cap48h)",500,0.9946,5.351,15.246,0.19,49962.2,291.7,291.7,9.99,0,bench_out_all6_8760h_s10/catalog.csv
+all6_8760h,8760 h (1 y),none,gt(e1_time_first),500,1.0000,83.546,176.811,0.01,63084.0,63084.0,56961.8,10.00,0,bench_out_all6_8760h/e1_time_first.csv
+all6_8760h,8760 h (1 y),none,space(space_first),500,1.0000,192.616,287.773,0.01,63084.0,63084.0,56961.8,10.00,0,bench_out_all6_8760h/b2_space_first.csv
+all6_8760h,8760 h (1 y),none,"catalog(topc300,cap48h)",0,,,,,,,,,,TIMEOUT/no output: bench_out_all6_8760h/catalog.csv

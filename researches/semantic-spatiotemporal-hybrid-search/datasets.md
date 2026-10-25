@@ -64,3 +64,15 @@ Melbourne：
 ## 引用与归属
 
 使用 Massive-STEPS 时引用其 SIGSPATIAL 2026 论文，并保留 Semantic Trails / Foursquare OS Places 的归属。数据不提交到 Git；实验报告只写统计与校验和。
+
+## 2026-10-25 工作负载变体
+
+| workload | 空间约束 | 时间窗 | 查询 | 说明 |
+|---|---|---:|---:|---|
+| `all6_8760h_s50` | 50 km | 1 年 | 500 | 主实验（旧 pilot embedding） |
+| `all6_2160h_s50` | 50 km | 90 天 | 500 | 窗口敏感性 |
+| `all6_8760h_s10` | 10 km | 1 年 | 500 | 空间敏感性 |
+| `all6_8760h` | 无 | 1 年 | 500 | 无空间约束 |
+| `all6_8760h_s50_potion` | 50 km | 1 年 | 500 | potion-base-8M 128 维；查询集与主实验逐字段一致，仅向量不同 |
+
+**旧 pilot embedding 有两个缺陷**（`prep.py`）：`l2()` 对 (724,64) 矩阵使用 Frobenius 范数，类别通道只占 0.1%；约 36.6% 的不同名称哈希到相同向量。新 workload 用 potion-base-8M（256 维，逐行 L2，PCA 到 128），并保留旧 workload 仅作“弱语义”对照，不混表。
