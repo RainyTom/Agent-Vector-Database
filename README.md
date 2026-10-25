@@ -1,47 +1,61 @@
 # Vector Database Research Workspace
 
-本项目用于探索向量数据库研究问题。当前主线是 **vector join**，重点关注高维向量集合之间的阈值连接、近似执行、外存执行、过滤与基数估计。
+研究型仓库：论文索引 + 研究笔记 + 可复现实验。**当前主线是语义时空 episode 检索**；早期 vector join、前缀/包含过滤、层级属性检索三条线已暂停，保留历史文档。
 
-## 目录约定
+## 入口
+
+| 用途 | 文件 |
+|---|---|
+| **项目移交与服务器迁移** | [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) |
+| **Planner/Executor 协议** | [coordination/README.md](coordination/README.md) |
+| 项目状态（机器可读） | [coordination/state.json](coordination/state.json) |
+| 研究助理长期规则 | [AGENTS.md](AGENTS.md) |
+| 方向级交接 | [researches/semantic-spatiotemporal-hybrid-search/HANDOFF.md](researches/semantic-spatiotemporal-hybrid-search/HANDOFF.md) |
+| 问题定义（唯一规范） | [problem-definition.md](researches/semantic-spatiotemporal-hybrid-search/problem-definition.md) |
+| 方法完整规范 | [approach.md](researches/semantic-spatiotemporal-hybrid-search/approach.md) |
+| 基线方案 | [baseline.md](researches/semantic-spatiotemporal-hybrid-search/baseline.md) |
+| 查重与边界 | [novelty-audit.md](researches/semantic-spatiotemporal-hybrid-search/novelty-audit.md) |
+| 候选新问题 | [open-problems.md](researches/semantic-spatiotemporal-hybrid-search/open-problems.md) |
+
+## 当前结论（6 城、1.84M 签到、500 查询、1 年窗、50 km）
+
+| 方法 | Recall@10 | mean ms | p95 ms |
+|---|---:|---:|---:|
+| 精确空间先行 | 1.000 | 15.3 | 37.5 |
+| 平坦桶 catalog | 0.989 | 10.5 | 23.6 |
+| **EST（Episode Span Tree）** | 0.989 | **5.66** | 15.0 |
+| **EST + 有界 slack G=2** | 0.989 | **4.68** | 11.4 |
+
+EST 的硬约束结果与全量扫描 500/500 逐条一致。详见 `researches/semantic-spatiotemporal-hybrid-search/2026-10-25-exps/`。
+
+## 目录
 
 ```text
 .
-├── papers/                  # 按论文自身研究主题分类
-│   ├── papers.jsonl         # 全主题总索引
-│   ├── relations.jsonl      # 跨主题论文关系
-│   ├── vector-join/         # 几何向量连接：7 篇
-│   ├── filtered-ann/        # 过滤 ANN：12 篇
-│   ├── prefix-vector-search/ # 前缀/目录检索：1 篇
-│   └── similarity-join/     # 一般相似连接：1 篇
-├── researches/             # 探索性笔记、调研报告、实验草稿
-│   ├── vector-join/
-│   ├── containment-filtered-vector-search/
-│   └── nested-attr-vector-search/
-├── codes/                  # 论文实现和实验代码
-├── datasets/               # 数据集与数据审计信息
-└── paper-production/       # 论文写作工程
+├── AGENTS.md                  # 研究规则
+├── PROJECT_HANDOFF.md         # 项目移交手册
+├── coordination/              # planner/executor 任务、结果、状态
+├── papers/                    # 论文库：29 篇、27 条关系
+│   ├── papers.jsonl / relations.jsonl / changelog.md
+│   └── vector-join/ filtered-ann/ prefix-vector-search/
+│       similarity-join/ trajectory-search/
+├── researches/
+│   ├── semantic-spatiotemporal-hybrid-search/   # 当前主线
+│   ├── vector-join/                             # 暂停
+│   ├── containment-filtered-vector-search/      # 暂停
+│   └── nested-attr-vector-search/               # 暂停
+├── production/semantic-mobility-search/         # 实验代码与 workload
+│   ├── src/（prep_potion、bench、bench_est、bench_pq）
+│   └── work/（大文件，gitignored）
+├── datasets/                  # 原始 CSV（gitignored）
+├── deps/                      # 第三方源码（gitignored）
+├── codes/                     # 早期复现代码
+└── paper-production/          # 论文写作工程（未用于本主线）
 ```
 
-论文按自身研究问题选择主题目录，“可迁移到 vector join”只作为相关性标签。新增论文时应先在总索引查重，再按 `<arxiv-id>-<short-slug>` 建立独立目录。论文材料沿用 `paper.pdf`、`paper.md`、`paper.report.md` 与已有 `images/`，以便笔记和后续论文写作稳定引用。
+## 约定
 
-## 当前入口
-
-- [论文库总入口](papers/README.md)
-- [Vector Join](papers/vector-join/README.md)、[过滤 ANN](papers/filtered-ann/README.md)、[前缀/目录检索](papers/prefix-vector-search/README.md)、[一般相似连接](papers/similarity-join/README.md)
-- [可检索论文索引](papers/papers.jsonl)、[论文关系](papers/relations.jsonl)、[更新记录](papers/changelog.md)
-- [检索覆盖与补查队列](researches/vector-join/search-log.md)、[待验证研究问题](researches/vector-join/research-questions.md)
-- 前缀属性向量检索：[问题定义](researches/containment-filtered-vector-search/problem-definition.md)、[创新性复核](researches/containment-filtered-vector-search/novelty-analysis.md)、[逐篇证据](researches/containment-filtered-vector-search/index.md)
-- [前缀与Context Database六个子方向方案](researches/nested-attr-vector-search/directions.md)：Directory-Aware加速、DAG、联合索引、渐进导航、版本、权限。
-- [六方向alphaXiv查重决定](researches/nested-attr-vector-search/alphaxiv-novelty-audit.md)：四项停止独立立项，两项暂停；原方案均未进入实现。
-- [Vector Join 研究综述](researches/vector-join/survey.md)
-- [Vector Join 学习与实验路线](researches/vector-join/roadmap.md)
-
-# Agent-Vector-Database
-
-研究助理的长期工作规则保存在 [AGENTS.md](AGENTS.md)。索引维护在每次研究任务中执行；当前没有定时抓取任务。
-
-```bash
-python tools/research_index.py search 'NN-Map' --topic vector-join
-python tools/research_index.py search 'containment' --topic filtered-ann --json
-python tools/research_index.py validate
-```
+- 论文按**自身研究问题**分类，`papers.jsonl` 为总索引；新增前先查重，更新 `changelog.md`。
+- 研究笔记与实验记录在 `researches/<方向>/`；每日实验在 `<YYYY-MM-DD>-exps/`，含 `data/` 与 `experiments/`。
+- 大数据、workload、模型、venv、第三方源码不入库。
+- 结果必须可复现：命令、环境、产物路径、指标一起记录。

@@ -1,0 +1,21 @@
+{
+  "task_id": "T-0001",
+  "status": "completed",
+  "summary": "结论先行，不超过 10 行。",
+  "commands": [
+    "cd /path/to/repo && command ..."
+  ],
+  "metrics": {
+    "recall_at_10": 0.0,
+    "mean_us": 0.0,
+    "p95_us": 0.0
+  },
+  "artifacts": [
+    "researches/semantic-spatiotemporal-hybrid-search/2026-10-25-exps/data/foo.csv"
+  ],
+  "errors": [],
+  "missing": [],
+  "next": [],
+  "env": {"cpu": "", "ram_gb": 0, "gcc": ""},
+  "commit": ""
+}

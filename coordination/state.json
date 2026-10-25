@@ -1,0 +1,47 @@
+{
+  "updated": "2026-10-25",
+  "project": "semantic-spatiotemporal-episode-retrieval",
+  "git": {
+    "branch": "autoresearch/researches-nested-attr-vector-search-agent-datas-20261020",
+    "head": "9fc9a15",
+    "main_synced": true,
+    "note": "main 与远程已同步（9fc9a15，包含此前合并）；不要强推或重写历史。"
+  },
+  "phase": "method-validation-and-positioning",
+  "best_results": {
+    "workload": "all6_8760h_s50_potion",
+    "exact_space_first": {"recall_at_10": 1.0, "mean_ms": 15.26, "p95_ms": 37.46},
+    "flat_catalog": {"recall_at_10": 0.9894, "mean_ms": 10.5, "p95_ms": 23.6},
+    "est": {"recall_at_10": 0.9894, "mean_ms": 5.66, "p95_ms": 15.0},
+    "est_g2": {"recall_at_10": 0.9894, "mean_ms": 4.68, "p95_ms": 11.4},
+    "flat_catalog_pq": {"recall_at_10": 0.9966, "mean_ms": 7.73, "p95_ms": 16.86}
+  },
+  "workloads": [
+    {"id": "all6_8760h_s50_potion", "window": "1y", "spatial_km": 50, "status": "ready", "role": "primary"},
+    {"id": "all6_8760h_s50", "window": "1y", "spatial_km": 50, "status": "ready", "role": "legacy pilot embedding; do not mix"},
+    {"id": "all6_2160h_s50", "window": "90d", "spatial_km": 50, "status": "ready", "role": "window sensitivity"},
+    {"id": "all6_8760h_s10", "window": "1y", "spatial_km": 10, "status": "ready", "role": "space sensitivity"},
+    {"id": "all6_8760h", "window": "1y", "spatial_km": null, "status": "ready", "role": "no spatial constraint"}
+  ],
+  "open_decisions": [
+    "新颖性定位：3x + 首个联合跨度索引是否足够，还是转为“何时物化 episode”的系统性刻画。",
+    "G=2 的普适性：目前只在 1 年/50 km 验证，需在 90 天/10 km/无空间复核。",
+    "精确 vs 近似：0.989 召回是否可接受；是否需要带误差证书的版本。",
+    "是否把 PQ 并入 EST（当前 PQ 只在平坦 catalog 上测过）。",
+    "下一个研究问题：P1 聚合属性谓词、P2 流式维护、P3 episode join。"
+  ],
+  "next_tasks": [
+    {"id": "T-0001", "title": "环境冒烟与主表复现", "priority": "P0"},
+    {"id": "T-0002", "title": "三档 workload 的 EST 与 G 扫描", "priority": "P0"},
+    {"id": "T-0003", "title": "选择性代价模型：scan vs flat vs EST vs ANN", "priority": "P0"},
+    {"id": "T-0004", "title": "PQ 与 EST 合并", "priority": "P1"},
+    {"id": "T-0005", "title": "聚合属性谓词原型（P1）", "priority": "P1"}
+  ],
+  "constraints": [
+    "datasets/、work/、models/、venv_potion/、deps/ 不入库。",
+    "不得强推、不得重写历史；破坏性操作需批准。",
+    "不同 embedding 的 GT 不可混表；换编码器必须重算 GT。",
+    "结果必须包含确切命令与产物路径；禁止编造数字。",
+    "论文索引更新遵循 AGENTS.md（先查重、按主题、更新 changelog）。"
+  ]
+}
