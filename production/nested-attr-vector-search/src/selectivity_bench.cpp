@@ -340,7 +340,13 @@ struct Group {
     std::string bucket;
     double s_mean = 0;
     std::vector<Query> qs;
+    // Optional group-specific query vectors (cluster-near uses centroids).
+    std::vector<float> query_data;
 };
+
+const float* group_query_base(const Group& g, const float* test) {
+    return g.query_data.empty() ? test : g.query_data.data();
+}
 
 struct Row {
     std::string mode, bucket, method, variant;
@@ -615,7 +621,7 @@ Row make_row(const std::string& mode, const std::string& bucket, double s,
     return r;
 }
 
-void self_check(const std::vector<float>& base, const std::vector<float>& queries,
+void self_check(const std::vector<float>& base, const float* queries,
                 int n, int d, const Group& g, const std::vector<int>& gt) {
     faiss::IndexFlat flat(d, faiss::METRIC_L2);
     flat.add(n, base.data());
@@ -626,7 +632,7 @@ void self_check(const std::vector<float>& base, const std::vector<float>& querie
         p.sel = &sel;
         float D[K];
         faiss::idx_t I[K];
-        flat.search(1, queries.data() + size_t(g.qs[qi].qvec) * d, K, D, I, &p);
+        flat.search(1, queries + size_t(g.qs[qi].qvec) * d, K, D, I, &p);
         std::vector<int> a, b;
         for (int t = 0; t < K; ++t) {
             if (I[t] >= 0) a.push_back(int(I[t]));
@@ -793,7 +799,8 @@ Clusters build_clusters(const float* base, int n, int d, int k, uint64_t seed) {
 
 std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
                                        int n, int d, int nq_data,
-                                       int nq_per_bucket, uint64_t seed) {
+                                       int nq_per_bucket, uint64_t seed,
+                                       bool near) {
     static const double targets[7] = {0.001, 0.003, 0.01, 0.03,
                                       0.1,   0.3,   1.0};
     std::mt19937_64 rng(seed ^ 0x517cc1b727220a95ull);
@@ -801,7 +808,7 @@ std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
     const int nb = (n + 7) / 8;
     for (int bi = 0; bi < 7; ++bi) {
         Group g;
-        g.mode = "cluster";
+        g.mode = near ? "cluster_near" : "cluster";
         g.bucket = BUCKET_NAMES[bi];
         size_t m = size_t(std::llround(targets[bi] * double(n)));
         m = std::max<size_t>(1, std::min<size_t>(size_t(n), m));
@@ -810,7 +817,20 @@ std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
         for (int qi = 0; qi < nq_per_bucket; ++qi) {
             Query q;
             q.bm.assign(nb, 0);
-            q.qvec = qi % nq_data;
+            int c = -1;
+            if (m < size_t(n) || near) {
+                do {
+                    c = int(rng() % uint64_t(cl.k));
+                } while (cl.members[c].empty());
+            }
+            if (near) {
+                const float* cq = cl.centroids.data() + size_t(c) * d;
+                const size_t off = g.query_data.size();
+                g.query_data.insert(g.query_data.end(), cq, cq + d);
+                q.qvec = int(off / size_t(d));
+            } else {
+                q.qvec = qi % nq_data;
+            }
             if (m == size_t(n)) {
                 q.ids.resize(n);
                 for (int id = 0; id < n; ++id) {
@@ -820,10 +840,6 @@ std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
                 g.qs.push_back(std::move(q));
                 continue;
             }
-            int c = 0;
-            do {
-                c = int(rng() % uint64_t(cl.k));
-            } while (cl.members[c].empty());
             const float* cen = cl.centroids.data() + size_t(c) * d;
             std::vector<std::pair<float, int>> order;
             order.reserve(cl.k);
@@ -965,9 +981,10 @@ int main(int argc, char** argv) {
         const bool want_tree = mode_enabled(args.modes, "sub") ||
                                mode_enabled(args.modes, "exact");
         const bool want_cluster = mode_enabled(args.modes, "cluster");
-        if (!want_random && !want_tree && !want_cluster) {
+        const bool want_cluster_near = mode_enabled(args.modes, "cluster_near");
+        if (!want_random && !want_tree && !want_cluster && !want_cluster_near) {
             throw std::runtime_error(
-                "--modes must include random, cluster, sub, or exact");
+                "--modes must include random, cluster, cluster_near, sub, or exact");
         }
         std::vector<float> base_raw = read_f32(fix + "/base.f32");
         std::vector<float> query_raw = read_f32(fix + "/test.f32");
@@ -990,17 +1007,24 @@ int main(int argc, char** argv) {
             groups = make_random_groups(n, nb, nq_data, args.nq_per_bucket,
                                         args.seed);
         }
-        if (want_cluster) {
+        if (want_cluster || want_cluster_near) {
             std::cerr << "[selectivity] k-means k=" << args.cluster_k << "\n";
             const double c0 = now_s();
             Clusters cl = build_clusters(base_raw.data(), n, d, args.cluster_k,
                                          args.seed);
             std::cerr << "[selectivity] kmeans_s=" << now_s() - c0 << "\n";
-            std::vector<Group> cluster_groups = make_cluster_groups(
-                cl, base_raw.data(), n, d, nq_data, args.nq_per_bucket,
-                args.seed);
-            groups.insert(groups.end(), cluster_groups.begin(),
-                          cluster_groups.end());
+            if (want_cluster) {
+                std::vector<Group> cg = make_cluster_groups(
+                    cl, base_raw.data(), n, d, nq_data, args.nq_per_bucket,
+                    args.seed, false);
+                groups.insert(groups.end(), cg.begin(), cg.end());
+            }
+            if (want_cluster_near) {
+                std::vector<Group> cg = make_cluster_groups(
+                    cl, base_raw.data(), n, d, nq_data, args.nq_per_bucket,
+                    args.seed, true);
+                groups.insert(groups.end(), cg.begin(), cg.end());
+            }
         }
         if (want_tree) {
             std::vector<Group> tree_groups =
@@ -1037,9 +1061,10 @@ int main(int argc, char** argv) {
         for (size_t gi = 0; gi < groups.size(); ++gi) {
             const Group& g = groups[gi];
             gts[gi].assign(g.qs.size() * K, -1);
+            const float* gq = group_query_base(g, query_raw.data());
             for (size_t qi = 0; qi < g.qs.size(); ++qi) {
                 exact_topk(g.qs[qi].bm.data(),
-                           query_raw.data() + size_t(g.qs[qi].qvec) * d,
+                           gq + size_t(g.qs[qi].qvec) * d,
                            base_raw.data(), n, d, gts[gi].data() + qi * K);
             }
         }
@@ -1049,7 +1074,8 @@ int main(int argc, char** argv) {
             if (groups[gi].mode == args.metric_mode) metric_mode_found = true;
             if (groups[gi].mode != args.metric_mode) continue;
             if (groups[gi].bucket != "0.01" && groups[gi].bucket != "1.0") continue;
-            self_check(base_raw, query_raw, n, d, groups[gi], gts[gi]);
+            const float* gq = group_query_base(groups[gi], query_raw.data());
+            self_check(base_raw, gq, n, d, groups[gi], gts[gi]);
         }
         if (!metric_mode_found) {
             throw std::runtime_error("--metric-mode not present in --modes");
@@ -1122,12 +1148,14 @@ int main(int argc, char** argv) {
             Group& g = groups[gi];
             const int nq = int(g.qs.size());
             const int half = nq / 2;
+            const float* gq = group_query_base(g, query_raw.data());
             std::cerr << "[selectivity] " << g.mode << " bucket=" << g.bucket
                       << " s=" << std::fixed << std::setprecision(5) << g.s_mean
                       << " nq=" << nq << "\n";
 
             std::vector<std::string> variants;
-            if (g.mode == "random" || g.mode == "cluster") {
+            if (g.mode == "random" || g.mode == "cluster" ||
+                g.mode == "cluster_near") {
                 variants = {"precomputed"};
             } else if (g.mode == "sub") {
                 variants = {"precomputed", "triehi", "peonline"};
@@ -1136,13 +1164,13 @@ int main(int argc, char** argv) {
             }
 
             for (const auto& variant : variants) {
-                const int ef = choose_ef(*index, g, tree, query_raw.data(),
+                const int ef = choose_ef(*index, g, tree, gq,
                                          nq_data, gts[gi], variant, args.max_ef,
                                          half);
-                EvalOut tune = eval_hnsw(*index, g, tree, query_raw.data(),
+                EvalOut tune = eval_hnsw(*index, g, tree, gq,
                                          nq_data, gts[gi], variant, ef, 0, half);
                 EvalOut e = median_eval([&] {
-                    return eval_hnsw(*index, g, tree, query_raw.data(),
+                    return eval_hnsw(*index, g, tree, gq,
                                      nq_data, gts[gi], variant, ef, half, nq);
                 }, args.repeats);
                 Row r = make_row(g.mode, g.bucket, g.s_mean, "hnsw", variant,
@@ -1151,7 +1179,7 @@ int main(int argc, char** argv) {
                 rows.push_back(r);
 
                 EvalOut ex = median_eval([&] {
-                    return eval_exact(g, tree, query_raw.data(), nq_data,
+                    return eval_exact(g, tree, gq, nq_data,
                                       base_raw.data(), n, d, gts[gi], variant,
                                       false, half, nq);
                 }, args.repeats);
@@ -1161,7 +1189,7 @@ int main(int argc, char** argv) {
 
                 if (variant == "precomputed") {
                     EvalOut el = median_eval([&] {
-                        return eval_exact(g, tree, query_raw.data(), nq_data,
+                        return eval_exact(g, tree, gq, nq_data,
                                           base_raw.data(), n, d, gts[gi],
                                           variant, true, half, nq);
                     }, args.repeats);
@@ -1195,7 +1223,7 @@ int main(int argc, char** argv) {
                     args.max_ef,
                     std::max(16, int(std::ceil(2.0 * K / g.s_mean))));
                 EvalOut p = median_eval([&] {
-                    return eval_post(*index, g, query_raw.data(), nq_data,
+                    return eval_post(*index, g, gq, nq_data,
                                      gts[gi], ef0, args.max_ef, half, nq);
                 }, args.repeats);
                 Row r = make_row(g.mode, g.bucket, g.s_mean, "post", "precomputed",
@@ -1206,7 +1234,7 @@ int main(int argc, char** argv) {
                 for (int fixed_ef : {16, 64, 256, 1024, 4096}) {
                     if (fixed_ef > args.max_ef) continue;
                     EvalOut fe = median_eval([&] {
-                        return eval_hnsw(*index, g, tree, query_raw.data(),
+                        return eval_hnsw(*index, g, tree, gq,
                                          nq_data, gts[gi], "precomputed",
                                          fixed_ef, half, nq);
                     }, args.repeats);
