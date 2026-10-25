@@ -39,6 +39,10 @@ def fmt(v, nd=1):
     return "—" if v is None else f"{v:,.{nd}f}"
 
 
+def fmt_attr(row, key, nd=2):
+    return "—" if not row else f"{float(row[key]):,.{nd}f}"
+
+
 def random_table(rows):
     buckets = sorted({r["bucket"] for r in rows if r["mode"] == "random"},
                      key=float)
@@ -78,8 +82,8 @@ def directory_table(rows):
         s = float((el or hn or (tri[0] if tri else {"s": 0}))["s"])
         print(
             f"| {mode} | {b} | {s:.4f} | "
-            f"{float(tri[0]['resolve_us']) if tri else '—':.2f} | "
-            f"{float(pe[0]['resolve_us']) if pe else '—':.2f} | "
+            f"{fmt_attr(tri[0] if tri else None, 'resolve_us')} | "
+            f"{fmt_attr(pe[0] if pe else None, 'resolve_us')} | "
             f"{fmt(float(el['qps']) if el else None)} | "
             f"{hn['ef'] if hn else '—'} | "
             f"{fmt(float(hn['qps']) if hn else None)} | "
