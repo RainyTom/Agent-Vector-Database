@@ -97,6 +97,10 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 
 1M 只跑随机谓词；结果见报告的 §5。100k 的主指标与 1M 不可直接比较。
 
+### 属性分区 flat 基线
+
+`--part-flat --parts 128 --part-seed 777`：用独立 k-means（k=128，seed 777）建立连续分区副本；查询时从可行 ID 标记非空分区，只扫描这些分区的连续向量并按全局位图过滤。构建 0.014 s、额外 49.2 MB；精确召回。只在 $s=0.3$ 比全局精确 list 快 15%，低/中选择率更慢。结果见报告 §6.2。
+
 ### PathSeer filter-aware 基线
 
 `--pathseer` 在 HNSW 之外再建 `IndexPathSeerFlat`（默认 M=16，M_exp=32，efc=200；索引约 76 MB，构建约 44 s），搜索用 `SearchParametersPathSeer`，`M_exp_search=16`。该 fork 在 `M_exp_search>16` 时触发缓冲区溢出，本实验未扫描更大的搜索度。cluster 完整曲线见报告 §6 与 `data/selectivity_cluster_pathseer_full_20261026.csv`。
