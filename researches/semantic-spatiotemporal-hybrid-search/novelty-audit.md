@@ -97,3 +97,28 @@ Quantum Range Query、ACORN、REPOSE、N-tree 的原系统不应硬改成同题�
 - TRSSQ：全文13页已核（定义为每轨一个代表片段 + 全局 top-k；RSSE = Bi-GRU + 点级 attention + interaction；候选预算 M；ExactS/PSS/RLS 验证；无端到端精确性保证；无时间/空间/语义约束）。
 - ETQ：已读定义 1–7、算法 1–2；实验未复现。STKST-I 仍需精读。
 - 本审计仍不是完整系统综述，不能据此声称“无人研究”。
+
+## 2026-10-25 查重更新（并行子代理）
+
+### 最接近的工作
+
+| # | 工作 | 索引单位 | 支持的约束 | 是否返回每轨迹 episode |
+|---|---|---|---|---|
+| 1 | Fast Subtrajectory Similarity Search in Road Networks (PVLDB 2020) | 位置倒排 `(轨迹, 符号位置)`；候选点 + WED 验证 | 时间区间约束是**后过滤**，或按出发时间排序加速 | 返回全部匹配子轨迹，不是每轨最佳 + top-k |
+| 2 | TRSSQ (ICDE 2024) / GTRSS (2025) | 轨迹级图；代表子轨迹在过滤/验证中计算 | 无时间窗/时长/空间 | **是**（每轨一个代表片段） |
+| 3 | S-RAILS (ICASSP 2015) | 物化**单段**（0.4–1 s）embedding + LSH/PLEB，DTW 重排 | 仅段时长；无绝对窗/空间/多段 episode | 否 |
+| 4 | RAILS (Interspeech 2012) | 帧级 embedding ANN + Hough 检测对角（相对偏移） | 查询时恢复顺序与相对时间；无跨度索引 | 否 |
+| 5 | LaSTR (arXiv 2026) | 物化单段 `(series,a,b)` + Conformer embedding | 仅最小段长 | 否（段级 top-K） |
+| 6 | STS-Join / STS-Index (SSDBM 2021) | 时间区间 B-tree + 段 MBR 四叉树 | 距离阈值 + 时长阈值；轨迹对 join | 否 |
+| 7 | SeRF (SIGMOD 2024) / UDG (2026) / RF-ANNS (KDD 2026) | 单向量 + 区间属性图 | 单对象的区间包含/重叠 | 否 |
+| 8 | QuT/ReTraTree (DMKD 2017) | 代表子轨迹层级索引 | 时间区间、LCSS | 否（聚类/离群） |
+
+### 判定
+
+- **未被覆盖**：把多段 episode 作为索引单位，并联合索引其跨度属性（绝对起止、时长、bbox、段数），返回每轨迹最佳 episode 与全局 top-k。检索式查重未发现同形工作，但这是**未发现**，不是证明。
+- **已被覆盖、不能主张**：
+  - “slack band” $j\in[u+i-1,v-m+i]$ 是 episode matching / SPRING 中已有的可行出现区间；只能作为实现剪枝与成本分析引用，不能作为新引理。
+  - “物化段 + ANN + DTW 重排”已有 S-RAILS/LaSTR；单纯把段换成 episode 不足以构成方法贡献。
+  - “时间约束后过滤/按时间排序倒排”已在 PVLDB 2020 明确讨论。
+- **最危险的审稿意见**：这是 “PVLDB 2020 / TRSSQ + 硬过滤 + 物化”。防御必须给出：(i) 一个选择性区间，使 filter-first 与 post-filter 都失效，并测到与两者在等召回下的差距；(ii) 无误判（no false dismissal）论证 + 候选膨胀/成本模型；(iii) 单段 ANN 无法在不漏解的情况下回答 episode 查询的证据。
+- **备选定位**：若加速比停在 1.5–3×，改为“何时物化 episode 目录优于精确扫描”的系统性刻画与负结果，而不是新索引。

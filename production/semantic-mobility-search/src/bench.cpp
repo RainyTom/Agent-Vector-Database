@@ -507,7 +507,7 @@ static float banded_dtw(const Query& q, const Point* p, int u, int v, float lamb
 }
 
 static float banded_dtw_proj(const float qp[MAXM][PD], int m, const float* base,
-                             int n, int skip) {
+                             int n, int skip, int kdim = PD) {
     const int g = n - m;
     if (g < 0) return INF;
     static thread_local std::vector<float> prev, cur;
@@ -517,7 +517,7 @@ static float banded_dtw_proj(const float qp[MAXM][PD], int m, const float* base,
     for (int off = 0; off <= g; ++off) {
         const float* v = base + (size_t)(off + skip) * PD;
         float d2 = 0.0f;
-        for (int c = 0; c < PD; ++c) { float t = qp[0][c] - v[c]; d2 += t * t; }
+        for (int c = 0; c < kdim; ++c) { float t = qp[0][c] - v[c]; d2 += t * t; }
         run += std::sqrt(d2);
         prev[off] = run;
     }
@@ -531,7 +531,7 @@ static float banded_dtw_proj(const float qp[MAXM][PD], int m, const float* base,
             if (best >= INF) continue;
             const float* v = base + (size_t)(off + skip) * PD;
             float d2 = 0.0f;
-            for (int c = 0; c < PD; ++c) { float t = qp[i - 1][c] - v[c]; d2 += t * t; }
+            for (int c = 0; c < kdim; ++c) { float t = qp[i - 1][c] - v[c]; d2 += t * t; }
             cur[off] = best + std::sqrt(d2);
         }
         std::swap(prev, cur);
@@ -572,7 +572,7 @@ static void run_catalog(const std::string& dir, const std::string& out,
                         const std::vector<int32_t>& len, const std::vector<Query>& qs,
                         const std::vector<std::vector<Hit>>& gt, int k, int topc,
                         float cap_hours, float cell_deg, int bucket_hours,
-                        bool rank_cat) {
+                        bool rank_cat, int coarse_n) {
     const float CAP = cap_hours * 3600.0f;
     const int64_t BUCKET = (int64_t)bucket_hours * 3600;
 
@@ -756,8 +756,11 @@ static void run_catalog(const std::string& dir, const std::string& out,
                         }
                 }
         };
-        size_t space_n = 0;
-        grid_collect(nullptr, &space_n);
+        // A global bbox would enumerate every cell; treat space as unselective.
+        bool space_global = (q.bbox[0] <= -89.0f && q.bbox[1] >= 89.0f &&
+                             q.bbox[2] <= -179.0f && q.bbox[3] >= 179.0f);
+        size_t space_n = space_global ? (size_t)-1 : 0;
+        if (!space_global) grid_collect(nullptr, &space_n);
         if (city_n <= dur_n && city_n <= time_n && city_n <= space_n) {
             for (int c = 0; c < ncity; ++c) {
                 if (!cinit[c]) continue;
@@ -816,6 +819,22 @@ static void run_catalog(const std::string& dir, const std::string& out,
             scored.push_back({approx, id});
         }
         filter_n = (long long)scored.size();
+        if (!rank_cat && coarse_n > 0 && (int)scored.size() > coarse_n) {
+            // Coarse rank on the first 16 projection dims, then refine with PD dims.
+            for (auto& c : scored) {
+                const Span& s = cat[c.id];
+                const float* base = proj_pts.data() + (size_t)(off[s.traj] + s.u) * PD;
+                c.d = banded_dtw_proj(qproj, q.m, base, s.n, 0, 16);
+            }
+            std::nth_element(scored.begin(), scored.begin() + coarse_n, scored.end(),
+                             [](const CScored& a, const CScored& b) { return a.d < b.d; });
+            scored.resize(coarse_n);
+            for (auto& c : scored) {
+                const Span& s = cat[c.id];
+                const float* base = proj_pts.data() + (size_t)(off[s.traj] + s.u) * PD;
+                c.d = banded_dtw_proj(qproj, q.m, base, s.n, 0, PD);
+            }
+        }
         size_t keep = std::min(scored.size(), (size_t)topc);
         if (keep < scored.size())
             std::nth_element(scored.begin(), scored.begin() + keep, scored.end(),
@@ -876,7 +895,7 @@ int main(int argc, char** argv) {
     std::string out = ".";
     int k = 10, topn = 300, cand_cap = 1250, threads = 8, limit = -1;
     int m_hnsw = 16, efc = 200;
-    int topc = 200, bucket_h = 24;
+    int topc = 200, bucket_h = 24, coarse_n = 0;
     std::string rank_mode = "proj";
     float cap_hours = 48.0f, cell_deg = 0.05f;
     float lambda = 0.0f;
@@ -898,6 +917,7 @@ int main(int argc, char** argv) {
         else if (a == "--cell") cell_deg = std::stof(next());
         else if (a == "--bucket-hours") bucket_h = std::stoi(next());
         else if (a == "--rank") rank_mode = next();
+        else if (a == "--coarse") coarse_n = std::stoi(next());
         else { std::cerr << "unknown arg " << a << "\n"; return 2; }
     }
 
@@ -992,7 +1012,7 @@ int main(int argc, char** argv) {
 
     if (mode == "catalog") {
         run_catalog(dir, out, pts, off, len, qs, gt, k, topc, cap_hours, cell_deg, bucket_h,
-                    rank_mode == "cat");
+                    rank_mode == "cat", coarse_n);
         return 0;
     }
 
