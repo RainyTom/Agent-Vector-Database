@@ -78,6 +78,7 @@ struct Args {
     int efc = 200;
     int max_ef = 16384;
     double policy_s = 0.06;
+    double tune_margin = 0.0;
     int repeats = 1;
     bool rebuild_index = false;
 };
@@ -99,6 +100,7 @@ Args parse(int argc, char** argv) {
         else if (f == "--pathseer-Mexp") a.pathseer_Mexp = std::stoi(next());
         else if (f == "--pathseer-Mexp-search") a.pathseer_Mexp_search = std::stoi(next());
         else if (f == "--pathseer-max-ef") a.pathseer_max_ef = std::stoi(next());
+        else if (f == "--tune-margin") a.tune_margin = std::stod(next());
         else if (f == "--nq-per-bucket") a.nq_per_bucket = std::stoi(next());
         else if (f == "--seed") a.seed = std::stoull(next());
         else if (f == "--M") a.M = std::stoi(next());
@@ -931,7 +933,8 @@ std::vector<Group> make_tree_groups(const Tree& tree, int n, int nb,
 
 int choose_ef(faiss::IndexHNSWFlat& index, const Group& g, const Tree& tree,
               const float* queries, int nq_data, const std::vector<int>& gt,
-              const std::string& variant, int max_ef, int tune_end) {
+              const std::string& variant, int max_ef, int tune_end,
+              double target) {
     const int efs[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192,
                        16384, 32768};
     int last = 16;
@@ -941,7 +944,7 @@ int choose_ef(faiss::IndexHNSWFlat& index, const Group& g, const Tree& tree,
                               ef, 0, tune_end);
         last = ef;
         double recall = double(e.hits) / double(tune_end * K);
-        if (recall >= TARGET_RECALL && e.violations == 0) return ef;
+        if (recall >= target && e.violations == 0) return ef;
     }
     return last;
 }
@@ -949,7 +952,8 @@ int choose_ef(faiss::IndexHNSWFlat& index, const Group& g, const Tree& tree,
 int choose_ef_pathseer(faiss::IndexPathSeer& index, const Group& g,
                        const Tree& tree, const float* queries, int nq_data,
                        const std::vector<int>& gt, const std::string& variant,
-                       int max_ef, int tune_end, int mexp_search) {
+                       int max_ef, int tune_end, int mexp_search,
+                       double target) {
     const int efs[] = {16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192,
                        16384};
     int last = 16;
@@ -959,7 +963,7 @@ int choose_ef_pathseer(faiss::IndexPathSeer& index, const Group& g,
                                   variant, ef, mexp_search, 0, tune_end);
         last = ef;
         double recall = double(e.hits) / double(tune_end * K);
-        if (recall >= TARGET_RECALL && e.violations == 0) return ef;
+        if (recall >= target && e.violations == 0) return ef;
     }
     return last;
 }
@@ -1164,9 +1168,9 @@ int main(int argc, char** argv) {
             }
 
             for (const auto& variant : variants) {
-                const int ef = choose_ef(*index, g, tree, gq,
-                                         nq_data, gts[gi], variant, args.max_ef,
-                                         half);
+                const int ef = choose_ef(
+                    *index, g, tree, gq, nq_data, gts[gi], variant,
+                    args.max_ef, half, TARGET_RECALL + args.tune_margin);
                 EvalOut tune = eval_hnsw(*index, g, tree, gq,
                                          nq_data, gts[gi], variant, ef, 0, half);
                 EvalOut e = median_eval([&] {
@@ -1202,7 +1206,8 @@ int main(int argc, char** argv) {
                     const int pef = choose_ef_pathseer(
                         *pidx, g, tree, query_raw.data(), nq_data, gts[gi],
                         variant, args.pathseer_max_ef, half,
-                        args.pathseer_Mexp_search);
+                        args.pathseer_Mexp_search,
+                        TARGET_RECALL + args.tune_margin);
                     EvalOut ptune = eval_pathseer(
                         *pidx, g, tree, query_raw.data(), nq_data, gts[gi],
                         variant, pef, args.pathseer_Mexp_search, 0, half);
@@ -1292,8 +1297,9 @@ int main(int argc, char** argv) {
                     best_qps = r.qps;
                     best_m = r.method;
                 }
-                if (r.method == "exact" && r.variant == "precomputed" && r.ok)
-                    exact_qps = r.qps;
+                if ((r.method == "exact" || r.method == "exact_list") &&
+                    r.variant == "precomputed" && r.ok)
+                    exact_qps = std::max(exact_qps, r.qps);
                 if (r.method == "hnsw" && r.variant == "precomputed" && r.ok) {
                     hnsw_qps = r.qps;
                     hnsw_ok = true;
@@ -1373,6 +1379,7 @@ int main(int argc, char** argv) {
               << ",\"k\":" << K << ",\"target_recall\":" << TARGET_RECALL
               << ",\"nq_per_bucket\":" << args.nq_per_bucket
               << ",\"policy_s\":" << args.policy_s
+              << ",\"tune_margin\":" << args.tune_margin
               << ",\"repeats\":" << args.repeats
               << ",\"metric_mode\":\"" << args.metric_mode << "\""
               << ",\"clusters\":" << args.cluster_k
