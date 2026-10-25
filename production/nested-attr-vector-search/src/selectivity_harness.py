@@ -103,6 +103,8 @@ def main() -> int:
     print(f"METRIC valid={1 if valid else 0}")
     print(f"METRIC target_recall={TARGET_RECALL}")
     print(f"ASI frontier={json.dumps(summary['frontier'])}")
+    print(f"ASI metric_mode={summary.get('metric_mode', 'random')} "
+          f"clusters={summary.get('clusters', 0)}")
     print(
         "ASI design=random+CCS-hierarchy predicates; exact/PASS/FAISS-BF-HNSW/post-filter; "
         "single-thread query"

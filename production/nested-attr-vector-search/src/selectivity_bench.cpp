@@ -25,6 +25,7 @@
 // geometric mean over random-selectivity buckets of the best QPS that reaches
 // Recall@10 >= 0.95 (exact scan included, so the frontier is always defined).
 
+#include <faiss/Clustering.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexHNSW.h>
 #include <faiss/impl/HNSW.h>
@@ -64,6 +65,8 @@ struct Args {
     std::string fixtures;
     std::string out_dir;
     std::string modes = "all";
+    std::string metric_mode = "random";
+    int cluster_k = 256;
     int nq_per_bucket = 200;
     uint64_t seed = 20261026;
     int M = 16;
@@ -85,6 +88,8 @@ Args parse(int argc, char** argv) {
         if (f == "--fixtures") a.fixtures = next();
         else if (f == "--out-dir") a.out_dir = next();
         else if (f == "--modes") a.modes = next();
+        else if (f == "--metric-mode") a.metric_mode = next();
+        else if (f == "--clusters") a.cluster_k = std::stoi(next());
         else if (f == "--nq-per-bucket") a.nq_per_bucket = std::stoi(next());
         else if (f == "--seed") a.seed = std::stoull(next());
         else if (f == "--M") a.M = std::stoi(next());
@@ -706,6 +711,112 @@ std::vector<Group> make_random_groups(int n, int nb, int nq_data,
     return groups;
 }
 
+struct Clusters {
+    int k = 0;
+    std::vector<int> assign;
+    std::vector<std::vector<int>> members;
+    std::vector<float> centroids;
+};
+
+Clusters build_clusters(const float* base, int n, int d, int k, uint64_t seed) {
+    faiss::ClusteringParameters cp;
+    cp.niter = 10;
+    cp.nredo = 1;
+    cp.seed = int(seed & 0x7fffffff);
+    cp.verbose = false;
+    faiss::IndexFlatL2 quantizer(d);
+    faiss::Clustering clus(d, k, cp);
+    clus.train(n, base, quantizer);
+    Clusters c;
+    c.k = k;
+    c.centroids = clus.centroids;
+    faiss::IndexFlatL2 ci(d);
+    ci.add(k, c.centroids.data());
+    std::vector<float> D(n);
+    std::vector<faiss::idx_t> I(n);
+    ci.search(n, base, 1, D.data(), I.data());
+    c.assign.resize(n);
+    c.members.resize(k);
+    for (int i = 0; i < n; ++i) {
+        int a = int(I[i]);
+        if (a < 0 || a >= k) throw std::runtime_error("bad cluster assignment");
+        c.assign[i] = a;
+        c.members[a].push_back(i);
+    }
+    return c;
+}
+
+std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
+                                       int n, int d, int nq_data,
+                                       int nq_per_bucket, uint64_t seed) {
+    static const double targets[7] = {0.001, 0.003, 0.01, 0.03,
+                                      0.1,   0.3,   1.0};
+    std::mt19937_64 rng(seed ^ 0x517cc1b727220a95ull);
+    std::vector<Group> groups;
+    const int nb = (n + 7) / 8;
+    for (int bi = 0; bi < 7; ++bi) {
+        Group g;
+        g.mode = "cluster";
+        g.bucket = BUCKET_NAMES[bi];
+        size_t m = size_t(std::llround(targets[bi] * double(n)));
+        m = std::max<size_t>(1, std::min<size_t>(size_t(n), m));
+        g.s_mean = double(m) / double(n);
+        g.qs.reserve(nq_per_bucket);
+        for (int qi = 0; qi < nq_per_bucket; ++qi) {
+            Query q;
+            q.bm.assign(nb, 0);
+            q.qvec = qi % nq_data;
+            if (m == size_t(n)) {
+                q.ids.resize(n);
+                for (int id = 0; id < n; ++id) {
+                    set_bit(q.bm.data(), id);
+                    q.ids[id] = id;
+                }
+                g.qs.push_back(std::move(q));
+                continue;
+            }
+            int c = 0;
+            do {
+                c = int(rng() % uint64_t(cl.k));
+            } while (cl.members[c].empty());
+            const float* cen = cl.centroids.data() + size_t(c) * d;
+            std::vector<std::pair<float, int>> order;
+            order.reserve(cl.k);
+            for (int j = 0; j < cl.k; ++j) {
+                order.push_back({l2sq(cen, cl.centroids.data() + size_t(j) * d, d), j});
+            }
+            std::sort(order.begin(), order.end());
+            std::vector<int> pool;
+            pool.reserve(std::min<size_t>(size_t(n), m + 2048));
+            for (const auto& [dist, j] : order) {
+                (void)dist;
+                pool.insert(pool.end(), cl.members[j].begin(), cl.members[j].end());
+                if (pool.size() >= m) break;
+            }
+            std::vector<Cand> cands;
+            cands.reserve(pool.size());
+            for (int id : pool) {
+                cands.push_back({l2sq(cen, base + size_t(id) * d, d), id});
+            }
+            if (cands.size() < m) {
+                throw std::runtime_error("cluster pool smaller than target");
+            }
+            std::nth_element(cands.begin(), cands.begin() + m, cands.end(),
+                             better);
+            q.ids.resize(m);
+            for (size_t i = 0; i < m; ++i) {
+                q.ids[i] = cands[i].id;
+                set_bit(q.bm.data(), q.ids[i]);
+            }
+            std::sort(q.ids.begin(), q.ids.end());
+            g.qs.push_back(std::move(q));
+        }
+        std::shuffle(g.qs.begin(), g.qs.end(), rng);
+        groups.push_back(std::move(g));
+    }
+    return groups;
+}
+
 std::vector<Group> make_tree_groups(const Tree& tree, int n, int nb,
                                     int nq_data, int nq_per_bucket,
                                     uint64_t seed) {
@@ -790,8 +901,10 @@ int main(int argc, char** argv) {
         const bool want_random = mode_enabled(args.modes, "random");
         const bool want_tree = mode_enabled(args.modes, "sub") ||
                                mode_enabled(args.modes, "exact");
-        if (!want_random && !want_tree) {
-            throw std::runtime_error("--modes must include random, sub, or exact");
+        const bool want_cluster = mode_enabled(args.modes, "cluster");
+        if (!want_random && !want_tree && !want_cluster) {
+            throw std::runtime_error(
+                "--modes must include random, cluster, sub, or exact");
         }
         std::vector<float> base_raw = read_f32(fix + "/base.f32");
         std::vector<float> query_raw = read_f32(fix + "/test.f32");
@@ -814,6 +927,18 @@ int main(int argc, char** argv) {
             groups = make_random_groups(n, nb, nq_data, args.nq_per_bucket,
                                         args.seed);
         }
+        if (want_cluster) {
+            std::cerr << "[selectivity] k-means k=" << args.cluster_k << "\n";
+            const double c0 = now_s();
+            Clusters cl = build_clusters(base_raw.data(), n, d, args.cluster_k,
+                                         args.seed);
+            std::cerr << "[selectivity] kmeans_s=" << now_s() - c0 << "\n";
+            std::vector<Group> cluster_groups = make_cluster_groups(
+                cl, base_raw.data(), n, d, nq_data, args.nq_per_bucket,
+                args.seed);
+            groups.insert(groups.end(), cluster_groups.begin(),
+                          cluster_groups.end());
+        }
         if (want_tree) {
             std::vector<Group> tree_groups =
                 make_tree_groups(tree, n, nb, nq_data, args.nq_per_bucket,
@@ -830,7 +955,7 @@ int main(int argc, char** argv) {
 
         // Validate every hierarchy bitmap against its resolved representation.
         for (const auto& g : groups) {
-            if (g.mode == "random") continue;
+            if (g.mode != "sub" && g.mode != "exact") continue;
             std::vector<uint8_t> scratch(nb);
             std::vector<int> stack;
             for (const auto& q : g.qs) {
@@ -856,10 +981,15 @@ int main(int argc, char** argv) {
             }
         }
         std::cerr << "[selectivity] oracle_s=" << now_s() - gt0 << "\n";
+        bool metric_mode_found = false;
         for (size_t gi = 0; gi < groups.size(); ++gi) {
-            if (groups[gi].mode != "random") continue;
+            if (groups[gi].mode == args.metric_mode) metric_mode_found = true;
+            if (groups[gi].mode != args.metric_mode) continue;
             if (groups[gi].bucket != "0.01" && groups[gi].bucket != "1.0") continue;
             self_check(base_raw, query_raw, n, d, groups[gi], gts[gi]);
+        }
+        if (!metric_mode_found) {
+            throw std::runtime_error("--metric-mode not present in --modes");
         }
         std::cerr << "[selectivity] self_check=PASS\n";
 
@@ -902,7 +1032,7 @@ int main(int argc, char** argv) {
                       << " nq=" << nq << "\n";
 
             std::vector<std::string> variants;
-            if (g.mode == "random") {
+            if (g.mode == "random" || g.mode == "cluster") {
                 variants = {"precomputed"};
             } else if (g.mode == "sub") {
                 variants = {"precomputed", "triehi", "peonline"};
@@ -1002,7 +1132,7 @@ int main(int argc, char** argv) {
             }
         }
 
-        // Frontier over random buckets: best gated QPS per bucket.
+        // Frontier over the metric mode's buckets: best gated QPS per bucket.
         double logsum = 0;
         int nvalid = 0;
         double crossover_s = -1;
@@ -1015,7 +1145,7 @@ int main(int argc, char** argv) {
             double exact_qps = -1, hnsw_qps = -1;
             bool hnsw_ok = false;
             for (const auto& r : rows) {
-                if (r.mode != "random" || r.bucket != b) continue;
+                if (r.mode != args.metric_mode || r.bucket != b) continue;
                 if (r.ok && r.method != "hnsw_fixed" && r.qps > best_qps) {
                     best_qps = r.qps;
                     best_m = r.method;
@@ -1050,7 +1180,7 @@ int main(int argc, char** argv) {
             const std::string b = BUCKET_NAMES[bi];
             double s_bucket = 0;
             for (const auto& r : rows) {
-                if (r.mode == "random" && r.bucket == b) {
+                if (r.mode == args.metric_mode && r.bucket == b) {
                     s_bucket = r.s;
                     break;
                 }
@@ -1059,7 +1189,7 @@ int main(int argc, char** argv) {
                 (s_bucket < args.policy_s) ? "exact_list" : "hnsw";
             double q = 0;
             for (const auto& r : rows) {
-                if (r.mode == "random" && r.bucket == b && r.ok &&
+                if (r.mode == args.metric_mode && r.bucket == b && r.ok &&
                     r.method == want && r.variant == "precomputed") {
                     q = std::max(q, r.qps);
                 }
@@ -1096,6 +1226,8 @@ int main(int argc, char** argv) {
               << ",\"nq_per_bucket\":" << args.nq_per_bucket
               << ",\"policy_s\":" << args.policy_s
               << ",\"repeats\":" << args.repeats
+              << ",\"metric_mode\":\"" << args.metric_mode << "\""
+              << ",\"clusters\":" << args.cluster_k
               << ",\"seed\":" << args.seed << ",\"valid\":"
               << (valid ? "true" : "false") << ",\"frontier\":[";
             for (int bi = 0; bi < 7; ++bi) {
