@@ -1,6 +1,6 @@
 # 待验证研究问题
 
-> 2026-10-25 新候选：[文件目录约束下的跨集合阈值向量连接](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)，当前已定义背景和输出语义，未立方法主张、未运行实验。它与下方保留的单查询层级 top-k 方向不同。
+> 2026-10-25 新候选：[共享虚拟目录 DAG 中的跨集合阈值向量连接](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)，已定义背景、输出语义及四种精确基线，未立方法主张、未运行实验。它与下方保留的单查询层级 top-k 方向不同。
 
 > 最新前缀方向[alphaXiv审计](../nested-attr-vector-search/alphaxiv-novelty-audit.md)：D0/D1/D3/D5停止独立立项，D2/RQ-P具体方案与D4暂停，原MVP不实施；没有通过新颖性门槛的六方向方案。此决定仅针对前缀扩展，不取消本文件其他vector join课题。
 

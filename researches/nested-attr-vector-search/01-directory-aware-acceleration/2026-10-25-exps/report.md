@@ -9,3 +9,7 @@
 形成 [Problem Formulation](../problem-formulation.md)：以代码仓库文件目录树为背景，定义静态共用目录树、单路径对象、cross/L2/threshold/exact pair 输出及祖先可比路径过滤；明确同路径、内部节点、兄弟节点、阈值等号及去重边界。原 D0 按需范围编译停止独立立项的决定不变。
 
 本轮**没有算法实现或实验**，没有性能、召回或新颖性验证数字。网页检索与当前本地文献不足以排除同构的 filtered/hierarchical vector join；待补查项见总检索日志。
+
+## 同日问题修订
+
+将原单父文件目录树设定改为共享虚拟目录的静态 DAG。一个逻辑目录可由多个上级入口访问，对象按逻辑 ID 去重；[修订后的 Problem Formulation](../problem-formulation.md)给出可达性谓词、精确跨集合阈值 pair 输出，以及四种精确基线及其共同的合格对象集合公式。原树模型为历史草案，不再作为当前问题定义。本次修订仍未执行实验。
