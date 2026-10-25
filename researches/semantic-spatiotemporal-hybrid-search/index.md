@@ -4,6 +4,8 @@
 
 > **状态：新主线，探索阶段。** 2026-10-22 关闭[层级属性检索](../nested-attr-vector-search/index.md)，暂停[前缀包含](../containment-filtered-vector-search/index.md)与[vector join](../vector-join/roadmap.md)。本方向以高维向量检索为主线，研究带真实语义的时空属性（地点、轨迹、时间戳）如何改变混合搜索的问题定义、索引与执行。
 
+> 交接入口：[HANDOFF.md](HANDOFF.md)（结论、产物、复现、坑与下一步）。
+
 ## 新颖性状态
 
 **当前更接近“constrained semantic TRSSQ”，不能再称为尚无输出前序的新问题。** [新颖性审计](novelty-audit.md)已确认：TRSSQ（ICDE 2024）定义“每条轨迹的最佳连续子轨迹 → 全局 top-k”，并用 RSSE（Bi-GRU + 点级 attention）做学习型过滤，全文已核；GTRSS 只是其图索引后继。TISIS* 覆盖 POI embedding 序列匹配，ST2Vec 覆盖时间感知完整轨迹相似度，Quantum Range Query 覆盖轨迹段上的时空混合范围查询。TRSSQ 已核为无时间/空间/语义约束，因此尚未核到的仍是“稠密语义序列 + 绝对时间窗/持续时间 + 空间硬约束”的同一实现。下一步必须对比 `hard filter → TRSSQ`；只有硬约束导致新的算法结构或显著收益，独立贡献才成立。
