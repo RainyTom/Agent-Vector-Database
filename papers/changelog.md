@@ -141,3 +141,10 @@
 - 新增 survey→REPOSE、survey→ST2Vec、GTRSS→REPOSE 三条有正文证据的关系。总索引现为 **28篇/25关系**；本轮未运行性能实验，不作新颖性确认。
 - 补核 GTRSS 的直接前序 TRSSQ（ICDE 2024, DOI:10.1109/ICDE60146.2024.00335）：Crossref/OpenAlex 书目一致，OpenAlex 摘要被截断，方法细节仅来自 GTRSS §I–II 转述（RSSE = GRU 点级匹配 + 轨迹编码对齐 + filter-validate）；IEEE/CSDL 付费墙与 202 挑战页导致全文未获取。按全文缺失处理，**不计入论文索引**，证据存 `researches/semantic-spatiotemporal-hybrid-search/evidence/trssq-2026-10-23.md`；28篇/25关系不变。
 - 用户提供 TRSSQ 13 页 IEEE 正式版 PDF 后**转正**：新增 `trajectory-search/10.1109-icde60146.2024.00335-trssq/`（PDF + 日期化元数据 + 全文证据），全文核对度量 DTW/EDR/ERP/LCSS、RSSE 结构与 top-M 候选+ExactS 验证、无端到端精确保证、无时间/空间/语义约束。新增 GTRSS→TRSSQ、TRSSQ→REPOSE 两条原文关系。索引现为 **29篇/27关系**；上述“不计入”条目仅保留历史，不再适用。
+
+## 2026-10-20 完整属性集 equality / containment 能力核查
+
+- 用户明确equality为Lx=Q、containment为Q⊆Lx；新增containment研究目录当日报告与六方法证据。
+- 修订LSSG、ACORN、PathSeer、ELI、RWalks五条既有索引的支持层次；LSSG补已核官方代码入口。UNG保留作者产物证据候选，不补造未取得的全文记录；论文总数/关系数不变。
+- 明确UNG general/equality分构建模式；RWalks名为Equality的公式只要求包含；ACORN/PathSeer的双集合能力是通用predicate实例化，ELI具体equality扩展实现待核。
+- 旧Exact/Subtree与完整集合谓词不同，帕累托计划追加语义校正及核心基线优先级。无新性能实验。

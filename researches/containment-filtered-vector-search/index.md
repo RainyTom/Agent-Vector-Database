@@ -2,6 +2,8 @@
 
 > **状态：2026-10-22 暂停。** 前缀/目录方向的新颖性审计已撤销原六方向立项；本文件保留问题定义与逐篇证据。除非出现新的可检验差异，不再启动新实验。新主线见[语义时空混合搜索](../semantic-spatiotemporal-hybrid-search/index.md)。
 
+2026-10-20语义确认：用户当前要求完整属性集等价 `Lx=Q` 与包含 `Q⊆Lx`。最新[双语义文献核查](2026-10-20-exps/report.md)区分LSSG/UNG原生支持、ACORN/PathSeer通用谓词实例化与ELI扩展。下文保留单路径prefix方向历史定义，不能替代本轮集合任务。
+
 更新日期：2026-10-19（Asia/Shanghai）。
 
 当前规范入口：[问题定义（Introduction / Definitions / Naive Solutions）](problem-definition.md)、[创新性复核与立项条件](novelty-analysis.md)。以下逐篇笔记和早期集合模型作为证据与背景；研究主张以本轮复核为准。

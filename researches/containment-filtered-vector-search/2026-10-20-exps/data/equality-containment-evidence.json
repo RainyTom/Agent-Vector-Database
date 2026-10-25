@@ -1,0 +1,168 @@
+{
+  "date": "2026-10-20",
+  "confirmed_predicates": {
+    "equality": "Lx = Q",
+    "containment": "Q subseteq Lx"
+  },
+  "classification": "B, filtered top-k ANN; transferable to vector join, not itself a join",
+  "items": [
+    {
+      "method": "LSSG",
+      "id": "arxiv:2609.15058",
+      "support": "paper_explicit_same_index",
+      "equality": "Lx = Q",
+      "containment": "Q subseteq Lx",
+      "sections": [
+        "2.1: filter definitions",
+        "3.1: equal-label top tier",
+        "3.4: in-filtering",
+        "6.3: both workloads"
+      ],
+      "sources": [
+        "https://arxiv.org/html/2609.15058v1",
+        "https://github.com/nju-websoft/LSSG"
+      ],
+      "status": "2026-09 preprint; repo claims SIGMOD2027, formal DOI unverified",
+      "title": "Fast Label-Filtering Approximate Nearest Neighbor Search via Progressive Label Set Stratification",
+      "authors": [
+        "Ziqi Wang",
+        "Jingzhe Zhang",
+        "Shuo Shen",
+        "Wei Hu"
+      ],
+      "year": 2026,
+      "venue": "arXiv; 注释声明 SIGMOD 2027 accepted，正式出版/DOI 未核实",
+      "version_status": "2026-09-14 预印本 v1；接收声明不等于正式刊年"
+    },
+    {
+      "method": "UNG",
+      "id": "doi:10.1145/3698822",
+      "title": "Navigating Labels and Vectors: A Unified Approach to Filtered Approximate Nearest Neighbor Search",
+      "authors": [
+        "Yuzheng Cai",
+        "Jiayang Shi",
+        "Yizhuo Chen",
+        "Weiguo Zheng"
+      ],
+      "year": 2024,
+      "conference_year": 2025,
+      "venue": "PACMMOD 2(6), Article 246 / SIGMOD2025",
+      "support": "official_author_artifact_both_modes",
+      "index_caveat": "README distinguishes general/equality builds; no claim a single general index safely serves equality unchanged",
+      "equality": "find_exact_match in get_entry_points; equality build has no LNG/cross-group edges",
+      "containment": "get_min_super_sets in get_entry_points; general build has directed cross-group edges",
+      "sources": [
+        "https://doi.org/10.1145/3698822",
+        "https://github.com/YZ-Cai/Unified-Navigating-Graph"
+      ],
+      "local_evidence": [
+        "researches/containment-filtered-vector-search/evidence/ung-readme-2026-10-19.md",
+        "researches/containment-filtered-vector-search/evidence/ung-uni-nav-graph-2026-10-19.cpp"
+      ],
+      "full_paper": "not acquired; author README/poster/core code checked"
+    },
+    {
+      "method": "ACORN",
+      "id": "doi:10.1145/3654923",
+      "support": "predicate_agnostic_expressibility",
+      "sections": [
+        "3.1: arbitrary p_q",
+        "5: predicate subgraph traversal"
+      ],
+      "sources": [
+        "https://arxiv.org/html/2403.04871v1"
+      ],
+      "researcher_derivation": "instantiate predicate by full set equality or query subset; not a claim original paper benchmarks both label-set modes",
+      "title": "ACORN: Performant and Predicate-Agnostic Search Over Vector Embeddings and Structured Data",
+      "authors": [
+        "Liana Patel",
+        "Peter Kraft",
+        "Carlos Guestrin",
+        "Matei Zaharia"
+      ],
+      "year": 2024,
+      "venue": "Proceedings of the ACM on Management of Data 2(3), Article 120 (2024)",
+      "version_status": "正式 DOI 已核实；分析 arXiv v1，正式版差异未逐项比对"
+    },
+    {
+      "method": "PathSeer",
+      "id": "doi:10.1145/3802098",
+      "support": "predicate_agnostic_expressibility",
+      "sections": [
+        "Introduction PDF p.2: attributes independent; any predicate",
+        "filtered ANN definition and hybrid neighbor handling"
+      ],
+      "sources": [
+        "https://doi.org/10.1145/3802098",
+        "https://github.com/lizhiyuell/PathSeer"
+      ],
+      "local_evidence": [
+        "papers/filtered-ann/10.1145-3802098-pathseer/paper.md"
+      ],
+      "researcher_derivation": "both via exact callback or bitmap; charge predicate construction; no claim both were separately benchmarked",
+      "title": "PathSeer: Adaptive Neighbor Handling for Efficient Filtered ANN Search",
+      "authors": [
+        "Zhiyue Li",
+        "Guangyan Zhang",
+        "Ruochun Jin",
+        "Bojun Li",
+        "Xiaoguang Ren",
+        "Wenjing Yang"
+      ],
+      "year": 2026,
+      "venue": "PACMMOD 4(3), Article221,221:1–221:27 (2026); SIGMOD2026",
+      "version_status": "原论文27页镜像，DOI/作者/刊头核同；PDF标June2026，Crossref published2026-05-18分别记；独立arXiv未核"
+    },
+    {
+      "method": "ELI",
+      "id": "doi:10.14778/3785297.3785304",
+      "support": "containment_main_problem_equality_extension_claim",
+      "sections": [
+        "2.1 S(Lq)",
+        "2.1 Remark: equality variant; appendix pointer"
+      ],
+      "sources": [
+        "https://arxiv.org/html/2505.03212v2"
+      ],
+      "caveat": "equality extension actual code and same-index deployment not reverified; no native-single-index claim",
+      "title": "Elastic Index Selection for Label-Hybrid AKNN Search",
+      "authors": [
+        "Mingyu Yang",
+        "Wenxuan Xia",
+        "Wentao Li",
+        "Raymond Chi-Wing Wong",
+        "Wei Wang"
+      ],
+      "year": 2025,
+      "venue": "Proceedings of the VLDB Endowment 19(4):617–630 (2025); VLDB 2026",
+      "version_status": "正式首页与 Crossref print=2025-12-01；online=2026-03-18 分开记录；相关附录阅读 arXiv v2 (2025-12-11)"
+    },
+    {
+      "method": "RWalks",
+      "id": "doi:10.1145/3725349",
+      "support": "do_not_infer_full_set_equality_from_word_equality",
+      "sections": [
+        "2.1 Definition 2 PDF p.3"
+      ],
+      "sources": [
+        "https://raw.githubusercontent.com/AnasAito/rwalks-reproduce-v2/master/RWalks_paper_public.pdf"
+      ],
+      "local_evidence": [
+        "papers/filtered-ann/10.1145-3725349-rwalks/paper.md"
+      ],
+      "caveat": "printed equality/AND both require all query 1s in object, i.e. subset; full set equality needs separate predicate/absence handling and validation",
+      "title": "RWalks: Random Walks as Attribute Diffusers for Filtered Vector Search",
+      "authors": [
+        "Anas Ait Aomar",
+        "Karima Echihabi",
+        "Marco Arnaboldi",
+        "Ioannis Alagiannis",
+        "Damien Hilloulin",
+        "Manal Cherkaoui"
+      ],
+      "year": 2025,
+      "venue": "Proceedings of the ACM on Management of Data 3(3), Article 212 (2025); SIGMOD 2025",
+      "version_status": "作者公开仓库 26 页稿，首页正式 DOI，第三作者拼写与出版元数据有差异；与最终版差异未逐项核对"
+    }
+  ]
+}

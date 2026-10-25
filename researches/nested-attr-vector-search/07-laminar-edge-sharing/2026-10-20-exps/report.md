@@ -211,3 +211,35 @@
 **数据边界。** manifest确认400/300/300原始行号互斥，但来自此前调参的历史1000条查询，只是本轮B1留出划分。15次重复不增加查询独立样本。B1只在本次LES上达标，不保证阈值。未有逐查询计数，不能把邻居枚举/图结构当作已证实瓶颈；本地未取得预测ids，recall仍依据远端summary，需远端哈希及逐查询摘要补齐。
 
 **决定与下一步。** 收束当前性能优化，不启动A1/联合构图/更多ef搜索；将共享表示收益与搜索代价整理为限制分析。远端仅需补回ef72/1.21×来源、配置冻结时间和结果哈希，不为追认旧结论继续扫test。若后续重启，先做一次有界、绑核预热的计数诊断。执行规格见 [收束交接](experiments/les-closeout-ee90400.md)；论文、基准记录和导航已同步勘误，既有CSV/JSON保留。
+
+## 14. 最终归档验收：eb13a26（未运行新实验）
+
+研究侧已快进同步eb13a26，核查归档manifest及PROVENANCE。通过Python标准库离线检查：runs/per-query/buckets三份CSV的字节数及SHA256全部匹配；225份入库日志的SHA256全部匹配；225个(block,config)唯一、每配置15轮；4,500条block01逐查询记录的hits与每轮汇总一致，45条分桶汇总的查询数与recall可由逐查询表重算。每配置15轮ids哈希一致，报告的违规/重复/空结果均为0，每轮填满3,000槽。
+
+最大桶（148条）LES policy r95 recall=0.939189、M12 fixed40=0.941216，均未达到该桶r95；聚合目标不能解释为逐桶保证。post-hoc ef72及1.21×的来源已明确隔离，后者来自不同recall的LES ef28与M12 ef80，不进入冻结主表。配置来源记录见 [PROVENANCE.md](experiments/b1/PROVENANCE.md)。
+
+验收范围为归档完整性与摘要内部一致性；ids/timings、索引和二进制留在远端，本地没有重新计算距离或从预测ids复核过滤资格。哈希提供后续核对依据，不等于本地已完成二进制复验。
+
+**本轮收束完成。** 保留已验证机制、失败案例及限制分析，不再新增实验任务；A1、联合构图和新ef扫描均未启动。只有后续明确重启时，才采用收束文档中的有界诊断协议。
+
+## 15. 方案合理性与SOTA判断（研究侧评估，无新实验）
+
+**结论。** LES作为Subtree filtered ANN的共享邻接表示具有合理性，作为已达到SOTA的搜索方法则证据不成立。activation区间编码的是端点资格，不是每作用域最佳导航邻接；共享存储可以成立而吞吐优势不成立。varint的无损压缩及E0执行优化已经验证；它们不能单独证明新算法新颖性。B1仅优化聚合目标，最大桶不达r95且其他方法策略有失败案例，不提供逐桶或泛化召回保证。
+
+**性能依据。** 相近空间下，M12在0.958333同召回点比LES fixed14快1.242×；r98缺少冻结且达标的M12对照，不能宣称被其全档支配，也不能反向认定LES为r98最优。M16用更多空间在r98提供更高吞吐。0.6%的M12空间差及单seed、历史查询重划不足以建立稳健Pareto优势；Exact/antichain、真实层级与1M规模仍未完成。
+
+**外部核对范围。** 本轮仅做定向检索与原始摘要复核，不是全领域最新SOTA普查。ACORN原始摘要明确其研究predicate-agnostic hybrid search与predicate subgraph traversal：[arXiv:2403.04871](https://arxiv.org/abs/2403.04871)。统一FANNS基准摘要强调数据依赖参数、标准化过滤与调参对可比性的影响：[arXiv:2509.07789](https://arxiv.org/abs/2509.07789)。本地未完成这些代表性方法在相同语义/预算/调参协议下的充分评测，不能使用SOTA称谓。
+
+**当前定位。** 层级过滤ANN中的共享邻接压缩原型，以及表示收益、搜索代价和适用边界的实验分析；不是vector join SOTA，也不是已证明的filtered ANN SOTA。新颖性仍未充分排查，限制分析的研究价值不等于已达到新方法论文的贡献门槛。不重启性能路线。
+
+## 16. 用户明确重启：以帕累托前沿为目标的参数扫描
+
+**目标修订。** 用户明确本项目SOTA判据为效率与recall trade-off上的前沿贡献，不要求所有阈值全面领先。因此重新开启系统参数扫描；此前收束是历史状态，不能据少量r95/r98点终止曲线比较。前沿声明仍需明确比较集合、预算和负载。
+
+**本轮已完成。** 新增参数化 `production/nested-attr-vector-search/src/plot_pareto_frontier.py`，将225条冻结B1记录转为15个实测点，按54/64MB预算计算方法前沿、联合前沿和补充三目标标记，输出PNG/PDF及points/frontiers CSV。空间采用归档索引字节加policy文件；未重测RSS。旧post-hoc点和其他会话数据不混入。
+
+**探索结果。** 54MB下联合前沿为M12 fixed40、fixed48、policy r98与LES policy r98；64MB下联合前沿来自M12/M16，现有LES点均被支配。54MB的LES高recall点受M12最高冻结recall仅0.979的覆盖缺口影响，不能据此宣称充分调参后的优势。失败的r95策略按真实recall进入曲线，而不伪装为r95达标点。
+
+**验证。** 运行了旧数据适配与通用CSV两种入口；检查二维支配、严格相等点保留、预算过滤和三目标空间取舍；检查图像布局。竖线为计时IQR，折线只连接离散实测非支配点，不表示中间点已测。图：[PNG](../figures/pareto_b1_observed_20261020.png)、[PDF](../figures/pareto_b1_observed_20261020.pdf)；数据：[points](../figures/pareto_b1_observed_20261020.points.csv)、[frontiers](../figures/pareto_b1_observed_20261020.frontiers.csv)。
+
+**待远端执行。** [扫描规划](experiments/pareto-sweep-plan.md)定义M8/12/16/24/32、efC与查询ef、fixed/adaptive/B1、布局/桶裁剪的分阶段扫描；54/64/80/128MB预算，新查询calibration/validation/test、前沿邻域精化、统一绑核预热15block及多seed验证。随后扩展Filtered-HNSW、ACORN、PathSeer、PFS的公平参数曲线。未运行新性能实验，未启动A1/联合构图。

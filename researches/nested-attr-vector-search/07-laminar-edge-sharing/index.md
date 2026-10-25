@@ -148,6 +148,8 @@ SIFT 25k/50k/100k、MNIST 25k、Fashion-MNIST 25k（合成 1365 节点层级，�
 
 ## 5. 导航
 
+当前执行入口（用户明确重启）：[参数扫描与帕累托前沿规划](2026-10-20-exps/experiments/pareto-sweep-plan.md)。目标是在明确资源预算和recall区间形成前沿贡献；已生成 [现有B1配置探索图](figures/pareto_b1_observed_20261020.png)，参数覆盖未完成。下方收束决定为上一轮历史状态。
+
 最新决定：[ee90400回传复核与路线收束](2026-10-20-exps/experiments/les-closeout-ee90400.md)。停止本轮新增优化，保留E0/varint/B1与负结果，先补回缺失证据并整理限制；A1未启动。后列交接为历史计划。
 
 当前下一轮：[同空间证据补齐与作用域 ef 预算策略](2026-10-20-exps/experiments/remote-round2-budget-policy.md)。E0已由远端实现，S1全量列表字典关闭；M12尚缺已入库的配对逐轮记录，计时边界仍需统一。优先验证B1预算表，anchor按诊断条件启动。
