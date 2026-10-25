@@ -1,4 +1,4 @@
-# 选择率对属性过滤索引效率的影响（SIFT100k + 1M）
+# 选择率对属性过滤索引效率的影响（SIFT100k/1M，随机与相关谓词）
 
 日期：2026-10-26。方向：`01-directory-aware-acceleration` 的测量诊断，不是对 2026-10-19 停止独立立项结论的翻案。代码：`production/nested-attr-vector-search/src/{selectivity_bench.cpp,selectivity_harness.py,analyze_selectivity.py,plot_selectivity.py,plot_scale_compare.py,export_sift1m.py}`。协议：[`experiments/selectivity-benchmark.md`](experiments/selectivity-benchmark.md)；FAISS 接口证据：[`experiments/faiss-attribute-filter-support.md`](experiments/faiss-attribute-filter-support.md)。
 
@@ -11,6 +11,7 @@
 5. **表示方式本身就是选择率相关成本。** 同一可行集，按 posting list 枚举比按 12.5 KB 位图枚举快 2.5×（$s=0.001$）、1.9×（$s=0.01$）；差异主要来自冷内存随机 gather，而不是 popcount。
 6. **目录解析成本与选择率近似无关**：TrieHI 式 inclusive 位图拷贝 0.7–1.6 µs；PE-Online 式子树的逐节点 OR 从 4 µs 增长到 933 µs（$s=0.3$），在高选择率下成为端到端主项。低选择率下解析只占精确扫描的 10–30%。
 7. **交叉点随规模左移。** SIFT1M 上交叉点约 $s^\*\approx0.0194$（100k 为 0.0605）。精确扫描从 100k 到 1M 慢 10.7–13.7×，HNSW 在 $s=1$ 只慢 3.6×；更大规模应更早切到精确枚举。1M 的 ef 前因子从 23.4 增到 50.6，指数仍约 $-0.67$。
+8. **属性-几何相关性会改变甚至消除交叉点。** 紧凑可行簇 + 独立查询时，HNSW 在 $s\le0.3$ 即使 `ef=32768` 也只有 50–87% 召回；精确扫描一直赢到 $s=0.3$，只有 $s=1$ 时 HNSW 胜出。随机谓词的 0.06 交叉点不能直接外推到相关属性。
 
 ## 2. 实验设置
 
@@ -18,12 +19,12 @@
 |---|---|
 | 向量 | SIFT100k，`n=100000`，`d=128`，L2，1000 条真实查询向量 |
 | 层级 | 1365 节点 CCS 形状树，1024 叶，每对象最多 5 个标签；30146 个对象无标签；合成校准，非真实 CCS |
-| 谓词 | `random`：每查询均匀抽 `round(s·n)` 个 ID，$s\in\{0.001,0.003,0.01,0.03,0.1,0.3,1.0\}$；`sub`/`exact`：树节点的 `Inc(v)`/`Local(v)`，按实际 $s$ 分桶 |
+| 谓词 | `random`：每查询均匀抽 `round(s·n)` 个 ID；`cluster`：k-means（k=256）随机簇中心，取距中心最近的 $m=s·n$ 个点，查询独立；`sub`/`exact`：树节点的 `Inc(v)`/`Local(v)`；$s\in\{0.001,0.003,0.01,0.03,0.1,0.3,1.0\}$ |
 | 查询数 | 每桶最多 200 条谓词，随机打乱后前 100 调参、后 100 评估；层级桶不足 200 时用全部 |
 | 方法 | `exact`（位图枚举）、`exact_list`（posting list + prefetch 8）、`hnsw`（FAISS `IndexHNSWFlat` M=16, efc=200 + bitmap selector）、`post`（全局 top-ef 后筛） |
 | ANN 参数 | `hnsw` 的 `ef` 在调参半集上取满足 Recall@10 ≥ 0.95 的最小值；`post` 初始 `ef=max(16,ceil(2k/s))`，不足时 ×4，上限 16384 |
 | 硬件/线程 | i5-12600KF，WSL2，单线程查询，`OMP_NUM_THREADS=1`；索引构建一次并缓存 |
-| 主指标 | `gmean_qps_r95`：七个 random 桶的 per-bucket 最优 gated QPS 的几何平均 |
+| 主指标 | `gmean_qps_r95`：`--metric-mode` 选定的七个桶的 per-bucket 最优 gated QPS 的几何平均（random/cluster 分别成段） |
 
 **Oracle 与校验。** `exact_topk` 与 `faiss::IndexFlat + IDSelectorBitmap` 在 $s=0.01$ 和 $s=1$ 上逐 ID 对比通过；所有 `exact`/`exact_list` 行的评估召回必须 ≥0.999，否则 `valid=false`；selector 方法检查重复/不可行 ID；tune/eval 分半且按组随机打乱（先前顺序分半会让 SIFT 前 100 条查询偏易，导致 $s=1$ 的评估召回被人为压低 2.3pp）。
 
@@ -128,17 +129,42 @@
 
 **测量注意。** 每行评估半集跑 3 次、取总时间中位数的重复；$s=0.001$ 的 exact list 在单次评估下曾掉到 3.8k QPS，三次重复后为 17.5k–18.0k。$s=0.001/0.01$ 的 HNSW 调参 ef 在评估半集分别只有 94.4%/93.2%，没有 gated 点；表中用固定 ef 网格里最小的 gated 点（$s=0.01$ 的 1024）替代，$s=0.001$ 的 8192 是下一格、未直接测到。$s=0.03$ 的 95.1% 贴线，重复运行 95.1% 仍通过，但该桶对采样敏感。1M 的 gmean 与 100k 不可直接比较，只比较趋势。
 
-## 6. 局限
+## 6. 属性-几何相关性的影响（cluster 模式）
+
+随机谓词与几何独立，是选择率轴的干净对照，但也可能是**对 HNSW 最容易**的情况。为分离“选择率”与“相关性”，新增 `cluster` 模式：在 SIFT100k 上做 k-means（k=256），随机选一个簇中心，可行集取距该中心最近的 $m=s\cdot n$ 个点（可跨相邻簇）；查询向量独立取自 `test.f32`，不偏向可行区域。这样可行集在向量空间紧凑，但查询可能在远处。
+
+![随机 vs 相关谓词](figures/selectivity_correlation_compare.svg)
+
+| s | exact list QPS | HNSW ef=16384 QPS（召回） | HNSW ef=32768 召回（50 条探针） |
+|---:|---:|---:|---:|
+| 0.001 | **349,188** | 10.5（43.2%） | 49.6% |
+| 0.003 | **83,548** | 10.6（50.9%） | 76.8% |
+| 0.01 | **22,933** | 10.6（51.1%） | 67.6% |
+| 0.03 | **6,843** | 10.5（51.3%） | 77.6% |
+| 0.1 | **2,161** | 10.5（58.1%） | 62.8% |
+| 0.3 | **772** | 10.6（77.2%） | 87.2% |
+| 1.0 | 331 | **17,188（95.4%，ef=32）** | — |
+
+- **HNSW 在 $s\le0.3$ 从未达到 r95**，即使把 ef 从 16,384 提到 32,768；QPS 从 10.5 掉到 2.9（p50 约 340 ms）。精确扫描在 $s=0.3$ 仍有 772 QPS，快约 270×。
+- **交叉点实质消失**：汇总 `crossover_s=0.5` 只表示首个 HNSW 胜出桶是 $s=1.0$；在 $0<s<1$ 的过滤查询上，HNSW 没有可用工作点。
+- **主指标**：cluster `gmean_qps_r95=14,447`，低于 random 100k 的 22,426；差异来自 random 在 $s=0.1/0.3$ 可用 HNSW，而 cluster 只能用精确扫描。
+- **固定策略失效**：`s<0.06` exact、否则 HNSW 的规则在 cluster 上 `gmean_policy=0`，因为 $s=0.1/0.3$ 选中的 HNSW 不满足 r95。
+
+**机制。** FAISS HNSW 的 selector 只过滤结果堆，不剪枝遍历；`efSearch` 预算按全部候选计数。当可行簇远离查询时，搜索先在不可行区域消耗预算，直到进入可行簇才可能收集到 k 个结果。把 ef 拉大只能线性扩大全局候选池，无法像属性分区索引那样直接跳到可行区域。因此“选择率 $s$ 决定一切”不成立：**属性与向量的相关性决定了 HNSW 是否可达**。
+
+**注意。** 这是合成压力测试：k-means 簇、查询独立、单 k；真实属性可能既相关又与查询同区域。cluster 可行集的 ID 可能有一定局部性，精确扫描 QPS 不宜与 random 逐点比较；稳健结论是 HNSW 的召回坍塌。post-filter 与本模式的固定 ef 诊断未跑（`hnsw_fixed` 行只对 random 生成），探针用 50 条查询、单次评估。
+
+## 7. 局限
 
 - **数据规模**：100k 与 1M SIFT、单一数据集；10M 未测。100k 有合成层级，1M 只有随机谓词；交叉点与拟合指数不能直接外推到 10M。
-- **谓词相关性**：`random` 与几何独立；`sub`/`exact` 有部分语义相关性，但不是真实 CCS 标注。相同 $s$ 下，属性与向量的相关性会改变图的可导航性，本研究只覆盖了两端。
+- **谓词相关性**：`random` 与几何独立；`cluster` 是紧凑簇 + 独立查询的合成压力测试；`sub`/`exact` 有部分语义相关性，但不是真实 CCS 标注。相同 $s$ 下，属性与向量的相关性会改变图的可导航性；cluster 的 k-means 簇与查询独立性是强假设，真实属性可能介于三者之间。
 - **方法范围**：只测 FAISS `IndexHNSWFlat + sel`、精确扫描、post-filter；ACORN/PathSeer/NaviX 等属性感知图未进入本轮，不能据此评价它们。IVF 也未测。
 - **单谓词**：未测多节点 AND/OR、否定、更新与并发。
 - **表示成本**：posting list 的构建/更新/空间未计；dense bitmap 元数据 32.5 MB 是简化表示，Roaring 会更小。
 - **测量**：单线程、WSL2；HNSW 构建后立即测量的首轮会受热降频影响，本报告使用缓存索引的 100k run #81/#82 与 1M run #88（三次评估中位数）。固定 ef 行只用于诊断，不参与 ef 选择。
 - **调参/评估**：ef 在 100 条调参谓词上选，评估用另外 100 条；样本量仍有限，$s=0.01$ 的 HNSW 评估召回 95.9% 贴近门槛。前沿指标按评估结果选每桶最优方法，是“可达前沿”，不是线上策略。1M 上 $s=0.001/0.01$ 的 HNSW 调参 ef 在评估半集未达 r95；表中用固定 ef 网格的最小 gated 点，$s=0.001$ 的 8192 为推断的下一格。1M 只测 random 谓词，未重跑层级/目录模式；1M 的 HNSW 仍只有 M=16 一个构型。
 
-## 7. 复现
+## 8. 复现
 
 ```bash
 # 当前 segment（1M）：bash autoresearch.sh 等价于下面的 1M 命令
@@ -162,14 +188,31 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --out-dir production/nested-attr-vector-search/work/selectivity_1m \
   --modes random --nq-per-bucket 200 --max-ef 8192 --policy-s 0.02
 python3 production/nested-attr-vector-search/src/plot_scale_compare.py
+
+# 100k 相关 cluster 谓词（当前 segment）
+bash autoresearch.sh
+# 等价于：
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_ccs \
+  --out-dir production/nested-attr-vector-search/work/selectivity_cluster \
+  --modes cluster --metric-mode cluster --nq-per-bucket 200 --max-ef 16384 \
+  --policy-s 0.06 --repeats 3 --clusters 256
+python3 production/nested-attr-vector-search/src/plot_correlation_compare.py
+
+# ef=32768 探针（50 条/桶，单次评估）
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_ccs \
+  --out-dir production/nested-attr-vector-search/work/selectivity_cluster_probe \
+  --modes cluster --metric-mode cluster --nq-per-bucket 50 --max-ef 32768 \
+  --policy-s 0.06 --repeats 1 --clusters 256
 ```
 
-原始数据：100k 为 [`data/selectivity_curve_20261026.csv`](data/selectivity_curve_20261026.csv)、[`data/summary_20261026.json`](data/summary_20261026.json)、[`data/selectivity_20261026.jsonl`](data/selectivity_20261026.jsonl)（run #82，复现 run #81）；1M 为 [`data/selectivity_1m_curve_20261026.csv`](data/selectivity_1m_curve_20261026.csv)、[`data/summary_1m_20261026.json`](data/summary_1m_20261026.json)、[`data/selectivity_1m_20261026.jsonl`](data/selectivity_1m_20261026.jsonl)（run #88，三次评估中位数；run #87 复现）。
+原始数据：100k 为 [`data/selectivity_curve_20261026.csv`](data/selectivity_curve_20261026.csv)、[`data/summary_20261026.json`](data/summary_20261026.json)、[`data/selectivity_20261026.jsonl`](data/selectivity_20261026.jsonl)（run #82，复现 run #81）；1M 为 [`data/selectivity_1m_curve_20261026.csv`](data/selectivity_1m_curve_20261026.csv)、[`data/summary_1m_20261026.json`](data/summary_1m_20261026.json)、[`data/selectivity_1m_20261026.jsonl`](data/selectivity_1m_20261026.jsonl)（run #88，三次评估中位数；run #87 复现）；cluster 为 [`data/selectivity_cluster_curve_20261026.csv`](data/selectivity_cluster_curve_20261026.csv)、[`data/summary_cluster_20261026.json`](data/summary_cluster_20261026.json)（run #89）与 [`data/selectivity_cluster_probe_32768_20261026.csv`](data/selectivity_cluster_probe_32768_20261026.csv)（ef=32768 探针）。
 
-## 8. 下一步
+## 9. 下一步
 
-1. 在 1M/10M 上加入层级与目录模式，确认目录解析成本在高 $n$ 下是否仍可忽略。
-2. 加入属性-几何相关谓词（k-means 簇/邻域），分离“选择率”与“相关性”的贡献。
-3. 加入 IVF 与 ACORN/PathSeer 基线，检验 filter-aware 图能否把交叉点推向更低 $s$。
+1. 在 cluster 模式上加入属性分区/每簇独立索引与 ACORN/PathSeer，检验属性感知执行器能否把相关谓词的交叉点拉回低 $s$。
+2. 增加“查询落在可行簇内”的 cluster-near 对照，覆盖相关的另一端；当前 cluster 是查询独立的压力测试。
+3. 在 1M/10M 上加入层级与目录模式，确认目录解析成本在高 $n$ 下是否仍可忽略。
 4. 实现“位图 + posting list”双表示与按 $s$ 的切换策略，计入构建/更新/空间成本。
-5. 把目录解析与向量执行器的计时拆成稳定的三段，报告 p50/p95 与内存带宽。
+5. 用真实多标签/属性数据集复核 random、cluster 与层级三种谓词分布。
