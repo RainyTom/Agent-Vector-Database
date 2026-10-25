@@ -49,6 +49,7 @@
 
 static constexpr int D = 128;
 static constexpr int MAXM = 6;
+static constexpr int PD = 64;  // projection dim for catalog ranking
 static constexpr float INF = 1e30f;
 
 struct Point {
@@ -449,6 +450,424 @@ static void summary_line(const std::string& method, const std::vector<RunStats>&
               << " empty=" << empty << "\n";
 }
 
+
+// ---------------------------------------------------------------- episode catalog
+
+struct Span {
+    int32_t traj = -1, u = -1, v = -1, n = 0;
+    int64_t ts = 0;
+    float dur = 0.0f;
+    float bbox[4] = {0, 0, 0, 0};  // min_lat, max_lat, min_lon, max_lon
+    float maxnorm = 0.0f;
+};
+static_assert(sizeof(Span) == 48, "Span should stay compact");
+
+static inline int64_t cell_key(float lat, float lon, float cell) {
+    int iy = (int)std::floor(lat / cell);
+    int ix = (int)std::floor(lon / cell);
+    return ((int64_t)iy << 32) ^ (uint32_t)ix;
+}
+
+// Banded DTW. f[1][off] = prefix cost; f[i][off] = cost + min(f[i-1][off-1], f[i][off-1]).
+static float banded_dtw(const Query& q, const Point* p, int u, int v, float lambda) {
+    const int m = q.m;
+    const int n = v - u + 1;
+    const int g = n - m;
+    if (g < 0) return INF;
+    static thread_local std::vector<float> prev, cur;
+    prev.assign(n, INF);
+    cur.assign(n, INF);
+    auto cost_at = [&](int i, int off) -> float {
+        float c = l2(q.emb[i - 1], p[u + off].emb);
+        if (lambda > 0.0f) {
+            double dt = std::fabs((double)q.tau[i - 1] -
+                                  (double)(p[u + off].ts - p[u].ts)) / 3600.0;
+            c += lambda * (float)dt;
+        }
+        return c;
+    };
+    // i = 1: q1 covers segments 0..off.
+    float run = 0.0f;
+    for (int off = 0; off <= g; ++off) {  // band for i=1: off in [0, g]
+        run += cost_at(1, off);
+        prev[off] = run;
+    }
+    for (int i = 2; i <= m; ++i) {
+        std::fill(cur.begin(), cur.end(), INF);
+        int lo = i - 1, hi = g + i - 1;
+        for (int off = lo; off <= hi; ++off) {
+            float best = INF;
+            if (off - 1 >= (i - 2) && off - 1 <= g + (i - 2)) best = prev[off - 1];
+            if (off - 1 >= lo) best = std::min(best, cur[off - 1]);
+            if (best < INF) cur[off] = cost_at(i, off) + best;
+        }
+        std::swap(prev, cur);
+    }
+    return prev[n - 1] / (float)m;
+}
+
+static float banded_dtw_proj(const float qp[MAXM][PD], int m, const float* base,
+                             int n, int skip) {
+    const int g = n - m;
+    if (g < 0) return INF;
+    static thread_local std::vector<float> prev, cur;
+    prev.assign(n, INF);
+    cur.assign(n, INF);
+    float run = 0.0f;
+    for (int off = 0; off <= g; ++off) {
+        const float* v = base + (size_t)(off + skip) * PD;
+        float d2 = 0.0f;
+        for (int c = 0; c < PD; ++c) { float t = qp[0][c] - v[c]; d2 += t * t; }
+        run += std::sqrt(d2);
+        prev[off] = run;
+    }
+    for (int i = 2; i <= m; ++i) {
+        std::fill(cur.begin(), cur.end(), INF);
+        int lo = i - 1, hi = g + i - 1;
+        for (int off = lo; off <= hi; ++off) {
+            float best = INF;
+            if (off - 1 >= (i - 2) && off - 1 <= g + (i - 2)) best = prev[off - 1];
+            if (off - 1 >= lo) best = std::min(best, cur[off - 1]);
+            if (best >= INF) continue;
+            const float* v = base + (size_t)(off + skip) * PD;
+            float d2 = 0.0f;
+            for (int c = 0; c < PD; ++c) { float t = qp[i - 1][c] - v[c]; d2 += t * t; }
+            cur[off] = best + std::sqrt(d2);
+        }
+        std::swap(prev, cur);
+    }
+    return prev[n - 1] / (float)m;
+}
+
+// Banded DP over a symbolic sequence: cost(i, symbol) comes from a precomputed table.
+static float banded_dtw_cat(const float* ctab, int stride, int m, const Point* p,
+                            int u, int n) {
+    const int g = n - m;
+    if (g < 0) return INF;
+    static thread_local std::vector<float> prev, cur;
+    prev.assign(n, INF);
+    cur.assign(n, INF);
+    float run = 0.0f;
+    for (int off = 0; off <= g; ++off) {
+        run += ctab[(size_t)0 * stride + p[u + off].cat];
+        prev[off] = run;
+    }
+    for (int i = 2; i <= m; ++i) {
+        std::fill(cur.begin(), cur.end(), INF);
+        int lo = i - 1, hi = g + i - 1;
+        for (int off = lo; off <= hi; ++off) {
+            float best = INF;
+            if (off - 1 >= (i - 2) && off - 1 <= g + (i - 2)) best = prev[off - 1];
+            if (off - 1 >= lo) best = std::min(best, cur[off - 1]);
+            if (best >= INF) continue;
+            cur[off] = best + ctab[(size_t)(i - 1) * stride + p[u + off].cat];
+        }
+        std::swap(prev, cur);
+    }
+    return prev[n - 1] / (float)m;
+}
+
+static void run_catalog(const std::string& dir, const std::string& out,
+                        const std::vector<Point>& pts, const std::vector<int32_t>& off,
+                        const std::vector<int32_t>& len, const std::vector<Query>& qs,
+                        const std::vector<std::vector<Hit>>& gt, int k, int topc,
+                        float cap_hours, float cell_deg, int bucket_hours,
+                        bool rank_cat) {
+    const float CAP = cap_hours * 3600.0f;
+    const int64_t BUCKET = (int64_t)bucket_hours * 3600;
+
+    // Fixed random projection 128 -> 8 (deterministic).
+    static float P[D][PD];
+    {
+        std::mt19937 rng(20261024);
+        std::normal_distribution<float> nd(0.0f, 1.0f / std::sqrt((float)PD));
+        for (int i = 0; i < D; ++i)
+            for (int j = 0; j < PD; ++j) P[i][j] = nd(rng);
+    }
+    auto project = [&](const std::array<float, D>& e, float* dst) {
+        for (int j = 0; j < PD; ++j) dst[j] = 0.0f;
+        for (int i = 0; i < D; ++i) {
+            float v = e[i];
+            for (int j = 0; j < PD; ++j) dst[j] += v * P[i][j];
+        }
+    };
+
+    int max_cat = 0;
+    for (const auto& p : pts) max_cat = std::max(max_cat, (int)p.cat);
+    std::vector<std::array<float, D>> centroids((size_t)max_cat + 1);
+    std::vector<int> ccount((size_t)max_cat + 1, 0);
+    if (rank_cat) {
+        for (const auto& p : pts) {
+            auto& c = centroids[(size_t)p.cat];
+            for (int i = 0; i < D; ++i) c[i] += p.emb[i];
+            ccount[(size_t)p.cat]++;
+        }
+        for (size_t c = 0; c < centroids.size(); ++c)
+            if (ccount[c] > 0)
+                for (int i = 0; i < D; ++i) centroids[c][i] /= (float)ccount[c];
+    }
+
+    std::vector<Span> cat;
+    cat.reserve(7000000);
+    std::vector<float> proj_pts((size_t)pts.size() * PD);
+    std::vector<float> pref;  // (s+1)*8 projection prefix per trajectory
+    double tb = now_ms();
+    for (int uidx = 0; uidx < (int)off.size(); ++uidx) {
+        const int s = len[uidx];
+        const Point* p = pts.data() + off[uidx];
+        pref.assign((size_t)(s + 1) * PD, 0.0f);
+        for (int j = 0; j < s; ++j) {
+            float v[PD];
+            project(p[j].emb, v);
+            for (int c = 0; c < PD; ++c) {
+                proj_pts[(size_t)(off[uidx] + j) * PD + c] = v[c];
+                pref[(size_t)(j + 1) * PD + c] = pref[(size_t)j * PD + c] + v[c];
+            }
+        }
+        for (int u = 0; u < s; ++u) {
+            float mnla = 1e9f, mxla = -1e9f, mnlo = 1e9f, mxlo = -1e9f, mxnorm = 0.0f;
+            for (int v = u; v < s; ++v) {
+                float dur = (float)(p[v].ts - p[u].ts);
+                if (dur > CAP) break;
+                mnla = std::min(mnla, p[v].lat);
+                mxla = std::max(mxla, p[v].lat);
+                mnlo = std::min(mnlo, p[v].lon);
+                mxlo = std::max(mxlo, p[v].lon);
+                mxnorm = std::max(mxnorm, std::sqrt(std::inner_product(
+                    p[v].emb.begin(), p[v].emb.end(), p[v].emb.begin(), 0.0f)));
+                Span sp;
+                sp.traj = uidx; sp.u = u; sp.v = v; sp.n = v - u + 1;
+                sp.ts = p[u].ts; sp.dur = dur;
+                sp.bbox[0] = mnla; sp.bbox[1] = mxla; sp.bbox[2] = mnlo; sp.bbox[3] = mxlo;
+                sp.maxnorm = mxnorm;
+                cat.push_back(sp);
+            }
+        }
+    }
+    double build_s = (now_ms() - tb) / 1000.0;
+
+    // Duration-sorted order.
+    std::vector<uint32_t> dur_order(cat.size());
+    for (size_t i = 0; i < cat.size(); ++i) dur_order[i] = (uint32_t)i;
+    std::sort(dur_order.begin(), dur_order.end(),
+              [&](uint32_t a, uint32_t b) { return cat[a].dur < cat[b].dur; });
+    std::vector<float> dur_sorted(cat.size());
+    for (size_t i = 0; i < cat.size(); ++i) dur_sorted[i] = cat[dur_order[i]].dur;
+
+    std::unordered_map<int64_t, std::vector<uint32_t>> buckets;
+    for (size_t i = 0; i < cat.size(); ++i)
+        buckets[cat[i].ts / BUCKET].push_back((uint32_t)i);
+
+    std::unordered_map<uint64_t, std::vector<uint32_t>> grid;
+    const int64_t MONTH32 = 30LL * 86400;
+    const float DUR_BUCKET = 900.0f;  // 15 min
+    auto grid_key = [&](int64_t ck, int64_t month, int db) -> uint64_t {
+        uint64_t h = (uint64_t)ck * 1000003ULL ^ (uint64_t)month;
+        return h * 1009ULL + (uint64_t)(db + 1);
+    };
+    for (size_t i = 0; i < cat.size(); ++i) {
+        float clat = 0.5f * (cat[i].bbox[0] + cat[i].bbox[1]);
+        float clon = 0.5f * (cat[i].bbox[2] + cat[i].bbox[3]);
+        int db = (int)(cat[i].dur / DUR_BUCKET);
+        grid[grid_key(cell_key(clat, clon, cell_deg), cat[i].ts / MONTH32, db)]
+            .push_back((uint32_t)i);
+    }
+
+    // City bucket per span (from user_city.bin), with per-city bbox.
+    std::vector<int32_t> user_city(off.size(), 0);
+    int32_t ncity = 1;
+    {
+        std::ifstream ucf(dir + "/user_city.bin", std::ios::binary);
+        if (ucf) {
+            int32_t nu = 0, nc = 0;
+            ucf.read((char*)&nu, 4); ucf.read((char*)&nc, 4);
+            if (nu == (int32_t)off.size() && nc > 0) {
+                ncity = nc;
+                for (int i = 0; i < nu; ++i) ucf.read((char*)&user_city[i], 4);
+            }
+        }
+    }
+    std::vector<float> cb(4 * (size_t)ncity, 0.0f);
+    std::vector<char> cinit(ncity, 0);
+    std::vector<std::vector<uint32_t>> by_city(ncity);
+    for (size_t i = 0; i < cat.size(); ++i) {
+        int c = user_city[cat[i].traj];
+        by_city[c].push_back((uint32_t)i);
+        if (!cinit[c]) {
+            cinit[c] = 1;
+            cb[4 * (size_t)c + 0] = cat[i].bbox[0]; cb[4 * (size_t)c + 1] = cat[i].bbox[1];
+            cb[4 * (size_t)c + 2] = cat[i].bbox[2]; cb[4 * (size_t)c + 3] = cat[i].bbox[3];
+        } else {
+            cb[4 * (size_t)c + 0] = std::min(cb[4 * (size_t)c + 0], cat[i].bbox[0]);
+            cb[4 * (size_t)c + 1] = std::max(cb[4 * (size_t)c + 1], cat[i].bbox[1]);
+            cb[4 * (size_t)c + 2] = std::min(cb[4 * (size_t)c + 2], cat[i].bbox[2]);
+            cb[4 * (size_t)c + 3] = std::max(cb[4 * (size_t)c + 3], cat[i].bbox[3]);
+        }
+    }
+
+    std::vector<RunStats> st(qs.size());
+    std::vector<double> recall(qs.size(), 0.0);
+    std::vector<size_t> hits(qs.size(), 0);
+    long long tot_slice = 0, tot_filter = 0, tot_verify = 0;
+
+    for (size_t qi = 0; qi < qs.size(); ++qi) {
+        const Query& q = qs[qi];
+        double t0 = now_ms();
+        // Stage 1: duration slice.
+        float lo = std::max(0.0f, (float)q.dur - (float)q.tol);
+        float hi = (float)q.dur + (float)q.tol;
+        auto b = std::lower_bound(dur_sorted.begin(), dur_sorted.end(), lo);
+        auto e = std::upper_bound(dur_sorted.begin(), dur_sorted.end(), hi);
+
+        // Stage 2: time buckets overlapping [ws, we].
+        int64_t b0 = q.ws / BUCKET, b1 = q.we / BUCKET;
+        long long slice_n = 0, filter_n = 0;
+
+        std::vector<uint32_t> cand;
+        cand.reserve((size_t)(e - b));
+        // Use the smaller of duration slice and time-bucket union as the driver.
+        size_t dur_n = (size_t)(e - b);
+        size_t time_n = 0;
+        for (int64_t bt = b0; bt <= b1; ++bt) {
+            auto it = buckets.find(bt);
+            if (it != buckets.end()) time_n += it->second.size();
+        }
+        int y0 = (int)std::floor(q.bbox[0] / cell_deg), y1 = (int)std::floor(q.bbox[1] / cell_deg);
+        int x0 = (int)std::floor(q.bbox[2] / cell_deg), x1 = (int)std::floor(q.bbox[3] / cell_deg);
+        size_t city_n = 0;
+        for (int c = 0; c < ncity; ++c) {
+            if (!cinit[c]) continue;
+            bool inter = !(cb[4*(size_t)c+1] < q.bbox[0] || cb[4*(size_t)c+0] > q.bbox[1] ||
+                           cb[4*(size_t)c+3] < q.bbox[2] || cb[4*(size_t)c+2] > q.bbox[3]);
+            if (inter) city_n += by_city[c].size();
+        }
+        int64_t m0 = q.ws / MONTH32, m1 = q.we / MONTH32;
+        int d0 = (int)(lo / DUR_BUCKET), d1 = (int)(hi / DUR_BUCKET);
+        auto grid_collect = [&](std::vector<uint32_t>* dst, size_t* cnt) {
+            for (int iy = y0; iy <= y1; ++iy)
+                for (int ix = x0; ix <= x1; ++ix) {
+                    int64_t ck = ((int64_t)iy << 32) ^ (uint32_t)ix;
+                    for (int64_t mm = m0; mm <= m1; ++mm)
+                        for (int db = d0; db <= d1; ++db) {
+                            auto it = grid.find(grid_key(ck, mm, db));
+                            if (it == grid.end()) continue;
+                            if (cnt) *cnt += it->second.size();
+                            if (dst) dst->insert(dst->end(), it->second.begin(), it->second.end());
+                        }
+                }
+        };
+        size_t space_n = 0;
+        grid_collect(nullptr, &space_n);
+        if (city_n <= dur_n && city_n <= time_n && city_n <= space_n) {
+            for (int c = 0; c < ncity; ++c) {
+                if (!cinit[c]) continue;
+                bool inter = !(cb[4*(size_t)c+1] < q.bbox[0] || cb[4*(size_t)c+0] > q.bbox[1] ||
+                               cb[4*(size_t)c+3] < q.bbox[2] || cb[4*(size_t)c+2] > q.bbox[3]);
+                if (inter) cand.insert(cand.end(), by_city[c].begin(), by_city[c].end());
+            }
+        } else if (dur_n <= time_n && dur_n <= space_n) {
+            for (auto it = b; it != e; ++it) cand.push_back(dur_order[(size_t)(it - dur_sorted.begin())]);
+        } else if (time_n <= space_n) {
+            for (int64_t bt = b0; bt <= b1; ++bt) {
+                auto it = buckets.find(bt);
+                if (it != buckets.end()) cand.insert(cand.end(), it->second.begin(), it->second.end());
+            }
+        } else {
+            grid_collect(&cand, nullptr);
+        }
+        slice_n = (long long)cand.size();
+
+        // Stage 3: exact hard constraints + sketch distance.
+        float qproj[MAXM][PD];
+        for (int i = 0; i < q.m; ++i) project(q.emb[i], qproj[i]);
+        std::vector<float> ctab;
+        if (rank_cat) {
+            ctab.resize((size_t)MAXM * (max_cat + 1), 0.0f);
+            for (int i = 0; i < q.m; ++i)
+                for (int c = 0; c <= max_cat; ++c) {
+                    if (ccount[c] == 0) { ctab[(size_t)i * (max_cat + 1) + c] = INF; continue; }
+                    float d2 = 0.0f;
+                    for (int k = 0; k < D; ++k) {
+                        float t = q.emb[i][k] - centroids[(size_t)c][k];
+                        d2 += t * t;
+                    }
+                    ctab[(size_t)i * (max_cat + 1) + c] = std::sqrt(d2);
+                }
+        }
+
+        struct CScored { float d; uint32_t id; };
+        std::vector<CScored> scored;
+        scored.reserve(cand.size());
+        for (uint32_t id : cand) {
+            const Span& s = cat[id];
+            if (s.n < q.m) continue;
+            if (s.dur < lo || s.dur > hi) continue;
+            if (s.ts < q.ws || (double)s.ts + s.dur > (double)q.we) continue;
+            if (s.bbox[0] < q.bbox[0] || s.bbox[1] > q.bbox[1] ||
+                s.bbox[2] < q.bbox[2] || s.bbox[3] > q.bbox[3]) continue;
+            float approx;
+            if (rank_cat) {
+                approx = banded_dtw_cat(ctab.data(), max_cat + 1, q.m,
+                                        pts.data() + off[s.traj], s.u, s.n);
+            } else {
+                const float* base = proj_pts.data() + (size_t)(off[s.traj] + s.u) * PD;
+                approx = banded_dtw_proj(qproj, q.m, base, s.n, 0);
+            }
+            scored.push_back({approx, id});
+        }
+        filter_n = (long long)scored.size();
+        size_t keep = std::min(scored.size(), (size_t)topc);
+        if (keep < scored.size())
+            std::nth_element(scored.begin(), scored.begin() + keep, scored.end(),
+                             [](const CScored& a, const CScored& b) { return a.d < b.d; });
+        scored.resize(keep);
+
+        std::vector<Hit> all;
+        all.reserve(keep);
+        for (auto& c : scored) {
+            const Span& s = cat[c.id];
+            float sc = banded_dtw(q, pts.data() + off[s.traj], s.u, s.v, 0.0f);
+            if (sc < INF) all.push_back(Hit{sc, s.traj, pts[off[s.traj] + s.u].ts,
+                                            pts[off[s.traj] + s.v].ts, s.u, s.v});
+        }
+        std::sort(all.begin(), all.end(), [](const Hit& x, const Hit& y) {
+            if (x.score != y.score) return x.score < y.score;
+            return x.user < y.user;
+        });
+        std::vector<Hit> top;
+        for (auto& h : all) {
+            if (h.user == q.source) continue;
+            bool dup = false;
+            for (auto& t : top) if (t.user == h.user) { dup = true; break; }
+            if (!dup) top.push_back(h);
+            if ((int)top.size() >= k) break;
+        }
+        st[qi].ms = now_ms() - t0;
+        st[qi].cand = slice_n;
+        st[qi].verified = (long long)keep;
+        st[qi].dtw = (long long)keep;
+        hits[qi] = top.size();
+        std::vector<int> got, want;
+        for (auto& x : top) got.push_back(x.user);
+        for (auto& x : gt[qi]) want.push_back(x.user);
+        std::sort(got.begin(), got.end());
+        std::sort(want.begin(), want.end());
+        std::vector<int> inter;
+        std::set_intersection(got.begin(), got.end(), want.begin(), want.end(),
+                              std::back_inserter(inter));
+        recall[qi] = want.empty() ? 1.0 : (double)inter.size() / want.size();
+        tot_slice += slice_n; tot_filter += filter_n; tot_verify += keep;
+    }
+    write_method_csv(out + "/catalog.csv", st, recall, hits);
+    summary_line("catalog", st, recall, hits);
+    std::cout << "CATALOG spans=" << cat.size() << " build_s=" << build_s
+              << " bytes=" << (double)cat.size() * sizeof(Span)
+              << " mean_slice=" << (double)tot_slice / qs.size()
+              << " mean_filter=" << (double)tot_filter / qs.size()
+              << " mean_verify=" << (double)tot_verify / qs.size()
+              << " topc=" << topc << " cap_h=" << cap_hours << "\n";
+}
+
 // ---------------------------------------------------------------- main
 
 int main(int argc, char** argv) {
@@ -457,6 +876,9 @@ int main(int argc, char** argv) {
     std::string out = ".";
     int k = 10, topn = 300, cand_cap = 1250, threads = 8, limit = -1;
     int m_hnsw = 16, efc = 200;
+    int topc = 200, bucket_h = 24;
+    std::string rank_mode = "proj";
+    float cap_hours = 48.0f, cell_deg = 0.05f;
     float lambda = 0.0f;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -471,6 +893,11 @@ int main(int argc, char** argv) {
         else if (a == "--threads") threads = std::stoi(next());
         else if (a == "--limit") limit = std::stoi(next());
         else if (a == "--lambda") lambda = std::stof(next());
+        else if (a == "--topc") topc = std::stoi(next());
+        else if (a == "--cap-hours") cap_hours = std::stof(next());
+        else if (a == "--cell") cell_deg = std::stof(next());
+        else if (a == "--bucket-hours") bucket_h = std::stoi(next());
+        else if (a == "--rank") rank_mode = next();
         else { std::cerr << "unknown arg " << a << "\n"; return 2; }
     }
 
@@ -480,6 +907,31 @@ int main(int argc, char** argv) {
     if (!load_points(dir, pts) || !load_users(dir, off, len) || !load_queries(dir, qs))
         return 2;
     if (limit > 0 && limit < (int)qs.size()) qs.resize(limit);
+
+    if (mode == "selftest") {
+        std::mt19937 rng(7);
+        int bad = 0, tests = 0;
+        for (int it = 0; it < 5000; ++it) {
+            const Query& q = qs[rng() % qs.size()];
+            int uidx = (int)(rng() % off.size());
+            int s = len[uidx];
+            if (s < q.m + 1) continue;
+            int u = (int)(rng() % (s - q.m));
+            int maxn = std::min(s - u, q.m + 4);
+            int n = q.m + (int)(rng() % (maxn - q.m + 1));
+            int v = u + n - 1;
+            const Point* base = pts.data() + off[uidx];
+            float a = banded_dtw(q, base, u, v, 0.0f);
+            float b = episode_dtw(q, base, u, n, 0.0f);
+            ++tests;
+            if (std::fabs(a - b) > 1e-3f * std::max(1.0f, std::fabs(b))) {
+                if (bad++ < 5) std::printf("MISMATCH traj=%d u=%d v=%d band=%.6f full=%.6f\n",
+                                           uidx, u, v, a, b);
+            }
+        }
+        std::printf("selftest tests=%d bad=%d\n", tests, bad);
+        return bad ? 2 : 0;
+    }
 
     if (mode == "dump") {
         write_queries_csv(out + "/queries.csv", qs);
@@ -537,6 +989,12 @@ int main(int argc, char** argv) {
     std::vector<RunStats> st(qs.size());
     std::vector<double> recall(qs.size(), 0.0);
     std::vector<size_t> hits(qs.size(), 0);
+
+    if (mode == "catalog") {
+        run_catalog(dir, out, pts, off, len, qs, gt, k, topc, cap_hours, cell_deg, bucket_h,
+                    rank_mode == "cat");
+        return 0;
+    }
 
     if (mode == "space") {
         for (size_t i = 0; i < qs.size(); ++i) {
