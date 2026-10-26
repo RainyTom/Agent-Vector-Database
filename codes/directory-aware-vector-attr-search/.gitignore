@@ -1,0 +1,6 @@
+# third-party deps (downloaded, not vendored)
+deps/
+# build artifacts
+build/
+# generated data fixtures (regenerate with scripts/gen_workload.py)
+data/
