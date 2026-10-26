@@ -97,6 +97,26 @@ def main() -> int:
             ax.scatter([p[0] for p in bad], [p[1] for p in bad], marker=marker,
                        facecolors="none", edgecolors="0.4",
                        label=f"{label} (r95 fail)")
+        # annotate each tuned point with its search parameter
+        if method in ("hnsw", "ivf"):
+            param = "ef" if method == "hnsw" else "nprobe"
+            for s, q, ef, good in pts:
+                if not good or ef <= 0:
+                    continue
+                ax.annotate(f"{param}={ef}", (s, q),
+                            textcoords="offset points",
+                            xytext=(0, 7), fontsize=7, color="0.35",
+                            ha="center")
+        # single-series panel: smooth visual guide against eval noise
+        if len(active) == 1 and len(ok) >= 3:
+            xs = [p[0] for p in ok]
+            ys = [p[1] for p in ok]
+            a, b = fit_power(xs, ys)
+            grid = [min(xs) * (max(xs) / min(xs)) ** (i / 50.0)
+                    for i in range(51)]
+            ax.plot(grid, [a * g ** b for g in grid], linestyle="--",
+                    color="0.6", linewidth=1.2,
+                    label=f"log-log fit (guide): QPS≈{a:.0f}·s^{b:.2f}")
     if cross is not None and "exact_list" not in excluded:
         ax.axvline(cross, color="0.5", linestyle=":", linewidth=1)
         ax.text(cross * 1.05, 1.8e4, f"cross-over\ns≈{cross:.3f}", fontsize=9,
@@ -109,7 +129,7 @@ def main() -> int:
              "post": "post-filter"}
     ax.set_title("SIFT100k: " + " vs ".join(short[m[0]] for m in active))
     ax.grid(True, which="both", alpha=0.25)
-    ax.legend(fontsize=8, loc="lower left")
+    ax.legend(fontsize=8, loc="upper left" if len(active) == 1 else "lower left")
 
     ax = axes[1]
     for ef in (16, 64, 256, 1024):
