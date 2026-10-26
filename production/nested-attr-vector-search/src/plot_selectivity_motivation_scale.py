@@ -37,7 +37,7 @@ def series(rows, method, key, ok_only=False):
 
 def crossover(rows):
     ex = {s: q for s, q, _, _ in series(rows, "exact_list", "qps")}
-    hn = {s: q for s, q, _, ok in series(rows, "hnsw", "qps") if ok}
+    hn = {s: q for s, q, _, _ in series(rows, "hnsw", "qps")}
     ss = sorted(set(ex) & set(hn))
     for i in range(len(ss) - 1):
         s1, s2 = ss[i], ss[i + 1]
@@ -53,9 +53,9 @@ def crossover(rows):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv-100k", type=Path,
-                    default=DATA / "selectivity_grid_curve_20261026.csv")
+                    default=DATA / "selectivity_grid_ext_curve_20261026.csv")
     ap.add_argument("--csv-1m", type=Path,
-                    default=DATA / "selectivity_grid_1m_curve_20261026.csv")
+                    default=DATA / "selectivity_grid_ext_1m_curve_20261026.csv")
     ap.add_argument("--out", type=Path,
                     default=OUT / "selectivity_motivation_scale")
     args = ap.parse_args()
