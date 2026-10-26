@@ -53,17 +53,27 @@ production/nested-attr-vector-search/work/venv/bin/python \
 ./build.sh
 
 # 3. 运行全部实验(HNSW efSearch=2048、IVF nprobe=256,可用 --ef/--nprobe 调)
+#    --csv 指向研究报告数据目录(代码与报告分离,见下)
+REPRO=../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/repro-2606.16903
 LD_LIBRARY_PATH=../../deps/PathSeer/faiss/build/faiss \
-  ./build/repro --data data/sift100k --csv experiments/results --mode all
+  ./build/repro --data data/sift100k --csv $REPRO/data/results --mode all
+
+# 4. 绘图(PNG+SVG 写入 $REPRO/figures)
+cd ../..
+production/nested-attr-vector-search/work/venv/bin/python \
+  codes/directory-aware-vector-attr-search/scripts/plot_repro.py
 ```
 
 DSQ 参数选择说明:HNSW 过滤搜索的 ef 必须随选择率缩放(本仓库
 2026-10-26 选择率实验:ef≈23·s^-0.77),默认 ef=2048 覆盖 wiki workload
 中位 scope(card≈54, s≈5e-4);IVF nprobe=256 同理。
 
-输出:`experiments/results_dsq.csv`(directory-only 延迟分位数、
-Recall@10、端到端延迟）、`results_dsm.csv`(MOVE/MERGE 墙钟）、
-`results_size.csv`(构建时间与大小)。
+## 实验报告(与代码分离)
+
+报告、数据、图统一放在
+[researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/repro-2606.16903](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/repro-2606.16903/report.md):
+`report.md`(论文对比与偏离声明)、`data/`(CSV 原始数据)、
+`figures/`(PNG+SVG 图)、`experiments/protocol.md`(复现命令)。
 
 自检：每个 DSM op 后可设 `DSM_AUDIT_EACH=1` 逐 op 重算 Inclusive 集合
 audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。

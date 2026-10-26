@@ -6,13 +6,15 @@
 - 运行环境:SIFT100k×128d,合成层级嵌套属性(seed=20261026),
   FAISS(PathSeer fork)HNSW M16 ≈ PG、IndexIVFFlat nlist=1024 ≈ IVF,
   CRoaring v4.3.1 位图,IDSelector 预过滤,HNSW efSearch=2048、IVF nprobe=256
-- 原始数据:`experiments/results_{dsq,dsm,size}.csv`;复现命令见
+- 原始数据:`data/results_{dsq,dsm,size}.csv`;图:`figures/`;复现命令见
   `experiments/protocol.md`
 - 正确性:三个设计的 DSM 全序列 audit(由 Local 重算 Inclusive 集合逐节点
   比对)通过;每 op 结构不变量(parent/children/path-key 一致)校验通过;
   三设计共享同一 GT(暴力可行集 top-10),scope 语义一致。
 
 ## 1. DSQ directory-only 延迟(µs,mean,PG 执行器)——对应论文 Table IV
+
+![directory-only 延迟](figures/fig_repro_dir_latency.png)
 
 | 查询 | 设计 | wiki(深树 19k 目录) | 论文 WIKI-Dir | arxiv(浅双命名空间) | 论文 ARXIV-Dir |
 |---|---|---|---|---|---|
@@ -42,6 +44,8 @@ PE-Online 扩张成本对目录数超线性,365ms→1.7ms 的约 200× 压缩与
 
 ## 2. 检索质量(nDCG@10 / Recall@10,mean)
 
+![nDCG 按 scope 基数分桶](figures/fig_repro_ndcg_buckets.png)
+
 | 数据集 | 查询类型 | PG ndcg/recall | IVF ndcg/recall | 论文 nDCG |
 |---|---|---|---|---|
 | wiki | recursive | 0.680 / 0.601 | 0.783 / 0.698 | ≈0.92 |
@@ -65,6 +69,8 @@ scope<10(论文未给 scope 分布;其深度锚点子树显然更大),而过滤 
 
 ## 3. DSM 墙钟延迟(ms,mean / P95 / P99)——对应论文 Fig. 9
 
+![DSM 墙钟延迟](figures/fig_repro_dsm.png)
+
 | 设计 | MOVE | MERGE | 论文定性结论 |
 |---|---|---|---|
 | PE-Online | **0.84 / 5.29 / 9.15** | **0.43 / 2.13 / 6.78** | 扩张式设计最贵 |
@@ -79,6 +85,8 @@ scope<10(论文未给 scope 分布;其深度锚点子树显然更大),而过滤 
 1.94M 规模 ≈ 2ms,落在论文 Fig. 9 TrieHI 量级区间。
 
 ## 4. 构建与存储(对应论文 Table V)
+
+![目录模块大小](figures/fig_repro_dir_size.png)
 
 | 组件 | 构建(s) | 大小(MB) |
 |---|---|---|
