@@ -51,8 +51,11 @@ def main() -> int:
                     default=DATA / "selectivity_grid_ext_ivf_curve_20261026.csv")
     ap.add_argument("--out", type=Path,
                     default=OUT / "selectivity_motivation")
+    ap.add_argument("--exclude", nargs="*", default=[],
+                    help="method series to drop from the QPS panel")
     args = ap.parse_args()
     rows = load(args.csv)
+    excluded = set(args.exclude)
 
     # Interpolate the first exact-to-valid-index crossing; not a universal threshold.
     ex = series(rows, "exact_list", "qps")
@@ -83,6 +86,8 @@ def main() -> int:
         ("hnsw", "BF-HNSW, ef tuned for r95", "s"),
         ("post", "post-filter, expanding ef", "^"),
     ]:
+        if method in excluded:
+            continue
         pts = series(rows, method, "qps")
         ok = [(s, q) for s, q, _, good in pts if good]
         bad = [(s, q) for s, q, _, good in pts if not good]
@@ -92,7 +97,7 @@ def main() -> int:
             ax.scatter([p[0] for p in bad], [p[1] for p in bad], marker=marker,
                        facecolors="none", edgecolors="0.4",
                        label=f"{label} (r95 fail)")
-    if cross is not None:
+    if cross is not None and "exact_list" not in excluded:
         ax.axvline(cross, color="0.5", linestyle=":", linewidth=1)
         ax.text(cross * 1.05, 1.8e4, f"cross-over\ns≈{cross:.3f}", fontsize=9,
                 color="0.35")
@@ -100,7 +105,10 @@ def main() -> int:
     ax.set_yscale("log")
     ax.set_xlabel("filter selectivity s = |feasible| / n")
     ax.set_ylabel("QPS at Recall@10 ≥ 0.95")
-    ax.set_title("SIFT100k: exact vs IVF vs BF-HNSW vs post-filter")
+    if "exact_list" in excluded:
+        ax.set_title("SIFT100k: IVF vs BF-HNSW vs post-filter")
+    else:
+        ax.set_title("SIFT100k: exact vs IVF vs BF-HNSW vs post-filter")
     ax.grid(True, which="both", alpha=0.25)
     ax.legend(fontsize=8, loc="lower left")
 
