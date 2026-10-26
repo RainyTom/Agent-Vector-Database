@@ -1,16 +1,10 @@
 # 复现报告:Directory-Aware Query and Maintenance in Vector Databases
 
-- 论文:arXiv:2606.16903v1(Wang et al.,2026-06-15);本地全文
-  `papers/prefix-vector-search/2606.16903-directory-aware/`
+- 论文:arXiv:2606.16903v1(Wang et al.,2026-06-15);本地全文`papers/prefix-vector-search/2606.16903-directory-aware/`
 - 复现代码:`codes/directory-aware-vector-attr-search/`(本目录)
-- 运行环境:SIFT100k×128d,合成层级嵌套属性(seed=20261026),
-  FAISS(PathSeer fork)HNSW M16 ≈ PG、IndexIVFFlat nlist=1024 ≈ IVF,
-  CRoaring v4.3.1 位图,IDSelector 预过滤,HNSW efSearch=2048、IVF nprobe=256
-- 原始数据:`data/results_{dsq,dsm,size}.csv`;图:`figures/`;复现命令见
-  `experiments/protocol.md`
-- 正确性:三个设计的 DSM 全序列 audit(由 Local 重算 Inclusive 集合逐节点
-  比对)通过;每 op 结构不变量(parent/children/path-key 一致)校验通过;
-  三设计共享同一 GT(暴力可行集 top-10),scope 语义一致。
+- 运行环境:SIFT100k×128d,合成层级嵌套属性(seed=20261026), FAISS(PathSeer fork)HNSW M16 ≈ PG、IndexIVFFlat nlist=1024 ≈ IVF, CRoaring v4.3.1 位图,IDSelector 预过滤,HNSW efSearch=2048、IVF nprobe=256
+- 原始数据:`data/results_{dsq,dsm,size}.csv`;图:`figures/`;复现命令见experiments/protocol.md`
+- 正确性:三个设计的 DSM 全序列 audit(由 Local 重算 Inclusive 集合逐节点比对)通过;每 op 结构不变量(parent/children/path-key 一致)校验通过;三设计共享同一 GT(暴力可行集 top-10),scope 语义一致。
 
 ## 1. DSQ directory-only 延迟(µs,mean,PG 执行器)——对应论文 Table IV
 
@@ -104,24 +98,13 @@ scope<10(论文未给 scope 分布;其深度锚点子树显然更大),而过滤 
 ## 5. 与论文的偏离(诚实声明)
 
 1. **数据规模/维度**:100k×128 vs 1.94M×1024 —— 绝对延迟不可直接比。
-2. **属性为合成**:论文用真实 Wikipedia 类别 DAG(取规范路径)与 arXiv
-   元数据;本复现按论文统计量(目录数、均深、命名空间结构、Fig. 10
-   深度混合)合成;条目绑定位置(90% 深度≥8)是显式假设。
-3. **wiki workload 浅层锚点子树偏小**(树形构造的 (depth+1)² 偏置),
-   wiki 整体 ndcg 受小 scope 查询拖累;第 2 节已分桶呈现。
-4. **MERGE 无同名冲突**:数字身份节点不存在 name-collision 分支
-   reconciling,TrieHI 的冲突局部合并未触发。
-5. **执行器参数**:HNSW ef=2048 / IVF nprobe=256 为固定工作点(论文
-   Fig. 7 为整条 trade-off 曲线);低选择率下论文工作点可能更高。
-6. **DSM op 目标**:条目数加权采样是论文未明说的部分,依据其 Fig. 9/10
-   的结构性叙述;均匀采样下 TrieHI 仍最优但差距缩小一个量级。
+2. **属性为合成**:论文用真实 Wikipedia 类别 DAG(取规范路径)与 arXiv元数据;本复现按论文统计量(目录数、均深、命名空间结构、Fig. 10深度混合)合成;条目绑定位置(90% 深度≥8)是显式假设。
+3. **wiki workload 浅层锚点子树偏小**(树形构造的 (depth+1)² 偏置), wiki 整体 ndcg 受小 scope 查询拖累;第 2 节已分桶呈现。
+4. **MERGE 无同名冲突**:数字身份节点不存在 name-collision 分支reconciling, TrieHI 的冲突局部合并未触发。
+5. **执行器参数**:HNSW ef=2048 / IVF nprobe=256 为固定工作点(论文Fig. 7 为整条 trade-off 曲线);低选择率下论文工作点可能更高。
+6. **DSM op 目标**:条目数加权采样是论文未明说的部分,依据其 Fig. 9/10的结构性叙述;均匀采样下 TrieHI 仍最优但差距缩小一个量级。
 
 ## 6. 复现结论
 
 论文的三个核心主张在 SIFT100k + 合成层级属性上全部复现:
-(a) recursive DSQ 下查询时路径扩张(PE-Online)比物化设计慢 2–3 个
-数量级;(b) non-recursive 下代价反转;(c) TrieHI 以额外元数据空间换
-DSQ 稳定低延迟与 DSM 子树重链效率(TrieHI DSM 比扩张式设计快 4–9×)。
-端到端质量在 scope 不极端时(ndcg≥0.99)与论文一致;极端低选择率
-(scope<10)下三种设计受同一 ANN 执行器限制而差异消失——这是执行器层
-而非目录层的问题,也再次印证 01-directory-aware 方向选择率实验的结论。
+(a) recursive DSQ 下查询时路径扩张(PE-Online)比物化设计慢 2–3 个数量级;(b) non-recursive 下代价反转;(c) TrieHI 以额外元数据空间换DSQ 稳定低延迟与 DSM 子树重链效率(TrieHI DSM 比扩张式设计快 4–9×)。端到端质量在 scope 不极端时(ndcg≥0.99)与论文一致;极端低选择率(scope<10)下三种设计受同一 ANN 执行器限制而差异消失——这是执行器层而非目录层的问题,也再次印证 01-directory-aware 方向选择率实验的结论。

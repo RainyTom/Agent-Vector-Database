@@ -112,6 +112,15 @@ static std::vector<int> load_ints(const std::string& path) {
     return out;
 }
 
+// multi-binding fixture: pairs of "entry node" (entry may bind several nodes)
+static std::vector<std::pair<int, int>> load_pairs(const std::string& path) {
+    std::ifstream f(path);
+    std::vector<std::pair<int, int>> out;
+    long long e, v;
+    while (f >> e >> v) out.push_back({(int)e, (int)v});
+    return out;
+}
+
 struct Vectors {
     int n = 0, d = 0;
     std::vector<float> x;
@@ -178,7 +187,6 @@ struct Design {
 
     Design(Kind k, Tree t, const std::vector<int>& entry_node)
         : kind(k), tree(std::move(t)), n_entries((int)entry_node.size()) {
-        auto t0 = Clock::now();
         int n = tree.n;
         local.assign(n, nullptr);
         inc.assign(n, nullptr);
@@ -188,6 +196,27 @@ struct Design {
         }
         for (int i = 0; i < n_entries; ++i)
             roaring_bitmap_add(local[entry_node[i]], (uint32_t)i);
+        init_rest();
+    }
+
+    Design(Kind k, Tree t, std::vector<std::pair<int, int>> bindings, int n_ent)
+        : kind(k), tree(std::move(t)), n_entries(n_ent) {
+        auto t0 = Clock::now();
+        int n = tree.n;
+        local.assign(n, nullptr);
+        inc.assign(n, nullptr);
+        for (int v = 0; v < n; ++v) {
+            local[v] = roaring_bitmap_create();
+            inc[v] = roaring_bitmap_create();
+        }
+        for (auto& [e, v] : bindings)
+            roaring_bitmap_add(local[v], (uint32_t)e);
+        init_rest();
+    }
+
+    void init_rest() {
+        auto t0 = Clock::now();
+        int n = tree.n;
         if (kind != PE_ONLINE) {
             // generator guarantees parent index < child index: reverse
             // order processes children before parents
@@ -450,26 +479,88 @@ static std::string kind_name(int e) {
     return e == 0 ? "PE-Online" : e == 1 ? "PE-Offline" : "TrieHI";
 }
 
+// ------------------------------------------------------------------ DSM -----
+static void run_dsm(std::ofstream& csv_dsm, const std::string& ops_path,
+                    const std::string& tree_path, const std::string& bindings_path) {
+    std::ifstream f(ops_path);
+    int nop, _;
+    f >> nop >> _;
+    struct Op {
+        std::string kind;
+        int u, w;
+    };
+    std::vector<Op> ops;
+    for (int i = 0; i < nop; ++i) {
+        Op op;
+        f >> op.kind >> op.u >> op.w;
+        ops.push_back(op);
+    }
+    Tree orig = load_tree(tree_path);
+    std::vector<int> entry_node = load_ints(bindings_path);
+    for (int e = 0; e < 3; ++e) {
+        Design d((Design::Kind)e, Tree(orig.parent), entry_node);
+        Stats lat[2];
+        for (size_t oi = 0; oi < ops.size(); ++oi) {
+            auto& op = ops[oi];
+            // ops were drawn against the initial tree; MERGE removes
+            // directories, so later ops may reference removed nodes.
+            // Tree evolution is identical across designs, so skipping
+            // keeps the compared op streams consistent.
+            if (d.tree.parent[op.u] == -2 || d.tree.parent[op.w] == -2)
+                continue;
+            if (op.kind == "MERGE" && (op.u == 0 || op.w == 0)) continue;
+            auto t0 = Clock::now();
+            if (op.kind == "MOVE") d.move(op.u, op.w);
+            else d.merge(op.u, op.w);
+            lat[op.kind == "MOVE" ? 0 : 1].add(us_since(t0) / 1000.0);
+            if (!d.validate()) {
+                std::cerr << "at op " << oi << " " << op.kind << " " << op.u << " "
+                          << op.w << "\n";
+                std::abort();
+            }
+            if (getenv("DSM_AUDIT_EACH") && !d.audit()) {
+                std::cerr << "AUDIT-FAIL at op " << oi << " " << op.kind << " " << op.u
+                          << " " << op.w << "\n";
+                auto chain = [&](int x) {
+                    std::ostringstream oss;
+                    for (int a = x; a >= 0; a = d.tree.parent[a]) oss << a << " ";
+                    return oss.str();
+                };
+                std::cerr << "u-chain: " << chain(op.u) << "\nw-chain: " << chain(op.w)
+                          << "\n";
+                std::abort();
+            }
+        }
+        bool ok = d.audit();
+        for (int i = 0; i < 2; ++i) {
+            csv_dsm << kind_name(e) << "," << (i == 0 ? "MOVE" : "MERGE") << ","
+                    << lat[i].mean() << "," << lat[i].pct(0.95) << "," << lat[i].pct(0.99)
+                    << "\n";
+        }
+        std::cout << "DSM " << kind_name(e) << " move_mean_ms=" << lat[0].mean()
+                  << " merge_mean_ms=" << lat[1].mean() << " audit=" << (ok ? "ok" : "FAIL")
+                  << "\n";
+    }
+}
+
 // ------------------------------------------------------------------ main ----
 int main(int argc, char** argv) {
-    std::string data = "data/sift100k";
-    std::string csv = "experiments/results";
-    std::string mode = "all";
-    int ef_search = 2048, nprobe = 256;
+    std::unordered_map<std::string, std::string> args;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
-        if (a == "--data") data = argv[++i];
-        else if (a == "--csv") csv = argv[++i];
-        else if (a == "--mode") mode = argv[++i];
-        else if (a == "--ef") ef_search = std::atoi(argv[++i]);
-        else if (a == "--nprobe") nprobe = std::atoi(argv[++i]);
+        if (a.rfind("--", 0) == 0 && i + 1 < argc) args[a.substr(2)] = argv[++i];
     }
+    auto arg_or = [&](const char* k, const char* def) {
+        auto it = args.find(k);
+        return it == args.end() ? std::string(def) : it->second;
+    };
+    std::string data = arg_or("data", "data/sift100k");
+    std::string csv = arg_or("csv", "experiments/results");
+    std::string mode = arg_or("mode", "all");
+    int ef_search = std::atoi(arg_or("ef", "2048").c_str());
+    int nprobe = std::atoi(arg_or("nprobe", "256").c_str());
 
-    Vectors base = Vectors::load(data + "/base.f32", 128);
-    Vectors test = Vectors::load(data + "/test.f32", 128);
-    std::cerr << "base " << base.n << "x" << base.d << ", test " << test.n << "x"
-              << test.d << "\n";
-
+    Vectors base, test;
     struct Exec {
         std::string name;
         std::unique_ptr<faiss::Index> ix;
@@ -477,29 +568,35 @@ int main(int argc, char** argv) {
         size_t bytes = 0;
     };
     std::vector<Exec> execs;
-    {
-        auto t0 = Clock::now();
-        auto ix = std::make_unique<faiss::IndexHNSWFlat>(base.d, 16);
-        ix->hnsw.efConstruction = 200;
-        ix->add(base.n, base.x.data());
-        execs.push_back({"PG-hnsw-M16", std::move(ix), us_since(t0)});
-    }
-    {
-        auto t0 = Clock::now();
-        auto ix = std::make_unique<faiss::IndexIVFFlat>(
-            new faiss::IndexFlatL2(base.d), base.d, 1024, faiss::METRIC_L2);
-        ix->train(base.n, base.x.data());
-        ix->add(base.n, base.x.data());
-        execs.push_back({"IVF-nlist1024", std::move(ix), us_since(t0)});
-    }
-    for (auto& ex : execs) {
-        std::string tmp = csv + "_faiss_index.bin";
-        faiss::write_index(ex.ix.get(), tmp.c_str());
-        std::ifstream f(tmp, std::ios::binary | std::ios::ate);
-        ex.bytes = f.tellg();
-        std::remove(tmp.c_str());
-        std::cout << "executor " << ex.name << " build_s=" << ex.build_us / 1e6
-                  << " size_MB=" << ex.bytes / 1e6 << "\n";
+    if (mode == "all" || mode == "dsq") {
+        base = Vectors::load(data + "/base.f32", 128);
+        test = Vectors::load(data + "/test.f32", 128);
+        std::cerr << "base " << base.n << "x" << base.d << ", test " << test.n << "x"
+                  << test.d << "\n";
+        {
+            auto t0 = Clock::now();
+            auto ix = std::make_unique<faiss::IndexHNSWFlat>(base.d, 16);
+            ix->hnsw.efConstruction = 200;
+            ix->add(base.n, base.x.data());
+            execs.push_back({"PG-hnsw-M16", std::move(ix), us_since(t0)});
+        }
+        {
+            auto t0 = Clock::now();
+            auto ix = std::make_unique<faiss::IndexIVFFlat>(
+                new faiss::IndexFlatL2(base.d), base.d, 1024, faiss::METRIC_L2);
+            ix->train(base.n, base.x.data());
+            ix->add(base.n, base.x.data());
+            execs.push_back({"IVF-nlist1024", std::move(ix), us_since(t0)});
+        }
+        for (auto& ex : execs) {
+            std::string tmp = csv + "_faiss_index.bin";
+            faiss::write_index(ex.ix.get(), tmp.c_str());
+            std::ifstream f(tmp, std::ios::binary | std::ios::ate);
+            ex.bytes = f.tellg();
+            std::remove(tmp.c_str());
+            std::cout << "executor " << ex.name << " build_s=" << ex.build_us / 1e6
+                      << " size_MB=" << ex.bytes / 1e6 << "\n";
+        }
     }
 
     std::ofstream csv_dsq(csv + "_dsq.csv"), csv_dsm(csv + "_dsm.csv"),
@@ -508,6 +605,91 @@ int main(int argc, char** argv) {
                "dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms\n";
     csv_dsm << "design,op,mean_ms,p95_ms,p99_ms\n";
     csv_size << "component,design,build_s,size_mb\n";
+
+    // -------------------------------------------- scope (no vectors) --------
+    if (mode == "scope") {
+        std::string ds_name = arg_or("ds", "ds"), wl_path = arg_or("wl", "");
+        bool has_ns = arg_or("has-ns", "0") == "1";
+        struct NS {
+            std::string name, tree_path, bind_path;
+        };
+        std::vector<NS> nss;
+        std::string spec = arg_or("nsspec", "");
+        std::stringstream ss(spec);
+        std::string item;
+        while (std::getline(ss, item, ';')) {
+            if (item.empty()) continue;
+            auto p1 = item.find(':'), p2 = item.find(':', p1 + 1);
+            nss.push_back({item.substr(0, p1), item.substr(p1 + 1, p2 - p1 - 1),
+                           item.substr(p2 + 1)});
+        }
+        if (nss.empty() || wl_path.empty()) {
+            std::cerr << "scope mode needs --nsspec name:tree:bindings[;...] and --wl\n";
+            return 1;
+        }
+        Workload wl = Workload::load(wl_path, has_ns);
+        for (int e = 0; e < 3; ++e) {
+            std::vector<std::unique_ptr<Design>> designs;
+            double dir_build_s = 0;
+            size_t dir_bytes = 0;
+            for (auto& nsd : nss) {
+                Tree t = load_tree(nsd.tree_path);
+                bool pairs = nsd.bind_path.size() >= 6 &&
+                             nsd.bind_path.compare(nsd.bind_path.size() - 6, 6, ".pairs") == 0;
+                std::unique_ptr<Design> d;
+                if (pairs) {
+                    auto bp = load_pairs(nsd.bind_path);
+                    int ne = 0;
+                    for (auto& [en, _] : bp) ne = std::max(ne, en + 1);
+                    d = std::make_unique<Design>((Design::Kind)e, std::move(t),
+                                                 std::move(bp), ne);
+                } else {
+                    d = std::make_unique<Design>((Design::Kind)e, std::move(t),
+                                                 load_ints(nsd.bind_path));
+                }
+                dir_build_s += d->build_us;
+                dir_bytes += d->bytes;
+                designs.push_back(std::move(d));
+            }
+            csv_size << "directory_module," << kind_name(e) << "," << dir_build_s / 1e6
+                     << "," << dir_bytes / 1e6 << "\n";
+            Stats dir[2];
+            std::vector<int> cards[2];
+            for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
+                auto& q = wl.qs[qi];
+                int nsi = has_ns ? wl.ns_flag[qi] : 0;
+                auto t0 = Clock::now();
+                auto* scope = designs[nsi]->resolve(q.anchor, q.rec == 1);
+                double d_us = us_since(t0);
+                int r = q.rec == 1 ? 0 : 1;
+                dir[r].add(d_us);
+                cards[r].push_back((int)roaring_bitmap_get_cardinality(scope));
+                roaring_bitmap_free(scope);
+            }
+            for (int r = 0; r < 2; ++r) {
+                const char* qt = r == 0 ? "recursive" : "non-recursive";
+                csv_dsq << ds_name << "," << kind_name(e) << ",none," << qt << ",all,,,"
+                        << dir[r].mean() << "," << dir[r].pct(0.90) << "," << dir[r].pct(0.95)
+                        << "," << dir[r].pct(0.99) << "," << dir[r].pct(0.999) << ",\n";
+            }
+            double m0 = dir[0].v.empty() ? 0 : dir[0].mean();
+            double m1 = dir[1].v.empty() ? 0 : dir[1].mean();
+            std::cout << ds_name << " " << kind_name(e)
+                      << " rec_n=" << dir[0].v.size() << " rec_mean_us=" << m0
+                      << " nonrec_n=" << dir[1].v.size() << " nonrec_mean_us=" << m1
+                      << "\n";
+        }
+        // optional DSM on real trees: --dsm-spec name:ops:tree:bindings[;...]
+        std::string dsm_spec = arg_or("dsm-spec", "");
+        std::stringstream ds2(dsm_spec);
+        while (std::getline(ds2, item, ';')) {
+            if (item.empty()) continue;
+            auto p1 = item.find(':'), p2 = item.find(':', p1 + 1), p3 = item.find(':', p2 + 1);
+            run_dsm(csv_dsm, item.substr(p1 + 1, p2 - p1 - 1), item.substr(p2 + 1, p3 - p2 - 1),
+                    item.substr(p3 + 1));
+        }
+        return 0;
+    }
 
     // ------------------------------------------------------------ DSQ -------
     if (mode == "all" || mode == "dsq") {
@@ -651,103 +833,8 @@ int main(int argc, char** argv) {
     }
 
     // ------------------------------------------------------------ DSM -------
-    if (mode == "all" || mode == "dsm") {
-        std::ifstream f(data + "/dsm_wiki.txt");
-        int nop, _;
-        f >> nop >> _;
-        struct Op {
-            std::string kind;
-            int u, w;
-        };
-        std::vector<Op> ops;
-        for (int i = 0; i < nop; ++i) {
-            Op op;
-            f >> op.kind >> op.u >> op.w;
-            ops.push_back(op);
-        }
-        Tree orig = load_tree(data + "/wiki_tree.txt");
-        std::vector<int> entry_node = load_ints(data + "/wiki_entry_node.txt");
-        for (int e = 0; e < 3; ++e) {
-            Design d((Design::Kind)e, Tree(orig.parent), entry_node);
-            Stats lat[2];
-            for (size_t oi = 0; oi < ops.size(); ++oi) {
-                auto& op = ops[oi];
-                // ops were drawn against the initial tree; MERGE removes
-                // directories, so later ops may reference removed nodes.
-                // Tree evolution is identical across designs, so skipping
-                // keeps the compared op streams consistent.
-                if (d.tree.parent[op.u] == -2 || d.tree.parent[op.w] == -2)
-                    continue;
-                if (op.kind == "MERGE" && (op.u == 0 || op.w == 0)) continue;
-                auto t0 = Clock::now();
-                if (op.kind == "MOVE") d.move(op.u, op.w);
-                else d.merge(op.u, op.w);
-                lat[op.kind == "MOVE" ? 0 : 1].add(us_since(t0) / 1000.0);
-                if (!d.validate()) {
-                    std::cerr << "at op " << oi << " " << op.kind << " " << op.u << " "
-                              << op.w << "\n";
-                    std::abort();
-                }
-                if (getenv("DSM_AUDIT_EACH") && !d.audit()) {
-                    std::cerr << "AUDIT-FAIL at op " << oi << " " << op.kind << " " << op.u
-                              << " " << op.w << "\n";
-                    auto chain = [&](int x) {
-                        std::ostringstream oss;
-                        for (int a = x; a >= 0; a = d.tree.parent[a]) oss << a << " ";
-                        return oss.str();
-                    };
-                    std::cerr << "u-chain: " << chain(op.u) << "\nw-chain: " << chain(op.w)
-                              << "\n";
-                    // rebuild ref for reporting
-                    int n = d.tree.n;
-                    std::vector<roaring_bitmap_t*> ref(n, nullptr);
-                    std::vector<int> order(1, 0);
-                    for (size_t i = 0; i < order.size(); ++i)
-                        for (int c : d.tree.children[order[i]])
-                            if (d.tree.parent[c] == order[i]) order.push_back(c);
-                    std::reverse(order.begin(), order.end());
-                    for (int v : order) {
-                        ref[v] = roaring_bitmap_copy(d.local[v]);
-                        for (int c : d.tree.children[v])
-                            if (d.tree.parent[c] == v)
-                                roaring_bitmap_or_inplace(ref[v], ref[c]);
-                    }
-                    for (int v = 0; v < n; ++v) {
-                        if (d.tree.parent[v] == -2) continue;
-                        if (roaring_bitmap_equals(ref[v], d.inc[v])) continue;
-                        roaring_bitmap_t* diff = roaring_bitmap_andnot(ref[v], d.inc[v]);
-                        roaring_uint32_iterator_t it;
-                        roaring_init_iterator(diff, &it);
-                        int shown = 0;
-                        while (it.has_value && shown < 8) {
-                            uint32_t e = it.current_value;
-                            int owner = -1;
-                            for (int x = 0; x < n; ++x) {
-                                if (d.tree.parent[x] == -2) continue;
-                                if (roaring_bitmap_contains(d.local[x], e)) owner = x;
-                            }
-                                std::cerr << "  v=" << v << " missing-entry=" << e
-                                          << " owner=" << owner
-                                          << " owner-chain: " << chain(owner) << "\n";
-                            roaring_advance_uint32_iterator(&it);
-                            ++shown;
-                        }
-                        roaring_bitmap_free(diff);
-                        break;
-                    }
-                    std::abort();
-                }
-            }
-            bool ok = d.audit();
-            for (int i = 0; i < 2; ++i) {
-                csv_dsm << kind_name(e) << "," << (i == 0 ? "MOVE" : "MERGE") << ","
-                        << lat[i].mean() << "," << lat[i].pct(0.95) << "," << lat[i].pct(0.99)
-                        << "\n";
-            }
-            std::cout << "DSM " << kind_name(e) << " move_mean_ms=" << lat[0].mean()
-                      << " merge_mean_ms=" << lat[1].mean()
-                      << " audit=" << (ok ? "ok" : "FAIL") << "\n";
-        }
-    }
+    if (mode == "all" || mode == "dsm")
+        run_dsm(csv_dsm, data + "/dsm_wiki.txt", data + "/wiki_tree.txt",
+                data + "/wiki_entry_node.txt");
     return 0;
 }

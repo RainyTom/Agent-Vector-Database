@@ -1,0 +1,7 @@
+dataset,design,executor,query_type,scope_bucket,ndcg10,recall10,dir_mean_us,dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms
+arxiv,PE-Online,none,recursive,all,,,807.618,2112.35,2444.15,3214.64,4201.38,
+arxiv,PE-Online,none,non-recursive,all,,,9.47734,19.558,26.124,56.458,148.395,
+arxiv,PE-Offline,none,recursive,all,,,13.4756,23.964,31.409,57.428,198.247,
+arxiv,PE-Offline,none,non-recursive,all,,,36.8926,15.752,23.944,2158.55,2718.51,
+arxiv,TrieHI,none,recursive,all,,,11.7898,21.065,26.863,55.287,135.913,
+arxiv,TrieHI,none,non-recursive,all,,,35.3453,13.284,17.645,2155.09,2714.61,
