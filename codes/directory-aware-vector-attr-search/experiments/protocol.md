@@ -108,4 +108,62 @@ Local 并重键，物化设计要沿祖先链修补，反转。
 1. 目录解析延迟不包含执行器时间与端到端；本机与论文机器不同。
 2. 论文 WIKI 树 363k 目录 vs 本构建 468k（我们保留全部实际中间前缀）。
 3. 一般查询约束为合成（发布方缺失），category 约束为真实数据。
-4. ANN 质量（NDCG/Recall）因无向量未复现，需要 ≥16GB RAM 机器补做。
+4. ANN 质量数字基于 400k 子采样（见下节），非论文全量。
+
+## 阶段 3：ANN 质量与端到端（400k 子采样 × 1024 维）
+
+RAM 限制（11GB）→ 对两个真实数据集各均匀子采样 400k 条目（seed 20261026），
+条目重编号 0..K-1（`old_to_new.txt`），目录树与查询锚点不变，scope 相应变稀。
+fvecs→f32 转换与重编号：`scripts/build_subsampled_fixtures.py`。
+GT = scope 内暴力精确 top-10（repro 自建；发布方 relevance GT 因重编号未用）。
+发布方文件命名再次有误：`dbpedia_dir_2m_query_vectors.fvecs`(7.96GB) 实为
+语料向量，真正的 456 条查询向量在 `dbpedia_dir_2m_corpus_vectors.fvecs`
+名下（1.87MB）——已按内容纠正命名。
+
+运行（HNSW 与 IVF 分开跑以控制内存；`--executor none` 可只算 GT）：
+
+```bash
+./build/repro --data data/real_fixtures/wiki400000 --mode dsq --dim 1024 \
+  --executor hnsw --csv experiments/real_wiki400k_hnsw
+# --ef 4096 / --nprobe 1024 调工作点
+```
+
+### 结果（recall@10 / ndcg10 / e2e_mean_ms，TrieHI 行）
+
+wiki400k（457 查询，50% 递归，锚深度 1/2/4/9）：
+
+| 执行器 | 工作点 | recall@10 | ndcg | e2e ms |
+|---|---|---|---|---|
+| HNSW M16 | ef=2048 | 0.121 | 0.539 | 21.7 |
+| IVF nlist1024 | nprobe=256 | 0.146 | 0.608 | 0.97 |
+| IVF nlist1024 | nprobe=1024（全扫描） | **0.309** | **1.000** | 3.35 |
+
+arxiv400k（2000 查询，含 1000 条真实 category 约束）：
+
+| 执行器 | 工作点 | recall@10 | ndcg | e2e ms |
+|---|---|---|---|---|
+| HNSW M16 | ef=2048 | 0.706 | 0.704 | 12.0 |
+| HNSW M16 | ef=4096 | 0.760 | 0.757 | 23.5 |
+| IVF nlist1024 | nprobe=256 | 0.857 | 0.865 | 5.68 |
+| IVF nlist1024 | nprobe=1024（全扫描） | 0.995 | 0.999 | 21.7 |
+
+### 结论
+
+1. **ANN 质量与目录设计无关**：三设计 scope 语义一致，ndcg 差异 ≤2e-3
+   （仅同距离并列项的排序差异）。目录设计只通过 resolve 延迟影响端到端。
+2. **目录开销占比**：除 PE-Online 递归在 wiki（585µs，占 e2e 2.4%）外，
+   物化设计 resolve ≤0.5% e2e；arxiv 上全部 ≤0.9%。
+3. **wiki recall 低是 scope 饱和假象**：全扫描 IVF 达 ndcg=1.0 但
+   recall@10=0.31——子采样后深锚点 scope 平均不足 10 条，k=10 指标
+   本身不可能满分；执行器已找到全部存在的相关项。
+4. **arxiv（真实约束、大 scope）**：IVF 在工作点全面优于 HNSW
+   （recall 0.857 vs 0.706，延迟 5.7ms vs 12.0ms）；全扫描天花板 0.995。
+5. 构建成本：HNSW M16 212–369s/1.70GB；IVF nlist1024 28s/1.65GB。
+
+### 局限
+
+- 400k 子采样使 scope 比全量稀 5–7 倍，深锚点查询尤其受影响；绝对
+  recall 不可与论文全量比，但设计间相对关系与机制结论不受影响。
+- 固定工作点（论文 Fig.7 是整条 trade-off 曲线）；单线程计时；WSL2。
+- 发布方 relevance GT 未用于 ANN 指标（条目重编号 + 语义为相关性而非
+  scope 内精确 top-k）。

@@ -74,10 +74,34 @@ PE-Offline 13.5µs / TrieHI 11.1µs。
    PE-Offline 0.167ms（物化设计须沿祖先链修补）。两种操作的最优设计相反，
    与论文 §V-C 的机制叙述一致。
 
+## ANN 质量与端到端（阶段 3，2026-10-26 补）
+
+RAM 限制下对两个真实数据集各子采样 400k 条目（重编号；树与锚点不变；
+`scripts/build_subsampled_fixtures.py`），1024 维，GT 为 scope 内暴力
+top-10。工作点：HNSW M16 ef=2048/4096；IVF nlist1024 nprobe=256/1024。
+
+**wiki400k**（457 查询）：HNSW ef2048 recall 0.121/21.7ms；IVF np256
+0.146/0.97ms；**IVF 全扫描 0.309/ndcg=1.00/3.35ms**。
+
+**arxiv400k**（2000 查询，1000 真实 category 约束）：HNSW ef2048
+0.706/12.0ms；ef4096 0.760/23.5ms；IVF np256 **0.857**/5.7ms；IVF 全扫描
+0.995/21.7ms。
+
+三个要点：
+
+1. **ANN 质量与目录设计无关**（三设计 ndcg 差 ≤2e-3，仅并列项序差）——
+   目录设计只经 resolve 延迟影响端到端（占比 ≤2.4%）。
+2. **wiki 的低 recall 是 scope 饱和假象**：全扫描点 ndcg=1.0 证明执行器
+   已取回全部存在相关项；深锚点+子采样使 scope 平均不足 10 条，k=10
+   recall 结构上不可能高。
+3. **真实约束下 IVF 优于 HNSW**（recall 0.857 vs 0.706 且快 2×），与
+   scope 大小强相关；论文 Fig.7 的 trade-off 形态在真实 1024 维数据上
+   方向一致。
+
 ## 局限
 
-- 无向量 → 无 ANN 质量与端到端数字；需要 ≥24GB RAM 机器补全
-  （fvecs 可直接流式读入，IndexIVFPQ 可降内存）。
+- ANN 数字基于 400k 子采样（scope 稀 5–7 倍），绝对 recall 不可对论文
+  全量；设计间相对关系不受影响。全量实验需 ≥24GB RAM。
 - 一般查询约束为合成锚点；论文原约束若日后发布应直接替换复测。
 - DSM 结果见 `codes/.../experiments/real_wiki_dsm_dsm.csv`（wiki 2000 ops）。
 - 本机 WSL2，单线程计时；与论文集群/服务器配置不可比。

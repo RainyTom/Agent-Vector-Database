@@ -559,6 +559,8 @@ int main(int argc, char** argv) {
     std::string mode = arg_or("mode", "all");
     int ef_search = std::atoi(arg_or("ef", "2048").c_str());
     int nprobe = std::atoi(arg_or("nprobe", "256").c_str());
+    int dim = std::atoi(arg_or("dim", "128").c_str());
+    std::string which_exec = arg_or("executor", "both");
 
     Vectors base, test;
     struct Exec {
@@ -569,18 +571,18 @@ int main(int argc, char** argv) {
     };
     std::vector<Exec> execs;
     if (mode == "all" || mode == "dsq") {
-        base = Vectors::load(data + "/base.f32", 128);
-        test = Vectors::load(data + "/test.f32", 128);
+        base = Vectors::load(data + "/base.f32", dim);
+        test = Vectors::load(data + "/test.f32", dim);
         std::cerr << "base " << base.n << "x" << base.d << ", test " << test.n << "x"
                   << test.d << "\n";
-        {
+        if (which_exec == "both" || which_exec == "hnsw") {
             auto t0 = Clock::now();
             auto ix = std::make_unique<faiss::IndexHNSWFlat>(base.d, 16);
             ix->hnsw.efConstruction = 200;
             ix->add(base.n, base.x.data());
             execs.push_back({"PG-hnsw-M16", std::move(ix), us_since(t0)});
         }
-        {
+        if (which_exec == "both" || which_exec == "ivf") {
             auto t0 = Clock::now();
             auto ix = std::make_unique<faiss::IndexIVFFlat>(
                 new faiss::IndexFlatL2(base.d), base.d, 1024, faiss::METRIC_L2);
@@ -693,20 +695,50 @@ int main(int argc, char** argv) {
 
     // ------------------------------------------------------------ DSQ -------
     if (mode == "all" || mode == "dsq") {
-        struct NSData {
+        // auto-detect binding format: "<name>_bindings.txt" holds one node
+        // per entry; "<name>_bindings.pairs" holds "entry node" pairs
+        struct NSDataAny {
             std::string name;
             Tree tree;
-            std::vector<int> entry_node;
+            std::vector<std::pair<int, int>> bindings;
+            int n_entries;
         };
-        std::vector<NSData> wiki = {{"wiki", load_tree(data + "/wiki_tree.txt"),
-                                     load_ints(data + "/wiki_entry_node.txt")}};
-        std::vector<NSData> arxiv = {{"arxiv-subject", load_tree(data + "/subject_tree.txt"),
-                                      load_ints(data + "/subject_entry_node.txt")},
-                                     {"arxiv-temporal", load_tree(data + "/temporal_tree.txt"),
-                                      load_ints(data + "/temporal_entry_node.txt")}};
+        auto load_ns = [&](const char* name, const char* tree_f) {
+            std::string pairs_p = std::string(data) + "/" + name + "_bindings.pairs";
+            std::string ints_p = std::string(data) + "/" + name + "_bindings.txt";
+            std::string legacy_p = std::string(data) + "/" + name + "_entry_node.txt";
+            std::ifstream probe(pairs_p);
+            std::ifstream probe2(ints_p);
+            NSDataAny nsd{name, load_tree(std::string(data) + "/" + tree_f), {}, 0};
+            if (probe.good()) {
+                nsd.bindings = load_pairs(pairs_p);
+                for (auto& [e, _] : nsd.bindings) nsd.n_entries = std::max(nsd.n_entries, e + 1);
+            } else {
+                auto en = load_ints(probe2.good() ? ints_p : legacy_p);
+                nsd.n_entries = (int)en.size();
+                nsd.bindings.reserve(en.size());
+                for (int i = 0; i < (int)en.size(); ++i)
+                    nsd.bindings.push_back({i, en[i]});
+            }
+            return nsd;
+        };
+        auto file_ok0 = [&](const char* p) {
+            std::ifstream f(std::string(data) + "/" + p);
+            return f.good();
+        };
+        std::vector<NSDataAny> wiki, arxiv;
+        if (file_ok0("wiki_tree.txt"))
+            wiki = {load_ns("wiki", "wiki_tree.txt")};
+        if (file_ok0("subject_tree.txt"))
+            arxiv = {load_ns("subject", "subject_tree.txt"),
+                     load_ns("temporal", "temporal_tree.txt")};
 
         const int K = 10;
-        auto run_group = [&](const std::string& dataset_name, std::vector<NSData>& nss,
+        auto make_design = [](Design::Kind k, NSDataAny& nsd) {
+            return std::make_unique<Design>(k, Tree(nsd.tree.parent), nsd.bindings,
+                                            nsd.n_entries);
+        };
+        auto run_group = [&](const std::string& dataset_name, std::vector<NSDataAny>& nss,
                              const std::string& wl_path, bool has_ns) {
             Workload wl = Workload::load(wl_path, has_ns);
             // ground truth once per workload (scope semantics are design-
@@ -714,12 +746,12 @@ int main(int argc, char** argv) {
             std::vector<std::vector<int>> gts(wl.qs.size());
             bool dbg = getenv("RECALL_DEBUG") != nullptr;
             {
-                Design scratch(Design::TRIEHI, nss[0].tree, nss[0].entry_node);
+                auto scratch = make_design(Design::TRIEHI, nss[0]);
                 for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
                     int nsi = has_ns ? wl.ns_flag[qi] : 0;
-                    Design* dp = &scratch;
-                    Design d2(Design::TRIEHI, nss[nsi].tree, nss[nsi].entry_node);
-                    if (nsi != 0) dp = &d2;
+                    Design* dp = scratch.get();
+                    auto d2 = make_design(Design::TRIEHI, nss[nsi]);
+                    if (nsi != 0) dp = d2.get();
                     auto* sc = dp->resolve(wl.qs[qi].anchor, wl.qs[qi].rec == 1);
                     gts[qi] = brute_force_topk(
                         base, &test.x[(size_t)wl.qs[qi].qidx * test.d], sc, K);
@@ -736,9 +768,7 @@ int main(int argc, char** argv) {
             }
             for (int e = 0; e < 3; ++e) {
                 std::vector<std::unique_ptr<Design>> designs;
-                for (auto& nsd : nss)
-                    designs.push_back(
-                        std::make_unique<Design>((Design::Kind)e, nsd.tree, nsd.entry_node));
+                for (auto& nsd : nss) designs.push_back(make_design((Design::Kind)e, nsd));
                 double dir_build_s = 0;
                 size_t dir_bytes = 0;
                 for (auto& d : designs) {
@@ -828,8 +858,14 @@ int main(int argc, char** argv) {
                 }
             }
         };
-        run_group("wiki", wiki, data + "/workload_wiki.txt", false);
-        run_group("arxiv", arxiv, data + "/workload_arxiv.txt", true);
+        auto file_ok = [](const std::string& p) {
+            std::ifstream f(p);
+            return f.good();
+        };
+        if (file_ok(data + "/workload_wiki.txt") && file_ok(data + "/wiki_tree.txt"))
+            run_group("wiki", wiki, data + "/workload_wiki.txt", false);
+        if (file_ok(data + "/workload_arxiv.txt") && file_ok(data + "/subject_tree.txt"))
+            run_group("arxiv", arxiv, data + "/workload_arxiv.txt", true);
     }
 
     // ------------------------------------------------------------ DSM -------
