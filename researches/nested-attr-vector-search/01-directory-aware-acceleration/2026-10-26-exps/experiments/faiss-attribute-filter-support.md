@@ -89,7 +89,7 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 | 存在 `IDSelectorAnd`/`IDSelectorOr` 组合器 | 部分正确 | 仅 core `deps/faiss`（`impl/IDSelector.h:180,193`）；**PathSeer fork 没有 And/Or**，只有 `Not`/`All`（fork `impl/IDSelector.h:132-142`）。fork 上组合条件须由调用方预计算位图 |
 | “预过滤：在访问倒排表前过滤无效 ID” | 错误 | `IndexIVF.cpp:415,545` + `InvertedListScanner::sel_scan_codes`（`IndexIVF.cpp:1186`）：coarse quantizer **不感知 selector**，照常选 nprobe 个 list，selector 在 list 扫描**期间**跳过不可行 code；扫描了全部命中 list，只是不计算/不入堆 |
 | “确保过滤操作不影响核心检索性能” | 与实测矛盾 | 选择率实验：HNSW 固定 ef 召回随 s 崩塌（100k 上 ef=64 时 30%→97.3%、1%→44.1%），维持 r95 需 ef∝s⁻⁰·⁶~⁻⁰·⁸；IVF 需按 s 调 nprobe；过滤吞吐随 s 跨 3 个数量级变化（见 `../report.md` §3、§9） |
-| 行号引用（如 IDSelector.h#L134） | 仅适用于 core | 引用的是 core FAISS 行号；fork 同名文件行号不同，且 fork 缺 And/Or |
+| 行号引用（如 IDSelector.h#L134） | 过期 | 博文行号对应约 1.7/1.8 时代；本仓库 core（main `5b4aa46`，v1.15.1）实际为 Range L71 / Array L98 / Batch L123 / Bitmap L145 / Not L161 / And L180 / Or L193 / XOr L206 / `SearchParametersIVF` `IndexIVF.h:96`。fork 同名文件行号又不同且缺 And/Or |
 | GPU 预过滤建议 | 未核实 | 本仓库未测 GPU 路径，不作判断 |
 
 结论：博文可作为 core FAISS 的接口导览，但其“预过滤在访问倒排表前过滤”与“不影响核心检索性能”两处表述会误导设计；精确表述以本笔记 §1–§3 为准。组合器可用性须区分 core 与 fork。
