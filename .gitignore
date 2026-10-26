@@ -189,3 +189,6 @@ researches/**/experiments/b1/**/timings.f64
 production/semantic-mobility-search/work/
 datasets/**/*.csv
 datasets/**/*.jsonl
+
+# downloaded real-dataset raw materials (GB-scale, see datasets/SOURCES.md)
+data/real_fixtures/

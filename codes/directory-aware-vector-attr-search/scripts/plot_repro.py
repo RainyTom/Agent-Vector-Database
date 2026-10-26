@@ -130,22 +130,194 @@ def fig_dir_size(rows, out: Path):
     save(fig, out, "fig_repro_dir_size")
 
 
+# ----------------------------------------------------------- new figures ----
+def fig7_tradeoff(rows, out: Path):
+    """Fig 7 analog: recursive DSQ quality vs mean latency, 4 subplots."""
+    panels = [("wiki", "PG-hnsw-M16"), ("wiki", "IVF-nlist1024"),
+              ("arxiv", "PG-hnsw-M16"), ("arxiv", "IVF-nlist1024")]
+    fig, axes = plt.subplots(1, 4, figsize=(20, 4.6))
+    for ax, (ds, ex) in zip(axes, panels):
+        metric = "ndcg10" if ds == "wiki" else "recall10"
+        ylab = "nDCG@10" if ds == "wiki" else "Recall@100"
+        for d in DESIGNS:
+            pts = [r for r in rows if r["dataset"] == ds and r["design"] == d
+                   and r["executor"] == ex and r["query_type"] == "recursive"]
+            pts.sort(key=lambda r: int(r["value"]))
+            xs = [float(r["e2e_mean_ms"]) for r in pts]
+            ys = [float(r[metric]) for r in pts]
+            ax.plot(xs, ys, "-o", color=COLORS[d], label=d)
+        ax.set_xlabel("mean latency (ms)")
+        ax.set_ylabel(ylab)
+        ax.set_title(f"{ds}, {ex.split('-')[0]}")
+        ax.grid(True, alpha=0.3)
+    axes[0].legend()
+    fig.suptitle("Fig 7 analog: recursive DSQ quality vs latency (ef/nprobe sweep)")
+    fig.tight_layout()
+    save(fig, out, "fig_repro_fig7_tradeoff")
+
+
+def fig9_dsm_perop(rows, out: Path):
+    """Fig 9 analog: per-operation MOVE/MERGE wall-clock latency."""
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.6))
+    for ax, op in zip(axes, ["MOVE", "MERGE"]):
+        for d in DESIGNS:
+            pts = [(int(r["op_index"]), float(r["latency_ms"]))
+                   for r in rows if r["design"] == d and r["op_kind"] == op]
+            pts.sort()
+            ax.plot([p[0] for p in pts], [p[1] for p in pts], ".", ms=3,
+                    color=COLORS[d], label=d)
+        ax.set_yscale("log")
+        ax.set_xlabel("operation index")
+        ax.set_ylabel("latency (ms, log)")
+        ax.set_title(op)
+        ax.grid(True, which="both", alpha=0.3)
+    axes[0].legend()
+    fig.suptitle("Fig 9 analog: DSM wall-clock latency per operation")
+    fig.tight_layout()
+    save(fig, out, "fig_repro_fig9_dsm_perop")
+
+
+def fig10_structure(tree_dir: Path, out: Path):
+    """Fig 10 analog: WIKI structural complexity by anchor path depth."""
+    with open(tree_dir / "wiki_tree.txt", encoding="utf-8") as f:
+        n = int(f.readline())
+        parent = [0] * n
+        for _ in range(n):
+            v, p = map(int, f.readline().split())
+            parent[v] = p
+    children = [[] for _ in range(n)]
+    depth = [0] * n
+    for v in range(1, n):
+        children[parent[v]].append(v)
+        depth[v] = depth[parent[v]] + 1
+    with open(tree_dir / "workload_wiki.txt", encoding="utf-8") as f:
+        nq, _ = map(int, f.readline().split())
+        anchors = [int(f.readline().split()[-1]) for _ in range(nq)]
+    depths = sorted({depth[a] for a in anchors})
+    n_anchor, m_exp, c_child = [], [], []
+    for dpt in depths:
+        ans = [a for a in anchors if depth[a] == dpt]
+        n_anchor.append(len(ans))
+        m_exp.append(sum(len(_subtree(a, children)) for a in ans) / len(ans))
+        c_child.append(sum(len(children[a]) for a in ans) / len(ans))
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+    w = 0.26
+    xs = list(range(len(depths)))
+    ax.bar([x - w for x in xs], n_anchor, w, label="input path")
+    ax.bar(xs, m_exp, w, label="expanded sub-path (m)")
+    ax.bar([x + w for x in xs], c_child, w, label="direct child-path (c)")
+    ax.set_xticks(xs)
+    ax.set_xticklabels([str(d) for d in depths])
+    ax.set_xlabel("path depth")
+    ax.set_ylabel("count")
+    ax.set_title("Fig 10 analog: directory structural complexity by depth")
+    ax.legend()
+    ax.grid(True, axis="y", alpha=0.3)
+    save(fig, out, "fig_repro_fig10_structure")
+
+
+def _subtree(u, children):
+    out, st = [], [u]
+    while st:
+        x = st.pop()
+        out.append(x)
+        st.extend(children[x])
+    return out
+
+
+def fig11_depth(rows, out: Path):
+    """Fig 11 analog: recursive DSQ latency and nDCG by anchor depth (wiki)."""
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.6))
+    for ax, ex in zip(axes, ["PG-hnsw-M16", "IVF-nlist1024"]):
+        ax2 = ax.twinx()
+        for d in DESIGNS:
+            agg = {}
+            for r in rows:
+                if not (r["dataset"] == "wiki" and r["design"] == d
+                        and r["executor"] == ex and r["query_type"] == "recursive"):
+                    continue
+                agg.setdefault(int(r["anchor_depth"]), []).append(r)
+            ds_pts = sorted(agg)
+            lat = [sum(float(r["e2e_ms"]) for r in agg[x]) / len(agg[x]) for x in ds_pts]
+            ndc = [sum(float(r["ndcg10"]) for r in agg[x]) / len(agg[x]) for x in ds_pts]
+            ax.plot(ds_pts, lat, "-o", color=COLORS[d], label=f"{d} latency")
+            ax2.plot(ds_pts, ndc, "--s", color=COLORS[d], alpha=0.45,
+                     label=f"{d} nDCG")
+        ax.set_xlabel("path depth")
+        ax.set_ylabel("mean e2e latency (ms)")
+        ax2.set_ylabel("nDCG@10")
+        ax.set_title(f"wiki, {ex.split('-')[0]}")
+        ax.grid(True, alpha=0.3)
+    axes[0].legend(loc="upper left", fontsize=8)
+    fig.suptitle("Fig 11 analog: depth sensitivity of recursive DSQ (wiki)")
+    fig.tight_layout()
+    save(fig, out, "fig_repro_fig11_depth")
+
+
+def fig12_breakdown(rows, out: Path):
+    """Fig 12 analog: directory-only latency decomposition by depth (wiki)."""
+    fig, axes = plt.subplots(1, 2, figsize=(13, 4.6))
+    for ax, qt in zip(axes, ["recursive", "non-recursive"]):
+        depths = sorted({int(r["anchor_depth"]) for r in rows
+                         if r["dataset"] == "wiki" and r["query_type"] == qt})
+        w = 0.26
+        for di, d in enumerate(DESIGNS):
+            enum_pct, bmp_pct = [], []
+            for dp in depths:
+                sel = [r for r in rows if r["dataset"] == "wiki" and r["design"] == d
+                       and r["query_type"] == qt and int(r["anchor_depth"]) == dp]
+                te = sum(float(r["enum_us"]) for r in sel)
+                tb = sum(float(r["bitmap_us"]) for r in sel)
+                tot = te + tb
+                enum_pct.append(100 * te / tot if tot > 0 else 0)
+                bmp_pct.append(100 * tb / tot if tot > 0 else 0)
+            xs = [x + (di - 1) * w for x in range(len(depths))]
+            ax.bar(xs, enum_pct, w, color=COLORS[d], alpha=0.55,
+                   label=f"{d} enum" if qt == "recursive" else None)
+            ax.bar(xs, bmp_pct, w, bottom=enum_pct, color=COLORS[d],
+                   label=f"{d} bitmap" if qt == "recursive" else None)
+        ax.set_xticks(range(len(depths)))
+        ax.set_xticklabels([str(d) for d in depths])
+        ax.set_xlabel("path depth")
+        ax.set_ylabel("% of directory-only latency")
+        ax.set_ylim(0, 100)
+        ax.set_title(qt)
+        ax.grid(True, axis="y", alpha=0.3)
+    axes[0].legend(fontsize=8)
+    fig.suptitle("Fig 12 analog: directory-only latency decomposition (wiki)")
+    fig.tight_layout()
+    save(fig, out, "fig_repro_fig12_breakdown")
+
+
 def main():
     ap = argparse.ArgumentParser()
     repro = (Path(__file__).resolve().parents[3] / "researches" /
              "nested-attr-vector-search" / "01-directory-aware-acceleration" /
-             "2026-10-26-exps" / "repro-2606.16903")
+             "2026-10-26-triehi-reproduction")
     ap.add_argument("--data", type=Path, default=repro / "data")
     ap.add_argument("--out", type=Path, default=repro / "figures")
+    ap.add_argument("--tree-dir", type=Path,
+                    default=Path(__file__).resolve().parents[1] / "data" / "sift100k")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     dsq = load(args.data / "results_dsq.csv")
     dsm = load(args.data / "results_dsm.csv")
     size = load(args.data / "results_size.csv")
+    perop = load(args.data / "results_dsm_perop.csv")
+    perquery = load(args.data / "results_dsq_perquery.csv")
+    scan = load(args.data / "results_dsq_scan.csv")
     fig_dir_latency(dsq, args.out)
     fig_ndcg_buckets(dsq, args.out)
     fig_dsm(dsm, args.out)
     fig_dir_size(size, args.out)
+    if scan:
+        fig7_tradeoff(scan, args.out)
+    if perop:
+        fig9_dsm_perop(perop, args.out)
+    fig10_structure(args.tree_dir, args.out)
+    if perquery:
+        fig11_depth(perquery, args.out)
+        fig12_breakdown(perquery, args.out)
 
 
 if __name__ == "__main__":

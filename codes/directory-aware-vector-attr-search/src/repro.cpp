@@ -37,6 +37,7 @@
 #include <memory>
 #include <numeric>
 #include <queue>
+#include <sstream>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -184,6 +185,12 @@ struct Design {
     std::vector<std::string> entry_key;    // PE-Online: per-entry path keys
     double build_us = 0;
     size_t bytes = 0;
+    // Fig 12 directory-only latency decomposition (set by resolve()):
+    //   t_enum_us   : sub-path / child-path enumeration (PE-Online subtree
+    //                 walk, non-recursive child enumeration)
+    //   t_bitmap_us : bitmap fetch / compute (posting reads + set ops)
+    double t_enum_us = 0;
+    double t_bitmap_us = 0;
 
     Design(Kind k, Tree t, const std::vector<int>& entry_node)
         : kind(k), tree(std::move(t)), n_entries((int)entry_node.size()) {
@@ -251,23 +258,47 @@ struct Design {
         for (auto& e : entry_key) bytes += e.size() + 1;
     }
 
-    // DSQ resolution -> owned candidate entry-ID set (paper §V-A)
+    // DSQ resolution -> owned candidate entry-ID set (paper §V-A).
+    // Sets t_enum_us / t_bitmap_us for the Fig 12 latency decomposition.
     roaring_bitmap_t* resolve(int anchor, bool recursive) {
+        t_enum_us = t_bitmap_us = 0;
+        auto t0 = Clock::now();
         if (kind == PE_ONLINE) {
-            if (!recursive) return roaring_bitmap_copy(local[anchor]);
-            roaring_bitmap_t* out = roaring_bitmap_create();
-            std::vector<int> st(1, anchor);
-            while (!st.empty()) {
-                int v = st.back();
-                st.pop_back();
-                roaring_bitmap_or_inplace(out, local[v]);
-                for (int c : tree.children[v]) st.push_back(c);
+            if (!recursive) {
+                t_bitmap_us = us_since(t0);
+                return roaring_bitmap_copy(local[anchor]);
             }
+            roaring_bitmap_t* out = roaring_bitmap_create();
+            // stage 1: descendant path enumeration (auxiliary dir index walk)
+            std::vector<int> nodes;
+            {
+                std::vector<int> st(1, anchor);
+                while (!st.empty()) {
+                    int v = st.back();
+                    st.pop_back();
+                    nodes.push_back(v);
+                    for (int c : tree.children[v]) st.push_back(c);
+                }
+            }
+            t_enum_us = us_since(t0);
+            auto t1 = Clock::now();
+            // stage 2: posting-list fetch + union
+            for (int v : nodes) roaring_bitmap_or_inplace(out, local[v]);
+            t_bitmap_us = us_since(t1);
             return out;
         }
-        if (recursive) return roaring_bitmap_copy(inc[anchor]);
+        if (recursive) {
+            // one aggregate-set access (materialized designs)
+            t_bitmap_us = us_since(t0);
+            return roaring_bitmap_copy(inc[anchor]);
+        }
+        // non-recursive materialized designs: Inc(anchor) minus child subtrees
+        std::vector<int> kids(tree.children[anchor]);
+        t_enum_us = us_since(t0);
+        auto t1 = Clock::now();
         roaring_bitmap_t* out = roaring_bitmap_copy(inc[anchor]);
-        for (int c : tree.children[anchor]) roaring_bitmap_andnot_inplace(out, inc[c]);
+        for (int c : kids) roaring_bitmap_andnot_inplace(out, inc[c]);
+        t_bitmap_us = us_since(t1);
         return out;
     }
 
@@ -480,7 +511,8 @@ static std::string kind_name(int e) {
 }
 
 // ------------------------------------------------------------------ DSM -----
-static void run_dsm(std::ofstream& csv_dsm, const std::string& ops_path,
+static void run_dsm(std::ofstream& csv_dsm, std::ofstream& csv_perop,
+                    const std::string& ops_path,
                     const std::string& tree_path, const std::string& bindings_path) {
     std::ifstream f(ops_path);
     int nop, _;
@@ -512,7 +544,10 @@ static void run_dsm(std::ofstream& csv_dsm, const std::string& ops_path,
             auto t0 = Clock::now();
             if (op.kind == "MOVE") d.move(op.u, op.w);
             else d.merge(op.u, op.w);
-            lat[op.kind == "MOVE" ? 0 : 1].add(us_since(t0) / 1000.0);
+            double op_ms = us_since(t0) / 1000.0;
+            lat[op.kind == "MOVE" ? 0 : 1].add(op_ms);
+            csv_perop << kind_name(e) << "," << oi << "," << op.kind << "," << op_ms
+                      << "\n";
             if (!d.validate()) {
                 std::cerr << "at op " << oi << " " << op.kind << " " << op.u << " "
                           << op.w << "\n";
@@ -570,7 +605,7 @@ int main(int argc, char** argv) {
         size_t bytes = 0;
     };
     std::vector<Exec> execs;
-    if (mode == "all" || mode == "dsq") {
+    if (mode == "all" || mode == "dsq" || mode == "dsq_scan") {
         base = Vectors::load(data + "/base.f32", dim);
         test = Vectors::load(data + "/test.f32", dim);
         std::cerr << "base " << base.n << "x" << base.d << ", test " << test.n << "x"
@@ -601,12 +636,43 @@ int main(int argc, char** argv) {
         }
     }
 
-    std::ofstream csv_dsq(csv + "_dsq.csv"), csv_dsm(csv + "_dsm.csv"),
-        csv_size(csv + "_size.csv");
-    csv_dsq << "dataset,design,executor,query_type,scope_bucket,ndcg10,recall10,dir_mean_us,"
-               "dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms\n";
-    csv_dsm << "design,op,mean_ms,p95_ms,p99_ms\n";
-    csv_size << "component,design,build_s,size_mb\n";
+    std::ofstream csv_dsq, csv_dsm, csv_size, csv_perop, csv_perquery, csv_scan;
+    bool want_dsq = mode == "all" || mode == "dsq";
+    bool want_dsm = mode == "all" || mode == "dsm";
+    bool want_scan = mode == "dsq_scan";
+    bool want_size = want_dsq || mode == "scope";
+    if (want_dsq) {
+        csv_dsq.open(csv + "_dsq.csv");
+        csv_perquery.open(csv + "_dsq_perquery.csv");
+        csv_dsq << "dataset,design,executor,query_type,scope_bucket,ndcg10,recall10,dir_mean_us,"
+                   "dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms\n";
+        csv_perquery << "dataset,design,executor,query_type,anchor_depth,scope_card,dir_us,"
+                        "enum_us,bitmap_us,e2e_ms,recall10,ndcg10\n";
+    }
+    if (want_dsm) {
+        csv_dsm.open(csv + "_dsm.csv");
+        csv_perop.open(csv + "_dsm_perop.csv");
+        csv_dsm << "design,op,mean_ms,p95_ms,p99_ms\n";
+        csv_perop << "design,op_index,op_kind,latency_ms\n";
+    }
+    if (want_size) {
+        csv_size.open(csv + "_size.csv");
+        csv_size << "component,design,build_s,size_mb\n";
+    }
+    if (want_scan) {
+        csv_scan.open(csv + "_dsq_scan.csv");
+        csv_scan << "dataset,design,executor,query_type,param,value,ndcg10,recall10,"
+                      "dir_mean_us,e2e_mean_ms\n";
+    }
+    auto parse_int_list = [](const std::string& s) {
+        std::vector<int> out;
+        std::stringstream ss(s);
+        std::string item;
+        while (std::getline(ss, item, ',')) out.push_back(std::atoi(item.c_str()));
+        return out;
+    };
+    std::vector<int> ef_list = parse_int_list(arg_or("ef-list", "2048"));
+    std::vector<int> nprobe_list = parse_int_list(arg_or("nprobe-list", "256"));
 
     // -------------------------------------------- scope (no vectors) --------
     if (mode == "scope") {
@@ -687,14 +753,14 @@ int main(int argc, char** argv) {
         while (std::getline(ds2, item, ';')) {
             if (item.empty()) continue;
             auto p1 = item.find(':'), p2 = item.find(':', p1 + 1), p3 = item.find(':', p2 + 1);
-            run_dsm(csv_dsm, item.substr(p1 + 1, p2 - p1 - 1), item.substr(p2 + 1, p3 - p2 - 1),
-                    item.substr(p3 + 1));
+            run_dsm(csv_dsm, csv_perop, item.substr(p1 + 1, p2 - p1 - 1),
+                    item.substr(p2 + 1, p3 - p2 - 1), item.substr(p3 + 1));
         }
         return 0;
     }
 
     // ------------------------------------------------------------ DSQ -------
-    if (mode == "all" || mode == "dsq") {
+    if (mode == "all" || mode == "dsq" || mode == "dsq_scan") {
         // auto-detect binding format: "<name>_bindings.txt" holds one node
         // per entry; "<name>_bindings.pairs" holds "entry node" pairs
         struct NSDataAny {
@@ -826,6 +892,13 @@ int main(int argc, char** argv) {
                         int r = q.rec == 1 ? 0 : 1;
                         int card = (int)roaring_bitmap_get_cardinality(scope);
                         int b = card < 10 ? 0 : card < 1000 ? 1 : 2;
+                        csv_perquery << dataset_name << "," << kind_name(e) << "," << ex.name
+                                     << "," << (r == 0 ? "recursive" : "non-recursive")
+                                     << "," << designs[nsi]->tree.depth[q.anchor] << ","
+                                     << card << "," << d_us << ","
+                                     << designs[nsi]->t_enum_us << ","
+                                     << designs[nsi]->t_bitmap_us << "," << e2e_ms << ","
+                                     << (double)hit / K << "," << ndcg << "\n";
                         dir[r].add(d_us);
                         e2e[r].add(e2e_ms);
                         rec[r].add((double)hit / K);
@@ -862,15 +935,106 @@ int main(int argc, char** argv) {
             std::ifstream f(p);
             return f.good();
         };
-        if (file_ok(data + "/workload_wiki.txt") && file_ok(data + "/wiki_tree.txt"))
-            run_group("wiki", wiki, data + "/workload_wiki.txt", false);
-        if (file_ok(data + "/workload_arxiv.txt") && file_ok(data + "/subject_tree.txt"))
-            run_group("arxiv", arxiv, data + "/workload_arxiv.txt", true);
+        if (mode != "dsq_scan") {
+            if (file_ok(data + "/workload_wiki.txt") && file_ok(data + "/wiki_tree.txt"))
+                run_group("wiki", wiki, data + "/workload_wiki.txt", false);
+            if (file_ok(data + "/workload_arxiv.txt") && file_ok(data + "/subject_tree.txt"))
+                run_group("arxiv", arxiv, data + "/workload_arxiv.txt", true);
+        }
+
+        // ---- Fig 7: quality-latency trade-off sweep over ANN parameters ----
+        if (mode == "dsq_scan") {
+            auto run_scan = [&](const std::string& dataset_name, std::vector<NSDataAny>& nss,
+                                const std::string& wl_path, bool has_ns) {
+                Workload wl = Workload::load(wl_path, has_ns);
+                std::vector<std::vector<int>> gts(wl.qs.size());
+                {
+                    auto scratch = make_design(Design::TRIEHI, nss[0]);
+                    for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
+                        int nsi = has_ns ? wl.ns_flag[qi] : 0;
+                        Design* dp = scratch.get();
+                        auto d2 = make_design(Design::TRIEHI, nss[nsi]);
+                        if (nsi != 0) dp = d2.get();
+                        auto* sc = dp->resolve(wl.qs[qi].anchor, wl.qs[qi].rec == 1);
+                        gts[qi] = brute_force_topk(
+                            base, &test.x[(size_t)wl.qs[qi].qidx * test.d], sc, K);
+                        roaring_bitmap_free(sc);
+                    }
+                }
+                for (int e = 0; e < 3; ++e) {
+                    std::vector<std::unique_ptr<Design>> designs;
+                    for (auto& nsd : nss) designs.push_back(make_design((Design::Kind)e, nsd));
+                    for (auto& ex : execs) {
+                        bool is_pg = ex.name.rfind("PG", 0) == 0;
+                        const char* pname = is_pg ? "efSearch" : "nprobe";
+                        const auto& params = is_pg ? ef_list : nprobe_list;
+                        for (int pv : params) {
+                            Stats ndc[2], rec[2], dir[2], e2e[2];
+                            for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
+                                auto& q = wl.qs[qi];
+                                int nsi = has_ns ? wl.ns_flag[qi] : 0;
+                                auto t0 = Clock::now();
+                                auto* scope = designs[nsi]->resolve(q.anchor, q.rec == 1);
+                                double d_us = us_since(t0);
+                                auto t1 = Clock::now();
+                                RoaringSel sel(scope);
+                                std::vector<faiss::idx_t> I(K, -1);
+                                std::vector<float> D(K);
+                                if (is_pg) {
+                                    faiss::SearchParametersHNSW sp;
+                                    sp.sel = &sel;
+                                    sp.efSearch = pv;
+                                    ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
+                                                  D.data(), I.data(), &sp);
+                                } else {
+                                    faiss::SearchParametersIVF sp;
+                                    sp.sel = &sel;
+                                    sp.nprobe = pv;
+                                    ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
+                                                  D.data(), I.data(), &sp);
+                                }
+                                double e2e_ms = us_since(t1) / 1000.0 + d_us / 1000.0;
+                                std::unordered_set<int> gs(gts[qi].begin(), gts[qi].end());
+                                int hit = 0;
+                                double dcg = 0;
+                                for (int t = 0; t < K; ++t) {
+                                    if (I[t] >= 0 && gs.count((int)I[t])) {
+                                        ++hit;
+                                        dcg += 1.0 / std::log2(2.0 + t);
+                                    }
+                                }
+                                double idcg = 0;
+                                for (size_t t = 0; t < gts[qi].size() && t < K; ++t)
+                                    idcg += 1.0 / std::log2(2.0 + t);
+                                double ndcg = idcg > 0 ? dcg / idcg : 1.0;
+                                int r = q.rec == 1 ? 0 : 1;
+                                dir[r].add(d_us);
+                                e2e[r].add(e2e_ms);
+                                rec[r].add((double)hit / K);
+                                ndc[r].add(ndcg);
+                                roaring_bitmap_free(scope);
+                            }
+                            for (int r = 0; r < 2; ++r)
+                                csv_scan << dataset_name << "," << kind_name(e) << ","
+                                         << ex.name << ","
+                                         << (r == 0 ? "recursive" : "non-recursive") << ","
+                                         << pname << "," << pv << "," << ndc[r].mean() << ","
+                                         << rec[r].mean() << "," << dir[r].mean() << ","
+                                         << e2e[r].mean() << "\n";
+                        }
+                    }
+                }
+            };
+            if (file_ok(data + "/workload_wiki.txt") && file_ok(data + "/wiki_tree.txt"))
+                run_scan("wiki", wiki, data + "/workload_wiki.txt", false);
+            if (file_ok(data + "/workload_arxiv.txt") && file_ok(data + "/subject_tree.txt"))
+                run_scan("arxiv", arxiv, data + "/workload_arxiv.txt", true);
+        }
     }
 
     // ------------------------------------------------------------ DSM -------
     if (mode == "all" || mode == "dsm")
-        run_dsm(csv_dsm, data + "/dsm_wiki.txt", data + "/wiki_tree.txt",
+        run_dsm(csv_dsm, csv_perop, data + "/dsm_wiki.txt", data + "/wiki_tree.txt",
                 data + "/wiki_entry_node.txt");
     return 0;
 }
