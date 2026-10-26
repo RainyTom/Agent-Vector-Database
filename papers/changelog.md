@@ -2,7 +2,7 @@
 
 ## 2026-10-26（Asia/Shanghai）
 
-- 新增 `papers/prefix-vector-search/2606.16903-directory-aware/paper.technical.md`：TrieHI 论文的系统技术解读（问题定义 DSQ/DSM、三方案结构与复杂度画像、§V 全部实验数字与口径、局限），章节定位到 PDF 页码；与既有 `paper.report.md`（索引摘要）互补，复现与延伸链接到 researches/nested-attr-vector-search 的 2026-10-26 实验记录。
+- TrieHI（arXiv:2606.16903）技术解读（问题定义 DSQ/DSM、三方案结构与复杂度画像、§V 全部实验数字与口径、局限）落位于 `researches/nested-attr-vector-search/01-directory-aware-acceleration/paper-notes-2606.16903.md`（研究文档归 researches，papers 目录只留索引摘要与全文）；复现图在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/` 两处 figures/ 下。
 
 ## 2026-10-11（Asia/Shanghai）
 
