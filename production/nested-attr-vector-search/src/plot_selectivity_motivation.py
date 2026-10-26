@@ -80,14 +80,14 @@ def main() -> int:
 
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.6))
     ax = axes[0]
-    for method, label, marker in [
+    method_specs = [
         ("exact_list", "exact feasible scan (list)", "o"),
         ("ivf", "IVF + selector, nprobe tuned", "D"),
         ("hnsw", "BF-HNSW, ef tuned for r95", "s"),
         ("post", "post-filter, expanding ef", "^"),
-    ]:
-        if method in excluded:
-            continue
+    ]
+    active = [m for m in method_specs if m[0] not in excluded]
+    for method, label, marker in active:
         pts = series(rows, method, "qps")
         ok = [(s, q) for s, q, _, good in pts if good]
         bad = [(s, q) for s, q, _, good in pts if not good]
@@ -105,10 +105,9 @@ def main() -> int:
     ax.set_yscale("log")
     ax.set_xlabel("filter selectivity s = |feasible| / n")
     ax.set_ylabel("QPS at Recall@10 ≥ 0.95")
-    if "exact_list" in excluded:
-        ax.set_title("SIFT100k: IVF vs BF-HNSW vs post-filter")
-    else:
-        ax.set_title("SIFT100k: exact vs IVF vs BF-HNSW vs post-filter")
+    short = {"exact_list": "exact", "ivf": "IVF", "hnsw": "BF-HNSW",
+             "post": "post-filter"}
+    ax.set_title("SIFT100k: " + " vs ".join(short[m[0]] for m in active))
     ax.grid(True, which="both", alpha=0.25)
     ax.legend(fontsize=8, loc="lower left")
 
