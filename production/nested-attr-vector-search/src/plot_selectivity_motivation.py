@@ -48,7 +48,7 @@ def fit_power(xs, ys):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", type=Path,
-                    default=DATA / "selectivity_grid_curve_20261026.csv")
+                    default=DATA / "selectivity_grid_ext_curve_20261026.csv")
     ap.add_argument("--out", type=Path,
                     default=OUT / "selectivity_motivation")
     args = ap.parse_args()

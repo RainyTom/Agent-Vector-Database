@@ -4,7 +4,8 @@
 `filtered-ann-selectivity-sweep`，1M 为 segment `filtered-ann-selectivity-1m-200q`，
 100k cluster-far 为 segment `filtered-ann-selectivity-cluster-100k`，cluster-near 为
 `filtered-ann-selectivity-cluster-near-margin`，partition-flat 为
-`filtered-ann-selectivity-cluster-partflat`，百分网格为 `filtered-ann-selectivity-grid-100k`。
+`filtered-ann-selectivity-cluster-partflat`，百分网格为 `filtered-ann-selectivity-grid-100k`，
+扩展网格为 `filtered-ann-selectivity-grid-ext-100k`。
 
 - `selectivity_curve_20261026.csv`：SIFT100k run #82 的逐行结果（131 行，表头 1 行）。
 - `selectivity_20261026.jsonl`：同一结果的 JSONL 版本。
@@ -20,6 +21,7 @@
 - `selectivity_cluster_partgather_smoke_20261026.csv` / `summary_cluster_partgather_smoke_20261026.json`：同一分区布局但只 gather 可行点；10 条/桶 smoke，s≤0.1 仍慢于全局 exact list，s=0.3 快 26%。
 - `selectivity_grid_curve_20261026.csv` / `summary_grid_20261026.json`：SIFT100k 随机谓词在 1%/5%/10%/15%/20%/25%/30% 的选择率网格，200/bucket、3 次重复、margin 0.01，run #93；主指标 6,066.30 QPS，交叉点约 0.065，作为动机实验。
 - `selectivity_grid_1m_curve_20261026.csv` / `summary_grid_1m_20261026.json`：同一网格在 SIFT1M（200/bucket、3 次重复、margin 0.01，run #94）；主指标 1,981.46 QPS，交叉点约 0.023。1M 与 100k 主指标不可直接比较。
+- `selectivity_grid_ext_curve_20261026.csv` / `summary_grid_ext_20261026.json`：SIFT100k 扩展网格 0.5%/1%/5%/10%/15%/20%/25%/30%/50%/100%（200/bucket、3 次重复、margin 0.01，run #95）；主指标 8,254.35 QPS，交叉点约 0.048。
 
 ## CSV 列
 
