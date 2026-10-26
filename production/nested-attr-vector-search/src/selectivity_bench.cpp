@@ -58,10 +58,11 @@ namespace {
 
 constexpr int K = 10;
 constexpr double TARGET_RECALL = 0.95;
-constexpr const char* BUCKET_NAMES[7] = {
-    "0.001", "0.003", "0.01", "0.03", "0.1", "0.3", "1.0"};
-constexpr double BUCKET_LO[7] = {0.0, 0.0015, 0.005, 0.015, 0.05, 0.15, 0.5};
-constexpr double BUCKET_HI[7] = {0.0015, 0.005, 0.015, 0.05, 0.15, 0.5, 1.01};
+constexpr int NB = 7;
+constexpr const char* BUCKET_NAMES[NB] = {
+    "0.01", "0.05", "0.10", "0.15", "0.20", "0.25", "0.30"};
+constexpr double BUCKET_LO[NB] = {0.005, 0.025, 0.075, 0.125, 0.175, 0.225, 0.275};
+constexpr double BUCKET_HI[NB] = {0.025, 0.075, 0.125, 0.175, 0.225, 0.275, 0.35};
 
 struct Args {
     std::string fixtures;
@@ -662,7 +663,7 @@ void self_check(const std::vector<float>& base, const float* queries,
 }
 
 int classify(double s) {
-    for (int i = 0; i < 7; ++i) {
+    for (int i = 0; i < NB; ++i) {
         if (s >= BUCKET_LO[i] && s < BUCKET_HI[i]) return i;
     }
     return -1;
@@ -736,11 +737,11 @@ Tree load_tree(const std::string& fix, int n, int nb) {
 
 std::vector<Group> make_random_groups(int n, int nb, int nq_data,
                                       int nq_per_bucket, uint64_t seed) {
-    static const double targets[7] = {0.001, 0.003, 0.01, 0.03,
-                                      0.1,   0.3,   1.0};
+    static const double targets[NB] = {0.01, 0.05, 0.10, 0.15,
+                                        0.20, 0.25, 0.30};
     std::mt19937_64 rng(seed ^ 0x9e3779b97f4a7c15ull);
     std::vector<Group> groups;
-    for (int bi = 0; bi < 7; ++bi) {
+    for (int bi = 0; bi < NB; ++bi) {
         Group g;
         g.mode = "random";
         g.bucket = BUCKET_NAMES[bi];
@@ -1074,12 +1075,12 @@ std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
                                        int n, int d, int nq_data,
                                        int nq_per_bucket, uint64_t seed,
                                        bool near) {
-    static const double targets[7] = {0.001, 0.003, 0.01, 0.03,
-                                      0.1,   0.3,   1.0};
+    static const double targets[NB] = {0.01, 0.05, 0.10, 0.15,
+                                        0.20, 0.25, 0.30};
     std::mt19937_64 rng(seed ^ 0x517cc1b727220a95ull);
     std::vector<Group> groups;
     const int nb = (n + 7) / 8;
-    for (int bi = 0; bi < 7; ++bi) {
+    for (int bi = 0; bi < NB; ++bi) {
         Group g;
         g.mode = near ? "cluster_near" : "cluster";
         g.bucket = BUCKET_NAMES[bi];
@@ -1156,7 +1157,7 @@ std::vector<Group> make_tree_groups(const Tree& tree, int n, int nb,
                                     uint64_t seed) {
     std::vector<Group> groups;
     for (const std::string scope : {"sub", "exact"}) {
-        std::vector<std::vector<std::pair<int, double>>> buckets(7);
+        std::vector<std::vector<std::pair<int, double>>> buckets(NB);
         std::unordered_set<uint64_t> seen;
         for (int v = 0; v < tree.nodes; ++v) {
             const auto& bm = scope == "sub" ? tree.inc[v] : tree.local[v];
@@ -1169,7 +1170,7 @@ std::vector<Group> make_tree_groups(const Tree& tree, int n, int nb,
             if (!seen.insert(h).second) continue;
             buckets[bi].push_back({v, s});
         }
-        for (int bi = 0; bi < 7; ++bi) {
+        for (int bi = 0; bi < NB; ++bi) {
             auto& cand = buckets[bi];
             if (cand.size() < 2) continue;
             std::mt19937_64 rng(seed + uint64_t(bi) * 131 + (scope == "sub" ? 7 : 11));
@@ -1625,7 +1626,7 @@ int main(int argc, char** argv) {
         double crossover_s = -1;
         std::vector<std::string> frontier_method;
         std::vector<double> frontier_qps;
-        for (int bi = 0; bi < 7; ++bi) {
+        for (int bi = 0; bi < NB; ++bi) {
             const std::string b = BUCKET_NAMES[bi];
             double best_qps = 0;
             std::string best_m;
@@ -1659,12 +1660,12 @@ int main(int argc, char** argv) {
                       << " " << best_qps << " qps\n";
         }
         const double gmean =
-            nvalid == 7 ? std::exp(logsum / 7.0) : 0.0;
+            nvalid == NB ? std::exp(logsum / double(NB)) : 0.0;
 
         // Fixed policy: exact scan below s=0.01, BF-HNSW at/above s=0.01.
         double pol_logsum = 0;
         int pol_valid = 0;
-        for (int bi = 0; bi < 7; ++bi) {
+        for (int bi = 0; bi < NB; ++bi) {
             const std::string b = BUCKET_NAMES[bi];
             double s_bucket = 0;
             for (const auto& r : rows) {
@@ -1688,7 +1689,7 @@ int main(int argc, char** argv) {
             }
         }
         const double policy_gmean =
-            pol_valid == 7 ? std::exp(pol_logsum / 7.0) : 0.0;
+            pol_valid == NB ? std::exp(pol_logsum / double(NB)) : 0.0;
 
         bool valid = true;
         for (const auto& r : rows) {
@@ -1734,7 +1735,7 @@ int main(int argc, char** argv) {
               << ",\"clusters\":" << args.cluster_k
               << ",\"seed\":" << args.seed << ",\"valid\":"
               << (valid ? "true" : "false") << ",\"frontier\":[";
-            for (int bi = 0; bi < 7; ++bi) {
+            for (int bi = 0; bi < NB; ++bi) {
                 if (bi) s << ",";
                 s << "{\"bucket\":\"" << BUCKET_NAMES[bi] << "\",\"method\":\""
                   << frontier_method[bi] << "\",\"qps\":" << frontier_qps[bi]
