@@ -379,5 +379,15 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 7. 1M 层级/目录模式：fixtures 已生成（`work/fixtures_1m_ccs`，CCS 树 + 语义相关标签，sub p50=10.4%、exact p50=0.11%），运行命令：
    `python3 src/selectivity_harness.py --fixtures work/fixtures_1m_ccs --out-dir work/selectivity_1m_hier --modes sub,exact --metric-mode sub --nq-per-bucket 200 --max-ef 8192 --policy-s 0.02 --repeats 3 --ivf`
    回答"目录解析成本与执行器交叉点在高 n=1M 下是否仍成立"。本机两次启动均被会话中止，未开跑；峰值内存约 3 GB。
+   fixtures 不在仓库（`work/` 按约定不入库），重建命令（2026-10-26 另一台机器复现验证）：
+   ```
+   production/nested-attr-vector-search/work/venv/bin/python \
+     production/nested-attr-vector-search/src/export_sift1m.py   # datasets/sift-128-euclidean.hdf5 → work/fixtures_1m
+   production/nested-attr-vector-search/work/venv/bin/python \
+     production/nested-attr-vector-search/src/prep_ccs.py \
+     --fixtures production/nested-attr-vector-search/work/fixtures_1m \
+     --out production/nested-attr-vector-search/work/fixtures_1m_ccs --n 1000000 --dim 128
+   ```
+   venv 需 h5py + numpy。复现 `stats_ccs.json`：subtree scope p50=99,492（9.95%）、exact p50=1,129（0.113%）——exact 与上文 0.11% 一致，sub 较上文 10.4% 偏低 0.45pp（相对 ~4.5%）；按同一脚本同一 HDF5 应可逐比特复现，差异来源未定位（疑当时 base 来源或参数不同），重建后以上文数字还是复现数字为准需在跑前核对。
 8. far/near 之间更细的相关性梯度（如查询在可行集半径的 1×/3×/10× 处采样），定位交叉点如何随查询距离移动。
 9. part_flat/part_gather 只测了 k=128 单构型；用 k=32/512 与更紧路由重测，确认 $s=0.1$ 的 0.86× 能否翻转。
