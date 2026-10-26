@@ -95,7 +95,27 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --modes random --nq-per-bucket 200 --max-ef 8192 --policy-s 0.02 --repeats 3
 ```
 
-1M 只跑随机谓词；结果见报告的 §5。100k 的主指标与 1M 不可直接比较。
+1M 只跑随机谓词；结果见报告的 §5 与动机实验的 1M 小节。100k 的主指标与 1M 不可直接比较。
+
+### 动机网格（1%–30%）
+
+```bash
+# 100k
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_ccs \
+  --out-dir production/nested-attr-vector-search/work/selectivity_grid \
+  --modes random --metric-mode random --nq-per-bucket 200 --max-ef 16384 \
+  --policy-s 0.06 --tune-margin 0.01 --repeats 3
+
+# 1M
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_1m \
+  --out-dir production/nested-attr-vector-search/work/selectivity_grid_1m \
+  --modes random --metric-mode random --nq-per-bucket 200 --max-ef 8192 \
+  --policy-s 0.02 --tune-margin 0.01 --repeats 3
+python3 production/nested-attr-vector-search/src/plot_selectivity_motivation.py
+python3 production/nested-attr-vector-search/src/plot_selectivity_motivation_scale.py
+```
 
 ### 属性分区 flat 基线
 

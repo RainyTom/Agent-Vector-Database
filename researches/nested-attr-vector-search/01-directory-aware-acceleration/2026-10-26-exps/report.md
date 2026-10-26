@@ -288,6 +288,8 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 
 固定 `ef=64` 的 Recall@10 从 30% 的 97.3% 掉到 1% 的 44.1%；维持 r95 的 `ef` 约按 $s^{-0.60}$ 增长。交叉点约 $s^*\approx0.065$。**结论：属性过滤不能简单下推给全局 HNSW；低选择率需要可行集精确枚举，高选择率才用 BF-HNSW。** 这是 Directory-Aware 选择执行器的直接动机。
 
+同一网格在 SIFT1M 上复测：1% 时 exact list 1,404 QPS 仍胜出（HNSW 354），5% 起 HNSW 反超；交叉点约 $s^*\approx0.023$，比 100k 左移约 2.9×。固定 `ef=64` 的召回在 1% 只有 49.0%、30% 为 91.7%，比 100k 更脆。见 `figures/selectivity_motivation_scale.svg`。
+
 ## 10. 下一步
 
 1. 用更紧的 flat routing / 更大分区重测 part_gather，确认 $s=0.1$ 的 0.86× 能否翻过 1；低 $s$ 的几微秒差距预计难以翻转。

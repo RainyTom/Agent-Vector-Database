@@ -19,6 +19,7 @@
 - `selectivity_cluster_partflat_curve_20261026.csv` / `.jsonl` / `summary_cluster_partflat_20261026.json`：SIFT100k cluster-far 的属性分区 flat 扫描（分区 k=128 seed 777，独立于谓词生成器；49.2 MB 分区副本），200/bucket、3 次重复，run #92；主指标 14,378.20 QPS，只在 s=0.3 略胜精确扫描。
 - `selectivity_cluster_partgather_smoke_20261026.csv` / `summary_cluster_partgather_smoke_20261026.json`：同一分区布局但只 gather 可行点；10 条/桶 smoke，s≤0.1 仍慢于全局 exact list，s=0.3 快 26%。
 - `selectivity_grid_curve_20261026.csv` / `summary_grid_20261026.json`：SIFT100k 随机谓词在 1%/5%/10%/15%/20%/25%/30% 的选择率网格，200/bucket、3 次重复、margin 0.01，run #93；主指标 6,066.30 QPS，交叉点约 0.065，作为动机实验。
+- `selectivity_grid_1m_curve_20261026.csv` / `summary_grid_1m_20261026.json`：同一网格在 SIFT1M（200/bucket、3 次重复、margin 0.01，run #94）；主指标 1,981.46 QPS，交叉点约 0.023。1M 与 100k 主指标不可直接比较。
 
 ## CSV 列
 
