@@ -103,6 +103,9 @@ def main() -> int:
     if summary.get("pathseer"):
         print(f"METRIC pathseer_index_mb={summary['pathseer_index_mb']:.3f}")
         print(f"METRIC pathseer_build_s={summary['pathseer_build_s']:.3f}")
+    if summary.get("ivf"):
+        print(f"METRIC ivf_build_s={summary['ivf_build_s']:.3f}")
+        print(f"METRIC ivf_index_mb={summary['ivf_index_mb']:.3f}")
     if summary.get("partitioned"):
         print(f"METRIC part_build_s={summary['part_build_s']:.3f}")
         print(f"METRIC part_index_est_mb={summary['part_index_est_mb']:.3f}")
@@ -125,6 +128,9 @@ def main() -> int:
               f"part_max_ef={summary.get('part_max_ef')}")
     if summary.get("part_flat"):
         print(f"ASI part_flat=1 parts={summary.get('parts')}")
+    if summary.get("ivf"):
+        print(f"ASI ivf=1 nlist={summary.get('ivf_nlist')} "
+              f"ivf_max_nprobe={summary.get('ivf_max_nprobe')}")
     if summary.get("part_gather"):
         print(f"ASI part_gather=1 parts={summary.get('parts')}")
     print(

@@ -28,6 +28,7 @@
 #include <faiss/Clustering.h>
 #include <faiss/IndexFlat.h>
 #include <faiss/IndexHNSW.h>
+#include <faiss/IndexIVFFlat.h>
 #include <faiss/IndexPathSeer.h>
 #include <faiss/impl/HNSW.h>
 #include <faiss/impl/IDSelector.h>
@@ -85,6 +86,9 @@ struct Args {
     double policy_s = 0.06;
     double tune_margin = 0.0;
     bool use_partitioned = false;
+    bool use_ivf = false;
+    int ivf_nlist = 1024;
+    int ivf_max_nprobe = 1024;
     bool use_part_flat = false;
     bool use_part_gather = false;
     int parts = 128;
@@ -113,6 +117,9 @@ Args parse(int argc, char** argv) {
         else if (f == "--pathseer-max-ef") a.pathseer_max_ef = std::stoi(next());
         else if (f == "--tune-margin") a.tune_margin = std::stod(next());
         else if (f == "--partitioned") a.use_partitioned = true;
+        else if (f == "--ivf") a.use_ivf = true;
+        else if (f == "--ivf-nlist") a.ivf_nlist = std::stoi(next());
+        else if (f == "--ivf-max-nprobe") a.ivf_max_nprobe = std::stoi(next());
         else if (f == "--part-flat") a.use_part_flat = true;
         else if (f == "--part-gather") a.use_part_gather = true;
         else if (f == "--parts") a.parts = std::stoi(next());
@@ -535,6 +542,57 @@ EvalOut eval_hnsw(faiss::IndexHNSWFlat& index, const Group& g, const Tree& tree,
         }
     }
     return out;
+}
+
+EvalOut eval_ivf(faiss::IndexIVF& index, const Group& g, const Tree& tree,
+                 const float* queries, int nq_data, const std::vector<int>& gt,
+                 const std::string& variant, int nprobe, int begin, int end) {
+    EvalOut out;
+    const int nb = int(g.qs[0].bm.size());
+    std::vector<uint8_t> scratch(nb);
+    std::vector<int> stack;
+    std::vector<float> D(K);
+    std::vector<faiss::idx_t> I(K);
+    out.times.reserve(end - begin);
+    for (int qi = begin; qi < end; ++qi) {
+        const Query& q = g.qs[qi];
+        const uint8_t* bm = prepare_bitmap(q, tree, variant, scratch, stack,
+                                            out.resolve_us);
+        const double t0 = now_us();
+        std::fill(I.begin(), I.end(), -1);
+        BitmapSel sel(nb, bm);
+        faiss::SearchParametersIVF p;
+        p.nprobe = size_t(nprobe);
+        p.sel = &sel;
+        index.search(1, queries + size_t(q.qvec) * index.d, K, D.data(),
+                     I.data(), &p);
+        out.times.push_back(now_us() - t0);
+        int pred[K];
+        for (int t = 0; t < K; ++t) pred[t] = int(I[t]);
+        out.hits += count_hits(pred, gt.data() + size_t(qi) * K);
+        out.violations += count_duplicates(pred);
+        for (int t = 0; t < K; ++t) {
+            if (pred[t] >= 0 && !test_bit(bm, pred[t])) ++out.violations;
+        }
+    }
+    return out;
+}
+
+int choose_nprobe_ivf(faiss::IndexIVF& index, const Group& g, const Tree& tree,
+                      const float* queries, int nq_data,
+                      const std::vector<int>& gt, const std::string& variant,
+                      int max_nprobe, int tune_end, double target) {
+    const int probes[] = {1, 4, 16, 64, 256, 1024, 4096};
+    int last = 1;
+    for (int np : probes) {
+        if (np > max_nprobe) break;
+        EvalOut e = eval_ivf(index, g, tree, queries, nq_data, gt, variant, np,
+                             0, tune_end);
+        last = np;
+        double recall = double(e.hits) / double(tune_end * K);
+        if (recall >= target && e.violations == 0) return np;
+    }
+    return last;
 }
 
 EvalOut eval_pathseer(faiss::IndexPathSeer& index, const Group& g,
@@ -1421,6 +1479,39 @@ int main(int argc, char** argv) {
                       << ps_bytes / (1024.0 * 1024.0) << "\n";
         }
 
+        faiss::IndexIVFFlat* ivf = nullptr;
+        faiss::Index* ivf_quantizer = nullptr;
+        double ivf_build_s = 0, ivf_load_s = 0;
+        size_t ivf_bytes = 0;
+        if (args.use_ivf) {
+            const std::string ipath =
+                args.out_dir + "/ivf_N" + std::to_string(args.ivf_nlist) +
+                "_n" + std::to_string(n) + ".faiss";
+            if (!args.rebuild_index && std::filesystem::exists(ipath)) {
+                const double t0 = now_s();
+                faiss::Index* raw = faiss::read_index(ipath.c_str());
+                ivf = dynamic_cast<faiss::IndexIVFFlat*>(raw);
+                if (!ivf || ivf->ntotal != n || ivf->d != d) {
+                    throw std::runtime_error("cached ivf index mismatch");
+                }
+                ivf_load_s = now_s() - t0;
+            } else {
+                const double t0 = now_s();
+                ivf_quantizer = new faiss::IndexFlatL2(d);
+                ivf = new faiss::IndexIVFFlat(ivf_quantizer, d,
+                                              size_t(args.ivf_nlist),
+                                              faiss::METRIC_L2);
+                ivf->train(n, base_raw.data());
+                ivf->add(n, base_raw.data());
+                ivf_build_s = now_s() - t0;
+                faiss::write_index(ivf, ipath.c_str());
+            }
+            ivf_bytes = std::filesystem::file_size(ipath);
+            std::cerr << "[selectivity] ivf build_s=" << ivf_build_s
+                      << " load_s=" << ivf_load_s << " index_mb="
+                      << ivf_bytes / (1024.0 * 1024.0) << "\n";
+        }
+
         Partitioned pinfo;
         PartFlat pflat;
         double part_build_s = 0, part_flat_build_s = 0;
@@ -1525,6 +1616,23 @@ int main(int argc, char** argv) {
                                       variant, pef, pe, nq - half, &ptune);
                     rp.recall_tune = double(ptune.hits) / double(half * K);
                     rows.push_back(rp);
+                }
+
+                if (args.use_ivf && variant == "precomputed") {
+                    const int np = choose_nprobe_ivf(
+                        *ivf, g, tree, gq, nq_data, gts[gi], variant,
+                        args.ivf_max_nprobe, half,
+                        TARGET_RECALL + args.tune_margin);
+                    EvalOut itune = eval_ivf(*ivf, g, tree, gq, nq_data,
+                                             gts[gi], variant, np, 0, half);
+                    EvalOut ie = median_eval([&] {
+                        return eval_ivf(*ivf, g, tree, gq, nq_data, gts[gi],
+                                        variant, np, half, nq);
+                    }, args.repeats);
+                    Row ri = make_row(g.mode, g.bucket, g.s_mean, "ivf",
+                                      variant, np, ie, nq - half, &itune);
+                    ri.recall_tune = double(itune.hits) / double(half * K);
+                    rows.push_back(ri);
                 }
 
                 if (args.use_partitioned && variant == "precomputed") {
@@ -1717,6 +1825,12 @@ int main(int argc, char** argv) {
               << ",\"pathseer_index_mb\":" << ps_bytes / (1024.0 * 1024.0)
               << ",\"pathseer_Mexp\":" << args.pathseer_Mexp
               << ",\"pathseer_Mexp_search\":" << args.pathseer_Mexp_search
+              << ",\"ivf\":" << (args.use_ivf ? "true" : "false")
+              << ",\"ivf_nlist\":" << args.ivf_nlist
+              << ",\"ivf_build_s\":" << ivf_build_s
+              << ",\"ivf_load_s\":" << ivf_load_s
+              << ",\"ivf_index_mb\":" << ivf_bytes / (1024.0 * 1024.0)
+              << ",\"ivf_max_nprobe\":" << args.ivf_max_nprobe
               << ",\"partitioned\":" << (args.use_partitioned ? "true" : "false")
               << ",\"part_flat\":" << (args.use_part_flat ? "true" : "false")
               << ",\"part_gather\":" << (args.use_part_gather ? "true" : "false")
