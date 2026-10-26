@@ -78,7 +78,23 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --nq-per-bucket 200 --max-ef 16384
 ```
 
-## 7. 局限
+## 7. 二手来源核对（CSDN 博文，2026-10-26）
+
+核对对象：CSDN《元数据过滤的技术基石：IDSelector 架构》（作者翟桔贞，CC BY-SA）。按本仓库源码与实测逐条审计：
+
+| 博文主张 | 判定 | 本仓库证据 |
+|---|---|---|
+| `IDSelector::is_member` 为核心接口，筛选逻辑与检索解耦 | 正确 | fork `impl/IDSelector.h:27-33`；属性求值（谓词→ID 集合）完全由调用方负责，FAISS 内无任何谓词引擎 |
+| Range O(1)、Array O(n)（线性扫描）、Batch O(1)（unordered_set+bloom）、Bitmap O(1) | 正确 | fork `IDSelector.cpp:82-88`（Array 线性扫描）；Batch 带 bloom 前置过滤 |
+| 存在 `IDSelectorAnd`/`IDSelectorOr` 组合器 | 部分正确 | 仅 core `deps/faiss`（`impl/IDSelector.h:180,193`）；**PathSeer fork 没有 And/Or**，只有 `Not`/`All`（fork `impl/IDSelector.h:132-142`）。fork 上组合条件须由调用方预计算位图 |
+| “预过滤：在访问倒排表前过滤无效 ID” | 错误 | `IndexIVF.cpp:415,545` + `InvertedListScanner::sel_scan_codes`（`IndexIVF.cpp:1186`）：coarse quantizer **不感知 selector**，照常选 nprobe 个 list，selector 在 list 扫描**期间**跳过不可行 code；扫描了全部命中 list，只是不计算/不入堆 |
+| “确保过滤操作不影响核心检索性能” | 与实测矛盾 | 选择率实验：HNSW 固定 ef 召回随 s 崩塌（100k 上 ef=64 时 30%→97.3%、1%→44.1%），维持 r95 需 ef∝s⁻⁰·⁶~⁻⁰·⁸；IVF 需按 s 调 nprobe；过滤吞吐随 s 跨 3 个数量级变化（见 `../report.md` §3、§9） |
+| 行号引用（如 IDSelector.h#L134） | 仅适用于 core | 引用的是 core FAISS 行号；fork 同名文件行号不同，且 fork 缺 And/Or |
+| GPU 预过滤建议 | 未核实 | 本仓库未测 GPU 路径，不作判断 |
+
+结论：博文可作为 core FAISS 的接口导览，但其“预过滤在访问倒排表前过滤”与“不影响核心检索性能”两处表述会误导设计；精确表述以本笔记 §1–§3 为准。组合器可用性须区分 core 与 fork。
+
+## 8. 局限
 
 - 证据来自本机两个 FAISS 版本：core `deps/faiss`（manifest `5b4aa46`）与 PathSeer fork（`6e0cd1d`）。其他版本/分支的 selector 语义应以对应源码为准。
 - `IDSelectorBitmap` 是稠密位图；Roaring/压缩位图不是 FAISS 自带能力。属性索引的压缩与更新成本不在本笔记结论内。
