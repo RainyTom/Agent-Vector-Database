@@ -40,7 +40,9 @@ __pycache__/
 *$py.class
 .python-version
 .venv/
+.venv_*/
 venv/
+venv_*/
 env/
 ENV/
 .pytest_cache/
@@ -132,8 +134,11 @@ profiles/
 perf.data
 perf.data.old
 
-# Raw/generated datasets are local artifacts. Keep metadata, manifests,
-# checksums, download scripts, and audit files in Git.
+# Datasets, downloaded dependencies, and scratch files stay local.
+# Keep download scripts and research summaries outside these directories.
+/datasets/
+/deps/
+/work/
 datasets/**/*.f32
 datasets/**/*.f64
 datasets/**/*.fvecs
