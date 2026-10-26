@@ -58,11 +58,14 @@ namespace {
 
 constexpr int K = 10;
 constexpr double TARGET_RECALL = 0.95;
-constexpr int NB = 7;
+constexpr int NB = 10;
 constexpr const char* BUCKET_NAMES[NB] = {
-    "0.01", "0.05", "0.10", "0.15", "0.20", "0.25", "0.30"};
-constexpr double BUCKET_LO[NB] = {0.005, 0.025, 0.075, 0.125, 0.175, 0.225, 0.275};
-constexpr double BUCKET_HI[NB] = {0.025, 0.075, 0.125, 0.175, 0.225, 0.275, 0.35};
+    "0.005", "0.01", "0.05", "0.10", "0.15", "0.20", "0.25",
+    "0.30", "0.50", "1.00"};
+constexpr double BUCKET_LO[NB] = {0.0025, 0.005, 0.025, 0.075, 0.125, 0.175,
+                                  0.225, 0.275, 0.375, 0.75};
+constexpr double BUCKET_HI[NB] = {0.005, 0.025, 0.075, 0.125, 0.175, 0.225,
+                                  0.275, 0.375, 0.75, 1.01};
 
 struct Args {
     std::string fixtures;
@@ -737,8 +740,8 @@ Tree load_tree(const std::string& fix, int n, int nb) {
 
 std::vector<Group> make_random_groups(int n, int nb, int nq_data,
                                       int nq_per_bucket, uint64_t seed) {
-    static const double targets[NB] = {0.01, 0.05, 0.10, 0.15,
-                                        0.20, 0.25, 0.30};
+    static const double targets[NB] = {0.005, 0.01, 0.05, 0.10, 0.15,
+                                        0.20, 0.25, 0.30, 0.50, 1.00};
     std::mt19937_64 rng(seed ^ 0x9e3779b97f4a7c15ull);
     std::vector<Group> groups;
     for (int bi = 0; bi < NB; ++bi) {
@@ -1075,8 +1078,8 @@ std::vector<Group> make_cluster_groups(const Clusters& cl, const float* base,
                                        int n, int d, int nq_data,
                                        int nq_per_bucket, uint64_t seed,
                                        bool near) {
-    static const double targets[NB] = {0.01, 0.05, 0.10, 0.15,
-                                        0.20, 0.25, 0.30};
+    static const double targets[NB] = {0.005, 0.01, 0.05, 0.10, 0.15,
+                                        0.20, 0.25, 0.30, 0.50, 1.00};
     std::mt19937_64 rng(seed ^ 0x517cc1b727220a95ull);
     std::vector<Group> groups;
     const int nb = (n + 7) / 8;
