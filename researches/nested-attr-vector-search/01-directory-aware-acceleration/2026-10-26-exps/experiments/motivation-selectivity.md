@@ -82,7 +82,7 @@ FAISS 的 `IDSelector` 是 filter-agnostic：HNSW 仍遍历不可行节点，只
 
 四方法可达前沿几何均值 9,903 QPS，相比不包含 IVF 的 100k 扩展网格 8,254 高约 20%（不同运行，非配对加速比）。IVF 5%/10%/15%/20% 桶分别快于同轮 HNSW 2.59×/1.72×/1.70×/1.17×（5% 的 HNSW 未过门槛）。首次合格的索引胜出在 1%–5%；图中对数插值约 2.2%，只是本配置的画图估计。IVF 不消除低选择率精确枚举优势，也不能从独立随机谓词外推到相关属性。
 
-## 1M 规模复测
+## 1M 规模复测（先前 HNSW-only，随后加入 IVF）
 
 把同一组 0.5%–100% 随机谓词搬到 SIFT1M（`n=1000000`，200 条/桶，100 调参 + 100 评估，3 次中位数，margin 0.01；HNSW M=16/efc=200，625.9 MB，冷构建 499.8 s）：
 
@@ -101,16 +101,35 @@ FAISS 的 `IDSelector` 是 filter-agnostic：HNSW 仍遍历不可行节点，只
 | 50% | 39 | **2,469（128）** | 99.1% | 5,308 | 92.0% ✗ |
 | 100% | 29 | **3,814（64）** | 96.9% | 10,928 | 81.9% ✗ |
 
-- **交叉点左移**：约 $s^*\approx0.022$（100k 为 0.048），即在 1M 上 5% 已足以让 BF-HNSW 反超。
+- **HNSW-only 交叉点左移**：约 $s^*\approx0.022$（100k 为 0.048），即在 1M 上 5% 已足以让 BF-HNSW 反超；这不是包含 IVF 的多索引交叉点。
 - **固定 ef 的召回更脆**：`ef=64` 在 0.5% 只有 31.4%（100k 为 32.7%），在 100% 为 96.9%（100k 为 98.8%）。
 - **post-filter 在 10%/20%/25% 反超 HNSW**，但 30%/50%/100% 召回只有 94.5%/92.0%/81.9%，不可用。
 
-主指标 `gmean_qps_r95=2,196`（不与 100k 直接可比）。规模效应一致：$n$ 从 100k 到 1M，精确枚举的相对优势从约 5% 以下扩展到约 2% 以下；post-filter 只在中间选择率短暂占优。
+原 HNSW-only 主指标 `gmean_qps_r95=2,196`（不与 100k 直接可比）。规模效应一致：$n$ 从 100k 到 1M，精确枚举的相对优势缩小；post-filter 只在中间选择率短暂占优。图已更新为 IVF 复测后的索引对照，原 HNSW-only 数值保留于上表。
+
+### SIFT1M IVF 复测（run #99 首次构建；#100 缓存索引复现）
+
+仍用相同 10 桶/100 tune + 100 eval/3 次中位数、同一可行位图；IVF `nlist=1024`、`nprobe` 从 `{1,4,16,64,256,1024}` 选最小 tune r96 后按 eval r95 门控。下表取缓存查询的 run #100；#99 冷构建 IVF 11.56 s、496.4 MB，HNSW 索引 625.9 MB（另一次冷构建约 499.8 s），两者构建均未计入 QPS。
+
+| s | IVF nprobe | IVF QPS | IVF Recall@10 | 本轮最优方法（QPS） |
+|---:|---:|---:|---:|---|
+| 0.5% | 256 | 1,147 | 100% | exact list（2,845） |
+| 1% | 64 | **3,051** | 96.2% | IVF（3,051） |
+| 5% | 64 | **1,401** | 98.7% | IVF（1,401）；HNSW 1,248 |
+| 10% | 64 | 920 | 99.7% | post（1,417；98.4%） |
+| 15% | 64 | 687 | 99.6% | HNSW（2,049） |
+| 20% | 64 | 623 | 99.3% | post（2,551；96.6%） |
+| 25% | 64 | 553 | 99.6% | post（2,707；95.8%） |
+| 30% | 64 | 535 | 99.7% | HNSW（2,278） |
+| 50% | 64 | 448 | 99.8% | HNSW（2,254） |
+| 100% | 64 | 359 | 99.8% | HNSW（4,410） |
+
+100k 的首次合格 IVF 胜出在 1%–5%，1M 在 0.5%–1%；对应的 exact→合格 ANN 对数插值约 2.2% 和 0.7%（图左，仅取精确/HNSW/IVF；post 不影响这两个首次区间）。1M 1% IVF 3,051 QPS vs 同轮 exact list 1,124；5% IVF 仅比同轮 HNSW 快 12%，不能视为稳健的普遍优势。run #99/#100 的最优方法逐桶相同，主指标分别 2,342/2,367 QPS；与 HNSW-only 旧运行的 2,196 差异非配对，不能当作同硬件确定性加速比。两轮 1% IVF 评估召回均 96.2%，离 r95 仅 1.2pp；真实属性或其他查询分布尚未验证。
 
 ## 局限
 
 - 谓词与几何独立（随机子集）；真实属性通常与向量分布相关，相关方向会进一步改变结果（见同目录 cluster-far/cluster-near 结果）。
-- 测过 100k IVF nlist=1024、HNSW M=16/efc=200；尚未测 1M IVF 或真实属性，未在本随机网格上测 ACORN/PathSeer。只有单线程结果；缓存索引只计查询耗时，IVF 首次构建约 3.26 s、50.1 MB，HNSW 构建约 25.4 s、62.6 MB。
+- 只测 SIFT100k/1M 随机谓词、FAISS IVF nlist=1024 与 HNSW M=16/efc=200；未在 IVF 对照中测属性-几何相关谓词、真实属性或 ACORN/PathSeer。单线程、缓存查询 QPS 不含索引构建；100k/1M IVF 首次构建分别约 3.26/11.56 s、50.1/496.4 MB。
 - 精确枚举是下界，不是 ANN；交叉点数值只对本数据/硬件有效，但 100k 与 1M 的趋势一致。
 - 1M 的 s=1% HNSW 需要 ef=1024（评估召回 99.6%），而 100k 只需 512；规模效应需要更大 ef。
 - 旧的 HNSW-only 100k 扩展网格中，5% HNSW 评估召回 94.7%（未过 r95），因此当时最优是精确枚举；加入 IVF 后 5% 最优改为 IVF。未门控 HNSW QPS 推算的 0.048 与合格的 exact→IVF 首胜区间不是同一交叉点。
@@ -125,9 +144,18 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --modes random --metric-mode random --nq-per-bucket 200 --max-ef 16384 \
   --policy-s 0.06 --tune-margin 0.01 --repeats 3 \
   --ivf --ivf-nlist 1024 --ivf-max-nprobe 1024
+
+# SIFT1M（索引和 fixtures 在忽略提交的 work/ 内，初次需要生成）
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_1m \
+  --out-dir production/nested-attr-vector-search/work/selectivity_grid_ext_1m_ivf \
+  --modes random --metric-mode random --nq-per-bucket 200 --max-ef 8192 \
+  --policy-s 0.02 --tune-margin 0.01 --repeats 3 \
+  --ivf --ivf-nlist 1024 --ivf-max-nprobe 1024
 python3 production/nested-attr-vector-search/src/plot_selectivity_motivation.py
+python3 production/nested-attr-vector-search/src/plot_selectivity_motivation_scale.py
 ```
 
 run #97 使用提交 `ad6a4da` 中 `{1,4,16,64,256,1024}` 调参网格；之后调整 `nprobe` 网格时应同时报告版本与评估召回。
 
-数据：[`data/selectivity_grid_ext_ivf_curve_20261026.csv`](../data/selectivity_grid_ext_ivf_curve_20261026.csv)、[`data/summary_grid_ext_ivf_20261026.json`](../data/summary_grid_ext_ivf_20261026.json)（run #97）。旧网格见 [`data/selectivity_grid_curve_20261026.csv`](../data/selectivity_grid_curve_20261026.csv)、[`data/summary_grid_20261026.json`](../data/summary_grid_20261026.json)。
+归档：100k [`CSV`](../data/selectivity_grid_ext_ivf_curve_20261026.csv) / [`summary`](../data/summary_grid_ext_ivf_20261026.json)（run #97），1M [`CSV`](../data/selectivity_grid_ext_1m_ivf_curve_20261026.csv) / [`summary`](../data/summary_grid_ext_1m_ivf_20261026.json)（缓存 run #100）；旧 100k HNSW-only 网格见 [`CSV`](../data/selectivity_grid_ext_curve_20261026.csv)，旧 1M HNSW-only 网格见 [`CSV`](../data/selectivity_grid_ext_1m_curve_20261026.csv)。

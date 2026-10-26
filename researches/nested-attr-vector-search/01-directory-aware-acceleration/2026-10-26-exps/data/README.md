@@ -5,7 +5,7 @@
 100k cluster-far 为 segment `filtered-ann-selectivity-cluster-100k`，cluster-near 为
 `filtered-ann-selectivity-cluster-near-margin`，partition-flat 为
 `filtered-ann-selectivity-cluster-partflat`，百分网格为 `filtered-ann-selectivity-grid-100k`，
-扩展网格为 `filtered-ann-selectivity-grid-ext-100k`，1M 扩展网格为 `filtered-ann-selectivity-grid-ext-1m`，新增 IVF 为 `filtered-ann-selectivity-ivf-100k`。
+扩展网格为 `filtered-ann-selectivity-grid-ext-100k`，1M 扩展网格为 `filtered-ann-selectivity-grid-ext-1m`，新增 IVF 依次为 `filtered-ann-selectivity-ivf-100k` / `filtered-ann-selectivity-ivf-1m`。
 
 - `selectivity_curve_20261026.csv`：SIFT100k run #82 的逐行结果（131 行，表头 1 行）。
 - `selectivity_20261026.jsonl`：同一结果的 JSONL 版本。
@@ -24,13 +24,14 @@
 - `selectivity_grid_ext_curve_20261026.csv` / `summary_grid_ext_20261026.json`：SIFT100k 扩展网格 0.5%/1%/5%/10%/15%/20%/25%/30%/50%/100%（200/bucket、3 次重复、margin 0.01，run #95）；主指标 8,254.35 QPS，交叉点约 0.048。
 - `selectivity_grid_ext_1m_curve_20261026.csv` / `summary_grid_ext_1m_20261026.json`：同一扩展网格在 SIFT1M（200/bucket、3 次重复、margin 0.01，run #96）；主指标 2,195.55 QPS，交叉点约 0.022。
 - `selectivity_grid_ext_ivf_curve_20261026.csv` / `summary_grid_ext_ivf_20261026.json`：SIFT100k 同一 10 桶随机谓词的 FAISS `IndexIVFFlat` + selector（nlist=1024，nprobe 在调参半集按 1/4/16/64/256/1024 搜索），run #97；200/bucket，100 tune + 100 eval，3 次重复、margin 0.01。前沿主指标 9,902.60 QPS；5%–20% IVF，25%–100% HNSW，≤1% 精确枚举。IVF 50.1 MB、冷构建 3.26 s；不同运行的 8,254.35 QPS HNSW-only 前沿仅作非配对参照。
+- `selectivity_grid_ext_1m_ivf_curve_20261026.csv` / `summary_grid_ext_1m_ivf_20261026.json`：SIFT1M 同一 10 桶随机谓词 + `IndexIVFFlat(nlist=1024) + IDSelectorBitmap`；run #99 首建 11.56 s、496.4 MB，run #100 使用缓存索引并归档（200/bucket、3 次中位数、margin 0.01）。#99/#100 主指标 2,341.93/2,367.17 QPS；0.5% 精确、1%/5% IVF，其余 HNSW/post。旧 1M HNSW-only 独立运行 2,195.55 QPS，不作配对加速比。run #101 细化 `nprobe` 网格后获胜 IVF 桶仍选 64，主指标变化由执行噪声主导，弃用。
 
 ## CSV 列
 
 | 列 | 含义 |
 |---|---|
 | `mode` | `random`（均匀随机谓词）、`sub`（递归目录 `Inc(v)`）、`exact`（非递归 `Local(v)`） |
-| `bucket` | 目标/实际选择率桶：0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0 |
+| `bucket` | 目标/实际选择率桶：七桶原网格 0.001/0.003/0.01/0.03/0.1/0.3/1.0；扩展网格 0.005/0.01/0.05/0.10/0.15/0.20/0.25/0.30/0.50/1.0 |
 | `method` | `exact`（位图枚举）、`exact_list`（posting list + prefetch）、`hnsw`（调参 ef）、`ivf`（调参 nprobe）、`hnsw_fixed`（固定 ef 诊断）、`post`（后过滤） |
 | `variant` | `precomputed`、`triehi`（inclusive 位图拷贝）、`peonline`（子树逐节点 OR）、`local`（Local 位图拷贝） |
 | `ef` | HNSW 的 `efSearch`、IVF 的 `nprobe`；`post` 行为初始 ef；`exact` 为 0 |

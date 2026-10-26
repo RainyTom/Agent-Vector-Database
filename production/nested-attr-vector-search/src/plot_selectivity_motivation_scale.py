@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare the 100k and 1M motivation curves on the same 1%-30% grid."""
+"""Compare SIFT100k/1M selectivity with filtered IVF and HNSW."""
 
 from __future__ import annotations
 
@@ -37,14 +37,16 @@ def series(rows, method, key, ok_only=False):
 
 def crossover(rows):
     ex = {s: q for s, q, _, _ in series(rows, "exact_list", "qps")}
-    hn = {s: q for s, q, _, _ in series(rows, "hnsw", "qps")}
-    ss = sorted(set(ex) & set(hn))
+    hn = {s: q for s, q, _, _ in series(rows, "hnsw", "qps", ok_only=True)}
+    ivf = {s: q for s, q, _, _ in series(rows, "ivf", "qps", ok_only=True)}
+    best = {s: max(hn.get(s, 0), ivf.get(s, 0)) for s in set(hn) | set(ivf)}
+    ss = sorted(set(ex) & set(best))
     for i in range(len(ss) - 1):
         s1, s2 = ss[i], ss[i + 1]
-        if hn[s1] < ex[s1] and hn[s2] > ex[s2]:
+        if best[s1] < ex[s1] and best[s2] > ex[s2]:
             lx1, lx2 = math.log(s1), math.log(s2)
             a1, a2 = math.log(ex[s1]), math.log(ex[s2])
-            b1, b2 = math.log(hn[s1]), math.log(hn[s2])
+            b1, b2 = math.log(best[s1]), math.log(best[s2])
             t = (b1 - a1) / ((a2 - a1) - (b2 - b1))
             return math.exp(lx1 + t * (lx2 - lx1))
     return None
@@ -53,9 +55,9 @@ def crossover(rows):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv-100k", type=Path,
-                    default=DATA / "selectivity_grid_ext_curve_20261026.csv")
+                    default=DATA / "selectivity_grid_ext_ivf_curve_20261026.csv")
     ap.add_argument("--csv-1m", type=Path,
-                    default=DATA / "selectivity_grid_ext_1m_curve_20261026.csv")
+                    default=DATA / "selectivity_grid_ext_1m_ivf_curve_20261026.csv")
     ap.add_argument("--out", type=Path,
                     default=OUT / "selectivity_motivation_scale")
     args = ap.parse_args()
@@ -77,6 +79,9 @@ def main() -> int:
         bad = [p for p in hn if not p[3]]
         ax.plot([p[0] for p in ok], [p[1] for p in ok], marker=marker,
                 color=color, linestyle="--", label=f"BF-HNSW@r95, {scale}")
+        ivf = series(rows, "ivf", "qps", ok_only=True)
+        ax.plot([p[0] for p in ivf], [p[1] for p in ivf], marker=marker,
+                color=color, linestyle="-.", label=f"IVF@r95, {scale}")
         if bad:
             ax.scatter([p[0] for p in bad], [p[1] for p in bad], marker=marker,
                        facecolors="none", edgecolors=color)
@@ -92,7 +97,7 @@ def main() -> int:
     ax.set_yscale("log")
     ax.set_xlabel("filter selectivity s = |feasible| / n")
     ax.set_ylabel("QPS at Recall@10 ≥ 0.95")
-    ax.set_title("Same grid: crossover moves left with n")
+    ax.set_title("First valid filtered-index win moves left with n")
     ax.grid(True, which="both", alpha=0.25)
     ax.legend(fontsize=8, loc="lower left")
 

@@ -130,7 +130,9 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --ivf --ivf-nlist 1024 --ivf-max-nprobe 1024
 ```
 
-新调参网格的查询吞吐与基线不得混写；基线图/表使用固定归档 CSV。IVF 首次构建 3.26 s、50.1 MB，QPS 不计构建时间；只有 100k 随机谓词得到 IVF 数据。
+新调参网格的查询吞吐与基线不得混写；基线图/表使用固定归档 CSV。100k IVF 首次构建 3.26 s、50.1 MB，QPS 不计构建时间。
+
+SIFT1M 按相同 10 桶复测：将 fixtures 改为 `work/fixtures_1m`、输出目录改为 `work/selectivity_grid_ext_1m_ivf`、`--max-ef 8192 --policy-s 0.02`，其余 IVF 参数不变。run #99 首次构建索引，run #100 缓存索引 3 次评估中位数；归档 [`../data/selectivity_grid_ext_1m_ivf_curve_20261026.csv`](../data/selectivity_grid_ext_1m_ivf_curve_20261026.csv)。1M 先前的 HNSW-only 交叉点约 0.022，与 IVF 首次胜出区间 0.5%–1% 是不同方法集合，不能混为一谈。
 
 
 ### 属性分区 flat 基线

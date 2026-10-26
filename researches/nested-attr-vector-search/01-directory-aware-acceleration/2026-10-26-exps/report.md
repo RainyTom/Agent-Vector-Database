@@ -5,7 +5,7 @@
 ## 1. 结论
 
 1. **FAISS 没有属性过滤索引。** 它只提供 ID 级过滤钩子 `IDSelector` + `SearchParameters.sel`，由调用方先把属性条件编译成可行位图/ID 集合；Flat、IVF、HNSW（以及 PathSeer fork 的 ACORN/PathSeer）都消费这个钩子。HNSW 的 selector **过滤结果堆、不剪枝遍历**，所以固定 `efSearch` 下召回随选择率 `s` 下降。
-2. **选择率与索引族共同决定最优执行器。** 原 SIFT100k HNSW-only 对照中精确枚举在 $s\le0.03$ 胜出，BF-HNSW 从 $s\ge0.1$ 胜出，交叉点约 0.06（七桶网格）。新增十桶网格 IVF 对照（§9.1）后，≤1% 精确枚举、5%–20% IVF、≥25% HNSW 胜出；首个合格 ANN 胜出落在 1%–5%。
+2. **选择率与索引族共同决定最优执行器。** 原 SIFT100k HNSW-only 对照中精确枚举在 $s\le0.03$ 胜出，BF-HNSW 从 $s\ge0.1$ 胜出。新增十桶网格 IVF 对照（§9.1–9.2）后，100k ≤1% 精确枚举、5%–20% IVF、≥25% HNSW 胜出；在 SIFT1M 则 0.5% 精确枚举、1%/5% IVF，其余桶由 HNSW 或 post-filter 胜出。首个合格 IVF 胜出区间随规模从 1%–5% 左移至 0.5%–1%，仅限随机属性谓词。
 3. **维持 r95 所需的 `efSearch` 近似按幂律增长**：拟合 $\mathrm{ef}\approx23.4\,s^{-0.774}$。从 $s=1$ 的 `ef=32` 到 $s=0.001$ 的 `ef=8192`，查询延迟从 57 µs 升到 27.7 ms（约 490×），而精确扫描在 $s=0.001$ 只需 5.1 µs。
 4. **post-filter 在 100k 上从不是最优。** 它需要约 $k/s$ 的全局候选池；$s=0.001$ 时 10.2 QPS、p50 98 ms，比精确扫描慢约 1.9 万倍；$s=1$ 时召回只有 89.9%，连 r95 都达不到。1M 上 post 在 $s=0.1$ 首次略胜 HNSW（1,774 vs 1,605），但 $s=0.3/1$ 仍因召回不足不可用（§5）。
 5. **表示方式本身就是选择率相关成本。** 同一可行集，按 posting list 枚举比按 12.5 KB 位图枚举快 2.5×（$s=0.001$）、1.9×（$s=0.01$）；差异主要来自冷内存随机 gather，而不是 popcount。
@@ -214,10 +214,10 @@
 - **数据规模**：100k 与 1M SIFT、单一数据集；10M 未测。100k 有合成层级，1M 只有随机谓词；交叉点与拟合指数不能直接外推到 10M。
 - **谓词相关性**：`random` 与几何独立；`cluster`（查询独立）与 `cluster_near`（查询=簇中心）是同一可行集的两个极端；`sub`/`exact` 有部分语义相关性，但不是真实 CCS 标注。真实属性/查询关系可能处于 near 与 far 之间；k-means 簇与单一 k 是强假设。
 - **分区布局**：part_flat/part_gather/分区 HNSW 只测 k=128、seed=777 一个构型；part_gather 的 smoke 只 10 条/桶；49.2 MB 分区副本与 local_idx 的空间/更新成本未与收益权衡。
-- **方法范围**：只测 FAISS `IndexHNSWFlat + sel`、精确扫描、post-filter；ACORN/PathSeer/NaviX 等属性感知图未进入本轮，不能据此评价它们。IVF 也未测。
+- **方法范围**：100k/1M 随机谓词已测 FAISS `IndexIVFFlat(nlist=1024) + sel`；cluster-far/near、层级模式未测 IVF，ACORN/NaviX 等属性感知图未纳入这些网格。早前 PathSeer 只在 cluster-far 上测 M16/M_exp32/ef≤4096，不能据此评价其他索引或参数。
 - **单谓词**：未测多节点 AND/OR、否定、更新与并发。
 - **表示成本**：posting list 的构建/更新/空间未计；dense bitmap 元数据 32.5 MB 是简化表示，Roaring 会更小。
-- **测量**：单线程、WSL2；HNSW 构建后立即测量的首轮会受热降频影响，本报告使用缓存索引的 100k run #81/#82 与 1M run #88（三次评估中位数）。固定 ef 行只用于诊断，不参与 ef 选择。
+- **测量**：单线程、WSL2；索引构建后立即测量会受热降频影响，随机选择率的 IVF 1M 结果以缓存索引 run #100 为准，100k IVF 基线为首次构建 run #97；其余实验分别按各节记录。查询 QPS 不包括构建和属性位图求值。
 - **调参/评估**：ef 在 100 条调参谓词上选，评估用另外 100 条；样本量仍有限，$s=0.01$ 的 HNSW 评估召回 95.9% 贴近门槛。前沿指标按评估结果选每桶最优方法，是“可达前沿”，不是线上策略。1M 上 $s=0.001/0.01$ 的 HNSW 调参 ef 在评估半集未达 r95；表中用固定 ef 网格的最小 gated 点，$s=0.001$ 的 8192 为推断的下一格。1M 只测 random 谓词，未重跑层级/目录模式；1M 的 HNSW 仍只有 M=16 一个构型。
 
 ## 8. 复现
@@ -288,7 +288,7 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 
 固定 `ef=64` 的 Recall@10 从 30% 的 97.3% 掉到 1% 的 44.1%；维持 r95 的 `ef` 约按 $s^{-0.60}$ 增长。**以下交叉点只针对 HNSW-only**：未门控 QPS 插值约 $s^\*\approx0.048$，而 5% 的 HNSW 未达 r95，首次合格胜出桶为 10%。扩展到 0.5%/50%/100% 后，0.5% 时精确枚举比 HNSW 快 53×；20%/50% 的 post-filter 曾反超 HNSW，但 100% 时 post 召回只有 86.5%。选择率与索引族共同决定执行器，不应简单下推给全局 HNSW。
 
-同一扩展网格在 SIFT1M 上复测：0.5% 时 exact list 2,739 QPS 仍胜出（HNSW 155），5% 起 HNSW 反超；交叉点约 $s^*\approx0.022$，比 100k 左移约 2.1×。post-filter 在 10%/20%/25% 反超 HNSW，但 30%/50%/100% 召回只有 94.5%/92.0%/81.9%。固定 `ef=64` 的召回在 0.5% 只有 31.4%、100% 为 96.9%。见 `figures/selectivity_motivation_scale.svg`。
+同一扩展网格在 SIFT1M 上的原 HNSW-only 复测：0.5% 时 exact list 2,739 QPS 仍胜出（HNSW 155），5% 起 HNSW 反超；仅比较精确与 HNSW 的交叉点约 $s^*\approx0.022$，比 100k HNSW-only 左移约 2.1×。post-filter 在 10%/20%/25% 反超 HNSW，但 30%/50%/100% 召回只有 94.5%/92.0%/81.9%。固定 `ef=64` 的召回在 0.5% 只有 31.4%、100% 为 96.9%。更新后的 `figures/selectivity_motivation_scale.svg` 同时展示了 §9.2 的 IVF 复测。
 
 ### 9.1 补充 IndexIVFFlat + IDSelectorBitmap（run #97，SIFT100k）
 
@@ -307,7 +307,26 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 | 50% | 357 | 3,698（64；98.3%） | **7,894（64；98.3%）** | HNSW |
 | 100% | 279 | 3,337（64；98.9%） | **12,661（32；95.1%）** | HNSW |
 
-本轮几何平均前沿 9,903 QPS；仅含 HNSW 的旧扩展网格 8,254 QPS。**低/中/高选择率分别由精确枚举、IVF、HNSW 胜出**；首次索引胜出在 1%–5%，图中对数插值约 2.2%，不是通用阈值。IVF 冷构建 3.26 s、索引 50.1 MB（HNSW 约 25.4 s、62.6 MB）；构建时间不计入吞吐。1M 尚未跑 IVF，不应把前述 1M HNSW 交叉点称为多索引最优交叉点。
+本轮几何平均前沿 9,903 QPS；仅含 HNSW 的旧扩展网格 8,254 QPS。**低/中/高选择率分别由精确枚举、IVF、HNSW 胜出**；首次索引胜出在 1%–5%，图中对数插值约 2.2%，不是通用阈值。IVF 冷构建 3.26 s、索引 50.1 MB（HNSW 约 25.4 s、62.6 MB）；构建时间不计入吞吐。SIFT1M 的独立结果见 §9.2。
+
+### 9.2 SIFT1M IVF 规模复测（run #99/#100）
+
+保持 nlist=1024、同一 10 桶随机谓词、200 查询/桶和 r95 门槛；先冷建 IVF（#99，11.56 s、496.4 MB），再用缓存索引重复（#100）。下表是 run #100，含每桶同轮最优对照，避免跨次 QPS 比较：
+
+| 选择率 | IVF QPS（nprobe；Recall@10） | 最优可用方法（QPS） |
+|---:|---:|---|
+| 0.5% | 1,147（256；100%） | exact list（2,845） |
+| 1% | **3,051（64；96.2%）** | IVF（3,051） |
+| 5% | **1,401（64；98.7%）** | IVF（1,401）；HNSW 1,248 |
+| 10% | 920（64；99.7%） | post（1,417；98.4%） |
+| 15% | 687（64；99.6%） | HNSW（2,049） |
+| 20% | 623（64；99.3%） | post（2,551；96.6%） |
+| 25% | 553（64；99.6%） | post（2,707；95.8%） |
+| 30% | 535（64；99.7%） | HNSW（2,278） |
+| 50% | 448（64；99.8%） | HNSW（2,254） |
+| 100% | 359（64；99.8%） | HNSW（4,410） |
+
+相同方法胜出桶在 #99 与 #100 重复；1M 首次合格索引胜出在 0.5%–1%（图中对数插值约 0.7%），100k 是 1%–5%（约 2.2%）。1M 5% IVF 比 HNSW 快约 12%，1% 召回只有 96.2%（r95 裕量 1.2pp）；跨数据集与相关属性的收益未经验证。10 桶可达前沿几何均值 2,342/2,367 QPS（#99/#100），原 HNSW-only 独立运行 2,196 QPS，后者非同一次实验的配对对照。归档 [`data/selectivity_grid_ext_1m_ivf_curve_20261026.csv`](data/selectivity_grid_ext_1m_ivf_curve_20261026.csv)、[`data/summary_grid_ext_1m_ivf_20261026.json`](data/summary_grid_ext_1m_ivf_20261026.json)；100k/1M 曲线见 `figures/selectivity_motivation_scale.svg`。
 
 ## 10. 下一步
 
@@ -316,3 +335,4 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 3. 实现“位图 + posting list”双表示与按 $s$ 的切换策略，计入构建/更新/空间成本。
 4. 用真实多标签/属性数据集复核 random、cluster-far、cluster-near 与层级四种谓词分布。
 5. 对 near/far 之间的真实查询距离分布做采样，估计实际工作负载落在哪一端。
+6. 在 cluster-far/near 同一可行集上测 IVF 的 nprobe/召回，检验随机谓词的 IVF 中选择率优势是否保持；相关属性不能从 random 网格推断。
