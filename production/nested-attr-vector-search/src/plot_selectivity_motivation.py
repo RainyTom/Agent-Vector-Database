@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Motivation figure: FAISS BF-HNSW efficiency vs filter selectivity."""
+"""Selectivity: exact scan, FAISS filtered IVF/HNSW, and post-filter."""
 
 from __future__ import annotations
 
@@ -48,25 +48,29 @@ def fit_power(xs, ys):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--csv", type=Path,
-                    default=DATA / "selectivity_grid_ext_curve_20261026.csv")
+                    default=DATA / "selectivity_grid_ext_ivf_curve_20261026.csv")
     ap.add_argument("--out", type=Path,
                     default=OUT / "selectivity_motivation")
     args = ap.parse_args()
     rows = load(args.csv)
 
-    # crossover: exact list vs BF-HNSW on the 1%-30% grid
+    # Interpolate the first exact-to-valid-index crossing; not a universal threshold.
     ex = series(rows, "exact_list", "qps")
     hn = series(rows, "hnsw", "qps")
+    ivf = series(rows, "ivf", "qps")
     exd = {s: q for s, q, _, _ in ex}
-    hnd = {s: q for s, q, _, ok in hn}
+    hnd = {s: q for s, q, _, ok in hn if ok}
+    ivd = {s: q for s, q, _, ok in ivf if ok}
+    best = {s: max(hnd.get(s, 0), ivd.get(s, 0))
+            for s in set(hnd) | set(ivd)}
     cross = None
-    ss = sorted(exd)
+    ss = sorted(set(exd) & set(best))
     for i in range(len(ss) - 1):
         s1, s2 = ss[i], ss[i + 1]
-        if hnd[s1] < exd[s1] and hnd[s2] > exd[s2]:
+        if best[s1] < exd[s1] and best[s2] > exd[s2]:
             lx1, lx2 = math.log(s1), math.log(s2)
             a1, a2 = math.log(exd[s1]), math.log(exd[s2])
-            b1, b2 = math.log(hnd[s1]), math.log(hnd[s2])
+            b1, b2 = math.log(best[s1]), math.log(best[s2])
             t = (b1 - a1) / ((a2 - a1) - (b2 - b1))
             cross = math.exp(lx1 + t * (lx2 - lx1))
             break
@@ -75,6 +79,7 @@ def main() -> int:
     ax = axes[0]
     for method, label, marker in [
         ("exact_list", "exact feasible scan (list)", "o"),
+        ("ivf", "IVF + selector, nprobe tuned", "D"),
         ("hnsw", "BF-HNSW, ef tuned for r95", "s"),
         ("post", "post-filter, expanding ef", "^"),
     ]:
@@ -89,13 +94,13 @@ def main() -> int:
                        label=f"{label} (r95 fail)")
     if cross is not None:
         ax.axvline(cross, color="0.5", linestyle=":", linewidth=1)
-        ax.text(cross * 1.05, 3e4, f"cross-over\ns≈{cross:.3f}", fontsize=9,
+        ax.text(cross * 1.05, 1.8e4, f"cross-over\ns≈{cross:.3f}", fontsize=9,
                 color="0.35")
     ax.set_xscale("log")
     ax.set_yscale("log")
     ax.set_xlabel("filter selectivity s = |feasible| / n")
     ax.set_ylabel("QPS at Recall@10 ≥ 0.95")
-    ax.set_title("SIFT100k: exact vs BF-HNSW vs post-filter")
+    ax.set_title("SIFT100k: exact vs IVF vs BF-HNSW vs post-filter")
     ax.grid(True, which="both", alpha=0.25)
     ax.legend(fontsize=8, loc="lower left")
 

@@ -5,7 +5,7 @@
 100k cluster-far 为 segment `filtered-ann-selectivity-cluster-100k`，cluster-near 为
 `filtered-ann-selectivity-cluster-near-margin`，partition-flat 为
 `filtered-ann-selectivity-cluster-partflat`，百分网格为 `filtered-ann-selectivity-grid-100k`，
-扩展网格为 `filtered-ann-selectivity-grid-ext-100k`，1M 扩展网格为 `filtered-ann-selectivity-grid-ext-1m`。
+扩展网格为 `filtered-ann-selectivity-grid-ext-100k`，1M 扩展网格为 `filtered-ann-selectivity-grid-ext-1m`，新增 IVF 为 `filtered-ann-selectivity-ivf-100k`。
 
 - `selectivity_curve_20261026.csv`：SIFT100k run #82 的逐行结果（131 行，表头 1 行）。
 - `selectivity_20261026.jsonl`：同一结果的 JSONL 版本。
@@ -23,6 +23,7 @@
 - `selectivity_grid_1m_curve_20261026.csv` / `summary_grid_1m_20261026.json`：同一网格在 SIFT1M（200/bucket、3 次重复、margin 0.01，run #94）；主指标 1,981.46 QPS，交叉点约 0.023。1M 与 100k 主指标不可直接比较。
 - `selectivity_grid_ext_curve_20261026.csv` / `summary_grid_ext_20261026.json`：SIFT100k 扩展网格 0.5%/1%/5%/10%/15%/20%/25%/30%/50%/100%（200/bucket、3 次重复、margin 0.01，run #95）；主指标 8,254.35 QPS，交叉点约 0.048。
 - `selectivity_grid_ext_1m_curve_20261026.csv` / `summary_grid_ext_1m_20261026.json`：同一扩展网格在 SIFT1M（200/bucket、3 次重复、margin 0.01，run #96）；主指标 2,195.55 QPS，交叉点约 0.022。
+- `selectivity_grid_ext_ivf_curve_20261026.csv` / `summary_grid_ext_ivf_20261026.json`：SIFT100k 同一 10 桶随机谓词的 FAISS `IndexIVFFlat` + selector（nlist=1024，nprobe 在调参半集按 1/4/16/64/256/1024 搜索），run #97；200/bucket，100 tune + 100 eval，3 次重复、margin 0.01。前沿主指标 9,902.60 QPS；5%–20% IVF，25%–100% HNSW，≤1% 精确枚举。IVF 50.1 MB、冷构建 3.26 s；不同运行的 8,254.35 QPS HNSW-only 前沿仅作非配对参照。
 
 ## CSV 列
 
@@ -30,14 +31,14 @@
 |---|---|
 | `mode` | `random`（均匀随机谓词）、`sub`（递归目录 `Inc(v)`）、`exact`（非递归 `Local(v)`） |
 | `bucket` | 目标/实际选择率桶：0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1.0 |
-| `method` | `exact`（位图枚举）、`exact_list`（posting list + prefetch）、`hnsw`（调参 ef）、`hnsw_fixed`（固定 ef 诊断）、`post`（后过滤） |
+| `method` | `exact`（位图枚举）、`exact_list`（posting list + prefetch）、`hnsw`（调参 ef）、`ivf`（调参 nprobe）、`hnsw_fixed`（固定 ef 诊断）、`post`（后过滤） |
 | `variant` | `precomputed`、`triehi`（inclusive 位图拷贝）、`peonline`（子树逐节点 OR）、`local`（Local 位图拷贝） |
-| `ef` | HNSW 的 `efSearch`；`post` 行为初始 ef；`exact` 为 0 |
+| `ef` | HNSW 的 `efSearch`、IVF 的 `nprobe`；`post` 行为初始 ef；`exact` 为 0 |
 | `s` | 实际选择率 `|feasible|/n` 的均值 |
 | `nq` | 评估半集的查询数（调参半集数量相同或略多） |
 | `qps` | 评估半集吞吐（`nq / 查询时间`，单线程） |
 | `recall` | 评估半集 Recall@10 |
-| `recall_tune` | 调参半集 Recall@10（仅 `hnsw` 行；用于选 ef，不参与评估） |
+| `recall_tune` | 调参半集 Recall@10（`hnsw`、`ivf` 等调参行；用于选参数，不参与评估） |
 | `p50_us`, `p95_us` | 每查询延迟分位数（含目录解析，若适用） |
 | `resolve_us` | 平均目录解析时间（每查询） |
 | `ok` | `recall>=0.95` 且无重复/不可行 ID |

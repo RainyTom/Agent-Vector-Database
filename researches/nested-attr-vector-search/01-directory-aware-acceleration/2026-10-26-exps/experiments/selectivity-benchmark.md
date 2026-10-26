@@ -117,6 +117,22 @@ python3 production/nested-attr-vector-search/src/plot_selectivity_motivation.py
 python3 production/nested-attr-vector-search/src/plot_selectivity_motivation_scale.py
 ```
 
+### 扩展 100k 网格的 IVF 对照
+
+10 桶 $s\in\{0.005,0.01,0.05,0.10,0.15,0.20,0.25,0.30,0.50,1.0\}$，每桶 200 条，随机打乱后 100 tune + 100 eval，3 次评估中位数。`IndexIVFFlat(nlist=1024)` 对全部基向量训练/入库，使用同一个 bitmap selector；`nprobe` 在调参半集 `{1,4,16,64,256,1024}` 取最小满足 r96 的值，并在独立评估半集按 r95 门控。run #97 使用提交 `ad6a4da`，结果见 [`../data/selectivity_grid_ext_ivf_curve_20261026.csv`](../data/selectivity_grid_ext_ivf_curve_20261026.csv)。
+
+```bash
+python3 production/nested-attr-vector-search/src/selectivity_harness.py \
+  --fixtures production/nested-attr-vector-search/work/fixtures_ccs \
+  --out-dir production/nested-attr-vector-search/work/selectivity_grid_ext_ivf \
+  --modes random --metric-mode random --nq-per-bucket 200 --max-ef 16384 \
+  --policy-s 0.06 --tune-margin 0.01 --repeats 3 \
+  --ivf --ivf-nlist 1024 --ivf-max-nprobe 1024
+```
+
+新调参网格的查询吞吐与基线不得混写；基线图/表使用固定归档 CSV。IVF 首次构建 3.26 s、50.1 MB，QPS 不计构建时间；只有 100k 随机谓词得到 IVF 数据。
+
+
 ### 属性分区 flat 基线
 
 `--part-flat --parts 128 --part-seed 777`：用独立 k-means（k=128，seed 777）建立连续分区副本；查询时从可行 ID 标记非空分区，只扫描这些分区的连续向量并按全局位图过滤。构建 0.014 s、额外 49.2 MB；精确召回。只在 $s=0.3$ 比全局精确 list 快 15%，低/中选择率更慢。

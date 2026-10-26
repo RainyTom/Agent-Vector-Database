@@ -1,11 +1,11 @@
-# 动机实验：选择率对 FAISS 过滤 HNSW 效率的影响
+# 动机实验：选择率对 FAISS 过滤 HNSW/IVF 效率的影响
 
 日期：2026-10-26。目的：为 Directory-Aware 方向提供选择率成本的直接证据。问题不是“FAISS 能不能过滤”，而是“过滤后的向量搜索效率如何随选择率变化”。
 
 ## 结论
 
 1. **FAISS 没有属性过滤索引。** 核心 FAISS 只有 `IDSelector`/`SearchParameters.sel`；调用方先把属性条件编译成可行位图，再交给 Flat/IVF/HNSW。HNSW 的 selector 只过滤结果堆、不剪枝遍历，所以固定 `efSearch` 的召回随选择率 $s$ 下降。
-2. **效率在选择率上分成两段。** SIFT100k 上，精确枚举可行 ID 在 $s=1\%$/$5\%$ 时仍是 BF-HNSW 的 14.3×/1.6×；从 $s=10\%$ 起 BF-HNSW 反超，交叉点约 $s^*\approx0.048$（5% 与 10% 对数插值；7 桶网格为 0.065）。
+2. **效率分三段，依索引族而变。** 仅比较精确枚举与 BF-HNSW 时，100k 扩展网格中后者首个合格胜出桶是 10%，二者未门控 QPS 的对数插值为 $s\approx0.048$。加入 `IndexIVFFlat + IDSelectorBitmap` 后，0.5%/1% 仍由精确枚举胜出，5%–20% 由 IVF 胜出，25%–100% 由 HNSW 胜出；首个精确到合格索引的交叉区间变为 1%–5%。
 3. **固定 ef 的召回在低 $s$ 崩塌。** $ef=64$ 在 $s=30\%$ 时 Recall@10=97.3%，在 $s=1\%$ 只有 44.1%。要维持 r95，必须按 $s$ 放大 `ef`，本数据上 $\mathrm{ef}\approx35.9\,s^{-0.60}$。
 4. **post-filter 只在高 $s$ 接近 BF-HNSW，不能替代精确枚举。** $s=1\%$ 时 post 需要把全局候选池扩到 2000 才凑够 10 个可行点，QPS 223；$s=30\%$ 时 post 7,354 QPS，接近 HNSW 的 7,718，但召回只有 97.5%，更脆弱。
 
@@ -13,7 +13,7 @@
 
 - 向量：SIFT100k，$n=100000$，$d=128$，L2，1000 条真实查询向量。
 - 谓词：每查询独立随机选取 `round(s·n)` 个 ID，$s\in\{0.5\%,1\%,5\%,10\%,15\%,20\%,25\%,30\%,50\%,100\%\}$；每桶 200 条，随机打乱后前 100 调参、后 100 评估，3 次评估取中位数。1%–30% 为原始请求范围，0.5%/50%/100% 为扩展点。
-- 索引：FAISS `IndexHNSWFlat` M=16, efc=200，62.6 MB，缓存加载；`exact` 为可行集精确枚举（posting list + prefetch），`post` 为全局 top-`ef` 后筛。
+- 索引：FAISS `IndexHNSWFlat` M=16、efc=200（62.6 MB）和新增 `IndexIVFFlat` nlist=1024（50.1 MB）；同一 `IDSelectorBitmap` 可行集。IVF 先在全部基向量训练/入库，按查询选择 `nprobe`，最初网格 `{1,4,16,64,256,1024}`；`exact` 为可行集精确枚举（posting list + prefetch），`post` 为全局 top-`ef` 后筛。缓存加载，构建成本另计。
 - 目标：Recall@10 ≥ 0.95；`ef` 在调参半集上取最小达标值（目标带 1pp margin）。
 - Oracle：`exact_topk` 与 `faiss::IndexFlat + IDSelectorBitmap` 在 $s=0.01$ 和 $s=1.0$ 上逐 ID 对比通过。
 - 环境：单线程，WSL2，`OMP_NUM_THREADS=1`。
@@ -50,7 +50,7 @@
 | 25% | 73.3% | 97.3% | 100% | 100% |
 | 30% | 74.6% | 97.3% | 99.9% | 100% |
 
-主指标 `gmean_qps_r95=8,254`（10 桶扩展网格）；7 桶 1%–30% 版本为 6,066。固定策略 `s<0.06 → exact`、`s≥0.06 → BF-HNSW` 在 7 桶网格上已达同一前沿。
+仅有 HNSW 的扩展网格主指标 `gmean_qps_r95=8,254`；7 桶 1%–30% 版本为 6,066。固定策略 `s<0.06 → exact`、`s≥0.06 → BF-HNSW` 在 7 桶网格上已达同一前沿；不等于新增 IVF 的最优三段策略。
 
 扩展点的含义：
 - $s=0.5\%$ 时精确枚举比 BF-HNSW 快约 53×，精确枚举的低选择率余量很大。
@@ -62,6 +62,25 @@
 FAISS 的 `IDSelector` 是 filter-agnostic：HNSW 仍遍历不可行节点，只是不把它们放入结果堆；`efSearch` 的预算按全部候选计数。选择率低时，为了凑够 10 个可行近邻，`efSearch` 必须约按 $1/s$ 放大，延迟从几十微秒升到几毫秒；此时直接枚举可行 ID 做精确扫描更便宜。选择率高时，可行点遍布全图，BF-HNSW 用很小的 `ef` 就能达标，精确扫描反而要遍历大量点。
 
 因此，一个基于全局向量索引的属性过滤系统不能忽略选择率：要么在低 $s$ 切换到可行集精确扫描，要么让属性索引把可行集显式枚举出来。Directory-Aware 的设计目标正是把属性条件编译成可行的执行器选择，而不是把过滤简单下推给全局 HNSW。
+
+## 新增 FAISS IVF 对照（SIFT100k）
+
+与前述 100k 扩展网格使用相同谓词、调参/评估划分、r95 门槛和 3 次中位数；独立再次计时，故 HNSW/精确 QPS 允许有系统负载噪声。以下为 run #97（`nlist=1024`，IVF nprobe 在调参半集选最小满足 r96 的值；`ok` 必须在评估半集达到 r95）。
+
+| s | exact list QPS | IVF QPS（nprobe；Recall@10） | HNSW QPS（ef；Recall@10） | 合格最优 |
+|---:|---:|---:|---:|---|
+| 0.5% | **32,339** | 8,050（256；99.8%） | 592（1024；97.2%） | exact |
+| 1% | **16,546** | 5,009（256；100%） | 1,126（512；95.7%） | exact |
+| 5% | 3,133 | **11,313（64；97.1%）** | 4,359（128；94.7%，未过 r95） | IVF |
+| 10% | 1,767 | **7,663（64；98.2%）** | 4,462（128；98.5%） | IVF |
+| 15% | 890 | **6,358（64；97.8%）** | 3,742（128；98.7%） | IVF |
+| 20% | 735 | **5,176（64；98.4%）** | 4,429（128；99.6%） | IVF |
+| 25% | 646 | 5,353（64；98.2%） | **7,967（64；96.5%）** | HNSW |
+| 30% | 546 | 4,980（64；98.1%） | **7,461（64；97.5%）** | HNSW |
+| 50% | 357 | 3,698（64；98.3%） | **7,894（64；98.3%）** | HNSW |
+| 100% | 279 | 3,337（64；98.9%） | **12,661（32；95.1%）** | HNSW |
+
+四方法可达前沿几何均值 9,903 QPS，相比不包含 IVF 的 100k 扩展网格 8,254 高约 20%（不同运行，非配对加速比）。IVF 5%/10%/15%/20% 桶分别快于同轮 HNSW 2.59×/1.72×/1.70×/1.17×（5% 的 HNSW 未过门槛）。首次合格的索引胜出在 1%–5%；图中对数插值约 2.2%，只是本配置的画图估计。IVF 不消除低选择率精确枚举优势，也不能从独立随机谓词外推到相关属性。
 
 ## 1M 规模复测
 
@@ -91,10 +110,10 @@ FAISS 的 `IDSelector` 是 filter-agnostic：HNSW 仍遍历不可行节点，只
 ## 局限
 
 - 谓词与几何独立（随机子集）；真实属性通常与向量分布相关，相关方向会进一步改变结果（见同目录 cluster-far/cluster-near 结果）。
-- 只测 SIFT100k/1M、单线程、FAISS HNSW M=16/efc=200；未测 IVF/ACORN/PathSeer。
+- 测过 100k IVF nlist=1024、HNSW M=16/efc=200；尚未测 1M IVF 或真实属性，未在本随机网格上测 ACORN/PathSeer。只有单线程结果；缓存索引只计查询耗时，IVF 首次构建约 3.26 s、50.1 MB，HNSW 构建约 25.4 s、62.6 MB。
 - 精确枚举是下界，不是 ANN；交叉点数值只对本数据/硬件有效，但 100k 与 1M 的趋势一致。
 - 1M 的 s=1% HNSW 需要 ef=1024（评估召回 99.6%），而 100k 只需 512；规模效应需要更大 ef。
-- 5% 的 HNSW 在 100k 上评估召回 94.7%（未过 r95），所以精确枚举在 5% 仍是最佳；交叉点估计用未 gating 的 HNSW QPS，报告中也给出 gating 后的首个胜出桶。
+- 旧的 HNSW-only 100k 扩展网格中，5% HNSW 评估召回 94.7%（未过 r95），因此当时最优是精确枚举；加入 IVF 后 5% 最优改为 IVF。未门控 HNSW QPS 推算的 0.048 与合格的 exact→IVF 首胜区间不是同一交叉点。
 - 调参/评估分半，样本量有限；$s=1\%$ 的 HNSW 评估召回 95.5% 贴近门槛。
 
 ## 复现
@@ -102,11 +121,13 @@ FAISS 的 `IDSelector` 是 filter-agnostic：HNSW 仍遍历不可行节点，只
 ```bash
 python3 production/nested-attr-vector-search/src/selectivity_harness.py \
   --fixtures production/nested-attr-vector-search/work/fixtures_ccs \
-  --out-dir production/nested-attr-vector-search/work/selectivity_grid \
+  --out-dir production/nested-attr-vector-search/work/selectivity_grid_ext_ivf \
   --modes random --metric-mode random --nq-per-bucket 200 --max-ef 16384 \
-  --policy-s 0.06 --tune-margin 0.01 --repeats 3
-
+  --policy-s 0.06 --tune-margin 0.01 --repeats 3 \
+  --ivf --ivf-nlist 1024 --ivf-max-nprobe 1024
 python3 production/nested-attr-vector-search/src/plot_selectivity_motivation.py
 ```
 
-数据：[`data/selectivity_grid_curve_20261026.csv`](../data/selectivity_grid_curve_20261026.csv)、[`data/summary_grid_20261026.json`](../data/summary_grid_20261026.json)。
+run #97 使用提交 `ad6a4da` 中 `{1,4,16,64,256,1024}` 调参网格；之后调整 `nprobe` 网格时应同时报告版本与评估召回。
+
+数据：[`data/selectivity_grid_ext_ivf_curve_20261026.csv`](../data/selectivity_grid_ext_ivf_curve_20261026.csv)、[`data/summary_grid_ext_ivf_20261026.json`](../data/summary_grid_ext_ivf_20261026.json)（run #97）。旧网格见 [`data/selectivity_grid_curve_20261026.csv`](../data/selectivity_grid_curve_20261026.csv)、[`data/summary_grid_20261026.json`](../data/summary_grid_20261026.json)。
