@@ -219,3 +219,16 @@
 先查总论文/关系索引、containment逐篇笔记和本地全文；用户确认Lx=Q、Q⊆Lx。先检索vector similarity join + set containment，再检索filtered nearest neighbor label-set equality、Unified Navigating Graph equality containment、原题名和ELI equality appendix。重点阅读LSSG v1 HTML §2.1/3/6.3、UNG作者README与已有源码、ACORN v1 §3.1/5、ELI v2 §2.1 Remark，以及本地PathSeer p.2和RWalks §2.1原文。
 
 结论与原始链接见[报告](../containment-filtered-vector-search/2026-10-20-exps/report.md)。UNG原文全文仍缺，ELI所需equality附录/代码未核；UniFilter/Curator完整集合相等能力本轮未核，不凭第三方比较表收录为已证支持。PathSeer/RWalks原始PDF在线重取失败，使用已存原始全文和可读官方仓库。未声称穷尽最新文献，无新实验。
+## 2026-10-25 Directory-Aware 新问题背景与定义初筛
+
+先查 `papers/papers.jsonl`、`relations.jsonl`、本地 `2606.16903v1` 原文/报告及 nested-attr 的 D0–D5 审计、LES 记录；再查 vector similarity join、vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join 加 hierarchy/prefix/metadata 变体，随后查 filtered ANN 与目录相关组合。核对 [Directory-Aware v1 §II–V](https://arxiv.org/html/2606.16903v1)、[Fast AVJ v2 摘要](https://arxiv.org/abs/2603.16360)及 [VBASE 正式论文 §2,4](https://www.usenix.org/system/files/osdi23-zhang-qianxi_1.pdf)。网页结果中有字符串/集合/semantic join 同名项，未当几何向量 join 证据；检索未形成引用闭包，不能以“无直接命中”证明新颖。
+
+产出[文件目录约束下跨集合阈值向量连接的 Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)：cross、L2、threshold、exact pairs，目录祖先可比过滤。Directory-Aware 的 DSQ 是单查询 top-k；现有 Fast AVJ/VBASE 是强前序。待查 filtered similarity join、hierarchical/dual-tree join、predicate-aware batch vector join 的直接正文与引用链，以及真实双库目录路径能否支持场景。没有新增已精读论文、关系或性能实验。
+
+同日修订：将背景从单父文件目录树改为可通过共享入口访问同一逻辑目录的**静态虚拟目录 DAG**。参考 [Google Drive 文件夹快捷方式官方说明](https://support.google.com/drive/answer/9700156?hl=en) 的“引用而非复制”现象；DAG 是本项目的抽象限制，未把该产品的实际目录系统或权限实现等同于模型。更新 [Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)，增加 B0 全量成对验证、B1 在线目录范围、B2 物化目录范围、B3 精确向量优先四种基线及 DAG 多路径去重公式。D1 已有支持计数/增量维护前序，本问题暂不研究维护；没有新论文记录或实验。
+
+同日再次修订：Google Drive 快捷方式仍属于文件目录背景，改为[多维商品目录 Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)。[OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/)以商品目录说明品类、品牌、颜色、尺码等多维筛选；将筛选状态建模为部分属性函数与按包含关系组织的目录偏序是本项目的形式化选择，不宣称 OpenSearch 实现了本文连接。新问题为跨平台、部分属性兼容、L2 阈值、精确 pairs；基线 B0–B4。商品匹配、缺失属性下记录连接及 filtered vector join 的最近工作仍需补查，不能以背景不同证明算法新颖。没有新增论文记录或实验。
+
+补充候选：产品实体匹配已有[莱比锡大学研究页](https://old.dbs.uni-leipzig.de/en/publication/title/tailoring_entity_resolution_for_matching_product_offers)讨论缺失/错误属性；[EM-Join 原始论文](https://www.scitepress.org/Papers/2025/134837/134837.pdf)涉及 embedding-based entity matching join。当前只核题名/摘要或入口，未核其完整定义、阈值语义和实验；列为后续精读候选，不把商品匹配场景本身宣称为新增研究问题。
+
+同日层级语义修正：核 [OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/) §Hierarchical faceting 与普通 facet 过滤，前者明确 Category→Subcategory→Product type，后者为品牌/颜色/尺码等独立过滤字段。当前 [Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md) 明确定义品类树 × 属性部分函数；整体目录状态并非单父树。前版只有 facet 约束偏序，不能称为明确的品类层级。五种基线已同步新的品类可比条件；未运行实验。

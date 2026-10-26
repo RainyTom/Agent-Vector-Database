@@ -1,5 +1,7 @@
 # 待验证研究问题
 
+> 2026-10-25 新候选：[层级品类与多维属性约束下的跨平台阈值向量连接](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)，已定义背景、输出语义及五种精确基线，未立方法主张、未运行实验。它与下方保留的单查询层级 top-k 方向不同。
+
 > 最新前缀方向[alphaXiv审计](../nested-attr-vector-search/alphaxiv-novelty-audit.md)：D0/D1/D3/D5停止独立立项，D2/RQ-P具体方案与D4暂停，原MVP不实施；没有通过新颖性门槛的六方向方案。此决定仅针对前缀扩展，不取消本文件其他vector join课题。
 
 > 当前前缀属性方向见[规范问题定义](../containment-filtered-vector-search/problem-definition.md)与[创新性复核](../containment-filtered-vector-search/novelty-analysis.md)。H/C/F编号保留研究过程，不代表独立贡献；RQ-P仍为索引主候选。用户要求的D0–D5六个具体方案见[子方向总览](../nested-attr-vector-search/directions.md)，是分别立项的待验证设计，不同时叠入基础定义。

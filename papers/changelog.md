@@ -148,3 +148,10 @@
 - 修订LSSG、ACORN、PathSeer、ELI、RWalks五条既有索引的支持层次；LSSG补已核官方代码入口。UNG保留作者产物证据候选，不补造未取得的全文记录；论文总数/关系数不变。
 - 明确UNG general/equality分构建模式；RWalks名为Equality的公式只要求包含；ACORN/PathSeer的双集合能力是通用predicate实例化，ELI具体equality扩展实现待核。
 - 旧Exact/Subtree与完整集合谓词不同，帕累托计划追加语义校正及核心基线优先级。无新性能实验。
+## 2026-10-25 Directory-Aware 子目录的新问题定义
+
+- 在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/` 新增跨集合目录兼容阈值向量连接的 Problem Formulation 与研究记录；原 D0 停止独立立项结论保留。
+- 更新 nested-attr 入口、vector join 问题入口及检索日志；本轮未新增论文或关系记录，未运行算法实验，候选新颖性尚未充分排查。
+- 同日按问题范围修订：将单父文件目录树背景改为共享虚拟目录 DAG，补四种精确基线与逻辑对象去重语义；旧树定义不再适用，原 D1 动态维护方案仍为独立历史方向。
+- 同日再次修订：文件夹快捷方式仍未摆脱文件目录背景，当前 Problem Formulation 改为多维商品目录的跨平台商品连接；基线更新为五种，前两版文件目录定义只作历史记录。
+- 同日层级语义修正：普通 facet 的约束细化不足以构成品类层级；当前定义明确为“品类树 × 属性 facet”，并将五种基线统一到品类祖先可比、属性兼容和 L2 阈值三重条件。
