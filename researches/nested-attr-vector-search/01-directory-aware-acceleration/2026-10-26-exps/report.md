@@ -272,7 +272,23 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
 
 原始数据：100k 为 [`data/selectivity_curve_20261026.csv`](data/selectivity_curve_20261026.csv)、[`data/summary_20261026.json`](data/summary_20261026.json)、[`data/selectivity_20261026.jsonl`](data/selectivity_20261026.jsonl)（run #82，复现 run #81）；1M 为 [`data/selectivity_1m_curve_20261026.csv`](data/selectivity_1m_curve_20261026.csv)、[`data/summary_1m_20261026.json`](data/summary_1m_20261026.json)、[`data/selectivity_1m_20261026.jsonl`](data/selectivity_1m_20261026.jsonl)（run #88，三次评估中位数；run #87 复现）；cluster-far 为 [`data/selectivity_cluster_curve_20261026.csv`](data/selectivity_cluster_curve_20261026.csv)、[`data/summary_cluster_20261026.json`](data/summary_cluster_20261026.json)（run #89）与 [`data/selectivity_cluster_probe_32768_20261026.csv`](data/selectivity_cluster_probe_32768_20261026.csv)（ef=32768 探针）；cluster-near 为 [`data/selectivity_cluster_near_curve_20261026.csv`](data/selectivity_cluster_near_curve_20261026.csv)、[`data/summary_cluster_near_20261026.json`](data/summary_cluster_near_20261026.json)（run #91）；partition-flat 为 [`data/selectivity_cluster_partflat_curve_20261026.csv`](data/selectivity_cluster_partflat_curve_20261026.csv)、[`data/summary_cluster_partflat_20261026.json`](data/summary_cluster_partflat_20261026.json)（run #92）；part_gather 为 [`data/selectivity_cluster_partgather_smoke_20261026.csv`](data/selectivity_cluster_partgather_smoke_20261026.csv)（10 条/桶 smoke）。
 
-## 9. 下一步
+## 9. 动机实验：选择率对 FAISS 过滤 HNSW 效率的影响
+
+为给出直接的选择率成本证据，另跑一组 SIFT100k 随机谓词，选择率网格固定为 **1%、5%、10%、15%、20%、25%、30%**。完整文档见 [`experiments/motivation-selectivity.md`](experiments/motivation-selectivity.md)，图见 `figures/selectivity_motivation.svg`。
+
+| 选择率 | exact list QPS | BF-HNSW QPS（ef） | Recall@10 |
+|---:|---:|---:|---:|
+| 1% | **18,443** | 1,294（512） | 95.5% |
+| 5% | **3,958** | 2,523（256） | 99.7% |
+| 10% | 1,981 | **4,148（128）** | 98.3% |
+| 15% | 1,219 | **4,523（128）** | 98.8% |
+| 20% | 819 | **4,706（128）** | 99.6% |
+| 25% | 415 | **6,077（64）** | 97.3% |
+| 30% | 473 | **7,718（64）** | 97.3% |
+
+固定 `ef=64` 的 Recall@10 从 30% 的 97.3% 掉到 1% 的 44.1%；维持 r95 的 `ef` 约按 $s^{-0.60}$ 增长。交叉点约 $s^*\approx0.065$。**结论：属性过滤不能简单下推给全局 HNSW；低选择率需要可行集精确枚举，高选择率才用 BF-HNSW。** 这是 Directory-Aware 选择执行器的直接动机。
+
+## 10. 下一步
 
 1. 用更紧的 flat routing / 更大分区重测 part_gather，确认 $s=0.1$ 的 0.86× 能否翻过 1；低 $s$ 的几微秒差距预计难以翻转。
 2. 在 1M/10M 上加入层级与目录模式，确认目录解析成本在高 $n$ 下是否仍可忽略。
