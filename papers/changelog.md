@@ -1,5 +1,9 @@
 # 索引变更记录
 
+## 2026-10-26（Asia/Shanghai）
+
+- 新增 `papers/prefix-vector-search/2606.16903-directory-aware/paper.technical.md`：TrieHI 论文的系统技术解读（问题定义 DSQ/DSM、三方案结构与复杂度画像、§V 全部实验数字与口径、局限），章节定位到 PDF 页码；与既有 `paper.report.md`（索引摘要）互补，复现与延伸链接到 researches/nested-attr-vector-search 的 2026-10-26 实验记录。
+
 ## 2026-10-11（Asia/Shanghai）
 
 - 首次将已有 8 篇论文迁移到 `papers.jsonl`：A=7（执行/理论/基数估计），C=1（多字段 streaming estimator）；本轮没有新增论文全文。
