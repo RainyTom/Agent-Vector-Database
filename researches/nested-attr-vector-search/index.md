@@ -12,7 +12,7 @@
 
 当前六个方案见[子方向总览](directions.md)：[Directory-Aware加速](01-directory-aware-acceleration/README.md)、[DAG维护](02-dag-incremental-scope/README.md)、[联合索引](03-prefix-coupled-index/README.md)、[渐进导航](04-certified-progressive-routing/README.md)、[版本检索](05-versioned-directory-search/README.md)、[继承权限](06-inherited-acl-search/README.md)。每项已有具体机制、前序差异、最小实验与停止条件；均为待验证提案。以下Introduction和定义保留历史模型，当前单路径定义仍以前述规范入口为准。
 
-选择率诊断（2026-10-26）：[报告](01-directory-aware-acceleration/2026-10-26-exps/report.md)，测量属性过滤层与 ANN 执行器随 $s=|F|/n$ 的成本（100k 与 1M）；不恢复六个方向的独立立项。
+选择率诊断（2026-10-26）：[报告](01-directory-aware-acceleration/2026-10-26-selectivity-sweep/2026-10-26-selectivity-experiments.md)，测量属性过滤层与 ANN 执行器随 $s=|F|/n$ 的成本（100k 与 1M）；不恢复六个方向的独立立项。
 
 # Introduction
 

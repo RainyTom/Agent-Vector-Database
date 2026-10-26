@@ -54,7 +54,7 @@ production/nested-attr-vector-search/work/venv/bin/python \
 
 # 3. 运行全部实验(HNSW efSearch=2048、IVF nprobe=256,可用 --ef/--nprobe 调)
 #    --csv 指向研究报告数据目录(代码与报告分离,见下)
-REPRO=../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/repro-2606.16903
+REPRO=../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction
 LD_LIBRARY_PATH=../../deps/PathSeer/faiss/build/faiss \
   ./build/repro --data data/sift100k --csv $REPRO/data/results --mode all
 
@@ -71,9 +71,9 @@ DSQ 参数选择说明:HNSW 过滤搜索的 ef 必须随选择率缩放(本仓�
 ## 实验报告(与代码分离)
 
 报告、数据、图统一放在
-[researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/repro-2606.16903](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/repro-2606.16903/report.md):
-`report.md`(论文对比与偏离声明)、`data/`(CSV 原始数据)、
-`figures/`(PNG+SVG 图)、`experiments/protocol.md`(复现命令)。
+[researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-results.md):
+`2026-10-26-triehi-repro-results.md`(论文对比与偏离声明)、`data/`(CSV 原始数据)、
+`figures/`(PNG+SVG 图)、`2026-10-26-triehi-repro-protocol.md`(复现命令)。
 
 自检：每个 DSM op 后可设 `DSM_AUDIT_EACH=1` 逐 op 重算 Inclusive 集合
 audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。

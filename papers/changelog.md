@@ -2,7 +2,7 @@
 
 ## 2026-10-26（Asia/Shanghai）
 
-- TrieHI（arXiv:2606.16903）技术解读（问题定义 DSQ/DSM、三方案结构与复杂度画像、§V 全部实验数字与口径、局限）落位于 `researches/nested-attr-vector-search/01-directory-aware-acceleration/paper-notes-2606.16903.md`（研究文档归 researches，papers 目录只留索引摘要与全文）；复现图在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/` 两处 figures/ 下。
+- TrieHI（arXiv:2606.16903）技术解读（问题定义 DSQ/DSM、三方案结构与复杂度画像、§V 全部实验数字与口径、局限）落位于 `researches/nested-attr-vector-search/01-directory-aware-acceleration/paper-notes-2606.16903.md`（研究文档归 researches，papers 目录只留索引摘要与全文）；复现图在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/` 下 `2026-10-26-selectivity-sweep/figures/` 与 `2026-10-26-triehi-reproduction/figures/`。
 
 ## 2026-10-11（Asia/Shanghai）
 

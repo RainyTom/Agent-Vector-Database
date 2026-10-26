@@ -19,7 +19,7 @@ production/nested-attr-vector-search/work/venv/bin/python \
 codes/directory-aware-vector-attr-search/build.sh
 
 # 3. DSQ + DSM 全量实验(HNSW efSearch=2048,IVF nprobe=256)
-REPRO=researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-exps/repro-2606.16903
+REPRO=researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction
 cd codes/directory-aware-vector-attr-search
 LD_LIBRARY_PATH=../../deps/PathSeer/faiss/build/faiss \
   ./build/repro --data data/sift100k --csv ../../$REPRO/data/results --mode all
@@ -36,7 +36,7 @@ DSM_AUDIT_EACH=1 ./build/repro --data data/sift100k \
 
 单次全量运行墙钟 ≈ 63s(WSL2 单线程计时)。
 
-产物(本目录上一级,即 repro-2606.16903/ 下):
+产物(本目录,即 2026-10-26-triehi-reproduction/ 下):
 - `data/results_dsq.csv` — 每 (数据集, 设计, 执行器, 查询类型, scope 桶):
   nDCG@10、Recall@10、directory-only 延迟 mean/P90/P95/P99/P99.9(µs)、
   端到端延迟 mean(ms)。

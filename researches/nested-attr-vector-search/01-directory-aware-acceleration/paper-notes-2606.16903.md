@@ -134,8 +134,8 @@ TrieHI 的 MOVE 重链子树 + 更新受影响祖先聚合，开销由源/目的
 
 ## 5. 本地复现与延伸
 
-- 合成 100k 全协议复现（Table IV/Table V/Fig 8/9/10 对应实验 + 6 项偏离声明）：`2026-10-26-exps/repro-2606.16903/report.md`。
+- 合成 100k 全协议复现（Table IV/Table V/Fig 8/9/10 对应实验 + 6 项偏离声明）：`2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-results.md`。
 - 真实数据 400k 子采样验证（WIKI/ARXIV-Dir 发布数据）：`2026-10-26-real-dataset-validation.md`。方向性结论一致；全量（需 ≥24GB RAM）与 Fig 7 逐点 trade-off 曲线为遗留任务。
-- 选择率主线（含 IVF × 相关谓词 §6.3）：`2026-10-26-exps/report.md`。
+- 选择率主线（含 IVF × 相关谓词 §6.3）：`2026-10-26-selectivity-sweep/2026-10-26-selectivity-experiments.md`。
 
 相关记录：索引摘要 [`paper.report.md`](../../../papers/prefix-vector-search/2606.16903-directory-aware/paper.report.md)；全文 [`paper.md`](../../../papers/prefix-vector-search/2606.16903-directory-aware/paper.md)。
