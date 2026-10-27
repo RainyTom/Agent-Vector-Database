@@ -1,0 +1,32 @@
+{
+  "command": [
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/repro",
+    "--data",
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full",
+    "--dim",
+    "1024",
+    "--mode",
+    "dsq",
+    "--csv",
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-10-27-exps/data/wiki_full_all3",
+    "--executor",
+    "all3",
+    "--ef",
+    "2048",
+    "--nprobe",
+    "256",
+    "--node-hnsw-threshold",
+    "0",
+    "--node-ef",
+    "64"
+  ],
+  "thread_environment": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1",
+    "MKL_NUM_THREADS": "1",
+    "BLIS_NUM_THREADS": "1"
+  },
+  "start_unix": 1793112363.4428558,
+  "end_unix": 1793117547.5986753,
+  "exit_code": 0
+}

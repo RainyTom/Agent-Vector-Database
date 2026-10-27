@@ -1,0 +1,23 @@
+	Command being timed: "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/repro --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full --dim 1024 --mode dsq --csv /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-10-27-exps/data/wiki_full_all3 --executor all3 --ef 2048 --nprobe 256 --node-hnsw-threshold 0 --node-ef 64"
+	User time (seconds): 5148.10
+	System time (seconds): 30.91
+	Percent of CPU this job got: 99%
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 1:26:23
+	Average shared text size (kbytes): 0
+	Average unshared data size (kbytes): 0
+	Average stack size (kbytes): 0
+	Average total size (kbytes): 0
+	Maximum resident set size (kbytes): 37215596
+	Average resident set size (kbytes): 0
+	Major (requiring I/O) page faults: 3
+	Minor (reclaiming a frame) page faults: 9667347
+	Voluntary context switches: 87
+	Involuntary context switches: 10539
+	Swaps: 0
+	File system inputs: 0
+	File system outputs: 0
+	Socket messages sent: 0
+	Socket messages received: 0
+	Signals delivered: 0
+	Page size (bytes): 4096
+	Exit status: 0

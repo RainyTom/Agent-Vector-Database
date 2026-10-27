@@ -38,6 +38,7 @@
 #include <numeric>
 #include <queue>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 #include <unordered_set>
 #include <utility>
@@ -659,7 +660,8 @@ int main(int argc, char** argv) {
         csv_dsq << "dataset,design,executor,query_type,scope_bucket,ndcg10,recall10,dir_mean_us,"
                    "dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms\n";
         csv_perquery << "dataset,design,executor,query_type,anchor_depth,scope_card,dir_us,"
-                        "enum_us,bitmap_us,e2e_ms,recall10,ndcg10\n";
+                        "enum_us,bitmap_us,e2e_ms,recall10,ndcg10,"
+                        "gt_count,hit_count,valid_return_count,query_index,search_us\n";
     }
     if (want_dsm) {
         csv_dsm.open(csv + "_dsm.csv");
@@ -878,34 +880,123 @@ int main(int argc, char** argv) {
             return std::make_unique<Design>(k, Tree(nsd.tree.parent), nsd.bindings,
                                             nsd.n_entries);
         };
+        auto validate_queries = [&](const Workload& wl, const std::string& path) {
+            for (size_t qi = 0; qi < wl.qs.size(); ++qi)
+                if (wl.qs[qi].qidx < 0 || wl.qs[qi].qidx >= test.n)
+                    throw std::runtime_error(
+                        path + ": query_index=" + std::to_string(qi) +
+                        " has out-of-range qidx=" + std::to_string(wl.qs[qi].qidx) +
+                        " (test.n=" + std::to_string(test.n) + ")");
+        };
+        // NODE resolves candidate nodes, never an entry-ID bitmap. Both DSQ
+        // paths use the same enumeration and test nonemptiness on the index.
+        auto candidate_nodes = [](const Exec& ex, const Tree& tree,
+                                  const Workload::Q& q) {
+            std::vector<int> cand;
+            if (q.rec == 1) {
+                std::vector<int> st(1, q.anchor);
+                while (!st.empty()) {
+                    int v = st.back();
+                    st.pop_back();
+                    if (ex.node_ix[v]) cand.push_back(v);
+                    for (int c : tree.children[v]) st.push_back(c);
+                }
+            } else if (ex.node_ix[q.anchor]) {
+                cand.push_back(q.anchor);
+            }
+            return cand;
+        };
+        struct GroundTruth {
+            std::vector<std::unique_ptr<Design>> namespaces;
+            std::vector<std::vector<int>> ids;
+            std::vector<int> cards, depths;
+        };
+        auto prepare_gt = [&](std::vector<NSDataAny>& nss, const Workload& wl,
+                              bool has_ns) {
+            GroundTruth gt;
+            // One reference design per namespace, not one per query. Retain
+            // it for untimed result-membership checks without building scopes.
+            for (auto& nsd : nss)
+                gt.namespaces.push_back(make_design(Design::TRIEHI, nsd));
+            gt.ids.resize(wl.qs.size());
+            gt.cards.resize(wl.qs.size());
+            gt.depths.resize(wl.qs.size());
+            for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
+                const auto& q = wl.qs[qi];
+                int nsi = has_ns ? wl.ns_flag[qi] : 0;
+                auto& d = *gt.namespaces[nsi];
+                auto* sc = d.resolve(q.anchor, q.rec == 1);
+                gt.cards[qi] = (int)roaring_bitmap_get_cardinality(sc);
+                gt.depths[qi] = d.tree.depth[q.anchor];
+                gt.ids[qi] = brute_force_topk(
+                    base, &test.x[(size_t)q.qidx * test.d], sc, K);
+                roaring_bitmap_free(sc);
+            }
+            return gt;
+        };
+        struct QueryQuality {
+            int hit = 0, valid = 0;
+            double dcg = 0;
+        };
+        auto query_quality = [&](const std::vector<faiss::idx_t>& ids,
+                                 const GroundTruth& gt, size_t qi, int nsi,
+                                 const Workload::Q& q) {
+            QueryQuality quality;
+            const auto& d = *gt.namespaces[nsi];
+            int duplicate = 0, outside = 0;
+            for (int t = 0; t < K; ++t) {
+                faiss::idx_t id = ids[t];
+                if (id < 0) continue;  // FAISS missing-result sentinel
+                if (std::find(ids.begin(), ids.begin() + t, id) != ids.begin() + t) {
+                    ++duplicate;
+                    continue;
+                }
+                bool in_scope = id < base.n &&
+                    roaring_bitmap_contains(d.inc[q.anchor], (uint32_t)id);
+                if (in_scope && q.rec != 1)
+                    for (int c : d.tree.children[q.anchor])
+                        if (roaring_bitmap_contains(d.inc[c], (uint32_t)id)) {
+                            in_scope = false;
+                            break;
+                        }
+                if (!in_scope) {
+                    ++outside;
+                    continue;
+                }
+                ++quality.valid;
+                if (std::find(gt.ids[qi].begin(), gt.ids[qi].end(), (int)id) !=
+                    gt.ids[qi].end()) {
+                    ++quality.hit;
+                    quality.dcg += 1.0 / std::log2(2.0 + t);
+                }
+            }
+            // Do not silently filter or change ANN output. Multi-bindings can
+            // expose duplicate NODE IDs or Local-vs-materialized scope gaps.
+            if (duplicate || outside)
+                std::cerr << "RESULT_SCOPE_WARNING qi=" << qi << " ns=" << nsi
+                          << " duplicates=" << duplicate << " out_of_scope=" << outside
+                          << "\n";
+            return quality;
+        };
         auto run_group = [&](const std::string& dataset_name, std::vector<NSDataAny>& nss,
                              const std::string& wl_path, bool has_ns) {
             Workload wl = Workload::load(wl_path, has_ns);
-            // ground truth once per workload (scope semantics are design-
-            // independent; verified by the DSM audit)
-            std::vector<std::vector<int>> gts(wl.qs.size());
+            validate_queries(wl, wl_path);
+            // Fixed reference scopes and evaluation metadata are prepared
+            // before any timed query, independently of the executor.
+            auto gt = prepare_gt(nss, wl, has_ns);
+            const auto& gts = gt.ids;
             bool dbg = getenv("RECALL_DEBUG") != nullptr;
-            {
-                auto scratch = make_design(Design::TRIEHI, nss[0]);
-                for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
-                    int nsi = has_ns ? wl.ns_flag[qi] : 0;
-                    Design* dp = scratch.get();
-                    auto d2 = make_design(Design::TRIEHI, nss[nsi]);
-                    if (nsi != 0) dp = d2.get();
-                    auto* sc = dp->resolve(wl.qs[qi].anchor, wl.qs[qi].rec == 1);
-                    gts[qi] = brute_force_topk(
-                        base, &test.x[(size_t)wl.qs[qi].qidx * test.d], sc, K);
-                    if (dbg && qi < 10)
-                        std::cerr << "GT qi=" << qi << " ns=" << nsi
-                                  << " anchor=" << wl.qs[qi].anchor
-                                  << " rec=" << wl.qs[qi].rec
-                                  << " scope_card=" << roaring_bitmap_get_cardinality(sc)
-                                  << " gt_size=" << gts[qi].size()
-                                  << " gt0=" << (gts[qi].empty() ? -1 : gts[qi][0])
-                                  << "\n";
-                    roaring_bitmap_free(sc);
-                }
-            }
+            if (dbg)
+                for (size_t qi = 0; qi < wl.qs.size() && qi < 10; ++qi)
+                    std::cerr << "GT qi=" << qi
+                              << " ns=" << (has_ns ? wl.ns_flag[qi] : 0)
+                              << " anchor=" << wl.qs[qi].anchor
+                              << " rec=" << wl.qs[qi].rec
+                              << " scope_card=" << gt.cards[qi]
+                              << " gt_size=" << gts[qi].size()
+                              << " gt0=" << (gts[qi].empty() ? -1 : gts[qi][0])
+                              << "\n";
             for (int e = 0; e < 3; ++e) {
                 std::vector<std::unique_ptr<Design>> designs;
                 for (auto& nsd : nss) designs.push_back(make_design((Design::Kind)e, nsd));
@@ -928,32 +1019,13 @@ int main(int argc, char** argv) {
                     for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
                         auto& q = wl.qs[qi];
                         int nsi = has_ns ? wl.ns_flag[qi] : 0;
-                        bool is_node = ex.name.rfind("NODE", 0) == 0;
-                        auto t0 = Clock::now();
-                        auto* scope = designs[nsi]->resolve(q.anchor, q.rec == 1);
-                        double d_us = us_since(t0);
-                        double search_us = 0;
+                        roaring_bitmap_t* scope = nullptr;
+                        double d_us = 0, search_us = 0;
                         std::vector<faiss::idx_t> I(K, -1);
                         std::vector<float> D(K);
                         if (is_node) {
-                            // candidate node set: subtree nodes with items
-                            // (recursive) or the anchor (non-recursive)
-                            std::vector<int> cand;
-                            if (q.rec == 1) {
-                                std::vector<int> st(1, q.anchor);
-                                while (!st.empty()) {
-                                    int v = st.back();
-                                    st.pop_back();
-                                    if (roaring_bitmap_get_cardinality(
-                                            designs[nsi]->local[v]))
-                                        cand.push_back(v);
-                                    for (int c : designs[nsi]->tree.children[v])
-                                        st.push_back(c);
-                                }
-                            } else if (roaring_bitmap_get_cardinality(
-                                               designs[nsi]->local[q.anchor])) {
-                                cand.push_back(q.anchor);
-                            }
+                            auto t0 = Clock::now();
+                            auto cand = candidate_nodes(ex, nss[nsi].tree, q);
                             d_us = us_since(t0);
                             auto t1 = Clock::now();
                             const float* qv = &test.x[(size_t)q.qidx * test.d];
@@ -991,6 +1063,7 @@ int main(int argc, char** argv) {
                                     ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
                                 }
                                 for (int j = 0; j < nn; ++j) {
+                                    if (In[j] < 0) continue;
                                     float dist = Dn[j];
                                     int gid = ex.node_ids[v][(size_t)In[j]];
                                     if ((int)heap.size() < K) heap.push({dist, gid});
@@ -1007,6 +1080,9 @@ int main(int argc, char** argv) {
                             }
                             search_us = us_since(t1);
                         } else {
+                            auto t0 = Clock::now();
+                            scope = designs[nsi]->resolve(q.anchor, q.rec == 1);
+                            d_us = us_since(t0);
                             auto t1 = Clock::now();
                             RoaringSel sel(scope);
                             if (ex.name.rfind("PG", 0) == 0) {
@@ -1030,30 +1106,26 @@ int main(int argc, char** argv) {
                                       << " ex=" << ex.name << " I0=" << (long)I[0]
                                       << " I1=" << (long)I[1]
                                       << " D0=" << D[0] << "\n";
-                        std::unordered_set<int> gs(gts[qi].begin(), gts[qi].end());
-                        int hit = 0;
-                        double dcg = 0;
-                        for (int t = 0; t < K; ++t) {
-                            if (I[t] >= 0 && gs.count((int)I[t])) {
-                                ++hit;
-                                dcg += 1.0 / std::log2(2.0 + t);
-                            }
-                        }
+                        auto quality = query_quality(I, gt, qi, nsi, q);
+                        int hit = quality.hit;
+                        double dcg = quality.dcg;
                         double idcg = 0;
                         for (size_t t = 0; t < gts[qi].size() && t < K; ++t)
                             idcg += 1.0 / std::log2(2.0 + t);
                         double ndcg = idcg > 0 ? dcg / idcg : 1.0;
                         int r = q.rec == 1 ? 0 : 1;
-                        int card = (int)roaring_bitmap_get_cardinality(scope);
+                        int card = gt.cards[qi];
                         int b = card < 10 ? 0 : card < 1000 ? 1 : 2;
                         csv_perquery << dataset_name << "," << dlabel << "," << ex.name
                                      << "," << (r == 0 ? "recursive" : "non-recursive")
-                                     << "," << designs[nsi]->tree.depth[q.anchor] << ","
+                                     << "," << gt.depths[qi] << ","
                                      << card << "," << d_us << ","
                                      << (is_node ? d_us : designs[nsi]->t_enum_us) << ","
-                                     << (is_node ? search_us : designs[nsi]->t_bitmap_us)
+                                     << (is_node ? 0.0 : designs[nsi]->t_bitmap_us)
                                      << "," << e2e_ms << "," << (double)hit / K << ","
-                                     << ndcg << "\n";
+                                     << ndcg << "," << gts[qi].size() << "," << hit
+                                     << "," << quality.valid << "," << qi << ","
+                                     << search_us << "\n";
                         dir[r].add(d_us);
                         e2e[r].add(e2e_ms);
                         rec[r].add((double)hit / K);
@@ -1062,7 +1134,7 @@ int main(int argc, char** argv) {
                         dir_all.add(d_us);
                         e2e_all.add(e2e_ms);
                         rec_all.add((double)hit / K);
-                        roaring_bitmap_free(scope);
+                        if (scope) roaring_bitmap_free(scope);
                     }
                     const char* buckets[3] = {"card<10", "card10-1000", "card>=1000"};
                     for (int r = 0; r < 2; ++r) {
@@ -1102,20 +1174,9 @@ int main(int argc, char** argv) {
             auto run_scan = [&](const std::string& dataset_name, std::vector<NSDataAny>& nss,
                                 const std::string& wl_path, bool has_ns) {
                 Workload wl = Workload::load(wl_path, has_ns);
-                std::vector<std::vector<int>> gts(wl.qs.size());
-                {
-                    auto scratch = make_design(Design::TRIEHI, nss[0]);
-                    for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
-                        int nsi = has_ns ? wl.ns_flag[qi] : 0;
-                        Design* dp = scratch.get();
-                        auto d2 = make_design(Design::TRIEHI, nss[nsi]);
-                        if (nsi != 0) dp = d2.get();
-                        auto* sc = dp->resolve(wl.qs[qi].anchor, wl.qs[qi].rec == 1);
-                        gts[qi] = brute_force_topk(
-                            base, &test.x[(size_t)wl.qs[qi].qidx * test.d], sc, K);
-                        roaring_bitmap_free(sc);
-                    }
-                }
+                validate_queries(wl, wl_path);
+                auto gt = prepare_gt(nss, wl, has_ns);
+                const auto& gts = gt.ids;
                 for (int e = 0; e < 3; ++e) {
                     std::vector<std::unique_ptr<Design>> designs;
                     for (auto& nsd : nss) designs.push_back(make_design((Design::Kind)e, nsd));
@@ -1143,23 +1204,8 @@ int main(int argc, char** argv) {
                                 double d_us = 0, search_us = 0;
                                 roaring_bitmap_t* scope = nullptr;
                                 if (is_node) {
-                                    std::vector<int> cand;
                                     auto t0 = Clock::now();
-                                    if (q.rec == 1) {
-                                        std::vector<int> st(1, q.anchor);
-                                        while (!st.empty()) {
-                                            int v = st.back();
-                                            st.pop_back();
-                                            if (roaring_bitmap_get_cardinality(
-                                                    designs[nsi]->local[v]))
-                                                cand.push_back(v);
-                                            for (int c : designs[nsi]->tree.children[v])
-                                                st.push_back(c);
-                                        }
-                                    } else if (roaring_bitmap_get_cardinality(
-                                                       designs[nsi]->local[q.anchor])) {
-                                        cand.push_back(q.anchor);
-                                    }
+                                    auto cand = candidate_nodes(ex, nss[nsi].tree, q);
                                     d_us = us_since(t0);
                                     auto t1 = Clock::now();
                                     const float* qv = &test.x[(size_t)q.qidx * test.d];
@@ -1196,6 +1242,7 @@ int main(int argc, char** argv) {
                                     ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
                                 }
                                         for (int j = 0; j < nn; ++j) {
+                                            if (In[j] < 0) continue;
                                             float dist = Dn[j];
                                             int gid = ex.node_ids[v][(size_t)In[j]];
                                             if ((int)heap.size() < K) heap.push({dist, gid});
@@ -1233,15 +1280,9 @@ int main(int argc, char** argv) {
                                 }
                                 double e2e_ms = (search_us + d_us) / 1000.0;
 
-                                std::unordered_set<int> gs(gts[qi].begin(), gts[qi].end());
-                                int hit = 0;
-                                double dcg = 0;
-                                for (int t = 0; t < K; ++t) {
-                                    if (I[t] >= 0 && gs.count((int)I[t])) {
-                                        ++hit;
-                                        dcg += 1.0 / std::log2(2.0 + t);
-                                    }
-                                }
+                                auto quality = query_quality(I, gt, qi, nsi, q);
+                                int hit = quality.hit;
+                                double dcg = quality.dcg;
                                 double idcg = 0;
                                 for (size_t t = 0; t < gts[qi].size() && t < K; ++t)
                                     idcg += 1.0 / std::log2(2.0 + t);

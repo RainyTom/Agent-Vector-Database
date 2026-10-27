@@ -128,8 +128,11 @@ def build_wiki(src, out, rng):
     total_w = sum(weights.values())
     nq = 456
     qs = []
+    assigned = 0
     for d, w in weights.items():
-        k = round(nq * w / total_w)
+        # Cumulative rounding keeps the final total exactly nq.
+        k = round(nq * (assigned + w) / total_w) - round(nq * assigned / total_w)
+        assigned += w
         for _ in range(k):
             a = rng.choice(by_depth[d])
             qs.append((0, rng.random() < 0.5, a))

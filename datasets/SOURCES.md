@@ -116,6 +116,8 @@ arxiv `1ZiChH3FO4eYw0Iiq3I-xv3X0tS8bWImM`。
 **向量格式转换**（fvecs → repro 的 base.f32）：
 `production/nested-attr-vector-search/work/venv/bin/python codes/directory-aware-vector-attr-search/scripts/fvecs_to_f32.py <in.fvecs> <out.f32> 1024`
 
+**全量到齐与转换修正（2026-10-28）**：`datasets/dbpedia_dir_2m_corpus_vectors.fvecs` 实测7,960,883,900 bytes，1,941,679×1024；SHA-256为`74b0a0ff511c94bca5e0a2fd371d23678aea673afd454fe1b3b70e8982575198`。查询fvecs为456条，非457条。旧转换脚本曾将payload的int位模式数值转换成float，现已修复并逐位核对完整输出；不要复用旧同尺寸f32文件。旧`data/real/test.f32`已确认受此错误影响。完整实验、输入hash和约束限制见[全量报告](../researches/nested-attr-vector-search/2026-10-28-exps/report.md)。
+
 ## E. PathSeer filtered-ANN 数据集（HF）
 
 `https://huggingface.co/datasets/lizhiyuell/filtered_ANNS_dataset` —

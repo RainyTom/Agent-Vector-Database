@@ -1,0 +1,50 @@
+{
+  "dimension": 1024,
+  "metric": "squared L2, raw published floats; no additional normalization",
+  "inputs": {
+    "base": {
+      "source": "datasets/dbpedia_dir_2m_corpus_vectors.fvecs",
+      "source_bytes": 7960883900,
+      "records": 1941679,
+      "source_sha256": "74b0a0ff511c94bca5e0a2fd371d23678aea673afd454fe1b3b70e8982575198",
+      "output_bytes": 7953117184,
+      "output_sha256": "a8502a406c474965a4d9db87b55addd59cf7e6c6d98c96969c5b24ba111d8e2e",
+      "min_norm": 0.9996314644813538,
+      "max_norm": 1.0003657341003418,
+      "all_values_finite": true,
+      "all_float_bits_preserved": true
+    },
+    "test": {
+      "source": "data/real_fixtures/wiki/query_vectors.fvecs",
+      "source_bytes": 1869600,
+      "records": 456,
+      "source_sha256": "4f443cd6583189a9adb24775e4edeb55fee4c21171a189fd923e6dcdf01ec9d9",
+      "output_bytes": 1867776,
+      "output_sha256": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e",
+      "min_norm": 0.9996829628944397,
+      "max_norm": 1.000311017036438,
+      "all_values_finite": true,
+      "all_float_bits_preserved": true
+    }
+  },
+  "workload": {
+    "source": "codes/directory-aware-vector-attr-search/data/real/workload_wiki.txt",
+    "original_count": 457,
+    "count": 456,
+    "omitted_invalid_query_ids": [
+      456
+    ],
+    "recursive": 227,
+    "non_recursive": 229,
+    "constraint_seed": 20261026,
+    "constraints": "synthetic depth-mixed anchors on the full real directory tree; not published query constraints"
+  },
+  "tree_nodes": 468031,
+  "nonempty_nodes": 363467,
+  "max_local_items": 13255,
+  "fixture_hashes": {
+    "wiki_tree.txt": "b6c5d9d2e63e0da89702f0674ea4d43f71e5601ce5816fa8812a7c8a16e90faf",
+    "wiki_bindings.txt": "f1f8fd8b053f82883727e92436837def37d2a60c71fadfe0cfb7b87cc2e50b42",
+    "workload_wiki.txt": "e6fa281a66e9bdab04a61bf2221ce1c58241a5b6fb01a9e2567d109fa4f4b684"
+  }
+}

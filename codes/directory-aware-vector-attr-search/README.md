@@ -8,9 +8,9 @@
 
 | 项目 | 论文 | 本复现 |
 |---|---|---|
-| 数据集 | WIKI-Dir 1.94M×1024d / ARXIV-Dir 2.76M×1024d | SIFT100k×128d(`datasets/sift-128-euclidean.hdf5`) |
-| 层级属性 | 真实 Wikipedia 类别树 / arXiv subject+temporal | 合成模拟（见下） |
-| ANN 执行器 | Viking PG + IVF | FAISS HNSM M16(≈PG) + IndexIVFFlat nlist=1024(≈IVF) |
+| 数据集 | WIKI-Dir 1.94M×1024d / ARXIV-Dir 2.76M×1024d | 已完成完整 WIKI 1,941,679×1024d 两类基线；历史 SIFT/子采样结果保留 |
+| 层级属性 | 真实 Wikipedia 类别树 / arXiv subject+temporal | 初始合成模拟（见下）；另有真实目录工作负载 |
+| ANN 执行器 | Viking PG + IVF | 全局 FAISS HNSW M16（PG 近似替代，非同一实现）+ IndexIVFFlat nlist=1024；另有每节点局部 ANN 基线 |
 | ID 集合 | Roaring bitmaps | CRoaring v4.3.1(与论文一致) |
 | 硬件 | 48-core Xeon Silver 4310 | 本机 WSL2(单线程计时) |
 
@@ -27,19 +27,23 @@
   （同论文 ARXIV-Dir 协议）。
 - **DSM**:wiki 命名空间上 1000 MOVE + 1000 MERGE（同论文数量）。
 
-三种目录设计(`src/repro.cpp`):
+## 两类基线与维护语义
 
-- **PE-Online**：仅存 Local posting;recursive DSQ 查询时 DFS 枚举后代目录
-  并 union;non-recursive 直接查 Local。
-- **PE-Offline**：摄入时物化祖先归属（每目录 Inclusive 集合）;recursive 一次
-  查找；non-recursive = Inc(v) − ∪ Inc(child)。
-- **TrieHI**:Trie 节点 + Inclusive 集合（查询语义同 PE-Offline);DSM 用子树
-  重链代替路径键重写。
+**A：全局 ANN + scope ID 过滤。** 一个 HNSW 或 IVF 索引覆盖全体向量，三种目录表示（`src/repro.cpp`）分别解析同一 scope 的候选 ID 集，再交给全局 ANN：
 
-DSM 语义：MOVE = 子树重挂；MERGE = u 的直接绑定条目迁移到 w、u 的子目录
-作为节点单元转挂到 w、u 删除（论文 §V-C "transferred as node units")。
-扩张式设计（PE-*)额外承担子树范围路径键重写；公共 catalog 不计入
-（同论文 §V-A Implementation Details)。
+- **PE-Online**：目录身份是完整路径字符串，仅存直接父路径的 Local posting；recursive 枚举后代路径键并 union，non-recursive 直接查 Local。MOVE 必须枚举移动子树的键并重映射，不能视作原生树的一次重挂。
+- **PE-Offline**：扁平路径键上物化祖先 Inclusive posting；recursive 一次查找，non-recursive = Inc(v) − ∪ Inc(child)。MOVE 同样重映射子树键，并维护新旧祖先的成员集合。
+- **TrieHI**：Trie 节点 + Inclusive 集合，查询语义同 PE-Offline；MOVE 重挂子树而无需重写所有后代路径键，但仍维护新旧祖先聚合集。
+
+`IDSelector` / `sel` 限制结果资格；这不等于属性谓词已下推到图遍历，也不能据此断言不合格节点必被跳过、不再扩展。未核对具体版本源码前不作该机制判断。
+
+**B：节点树 + 每节点局部 ANN。** 每个非空节点建局部索引，递归查询枚举候选节点，各搜 top-k 后按距离合并全局 top-k；非递归只搜锚节点。默认 `--node-hnsw-threshold 0`，全部非空节点使用 HNSW。阈值之下使用 Flat 的混合配置与纯 Flat 仅作对照，不替代局部 ANN 基线。每节点 top-N 的参数扫描与候选节点截断须单列；N<k 或截断节点可能损失结果，局部 HNSW 本身也仍近似。
+
+DSM 语义：MOVE = 子树重挂；MERGE = u 的直接绑定条目迁移到 w、u 的子目录作为节点单元转挂到 w、u 删除（论文 §V-C “transferred as node units”）。PE-* 额外承担子树路径键重映射；PE-Offline 与 TrieHI 还维护新旧祖先聚合集。参照[论文相应说明（第 5 页）](https://www.alphaxiv.org/abs/2606.16903?page=5)。
+
+成本须区分结构与集合维护：$O(m_u)$ 表示移动子树键的重映射次数（不含字符串长度成本）；$O(t)$ 仅表示祖先集合操作次数，不含位图规模及差/并运算成本。当前公共 `Tree::relink` 还遍历后代更新 depth，不能把 TrieHI 或 NodeANN 整个 MOVE 实现称为 $O(1)$。NodeANN 的局部索引随节点保留、无需因重挂重建，不等于整次 MOVE 无后代成本。公共 catalog 的历史 DSM 计时排除项沿用原实验记录，不能等同于实现没有该开销。
+
+完整 WIKI 输入为 `datasets/dbpedia_dir_2m_corpus_vectors.fvecs`（7,960,883,900 bytes，1,941,679×1024）。本轮已修复 fvecs 转换的 int 位模式数值转换错误，并确认旧 `data/real/test.f32` 受影响；未核查的历史实验不推断污染范围。NODE 查询已移除额外全局 scope 位图解析；旧457行约束改为456条有效查询，运行器拒绝越界 qidx。新结果与旧ANN质量/延迟不可直接比较，旧目录/DSM记录不因向量转换自动失效。
 
 ## 运行
 
@@ -64,9 +68,21 @@ production/nested-attr-vector-search/work/venv/bin/python \
   codes/directory-aware-vector-attr-search/scripts/plot_repro.py
 ```
 
-DSQ 参数选择说明:HNSW 过滤搜索的 ef 必须随选择率缩放(本仓库
-2026-10-26 选择率实验:ef≈23·s^-0.77),默认 ef=2048 覆盖 wiki workload
-中位 scope(card≈54, s≈5e-4);IVF nprobe=256 同理。
+完整 WIKI 两类基线（**仓库根目录**运行；默认局部全 HNSW，Flat 仅对照）：
+
+```bash
+bash codes/directory-aware-vector-attr-search/build.sh
+production/nested-attr-vector-search/work/venv/bin/python \
+  researches/nested-attr-vector-search/2026-10-27-exps/experiments/run_wiki_full.py
+production/nested-attr-vector-search/work/venv/bin/python \
+  researches/nested-attr-vector-search/2026-10-27-exps/experiments/summarize_wiki_full.py
+production/nested-attr-vector-search/work/venv/bin/python \
+  codes/directory-aware-vector-attr-search/tests/test_fvecs_to_f32.py
+```
+
+输入准备、固定约束、GT/empty-scope口径和内存限制见[复现协议](../../researches/nested-attr-vector-search/2026-10-27-exps/experiments/reproduction.md)，数字见[全量报告](../../researches/nested-attr-vector-search/2026-10-28-exps/report.md)。原CSV的 `recall10` 仍为历史 `hit/10`；标准macro/global recall由新增计数列汇总。NODE `bitmap_us=0`，局部搜索/合并计入独立 `search_us`。
+
+历史选择率诊断给出过 ef 随选择率缩放的经验拟合，不是普适参数保证。完整 WIKI 本轮使用固定 ef=2048、nprobe=256，并单列 nprobe=1024 精确对照；极小 scope 下全局 ANN 召回仍低，不能称该默认值已覆盖 workload 或达到同召回最优。
 
 ## 实验报告(与代码分离)
 

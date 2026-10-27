@@ -6,6 +6,8 @@
 
 当前测量入口见[基准协议](07-laminar-edge-sharing/benchmark-protocol.md)；研究草案、问题定义与提出的共享索引见[Laminar Edge Sharing](07-laminar-edge-sharing/README.md)；开源过滤 ANN 基线的改造评估见[基线改造](07-laminar-edge-sharing/baseline-adaptation.md)。该结果不改变下方六个方向的停止/暂停决定。
 
+完整 WIKI 两类基线重跑：[实测报告](2026-10-28-exps/report.md)、[原始CSV与输入校验](2026-10-27-exps/data/)、[复现协议](2026-10-27-exps/experiments/reproduction.md)。区分全局ANN+候选ID过滤与节点树+每节点局部ANN；已修复浮点转换、查询越界及NODE重复scope成本，旧ANN结果不与新结果直接连线。两类基线及MOVE成本定义见[方案报告§2](2026-10-27-hierarchical-attr-vector-search-report.md#2-两类基线方案)。
+
 ## 子方向方案入口
 
 最新查重决定见[alphaXiv新颖性审计](alphaxiv-novelty-audit.md)：D0/D1/D3/D5停止独立立项，D2/D4暂停，当前不实施原六个方案。以下链接保留设计与证据，不代表六项创新已获确认。
