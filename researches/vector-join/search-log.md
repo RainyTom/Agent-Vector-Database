@@ -232,3 +232,11 @@
 补充候选：产品实体匹配已有[莱比锡大学研究页](https://old.dbs.uni-leipzig.de/en/publication/title/tailoring_entity_resolution_for_matching_product_offers)讨论缺失/错误属性；[EM-Join 原始论文](https://www.scitepress.org/Papers/2025/134837/134837.pdf)涉及 embedding-based entity matching join。当前只核题名/摘要或入口，未核其完整定义、阈值语义和实验；列为后续精读候选，不把商品匹配场景本身宣称为新增研究问题。
 
 同日层级语义修正：核 [OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/) §Hierarchical faceting 与普通 facet 过滤，前者明确 Category→Subcategory→Product type，后者为品牌/颜色/尺码等独立过滤字段。当前 [Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md) 明确定义品类树 × 属性部分函数；整体目录状态并非单父树。前版只有 facet 约束偏序，不能称为明确的品类层级。五种基线已同步新的品类可比条件；未运行实验。
+
+## 2026-10-28 层级DSQ候选机制与前序核查
+
+本轮是单查询、scope内top-k的B类可迁移检索实验，不是几何vector join。先查论文总索引、关系索引、TrieHI全文笔记及既有新颖性审计，再搜`vector similarity join`、`high-dimensional similarity join`、`inner-product similarity join`的hierarchical/prefix/partition变体；随后查filtered ANN hierarchical partition/packing、DFS范围组织、partial-distance与局部索引合并。广义Curator检索混入NVIDIA NeMo同名结果，未当作向量索引证据。
+
+本地原文证据：[iRangeGraph](https://arxiv.org/abs/2409.02571) `paper.md:407-520` 的范围/segment-tree共享图；[Curator](https://arxiv.org/abs/2601.01291) `paper.md:450-500,650-715` 的子树连续ID与按需谓词索引；Packing相关块组织沿用既有全文记录。VA-file原始PDF本轮未成功读取，不能把snippet当精读。没有新增未经完整书目核实的论文条目，既有D0–D5停止/暂停决定不变。
+
+实际完成12轮冻结WIKI实验，见[报告§9](../nested-attr-vector-search/2026-10-28-exps/report.md#9-autoresearch-静态dsq迭代)。scope-run/tile执行候选有效，但DFS区间、bulk scan、SIMD、partial-distance及局部top-k合并都不是单独新贡献；tile cutoff组合的新颖性仍未充分排查。未运行holdout、多数据集或动态维护，不宣称覆盖所有前序。

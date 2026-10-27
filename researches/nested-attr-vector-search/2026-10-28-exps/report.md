@@ -160,6 +160,7 @@ all3整进程峰值RSS为35.492 GiB，局部Flat独立运行17.111 GiB，IVF全�
 | 9 | 截止检查改为每16维 | 1.740295 | 1.000000/1.000000 | 丢弃，无可靠收益 |
 | 10 | 子树质心前8维符号编码，重排兄弟子树 | 1.798043 | 1.000000/1.000000 | 丢弃，较run7慢3.38% |
 | 11 | 直接绑定内部按8维符号编组，顺序物化packed payload | 1.127503 | 1.000000/1.000000 | 保留，需分离物化顺序消融 |
+| 12 | 保留顺序物化，但关闭局部几何编组 | 1.158137 | 1.000000/1.000000 | 消融后恢复run11；编组净差约2.65% |
 
 run2相对baseline降低约1.41%，不改变索引或召回；是消除逐节点临时分配的工程对照，**不宣称算法创新**。non-recursive mean=0.005055ms，build=69.0099s，peak RSS=19,742.234MiB。尚未测试动态维护或跨数据集泛化。
 
@@ -174,3 +175,24 @@ run7将原run5逐向量“部分距离后再完整refine”改为tile内SIMD累�
 run8/9是截止反馈检查频率消融，均未比64维取得可靠收益。run10保持每个子树区间但按子树聚合几何sign code重排兄弟，查询无效开销反而增加，已回退。
 
 run11仅在各节点的直接绑定内部按前8维符号code分组、以global ID打破同code平局，不改变拓扑或scope；所有统计仅用base向量，不使用query/GT。构建同时由“按输入binding随机写packed”改为“先填全局ID映射、再顺序写packed”。两项变化耦合，所以1.127503ms不能全归因于几何编组：需以相同顺序物化、关闭几何排序的消融分离。该run相比run7低35.17%，build=5.35924s、peakRSS=16,031.922MiB、non-recursive mean=0.003153ms，独立召回全部为1。排序/空间编组本身仍有大量经典前序，新颖性未确认。
+
+run12给出关键反证：关闭局部几何排序、保留顺序物化后仍为1.158137ms，所以不能把run11相对run7的35.17%全部算作几何编组收益。两者控制比较的净差只有2.65%，尚需独立重复与不同硬件确认；其余差异与构建物化/缓存及编译效应的具体因果尚未剥离。最佳保留run11，完成配置上限12/12，无修改评估器、输入hash、质量门槛或计时边界。
+
+### 9.1 本轮结论及研究级别
+
+- 保留实现：`src/scope_run_index.h`的静态single-binding范围索引；每节点直接绑定内部几何编组、DFS interval、单份tile8 AoSoA、global top-k cutoff反馈。构建只读取base/目录/bindings，不读取query或GT。
+- 相对正式局部HNSW baseline快**5.897倍**（6.649231→1.127503ms），观测macro/global recall由0.999559/0.999320到1/1，构建70.8704→5.35924s，peakRSS19,742.180→16,031.922MiB。不能把全部性能差距归因于某个新机制：大量收益来自批量扫描与物理布局，均有成熟前序。
+- 最强机制证据是tile共享截止反馈相对于tile exhaustive的6.34%改进，以及逐点提前终止反而变慢的消融。局部几何编组的独立收益小，不能夸大。
+- **当前级别是有收益的候选索引/执行机制与工程强基线，不是已通过新颖性审查的新算法。** 已知前序包括Curator的连续子树ID、iRangeGraph的范围组织、Packing的块组织、VA-file/partial-distance与通用SIMD布局；本文未完成所有最近前序正文与引用闭包。
+- 明确退化：single-binding/static，不支持DAG多标签；没有MOVE/MERGE实现。DFS物理布局在目录移动后可能要重排向量与更新区间，**不继承TrieHI廉价重挂的维护保证**。新提出的“稳定extent/tile所有权与范围cover解耦”只能作为下轮待查重问题，不能把常规间接层/rope改名当创新。
+- 完整WIKI但仍只有456条合成约束query；12轮均观察同一workload，存在选择偏差，未运行独立holdout或第二数据集。没有GPU/多线程/动态更新结果。mode4浮点margin未作形式化证明，观测召回1不等于所有输入下精确保证；mode0/3是不提前终止的穷尽对照。
+
+### 9.2 证据与复现
+
+全部12轮[数值CSV](data/autoresearch_iterations.csv)/[JSON](data/autoresearch_iterations.json)，[最佳run完整汇总](data/autoresearch_best_summary.json)，最佳3次[逐查询0](data/autoresearch_best_repeat_0.csv)/[1](data/autoresearch_best_repeat_1.csv)/[2](data/autoresearch_best_repeat_2.csv)。`experiments/autoresearch_run_01.txt`到`autoresearch_run_12.txt`保留实际benchmark stdout与本地原始产物目录。没有把推测补成实验结果。
+
+统一入口仍为`bash autoresearch.sh`，评估器冻结；最终默认候选为scope-run/mode4/local geometry。直接CLI可用`--node-algorithm hnsw`复现旧局部HNSW/Flat，`--node-algorithm scope-run --scope-mode 0`复现row exhaustive，mode3为tile exhaustive；`--scope-local-order original`关闭局部几何编组。`dsq_scan`仍默认旧索引，新增scope-run不伪装支持nodeTopN/limit语义。
+
+结束前构建最终保留源码并实际CLI验证mode0..4：独立Python距离排序核查scope>k、scope<k、内部节点绑定、非对齐区间、partial tile及空scope；另用35条128维、强远近分离数据覆盖tile cutoff及尾tile，返回ID完全符合独立期望。临时fixture已移除。大数据/索引不入库。
+
+交付时为保持旧caller的复现语义，`--executor all3`默认仍选择原局部HNSW，单独`--executor node`默认选择候选；未改冻结harness的node选择。修改后再次构建，六项现有Python回归通过；1,200×4d真实CLI烟测确认all3输出`NODE-hnsw`、node输出`NODE-scope-run`，各四查询，候选命中该小fixture全部GT。该变更仅影响非基准all3的默认选择，不是第13轮性能优化。

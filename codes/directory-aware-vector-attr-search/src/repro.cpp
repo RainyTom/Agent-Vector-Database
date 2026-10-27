@@ -828,7 +828,8 @@ int main(int argc, char** argv) {
             int thr = std::atoi(arg_or("node-hnsw-threshold", "0").c_str());
             auto& nsd = wiki[0];
             const std::string node_algorithm = arg_or(
-                "node-algorithm", mode == "dsq_scan" || thr > 0 ? "hnsw" : "scope-run");
+                "node-algorithm", mode == "dsq_scan" || which_exec == "all3" || thr > 0
+                                      ? "hnsw" : "scope-run");
             if (node_algorithm == "scope-run") {
                 if (mode == "dsq_scan")
                     throw std::invalid_argument("scope-run uses exact scope search, not nodeTopN/limit scans");

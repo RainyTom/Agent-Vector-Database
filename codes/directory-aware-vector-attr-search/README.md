@@ -37,7 +37,7 @@
 
 `IDSelector` / `sel` 限制结果资格；这不等于属性谓词已下推到图遍历，也不能据此断言不合格节点必被跳过、不再扩展。未核对具体版本源码前不作该机制判断。
 
-**B：节点树 + 每节点局部 ANN。** 每个非空节点建局部索引，递归查询枚举候选节点，各搜 top-k 后按距离合并全局 top-k；非递归只搜锚节点。默认 `--node-hnsw-threshold 0`，全部非空节点使用 HNSW。阈值之下使用 Flat 的混合配置与纯 Flat 仅作对照，不替代局部 ANN 基线。每节点 top-N 的参数扫描与候选节点截断须单列；N<k 或截断节点可能损失结果，局部 HNSW 本身也仍近似。
+**B：节点树 + 每节点局部 ANN。** 使用 `--node-algorithm hnsw`：每个非空节点建局部索引，递归查询枚举候选节点，各搜 top-k 后合并；非递归只搜锚节点。该基线的 `--node-hnsw-threshold 0` 仍表示全部非空节点使用HNSW，大阈值/混合Flat仅作对照。`all3`与`dsq_scan`默认保持该基线，不因新增候选而替换旧复现实验。N<k、截断节点和局部HNSW自身均可能造成近似损失。
 
 DSM 语义：MOVE = 子树重挂；MERGE = u 的直接绑定条目迁移到 w、u 的子目录作为节点单元转挂到 w、u 删除（论文 §V-C “transferred as node units”）。PE-* 额外承担子树路径键重映射；PE-Offline 与 TrieHI 还维护新旧祖先聚合集。参照[论文相应说明（第 5 页）](https://www.alphaxiv.org/abs/2606.16903?page=5)。
 
@@ -98,4 +98,14 @@ audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。
 
 仓库根目录运行 `bash autoresearch.sh`：完整WIKI、独立冻结NumPy GT、局部全HNSW起点，串行3次重复；输出主指标 `METRIC recursive_e2e_ms=...` 与召回/构建/RSS等副指标。每次重复均须通过质量及资源门槛，否则非零退出。`result_ids` 为新增per-query列，输出与独立质量审计均在查询计时外。
 
-[固定协议及新颖性边界](../../researches/nested-attr-vector-search/2026-10-28-exps/experiments/autoresearch-harness.md)；[已观测baseline](../../researches/nested-attr-vector-search/2026-10-28-exps/data/autoresearch_harness_baseline.json)。这是评测起点，不是已实现或已确认新颖的新算法。
+[固定协议及新颖性边界](../../researches/nested-attr-vector-search/2026-10-28-exps/experiments/autoresearch-harness.md)；[已观测baseline](../../researches/nested-attr-vector-search/2026-10-28-exps/data/autoresearch_harness_baseline.json)。已完成12轮静态DSQ迭代，最佳保留候选及消融见[报告§9](../../researches/nested-attr-vector-search/2026-10-28-exps/report.md#9-autoresearch-静态dsq迭代)，不是已通过新颖性认证的论文方案。
+
+### Scope-run 候选索引
+
+单独`--executor node`的DSQ默认采用新候选；显式配置为`--node-algorithm scope-run --scope-mode 4 --scope-local-order geometry`。静态single-binding，DFS区间及每节点内部符号编组，tile8 AoSoA与global top-k cutoff反馈；每个绑定仅一个向量副本。
+
+- `--scope-mode 0`：row布局穷尽L2扫描；mode1为四路交错对照，mode2为逐点partial-distance对照。
+- mode3：转置tile8穷尽扫描；mode4：每64维进行tile级共享截止反馈。mode4的浮点容差不是形式化精确性保证，本轮独立GT召回为1。
+- `--scope-local-order original`：关闭节点内部几何编组，保持顺序payload物化，用于关键消融。
+- `--node-algorithm hnsw`：保留原局部HNSW/Flat路径；全局HNSW/IVF与三种目录表示未移除。
+- 不支持多绑定/DAG及MOVE/MERGE；拒绝重复global ID。物理DFS布局不继承TrieHI的动态重挂优势，不能将静态查询收益写成维护收益。
