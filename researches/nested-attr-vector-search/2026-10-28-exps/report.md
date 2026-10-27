@@ -142,3 +142,14 @@ all3整进程峰值RSS为35.492 GiB，局部Flat独立运行17.111 GiB，IVF全�
 冻结合同与局限见[基准协议](experiments/autoresearch-harness.md)，观测汇总见[baseline JSON](data/autoresearch_harness_baseline.json)，独立GT见[reference JSON](data/autoresearch_reference.json)。原始日志与逐查询CSV在本地`production/nested-attr-vector-search/work/autoresearch_trie/run-6i9heh4v/`，未提交大数据/索引。harness固定输入但墙钟存在噪声，三次重复不构成跨硬件置信保证。
 
 下一步是初始化会话后再提出、查重并实验新机制；不能仅把精确局部top-k合并、质心排序、换Flat或改名写作创新。TrieHI的公开预印本仍须引用；本轮没有完成新的文献查重或新算法验证。
+
+## 9. Autoresearch 静态DSQ迭代
+
+正式baseline与harness setup的观测分开登记；每个run均使用冻结评估器与3个独立进程。这里的性能改进不等于新颖性通过。
+
+| run | 机制 | recursive mean中位数(ms) | macro/global recall | 决定 |
+|---|---|---:|---|---|
+| 1 | 原始局部HNSW正式baseline | 6.649231 | 0.999559/0.999320 | baseline |
+| 2 | 每query复用局部top-N结果缓冲，预留全局top-k heap容量 | 6.555309 | 0.999559/0.999320 | 保留工程对照 |
+
+run2相对baseline降低约1.41%，不改变索引或召回；是消除逐节点临时分配的工程对照，**不宣称算法创新**。non-recursive mean=0.005055ms，build=69.0099s，peak RSS=19,742.234MiB。尚未测试动态维护或跨数据集泛化。

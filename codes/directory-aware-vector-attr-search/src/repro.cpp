@@ -1048,12 +1048,15 @@ int main(int argc, char** argv) {
                                 cand.clear();
                                 for (auto& [d2, v] : cd) cand.push_back(v);
                             }
-                            std::priority_queue<std::pair<float, int>> heap;
+                            std::vector<float> Dn(ex.node_topn);
+                            std::vector<faiss::idx_t> In(ex.node_topn);
+                            std::vector<std::pair<float, int>> heap_storage;
+                            heap_storage.reserve(K);
+                            std::priority_queue<std::pair<float, int>> heap(
+                                std::less<std::pair<float, int>>(), std::move(heap_storage));
                             for (int v : cand) {
                                 if (!ex.node_ix[v]) continue;
                                 int nn = std::min(ex.node_topn, (int)ex.node_ids[v].size());
-                                std::vector<float> Dn(nn);
-                                std::vector<faiss::idx_t> In(nn);
                                 if (ex.node_is_hnsw[v]) {
                                     faiss::SearchParametersHNSW sp;
                                     sp.efSearch = std::max(ex.node_ef, nn);
