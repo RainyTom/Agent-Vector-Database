@@ -36,7 +36,7 @@ public:
                   int dim,
                   const std::vector<std::vector<int>>& children,
                   const std::vector<std::pair<int, int>>& bindings,
-                  bool transposed = false) {
+                  bool transposed = false, bool local_geometry_order = false) {
         if (dim <= 0 || base.size() % static_cast<size_t>(dim) != 0)
             throw std::invalid_argument("ScopeRunIndex: invalid base dimensions");
         dim_ = static_cast<size_t>(dim);
@@ -119,9 +119,25 @@ public:
             const size_t id = static_cast<size_t>(binding.first);
             const size_t pos = next[static_cast<size_t>(binding.second)]++;
             ids_[pos] = static_cast<faiss::idx_t>(id);
-            std::memcpy(packed_.get() + pos * dim_, base.data() + id * dim_,
-                        dim_ * sizeof(float));
         }
+        if (local_geometry_order) {
+            auto code = [&](faiss::idx_t id) {
+                unsigned bits = 0;
+                for (size_t j = 0; j < std::min(size_t{8}, dim_); ++j)
+                    bits |= static_cast<unsigned>(base[static_cast<size_t>(id) * dim_ + j] >= 0) << j;
+                return bits;
+            };
+            for (const Run& run : runs_)
+                std::sort(ids_.get() + run.begin, ids_.get() + run.local_end,
+                          [&](faiss::idx_t a, faiss::idx_t b) {
+                              const unsigned ka = code(a), kb = code(b);
+                              return ka < kb || (ka == kb && a < b);
+                          });
+        }
+        for (size_t pos = 0; pos < count_; ++pos)
+            std::memcpy(packed_.get() + pos * dim_,
+                        base.data() + static_cast<size_t>(ids_[pos]) * dim_,
+                        dim_ * sizeof(float));
         transposed_ = transposed;
         if (transposed_) {
             std::unique_ptr<float[]> tile(new float[8 * dim_]);

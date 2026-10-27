@@ -156,6 +156,10 @@ all3整进程峰值RSS为35.492 GiB，局部Flat独立运行17.111 GiB，IVF全�
 | 5 | chunk64部分距离提前终止，再完整L2 refinement | 2.807973 | 1.000000/1.000000 | 丢弃，较run3慢31.03% |
 | 6 | DFS scope-run + tile8转置 + 跨向量AVX2 | 1.856979 | 1.000000/1.000000 | 保留布局/内核对照 |
 | 7 | tile8共享global cutoff，每64维检查所有合法lane后共同提前终止 | 1.739233 | 1.000000/1.000000 | 保留探索性机制 |
+| 8 | 截止检查改为每256维 | 1.815224 | 1.000000/1.000000 | 丢弃，延迟提前终止 |
+| 9 | 截止检查改为每16维 | 1.740295 | 1.000000/1.000000 | 丢弃，无可靠收益 |
+| 10 | 子树质心前8维符号编码，重排兄弟子树 | 1.798043 | 1.000000/1.000000 | 丢弃，较run7慢3.38% |
+| 11 | 直接绑定内部按8维符号编组，顺序物化packed payload | 1.127503 | 1.000000/1.000000 | 保留，需分离物化顺序消融 |
 
 run2相对baseline降低约1.41%，不改变索引或召回；是消除逐节点临时分配的工程对照，**不宣称算法创新**。non-recursive mean=0.005055ms，build=69.0099s，peak RSS=19,742.234MiB。尚未测试动态维护或跨数据集泛化。
 
@@ -166,3 +170,7 @@ run3相对正式baseline降低约67.77%，build=5.29815s、peakRSS=16,031.953MiB
 run6每8个物理相邻向量转置成dimension-major tile，一次query广播服务8条距离累加；区间边界tile可以多算距离，但只允许scope内ID进top-k。转置在索引build计时内，采用单tile scratch原地重排，不增加第二份持久向量。相比run3再降13.35%，相比baseline约降72.07%；build=6.19698s，peakRSS=16,032MiB，non-recursive mean=0.003906ms（较row布局回退，但仍过门槛）。独立GT全部命中；额外CLI独立Python排序验证非对齐local/subtree边界、最后partial tile及空scope。其SIMD与AoSoA布局仍按工程对照记录，不据此宣称学术创新。
 
 run7将原run5逐向量“部分距离后再完整refine”改为tile内SIMD累加直接延续，仅当8条合法lane均已超过同一global top-k cutoff才跳过余维；非scope lane显式屏蔽。相比run6降低6.34%，相比run3降低18.84%，而逐点run5反而变慢，形成一次机制消融。全部2349个独立GT pairs命中，build=5.92129s、peakRSS=16,032.035MiB。浮点margin是工程保守容差，不据此宣称形式化float等价保证。共享截止反馈与partial-distance本身都有前序，该tile执行组合尚未完成最近前序的完整逐步骤排查，**新颖性未确认**。
+
+run8/9是截止反馈检查频率消融，均未比64维取得可靠收益。run10保持每个子树区间但按子树聚合几何sign code重排兄弟，查询无效开销反而增加，已回退。
+
+run11仅在各节点的直接绑定内部按前8维符号code分组、以global ID打破同code平局，不改变拓扑或scope；所有统计仅用base向量，不使用query/GT。构建同时由“按输入binding随机写packed”改为“先填全局ID映射、再顺序写packed”。两项变化耦合，所以1.127503ms不能全归因于几何编组：需以相同顺序物化、关闭几何排序的消融分离。该run相比run7低35.17%，build=5.35924s、peakRSS=16,031.922MiB、non-recursive mean=0.003153ms，独立召回全部为1。排序/空间编组本身仍有大量经典前序，新颖性未确认。
