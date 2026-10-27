@@ -19,8 +19,9 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-DESIGNS = ["PE-Online", "PE-Offline", "TrieHI"]
-COLORS = {"PE-Online": "tab:blue", "PE-Offline": "tab:orange", "TrieHI": "tab:green"}
+DESIGNS = ["PE-Online", "PE-Offline", "TrieHI", "NODE"]
+COLORS = {"PE-Online": "tab:blue", "PE-Offline": "tab:orange", "TrieHI": "tab:green",
+          "NODE": "tab:purple"}
 
 
 def load(path: Path) -> list[dict]:
@@ -98,13 +99,15 @@ def fig_dsm(rows, out: Path):
     width = 0.26
     for di, d in enumerate(DESIGNS):
         for oi, op in enumerate(["MOVE", "MERGE"]):
-            r = next(x for x in rows if x["design"] == d and x["op"] == op)
+            r = next((x for x in rows if x["design"] == d and x["op"] == op), None)
+            if r is None:
+                continue
             x = oi + (di - 1) * width
             ax.bar(x, float(r["mean_ms"]), width, color=COLORS[d],
                    label=d if oi == 0 else None)
             ax.text(x, float(r["mean_ms"]) * 1.15,
                     f"{float(r['mean_ms']):.2f}", ha="center", fontsize=8)
-    top = max(float(r["mean_ms"]) for r in rows) * 3
+    top = max((float(r["mean_ms"]) for r in rows), default=1.0) * 3
     ax.set_ylim(top=top)
     ax.set_yscale("log")
     ax.set_xticks([0, 1])
@@ -119,11 +122,16 @@ def fig_dsm(rows, out: Path):
 def fig_dir_size(rows, out: Path):
     fig, ax = plt.subplots(figsize=(6, 4))
     vals = []
+    present = []
     for d in DESIGNS:
         # wiki module rows are the first three (largest)
-        r = max((x for x in rows if x["design"] == d), key=lambda x: float(x["size_mb"]))
+        r = max((x for x in rows if x["design"] == d), key=lambda x: float(x["size_mb"]),
+                default=None)
+        if r is None:
+            continue
+        present.append(d)
         vals.append(float(r["size_mb"]))
-    ax.bar(DESIGNS, vals, color=[COLORS[d] for d in DESIGNS])
+    ax.bar(present, vals, color=[COLORS[d] for d in present])
     for i, v in enumerate(vals):
         ax.text(i, v + 0.05, f"{v:.2f}", ha="center", fontsize=9)
     ax.set_ylabel("directory module size (MB, serialized)")
@@ -167,41 +175,65 @@ def fig7_tradeoff(rows, out: Path):
 
 
 def fig_pareto_frontier(rows, out: Path):
-    """Pareto frontier: x=Recall@10, y=mean latency (log), one trade-off
-    curve per design.  Only non-dominated scan points are kept (recall
-    ascending, cumulative-min latency)."""
-    panels = [("wiki", "PG-hnsw-M16"), ("wiki", "IVF-nlist1024"),
-              ("arxiv", "PG-hnsw-M16"), ("arxiv", "IVF-nlist1024")]
-    fig, axes = plt.subplots(1, 4, figsize=(20, 4.6))
-    for ax, (ds, ex) in zip(axes, panels):
-        any_data = False
-        for d in DESIGNS:
-            pts = [(float(r["recall10"]), float(r["e2e_mean_ms"]), int(r["value"]))
-                   for r in rows if r["dataset"] == ds and r["design"] == d
-                   and r["executor"] == ex and r["query_type"] == "recursive"]
-            if not pts:
-                continue
-            any_data = True
-            # non-dominated filter: p is dominated if some q has
-            # q.recall >= p.recall AND q.latency <= p.latency
-            frontier = [p for p in pts if not any(
-                q is not p and q[0] >= p[0] and q[1] <= p[1] for q in pts)]
-            frontier.sort()  # by recall asc
-            ax.plot([p[0] for p in frontier], [p[1] for p in frontier], "-o",
-                    color=COLORS[d], label=d)
-        if not any_data:
-            ax.text(0.5, 0.5, "N/A (vectors unavailable)", ha="center", va="center",
-                    transform=ax.transAxes, fontsize=10, color="gray")
-        ax.set_xlabel("Recall@10")
-        ax.set_ylabel("mean latency (ms, log)")
-        ax.set_yscale("log")
-        ax.set_title(f"{ds}, {ex.split('-')[0]}")
-        ax.grid(True, which="both", alpha=0.3)
-    axes[0].legend()
-    fig.suptitle("Pareto frontier: recall vs latency per design (ef/nprobe sweep, "
-                 "recursive DSQ)")
-    fig.tight_layout()
-    save(fig, out, "fig_repro_pareto_recall_latency")
+    """Pareto frontier, one figure per dataset (1x2: PG / IVF panels).
+
+    x = Recall@10, y = mean latency (log). Three directory designs as lines;
+    NodeANN drawn as a separate thicker dashed series (its own executor family,
+    so it appears in both panels for reference). Only non-dominated points are
+    connected (a point is dominated if another has >= recall and <= latency).
+    """
+    datasets = sorted({r["dataset"] for r in rows})
+    for ds in datasets:
+        panels = [("PG-hnsw-M16", "PG (HNSW)"), ("IVF-nlist1024", "IVF")]
+        fig, axes = plt.subplots(1, 2, figsize=(13.5, 4.8), dpi=140)
+        for ax, (ex, title) in zip(axes, panels):
+            for d in DESIGNS:
+                if d == "NODE":
+                    if ds != "wiki":
+                        continue
+                    ex_name = "NODE-flat"
+                    style = dict(linewidth=2.4, linestyle="--", marker="D", markersize=5)
+                else:
+                    ex_name = ex
+                    style = dict(linewidth=1.8, marker="o", markersize=5)
+                pts = [(float(r["recall10"]), float(r["e2e_mean_ms"]), r)
+                       for r in rows
+                       if r["dataset"] == ds and r["design"] == d
+                       and r["executor"] == ex_name and r["query_type"] == "recursive"]
+                if not pts:
+                    continue
+                frontier = [p for p in pts if not any(
+                    q is not p and q[0] >= p[0] and q[1] <= p[1] for q in pts)]
+                frontier.sort(key=lambda t: t[0])
+                xs = [t[0] for t in frontier]
+                ys = [t[1] for t in frontier]
+                ax.plot(xs, ys, color=COLORS[d], label=d, zorder=3 if d != "NODE" else 4,
+                        **style)
+                # annotate the two extreme points with their knob value
+                for idx in (0, len(frontier) - 1):
+                    rec, lat, r = frontier[idx]
+                    knob = r.get("value") or ""
+                    knob2 = r.get("value2") or ""
+                    txt = f"N={knob}" if d == "NODE" else f"{knob}"
+                    if d == "NODE" and knob2:
+                        txt += f"/L={knob2}"
+                    ax.annotate(txt, (rec, lat), textcoords="offset points",
+                                xytext=(4, 5), fontsize=8, color=COLORS[d])
+            ax.set_xlabel("Recall@10", fontsize=11)
+            ax.set_ylabel("mean end-to-end latency (ms, log)", fontsize=11)
+            ax.set_yscale("log")
+            ax.set_title(f"{ds} · {title}", fontsize=12)
+            ax.grid(True, which="both", alpha=0.25)
+            ax.tick_params(labelsize=10)
+        axes[0].legend(fontsize=10, loc="best")
+        note = ("NodeANN = per-node flat indexes (own executor family; shown for reference "
+                "in both panels)")
+        if ds == "arxiv":
+            note = ("arxiv = second namespace of the synthetic fixture (subject + temporal, "
+                    "same vectors); NodeANN v1 supports single-namespace datasets only")
+        fig.text(0.5, -0.02, note, ha="center", fontsize=9, color="#666666")
+        fig.tight_layout()
+        save(fig, out, f"fig_pareto_{ds}_recall_latency")
 
 
 def fig9_dsm_perop(rows, out: Path):
