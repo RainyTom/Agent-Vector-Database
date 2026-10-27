@@ -154,14 +154,19 @@ TrieHI 的子树重链在真实深树（max depth 31）上稳定最优；PE-Onli
 
 ### 4.3 端到端质量-延迟（帕累托，加密超参数网格）
 
-![帕累托前沿：SIFT100k（PG/IVF 各 15/11 档，NODE 8 档）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures/fig_repro_pareto_recall_latency.png)
+三个数据集各一张（PG ef 15 档、IVF nprobe 11 档、NodeANN 双轴 14 点；横轴 Recall@10、纵轴延迟对数轴）：
+
+![帕累托前沿：SIFT100k 合成属性（PG 15 档 / IVF 11 档 / NodeANN limit×N 14 点）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures/fig_repro_pareto_recall_latency.png)
+
+![帕累托前沿：SIFT1M 合成属性（同协议；NodeANN 曲线从 recall 0.27/3.8 ms 延伸到 0.98/21.7 ms）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures_sift1m/fig_repro_pareto_recall_latency.png)
 
 ![帕累托前沿：真实 WIKI-Dir 1M](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures_real_wiki1m/fig_repro_pareto_recall_latency.png)
 
 读图要点：
 - 三设计在同一执行器参数下 recall 逐点相同（scope 语义等价、同一 GT），曲线按 y 分层——**目录表示只移动延迟轴，不改变质量**。
 - 真实 1M：PE-Online 在 PG 子图呈高位平台（目录展开 0.6–2.4 ms 固定成本压制 recall 收益）；TrieHI/PE-Offline 曲线在其下方贯穿 recall 全区间。
-- **NODE（紫线）出现在高 recall 区（0.85–0.98）**：它是精确方法（每节点暴力），recall 由 GT 覆盖度而非 ANN 近似决定；代价是 1M 深树递归的节点枚举 + 每节点搜索调用。
+- **NODE（紫线）呈现效率-精度 trade-off**：低端（limit=1–64）recall 0.19–0.61、延迟 1.7–3.9 ms；全候选（limit=0）跳到 recall 0.98、21.7 ms（SIFT1M）。中段平坦源于截断需算全部候选的质心距离（见 §4.5 末条）。
+- SIFT100k 与 SIFT1M 的 NODE 曲线位置差异说明：**曲线的"平台高度"由目录枚举成本决定**（100k 0.5 ms / 1M 3 ms），与数据规模成正比。
 
 ### 4.4 目录结构复杂度（Fig 10 对应，真实 WIKI 全量树）
 

@@ -94,7 +94,30 @@ ACM Computing Classification System（CCS）是 ACM 用于组织、索引和检�
 
 ## 7. 待办
 
-1. 将 CCS DAG 转成我们的 fixture 格式（tree/bindings/workload），**保留多父**（当前 repro 的 Tree 只支持单父，需扩展或加多父适配层）。
-2. 统计 SciHTC 中**多父概念的实际使用频率**（159 个多父概念里有多少被标注过、涉及多少论文）——量化 DAG 对实验的实际影响。
-3. 论文文本获取（邮件/ACM）→ embedding → 真实 CCS 端到端实验。
+1. 将 CCS DAG 转成我们的 fixture 格式（tree/bindings/workload），**保留多父**（当前 repro 的 Tree 只支持单父，需扩展或加多父适配层）。**已部分完成**：`scripts/build_scihtc_fixture.py` 用标签路径建树（1,664 节点、6 层），26 个概念的冲突父被折叠（记录在 meta.json）。
+2. 统计 SciHTC 中**多父概念的实际使用频率**（已完成：12,922 篇 / 6.9%）。
+3. 论文文本获取 → embedding → 真实 CCS 端到端实验（见 §8）。
 4. 合成 fixture 增加 DAG + 浅绑定选项，与真实分布对齐。
+
+## 8. 数据获取与文本重建（实操）
+
+### 8.1 SciHTC 文本（标题/摘要/关键词）
+
+已实测三条路径：
+
+| 路径 | 做法 | 状态 |
+|---|---|---|
+| **A. 邮件申请（推荐）** | 写信给 `msadat3@uic.edu` / `sadat.mobashir@gmail.com` / `cornelia@uic.edu`，提供姓名、单位、当前职位，说明研究用途 | 未执行（需人工发信）；作者在 README 明确提供此通道 |
+| **B. ACM proceedings 重建（官方脚本）** | 向 ACM 申请研究用途的 proceedings 数据，然后：`python ExtractData.py --proceedings_loc <ACM proceedings 目录> --output_csv_loc ExtractedData.csv` → `python Get_splitwise_title_abstract_keywords.py --extracted_data_loc ExtractedData.csv --directory_for_splitwise_ids_and_categories IDs_and_categories --output_directory out/` | 依赖 ACM 授权，未执行 |
+| **C. 公开元数据重建（实测受阻）** | 假设 ACM ID = DOI suffix → `10.1145/{id}` → OpenAlex/Crossref 取摘要 | **实测失败**：3 个样本 ID（1808918/3079388/225078）在 OpenAlex、Crossref 均 404；Semantic Scholar 无 `ACM:` 外部 ID 支持且限流；ACM DL 全站 403。**结论：ACM ID ≠ DOI suffix，公开重建先需 ACM ID↔DOI 映射表，该映射只能从 ACM 侧获得——因此路径 A/B 是唯一可行通道。** |
+
+**拿到文本后的替换步骤**（管线已就绪）：`bge-m3`（与 WIKI 一致）或 `mxb-ai-embed-large-v1` 编码 186,160 篇摘要 → 1024d，写 `data/scihtc/base.f32` + 查询向量 `test.f32` → `--dim 1024` 重跑 `--mode all --executor all3`，所有图/表自动更新。当前用 64d 随机占位向量跑通的是**延迟/结构/维护**数字，质量指标无意义（已在报告标注）。
+
+### 8.2 WIKI-Dir 全量向量（7.96 GB，未完成）
+
+- 官方文件页：<https://drive.google.com/file/d/1PBmCKaUmEYc1BGU_TBcICRaIqbc3xRuQ/view>
+- 命令：`gdown 1PBmCKaUmEYc1BGU_TBcICRaIqbc3xRuQ -O data/real_fixtures/wiki/corpus_vectors.fvecs`
+- 现状：Drive 触发"too many users" 24h 配额，已得 4.22 GB（1,029,778 条完整记录，`corpus_vectors.partial` 保留）
+- 恢复：配额恢复后重跑上述命令（`gdown -c` 对此大文件**无效**，只能完整重下，约 45–75 min）；或浏览器打开文件页手动下载（同样受配额）
+- 复用残片：`N=$(( $(stat -c%s partial) / 4100 )); head -c $((N*4100)) partial > usable.fvecs`（4100 B = 1024d fvecs 单记录，含 4 B 维头）
+- 影响：目录解析/DSM 已用全量 1.94M 目录完成；只有 **ANN 端到端**用 1M 子采样（scope 稀 5–7 倍，绝对 recall 不可对齐论文，相对排序有效）
