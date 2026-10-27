@@ -54,3 +54,62 @@ Fig 7 观察（100k 合成）：wiki-IVF 与 arxiv 两子图中 PE-Offline 与 T
 1. 真实全量 Fig 7–12 与 Table IV/V：下载完成后跑，数字与图追加到本文档。
 2. Table VI/VII（OpenViking QA）：需 LOCOMO/HotpotQA 基准 + doubao-seed LLM-as-judge + OpenViking 完整系统（论文只开源 benchmark 配置在 OpenViking 仓库），非本仓库 FAISS/C++ 基线可复现范围；标注为**环境依赖项，未复现**。
 3. ARXIV-Dir 双命名空间（subject+temporal）：build_real_fixtures.py 支持情况待下载后确认。
+
+---
+
+# 全量/真实数据结果（2026-10-27 补完）
+
+## 数据获取与适配
+
+- **wiki corpus_vectors（7.96 GB）**：Google Drive 触发"too many users"24h 配额，四次尝试后稳定在 4.22 GB（1,029,778 条完整 fvecs 记录，尾部 2 条半记录截断）。提取完整记录 → 子采样 1,000,000 条（seed 20261026，重编号）作为 ANN 端到端输入；**全量 1.94M 的目录解析与 DSM 实验不依赖向量，已用全量目录树完成**。全量向量待配额恢复后补（`data/real_fixtures/wiki/corpus_vectors.partial` 保留）。
+- **arxiv 语料向量**：发布方未提供下载（SOURCES.md D 节无此文件，F 节亦无）；arxiv 只完成目录解析（scope 模式），ANN 端到端不可跑。
+- 发布方文件名与 build 脚本期望名的差异全部用符号链接适配（`corpus_paths.jsonl`→`dbpedia_dir_2m_corpus_paths.json`、`arxiv_category_constraint.json`(116KB，SOURCES.md 标 29MB 有误)→`arxiv_category_query_constraint.json` 等）；`corpus_paths.jsonl`/`corpus_metadata.jsonl` 实为 JSON array，`arxiv_query_constraint.json` 实为查询向量 fvecs（与 SOURCES.md 记录一致）。
+- **数据集核对**：arxiv 构建出 2,763,543 条目、subject 168 / temporal 432 目录、max depth 3/2，与论文 §V-A 完全一致；GT 校验 1000/1000 查询全在 scope 内。wiki 构建出 1,941,679 条目、**468,031 目录**（论文 363,467）、max depth 31——目录数多 28.7%，因为 build 脚本对每对象的全部路径建 trie，未复现论文"取一规范路径 + 丢弃 invalid links"的裁剪；目录解析绝对值因此小于论文，排序不受影响。workload 457 查询（生成器 round 累积，论文 456）。
+
+## Table IV 对应：全量目录解析延迟（directory-only，µs mean，单线程）
+
+| 数据集 | 查询类型 | PE-Online | PE-Offline | TrieHI | 论文排序一致 |
+|---|---|---|---|---|---|
+| wiki 全量 1.94M/468k 目录 | recursive | **1964.93** | 2.57 | 3.22 | ✓（论文 365000 / 235 / 273） |
+| wiki 全量 | non-recursive | **0.95** | 44.21 | 50.12 | ✓（论文 29 / 1037 / 945） |
+| arxiv 全量 2.76M/168+432 | recursive | **852.20** | 8.93 | 9.66 | ✓（论文 1089 / 0.12 / 0.43） |
+| arxiv 全量 | non-recursive | **6.27** | 30.57 | 31.44 | ✓（论文 4.35 / 164 / 112） |
+
+物化设计（Offline/TrieHI）的 recursive 比论文快 1–2 个数量级：论文 WIKI 浅层锚点展开集巨大（Fig.10 depth-1 m=236,903/363k 目录），我们 468k 目录树上同位置 m≈10,800（Fig 10 复现图）且 posting 位图更小；arxiv 浅树（均深 ~2）下单次查找本就微秒级。相对关系（PE-Online 在 recursive 慢 2–3 个数量级、non-recursive 快 1.5–2 个数量级）与论文一致。
+
+## Fig 9 对应：DSM 墙钟（2000 ops，ms mean）
+
+| 运行 | MOVE PE-Online / PE-Offline / TrieHI | MERGE 三设计 |
+|---|---|---|
+| wiki 全量 1.94M（bg_3） | 38.1 / 14.9 / **2.75** | 0.077 / 0.431 / 0.120 |
+| wiki 1M 子采样（bg_9 复跑） | 17.1 / 5.90 / **2.38** | 0.039 / 0.129 / 0.095 |
+
+TrieHI MOVE 最快，排序一致；PE-Online MOVE 运行间方差大（38→17 ms），因其代价 ∝ 被移动子树的 entry 数，op 序列中偶发大子树主导 mean。逐 op 序列见 `real_wiki1m_scope_dsm_perop.csv`（Fig 9 复现图 `fig_repro_fig9_dsm_perop`）。DSM audit 全 ok。
+
+## Table V 对应：索引构建与大小
+
+| 项 | PG-hnsw-M16 | IVF-nlist1024 |
+|---|---|---|
+| wiki 1M 向量索引构建 | 779 s | 45 s |
+| wiki 1M 向量索引大小 | 4240 MB | 4108 MB |
+| 目录模块（全量 468k 目录） | PE-Online 44.6 MB / PE-Offline 94.9 / TrieHI 70.0；构建 0.14/0.77/0.58 s | 同左 |
+| 目录模块（1M 子采样） | 37.1 / 64.8 / 40.0 MB | 同左 |
+
+目录模块构建增量 ≪1.7%（论文结论）；TrieHI 存储 > PE-Offline > PE-Online（论文结论）。
+
+## Fig 7/8 对应：wiki 1M 端到端（ef2048/np256 固定点 + 参数扫描）
+
+固定点：PG e2e 32.4 ms / recall@10 0.107；IVF 3.09 ms / 0.168。三设计质量逐点相同（scope 语义等价），延迟差异体现在 directory-only（PE-Online recursive 616 µs vs 物化 20–28 µs）。`dsq_scan`（ef 64→4096 七档、nprobe 4→1024 五档，73 行）复现图 `fig_repro_fig7_tradeoff`：**PE-Offline/TrieHI 曲线整体位于 PE-Online 左下方（同质量更低延迟）**，与论文 Fig 7 论断一致；arxiv 两子图标注 N/A（向量不可得）。wiki 低召回是深锚点小 scope 的指标饱和（全扫描 ndcg=1.0 已验证），非执行器缺陷。
+
+## 产物清单（本目录）
+
+- 图：`figures_real_wiki1m/fig_repro_*.{png,svg}` ×9（100k 版图在 `figures/`）
+- 数据：`codes/directory-aware-vector-attr-search/experiments/real_{wiki_full,arxiv_full,wiki1m,wiki1m_scope}_*.csv`
+- fixture：`codes/.../data/real{,_arxiv}/`（全量树/绑定/workload）、`data/real_fixtures/wiki1000000/`（1M 向量 + 重编号）
+- 原始数据（gitignored）：`data/real_fixtures/{wiki,arxiv}/`，wiki 向量保留 `corpus_vectors.partial`（4.22/7.96 GB）待配额恢复续传
+
+## 仍遗留
+
+1. wiki 全量 1.94M 的 ANN 端到端 + Fig 7–12 全量图：等 Drive 配额恢复补下 3.74GB 向量后，`fvecs_to_f32.py` 转 base.f32 + 全量 fixture 直跑（目录 fixture 已就绪）。
+2. arxiv 语料向量：发布方未发布，ANN 部分不可复现；目录解析与 DSM 结论已覆盖 Table IV 的 arxiv 列。
+3. Fig 12 的真实数据分解图基于 1M perquery（`results_dsq_perquery.csv` 2742 行）；全量目录+全量向量的分解待向量补齐后重跑 mode all 自动产出。

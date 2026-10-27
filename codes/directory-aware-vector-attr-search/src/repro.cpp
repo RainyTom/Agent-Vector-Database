@@ -638,7 +638,8 @@ int main(int argc, char** argv) {
 
     std::ofstream csv_dsq, csv_dsm, csv_size, csv_perop, csv_perquery, csv_scan;
     bool want_dsq = mode == "all" || mode == "dsq";
-    bool want_dsm = mode == "all" || mode == "dsm";
+    bool want_dsm = mode == "all" || mode == "dsm" ||
+                    (mode == "scope" && args.count("dsm-spec") > 0);
     bool want_scan = mode == "dsq_scan";
     bool want_size = want_dsq || mode == "scope";
     if (want_dsq) {

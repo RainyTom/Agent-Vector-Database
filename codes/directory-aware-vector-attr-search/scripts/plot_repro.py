@@ -43,10 +43,12 @@ def fig_dir_latency(rows, out: Path):
     xticks, xlabels = [], []
     for gi, (ds, qt) in enumerate(groups):
         for di, d in enumerate(DESIGNS):
-            r = next(x for x in rows
-                     if x["dataset"] == ds and x["design"] == d
-                     and x["query_type"] == qt and x["scope_bucket"] == "all"
-                     and x["executor"].startswith("PG"))
+            r = next((x for x in rows
+                      if x["dataset"] == ds and x["design"] == d
+                      and x["query_type"] == qt and x["scope_bucket"] == "all"
+                      and x["executor"].startswith("PG")), None)
+            if r is None:
+                continue
             v = float(r["dir_mean_us"])
             x = gi + (di - 1) * width
             ax.bar(x, v, width, color=COLORS[d], label=d if gi == 0 else None)
@@ -139,13 +141,21 @@ def fig7_tradeoff(rows, out: Path):
     for ax, (ds, ex) in zip(axes, panels):
         metric = "ndcg10" if ds == "wiki" else "recall10"
         ylab = "nDCG@10" if ds == "wiki" else "Recall@100"
+        any_data = False
         for d in DESIGNS:
             pts = [r for r in rows if r["dataset"] == ds and r["design"] == d
                    and r["executor"] == ex and r["query_type"] == "recursive"]
             pts.sort(key=lambda r: int(r["value"]))
+            if not pts:
+                continue
+            any_data = True
             xs = [float(r["e2e_mean_ms"]) for r in pts]
             ys = [float(r[metric]) for r in pts]
             ax.plot(xs, ys, "-o", color=COLORS[d], label=d)
+        if not any_data:
+            ax.text(0.5, 0.5, "N/A\n(vectors unavailable:\nDrive quota / not released)",
+                    ha="center", va="center", transform=ax.transAxes, fontsize=9,
+                    color="gray")
         ax.set_xlabel("mean latency (ms)")
         ax.set_ylabel(ylab)
         ax.set_title(f"{ds}, {ex.split('-')[0]}")
@@ -296,16 +306,22 @@ def main():
              "2026-10-26-triehi-reproduction")
     ap.add_argument("--data", type=Path, default=repro / "data")
     ap.add_argument("--out", type=Path, default=repro / "figures")
+    ap.add_argument("--prefix", default="results_",
+                    help="CSV filename prefix (e.g. real_wiki1m_ for real-data runs)")
+    ap.add_argument("--prefix-dsm", default=None,
+                    help="CSV prefix for DSM/perop files if different (scope-mode runs)")
     ap.add_argument("--tree-dir", type=Path,
                     default=Path(__file__).resolve().parents[1] / "data" / "sift100k")
     args = ap.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
-    dsq = load(args.data / "results_dsq.csv")
-    dsm = load(args.data / "results_dsm.csv")
-    size = load(args.data / "results_size.csv")
-    perop = load(args.data / "results_dsm_perop.csv")
-    perquery = load(args.data / "results_dsq_perquery.csv")
-    scan = load(args.data / "results_dsq_scan.csv")
+    p = args.prefix
+    pd = args.prefix_dsm or p
+    dsq = load(args.data / f"{p}dsq.csv")
+    dsm = load(args.data / f"{pd}dsm.csv")
+    size = load(args.data / f"{p}size.csv")
+    perop = load(args.data / f"{pd}dsm_perop.csv")
+    perquery = load(args.data / f"{p}dsq_perquery.csv")
+    scan = load(args.data / f"{p}dsq_scan.csv")
     fig_dir_latency(dsq, args.out)
     fig_ndcg_buckets(dsq, args.out)
     fig_dsm(dsm, args.out)
