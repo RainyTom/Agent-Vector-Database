@@ -1,0 +1,11 @@
+base 1941679x1024, test 456x1024
+executor PG-hnsw-M16 build_s=4961.96 size_MB=8233.26
+executor IVF-nlist1024 build_s=84.2656 size_MB=7972.85
+executor NODE-hnsw nodes_with_items=363467 hnsw=363467 flat=0 thr=0 ef=64 build_s=76.3039 size_MB=7953.12
+wiki PE-Online PG-hnsw-M16 ndcg=0.223148 recall=0.10307 dir_mean_us=891.212 e2e_mean_ms=20.6691
+wiki PE-Online IVF-nlist1024 ndcg=0.421447 recall=0.201096 dir_mean_us=872.022 e2e_mean_ms=5.42312
+wiki PE-Online NODE-hnsw ndcg=0.99986 recall=0.514912 dir_mean_us=46.5048 e2e_mean_ms=3.4073
+wiki PE-Offline PG-hnsw-M16 ndcg=0.223148 recall=0.10307 dir_mean_us=32.5752 e2e_mean_ms=19.8137
+wiki PE-Offline IVF-nlist1024 ndcg=0.421447 recall=0.201096 dir_mean_us=28.9474 e2e_mean_ms=4.32776
+wiki TrieHI PG-hnsw-M16 ndcg=0.223148 recall=0.10307 dir_mean_us=33.0557 e2e_mean_ms=19.8461
+wiki TrieHI IVF-nlist1024 ndcg=0.421447 recall=0.201096 dir_mean_us=31.0677 e2e_mean_ms=4.46455

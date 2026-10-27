@@ -1,0 +1,5 @@
+base 1941679x1024, test 456x1024
+executor IVF-nlist1024 build_s=85.0239 size_MB=7972.85
+wiki PE-Online IVF-nlist1024 ndcg=1 recall=0.515132 dir_mean_us=1011.91 e2e_mean_ms=18.215
+wiki PE-Offline IVF-nlist1024 ndcg=1 recall=0.515132 dir_mean_us=38.7423 e2e_mean_ms=17.3084
+wiki TrieHI IVF-nlist1024 ndcg=1 recall=0.515132 dir_mean_us=33.8346 e2e_mean_ms=16.6293
