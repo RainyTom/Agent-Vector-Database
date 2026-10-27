@@ -12,6 +12,9 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+#if defined(__AVX2__)
+#include <immintrin.h>
+#endif
 
 // Static, single-binding squared-L2 index. Bindings are (global entry ID, node),
 // and base is row-major with the global entry ID as its row number. A forest is
@@ -32,7 +35,8 @@ public:
     ScopeRunIndex(const std::vector<float>& base,
                   int dim,
                   const std::vector<std::vector<int>>& children,
-                  const std::vector<std::pair<int, int>>& bindings) {
+                  const std::vector<std::pair<int, int>>& bindings,
+                  bool transposed = false) {
         if (dim <= 0 || base.size() % static_cast<size_t>(dim) != 0)
             throw std::invalid_argument("ScopeRunIndex: invalid base dimensions");
         dim_ = static_cast<size_t>(dim);
@@ -118,6 +122,18 @@ public:
             std::memcpy(packed_.get() + pos * dim_, base.data() + id * dim_,
                         dim_ * sizeof(float));
         }
+        transposed_ = transposed;
+        if (transposed_) {
+            std::unique_ptr<float[]> tile(new float[8 * dim_]);
+            for (size_t first = 0; first < count_; first += 8) {
+                const size_t width = std::min(size_t{8}, count_ - first);
+                for (size_t lane = 0; lane < width; ++lane)
+                    for (size_t j = 0; j < dim_; ++j)
+                        tile[j * width + lane] = packed_[(first + lane) * dim_ + j];
+                std::memcpy(packed_.get() + first * dim_, tile.get(),
+                            width * dim_ * sizeof(float));
+            }
+        }
     }
 
     // Offsets count packed vectors, not float components. Direct bindings are
@@ -140,10 +156,12 @@ public:
     // four-way kernel, not four single-point calls masquerading as batching.
     // Mode 2: chunks of 64 components screen candidates against the current
     // heap threshold, then surviving candidates receive full FAISS L2.
+    // Mode 3: transposed eight-vector tiles, SIMD across points; boundary
+    // tiles may compute extra distances but only in-scope IDs enter top-k.
     void search(const float* query, std::pair<size_t, size_t> scope, int k,
                 float* distances, faiss::idx_t* labels, int mode = 0) const {
-        if (mode < 0 || mode > 2)
-            throw std::invalid_argument("ScopeRunIndex: invalid search mode");
+        if (mode < 0 || mode > 3 || transposed_ != (mode == 3))
+            throw std::invalid_argument("ScopeRunIndex: incompatible search mode/layout");
         if (scope.first > scope.second || scope.second > count_)
             throw std::out_of_range("ScopeRunIndex: invalid packed range");
         if (k <= 0) return;
@@ -152,6 +170,46 @@ public:
         std::fill_n(labels, capacity, static_cast<faiss::idx_t>(-1));
         size_t filled = 0;
         size_t pos = scope.first;
+        if (mode == 3) {
+            for (size_t first = scope.first / 8 * 8; first < scope.second; first += 8) {
+                const size_t width = std::min(size_t{8}, count_ - first);
+                const float* tile = packed_.get() + first * dim_;
+                float sums[8] = {};
+#if defined(__AVX2__)
+                if (width == 8) {
+                    __m256 s0 = _mm256_setzero_ps(), s1 = s0, s2 = s0, s3 = s0;
+                    size_t j = 0;
+                    for (; j + 4 <= dim_; j += 4) {
+                        __m256 d0 = _mm256_sub_ps(_mm256_set1_ps(query[j]), _mm256_loadu_ps(tile + j * 8));
+                        __m256 d1 = _mm256_sub_ps(_mm256_set1_ps(query[j + 1]), _mm256_loadu_ps(tile + (j + 1) * 8));
+                        __m256 d2 = _mm256_sub_ps(_mm256_set1_ps(query[j + 2]), _mm256_loadu_ps(tile + (j + 2) * 8));
+                        __m256 d3 = _mm256_sub_ps(_mm256_set1_ps(query[j + 3]), _mm256_loadu_ps(tile + (j + 3) * 8));
+                        s0 = _mm256_add_ps(s0, _mm256_mul_ps(d0, d0));
+                        s1 = _mm256_add_ps(s1, _mm256_mul_ps(d1, d1));
+                        s2 = _mm256_add_ps(s2, _mm256_mul_ps(d2, d2));
+                        s3 = _mm256_add_ps(s3, _mm256_mul_ps(d3, d3));
+                    }
+                    s0 = _mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3));
+                    for (; j < dim_; ++j) {
+                        __m256 delta = _mm256_sub_ps(_mm256_set1_ps(query[j]), _mm256_loadu_ps(tile + j * 8));
+                        s0 = _mm256_add_ps(s0, _mm256_mul_ps(delta, delta));
+                    }
+                    _mm256_storeu_ps(sums, s0);
+                } else
+#endif
+                {
+                    for (size_t j = 0; j < dim_; ++j)
+                        for (size_t lane = 0; lane < width; ++lane) {
+                            float delta = query[j] - tile[j * width + lane];
+                            sums[lane] += delta * delta;
+                        }
+                }
+                for (size_t lane = 0; lane < width; ++lane)
+                    if (first + lane >= scope.first && first + lane < scope.second)
+                        offer(sums[lane], ids_[first + lane], capacity, filled, distances, labels);
+            }
+            pos = scope.second;
+        }
         if (mode == 1) {
             for (; scope.second - pos >= 4; pos += 4) {
                 const float* p0 = packed_.get() + pos * dim_;
@@ -278,6 +336,7 @@ private:
 
     size_t dim_ = 0;
     size_t count_ = 0;
+    bool transposed_ = false;
     std::vector<Run> runs_;
     std::unique_ptr<float[]> packed_;
     std::unique_ptr<faiss::idx_t[]> ids_;

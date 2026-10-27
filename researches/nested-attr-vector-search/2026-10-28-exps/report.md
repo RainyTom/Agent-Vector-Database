@@ -152,9 +152,14 @@ all3整进程峰值RSS为35.492 GiB，局部Flat独立运行17.111 GiB，IVF全�
 | 1 | 原始局部HNSW正式baseline | 6.649231 | 0.999559/0.999320 | baseline |
 | 2 | 每query复用局部top-N结果缓冲，预留全局top-k heap容量 | 6.555309 | 0.999559/0.999320 | 保留工程对照 |
 | 3 | DFS scope-run单份连续布局 + 单次全局top-k精确扫描 | 2.142991 | 1.000000/1.000000 | 保留强工程对照 |
+| 4 | 四向量交错scalar累加，共享query载入 | 2.606194 | 1.000000/1.000000 | 丢弃，较run3慢21.61% |
+| 5 | chunk64部分距离提前终止，再完整L2 refinement | 2.807973 | 1.000000/1.000000 | 丢弃，较run3慢31.03% |
+| 6 | DFS scope-run + tile8转置 + 跨向量AVX2 | 1.856979 | 1.000000/1.000000 | 保留布局/内核对照 |
 
 run2相对baseline降低约1.41%，不改变索引或召回；是消除逐节点临时分配的工程对照，**不宣称算法创新**。non-recursive mean=0.005055ms，build=69.0099s，peak RSS=19,742.234MiB。尚未测试动态维护或跨数据集泛化。
 
 run3保留`--node-algorithm hnsw`原局部HNSW/Flat路径，新增静态single-binding `ScopeRunIndex`。每绑定仅一份packed向量；recursive/local区间分别覆盖子树/直接绑定，内部节点直接绑定不丢失。查询的range获取在原directory计时内，扫描及合并在原search计时内，不移动计时边界。默认DSQ候选为scope-run；历史`dsq_scan`默认仍使用原局部索引，显式scope-run扫描参数不适用时拒绝。CLI实跑mode0/1/2在scope>k、scope<k、子树及空节点均命中10/2/7/0，旧HNSW可运行，多绑定重复global ID被拒绝。
 
 run3相对正式baseline降低约67.77%，build=5.29815s、peakRSS=16,031.953MiB，non-recursive mean=0.002883ms；全部2349个独立GT pairs命中。尚无新颖性认证：DFS-to-range是标准归约；[iRangeGraph §3](https://arxiv.org/abs/2409.02571)已有范围共享图，[Curator §4.2](https://arxiv.org/abs/2601.01291)已有子树连续ID及临时谓词索引。这里先把bulk exact scan作为强对照，不能把布局改造直接称为新算法。已核本地正文`2409.02571-irangegraph/paper.md:407-520`与`2601.01291-curator/paper.md:450-500,650-715`；经典VA-file正文读取仍未完成。搜索覆盖了vector similarity join/inner-product join的相邻分区机制后再查filtered ANN；未找到等价组合不作为新颖性证据。
+
+run6每8个物理相邻向量转置成dimension-major tile，一次query广播服务8条距离累加；区间边界tile可以多算距离，但只允许scope内ID进top-k。转置在索引build计时内，采用单tile scratch原地重排，不增加第二份持久向量。相比run3再降13.35%，相比baseline约降72.07%；build=6.19698s，peakRSS=16,032MiB，non-recursive mean=0.003906ms（较row布局回退，但仍过门槛）。独立GT全部命中；额外CLI独立Python排序验证非对齐local/subtree边界、最后partial tile及空scope。其SIMD与AoSoA布局仍按工程对照记录，不据此宣称学术创新。
