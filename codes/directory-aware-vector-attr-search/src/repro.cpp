@@ -24,6 +24,7 @@
 #include <faiss/IndexIVFFlat.h>
 #include <faiss/impl/IDSelector.h>
 #include <faiss/index_io.h>
+#include "scope_run_index.h"
 
 #include <roaring/roaring.h>
 
@@ -607,6 +608,8 @@ int main(int argc, char** argv) {
         int node_ef = 64;                                           // HNSW per-node efSearch
         std::vector<std::vector<int>> node_ids;                     // local -> global
         std::vector<std::vector<float>> node_centroid;              // per-node mean
+        std::unique_ptr<ScopeRunIndex> scope_run;
+        int scope_mode = 0;
         int node_topn = 10;                                         // scan knob
         int node_limit = 0;                                         // 0 = all candidates
         double build_us;
@@ -823,9 +826,27 @@ int main(int argc, char** argv) {
                 })) {
             Exec ex;
             int thr = std::atoi(arg_or("node-hnsw-threshold", "0").c_str());
+            auto& nsd = wiki[0];
+            const std::string node_algorithm = arg_or(
+                "node-algorithm", mode == "dsq_scan" || thr > 0 ? "hnsw" : "scope-run");
+            if (node_algorithm == "scope-run") {
+                if (mode == "dsq_scan")
+                    throw std::invalid_argument("scope-run uses exact scope search, not nodeTopN/limit scans");
+                auto t0 = Clock::now();
+                ex.scope_run = std::make_unique<ScopeRunIndex>(
+                    base.x, base.d, nsd.tree.children, nsd.bindings);
+                ex.name = "NODE-scope-run";
+                ex.scope_mode = std::atoi(arg_or("scope-mode", "0").c_str());
+                ex.build_us = us_since(t0);
+                ex.bytes = ex.scope_run->size_bytes();
+                std::cout << "executor " << ex.name << " build_s=" << ex.build_us / 1e6
+                          << " size_MB=" << ex.bytes / 1e6 << "\n";
+                execs.push_back(std::move(ex));
+            } else {
+            if (node_algorithm != "hnsw")
+                throw std::invalid_argument("unknown node-algorithm: " + node_algorithm);
             ex.name = thr > 0 ? "NODE-hnsw-thr" : "NODE-hnsw";
             ex.node_ef = std::atoi(arg_or("node-ef", "64").c_str());
-            auto& nsd = wiki[0];
             int nodes = nsd.tree.n;
             ex.node_ix.resize(nodes);
             ex.node_ids.resize(nodes);
@@ -873,6 +894,7 @@ int main(int argc, char** argv) {
                       << " build_s=" << ex.build_us / 1e6
                       << " size_MB=" << ex.bytes / 1e6 << "\n";
             execs.push_back(std::move(ex));
+            }
         }
 
         const int K = 10;
@@ -1023,7 +1045,15 @@ int main(int argc, char** argv) {
                         double d_us = 0, search_us = 0;
                         std::vector<faiss::idx_t> I(K, -1);
                         std::vector<float> D(K);
-                        if (is_node) {
+                        if (is_node && ex.scope_run) {
+                            auto t0 = Clock::now();
+                            auto range = ex.scope_run->range(q.anchor, q.rec == 1);
+                            d_us = us_since(t0);
+                            auto t1 = Clock::now();
+                            ex.scope_run->search(&test.x[(size_t)q.qidx * test.d],
+                                                 range, K, D.data(), I.data(), ex.scope_mode);
+                            search_us = us_since(t1);
+                        } else if (is_node) {
                             auto t0 = Clock::now();
                             auto cand = candidate_nodes(ex, nss[nsi].tree, q);
                             d_us = us_since(t0);
