@@ -76,15 +76,45 @@ harness 用 6 城（不含 melbourne）。本地合计 383MB。
 | arxiv/arxiv_query_constraint.json | 4.1MB | `1uU1LQkE_8aO1dKCyiSQyIi3ZGF7MQUIr` | ⚠ **这是 1000 条查询向量（fvecs 内容）** |
 | arxiv/arxiv_query_vectors.fvecs | 2.0MB | `1V08kABnk_Lyj-6qDj4a4XYlfgf9r8GWd` | 真实 category 查询（本项目未下载，可选） |
 | arxiv/groundtruth.txt | 122KB | `1StfVT_F0vv6__ZS4bUaC8DYkIli2ZP7f` | |
-| arxiv/groundtruth_category.txt | 57KB | `1KP6Nk3_3aWWLpvRAV5-vEZ_94g_pqyje` | category 查询的 GT |
-| arxiv/arxiv_category_constraint.json | 29MB | `1VM07pjh7S-0D1splg4INcEHG9OLQOvT_` | 每文档 category 列表 |
-| arxiv/corpus_metadata.jsonl | 221MB | `1fo-kMgI_bOcE2rB44mk9KrBDTDQFPc07` | |
+| arxiv/groundtruth_category.txt | 763KB | `1KP6Nk3_3aWWLpvRAV5-vEZ_94g_pqyje` | category 查询的 GT（space 分隔 id） |
+| arxiv/arxiv_category_constraint.json | **116KB**（表记 29MB 有误） | `1VM07pjh7S-0D1splg4INcEHG9OLQOvT_` | ⚠ 实为 1000 条 category **查询约束**（JSON array `{query_id, constraints.category}`），build 脚本里叫 `arxiv_category_query_constraint.json` |
+| arxiv/corpus_metadata.jsonl | **483MB**（表记 221MB） | `1fo-kMgI_bOcE2rB44mk9KrBDTDQFPc07` | 内容为 JSON array（`{id, categories[], time}`），build 脚本里叫 `arxiv_corpus_metadata.json` |
 
 子目录 folder ID：wiki `19mUedPFWJsfGj3Wnzeg5O9RNq8u_MX1K`，
 arxiv `1ZiChH3FO4eYw0Iiq3I-xv3X0tS8bWImM`。
 
 下载后跑 `codes/directory-aware-vector-attr-search/scripts/build_real_fixtures.py`
 重建 `data/real_fixtures/{wiki,arxiv}400000`（见该仓库 `experiments/protocol.md` 阶段 2）。
+
+### D-补（2026-10-27 实测修正）
+
+**文件名映射**（发布方下载名 → `build_real_fixtures.py` 期望名，用符号链接适配）：
+
+| 下载名 | 链接到 |
+|---|---|
+| wiki/corpus_paths.jsonl | wiki/dbpedia_dir_2m_corpus_paths.json |
+| wiki/query_vectors.fvecs | wiki/dbpedia_dir_2m_query_vectors.fvecs |
+| arxiv/corpus_metadata.jsonl | arxiv/arxiv_corpus_metadata.json |
+| arxiv/arxiv_category_constraint.json | arxiv/arxiv_category_query_constraint.json |
+| arxiv/groundtruth_category.txt | arxiv/arxiv_category_ground_truth.txt |
+
+**大文件配额坑**（wiki/corpus_vectors.fvecs 7.96GB 实测）：
+- 该文件下载量大会触发 Drive "too many users have viewed or downloaded this file recently"，**限制最长 24h**；触发后任何 gdown/curl 都拿不到（HTTP 403 确认页）。
+- `gdown -c` 的续传**对这类大文件无效**（实测报 `Gdown can't. Please check connections and permissions`）；中断的 `<name>.<random>.part` 不能被后续运行识别续传（每次随机后缀）。
+- 可行做法：①配额恢复（等 ≤24h）后重新完整 `gdown <id> -O corpus_vectors.fvecs`（单流 ~1.8–3 MB/s，约 45–75 min）；②中断残留按 fvecs 记录边界（dim=1024 时每条 4100 B）截断到完整记录数可再利用：`N=$(($(stat -c%s partial) / 4100)); head -c $((N*4100)) partial > usable.fvecs`（2026-10-27 用此法从 4.22GB 残片提取 1,029,778 条向量，子采样 1M 完成全部目录/DSM/1M-ANN 实验）。
+- 小文件（<1GB）不受配额影响、可随时重下。
+
+**arxiv_corpus_vectors.fvecs（2.76M×1024d，~11.3GB）**：
+上表未列此文件（2026-10-19 记录即为"未下载"）。它是 ARXIV-Dir ANN 端到端唯一缺口，
+获取途径按优先级：①浏览器打开 arxiv 子文件夹
+`https://drive.google.com/drive/folders/1ZiChH3FO4eYw0Iiq3I-xv3X0tS8bWImM`
+确认是否存在同名文件，若有则 `gdown <文件id>`（同样受配额限制）；②`gdown --folder <folder-id>` 整目录拉取；③论文 §V-F 的 OpenViking benchmark 仓库
+`https://github.com/volcengine/OpenViking/tree/main/benchmark` 查数据链接；④邮件作者（发布方 dir-vector-dataset）。
+若确认发布方未提供，ARXIV-Dir 的 ANN 部分（Fig 7/8/11 的 arxiv 子图、Table V 的 arxiv 列）不可复现，
+目录解析（Table IV arxiv 列）与 DSM 不受影响（不需要向量）。
+
+**向量格式转换**（fvecs → repro 的 base.f32）：
+`production/nested-attr-vector-search/work/venv/bin/python codes/directory-aware-vector-attr-search/scripts/fvecs_to_f32.py <in.fvecs> <out.f32> 1024`
 
 ## E. PathSeer filtered-ANN 数据集（HF）
 
