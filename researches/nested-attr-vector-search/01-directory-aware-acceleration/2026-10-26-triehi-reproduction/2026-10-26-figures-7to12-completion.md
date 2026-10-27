@@ -41,6 +41,16 @@ mode all（96–105 s）：DSM audit 全 ok；排序结论与前轮一致（Trie
 | fig_repro_fig12_breakdown | Fig 12 解析延迟分解（递归/非递归） | results_dsq_perquery.csv |
 | fig_repro_dir_latency / ndcg_buckets / dsm / dir_size | Table IV / Fig 8 / Fig 9 聚合 / Table V | 既有 CSV |
 
+![Fig 7 递归质量-延迟](figures/fig_repro_fig7_tradeoff.png)
+
+![Fig 9 DSM 逐 op](figures/fig_repro_fig9_dsm_perop.png)
+
+![Fig 10 深度结构复杂度](figures/fig_repro_fig10_structure.png)
+
+![Fig 11 深度敏感性](figures/fig_repro_fig11_depth.png)
+
+![Fig 12 目录解析延迟分解](figures/fig_repro_fig12_breakdown.png)
+
 Fig 7 观察（100k 合成）：wiki-IVF 与 arxiv 两子图中 PE-Offline 与 TrieHI 曲线近重合——与论文"recursive 下两者同一权衡"一致；wiki-PG 中低 ef 区三设计交织，原因是 100k 合成的锚深度浅（≤4）、子树规模小，PE-Online 展开开销未占主导（论文 WIKI-Dir 均深 11.95 才出现 365 ms 级展开）。**Fig 7 的论文形态需真实 WIKI-Dir 才能对齐**，100k 图仅验证机制方向。
 
 ## 全量 WIKI-Dir / ARXIV-Dir（进行中）
@@ -77,6 +87,8 @@ Fig 7 观察（100k 合成）：wiki-IVF 与 arxiv 两子图中 PE-Offline 与 T
 
 物化设计（Offline/TrieHI）的 recursive 比论文快 1–2 个数量级：论文 WIKI 浅层锚点展开集巨大（Fig.10 depth-1 m=236,903/363k 目录），我们 468k 目录树上同位置 m≈10,800（Fig 10 复现图）且 posting 位图更小；arxiv 浅树（均深 ~2）下单次查找本就微秒级。相对关系（PE-Online 在 recursive 慢 2–3 个数量级、non-recursive 快 1.5–2 个数量级）与论文一致。
 
+![真实 WIKI-Dir Fig 10：深度结构复杂度（全量 468k 目录树）](figures_real_wiki1m/fig_repro_fig10_structure.png)
+
 ## Fig 9 对应：DSM 墙钟（2000 ops，ms mean）
 
 | 运行 | MOVE PE-Online / PE-Offline / TrieHI | MERGE 三设计 |
@@ -84,7 +96,11 @@ Fig 7 观察（100k 合成）：wiki-IVF 与 arxiv 两子图中 PE-Offline 与 T
 | wiki 全量 1.94M（bg_3） | 38.1 / 14.9 / **2.75** | 0.077 / 0.431 / 0.120 |
 | wiki 1M 子采样（bg_9 复跑） | 17.1 / 5.90 / **2.38** | 0.039 / 0.129 / 0.095 |
 
-TrieHI MOVE 最快，排序一致；PE-Online MOVE 运行间方差大（38→17 ms），因其代价 ∝ 被移动子树的 entry 数，op 序列中偶发大子树主导 mean。逐 op 序列见 `real_wiki1m_scope_dsm_perop.csv`（Fig 9 复现图 `fig_repro_fig9_dsm_perop`）。DSM audit 全 ok。
+TrieHI MOVE 最快，排序一致；PE-Online MOVE 运行间方差大（38→17 ms），因其代价 ∝ 被移动子树的 entry 数，op 序列中偶发大子树主导 mean。逐 op 序列如下（原始数据 `real_wiki1m_scope_dsm_perop.csv`、全量版 `real_wiki_full_dsm_perop.csv`）：
+
+![真实 1M Fig 9：DSM 逐 op 延迟](figures_real_wiki1m/fig_repro_fig9_dsm_perop.png)
+
+DSM audit 全 ok。
 
 ## Table V 对应：索引构建与大小
 
@@ -99,7 +115,9 @@ TrieHI MOVE 最快，排序一致；PE-Online MOVE 运行间方差大（38→17 
 
 ## Fig 7/8 对应：wiki 1M 端到端（ef2048/np256 固定点 + 参数扫描）
 
-固定点：PG e2e 32.4 ms / recall@10 0.107；IVF 3.09 ms / 0.168。三设计质量逐点相同（scope 语义等价），延迟差异体现在 directory-only（PE-Online recursive 616 µs vs 物化 20–28 µs）。`dsq_scan`（ef 64→4096 七档、nprobe 4→1024 五档，73 行）复现图 `fig_repro_fig7_tradeoff`：**PE-Offline/TrieHI 曲线整体位于 PE-Online 左下方（同质量更低延迟）**，与论文 Fig 7 论断一致；arxiv 两子图标注 N/A（向量不可得）。wiki 低召回是深锚点小 scope 的指标饱和（全扫描 ndcg=1.0 已验证），非执行器缺陷。
+固定点：PG e2e 32.4 ms / recall@10 0.107；IVF 3.09 ms / 0.168。三设计质量逐点相同（scope 语义等价），延迟差异体现在 directory-only（PE-Online recursive 616 µs vs 物化 20–28 µs）。`dsq_scan`（ef 64→4096 七档、nprobe 4→1024 五档，73 行）：**PE-Offline/TrieHI 曲线整体位于 PE-Online 左下方（同质量更低延迟）**，与论文 Fig 7 论断一致；arxiv 两子图标注 N/A（向量不可得）。wiki 低召回是深锚点小 scope 的指标饱和（全扫描 ndcg=1.0 已验证），非执行器缺陷。
+
+![真实 1M Fig 7：递归质量-延迟 trade-off](figures_real_wiki1m/fig_repro_fig7_tradeoff.png)
 
 ## 产物清单（本目录）
 
