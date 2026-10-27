@@ -601,6 +601,11 @@ int main(int argc, char** argv) {
     struct Exec {
         std::string name;
         std::unique_ptr<faiss::Index> ix;
+        std::vector<std::unique_ptr<faiss::IndexFlatL2>> node_ix;  // NODE exec
+        std::vector<std::vector<int>> node_ids;                     // local -> global
+        std::vector<std::vector<float>> node_centroid;              // per-node mean
+        int node_topn = 10;                                         // scan knob
+        int node_limit = 0;                                         // 0 = all candidates
         double build_us;
         size_t bytes = 0;
     };
@@ -610,30 +615,34 @@ int main(int argc, char** argv) {
         test = Vectors::load(data + "/test.f32", dim);
         std::cerr << "base " << base.n << "x" << base.d << ", test " << test.n << "x"
                   << test.d << "\n";
-        if (which_exec == "both" || which_exec == "hnsw") {
+        if (which_exec == "both" || which_exec == "hnsw" || which_exec == "all3") {
             auto t0 = Clock::now();
             auto ix = std::make_unique<faiss::IndexHNSWFlat>(base.d, 16);
             ix->hnsw.efConstruction = 200;
             ix->add(base.n, base.x.data());
-            execs.push_back({"PG-hnsw-M16", std::move(ix), us_since(t0)});
+            Exec ex; ex.name = "PG-hnsw-M16"; ex.ix = std::move(ix);
+            ex.build_us = us_since(t0); execs.push_back(std::move(ex));
         }
-        if (which_exec == "both" || which_exec == "ivf") {
+        if (which_exec == "both" || which_exec == "ivf" || which_exec == "all3") {
             auto t0 = Clock::now();
             auto ix = std::make_unique<faiss::IndexIVFFlat>(
                 new faiss::IndexFlatL2(base.d), base.d, 1024, faiss::METRIC_L2);
             ix->train(base.n, base.x.data());
             ix->add(base.n, base.x.data());
-            execs.push_back({"IVF-nlist1024", std::move(ix), us_since(t0)});
+            Exec ex; ex.name = "IVF-nlist1024"; ex.ix = std::move(ix);
+            ex.build_us = us_since(t0); execs.push_back(std::move(ex));
         }
         for (auto& ex : execs) {
+            if (ex.name.rfind("NODE", 0) == 0) continue;  // per-node indexes, not serializable as one
             std::string tmp = csv + "_faiss_index.bin";
             faiss::write_index(ex.ix.get(), tmp.c_str());
             std::ifstream f(tmp, std::ios::binary | std::ios::ate);
             ex.bytes = f.tellg();
             std::remove(tmp.c_str());
+        }
+        for (auto& ex : execs)
             std::cout << "executor " << ex.name << " build_s=" << ex.build_us / 1e6
                       << " size_MB=" << ex.bytes / 1e6 << "\n";
-        }
     }
 
     std::ofstream csv_dsq, csv_dsm, csv_size, csv_perop, csv_perquery, csv_scan;
@@ -674,6 +683,8 @@ int main(int argc, char** argv) {
     };
     std::vector<int> ef_list = parse_int_list(arg_or("ef-list", "2048"));
     std::vector<int> nprobe_list = parse_int_list(arg_or("nprobe-list", "256"));
+    std::vector<int> noden_list = parse_int_list(arg_or("noden-list", "10,20,40,80"));
+    std::vector<int> nodelim_list = parse_int_list(arg_or("node-limit-list", "0"));
 
     // -------------------------------------------- scope (no vectors) --------
     if (mode == "scope") {
@@ -800,6 +811,48 @@ int main(int argc, char** argv) {
             arxiv = {load_ns("subject", "subject_tree.txt"),
                      load_ns("temporal", "temporal_tree.txt")};
 
+        // baseline D: per-node ANN indexes (only for single-namespace datasets)
+        bool want_node = which_exec == "node" || which_exec == "all3";
+        if (want_node && !wiki.empty() && execs.end() ==
+                std::find_if(execs.begin(), execs.end(), [](const Exec& e) {
+                    return e.name.rfind("NODE", 0) == 0;
+                })) {
+            Exec ex;
+            ex.name = "NODE-flat";
+            auto& nsd = wiki[0];
+            int nodes = nsd.tree.n;
+            ex.node_ix.resize(nodes);
+            ex.node_ids.resize(nodes);
+            ex.node_centroid.assign(nodes, {});
+            std::vector<std::vector<int>> ids(nodes);
+            for (auto& [e, v] : nsd.bindings) ids[v].push_back(e);
+            auto t0 = Clock::now();
+            for (int v = 0; v < nodes; ++v) {
+                if (ids[v].empty()) continue;
+                auto ix = std::make_unique<faiss::IndexFlatL2>(base.d);
+                std::vector<float> buf((size_t)ids[v].size() * base.d);
+                std::vector<float> cen(base.d, 0.0f);
+                for (size_t j = 0; j < ids[v].size(); ++j) {
+                    const float* x = &base.x[(size_t)ids[v][j] * base.d];
+                    std::copy_n(x, base.d, &buf[j * base.d]);
+                    for (int t = 0; t < base.d; ++t) cen[t] += x[t];
+                }
+                for (int t = 0; t < base.d; ++t) cen[t] /= (float)ids[v].size();
+                ex.node_centroid[v] = std::move(cen);
+                ix->add((faiss::idx_t)ids[v].size(), buf.data());
+                ex.node_ix[v] = std::move(ix);
+                ex.node_ids[v] = std::move(ids[v]);
+            }
+            ex.build_us = us_since(t0);
+            ex.bytes = (size_t)base.n * base.d * 4;  // one vector copy total
+            std::cout << "executor " << ex.name << " nodes_with_items="
+                      << std::count_if(ex.node_ix.begin(), ex.node_ix.end(),
+                                       [](const auto& p) { return (bool)p; })
+                      << " build_s=" << ex.build_us / 1e6
+                      << " size_MB=" << ex.bytes / 1e6 << "\n";
+            execs.push_back(std::move(ex));
+        }
+
         const int K = 10;
         auto make_design = [](Design::Kind k, NSDataAny& nsd) {
             return std::make_unique<Design>(k, Tree(nsd.tree.parent), nsd.bindings,
@@ -845,33 +898,106 @@ int main(int argc, char** argv) {
                 csv_size << "directory_module," << kind_name(e) << ","
                          << dir_build_s / 1e6 << "," << dir_bytes / 1e6 << "\n";
                 for (auto& ex : execs) {
+                    bool is_node = ex.name.rfind("NODE", 0) == 0;
+                    if (is_node && e != 0) continue;  // design-independent, run once
+                    if (is_node && has_ns) continue;  // v1: single-namespace only
+                    std::string dlabel = is_node ? "NODE" : kind_name(e);
                     Stats dir_all, e2e_all, rec_all;
                     Stats dir[2], e2e[2], rec[2], ndc[2];  // [recursive, non-recursive]
                     Stats ndc_b[2][3];                   // x [card<10, 10..1000, >=1000]
                     for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
                         auto& q = wl.qs[qi];
                         int nsi = has_ns ? wl.ns_flag[qi] : 0;
+                        bool is_node = ex.name.rfind("NODE", 0) == 0;
                         auto t0 = Clock::now();
                         auto* scope = designs[nsi]->resolve(q.anchor, q.rec == 1);
                         double d_us = us_since(t0);
-                        auto t1 = Clock::now();
-                        RoaringSel sel(scope);
+                        double search_us = 0;
                         std::vector<faiss::idx_t> I(K, -1);
                         std::vector<float> D(K);
-                        if (ex.name.rfind("PG", 0) == 0) {
-                            faiss::SearchParametersHNSW sp;
-                            sp.sel = &sel;
-                            sp.efSearch = ef_search;
-                            ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K, D.data(),
-                                          I.data(), &sp);
+                        if (is_node) {
+                            // candidate node set: subtree nodes with items
+                            // (recursive) or the anchor (non-recursive)
+                            std::vector<int> cand;
+                            if (q.rec == 1) {
+                                std::vector<int> st(1, q.anchor);
+                                while (!st.empty()) {
+                                    int v = st.back();
+                                    st.pop_back();
+                                    if (roaring_bitmap_get_cardinality(
+                                            designs[nsi]->local[v]))
+                                        cand.push_back(v);
+                                    for (int c : designs[nsi]->tree.children[v])
+                                        st.push_back(c);
+                                }
+                            } else if (roaring_bitmap_get_cardinality(
+                                               designs[nsi]->local[q.anchor])) {
+                                cand.push_back(q.anchor);
+                            }
+                            d_us = us_since(t0);
+                            auto t1 = Clock::now();
+                            const float* qv = &test.x[(size_t)q.qidx * test.d];
+                            if (ex.node_limit > 0 && (int)cand.size() > ex.node_limit) {
+                                // route to the closest centroids (P4-lite)
+                                std::vector<std::pair<float, int>> cd;
+                                cd.reserve(cand.size());
+                                for (int v : cand) {
+                                    const auto& cen = ex.node_centroid[v];
+                                    float s2 = 0;
+                                    for (int t = 0; t < base.d; ++t) {
+                                        float df = qv[t] - cen[t];
+                                        s2 += df * df;
+                                    }
+                                    cd.push_back({s2, v});
+                                }
+                                std::nth_element(cd.begin(), cd.begin() + ex.node_limit,
+                                                 cd.end());
+                                cd.resize(ex.node_limit);
+                                cand.clear();
+                                for (auto& [d2, v] : cd) cand.push_back(v);
+                            }
+                            std::priority_queue<std::pair<float, int>> heap;
+                            for (int v : cand) {
+                                if (!ex.node_ix[v]) continue;
+                                int nn = std::min(ex.node_topn, (int)ex.node_ids[v].size());
+                                std::vector<float> Dn(nn);
+                                std::vector<faiss::idx_t> In(nn);
+                                ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
+                                for (int j = 0; j < nn; ++j) {
+                                    float dist = Dn[j];
+                                    int gid = ex.node_ids[v][(size_t)In[j]];
+                                    if ((int)heap.size() < K) heap.push({dist, gid});
+                                    else if (dist < heap.top().first) {
+                                        heap.pop();
+                                        heap.push({dist, gid});
+                                    }
+                                }
+                            }
+                            for (int t = (int)heap.size() - 1; t >= 0; --t) {
+                                I[t] = heap.top().second;
+                                D[t] = heap.top().first;
+                                heap.pop();
+                            }
+                            search_us = us_since(t1);
                         } else {
-                            faiss::SearchParametersIVF sp;
-                            sp.sel = &sel;
-                            sp.nprobe = nprobe;
-                            ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K, D.data(),
-                                          I.data(), &sp);
+                            auto t1 = Clock::now();
+                            RoaringSel sel(scope);
+                            if (ex.name.rfind("PG", 0) == 0) {
+                                faiss::SearchParametersHNSW sp;
+                                sp.sel = &sel;
+                                sp.efSearch = ef_search;
+                                ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
+                                              D.data(), I.data(), &sp);
+                            } else {
+                                faiss::SearchParametersIVF sp;
+                                sp.sel = &sel;
+                                sp.nprobe = nprobe;
+                                ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
+                                              D.data(), I.data(), &sp);
+                            }
+                            search_us = us_since(t1);
                         }
-                        double e2e_ms = us_since(t1) / 1000.0 + d_us / 1000.0;
+                        double e2e_ms = (search_us + d_us) / 1000.0;
                         if (dbg && qi < 3 && e == 0)
                             std::cerr << "SRCH qi=" << qi << " d=" << kind_name(e)
                                       << " ex=" << ex.name << " I0=" << (long)I[0]
@@ -893,13 +1019,14 @@ int main(int argc, char** argv) {
                         int r = q.rec == 1 ? 0 : 1;
                         int card = (int)roaring_bitmap_get_cardinality(scope);
                         int b = card < 10 ? 0 : card < 1000 ? 1 : 2;
-                        csv_perquery << dataset_name << "," << kind_name(e) << "," << ex.name
+                        csv_perquery << dataset_name << "," << dlabel << "," << ex.name
                                      << "," << (r == 0 ? "recursive" : "non-recursive")
                                      << "," << designs[nsi]->tree.depth[q.anchor] << ","
                                      << card << "," << d_us << ","
-                                     << designs[nsi]->t_enum_us << ","
-                                     << designs[nsi]->t_bitmap_us << "," << e2e_ms << ","
-                                     << (double)hit / K << "," << ndcg << "\n";
+                                     << (is_node ? d_us : designs[nsi]->t_enum_us) << ","
+                                     << (is_node ? search_us : designs[nsi]->t_bitmap_us)
+                                     << "," << e2e_ms << "," << (double)hit / K << ","
+                                     << ndcg << "\n";
                         dir[r].add(d_us);
                         e2e[r].add(e2e_ms);
                         rec[r].add((double)hit / K);
@@ -914,13 +1041,13 @@ int main(int argc, char** argv) {
                     for (int r = 0; r < 2; ++r) {
                         Stats& d = dir[r];
                         const char* qt = r == 0 ? "recursive" : "non-recursive";
-                        csv_dsq << dataset_name << "," << kind_name(e) << "," << ex.name
+                        csv_dsq << dataset_name << "," << dlabel << "," << ex.name
                                 << "," << qt << ",all," << ndc[r].mean() << ","
                                 << rec[r].mean() << "," << d.mean() << "," << d.pct(0.90)
                                 << "," << d.pct(0.95) << "," << d.pct(0.99) << ","
                                 << d.pct(0.999) << "," << e2e[r].mean() << "\n";
                         for (int b = 0; b < 3; ++b)
-                            csv_dsq << dataset_name << "," << kind_name(e) << "," << ex.name
+                            csv_dsq << dataset_name << "," << dlabel << "," << ex.name
                                     << "," << qt << "," << buckets[b] << ","
                                     << ndc_b[r][b].mean() << ",,,,,,,\n";
                     }
@@ -966,35 +1093,112 @@ int main(int argc, char** argv) {
                     std::vector<std::unique_ptr<Design>> designs;
                     for (auto& nsd : nss) designs.push_back(make_design((Design::Kind)e, nsd));
                     for (auto& ex : execs) {
+                        bool is_node = ex.name.rfind("NODE", 0) == 0;
+                        if (is_node && e != 0) continue;  // design-independent, run once
+                        if (is_node && has_ns) continue;  // v1: single-namespace only
+                        std::string dlabel = is_node ? "NODE" : kind_name(e);
                         bool is_pg = ex.name.rfind("PG", 0) == 0;
-                        const char* pname = is_pg ? "efSearch" : "nprobe";
-                        const auto& params = is_pg ? ef_list : nprobe_list;
+                        const char* pname = is_node ? "nodeTopN" : is_pg ? "efSearch" : "nprobe";
+                        const std::vector<int>& params =
+                            is_node ? noden_list : is_pg ? ef_list : nprobe_list;
                         for (int pv : params) {
+                            if (is_node) ex.node_topn = pv;
+                            const std::vector<int> lims =
+                                is_node ? nodelim_list : std::vector<int>{0};
+                            for (int lim : lims) {
+                            if (is_node) ex.node_limit = lim;
                             Stats ndc[2], rec[2], dir[2], e2e[2];
                             for (size_t qi = 0; qi < wl.qs.size(); ++qi) {
                                 auto& q = wl.qs[qi];
                                 int nsi = has_ns ? wl.ns_flag[qi] : 0;
-                                auto t0 = Clock::now();
-                                auto* scope = designs[nsi]->resolve(q.anchor, q.rec == 1);
-                                double d_us = us_since(t0);
-                                auto t1 = Clock::now();
-                                RoaringSel sel(scope);
                                 std::vector<faiss::idx_t> I(K, -1);
                                 std::vector<float> D(K);
-                                if (is_pg) {
-                                    faiss::SearchParametersHNSW sp;
-                                    sp.sel = &sel;
-                                    sp.efSearch = pv;
-                                    ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
-                                                  D.data(), I.data(), &sp);
+                                double d_us = 0, search_us = 0;
+                                roaring_bitmap_t* scope = nullptr;
+                                if (is_node) {
+                                    std::vector<int> cand;
+                                    auto t0 = Clock::now();
+                                    if (q.rec == 1) {
+                                        std::vector<int> st(1, q.anchor);
+                                        while (!st.empty()) {
+                                            int v = st.back();
+                                            st.pop_back();
+                                            if (roaring_bitmap_get_cardinality(
+                                                    designs[nsi]->local[v]))
+                                                cand.push_back(v);
+                                            for (int c : designs[nsi]->tree.children[v])
+                                                st.push_back(c);
+                                        }
+                                    } else if (roaring_bitmap_get_cardinality(
+                                                       designs[nsi]->local[q.anchor])) {
+                                        cand.push_back(q.anchor);
+                                    }
+                                    d_us = us_since(t0);
+                                    auto t1 = Clock::now();
+                                    const float* qv = &test.x[(size_t)q.qidx * test.d];
+                                    if (ex.node_limit > 0 && (int)cand.size() > ex.node_limit) {
+                                        std::vector<std::pair<float, int>> cd;
+                                        cd.reserve(cand.size());
+                                        for (int v : cand) {
+                                            const auto& cen = ex.node_centroid[v];
+                                            float s2 = 0;
+                                            for (int t = 0; t < base.d; ++t) {
+                                                float df = qv[t] - cen[t];
+                                                s2 += df * df;
+                                            }
+                                            cd.push_back({s2, v});
+                                        }
+                                        std::nth_element(cd.begin(),
+                                                         cd.begin() + ex.node_limit, cd.end());
+                                        cd.resize(ex.node_limit);
+                                        cand.clear();
+                                        for (auto& [d2, v] : cd) cand.push_back(v);
+                                    }
+                                    std::priority_queue<std::pair<float, int>> heap;
+                                    for (int v : cand) {
+                                        if (!ex.node_ix[v]) continue;
+                                        int nn = std::min(pv, (int)ex.node_ids[v].size());
+                                        std::vector<float> Dn(nn);
+                                        std::vector<faiss::idx_t> In(nn);
+                                        ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
+                                        for (int j = 0; j < nn; ++j) {
+                                            float dist = Dn[j];
+                                            int gid = ex.node_ids[v][(size_t)In[j]];
+                                            if ((int)heap.size() < K) heap.push({dist, gid});
+                                            else if (dist < heap.top().first) {
+                                                heap.pop();
+                                                heap.push({dist, gid});
+                                            }
+                                        }
+                                    }
+                                    for (int t = (int)heap.size() - 1; t >= 0; --t) {
+                                        I[t] = heap.top().second;
+                                        heap.pop();
+                                    }
+                                    search_us = us_since(t1);
                                 } else {
-                                    faiss::SearchParametersIVF sp;
-                                    sp.sel = &sel;
-                                    sp.nprobe = pv;
-                                    ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
-                                                  D.data(), I.data(), &sp);
+                                    auto t0 = Clock::now();
+                                    scope = designs[nsi]->resolve(q.anchor, q.rec == 1);
+                                    d_us = us_since(t0);
+                                    auto t1 = Clock::now();
+                                    RoaringSel sel(scope);
+                                    if (is_pg) {
+                                        faiss::SearchParametersHNSW sp;
+                                        sp.sel = &sel;
+                                        sp.efSearch = pv;
+                                        ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
+                                                      D.data(), I.data(), &sp);
+                                    } else {
+                                        faiss::SearchParametersIVF sp;
+                                        sp.sel = &sel;
+                                        sp.nprobe = pv;
+                                        ex.ix->search(1, &test.x[(size_t)q.qidx * test.d], K,
+                                                      D.data(), I.data(), &sp);
+                                    }
+                                    search_us = us_since(t1);
                                 }
-                                double e2e_ms = us_since(t1) / 1000.0 + d_us / 1000.0;
+                                double e2e_ms = (search_us + d_us) / 1000.0;
+
                                 std::unordered_set<int> gs(gts[qi].begin(), gts[qi].end());
                                 int hit = 0;
                                 double dcg = 0;
@@ -1013,15 +1217,19 @@ int main(int argc, char** argv) {
                                 e2e[r].add(e2e_ms);
                                 rec[r].add((double)hit / K);
                                 ndc[r].add(ndcg);
-                                roaring_bitmap_free(scope);
+                                if (scope) roaring_bitmap_free(scope);
                             }
-                            for (int r = 0; r < 2; ++r)
-                                csv_scan << dataset_name << "," << kind_name(e) << ","
+                            for (int r = 0; r < 2; ++r) {
+                                csv_scan << dataset_name << "," << dlabel << ","
                                          << ex.name << ","
                                          << (r == 0 ? "recursive" : "non-recursive") << ","
                                          << pname << "," << pv << "," << ndc[r].mean() << ","
                                          << rec[r].mean() << "," << dir[r].mean() << ","
-                                         << e2e[r].mean() << "\n";
+                                         << e2e[r].mean();
+                                if (is_node) csv_scan << ",nodeLimit," << lim;
+                                csv_scan << "\n";
+                            }
+                            }
                         }
                     }
                 }

@@ -184,6 +184,7 @@ depth-1 锚点平均展开 ≈10,800 个子目录（论文同位置 236,903/363k
 - **非递归**：NodeANN 比全局 ANN 方案快 **100–3800 倍**（4.9 µs–12 µs vs 1.26–47 ms）——单节点 scope 无需全局索引遍历。
 - **递归**：100k 上最快（8.4 vs 12.8 ms）；SIFT1M 上慢于 TrieHI（68.7 vs 48.9 ms，19k 目录/1M 条目导致每查询枚举数千节点 + 37.7 ms 目录开销）；wiki1m 上与 TrieHI-IVF 接近（4.49 vs 3.68 ms）但比 PG 方案快 7 倍。**递归延迟由"候选节点数 × 每节点搜索调用开销"主导**，这正是 P1/P4 优化的靶点。
 - 帕累托图形态（SIFT1M，`figures_sift1m/fig_repro_pareto_recall_latency.png`）：wiki-PG 子图中只有 NodeANN 能进入 recall>0.7 区间（代价 ~20 ms 平台）；wiki-IVF 子图中三设计已能低延迟达到高 recall，NodeANN 呈现固定目录开销形成的水平线。
+- **NodeANN 的效率-精度双轴**：`--noden-list`（每节点 top-N，精度轴）+ `--node-limit-list`（按质心距离截断候选节点数，效率轴）。实测 trade-off（SIFT1M 递归）：limit=1 → recall 0.268 / 3.8 ms；limit=64 → 0.614 / 3.9 ms；limit=0（全候选）→ 0.983 / 21.7 ms。**中段平坦是剪枝元数据成本**：截断需计算全部候选节点到查询的质心距离（$O(|\mathrm{cand}|\cdot d)$），与逐节点搜索同量级，抵消了搜索节省——这直接验证了 P4 必须用亚线性 proxy（量化质心/PQ 码）而不是精确质心扫描。100k 与 wiki1m 的曲线同形态（wiki1m：0.189/1.73 ms → 0.575/3.19 ms）。
 
 ---
 
