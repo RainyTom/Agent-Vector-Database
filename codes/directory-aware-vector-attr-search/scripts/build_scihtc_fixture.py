@@ -34,8 +34,19 @@ def load_paths(src: Path):
             for r in csv.DictReader(f):
                 parts = [p.strip() for p in r["Category"].split("->")][1:]
                 parts = [p for p in parts if p]
-                if parts:
-                    rows.append((r["id"], parts))
+                # SciHTC/ACM policy: author labels like "Applied computing~Agriculture"
+                # break the CCS hierarchy ('~'), so keep only the CCS-consistent
+                # prefix of that segment (official experiments do the same).
+                cleaned = []
+                for seg in parts:
+                    if "~" in seg:
+                        head = seg.split("~")[0].strip()
+                        if head:
+                            cleaned.append(head)
+                        break
+                    cleaned.append(seg)
+                if cleaned:
+                    rows.append((r["id"], cleaned))
     return rows
 
 

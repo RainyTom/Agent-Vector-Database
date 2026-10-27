@@ -121,7 +121,9 @@ DSM audit 全 ok。
 
 ## SciHTC（真实 CCS 标签）基线实验（2026-10-27）
 
-数据：SciHTC 公开 IDs+labels（186,160 篇、`CCS->L1->...->Ln` 路径）；fixture 由 `scripts/build_scihtc_fixture.py` 从标签路径构建：**1,664 个概念节点、max depth 6、绑定深度分布 L1 17.2% / L2 23.9% / L3 28.4% / L4 22.0% / L5 8.1% / L6 0.3%**（与独立统计一致）；**26 个概念在标签路径中出现冲突父**（如 Virtual reality: Graphics systems and interfaces vs Interaction paradigms；Digital libraries: Computers in other domains vs Information systems applications）——这是 label 侧的 DAG 证据。
+数据：SciHTC 公开 IDs+labels（186,160 篇、`CCS->L1->...->Ln` 路径）；fixture 由 `scripts/build_scihtc_fixture.py` 构建：**830 个概念节点、max depth 6、绑定深度分布 L1 17.2% / L2 23.9% / L3 28.2% / L4 22.0% / L5 8.5% / L6 0.3%**；**26 个概念在标签路径中出现冲突父**（Virtual reality、Digital libraries and archives、Concurrent programming languages 等）——label 侧 DAG 证据。
+
+**数据瑕疵修正**：17,223 行（9.3%）的作者标注用 `~` 破坏层级（如 `Applied computing~Agriculture`，官方 README 说明此类标注按截断处理）。初版 fixture 误将 `~` 段当独立概念，产生 834 个假节点（1,664 vs 正确 830）；现已按官方策略截断到一致的 CCS 前缀并重跑全部基线（下方数字均为修正后）。
 
 **向量缺口**：SciHTC 文本（标题/摘要）需向作者申请或从 ACM proceedings 重建；本轮 DSQ 用 **64 维随机占位向量**跑通全管线，**质量指标（nDCG/recall）无意义，仅延迟/结构/维护数字有效**。
 
@@ -129,10 +131,10 @@ DSM audit 全 ok。
 
 | 指标 | PE-Online | PE-Offline | TrieHI |
 |---|---|---|---|
-| recursive 目录解析（µs，520 查询） | 3.65 | 0.174 | **0.152** |
-| non-recursive（µs，480 查询） | **0.238** | 1.90 | 1.77 |
-| DSM MOVE（ms，2000 ops） | 0.173 | 0.0277 | **0.0230** |
-| DSM MERGE（ms） | 0.177 | 0.036 | **0.029** |
+| recursive 目录解析（µs，520 查询） | 52.4 | 0.264 | **0.253** |
+| non-recursive（µs，480 查询） | **0.205** | 12.06 | 11.70 |
+| DSM MOVE（ms，2000 ops） | 0.256 | 0.0579 | **0.0562** |
+| DSM MERGE（ms） | 0.157 | 0.0492 | **0.0481** |
 
 与 WIKI/ARXIV 的排序完全一致，绝对值小 1–3 个数量级（树仅 6 层、1,664 节点、扇出小）。DSM audit 全 ok。
 
@@ -143,11 +145,11 @@ DSM audit 全 ok。
 | PE-Online + PG | 17.3 ms | 17.3 ms |
 | PE-Offline + PG | 18.5 ms | 18.8 ms |
 | TrieHI + PG | — | — |
-| **NodeANN-Flat** | **0.012 ms** | **0.0039 ms** |
+| **NodeANN-Flat** | **0.081 ms** | **0.0094 ms** |
 
-**NodeANN 在 CCS 结构上的优势最大**：树浅（6 层）+ 锚点浅 → 候选节点少（每节点平均 112 篇）→ 递归延迟 12 µs，比最佳全局方案（IVF 0.61–0.77 ms）快 50–60 倍，比 PG 快 ~1,500 倍。这与合成/WIKI 数据上"深树大子树使 NodeANN 变慢"形成鲜明对照，说明 **NodeANN 的适用区间由树的深度/扇出与锚点深度决定**，CCS 恰好落在其优势区。
+**NodeANN 在 CCS 结构上的优势最大**：树浅（6 层）+ 锚点浅 → 候选节点少（768 个有 item 节点、每节点平均 242 篇）→ 递归延迟 81 µs，比最佳全局方案（IVF 0.79–0.93 ms）快 10–11 倍，比 PG 快 ~200 倍。这与合成/WIKI 数据上"深树大子树使 NodeANN 变慢"形成鲜明对照，说明 **NodeANN 的适用区间由树的深度/扇出与锚点深度决定**，CCS 恰好落在其优势区。
 
-索引开销：HNSW M16 10.4 s / 74.5 MB；IVF nlist1024 14.7 s / 49.4 MB；NodeANN（1,602 个有 item 节点）0.03 s / 47.7 MB。
+索引开销：HNSW M16 10.4 s / 74.5 MB；IVF nlist1024 14.7 s / 49.4 MB；NodeANN（768 个有 item 节点）0.03 s / 47.7 MB。
 
 ## NodeANN（属性分区索引）完整实验（2026-10-27）
 

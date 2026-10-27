@@ -43,6 +43,8 @@ ACM Computing Classification System（CCS）是 ACM 用于组织、索引和检�
 | 公开内容 | ACM paper ID + 层级类别路径（CSV，全部 | 6 层与仅 | 2 层两份） |
 | 需申请内容 | 标题/摘要/关键词（邮件申请，或按 ACM proceedings + 官方脚本重建） |
 | 标注格式 | `id,Category`，Category = `CCS->L1->L2->...->Ln`；**每论文一条路径**，"多标签" = 路径上每层都是一个标签（与我们的祖先继承语义一致） |
+| 数据瑕疵 | **17,223 行（9.3%）用 `~` 破坏层级**（如 `Applied computing~Agriculture`，作者自定义细分不在 CCS 树中）；官方策略是截断到一致前缀。按此处理后得到 830 个路径概念（官方报 1,233 类别，口径不同，未核实） |
+| README 笔误 | README 写 184,160 篇，但 train/dev/test 文件合计 **186,160** 篇（论文摘要亦为 186,160）；以文件为准 |
 
 ## 4. 真实标签分布（实测，train+dev+test 全量 186,160 篇）
 
@@ -94,7 +96,7 @@ ACM Computing Classification System（CCS）是 ACM 用于组织、索引和检�
 
 ## 7. 待办
 
-1. 将 CCS DAG 转成我们的 fixture 格式（tree/bindings/workload），**保留多父**（当前 repro 的 Tree 只支持单父，需扩展或加多父适配层）。**已部分完成**：`scripts/build_scihtc_fixture.py` 用标签路径建树（1,664 节点、6 层），26 个概念的冲突父被折叠（记录在 meta.json）。
+1. 将 CCS DAG 转成我们的 fixture 格式（tree/bindings/workload），**保留多父**（当前 repro 的 Tree 只支持单父，需扩展或加多父适配层）。**已部分完成**：`scripts/build_scihtc_fixture.py` 用标签路径建树（**830 节点**、6 层；初版误把 `~` 段当独立概念产生 834 个假节点，已修正），26 个概念的冲突父被折叠（记录在 meta.json）。
 2. 统计 SciHTC 中**多父概念的实际使用频率**（已完成：12,922 篇 / 6.9%）。
 3. 论文文本获取 → embedding → 真实 CCS 端到端实验（见 §8）。
 4. 合成 fixture 增加 DAG + 浅绑定选项，与真实分布对齐。
