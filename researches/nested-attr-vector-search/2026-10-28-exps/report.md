@@ -117,3 +117,28 @@ all3整进程峰值RSS为35.492 GiB，局部Flat独立运行17.111 GiB，IVF全�
 本轮是原始向量/真实树/合成约束下的固定参数单次运行，不是论文查询约束复刻，也不是全选择率曲线。少量scope、empty scope及极低选择率明显影响指标；已分开macro/global并计空查询。多绑定/DAG不在WIKI验证范围内，NODE对重复全局ID及非递归多绑定仍有限制。局部HNSW单独RSS、统一索引存储尺寸、重复运行方差及同召回超参数网格仍未测。
 
 下一步应优先补同召回参数扫描与按scope/候选节点数量分桶，验证局部索引优势是否延续到大scope，再考虑共享搜索/减少局部调用；本轮没有运行新优化，也没有证据声称新颖性。
+
+## 8. 后续新增轮次：autoresearch harness setup（未优化）
+
+为新索引/算法研究建立固定入口`bash autoresearch.sh`，本轮仅搭建评测，没有实施候选算法。沿用完整WIKI与相同456查询，默认局部全HNSW；在3个独立进程分别构建索引并跑同一workload。下面是该轮新增实测，不覆盖前述单次两类基线。
+
+| 指标 | 实测值 | 汇总口径 |
+|---|---:|---|
+| 主指标recursive e2e | 6.638942 ms | 3次query-mean的中位数 |
+| recursive p95 | 23.720180 ms | 3次p95的中位数 |
+| recursive macro recall | 0.999559 | 3次最小值 |
+| recursive global pair recall | 0.999320 | 3次最小值 |
+| non-recursive e2e | 0.005186 ms | 3次query-mean的中位数 |
+| non-recursive recall | 1.000000 | 3次最小值 |
+| index build | 69.841400 s | 3次中位数，沿用executor构建计时 |
+| peak RSS | 19,742.082031 MiB | 3个被测进程最大值 |
+| recursive QPS | 150.626415 | 1000/主指标 |
+| recursive e2e MAD | 0.025667 ms | 3次query-mean的绝对中位差 |
+
+三次recursive mean分别为6.664609、6.594552、6.638942 ms。完整`bash autoresearch.sh`退出0，按约定输出主/副`METRIC`行。六项回归测试通过；非法参数子进程exit=1且不输出METRIC，实际返回ID的重复、越scope、虚报质量及缺失query行均被质量检查拒绝。
+
+本轮新增独立NumPy GT，枚举真实scope并扫描原始float32距离，保存2349个GT pair对应的ID；C++只追加计时外的`result_ids`输出，不改变搜索算法。评估器基于实际返回ID核查质量，而不是只信自报hit。输入SHA-256固定，recursive macro/global recall均需≥0.999，non-recursive recall需为1，non-recursive mean≤0.025ms，单进程RSS≤24GiB、index build≤180s。每次重复均需过门槛。
+
+冻结合同与局限见[基准协议](experiments/autoresearch-harness.md)，观测汇总见[baseline JSON](data/autoresearch_harness_baseline.json)，独立GT见[reference JSON](data/autoresearch_reference.json)。原始日志与逐查询CSV在本地`production/nested-attr-vector-search/work/autoresearch_trie/run-6i9heh4v/`，未提交大数据/索引。harness固定输入但墙钟存在噪声，三次重复不构成跨硬件置信保证。
+
+下一步是初始化会话后再提出、查重并实验新机制；不能仅把精确局部top-k合并、质心排序、换Flat或改名写作创新。TrieHI的公开预印本仍须引用；本轮没有完成新的文献查重或新算法验证。

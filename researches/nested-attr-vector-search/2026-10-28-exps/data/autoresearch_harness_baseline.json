@@ -1,0 +1,76 @@
+{
+  "metrics": {
+    "recursive_e2e_ms": 6.638941762114538,
+    "recursive_p95_ms": 23.72018,
+    "recursive_macro_recall": 0.9995594713656387,
+    "recursive_pair_recall": 0.9993201903467029,
+    "nonrecursive_e2e_ms": 0.005185502183406114,
+    "nonrecursive_macro_recall": 1.0,
+    "build_s": 69.8414,
+    "peak_rss_mib": 19742.08203125,
+    "recursive_qps": 150.6264154487017,
+    "recursive_e2e_mad_ms": 0.025667334801761754
+  },
+  "repeats": [
+    {
+      "recursive_macro_recall": 0.9995594713656387,
+      "recursive_pair_recall": 0.9993201903467029,
+      "recursive_e2e_ms": 6.664609096916299,
+      "recursive_p95_ms": 23.88785,
+      "nonrecursive_macro_recall": 1.0,
+      "nonrecursive_pair_recall": 1.0,
+      "nonrecursive_e2e_ms": 0.005066637554585153,
+      "nonrecursive_p95_ms": 0.016298399999999987,
+      "build_s": 69.8414,
+      "peak_rss_mib": 19742.07421875
+    },
+    {
+      "recursive_macro_recall": 0.9995594713656387,
+      "recursive_pair_recall": 0.9993201903467029,
+      "recursive_e2e_ms": 6.594551876651982,
+      "recursive_p95_ms": 23.650019999999998,
+      "nonrecursive_macro_recall": 1.0,
+      "nonrecursive_pair_recall": 1.0,
+      "nonrecursive_e2e_ms": 0.005371270742358079,
+      "nonrecursive_p95_ms": 0.017761799999999994,
+      "build_s": 69.7958,
+      "peak_rss_mib": 19742.08203125
+    },
+    {
+      "recursive_macro_recall": 0.9995594713656387,
+      "recursive_pair_recall": 0.9993201903467029,
+      "recursive_e2e_ms": 6.638941762114538,
+      "recursive_p95_ms": 23.72018,
+      "nonrecursive_macro_recall": 1.0,
+      "nonrecursive_pair_recall": 1.0,
+      "nonrecursive_e2e_ms": 0.005185502183406114,
+      "nonrecursive_p95_ms": 0.01631679999999999,
+      "build_s": 70.6172,
+      "peak_rss_mib": 19742.0078125
+    }
+  ],
+  "command": [
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/repro",
+    "--data",
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full",
+    "--dim",
+    "1024",
+    "--mode",
+    "dsq",
+    "--executor",
+    "node",
+    "--node-hnsw-threshold",
+    "0",
+    "--node-ef",
+    "64",
+    "--csv",
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/production/nested-attr-vector-search/work/autoresearch_trie/run-6i9heh4v/repeat_2"
+  ],
+  "input_hashes": {
+    "base.f32": "a8502a406c474965a4d9db87b55addd59cf7e6c6d98c96969c5b24ba111d8e2e",
+    "test.f32": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e",
+    "wiki_tree.txt": "b6c5d9d2e63e0da89702f0674ea4d43f71e5601ce5816fa8812a7c8a16e90faf",
+    "wiki_bindings.txt": "f1f8fd8b053f82883727e92436837def37d2a60c71fadfe0cfb7b87cc2e50b42",
+    "workload_wiki.txt": "e6fa281a66e9bdab04a61bf2221ce1c58241a5b6fb01a9e2567d109fa4f4b684"
+  }
+}

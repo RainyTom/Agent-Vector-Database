@@ -1,0 +1,6424 @@
+{
+  "inputs": {
+    "base.f32": "a8502a406c474965a4d9db87b55addd59cf7e6c6d98c96969c5b24ba111d8e2e",
+    "test.f32": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e",
+    "wiki_tree.txt": "b6c5d9d2e63e0da89702f0674ea4d43f71e5601ce5816fa8812a7c8a16e90faf",
+    "wiki_bindings.txt": "f1f8fd8b053f82883727e92436837def37d2a60c71fadfe0cfb7b87cc2e50b42",
+    "workload_wiki.txt": "e6fa281a66e9bdab04a61bf2221ce1c58241a5b6fb01a9e2567d109fa4f4b684"
+  },
+  "distance": "NumPy float32 squared L2; ties by ascending global ID",
+  "queries": [
+    {
+      "query_index": 0,
+      "query_id": 0,
+      "recursive": true,
+      "anchor": 299266,
+      "scope_card": 1,
+      "gt_ids": [
+        802175
+      ]
+    },
+    {
+      "query_index": 1,
+      "query_id": 1,
+      "recursive": false,
+      "anchor": 181540,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 2,
+      "query_id": 2,
+      "recursive": false,
+      "anchor": 141641,
+      "scope_card": 4,
+      "gt_ids": [
+        485303,
+        647350,
+        240675,
+        469078
+      ]
+    },
+    {
+      "query_index": 3,
+      "query_id": 3,
+      "recursive": true,
+      "anchor": 296,
+      "scope_card": 118084,
+      "gt_ids": [
+        612611,
+        1401246,
+        497878,
+        1553873,
+        29896,
+        1243214,
+        1595474,
+        650043,
+        813146,
+        1595785
+      ]
+    },
+    {
+      "query_index": 4,
+      "query_id": 4,
+      "recursive": true,
+      "anchor": 306778,
+      "scope_card": 1,
+      "gt_ids": [
+        836922
+      ]
+    },
+    {
+      "query_index": 5,
+      "query_id": 5,
+      "recursive": true,
+      "anchor": 433141,
+      "scope_card": 2,
+      "gt_ids": [
+        1620497,
+        1758252
+      ]
+    },
+    {
+      "query_index": 6,
+      "query_id": 6,
+      "recursive": false,
+      "anchor": 269948,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 7,
+      "query_id": 7,
+      "recursive": true,
+      "anchor": 20134,
+      "scope_card": 2,
+      "gt_ids": [
+        721358,
+        13309
+      ]
+    },
+    {
+      "query_index": 8,
+      "query_id": 8,
+      "recursive": false,
+      "anchor": 82,
+      "scope_card": 1,
+      "gt_ids": [
+        19644
+      ]
+    },
+    {
+      "query_index": 9,
+      "query_id": 9,
+      "recursive": false,
+      "anchor": 63048,
+      "scope_card": 1,
+      "gt_ids": [
+        109436
+      ]
+    },
+    {
+      "query_index": 10,
+      "query_id": 10,
+      "recursive": true,
+      "anchor": 979,
+      "scope_card": 2844,
+      "gt_ids": [
+        316889,
+        119083,
+        1267870,
+        155772,
+        479367,
+        870637,
+        581125,
+        227,
+        879359,
+        244909
+      ]
+    },
+    {
+      "query_index": 11,
+      "query_id": 11,
+      "recursive": false,
+      "anchor": 410876,
+      "scope_card": 2,
+      "gt_ids": [
+        1503530,
+        1441052
+      ]
+    },
+    {
+      "query_index": 12,
+      "query_id": 12,
+      "recursive": false,
+      "anchor": 237856,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 13,
+      "query_id": 13,
+      "recursive": false,
+      "anchor": 136288,
+      "scope_card": 1,
+      "gt_ids": [
+        228101
+      ]
+    },
+    {
+      "query_index": 14,
+      "query_id": 14,
+      "recursive": true,
+      "anchor": 91593,
+      "scope_card": 3,
+      "gt_ids": [
+        132888,
+        624323,
+        1060013
+      ]
+    },
+    {
+      "query_index": 15,
+      "query_id": 15,
+      "recursive": false,
+      "anchor": 233548,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 16,
+      "query_id": 16,
+      "recursive": true,
+      "anchor": 168924,
+      "scope_card": 2,
+      "gt_ids": [
+        1713737,
+        313557
+      ]
+    },
+    {
+      "query_index": 17,
+      "query_id": 17,
+      "recursive": false,
+      "anchor": 371837,
+      "scope_card": 1,
+      "gt_ids": [
+        1199284
+      ]
+    },
+    {
+      "query_index": 18,
+      "query_id": 18,
+      "recursive": false,
+      "anchor": 74,
+      "scope_card": 3,
+      "gt_ids": [
+        8252,
+        147391,
+        448665
+      ]
+    },
+    {
+      "query_index": 19,
+      "query_id": 19,
+      "recursive": true,
+      "anchor": 346071,
+      "scope_card": 1,
+      "gt_ids": [
+        1046245
+      ]
+    },
+    {
+      "query_index": 20,
+      "query_id": 20,
+      "recursive": false,
+      "anchor": 327,
+      "scope_card": 11,
+      "gt_ids": [
+        2556,
+        1400254,
+        17097,
+        13375,
+        1142856,
+        277194,
+        808578,
+        186214,
+        1187600,
+        120690
+      ]
+    },
+    {
+      "query_index": 21,
+      "query_id": 21,
+      "recursive": true,
+      "anchor": 4998,
+      "scope_card": 103,
+      "gt_ids": [
+        1842045,
+        14988,
+        449336,
+        263395,
+        488547,
+        460729,
+        1131591,
+        1252630,
+        355210,
+        777521
+      ]
+    },
+    {
+      "query_index": 22,
+      "query_id": 22,
+      "recursive": true,
+      "anchor": 323546,
+      "scope_card": 4,
+      "gt_ids": [
+        921158,
+        1917369,
+        1751892,
+        1043409
+      ]
+    },
+    {
+      "query_index": 23,
+      "query_id": 23,
+      "recursive": false,
+      "anchor": 146143,
+      "scope_card": 8,
+      "gt_ids": [
+        1714899,
+        1720212,
+        774983,
+        252247,
+        794280,
+        1721937,
+        870478,
+        1720247
+      ]
+    },
+    {
+      "query_index": 24,
+      "query_id": 24,
+      "recursive": true,
+      "anchor": 6612,
+      "scope_card": 1470,
+      "gt_ids": [
+        1714320,
+        252665,
+        1344476,
+        1550878,
+        1305017,
+        1893961,
+        20206,
+        724330,
+        8002,
+        1190489
+      ]
+    },
+    {
+      "query_index": 25,
+      "query_id": 25,
+      "recursive": false,
+      "anchor": 7928,
+      "scope_card": 16,
+      "gt_ids": [
+        180944,
+        1174294,
+        364509,
+        1160669,
+        266231,
+        137399,
+        1938481,
+        26720,
+        1842633,
+        788925
+      ]
+    },
+    {
+      "query_index": 26,
+      "query_id": 26,
+      "recursive": true,
+      "anchor": 36242,
+      "scope_card": 3,
+      "gt_ids": [
+        30611,
+        1622358,
+        1226543
+      ]
+    },
+    {
+      "query_index": 27,
+      "query_id": 27,
+      "recursive": true,
+      "anchor": 82,
+      "scope_card": 13366,
+      "gt_ids": [
+        1823358,
+        292859,
+        288427,
+        193201,
+        594703,
+        140653,
+        1366743,
+        8235,
+        1002352,
+        1173649
+      ]
+    },
+    {
+      "query_index": 28,
+      "query_id": 28,
+      "recursive": true,
+      "anchor": 398,
+      "scope_card": 11555,
+      "gt_ids": [
+        214179,
+        1777746,
+        1432744,
+        862666,
+        295085,
+        511706,
+        293611,
+        1671735,
+        164750,
+        612337
+      ]
+    },
+    {
+      "query_index": 29,
+      "query_id": 29,
+      "recursive": false,
+      "anchor": 8503,
+      "scope_card": 4,
+      "gt_ids": [
+        993804,
+        663097,
+        1143292,
+        793284
+      ]
+    },
+    {
+      "query_index": 30,
+      "query_id": 30,
+      "recursive": true,
+      "anchor": 430289,
+      "scope_card": 1,
+      "gt_ids": [
+        1597040
+      ]
+    },
+    {
+      "query_index": 31,
+      "query_id": 31,
+      "recursive": true,
+      "anchor": 217450,
+      "scope_card": 2,
+      "gt_ids": [
+        465978,
+        1435264
+      ]
+    },
+    {
+      "query_index": 32,
+      "query_id": 32,
+      "recursive": true,
+      "anchor": 17901,
+      "scope_card": 12,
+      "gt_ids": [
+        898985,
+        330742,
+        223494,
+        257050,
+        1381164,
+        580356,
+        271705,
+        870487,
+        337413,
+        669987
+      ]
+    },
+    {
+      "query_index": 33,
+      "query_id": 33,
+      "recursive": false,
+      "anchor": 135,
+      "scope_card": 8,
+      "gt_ids": [
+        1436117,
+        238104,
+        134413,
+        3793,
+        4174,
+        1071724,
+        1244913,
+        81965
+      ]
+    },
+    {
+      "query_index": 34,
+      "query_id": 34,
+      "recursive": true,
+      "anchor": 285321,
+      "scope_card": 8,
+      "gt_ids": [
+        1188510,
+        761729,
+        870864,
+        1917871,
+        738508,
+        1653805,
+        1635061,
+        1418048
+      ]
+    },
+    {
+      "query_index": 35,
+      "query_id": 35,
+      "recursive": false,
+      "anchor": 13368,
+      "scope_card": 2,
+      "gt_ids": [
+        1205412,
+        1603204
+      ]
+    },
+    {
+      "query_index": 36,
+      "query_id": 36,
+      "recursive": true,
+      "anchor": 584,
+      "scope_card": 24438,
+      "gt_ids": [
+        555334,
+        1564733,
+        316146,
+        1641826,
+        799894,
+        756829,
+        208395,
+        1922995,
+        754480,
+        1239179
+      ]
+    },
+    {
+      "query_index": 37,
+      "query_id": 37,
+      "recursive": true,
+      "anchor": 229,
+      "scope_card": 10856,
+      "gt_ids": [
+        363409,
+        886671,
+        128556,
+        190980,
+        145793,
+        805100,
+        465681,
+        490787,
+        204240,
+        1371870
+      ]
+    },
+    {
+      "query_index": 38,
+      "query_id": 38,
+      "recursive": false,
+      "anchor": 1010,
+      "scope_card": 9,
+      "gt_ids": [
+        389631,
+        935778,
+        1023420,
+        1064812,
+        1222702,
+        13380,
+        1436867,
+        90642,
+        6153
+      ]
+    },
+    {
+      "query_index": 39,
+      "query_id": 39,
+      "recursive": true,
+      "anchor": 98155,
+      "scope_card": 23,
+      "gt_ids": [
+        950307,
+        1139581,
+        306972,
+        654265,
+        288495,
+        144869,
+        848454,
+        950761,
+        936280,
+        1872400
+      ]
+    },
+    {
+      "query_index": 40,
+      "query_id": 40,
+      "recursive": false,
+      "anchor": 1040,
+      "scope_card": 17,
+      "gt_ids": [
+        391205,
+        662196,
+        1267857,
+        116256,
+        300717,
+        115566,
+        417791,
+        117978,
+        27607,
+        34404
+      ]
+    },
+    {
+      "query_index": 41,
+      "query_id": 41,
+      "recursive": false,
+      "anchor": 345823,
+      "scope_card": 1,
+      "gt_ids": [
+        1045094
+      ]
+    },
+    {
+      "query_index": 42,
+      "query_id": 42,
+      "recursive": true,
+      "anchor": 428105,
+      "scope_card": 1,
+      "gt_ids": [
+        1576233
+      ]
+    },
+    {
+      "query_index": 43,
+      "query_id": 43,
+      "recursive": false,
+      "anchor": 6047,
+      "scope_card": 9,
+      "gt_ids": [
+        8318,
+        4295,
+        103875,
+        33318,
+        983650,
+        83395,
+        426970,
+        89268,
+        2278
+      ]
+    },
+    {
+      "query_index": 44,
+      "query_id": 44,
+      "recursive": true,
+      "anchor": 386347,
+      "scope_card": 1,
+      "gt_ids": [
+        1287153
+      ]
+    },
+    {
+      "query_index": 45,
+      "query_id": 45,
+      "recursive": true,
+      "anchor": 226076,
+      "scope_card": 3,
+      "gt_ids": [
+        495983,
+        1161131,
+        1490488
+      ]
+    },
+    {
+      "query_index": 46,
+      "query_id": 46,
+      "recursive": true,
+      "anchor": 448325,
+      "scope_card": 1,
+      "gt_ids": [
+        1755860
+      ]
+    },
+    {
+      "query_index": 47,
+      "query_id": 47,
+      "recursive": true,
+      "anchor": 44427,
+      "scope_card": 1,
+      "gt_ids": [
+        43186
+      ]
+    },
+    {
+      "query_index": 48,
+      "query_id": 48,
+      "recursive": false,
+      "anchor": 135277,
+      "scope_card": 1,
+      "gt_ids": [
+        225532
+      ]
+    },
+    {
+      "query_index": 49,
+      "query_id": 49,
+      "recursive": true,
+      "anchor": 84763,
+      "scope_card": 56,
+      "gt_ids": [
+        1474834,
+        1498843,
+        1480138,
+        1412175,
+        1681304,
+        1619986,
+        201874,
+        1598971,
+        317409,
+        143851
+      ]
+    },
+    {
+      "query_index": 50,
+      "query_id": 50,
+      "recursive": false,
+      "anchor": 105,
+      "scope_card": 19,
+      "gt_ids": [
+        1645378,
+        1377375,
+        141751,
+        1444509,
+        26244,
+        858890,
+        1996,
+        1614988,
+        44838,
+        812201
+      ]
+    },
+    {
+      "query_index": 51,
+      "query_id": 51,
+      "recursive": true,
+      "anchor": 5654,
+      "scope_card": 1694,
+      "gt_ids": [
+        1816995,
+        851583,
+        505349,
+        1184013,
+        1642490,
+        971081,
+        571490,
+        1925909,
+        214319,
+        1802891
+      ]
+    },
+    {
+      "query_index": 52,
+      "query_id": 52,
+      "recursive": false,
+      "anchor": 34483,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 53,
+      "query_id": 53,
+      "recursive": false,
+      "anchor": 168505,
+      "scope_card": 3,
+      "gt_ids": [
+        940259,
+        1836246,
+        961953
+      ]
+    },
+    {
+      "query_index": 54,
+      "query_id": 54,
+      "recursive": true,
+      "anchor": 321059,
+      "scope_card": 1,
+      "gt_ids": [
+        908314
+      ]
+    },
+    {
+      "query_index": 55,
+      "query_id": 55,
+      "recursive": true,
+      "anchor": 375047,
+      "scope_card": 1,
+      "gt_ids": [
+        1219007
+      ]
+    },
+    {
+      "query_index": 56,
+      "query_id": 56,
+      "recursive": true,
+      "anchor": 1034,
+      "scope_card": 1810,
+      "gt_ids": [
+        612163,
+        830191,
+        315566,
+        1663777,
+        170536,
+        293725,
+        591321,
+        419840,
+        1329688,
+        371185
+      ]
+    },
+    {
+      "query_index": 57,
+      "query_id": 57,
+      "recursive": true,
+      "anchor": 1040,
+      "scope_card": 4408,
+      "gt_ids": [
+        103913,
+        1196011,
+        1128673,
+        1857430,
+        817279,
+        777621,
+        1456264,
+        1540892,
+        607487,
+        1409645
+      ]
+    },
+    {
+      "query_index": 58,
+      "query_id": 58,
+      "recursive": true,
+      "anchor": 216,
+      "scope_card": 2087,
+      "gt_ids": [
+        1407218,
+        1386669,
+        604159,
+        1386523,
+        1371339,
+        1555081,
+        1399310,
+        1257081,
+        1691951,
+        1693591
+      ]
+    },
+    {
+      "query_index": 59,
+      "query_id": 59,
+      "recursive": true,
+      "anchor": 289602,
+      "scope_card": 2,
+      "gt_ids": [
+        1779721,
+        757995
+      ]
+    },
+    {
+      "query_index": 60,
+      "query_id": 60,
+      "recursive": true,
+      "anchor": 1040,
+      "scope_card": 4408,
+      "gt_ids": [
+        1839125,
+        598626,
+        969161,
+        1073580,
+        1685121,
+        479314,
+        985867,
+        537859,
+        398027,
+        450545
+      ]
+    },
+    {
+      "query_index": 61,
+      "query_id": 61,
+      "recursive": false,
+      "anchor": 441894,
+      "scope_card": 1,
+      "gt_ids": [
+        1705049
+      ]
+    },
+    {
+      "query_index": 62,
+      "query_id": 62,
+      "recursive": false,
+      "anchor": 441,
+      "scope_card": 22,
+      "gt_ids": [
+        204845,
+        87539,
+        2281,
+        393638,
+        318514,
+        1626417,
+        909327,
+        5944,
+        1780388,
+        1407286
+      ]
+    },
+    {
+      "query_index": 63,
+      "query_id": 63,
+      "recursive": false,
+      "anchor": 8589,
+      "scope_card": 1,
+      "gt_ids": [
+        3798
+      ]
+    },
+    {
+      "query_index": 64,
+      "query_id": 64,
+      "recursive": false,
+      "anchor": 299266,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 65,
+      "query_id": 65,
+      "recursive": false,
+      "anchor": 466,
+      "scope_card": 22,
+      "gt_ids": [
+        110720,
+        652326,
+        173746,
+        236057,
+        170956,
+        774126,
+        207171,
+        86202,
+        1499,
+        80252
+      ]
+    },
+    {
+      "query_index": 66,
+      "query_id": 66,
+      "recursive": true,
+      "anchor": 253156,
+      "scope_card": 4,
+      "gt_ids": [
+        1884757,
+        1883572,
+        1883554,
+        600082
+      ]
+    },
+    {
+      "query_index": 67,
+      "query_id": 67,
+      "recursive": false,
+      "anchor": 351355,
+      "scope_card": 1,
+      "gt_ids": [
+        1078105
+      ]
+    },
+    {
+      "query_index": 68,
+      "query_id": 68,
+      "recursive": true,
+      "anchor": 441,
+      "scope_card": 47005,
+      "gt_ids": [
+        426064,
+        361410,
+        1392827,
+        927537,
+        1451333,
+        1474451,
+        91257,
+        1404670,
+        1430562,
+        1751823
+      ]
+    },
+    {
+      "query_index": 69,
+      "query_id": 69,
+      "recursive": false,
+      "anchor": 1102,
+      "scope_card": 2,
+      "gt_ids": [
+        711905,
+        104840
+      ]
+    },
+    {
+      "query_index": 70,
+      "query_id": 70,
+      "recursive": true,
+      "anchor": 261658,
+      "scope_card": 2,
+      "gt_ids": [
+        635551,
+        635515
+      ]
+    },
+    {
+      "query_index": 71,
+      "query_id": 71,
+      "recursive": true,
+      "anchor": 215,
+      "scope_card": 3073,
+      "gt_ids": [
+        789546,
+        174674,
+        94298,
+        1785764,
+        227707,
+        300321,
+        1839291,
+        1321957,
+        765745,
+        244132
+      ]
+    },
+    {
+      "query_index": 72,
+      "query_id": 72,
+      "recursive": false,
+      "anchor": 1010,
+      "scope_card": 9,
+      "gt_ids": [
+        13380,
+        90642,
+        1064812,
+        1023420,
+        935778,
+        6153,
+        1436867,
+        389631,
+        1222702
+      ]
+    },
+    {
+      "query_index": 73,
+      "query_id": 73,
+      "recursive": false,
+      "anchor": 466184,
+      "scope_card": 1,
+      "gt_ids": [
+        1927401
+      ]
+    },
+    {
+      "query_index": 74,
+      "query_id": 74,
+      "recursive": false,
+      "anchor": 275386,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 75,
+      "query_id": 75,
+      "recursive": true,
+      "anchor": 226133,
+      "scope_card": 18,
+      "gt_ids": [
+        496216,
+        500349,
+        500338,
+        500345,
+        500330,
+        500346,
+        500351,
+        500335,
+        500331,
+        500356
+      ]
+    },
+    {
+      "query_index": 76,
+      "query_id": 76,
+      "recursive": false,
+      "anchor": 288598,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 77,
+      "query_id": 77,
+      "recursive": true,
+      "anchor": 111,
+      "scope_card": 3785,
+      "gt_ids": [
+        955640,
+        114795,
+        1713214,
+        1644839,
+        556575,
+        1934773,
+        974388,
+        335999,
+        227470,
+        1375414
+      ]
+    },
+    {
+      "query_index": 78,
+      "query_id": 78,
+      "recursive": false,
+      "anchor": 163154,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 79,
+      "query_id": 79,
+      "recursive": false,
+      "anchor": 215,
+      "scope_card": 74,
+      "gt_ids": [
+        141427,
+        2025,
+        12628,
+        173632,
+        1620672,
+        429679,
+        643105,
+        1911480,
+        1899561,
+        1062611
+      ]
+    },
+    {
+      "query_index": 80,
+      "query_id": 80,
+      "recursive": false,
+      "anchor": 356726,
+      "scope_card": 1,
+      "gt_ids": [
+        1113721
+      ]
+    },
+    {
+      "query_index": 81,
+      "query_id": 81,
+      "recursive": true,
+      "anchor": 556,
+      "scope_card": 5228,
+      "gt_ids": [
+        679352,
+        879092,
+        25204,
+        1529767,
+        1352191,
+        1605863,
+        1594455,
+        1743704,
+        1259764,
+        858092
+      ]
+    },
+    {
+      "query_index": 82,
+      "query_id": 82,
+      "recursive": true,
+      "anchor": 152662,
+      "scope_card": 13,
+      "gt_ids": [
+        1422821,
+        268722,
+        387907,
+        844863,
+        469847,
+        1677513,
+        817338,
+        723986,
+        1282614,
+        1384364
+      ]
+    },
+    {
+      "query_index": 83,
+      "query_id": 83,
+      "recursive": true,
+      "anchor": 365,
+      "scope_card": 26290,
+      "gt_ids": [
+        1291985,
+        1198726,
+        457679,
+        1719686,
+        1424766,
+        1300672,
+        992592,
+        855571,
+        1427646,
+        1478978
+      ]
+    },
+    {
+      "query_index": 84,
+      "query_id": 84,
+      "recursive": false,
+      "anchor": 332279,
+      "scope_card": 3,
+      "gt_ids": [
+        1724049,
+        969567,
+        994038
+      ]
+    },
+    {
+      "query_index": 85,
+      "query_id": 85,
+      "recursive": true,
+      "anchor": 332138,
+      "scope_card": 1,
+      "gt_ids": [
+        968791
+      ]
+    },
+    {
+      "query_index": 86,
+      "query_id": 86,
+      "recursive": false,
+      "anchor": 316723,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 87,
+      "query_id": 87,
+      "recursive": true,
+      "anchor": 194229,
+      "scope_card": 1,
+      "gt_ids": [
+        389913
+      ]
+    },
+    {
+      "query_index": 88,
+      "query_id": 88,
+      "recursive": false,
+      "anchor": 1350,
+      "scope_card": 2,
+      "gt_ids": [
+        459084,
+        42955
+      ]
+    },
+    {
+      "query_index": 89,
+      "query_id": 89,
+      "recursive": true,
+      "anchor": 441,
+      "scope_card": 47005,
+      "gt_ids": [
+        306454,
+        627058,
+        271679,
+        91074,
+        578373,
+        1605605,
+        124503,
+        1722827,
+        327295,
+        1155570
+      ]
+    },
+    {
+      "query_index": 90,
+      "query_id": 90,
+      "recursive": false,
+      "anchor": 979,
+      "scope_card": 44,
+      "gt_ids": [
+        336231,
+        1812576,
+        23755,
+        3948,
+        125242,
+        3737,
+        1854902,
+        10178,
+        29536,
+        373563
+      ]
+    },
+    {
+      "query_index": 91,
+      "query_id": 91,
+      "recursive": true,
+      "anchor": 105,
+      "scope_card": 102325,
+      "gt_ids": [
+        39420,
+        508807,
+        466652,
+        84721,
+        86702,
+        1167206,
+        498844,
+        92485,
+        882966,
+        682229
+      ]
+    },
+    {
+      "query_index": 92,
+      "query_id": 92,
+      "recursive": true,
+      "anchor": 93151,
+      "scope_card": 1,
+      "gt_ids": [
+        135768
+      ]
+    },
+    {
+      "query_index": 93,
+      "query_id": 93,
+      "recursive": false,
+      "anchor": 133091,
+      "scope_card": 6,
+      "gt_ids": [
+        745917,
+        239220,
+        333796,
+        376353,
+        220096,
+        1176839
+      ]
+    },
+    {
+      "query_index": 94,
+      "query_id": 94,
+      "recursive": true,
+      "anchor": 103852,
+      "scope_card": 33,
+      "gt_ids": [
+        220819,
+        258529,
+        1026364,
+        1297455,
+        1695326,
+        272767,
+        272785,
+        165562,
+        208087,
+        155097
+      ]
+    },
+    {
+      "query_index": 95,
+      "query_id": 95,
+      "recursive": false,
+      "anchor": 40185,
+      "scope_card": 11,
+      "gt_ids": [
+        1790824,
+        1890045,
+        1200991,
+        1114784,
+        35742,
+        109344,
+        348490,
+        96322,
+        37643,
+        1280355
+      ]
+    },
+    {
+      "query_index": 96,
+      "query_id": 96,
+      "recursive": false,
+      "anchor": 120,
+      "scope_card": 43,
+      "gt_ids": [
+        1624164,
+        156219,
+        25429,
+        411790,
+        238076,
+        138595,
+        894368,
+        173094,
+        934868,
+        136504
+      ]
+    },
+    {
+      "query_index": 97,
+      "query_id": 97,
+      "recursive": false,
+      "anchor": 403860,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 98,
+      "query_id": 98,
+      "recursive": true,
+      "anchor": 198514,
+      "scope_card": 9,
+      "gt_ids": [
+        721411,
+        716539,
+        716560,
+        404113,
+        716559,
+        716591,
+        716567,
+        733503,
+        404115
+      ]
+    },
+    {
+      "query_index": 99,
+      "query_id": 99,
+      "recursive": true,
+      "anchor": 391462,
+      "scope_card": 5,
+      "gt_ids": [
+        1765478,
+        1316296,
+        1415066,
+        1696584,
+        1440838
+      ]
+    },
+    {
+      "query_index": 100,
+      "query_id": 100,
+      "recursive": false,
+      "anchor": 120,
+      "scope_card": 43,
+      "gt_ids": [
+        205069,
+        267136,
+        136504,
+        93755,
+        1624164,
+        382786,
+        25429,
+        238076,
+        623687,
+        980156
+      ]
+    },
+    {
+      "query_index": 101,
+      "query_id": 101,
+      "recursive": false,
+      "anchor": 229428,
+      "scope_card": 2,
+      "gt_ids": [
+        508698,
+        1903683
+      ]
+    },
+    {
+      "query_index": 102,
+      "query_id": 102,
+      "recursive": false,
+      "anchor": 979,
+      "scope_card": 44,
+      "gt_ids": [
+        427540,
+        126721,
+        324085,
+        125242,
+        1716976,
+        355134,
+        463087,
+        11254,
+        251156,
+        1639817
+      ]
+    },
+    {
+      "query_index": 103,
+      "query_id": 103,
+      "recursive": true,
+      "anchor": 5654,
+      "scope_card": 1694,
+      "gt_ids": [
+        100133,
+        100122,
+        100128,
+        1514400,
+        1190973,
+        480606,
+        167055,
+        1190977,
+        1190982,
+        96706
+      ]
+    },
+    {
+      "query_index": 104,
+      "query_id": 104,
+      "recursive": false,
+      "anchor": 174273,
+      "scope_card": 1,
+      "gt_ids": [
+        329314
+      ]
+    },
+    {
+      "query_index": 105,
+      "query_id": 105,
+      "recursive": false,
+      "anchor": 2141,
+      "scope_card": 2,
+      "gt_ids": [
+        1306031,
+        11964
+      ]
+    },
+    {
+      "query_index": 106,
+      "query_id": 106,
+      "recursive": true,
+      "anchor": 265200,
+      "scope_card": 1,
+      "gt_ids": [
+        650760
+      ]
+    },
+    {
+      "query_index": 107,
+      "query_id": 107,
+      "recursive": false,
+      "anchor": 353465,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 108,
+      "query_id": 108,
+      "recursive": false,
+      "anchor": 45384,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 109,
+      "query_id": 109,
+      "recursive": false,
+      "anchor": 18242,
+      "scope_card": 1,
+      "gt_ids": [
+        1646346
+      ]
+    },
+    {
+      "query_index": 110,
+      "query_id": 110,
+      "recursive": false,
+      "anchor": 173792,
+      "scope_card": 2,
+      "gt_ids": [
+        1372354,
+        1888283
+      ]
+    },
+    {
+      "query_index": 111,
+      "query_id": 111,
+      "recursive": false,
+      "anchor": 991,
+      "scope_card": 19,
+      "gt_ids": [
+        1169857,
+        1199598,
+        471991,
+        8663,
+        230530,
+        404299,
+        1023041,
+        1177623,
+        563956,
+        111023
+      ]
+    },
+    {
+      "query_index": 112,
+      "query_id": 112,
+      "recursive": true,
+      "anchor": 1010,
+      "scope_card": 16755,
+      "gt_ids": [
+        43871,
+        1531237,
+        1468868,
+        1263043,
+        82929,
+        1050135,
+        911894,
+        563764,
+        15177,
+        1320727
+      ]
+    },
+    {
+      "query_index": 113,
+      "query_id": 113,
+      "recursive": true,
+      "anchor": 33508,
+      "scope_card": 89,
+      "gt_ids": [
+        787140,
+        161275,
+        77099,
+        660214,
+        355185,
+        566943,
+        1508729,
+        905348,
+        1329302,
+        542755
+      ]
+    },
+    {
+      "query_index": 114,
+      "query_id": 114,
+      "recursive": false,
+      "anchor": 584,
+      "scope_card": 9,
+      "gt_ids": [
+        586481,
+        364608,
+        2153,
+        624540,
+        1491116,
+        18080,
+        363327,
+        430201,
+        1280070
+      ]
+    },
+    {
+      "query_index": 115,
+      "query_id": 115,
+      "recursive": false,
+      "anchor": 378636,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 116,
+      "query_id": 116,
+      "recursive": true,
+      "anchor": 3728,
+      "scope_card": 64,
+      "gt_ids": [
+        1321171,
+        723680,
+        180374,
+        250947,
+        1204341,
+        582294,
+        1511119,
+        176699,
+        272772,
+        1392260
+      ]
+    },
+    {
+      "query_index": 117,
+      "query_id": 117,
+      "recursive": true,
+      "anchor": 398,
+      "scope_card": 11555,
+      "gt_ids": [
+        306014,
+        1378304,
+        846370,
+        1611151,
+        245477,
+        585129,
+        1431487,
+        1004348,
+        583796,
+        779789
+      ]
+    },
+    {
+      "query_index": 118,
+      "query_id": 118,
+      "recursive": false,
+      "anchor": 242,
+      "scope_card": 28,
+      "gt_ids": [
+        1569115,
+        1890458,
+        128274,
+        298855,
+        85861,
+        3318,
+        7645,
+        6546,
+        1591950,
+        9848
+      ]
+    },
+    {
+      "query_index": 119,
+      "query_id": 119,
+      "recursive": false,
+      "anchor": 244405,
+      "scope_card": 2,
+      "gt_ids": [
+        1831930,
+        566643
+      ]
+    },
+    {
+      "query_index": 120,
+      "query_id": 120,
+      "recursive": true,
+      "anchor": 7895,
+      "scope_card": 418,
+      "gt_ids": [
+        1557998,
+        1065533,
+        197486,
+        316612,
+        1320892,
+        1615632,
+        1777019,
+        1298982,
+        763700,
+        97244
+      ]
+    },
+    {
+      "query_index": 121,
+      "query_id": 121,
+      "recursive": true,
+      "anchor": 154676,
+      "scope_card": 3,
+      "gt_ids": [
+        273593,
+        295735,
+        1846190
+      ]
+    },
+    {
+      "query_index": 122,
+      "query_id": 122,
+      "recursive": false,
+      "anchor": 276563,
+      "scope_card": 2,
+      "gt_ids": [
+        770217,
+        1666833
+      ]
+    },
+    {
+      "query_index": 123,
+      "query_id": 123,
+      "recursive": true,
+      "anchor": 122623,
+      "scope_card": 33,
+      "gt_ids": [
+        767715,
+        1749381,
+        254442,
+        1730652,
+        1730606,
+        195280,
+        1730664,
+        334121,
+        1749409,
+        1730636
+      ]
+    },
+    {
+      "query_index": 124,
+      "query_id": 124,
+      "recursive": true,
+      "anchor": 337807,
+      "scope_card": 1,
+      "gt_ids": [
+        999886
+      ]
+    },
+    {
+      "query_index": 125,
+      "query_id": 125,
+      "recursive": false,
+      "anchor": 402632,
+      "scope_card": 1,
+      "gt_ids": [
+        1387847
+      ]
+    },
+    {
+      "query_index": 126,
+      "query_id": 126,
+      "recursive": true,
+      "anchor": 14924,
+      "scope_card": 188,
+      "gt_ids": [
+        118330,
+        118307,
+        1250854,
+        299928,
+        1172694,
+        381161,
+        313461,
+        281974,
+        619728,
+        241246
+      ]
+    },
+    {
+      "query_index": 127,
+      "query_id": 127,
+      "recursive": false,
+      "anchor": 156582,
+      "scope_card": 4,
+      "gt_ids": [
+        278416,
+        1832364,
+        330523,
+        1601312
+      ]
+    },
+    {
+      "query_index": 128,
+      "query_id": 128,
+      "recursive": false,
+      "anchor": 33,
+      "scope_card": 22,
+      "gt_ids": [
+        725016,
+        523893,
+        790504,
+        26528,
+        1918804,
+        1862,
+        696160,
+        108736,
+        439581,
+        81642
+      ]
+    },
+    {
+      "query_index": 129,
+      "query_id": 129,
+      "recursive": true,
+      "anchor": 248357,
+      "scope_card": 1,
+      "gt_ids": [
+        581808
+      ]
+    },
+    {
+      "query_index": 130,
+      "query_id": 130,
+      "recursive": false,
+      "anchor": 267265,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 131,
+      "query_id": 131,
+      "recursive": false,
+      "anchor": 141535,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 132,
+      "query_id": 132,
+      "recursive": false,
+      "anchor": 176383,
+      "scope_card": 9,
+      "gt_ids": [
+        889213,
+        1098435,
+        1710848,
+        903003,
+        672768,
+        767566,
+        856899,
+        1841979,
+        403882
+      ]
+    },
+    {
+      "query_index": 133,
+      "query_id": 133,
+      "recursive": true,
+      "anchor": 115161,
+      "scope_card": 12,
+      "gt_ids": [
+        1776929,
+        404306,
+        1679308,
+        310084,
+        697123,
+        411315,
+        379478,
+        177977,
+        960234,
+        410301
+      ]
+    },
+    {
+      "query_index": 134,
+      "query_id": 134,
+      "recursive": true,
+      "anchor": 143467,
+      "scope_card": 7,
+      "gt_ids": [
+        1305044,
+        1192079,
+        1525973,
+        1006856,
+        245781,
+        494203,
+        407227
+      ]
+    },
+    {
+      "query_index": 135,
+      "query_id": 135,
+      "recursive": false,
+      "anchor": 18063,
+      "scope_card": 7,
+      "gt_ids": [
+        107652,
+        108136,
+        91077,
+        11362,
+        962742,
+        522365,
+        102171
+      ]
+    },
+    {
+      "query_index": 136,
+      "query_id": 136,
+      "recursive": false,
+      "anchor": 1,
+      "scope_card": 8,
+      "gt_ids": [
+        3969,
+        25226,
+        750977,
+        335686,
+        88031,
+        12458,
+        104557,
+        9690
+      ]
+    },
+    {
+      "query_index": 137,
+      "query_id": 137,
+      "recursive": false,
+      "anchor": 441,
+      "scope_card": 22,
+      "gt_ids": [
+        1697442,
+        226804,
+        204845,
+        393638,
+        1570545,
+        2281,
+        77893,
+        1184238,
+        1626417,
+        318514
+      ]
+    },
+    {
+      "query_index": 138,
+      "query_id": 138,
+      "recursive": false,
+      "anchor": 296,
+      "scope_card": 7,
+      "gt_ids": [
+        1941396,
+        8116,
+        706447,
+        853159,
+        338472,
+        1254519,
+        1711759
+      ]
+    },
+    {
+      "query_index": 139,
+      "query_id": 139,
+      "recursive": false,
+      "anchor": 12268,
+      "scope_card": 2,
+      "gt_ids": [
+        203998,
+        6303
+      ]
+    },
+    {
+      "query_index": 140,
+      "query_id": 140,
+      "recursive": false,
+      "anchor": 89718,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 141,
+      "query_id": 141,
+      "recursive": true,
+      "anchor": 127496,
+      "scope_card": 4,
+      "gt_ids": [
+        207193,
+        206508,
+        444565,
+        212219
+      ]
+    },
+    {
+      "query_index": 142,
+      "query_id": 142,
+      "recursive": true,
+      "anchor": 173073,
+      "scope_card": 6,
+      "gt_ids": [
+        1106449,
+        384482,
+        1170116,
+        325800,
+        353648,
+        1851231
+      ]
+    },
+    {
+      "query_index": 143,
+      "query_id": 143,
+      "recursive": true,
+      "anchor": 7053,
+      "scope_card": 2060,
+      "gt_ids": [
+        1326931,
+        1446995,
+        24651,
+        210540,
+        239824,
+        796708,
+        427158,
+        239283,
+        735498,
+        567539
+      ]
+    },
+    {
+      "query_index": 144,
+      "query_id": 144,
+      "recursive": false,
+      "anchor": 191548,
+      "scope_card": 2,
+      "gt_ids": [
+        1479011,
+        381577
+      ]
+    },
+    {
+      "query_index": 145,
+      "query_id": 145,
+      "recursive": true,
+      "anchor": 318809,
+      "scope_card": 1,
+      "gt_ids": [
+        896116
+      ]
+    },
+    {
+      "query_index": 146,
+      "query_id": 146,
+      "recursive": true,
+      "anchor": 160364,
+      "scope_card": 1,
+      "gt_ids": [
+        288415
+      ]
+    },
+    {
+      "query_index": 147,
+      "query_id": 147,
+      "recursive": true,
+      "anchor": 350662,
+      "scope_card": 1,
+      "gt_ids": [
+        1074359
+      ]
+    },
+    {
+      "query_index": 148,
+      "query_id": 148,
+      "recursive": false,
+      "anchor": 395966,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 149,
+      "query_id": 149,
+      "recursive": false,
+      "anchor": 8696,
+      "scope_card": 9,
+      "gt_ids": [
+        1210260,
+        483708,
+        435686,
+        803580,
+        1461668,
+        328539,
+        275939,
+        119662,
+        1200494
+      ]
+    },
+    {
+      "query_index": 150,
+      "query_id": 150,
+      "recursive": true,
+      "anchor": 187712,
+      "scope_card": 2,
+      "gt_ids": [
+        370293,
+        1461990
+      ]
+    },
+    {
+      "query_index": 151,
+      "query_id": 151,
+      "recursive": false,
+      "anchor": 79658,
+      "scope_card": 21,
+      "gt_ids": [
+        380212,
+        700191,
+        1186639,
+        826040,
+        1701589,
+        380382,
+        1183659,
+        112329,
+        1817192,
+        247775
+      ]
+    },
+    {
+      "query_index": 152,
+      "query_id": 152,
+      "recursive": false,
+      "anchor": 108157,
+      "scope_card": 2,
+      "gt_ids": [
+        246134,
+        908564
+      ]
+    },
+    {
+      "query_index": 153,
+      "query_id": 153,
+      "recursive": false,
+      "anchor": 111639,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 154,
+      "query_id": 154,
+      "recursive": true,
+      "anchor": 105,
+      "scope_card": 102325,
+      "gt_ids": [
+        696624,
+        356599,
+        973374,
+        472289,
+        334927,
+        87362,
+        1645952,
+        87621,
+        1195803,
+        373248
+      ]
+    },
+    {
+      "query_index": 155,
+      "query_id": 155,
+      "recursive": true,
+      "anchor": 365,
+      "scope_card": 26290,
+      "gt_ids": [
+        666080,
+        1075373,
+        288688,
+        926346,
+        1245247,
+        439778,
+        132192,
+        1923931,
+        506324,
+        343673
+      ]
+    },
+    {
+      "query_index": 156,
+      "query_id": 156,
+      "recursive": true,
+      "anchor": 5654,
+      "scope_card": 1694,
+      "gt_ids": [
+        1822878,
+        532416,
+        20916,
+        263371,
+        965252,
+        778830,
+        1074373,
+        667862,
+        1176867,
+        100122
+      ]
+    },
+    {
+      "query_index": 157,
+      "query_id": 157,
+      "recursive": false,
+      "anchor": 230021,
+      "scope_card": 2,
+      "gt_ids": [
+        510959,
+        1608835
+      ]
+    },
+    {
+      "query_index": 158,
+      "query_id": 158,
+      "recursive": false,
+      "anchor": 17519,
+      "scope_card": 9,
+      "gt_ids": [
+        10738,
+        450135,
+        787462,
+        857596,
+        837253,
+        1071096,
+        1300631,
+        347792,
+        1192449
+      ]
+    },
+    {
+      "query_index": 159,
+      "query_id": 159,
+      "recursive": true,
+      "anchor": 74,
+      "scope_card": 16976,
+      "gt_ids": [
+        1364452,
+        320989,
+        1744994,
+        1787726,
+        119266,
+        1115557,
+        320984,
+        1587765,
+        667480,
+        667460
+      ]
+    },
+    {
+      "query_index": 160,
+      "query_id": 160,
+      "recursive": true,
+      "anchor": 97047,
+      "scope_card": 2,
+      "gt_ids": [
+        142777,
+        1368725
+      ]
+    },
+    {
+      "query_index": 161,
+      "query_id": 161,
+      "recursive": false,
+      "anchor": 154465,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 162,
+      "query_id": 162,
+      "recursive": false,
+      "anchor": 203598,
+      "scope_card": 5,
+      "gt_ids": [
+        1266736,
+        1266739,
+        1266801,
+        1266811,
+        1266780
+      ]
+    },
+    {
+      "query_index": 163,
+      "query_id": 163,
+      "recursive": false,
+      "anchor": 441,
+      "scope_card": 22,
+      "gt_ids": [
+        318514,
+        1407286,
+        204845,
+        86651,
+        198610,
+        226804,
+        77893,
+        1184238,
+        1626417,
+        5944
+      ]
+    },
+    {
+      "query_index": 164,
+      "query_id": 164,
+      "recursive": true,
+      "anchor": 63,
+      "scope_card": 6057,
+      "gt_ids": [
+        1508451,
+        674571,
+        1122782,
+        1614854,
+        333258,
+        737747,
+        1265659,
+        522449,
+        1252649,
+        973999
+      ]
+    },
+    {
+      "query_index": 165,
+      "query_id": 165,
+      "recursive": false,
+      "anchor": 288432,
+      "scope_card": 1,
+      "gt_ids": [
+        752656
+      ]
+    },
+    {
+      "query_index": 166,
+      "query_id": 166,
+      "recursive": false,
+      "anchor": 171257,
+      "scope_card": 1,
+      "gt_ids": [
+        320348
+      ]
+    },
+    {
+      "query_index": 167,
+      "query_id": 167,
+      "recursive": false,
+      "anchor": 95650,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 168,
+      "query_id": 168,
+      "recursive": false,
+      "anchor": 423261,
+      "scope_card": 1,
+      "gt_ids": [
+        1531566
+      ]
+    },
+    {
+      "query_index": 169,
+      "query_id": 169,
+      "recursive": false,
+      "anchor": 169006,
+      "scope_card": 2,
+      "gt_ids": [
+        313797,
+        1499443
+      ]
+    },
+    {
+      "query_index": 170,
+      "query_id": 170,
+      "recursive": true,
+      "anchor": 91813,
+      "scope_card": 2,
+      "gt_ids": [
+        133251,
+        1755495
+      ]
+    },
+    {
+      "query_index": 171,
+      "query_id": 171,
+      "recursive": false,
+      "anchor": 430609,
+      "scope_card": 1,
+      "gt_ids": [
+        1723892
+      ]
+    },
+    {
+      "query_index": 172,
+      "query_id": 172,
+      "recursive": true,
+      "anchor": 229,
+      "scope_card": 10856,
+      "gt_ids": [
+        719671,
+        12705,
+        254315,
+        299605,
+        149702,
+        1727579,
+        736,
+        552978,
+        1877288,
+        166335
+      ]
+    },
+    {
+      "query_index": 173,
+      "query_id": 173,
+      "recursive": true,
+      "anchor": 177001,
+      "scope_card": 9,
+      "gt_ids": [
+        830395,
+        338154,
+        654802,
+        1639906,
+        1175360,
+        604076,
+        823654,
+        816017,
+        1157481
+      ]
+    },
+    {
+      "query_index": 174,
+      "query_id": 174,
+      "recursive": true,
+      "anchor": 63,
+      "scope_card": 6057,
+      "gt_ids": [
+        1796494,
+        1809939,
+        717028,
+        1826172,
+        282188,
+        740588,
+        1826171,
+        1337815,
+        1265659,
+        1526327
+      ]
+    },
+    {
+      "query_index": 175,
+      "query_id": 175,
+      "recursive": false,
+      "anchor": 9840,
+      "scope_card": 3,
+      "gt_ids": [
+        1629098,
+        4644,
+        1799523
+      ]
+    },
+    {
+      "query_index": 176,
+      "query_id": 176,
+      "recursive": true,
+      "anchor": 74256,
+      "scope_card": 9,
+      "gt_ids": [
+        103892,
+        198529,
+        1486215,
+        231924,
+        264636,
+        146881,
+        1301062,
+        561033,
+        105176
+      ]
+    },
+    {
+      "query_index": 177,
+      "query_id": 177,
+      "recursive": false,
+      "anchor": 307432,
+      "scope_card": 12,
+      "gt_ids": [
+        1022997,
+        1617109,
+        1303166,
+        1329444,
+        1039527,
+        1885602,
+        1462688,
+        1046258,
+        1308047,
+        1323010
+      ]
+    },
+    {
+      "query_index": 178,
+      "query_id": 178,
+      "recursive": false,
+      "anchor": 320,
+      "scope_card": 39,
+      "gt_ids": [
+        1234392,
+        469299,
+        951242,
+        709210,
+        412417,
+        642559,
+        1334340,
+        103791,
+        1119478,
+        314144
+      ]
+    },
+    {
+      "query_index": 179,
+      "query_id": 179,
+      "recursive": true,
+      "anchor": 460403,
+      "scope_card": 1,
+      "gt_ids": [
+        1863860
+      ]
+    },
+    {
+      "query_index": 180,
+      "query_id": 180,
+      "recursive": false,
+      "anchor": 171022,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 181,
+      "query_id": 181,
+      "recursive": false,
+      "anchor": 584,
+      "scope_card": 9,
+      "gt_ids": [
+        2153,
+        18080,
+        624540,
+        1491116,
+        363327,
+        364608,
+        586481,
+        430201,
+        1280070
+      ]
+    },
+    {
+      "query_index": 182,
+      "query_id": 182,
+      "recursive": true,
+      "anchor": 198843,
+      "scope_card": 1,
+      "gt_ids": [
+        405229
+      ]
+    },
+    {
+      "query_index": 183,
+      "query_id": 183,
+      "recursive": false,
+      "anchor": 56861,
+      "scope_card": 2,
+      "gt_ids": [
+        77490,
+        690283
+      ]
+    },
+    {
+      "query_index": 184,
+      "query_id": 184,
+      "recursive": true,
+      "anchor": 78988,
+      "scope_card": 7,
+      "gt_ids": [
+        246862,
+        119703,
+        582232,
+        497148,
+        111318,
+        1603144,
+        135326
+      ]
+    },
+    {
+      "query_index": 185,
+      "query_id": 185,
+      "recursive": true,
+      "anchor": 441808,
+      "scope_card": 1,
+      "gt_ids": [
+        1704346
+      ]
+    },
+    {
+      "query_index": 186,
+      "query_id": 186,
+      "recursive": true,
+      "anchor": 284767,
+      "scope_card": 1,
+      "gt_ids": [
+        735900
+      ]
+    },
+    {
+      "query_index": 187,
+      "query_id": 187,
+      "recursive": true,
+      "anchor": 200781,
+      "scope_card": 4,
+      "gt_ids": [
+        1216594,
+        1430689,
+        1181472,
+        411522
+      ]
+    },
+    {
+      "query_index": 188,
+      "query_id": 188,
+      "recursive": true,
+      "anchor": 111,
+      "scope_card": 3785,
+      "gt_ids": [
+        1874547,
+        1478005,
+        366753,
+        177721,
+        1934773,
+        556575,
+        597005,
+        799257,
+        495424,
+        1762495
+      ]
+    },
+    {
+      "query_index": 189,
+      "query_id": 189,
+      "recursive": true,
+      "anchor": 398,
+      "scope_card": 11555,
+      "gt_ids": [
+        546478,
+        380486,
+        1426144,
+        1010535,
+        899869,
+        1355771,
+        1875609,
+        1678663,
+        1127958,
+        1667865
+      ]
+    },
+    {
+      "query_index": 190,
+      "query_id": 190,
+      "recursive": false,
+      "anchor": 232358,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 191,
+      "query_id": 191,
+      "recursive": true,
+      "anchor": 229,
+      "scope_card": 10856,
+      "gt_ids": [
+        1702607,
+        350578,
+        226354,
+        1737925,
+        360567,
+        150553,
+        387606,
+        1412085,
+        522683,
+        94902
+      ]
+    },
+    {
+      "query_index": 192,
+      "query_id": 192,
+      "recursive": true,
+      "anchor": 140648,
+      "scope_card": 5,
+      "gt_ids": [
+        238319,
+        1828829,
+        1080341,
+        1118239,
+        1120154
+      ]
+    },
+    {
+      "query_index": 193,
+      "query_id": 193,
+      "recursive": true,
+      "anchor": 237074,
+      "scope_card": 1,
+      "gt_ids": [
+        538056
+      ]
+    },
+    {
+      "query_index": 194,
+      "query_id": 194,
+      "recursive": true,
+      "anchor": 107392,
+      "scope_card": 70,
+      "gt_ids": [
+        1166935,
+        1245483,
+        377342,
+        458990,
+        1284751,
+        503520,
+        481358,
+        1322318,
+        1106983,
+        1180945
+      ]
+    },
+    {
+      "query_index": 195,
+      "query_id": 195,
+      "recursive": false,
+      "anchor": 404213,
+      "scope_card": 1,
+      "gt_ids": [
+        1398696
+      ]
+    },
+    {
+      "query_index": 196,
+      "query_id": 196,
+      "recursive": false,
+      "anchor": 30520,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 197,
+      "query_id": 197,
+      "recursive": false,
+      "anchor": 63,
+      "scope_card": 4,
+      "gt_ids": [
+        135721,
+        653884,
+        10304,
+        1704563
+      ]
+    },
+    {
+      "query_index": 198,
+      "query_id": 198,
+      "recursive": false,
+      "anchor": 104782,
+      "scope_card": 1,
+      "gt_ids": [
+        156788
+      ]
+    },
+    {
+      "query_index": 199,
+      "query_id": 199,
+      "recursive": true,
+      "anchor": 464840,
+      "scope_card": 1,
+      "gt_ids": [
+        1916511
+      ]
+    },
+    {
+      "query_index": 200,
+      "query_id": 200,
+      "recursive": true,
+      "anchor": 75124,
+      "scope_card": 28,
+      "gt_ids": [
+        1502100,
+        962050,
+        1303702,
+        655384,
+        671148,
+        1170075,
+        801681,
+        1472518,
+        796587,
+        105230
+      ]
+    },
+    {
+      "query_index": 201,
+      "query_id": 201,
+      "recursive": true,
+      "anchor": 398,
+      "scope_card": 11555,
+      "gt_ids": [
+        861188,
+        56760,
+        560164,
+        673045,
+        421040,
+        114897,
+        1309468,
+        152536,
+        1777746,
+        1044164
+      ]
+    },
+    {
+      "query_index": 202,
+      "query_id": 202,
+      "recursive": true,
+      "anchor": 144913,
+      "scope_card": 10,
+      "gt_ids": [
+        607064,
+        412050,
+        1424940,
+        1605053,
+        1599929,
+        779068,
+        443453,
+        473933,
+        323166,
+        249312
+      ]
+    },
+    {
+      "query_index": 203,
+      "query_id": 203,
+      "recursive": true,
+      "anchor": 17217,
+      "scope_card": 71,
+      "gt_ids": [
+        460485,
+        1612482,
+        494397,
+        550670,
+        262706,
+        237733,
+        880050,
+        111673,
+        748191,
+        696461
+      ]
+    },
+    {
+      "query_index": 204,
+      "query_id": 204,
+      "recursive": true,
+      "anchor": 63,
+      "scope_card": 6057,
+      "gt_ids": [
+        1785184,
+        80826,
+        679720,
+        1883273,
+        755349,
+        639509,
+        38049,
+        1675754,
+        12531,
+        674571
+      ]
+    },
+    {
+      "query_index": 205,
+      "query_id": 205,
+      "recursive": false,
+      "anchor": 276550,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 206,
+      "query_id": 206,
+      "recursive": false,
+      "anchor": 398,
+      "scope_card": 10,
+      "gt_ids": [
+        702902,
+        37266,
+        631350,
+        3804,
+        780745,
+        518731,
+        691450,
+        1584266,
+        408216,
+        996593
+      ]
+    },
+    {
+      "query_index": 207,
+      "query_id": 207,
+      "recursive": true,
+      "anchor": 170359,
+      "scope_card": 2,
+      "gt_ids": [
+        1325863,
+        317627
+      ]
+    },
+    {
+      "query_index": 208,
+      "query_id": 208,
+      "recursive": true,
+      "anchor": 175,
+      "scope_card": 14571,
+      "gt_ids": [
+        544954,
+        1902498,
+        780822,
+        325337,
+        1472546,
+        1923899,
+        571467,
+        1184709,
+        1386964,
+        425974
+      ]
+    },
+    {
+      "query_index": 209,
+      "query_id": 209,
+      "recursive": true,
+      "anchor": 214603,
+      "scope_card": 3,
+      "gt_ids": [
+        456812,
+        645812,
+        842383
+      ]
+    },
+    {
+      "query_index": 210,
+      "query_id": 210,
+      "recursive": true,
+      "anchor": 48504,
+      "scope_card": 124,
+      "gt_ids": [
+        666310,
+        1921427,
+        54854,
+        884984,
+        54885,
+        1349187,
+        1268093,
+        1666816,
+        1702641,
+        1007118
+      ]
+    },
+    {
+      "query_index": 211,
+      "query_id": 211,
+      "recursive": false,
+      "anchor": 180306,
+      "scope_card": 3,
+      "gt_ids": [
+        1345573,
+        439620,
+        348630
+      ]
+    },
+    {
+      "query_index": 212,
+      "query_id": 212,
+      "recursive": true,
+      "anchor": 291554,
+      "scope_card": 3,
+      "gt_ids": [
+        1176051,
+        1269982,
+        767016
+      ]
+    },
+    {
+      "query_index": 213,
+      "query_id": 213,
+      "recursive": false,
+      "anchor": 1443,
+      "scope_card": 9,
+      "gt_ids": [
+        421507,
+        25269,
+        99682,
+        885090,
+        470271,
+        1407766,
+        250790,
+        288228,
+        591452
+      ]
+    },
+    {
+      "query_index": 214,
+      "query_id": 214,
+      "recursive": false,
+      "anchor": 75253,
+      "scope_card": 1,
+      "gt_ids": [
+        105433
+      ]
+    },
+    {
+      "query_index": 215,
+      "query_id": 215,
+      "recursive": true,
+      "anchor": 21269,
+      "scope_card": 4,
+      "gt_ids": [
+        14365,
+        876497,
+        500226,
+        1864693
+      ]
+    },
+    {
+      "query_index": 216,
+      "query_id": 216,
+      "recursive": true,
+      "anchor": 170580,
+      "scope_card": 1,
+      "gt_ids": [
+        318399
+      ]
+    },
+    {
+      "query_index": 217,
+      "query_id": 217,
+      "recursive": false,
+      "anchor": 1034,
+      "scope_card": 4,
+      "gt_ids": [
+        11439,
+        831626,
+        22407,
+        955591
+      ]
+    },
+    {
+      "query_index": 218,
+      "query_id": 218,
+      "recursive": false,
+      "anchor": 287699,
+      "scope_card": 1,
+      "gt_ids": [
+        749379
+      ]
+    },
+    {
+      "query_index": 219,
+      "query_id": 219,
+      "recursive": false,
+      "anchor": 1,
+      "scope_card": 8,
+      "gt_ids": [
+        3969,
+        335686,
+        25226,
+        750977,
+        9690,
+        88031,
+        12458,
+        104557
+      ]
+    },
+    {
+      "query_index": 220,
+      "query_id": 220,
+      "recursive": false,
+      "anchor": 83062,
+      "scope_card": 1,
+      "gt_ids": [
+        118812
+      ]
+    },
+    {
+      "query_index": 221,
+      "query_id": 221,
+      "recursive": true,
+      "anchor": 281690,
+      "scope_card": 3,
+      "gt_ids": [
+        722744,
+        722710,
+        722661
+      ]
+    },
+    {
+      "query_index": 222,
+      "query_id": 222,
+      "recursive": true,
+      "anchor": 466,
+      "scope_card": 15874,
+      "gt_ids": [
+        1305336,
+        392045,
+        131591,
+        302738,
+        1011086,
+        1297807,
+        617345,
+        14002,
+        948273,
+        91187
+      ]
+    },
+    {
+      "query_index": 223,
+      "query_id": 223,
+      "recursive": false,
+      "anchor": 147718,
+      "scope_card": 2,
+      "gt_ids": [
+        528028,
+        256271
+      ]
+    },
+    {
+      "query_index": 224,
+      "query_id": 224,
+      "recursive": false,
+      "anchor": 32723,
+      "scope_card": 11,
+      "gt_ids": [
+        1088929,
+        146653,
+        26634,
+        91098,
+        397493,
+        1512527,
+        151139,
+        1612894,
+        306361,
+        1337037
+      ]
+    },
+    {
+      "query_index": 225,
+      "query_id": 225,
+      "recursive": true,
+      "anchor": 120,
+      "scope_card": 6961,
+      "gt_ids": [
+        56966,
+        272702,
+        56898,
+        304477,
+        56863,
+        1025722,
+        182663,
+        500656,
+        1114153,
+        799229
+      ]
+    },
+    {
+      "query_index": 226,
+      "query_id": 226,
+      "recursive": false,
+      "anchor": 396440,
+      "scope_card": 1,
+      "gt_ids": [
+        1346507
+      ]
+    },
+    {
+      "query_index": 227,
+      "query_id": 227,
+      "recursive": true,
+      "anchor": 215,
+      "scope_card": 3073,
+      "gt_ids": [
+        32266,
+        1245277,
+        875760,
+        1281590,
+        1213633,
+        489265,
+        1770736,
+        901648,
+        1449988,
+        244132
+      ]
+    },
+    {
+      "query_index": 228,
+      "query_id": 228,
+      "recursive": true,
+      "anchor": 14833,
+      "scope_card": 168,
+      "gt_ids": [
+        1178868,
+        953400,
+        1386259,
+        875666,
+        1499712,
+        1135779,
+        567469,
+        1419086,
+        735695,
+        1026920
+      ]
+    },
+    {
+      "query_index": 229,
+      "query_id": 229,
+      "recursive": true,
+      "anchor": 1034,
+      "scope_card": 1810,
+      "gt_ids": [
+        1176774,
+        7514,
+        1105322,
+        891429,
+        1309595,
+        153655,
+        429757,
+        376249,
+        1160731,
+        132856
+      ]
+    },
+    {
+      "query_index": 230,
+      "query_id": 230,
+      "recursive": true,
+      "anchor": 118563,
+      "scope_card": 13,
+      "gt_ids": [
+        688019,
+        1232711,
+        185997,
+        958978,
+        1423013,
+        186022,
+        1551700,
+        707006,
+        967972,
+        687024
+      ]
+    },
+    {
+      "query_index": 231,
+      "query_id": 231,
+      "recursive": true,
+      "anchor": 991,
+      "scope_card": 7984,
+      "gt_ids": [
+        1893103,
+        1794959,
+        709923,
+        1302148,
+        100398,
+        291229,
+        875395,
+        1125086,
+        178116,
+        1620612
+      ]
+    },
+    {
+      "query_index": 232,
+      "query_id": 232,
+      "recursive": false,
+      "anchor": 188693,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 233,
+      "query_id": 233,
+      "recursive": false,
+      "anchor": 236588,
+      "scope_card": 2,
+      "gt_ids": [
+        1705578,
+        535978
+      ]
+    },
+    {
+      "query_index": 234,
+      "query_id": 234,
+      "recursive": false,
+      "anchor": 74,
+      "scope_card": 3,
+      "gt_ids": [
+        8252,
+        147391,
+        448665
+      ]
+    },
+    {
+      "query_index": 235,
+      "query_id": 235,
+      "recursive": true,
+      "anchor": 146218,
+      "scope_card": 30,
+      "gt_ids": [
+        1012857,
+        504472,
+        504407,
+        520820,
+        670169,
+        404043,
+        1012818,
+        1458695,
+        521373,
+        333417
+      ]
+    },
+    {
+      "query_index": 236,
+      "query_id": 236,
+      "recursive": false,
+      "anchor": 117263,
+      "scope_card": 4,
+      "gt_ids": [
+        1776498,
+        617235,
+        182865,
+        1117188
+      ]
+    },
+    {
+      "query_index": 237,
+      "query_id": 237,
+      "recursive": true,
+      "anchor": 58394,
+      "scope_card": 7,
+      "gt_ids": [
+        79624,
+        316328,
+        1235184,
+        80026,
+        1264704,
+        1889277,
+        332704
+      ]
+    },
+    {
+      "query_index": 238,
+      "query_id": 238,
+      "recursive": false,
+      "anchor": 412471,
+      "scope_card": 1,
+      "gt_ids": [
+        1451255
+      ]
+    },
+    {
+      "query_index": 239,
+      "query_id": 239,
+      "recursive": true,
+      "anchor": 435672,
+      "scope_card": 1,
+      "gt_ids": [
+        1647146
+      ]
+    },
+    {
+      "query_index": 240,
+      "query_id": 240,
+      "recursive": true,
+      "anchor": 30299,
+      "scope_card": 10,
+      "gt_ids": [
+        1398203,
+        300437,
+        225010,
+        828635,
+        783789,
+        35855,
+        337941,
+        24195,
+        1397699,
+        881425
+      ]
+    },
+    {
+      "query_index": 241,
+      "query_id": 241,
+      "recursive": false,
+      "anchor": 28483,
+      "scope_card": 1,
+      "gt_ids": [
+        1685985
+      ]
+    },
+    {
+      "query_index": 242,
+      "query_id": 242,
+      "recursive": false,
+      "anchor": 53593,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 243,
+      "query_id": 243,
+      "recursive": false,
+      "anchor": 323678,
+      "scope_card": 4,
+      "gt_ids": [
+        921784,
+        921854,
+        921850,
+        1585023
+      ]
+    },
+    {
+      "query_index": 244,
+      "query_id": 244,
+      "recursive": false,
+      "anchor": 385966,
+      "scope_card": 1,
+      "gt_ids": [
+        1285305
+      ]
+    },
+    {
+      "query_index": 245,
+      "query_id": 245,
+      "recursive": true,
+      "anchor": 104100,
+      "scope_card": 24,
+      "gt_ids": [
+        228824,
+        155528,
+        1039929,
+        1796099,
+        181594,
+        503005,
+        626218,
+        626246,
+        1923504,
+        626250
+      ]
+    },
+    {
+      "query_index": 246,
+      "query_id": 246,
+      "recursive": true,
+      "anchor": 9827,
+      "scope_card": 27,
+      "gt_ids": [
+        5414,
+        963928,
+        144131,
+        252732,
+        1666685,
+        143709,
+        115651,
+        795028,
+        149883,
+        1617437
+      ]
+    },
+    {
+      "query_index": 247,
+      "query_id": 247,
+      "recursive": false,
+      "anchor": 1102,
+      "scope_card": 2,
+      "gt_ids": [
+        711905,
+        104840
+      ]
+    },
+    {
+      "query_index": 248,
+      "query_id": 248,
+      "recursive": true,
+      "anchor": 70404,
+      "scope_card": 84,
+      "gt_ids": [
+        514684,
+        358991,
+        115629,
+        781234,
+        1669987,
+        97872,
+        460089,
+        1895867,
+        775342,
+        1805279
+      ]
+    },
+    {
+      "query_index": 249,
+      "query_id": 249,
+      "recursive": false,
+      "anchor": 113875,
+      "scope_card": 2,
+      "gt_ids": [
+        267545,
+        175323
+      ]
+    },
+    {
+      "query_index": 250,
+      "query_id": 250,
+      "recursive": true,
+      "anchor": 259958,
+      "scope_card": 1,
+      "gt_ids": [
+        628353
+      ]
+    },
+    {
+      "query_index": 251,
+      "query_id": 251,
+      "recursive": false,
+      "anchor": 51621,
+      "scope_card": 4,
+      "gt_ids": [
+        64241,
+        64301,
+        64300,
+        64238
+      ]
+    },
+    {
+      "query_index": 252,
+      "query_id": 252,
+      "recursive": false,
+      "anchor": 584,
+      "scope_card": 9,
+      "gt_ids": [
+        586481,
+        2153,
+        18080,
+        1491116,
+        1280070,
+        430201,
+        364608,
+        363327,
+        624540
+      ]
+    },
+    {
+      "query_index": 253,
+      "query_id": 253,
+      "recursive": true,
+      "anchor": 57930,
+      "scope_card": 1,
+      "gt_ids": [
+        78958
+      ]
+    },
+    {
+      "query_index": 254,
+      "query_id": 254,
+      "recursive": true,
+      "anchor": 17798,
+      "scope_card": 1,
+      "gt_ids": [
+        11058
+      ]
+    },
+    {
+      "query_index": 255,
+      "query_id": 255,
+      "recursive": false,
+      "anchor": 77981,
+      "scope_card": 1,
+      "gt_ids": [
+        109476
+      ]
+    },
+    {
+      "query_index": 256,
+      "query_id": 256,
+      "recursive": true,
+      "anchor": 164,
+      "scope_card": 12136,
+      "gt_ids": [
+        684214,
+        427447,
+        1500654,
+        832957,
+        902758,
+        1276263,
+        1724093,
+        1761979,
+        148439,
+        1276259
+      ]
+    },
+    {
+      "query_index": 257,
+      "query_id": 257,
+      "recursive": false,
+      "anchor": 363418,
+      "scope_card": 1,
+      "gt_ids": [
+        1153374
+      ]
+    },
+    {
+      "query_index": 258,
+      "query_id": 258,
+      "recursive": true,
+      "anchor": 137779,
+      "scope_card": 18,
+      "gt_ids": [
+        905512,
+        285566,
+        808053,
+        372159,
+        231788,
+        421862,
+        577709,
+        647057,
+        1839342,
+        1355626
+      ]
+    },
+    {
+      "query_index": 259,
+      "query_id": 259,
+      "recursive": false,
+      "anchor": 242,
+      "scope_card": 28,
+      "gt_ids": [
+        629965,
+        14793,
+        7645,
+        9332,
+        95906,
+        1352108,
+        298855,
+        3318,
+        1890458,
+        128274
+      ]
+    },
+    {
+      "query_index": 260,
+      "query_id": 260,
+      "recursive": false,
+      "anchor": 5145,
+      "scope_card": 12,
+      "gt_ids": [
+        1814,
+        289908,
+        1412507,
+        1497641,
+        541992,
+        462883,
+        1825958,
+        484737,
+        23870,
+        170101
+      ]
+    },
+    {
+      "query_index": 261,
+      "query_id": 261,
+      "recursive": true,
+      "anchor": 111282,
+      "scope_card": 7,
+      "gt_ids": [
+        554888,
+        450950,
+        1739356,
+        442497,
+        787960,
+        169578,
+        848219
+      ]
+    },
+    {
+      "query_index": 262,
+      "query_id": 262,
+      "recursive": false,
+      "anchor": 305204,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 263,
+      "query_id": 263,
+      "recursive": false,
+      "anchor": 181491,
+      "scope_card": 1,
+      "gt_ids": [
+        919301
+      ]
+    },
+    {
+      "query_index": 264,
+      "query_id": 264,
+      "recursive": true,
+      "anchor": 229730,
+      "scope_card": 1,
+      "gt_ids": [
+        509884
+      ]
+    },
+    {
+      "query_index": 265,
+      "query_id": 265,
+      "recursive": false,
+      "anchor": 78988,
+      "scope_card": 3,
+      "gt_ids": [
+        111318,
+        582232,
+        1603144
+      ]
+    },
+    {
+      "query_index": 266,
+      "query_id": 266,
+      "recursive": false,
+      "anchor": 271107,
+      "scope_card": 1,
+      "gt_ids": [
+        854131
+      ]
+    },
+    {
+      "query_index": 267,
+      "query_id": 267,
+      "recursive": true,
+      "anchor": 63,
+      "scope_card": 6057,
+      "gt_ids": [
+        402309,
+        402314,
+        643708,
+        1437285,
+        1520365,
+        875580,
+        759473,
+        12562,
+        907431,
+        1289540
+      ]
+    },
+    {
+      "query_index": 268,
+      "query_id": 268,
+      "recursive": true,
+      "anchor": 378994,
+      "scope_card": 1,
+      "gt_ids": [
+        1242922
+      ]
+    },
+    {
+      "query_index": 269,
+      "query_id": 269,
+      "recursive": true,
+      "anchor": 402226,
+      "scope_card": 2,
+      "gt_ids": [
+        1385025,
+        1532155
+      ]
+    },
+    {
+      "query_index": 270,
+      "query_id": 270,
+      "recursive": true,
+      "anchor": 231778,
+      "scope_card": 1,
+      "gt_ids": [
+        517328
+      ]
+    },
+    {
+      "query_index": 271,
+      "query_id": 271,
+      "recursive": false,
+      "anchor": 145339,
+      "scope_card": 3,
+      "gt_ids": [
+        1849615,
+        250297,
+        1903850
+      ]
+    },
+    {
+      "query_index": 272,
+      "query_id": 272,
+      "recursive": true,
+      "anchor": 399755,
+      "scope_card": 1,
+      "gt_ids": [
+        1367438
+      ]
+    },
+    {
+      "query_index": 273,
+      "query_id": 273,
+      "recursive": false,
+      "anchor": 89115,
+      "scope_card": 18,
+      "gt_ids": [
+        1441390,
+        1736922,
+        1432529,
+        1401960,
+        1393176,
+        667873,
+        128843,
+        599215,
+        1532966,
+        153101
+      ]
+    },
+    {
+      "query_index": 274,
+      "query_id": 274,
+      "recursive": true,
+      "anchor": 7531,
+      "scope_card": 3391,
+      "gt_ids": [
+        843041,
+        776841,
+        635039,
+        595805,
+        181040,
+        635011,
+        215983,
+        1470121,
+        1065873,
+        583426
+      ]
+    },
+    {
+      "query_index": 275,
+      "query_id": 275,
+      "recursive": false,
+      "anchor": 439059,
+      "scope_card": 1,
+      "gt_ids": [
+        1681035
+      ]
+    },
+    {
+      "query_index": 276,
+      "query_id": 276,
+      "recursive": true,
+      "anchor": 76954,
+      "scope_card": 47,
+      "gt_ids": [
+        1809164,
+        107839,
+        362783,
+        473157,
+        1776897,
+        1281948,
+        1218156,
+        1702247,
+        1413581,
+        1778509
+      ]
+    },
+    {
+      "query_index": 277,
+      "query_id": 277,
+      "recursive": true,
+      "anchor": 339455,
+      "scope_card": 2,
+      "gt_ids": [
+        1009311,
+        1558918
+      ]
+    },
+    {
+      "query_index": 278,
+      "query_id": 278,
+      "recursive": false,
+      "anchor": 434836,
+      "scope_card": 1,
+      "gt_ids": [
+        1639476
+      ]
+    },
+    {
+      "query_index": 279,
+      "query_id": 279,
+      "recursive": false,
+      "anchor": 203,
+      "scope_card": 9,
+      "gt_ids": [
+        155855,
+        104894,
+        705306,
+        705272,
+        544025,
+        1376031,
+        103816,
+        233397,
+        1854269
+      ]
+    },
+    {
+      "query_index": 280,
+      "query_id": 280,
+      "recursive": true,
+      "anchor": 34482,
+      "scope_card": 3,
+      "gt_ids": [
+        1757090,
+        28623,
+        865220
+      ]
+    },
+    {
+      "query_index": 281,
+      "query_id": 281,
+      "recursive": true,
+      "anchor": 176328,
+      "scope_card": 38,
+      "gt_ids": [
+        457323,
+        1052455,
+        772092,
+        358715,
+        1297916,
+        435261,
+        429855,
+        1097345,
+        435167,
+        1505115
+      ]
+    },
+    {
+      "query_index": 282,
+      "query_id": 282,
+      "recursive": false,
+      "anchor": 190282,
+      "scope_card": 3,
+      "gt_ids": [
+        458096,
+        377707,
+        1479586
+      ]
+    },
+    {
+      "query_index": 283,
+      "query_id": 283,
+      "recursive": true,
+      "anchor": 429755,
+      "scope_card": 1,
+      "gt_ids": [
+        1593039
+      ]
+    },
+    {
+      "query_index": 284,
+      "query_id": 284,
+      "recursive": true,
+      "anchor": 466,
+      "scope_card": 15874,
+      "gt_ids": [
+        1853315,
+        107784,
+        4598,
+        799801,
+        932396,
+        461144,
+        862797,
+        163105,
+        188866,
+        848107
+      ]
+    },
+    {
+      "query_index": 285,
+      "query_id": 285,
+      "recursive": true,
+      "anchor": 11861,
+      "scope_card": 322,
+      "gt_ids": [
+        778047,
+        412437,
+        291785,
+        1335974,
+        1351016,
+        384243,
+        949617,
+        1899449,
+        1076349,
+        1336015
+      ]
+    },
+    {
+      "query_index": 286,
+      "query_id": 286,
+      "recursive": false,
+      "anchor": 320,
+      "scope_card": 39,
+      "gt_ids": [
+        412417,
+        1086624,
+        1234392,
+        10074,
+        109094,
+        314144,
+        1334340,
+        164889,
+        652934,
+        129718
+      ]
+    },
+    {
+      "query_index": 287,
+      "query_id": 287,
+      "recursive": true,
+      "anchor": 86513,
+      "scope_card": 1,
+      "gt_ids": [
+        124630
+      ]
+    },
+    {
+      "query_index": 288,
+      "query_id": 288,
+      "recursive": false,
+      "anchor": 230543,
+      "scope_card": 1,
+      "gt_ids": [
+        1905742
+      ]
+    },
+    {
+      "query_index": 289,
+      "query_id": 289,
+      "recursive": false,
+      "anchor": 418626,
+      "scope_card": 1,
+      "gt_ids": [
+        1497036
+      ]
+    },
+    {
+      "query_index": 290,
+      "query_id": 290,
+      "recursive": false,
+      "anchor": 219949,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 291,
+      "query_id": 291,
+      "recursive": true,
+      "anchor": 387972,
+      "scope_card": 1,
+      "gt_ids": [
+        1296699
+      ]
+    },
+    {
+      "query_index": 292,
+      "query_id": 292,
+      "recursive": false,
+      "anchor": 33,
+      "scope_card": 22,
+      "gt_ids": [
+        81642,
+        1862,
+        26528,
+        132434,
+        108736,
+        477980,
+        439581,
+        948770,
+        523893,
+        725016
+      ]
+    },
+    {
+      "query_index": 293,
+      "query_id": 293,
+      "recursive": false,
+      "anchor": 4076,
+      "scope_card": 17,
+      "gt_ids": [
+        1594849,
+        501119,
+        1293606,
+        466699,
+        568956,
+        419279,
+        1431541,
+        655853,
+        1034320,
+        1560593
+      ]
+    },
+    {
+      "query_index": 294,
+      "query_id": 294,
+      "recursive": false,
+      "anchor": 122377,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 295,
+      "query_id": 295,
+      "recursive": false,
+      "anchor": 183842,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 296,
+      "query_id": 296,
+      "recursive": false,
+      "anchor": 334967,
+      "scope_card": 1,
+      "gt_ids": [
+        983499
+      ]
+    },
+    {
+      "query_index": 297,
+      "query_id": 297,
+      "recursive": false,
+      "anchor": 65018,
+      "scope_card": 2,
+      "gt_ids": [
+        1189955,
+        1673519
+      ]
+    },
+    {
+      "query_index": 298,
+      "query_id": 298,
+      "recursive": false,
+      "anchor": 556,
+      "scope_card": 3,
+      "gt_ids": [
+        2857,
+        445040,
+        474935
+      ]
+    },
+    {
+      "query_index": 299,
+      "query_id": 299,
+      "recursive": true,
+      "anchor": 255545,
+      "scope_card": 1,
+      "gt_ids": [
+        610250
+      ]
+    },
+    {
+      "query_index": 300,
+      "query_id": 300,
+      "recursive": false,
+      "anchor": 78246,
+      "scope_card": 8,
+      "gt_ids": [
+        1711602,
+        1046613,
+        1362909,
+        1684258,
+        1362895,
+        1549886,
+        1364733,
+        1669510
+      ]
+    },
+    {
+      "query_index": 301,
+      "query_id": 301,
+      "recursive": false,
+      "anchor": 370077,
+      "scope_card": 1,
+      "gt_ids": [
+        1189969
+      ]
+    },
+    {
+      "query_index": 302,
+      "query_id": 302,
+      "recursive": false,
+      "anchor": 310426,
+      "scope_card": 1,
+      "gt_ids": [
+        853958
+      ]
+    },
+    {
+      "query_index": 303,
+      "query_id": 303,
+      "recursive": false,
+      "anchor": 441,
+      "scope_card": 22,
+      "gt_ids": [
+        77893,
+        1407286,
+        1184238,
+        226804,
+        318514,
+        485743,
+        2366,
+        2281,
+        5944,
+        1219566
+      ]
+    },
+    {
+      "query_index": 304,
+      "query_id": 304,
+      "recursive": false,
+      "anchor": 979,
+      "scope_card": 44,
+      "gt_ids": [
+        740585,
+        336231,
+        23755,
+        427540,
+        463087,
+        125242,
+        126721,
+        251156,
+        10178,
+        3948
+      ]
+    },
+    {
+      "query_index": 305,
+      "query_id": 305,
+      "recursive": false,
+      "anchor": 353116,
+      "scope_card": 1,
+      "gt_ids": [
+        1090550
+      ]
+    },
+    {
+      "query_index": 306,
+      "query_id": 306,
+      "recursive": false,
+      "anchor": 243784,
+      "scope_card": 4,
+      "gt_ids": [
+        1840524,
+        1101911,
+        1052529,
+        564474
+      ]
+    },
+    {
+      "query_index": 307,
+      "query_id": 307,
+      "recursive": true,
+      "anchor": 194892,
+      "scope_card": 5,
+      "gt_ids": [
+        1768768,
+        1461761,
+        1438959,
+        1732352,
+        392137
+      ]
+    },
+    {
+      "query_index": 308,
+      "query_id": 308,
+      "recursive": false,
+      "anchor": 439280,
+      "scope_card": 1,
+      "gt_ids": [
+        1683153
+      ]
+    },
+    {
+      "query_index": 309,
+      "query_id": 309,
+      "recursive": false,
+      "anchor": 186672,
+      "scope_card": 8,
+      "gt_ids": [
+        476577,
+        761379,
+        484060,
+        1173685,
+        366969,
+        648085,
+        1738442,
+        1628571
+      ]
+    },
+    {
+      "query_index": 310,
+      "query_id": 310,
+      "recursive": true,
+      "anchor": 5654,
+      "scope_card": 1694,
+      "gt_ids": [
+        280931,
+        746730,
+        1500923,
+        20916,
+        7861,
+        1482329,
+        854563,
+        224702,
+        1257951,
+        1482381
+      ]
+    },
+    {
+      "query_index": 311,
+      "query_id": 311,
+      "recursive": false,
+      "anchor": 80149,
+      "scope_card": 4,
+      "gt_ids": [
+        113067,
+        1163386,
+        1616147,
+        1614119
+      ]
+    },
+    {
+      "query_index": 312,
+      "query_id": 312,
+      "recursive": false,
+      "anchor": 369833,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 313,
+      "query_id": 313,
+      "recursive": true,
+      "anchor": 43400,
+      "scope_card": 2,
+      "gt_ids": [
+        894510,
+        41537
+      ]
+    },
+    {
+      "query_index": 314,
+      "query_id": 314,
+      "recursive": false,
+      "anchor": 380458,
+      "scope_card": 1,
+      "gt_ids": [
+        1251499
+      ]
+    },
+    {
+      "query_index": 315,
+      "query_id": 315,
+      "recursive": true,
+      "anchor": 36509,
+      "scope_card": 20,
+      "gt_ids": [
+        1802891,
+        559985,
+        453523,
+        600306,
+        94127,
+        105166,
+        1015904,
+        991985,
+        103634,
+        30911
+      ]
+    },
+    {
+      "query_index": 316,
+      "query_id": 316,
+      "recursive": false,
+      "anchor": 1040,
+      "scope_card": 17,
+      "gt_ids": [
+        391205,
+        27607,
+        200385,
+        662196,
+        300717,
+        1267857,
+        117978,
+        34404,
+        116256,
+        488491
+      ]
+    },
+    {
+      "query_index": 317,
+      "query_id": 317,
+      "recursive": false,
+      "anchor": 312839,
+      "scope_card": 2,
+      "gt_ids": [
+        1465106,
+        864804
+      ]
+    },
+    {
+      "query_index": 318,
+      "query_id": 318,
+      "recursive": true,
+      "anchor": 168359,
+      "scope_card": 33,
+      "gt_ids": [
+        1340587,
+        311912,
+        1544643,
+        1341974,
+        1292096,
+        1341898,
+        1120672,
+        1340615,
+        1341963,
+        1295404
+      ]
+    },
+    {
+      "query_index": 319,
+      "query_id": 319,
+      "recursive": false,
+      "anchor": 112818,
+      "scope_card": 1,
+      "gt_ids": [
+        173111
+      ]
+    },
+    {
+      "query_index": 320,
+      "query_id": 320,
+      "recursive": false,
+      "anchor": 125415,
+      "scope_card": 3,
+      "gt_ids": [
+        584058,
+        201764,
+        1888226
+      ]
+    },
+    {
+      "query_index": 321,
+      "query_id": 321,
+      "recursive": true,
+      "anchor": 285036,
+      "scope_card": 3,
+      "gt_ids": [
+        1930990,
+        1218215,
+        737058
+      ]
+    },
+    {
+      "query_index": 322,
+      "query_id": 322,
+      "recursive": false,
+      "anchor": 288977,
+      "scope_card": 4,
+      "gt_ids": [
+        1405673,
+        985819,
+        755260,
+        1443861
+      ]
+    },
+    {
+      "query_index": 323,
+      "query_id": 323,
+      "recursive": true,
+      "anchor": 84557,
+      "scope_card": 5,
+      "gt_ids": [
+        1461959,
+        333737,
+        1777474,
+        121403,
+        1192838
+      ]
+    },
+    {
+      "query_index": 324,
+      "query_id": 324,
+      "recursive": false,
+      "anchor": 146436,
+      "scope_card": 1,
+      "gt_ids": [
+        344102
+      ]
+    },
+    {
+      "query_index": 325,
+      "query_id": 325,
+      "recursive": true,
+      "anchor": 365,
+      "scope_card": 26290,
+      "gt_ids": [
+        1518468,
+        146239,
+        1656899,
+        917355,
+        949085,
+        1365870,
+        1679510,
+        1279146,
+        415361,
+        170803
+      ]
+    },
+    {
+      "query_index": 326,
+      "query_id": 326,
+      "recursive": true,
+      "anchor": 242,
+      "scope_card": 3448,
+      "gt_ids": [
+        1119443,
+        1188059,
+        346388,
+        10616,
+        614571,
+        575660,
+        666076,
+        899998,
+        1888039,
+        1197980
+      ]
+    },
+    {
+      "query_index": 327,
+      "query_id": 327,
+      "recursive": false,
+      "anchor": 74395,
+      "scope_card": 3,
+      "gt_ids": [
+        1376252,
+        104086,
+        703218
+      ]
+    },
+    {
+      "query_index": 328,
+      "query_id": 328,
+      "recursive": false,
+      "anchor": 105,
+      "scope_card": 19,
+      "gt_ids": [
+        1213776,
+        180613,
+        812201,
+        1377375,
+        1444509,
+        306978,
+        12026,
+        1996,
+        388592,
+        141751
+      ]
+    },
+    {
+      "query_index": 329,
+      "query_id": 329,
+      "recursive": false,
+      "anchor": 63,
+      "scope_card": 4,
+      "gt_ids": [
+        135721,
+        653884,
+        1704563,
+        10304
+      ]
+    },
+    {
+      "query_index": 330,
+      "query_id": 330,
+      "recursive": false,
+      "anchor": 196574,
+      "scope_card": 1,
+      "gt_ids": [
+        398143
+      ]
+    },
+    {
+      "query_index": 331,
+      "query_id": 331,
+      "recursive": true,
+      "anchor": 297781,
+      "scope_card": 1,
+      "gt_ids": [
+        795232
+      ]
+    },
+    {
+      "query_index": 332,
+      "query_id": 332,
+      "recursive": true,
+      "anchor": 272648,
+      "scope_card": 1,
+      "gt_ids": [
+        683409
+      ]
+    },
+    {
+      "query_index": 333,
+      "query_id": 333,
+      "recursive": false,
+      "anchor": 258800,
+      "scope_card": 1,
+      "gt_ids": [
+        623292
+      ]
+    },
+    {
+      "query_index": 334,
+      "query_id": 334,
+      "recursive": false,
+      "anchor": 145852,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 335,
+      "query_id": 335,
+      "recursive": false,
+      "anchor": 135,
+      "scope_card": 8,
+      "gt_ids": [
+        3793,
+        238104,
+        4174,
+        1436117,
+        134413,
+        81965,
+        1244913,
+        1071724
+      ]
+    },
+    {
+      "query_index": 336,
+      "query_id": 336,
+      "recursive": true,
+      "anchor": 152475,
+      "scope_card": 4,
+      "gt_ids": [
+        1498886,
+        1070388,
+        268256,
+        786381
+      ]
+    },
+    {
+      "query_index": 337,
+      "query_id": 337,
+      "recursive": true,
+      "anchor": 303411,
+      "scope_card": 1,
+      "gt_ids": [
+        820967
+      ]
+    },
+    {
+      "query_index": 338,
+      "query_id": 338,
+      "recursive": true,
+      "anchor": 6352,
+      "scope_card": 85,
+      "gt_ids": [
+        1622703,
+        306790,
+        1321736,
+        944494,
+        1834276,
+        302867,
+        307399,
+        379292,
+        559196,
+        851726
+      ]
+    },
+    {
+      "query_index": 339,
+      "query_id": 339,
+      "recursive": false,
+      "anchor": 318569,
+      "scope_card": 1,
+      "gt_ids": [
+        894818
+      ]
+    },
+    {
+      "query_index": 340,
+      "query_id": 340,
+      "recursive": true,
+      "anchor": 330860,
+      "scope_card": 1,
+      "gt_ids": [
+        961866
+      ]
+    },
+    {
+      "query_index": 341,
+      "query_id": 341,
+      "recursive": false,
+      "anchor": 82,
+      "scope_card": 1,
+      "gt_ids": [
+        19644
+      ]
+    },
+    {
+      "query_index": 342,
+      "query_id": 342,
+      "recursive": true,
+      "anchor": 34265,
+      "scope_card": 9,
+      "gt_ids": [
+        1421233,
+        286324,
+        1580122,
+        1738510,
+        922026,
+        28381,
+        582735,
+        231866,
+        1255374
+      ]
+    },
+    {
+      "query_index": 343,
+      "query_id": 343,
+      "recursive": false,
+      "anchor": 406261,
+      "scope_card": 2,
+      "gt_ids": [
+        1622226,
+        1413382
+      ]
+    },
+    {
+      "query_index": 344,
+      "query_id": 344,
+      "recursive": false,
+      "anchor": 164,
+      "scope_card": 7,
+      "gt_ids": [
+        448482,
+        6152,
+        1689672,
+        1425546,
+        700929,
+        1150732,
+        1468541
+      ]
+    },
+    {
+      "query_index": 345,
+      "query_id": 345,
+      "recursive": true,
+      "anchor": 28481,
+      "scope_card": 13,
+      "gt_ids": [
+        1086435,
+        1218359,
+        23306,
+        1685985,
+        235492,
+        771645,
+        416911,
+        1605695,
+        107157,
+        22227
+      ]
+    },
+    {
+      "query_index": 346,
+      "query_id": 346,
+      "recursive": true,
+      "anchor": 139694,
+      "scope_card": 23,
+      "gt_ids": [
+        1071466,
+        1912973,
+        1921661,
+        1911102,
+        843581,
+        1366761,
+        1182918,
+        1184749,
+        1184841,
+        1911052
+      ]
+    },
+    {
+      "query_index": 347,
+      "query_id": 347,
+      "recursive": false,
+      "anchor": 373884,
+      "scope_card": 1,
+      "gt_ids": [
+        1379683
+      ]
+    },
+    {
+      "query_index": 348,
+      "query_id": 348,
+      "recursive": true,
+      "anchor": 3097,
+      "scope_card": 2293,
+      "gt_ids": [
+        1889392,
+        1832783,
+        1212750,
+        1246043,
+        1124640,
+        1474875,
+        552935,
+        541888,
+        247060,
+        1723245
+      ]
+    },
+    {
+      "query_index": 349,
+      "query_id": 349,
+      "recursive": false,
+      "anchor": 91576,
+      "scope_card": 3,
+      "gt_ids": [
+        132856,
+        269176,
+        517263
+      ]
+    },
+    {
+      "query_index": 350,
+      "query_id": 350,
+      "recursive": true,
+      "anchor": 365,
+      "scope_card": 26290,
+      "gt_ids": [
+        1207583,
+        1442847,
+        141903,
+        148294,
+        1158209,
+        473902,
+        1934925,
+        90822,
+        1036397,
+        641472
+      ]
+    },
+    {
+      "query_index": 351,
+      "query_id": 351,
+      "recursive": false,
+      "anchor": 320,
+      "scope_card": 39,
+      "gt_ids": [
+        129718,
+        1119478,
+        314144,
+        6535,
+        951242,
+        218268,
+        1086624,
+        469299,
+        169043,
+        103791
+      ]
+    },
+    {
+      "query_index": 352,
+      "query_id": 352,
+      "recursive": true,
+      "anchor": 249,
+      "scope_card": 24948,
+      "gt_ids": [
+        1091564,
+        1430529,
+        7038,
+        607754,
+        1844255,
+        943038,
+        614860,
+        416028,
+        429412,
+        445836
+      ]
+    },
+    {
+      "query_index": 353,
+      "query_id": 353,
+      "recursive": true,
+      "anchor": 204417,
+      "scope_card": 1,
+      "gt_ids": [
+        423786
+      ]
+    },
+    {
+      "query_index": 354,
+      "query_id": 354,
+      "recursive": true,
+      "anchor": 119796,
+      "scope_card": 54,
+      "gt_ids": [
+        1839944,
+        1596594,
+        942235,
+        1366993,
+        932191,
+        633900,
+        693136,
+        964450,
+        1105988,
+        917104
+      ]
+    },
+    {
+      "query_index": 355,
+      "query_id": 355,
+      "recursive": true,
+      "anchor": 28826,
+      "scope_card": 4,
+      "gt_ids": [
+        1021833,
+        22562,
+        726279,
+        1123950
+      ]
+    },
+    {
+      "query_index": 356,
+      "query_id": 356,
+      "recursive": true,
+      "anchor": 4376,
+      "scope_card": 906,
+      "gt_ids": [
+        1549924,
+        1356732,
+        277050,
+        588254,
+        924568,
+        445384,
+        1443728,
+        946017,
+        167208,
+        583165
+      ]
+    },
+    {
+      "query_index": 357,
+      "query_id": 357,
+      "recursive": true,
+      "anchor": 206294,
+      "scope_card": 8,
+      "gt_ids": [
+        1185517,
+        481563,
+        1931600,
+        626483,
+        1646784,
+        429417,
+        1731283,
+        1071264
+      ]
+    },
+    {
+      "query_index": 358,
+      "query_id": 358,
+      "recursive": true,
+      "anchor": 1011,
+      "scope_card": 4371,
+      "gt_ids": [
+        786539,
+        321965,
+        974494,
+        899878,
+        261188,
+        951545,
+        209711,
+        549169,
+        229177,
+        384948
+      ]
+    },
+    {
+      "query_index": 359,
+      "query_id": 359,
+      "recursive": false,
+      "anchor": 402438,
+      "scope_card": 2,
+      "gt_ids": [
+        1386669,
+        1386523
+      ]
+    },
+    {
+      "query_index": 360,
+      "query_id": 360,
+      "recursive": false,
+      "anchor": 21997,
+      "scope_card": 23,
+      "gt_ids": [
+        253174,
+        1004524,
+        1362903,
+        1062498,
+        354552,
+        829315,
+        532741,
+        728419,
+        862161,
+        313583
+      ]
+    },
+    {
+      "query_index": 361,
+      "query_id": 361,
+      "recursive": true,
+      "anchor": 45054,
+      "scope_card": 6,
+      "gt_ids": [
+        1228173,
+        77428,
+        971730,
+        1007396,
+        44419,
+        1839669
+      ]
+    },
+    {
+      "query_index": 362,
+      "query_id": 362,
+      "recursive": false,
+      "anchor": 440357,
+      "scope_card": 1,
+      "gt_ids": [
+        1693227
+      ]
+    },
+    {
+      "query_index": 363,
+      "query_id": 363,
+      "recursive": true,
+      "anchor": 120,
+      "scope_card": 6961,
+      "gt_ids": [
+        1241356,
+        1307994,
+        883944,
+        136576,
+        609642,
+        330163,
+        1319288,
+        180746,
+        699589,
+        153119
+      ]
+    },
+    {
+      "query_index": 364,
+      "query_id": 364,
+      "recursive": true,
+      "anchor": 8571,
+      "scope_card": 80,
+      "gt_ids": [
+        1699365,
+        448348,
+        525332,
+        1006692,
+        99752,
+        166725,
+        159457,
+        134616,
+        180630,
+        1770001
+      ]
+    },
+    {
+      "query_index": 365,
+      "query_id": 365,
+      "recursive": false,
+      "anchor": 328327,
+      "scope_card": 2,
+      "gt_ids": [
+        947327,
+        1469081
+      ]
+    },
+    {
+      "query_index": 366,
+      "query_id": 366,
+      "recursive": false,
+      "anchor": 398062,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 367,
+      "query_id": 367,
+      "recursive": true,
+      "anchor": 325102,
+      "scope_card": 3,
+      "gt_ids": [
+        992282,
+        929475,
+        1368323
+      ]
+    },
+    {
+      "query_index": 368,
+      "query_id": 368,
+      "recursive": false,
+      "anchor": 73827,
+      "scope_card": 1,
+      "gt_ids": [
+        103134
+      ]
+    },
+    {
+      "query_index": 369,
+      "query_id": 369,
+      "recursive": true,
+      "anchor": 99122,
+      "scope_card": 8,
+      "gt_ids": [
+        169116,
+        682023,
+        924574,
+        157242,
+        650675,
+        234526,
+        252260,
+        146688
+      ]
+    },
+    {
+      "query_index": 370,
+      "query_id": 370,
+      "recursive": true,
+      "anchor": 82,
+      "scope_card": 13366,
+      "gt_ids": [
+        611513,
+        353637,
+        748093,
+        450153,
+        800899,
+        772402,
+        722693,
+        1292439,
+        1128091,
+        1151672
+      ]
+    },
+    {
+      "query_index": 371,
+      "query_id": 371,
+      "recursive": false,
+      "anchor": 242,
+      "scope_card": 28,
+      "gt_ids": [
+        3318,
+        629965,
+        1352108,
+        9651,
+        1710868,
+        420761,
+        1890458,
+        14793,
+        1503110,
+        1591950
+      ]
+    },
+    {
+      "query_index": 372,
+      "query_id": 372,
+      "recursive": false,
+      "anchor": 34436,
+      "scope_card": 5,
+      "gt_ids": [
+        557901,
+        432401,
+        28567,
+        295672,
+        723125
+      ]
+    },
+    {
+      "query_index": 373,
+      "query_id": 373,
+      "recursive": true,
+      "anchor": 466,
+      "scope_card": 15874,
+      "gt_ids": [
+        409664,
+        769760,
+        1120313,
+        1613841,
+        1333563,
+        1208536,
+        366275,
+        200560,
+        1755436,
+        1013885
+      ]
+    },
+    {
+      "query_index": 374,
+      "query_id": 374,
+      "recursive": false,
+      "anchor": 216545,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 375,
+      "query_id": 375,
+      "recursive": true,
+      "anchor": 64322,
+      "scope_card": 3,
+      "gt_ids": [
+        88526,
+        1066844,
+        876054
+      ]
+    },
+    {
+      "query_index": 376,
+      "query_id": 376,
+      "recursive": false,
+      "anchor": 7106,
+      "scope_card": 2,
+      "gt_ids": [
+        90286,
+        2867
+      ]
+    },
+    {
+      "query_index": 377,
+      "query_id": 377,
+      "recursive": true,
+      "anchor": 1190,
+      "scope_card": 722,
+      "gt_ids": [
+        759814,
+        1913725,
+        1035035,
+        1454402,
+        1385015,
+        1199965,
+        1122982,
+        1678105,
+        1116283,
+        370879
+      ]
+    },
+    {
+      "query_index": 378,
+      "query_id": 378,
+      "recursive": false,
+      "anchor": 418291,
+      "scope_card": 1,
+      "gt_ids": [
+        1493940
+      ]
+    },
+    {
+      "query_index": 379,
+      "query_id": 379,
+      "recursive": true,
+      "anchor": 49765,
+      "scope_card": 4,
+      "gt_ids": [
+        158525,
+        60467,
+        611754,
+        60232
+      ]
+    },
+    {
+      "query_index": 380,
+      "query_id": 380,
+      "recursive": false,
+      "anchor": 97788,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 381,
+      "query_id": 381,
+      "recursive": false,
+      "anchor": 125161,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 382,
+      "query_id": 382,
+      "recursive": true,
+      "anchor": 213812,
+      "scope_card": 1,
+      "gt_ids": [
+        453958
+      ]
+    },
+    {
+      "query_index": 383,
+      "query_id": 383,
+      "recursive": false,
+      "anchor": 26284,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 384,
+      "query_id": 384,
+      "recursive": false,
+      "anchor": 370064,
+      "scope_card": 2,
+      "gt_ids": [
+        1730956,
+        1189912
+      ]
+    },
+    {
+      "query_index": 385,
+      "query_id": 385,
+      "recursive": false,
+      "anchor": 7531,
+      "scope_card": 16,
+      "gt_ids": [
+        926547,
+        727640,
+        724560,
+        443385,
+        684035,
+        91334,
+        303405,
+        1047647,
+        92293,
+        409087
+      ]
+    },
+    {
+      "query_index": 386,
+      "query_id": 386,
+      "recursive": true,
+      "anchor": 556,
+      "scope_card": 5228,
+      "gt_ids": [
+        1706202,
+        1422205,
+        812148,
+        1135890,
+        1470301,
+        1765372,
+        1877205,
+        1404122,
+        212908,
+        669142
+      ]
+    },
+    {
+      "query_index": 387,
+      "query_id": 387,
+      "recursive": false,
+      "anchor": 96407,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 388,
+      "query_id": 388,
+      "recursive": false,
+      "anchor": 9339,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 389,
+      "query_id": 389,
+      "recursive": false,
+      "anchor": 1288,
+      "scope_card": 3,
+      "gt_ids": [
+        14400,
+        383194,
+        549378
+      ]
+    },
+    {
+      "query_index": 390,
+      "query_id": 390,
+      "recursive": true,
+      "anchor": 322381,
+      "scope_card": 4,
+      "gt_ids": [
+        1237781,
+        914796,
+        1373031,
+        1919167
+      ]
+    },
+    {
+      "query_index": 391,
+      "query_id": 391,
+      "recursive": false,
+      "anchor": 392628,
+      "scope_card": 5,
+      "gt_ids": [
+        1926749,
+        1510747,
+        1324051,
+        1482633,
+        1482644
+      ]
+    },
+    {
+      "query_index": 392,
+      "query_id": 392,
+      "recursive": false,
+      "anchor": 135,
+      "scope_card": 8,
+      "gt_ids": [
+        3793,
+        238104,
+        4174,
+        81965,
+        134413,
+        1436117,
+        1071724,
+        1244913
+      ]
+    },
+    {
+      "query_index": 393,
+      "query_id": 393,
+      "recursive": true,
+      "anchor": 991,
+      "scope_card": 7984,
+      "gt_ids": [
+        1567912,
+        1838337,
+        359527,
+        433590,
+        1852463,
+        186179,
+        1265700,
+        1335687,
+        584361,
+        19249
+      ]
+    },
+    {
+      "query_index": 394,
+      "query_id": 394,
+      "recursive": false,
+      "anchor": 105,
+      "scope_card": 19,
+      "gt_ids": [
+        141751,
+        1377375,
+        1213776,
+        26244,
+        24244,
+        433792,
+        306978,
+        1996,
+        180613,
+        1444509
+      ]
+    },
+    {
+      "query_index": 395,
+      "query_id": 395,
+      "recursive": true,
+      "anchor": 365,
+      "scope_card": 26290,
+      "gt_ids": [
+        516224,
+        1396117,
+        1335112,
+        1789665,
+        1266209,
+        1114492,
+        82577,
+        537383,
+        261844,
+        1094669
+      ]
+    },
+    {
+      "query_index": 396,
+      "query_id": 396,
+      "recursive": false,
+      "anchor": 111,
+      "scope_card": 1,
+      "gt_ids": [
+        8013
+      ]
+    },
+    {
+      "query_index": 397,
+      "query_id": 397,
+      "recursive": true,
+      "anchor": 1,
+      "scope_card": 925829,
+      "gt_ids": [
+        249539,
+        441455,
+        821908,
+        250883,
+        149970,
+        216045,
+        150951,
+        595937,
+        465803,
+        1017445
+      ]
+    },
+    {
+      "query_index": 398,
+      "query_id": 398,
+      "recursive": false,
+      "anchor": 459304,
+      "scope_card": 1,
+      "gt_ids": [
+        1851903
+      ]
+    },
+    {
+      "query_index": 399,
+      "query_id": 399,
+      "recursive": true,
+      "anchor": 120,
+      "scope_card": 6961,
+      "gt_ids": [
+        1033386,
+        363170,
+        415766,
+        425269,
+        1624164,
+        1754433,
+        1940120,
+        1551970,
+        491911,
+        1102082
+      ]
+    },
+    {
+      "query_index": 400,
+      "query_id": 400,
+      "recursive": true,
+      "anchor": 127664,
+      "scope_card": 3,
+      "gt_ids": [
+        206859,
+        834143,
+        230094
+      ]
+    },
+    {
+      "query_index": 401,
+      "query_id": 401,
+      "recursive": true,
+      "anchor": 321162,
+      "scope_card": 1,
+      "gt_ids": [
+        908745
+      ]
+    },
+    {
+      "query_index": 402,
+      "query_id": 402,
+      "recursive": false,
+      "anchor": 120,
+      "scope_card": 43,
+      "gt_ids": [
+        1464038,
+        1795564,
+        267136,
+        894368,
+        93755,
+        1706767,
+        1755918,
+        1385701,
+        896809,
+        132012
+      ]
+    },
+    {
+      "query_index": 403,
+      "query_id": 403,
+      "recursive": true,
+      "anchor": 218893,
+      "scope_card": 7,
+      "gt_ids": [
+        1696321,
+        1637224,
+        470869,
+        1037642,
+        687594,
+        1771765,
+        1886650
+      ]
+    },
+    {
+      "query_index": 404,
+      "query_id": 404,
+      "recursive": false,
+      "anchor": 215,
+      "scope_card": 74,
+      "gt_ids": [
+        233894,
+        993739,
+        746877,
+        141427,
+        1302813,
+        120576,
+        107452,
+        1391564,
+        615175,
+        1911480
+      ]
+    },
+    {
+      "query_index": 405,
+      "query_id": 405,
+      "recursive": true,
+      "anchor": 2677,
+      "scope_card": 1199,
+      "gt_ids": [
+        916248,
+        124873,
+        1271208,
+        635865,
+        121168,
+        131185,
+        436826,
+        433268,
+        1502943,
+        791371
+      ]
+    },
+    {
+      "query_index": 406,
+      "query_id": 406,
+      "recursive": true,
+      "anchor": 1034,
+      "scope_card": 1810,
+      "gt_ids": [
+        1499623,
+        1610370,
+        1003901,
+        1673519,
+        1261609,
+        37763,
+        605776,
+        538049,
+        1183973,
+        1513479
+      ]
+    },
+    {
+      "query_index": 407,
+      "query_id": 407,
+      "recursive": true,
+      "anchor": 130822,
+      "scope_card": 2,
+      "gt_ids": [
+        214781,
+        829382
+      ]
+    },
+    {
+      "query_index": 408,
+      "query_id": 408,
+      "recursive": true,
+      "anchor": 63154,
+      "scope_card": 13,
+      "gt_ids": [
+        485985,
+        1051707,
+        177314,
+        86836,
+        447086,
+        165039,
+        1791549,
+        1094379,
+        711120,
+        352807
+      ]
+    },
+    {
+      "query_index": 409,
+      "query_id": 409,
+      "recursive": false,
+      "anchor": 327,
+      "scope_card": 11,
+      "gt_ids": [
+        1400254,
+        1142856,
+        2556,
+        13375,
+        1187600,
+        17097,
+        186214,
+        277194,
+        808578,
+        1445235
+      ]
+    },
+    {
+      "query_index": 410,
+      "query_id": 410,
+      "recursive": true,
+      "anchor": 466,
+      "scope_card": 15874,
+      "gt_ids": [
+        1264770,
+        1349426,
+        1342443,
+        1644985,
+        173633,
+        1048895,
+        204417,
+        1630840,
+        1290746,
+        1441388
+      ]
+    },
+    {
+      "query_index": 411,
+      "query_id": 411,
+      "recursive": false,
+      "anchor": 272432,
+      "scope_card": 3,
+      "gt_ids": [
+        1873020,
+        1238235,
+        682414
+      ]
+    },
+    {
+      "query_index": 412,
+      "query_id": 412,
+      "recursive": false,
+      "anchor": 441,
+      "scope_card": 22,
+      "gt_ids": [
+        318514,
+        1407286,
+        204845,
+        77893,
+        1184238,
+        2281,
+        2366,
+        393638,
+        485743,
+        1626417
+      ]
+    },
+    {
+      "query_index": 413,
+      "query_id": 413,
+      "recursive": false,
+      "anchor": 151969,
+      "scope_card": 4,
+      "gt_ids": [
+        321808,
+        267046,
+        1641608,
+        435563
+      ]
+    },
+    {
+      "query_index": 414,
+      "query_id": 414,
+      "recursive": false,
+      "anchor": 1102,
+      "scope_card": 2,
+      "gt_ids": [
+        711905,
+        104840
+      ]
+    },
+    {
+      "query_index": 415,
+      "query_id": 415,
+      "recursive": false,
+      "anchor": 185889,
+      "scope_card": 2,
+      "gt_ids": [
+        1210954,
+        364669
+      ]
+    },
+    {
+      "query_index": 416,
+      "query_id": 416,
+      "recursive": false,
+      "anchor": 63566,
+      "scope_card": 30,
+      "gt_ids": [
+        483460,
+        209993,
+        1275159,
+        1826894,
+        1521774,
+        147154,
+        718440,
+        644007,
+        449269,
+        236794
+      ]
+    },
+    {
+      "query_index": 417,
+      "query_id": 417,
+      "recursive": false,
+      "anchor": 337071,
+      "scope_card": 3,
+      "gt_ids": [
+        1220467,
+        1220481,
+        996409
+      ]
+    },
+    {
+      "query_index": 418,
+      "query_id": 418,
+      "recursive": true,
+      "anchor": 215,
+      "scope_card": 3073,
+      "gt_ids": [
+        1721931,
+        1815922,
+        432709,
+        1477419,
+        1535267,
+        1521870,
+        1340535,
+        121812,
+        918818,
+        355532
+      ]
+    },
+    {
+      "query_index": 419,
+      "query_id": 419,
+      "recursive": false,
+      "anchor": 1034,
+      "scope_card": 4,
+      "gt_ids": [
+        22407,
+        955591,
+        11439,
+        831626
+      ]
+    },
+    {
+      "query_index": 420,
+      "query_id": 420,
+      "recursive": true,
+      "anchor": 327,
+      "scope_card": 34329,
+      "gt_ids": [
+        133559,
+        510410,
+        258187,
+        711202,
+        1127929,
+        1329157,
+        470519,
+        751933,
+        871767,
+        1039293
+      ]
+    },
+    {
+      "query_index": 421,
+      "query_id": 421,
+      "recursive": false,
+      "anchor": 913,
+      "scope_card": 16,
+      "gt_ids": [
+        519685,
+        924267,
+        130959,
+        787457,
+        132117,
+        296807,
+        525710,
+        1244066,
+        209611,
+        112596
+      ]
+    },
+    {
+      "query_index": 422,
+      "query_id": 422,
+      "recursive": false,
+      "anchor": 103178,
+      "scope_card": 10,
+      "gt_ids": [
+        153798,
+        1446832,
+        881708,
+        1341353,
+        1116691,
+        807305,
+        447631,
+        608904,
+        1007239,
+        1073030
+      ]
+    },
+    {
+      "query_index": 423,
+      "query_id": 423,
+      "recursive": false,
+      "anchor": 294222,
+      "scope_card": 2,
+      "gt_ids": [
+        1087938,
+        779336
+      ]
+    },
+    {
+      "query_index": 424,
+      "query_id": 424,
+      "recursive": true,
+      "anchor": 164,
+      "scope_card": 12136,
+      "gt_ids": [
+        866256,
+        32453,
+        518971,
+        578036,
+        35970,
+        153114,
+        867996,
+        1651173,
+        621164,
+        739749
+      ]
+    },
+    {
+      "query_index": 425,
+      "query_id": 425,
+      "recursive": true,
+      "anchor": 373390,
+      "scope_card": 3,
+      "gt_ids": [
+        1208752,
+        1533034,
+        1426864
+      ]
+    },
+    {
+      "query_index": 426,
+      "query_id": 426,
+      "recursive": true,
+      "anchor": 10649,
+      "scope_card": 1,
+      "gt_ids": [
+        5193
+      ]
+    },
+    {
+      "query_index": 427,
+      "query_id": 427,
+      "recursive": true,
+      "anchor": 413088,
+      "scope_card": 1,
+      "gt_ids": [
+        1455675
+      ]
+    },
+    {
+      "query_index": 428,
+      "query_id": 428,
+      "recursive": true,
+      "anchor": 405323,
+      "scope_card": 1,
+      "gt_ids": [
+        1406656
+      ]
+    },
+    {
+      "query_index": 429,
+      "query_id": 429,
+      "recursive": true,
+      "anchor": 141593,
+      "scope_card": 2,
+      "gt_ids": [
+        240542,
+        1726148
+      ]
+    },
+    {
+      "query_index": 430,
+      "query_id": 430,
+      "recursive": true,
+      "anchor": 418020,
+      "scope_card": 2,
+      "gt_ids": [
+        1600135,
+        1490121
+      ]
+    },
+    {
+      "query_index": 431,
+      "query_id": 431,
+      "recursive": true,
+      "anchor": 72975,
+      "scope_card": 37,
+      "gt_ids": [
+        1529556,
+        668810,
+        297961,
+        826131,
+        1162238,
+        1423992,
+        299119,
+        1163184,
+        101787,
+        983886
+      ]
+    },
+    {
+      "query_index": 432,
+      "query_id": 432,
+      "recursive": false,
+      "anchor": 466,
+      "scope_card": 22,
+      "gt_ids": [
+        86202,
+        173746,
+        11940,
+        236057,
+        170956,
+        24648,
+        80252,
+        110720,
+        1499,
+        193892
+      ]
+    },
+    {
+      "query_index": 433,
+      "query_id": 433,
+      "recursive": true,
+      "anchor": 39023,
+      "scope_card": 4,
+      "gt_ids": [
+        730290,
+        33949,
+        35839,
+        1616629
+      ]
+    },
+    {
+      "query_index": 434,
+      "query_id": 434,
+      "recursive": true,
+      "anchor": 18032,
+      "scope_card": 23,
+      "gt_ids": [
+        113509,
+        93832,
+        1045071,
+        108911,
+        13874,
+        995438,
+        83486,
+        111925,
+        125517,
+        113508
+      ]
+    },
+    {
+      "query_index": 435,
+      "query_id": 435,
+      "recursive": true,
+      "anchor": 5654,
+      "scope_card": 1694,
+      "gt_ids": [
+        410874,
+        7861,
+        636815,
+        581964,
+        164246,
+        1111801,
+        588082,
+        1689934,
+        174946,
+        740695
+      ]
+    },
+    {
+      "query_index": 436,
+      "query_id": 436,
+      "recursive": false,
+      "anchor": 331278,
+      "scope_card": 1,
+      "gt_ids": [
+        964171
+      ]
+    },
+    {
+      "query_index": 437,
+      "query_id": 437,
+      "recursive": true,
+      "anchor": 193826,
+      "scope_card": 52,
+      "gt_ids": [
+        1898739,
+        1452304,
+        1306531,
+        1726827,
+        818644,
+        598889,
+        1254219,
+        525492,
+        1280375,
+        1866722
+      ]
+    },
+    {
+      "query_index": 438,
+      "query_id": 438,
+      "recursive": true,
+      "anchor": 153,
+      "scope_card": 8777,
+      "gt_ids": [
+        10310,
+        1652206,
+        4286,
+        1639809,
+        313231,
+        1877629,
+        740987,
+        1742051,
+        1317145,
+        403112
+      ]
+    },
+    {
+      "query_index": 439,
+      "query_id": 439,
+      "recursive": true,
+      "anchor": 365,
+      "scope_card": 26290,
+      "gt_ids": [
+        319322,
+        7106,
+        118019,
+        1547097,
+        1067812,
+        662783,
+        1314037,
+        122420,
+        836827,
+        619921
+      ]
+    },
+    {
+      "query_index": 440,
+      "query_id": 440,
+      "recursive": true,
+      "anchor": 399,
+      "scope_card": 8080,
+      "gt_ids": [
+        289149,
+        1422857,
+        782262,
+        1035852,
+        1736842,
+        1214510,
+        438429,
+        1201968,
+        477167,
+        790716
+      ]
+    },
+    {
+      "query_index": 441,
+      "query_id": 441,
+      "recursive": true,
+      "anchor": 96625,
+      "scope_card": 3,
+      "gt_ids": [
+        773946,
+        1654509,
+        142033
+      ]
+    },
+    {
+      "query_index": 442,
+      "query_id": 442,
+      "recursive": true,
+      "anchor": 385507,
+      "scope_card": 1,
+      "gt_ids": [
+        1282379
+      ]
+    },
+    {
+      "query_index": 443,
+      "query_id": 443,
+      "recursive": true,
+      "anchor": 178364,
+      "scope_card": 22,
+      "gt_ids": [
+        990424,
+        342695,
+        988331,
+        987936,
+        990192,
+        990068,
+        975174,
+        966271,
+        988711,
+        990498
+      ]
+    },
+    {
+      "query_index": 444,
+      "query_id": 444,
+      "recursive": true,
+      "anchor": 7212,
+      "scope_card": 110,
+      "gt_ids": [
+        917882,
+        651281,
+        325378,
+        1502687,
+        223338,
+        217396,
+        1771330,
+        348933,
+        691855,
+        1245621
+      ]
+    },
+    {
+      "query_index": 445,
+      "query_id": 445,
+      "recursive": false,
+      "anchor": 189853,
+      "scope_card": 3,
+      "gt_ids": [
+        376361,
+        1309678,
+        1582168
+      ]
+    },
+    {
+      "query_index": 446,
+      "query_id": 446,
+      "recursive": true,
+      "anchor": 82430,
+      "scope_card": 12,
+      "gt_ids": [
+        1121930,
+        262220,
+        197183,
+        1193631,
+        1676353,
+        117790,
+        137099,
+        663307,
+        381027,
+        171704
+      ]
+    },
+    {
+      "query_index": 447,
+      "query_id": 447,
+      "recursive": true,
+      "anchor": 292907,
+      "scope_card": 7,
+      "gt_ids": [
+        1904612,
+        1738664,
+        1814283,
+        1502212,
+        1298767,
+        1349560,
+        773373
+      ]
+    },
+    {
+      "query_index": 448,
+      "query_id": 448,
+      "recursive": true,
+      "anchor": 70013,
+      "scope_card": 15,
+      "gt_ids": [
+        1090093,
+        1829313,
+        1889132,
+        497369,
+        403070,
+        1415696,
+        1453089,
+        481010,
+        1154164,
+        164162
+      ]
+    },
+    {
+      "query_index": 449,
+      "query_id": 449,
+      "recursive": true,
+      "anchor": 1034,
+      "scope_card": 1810,
+      "gt_ids": [
+        1261609,
+        1073396,
+        114898,
+        771720,
+        429757,
+        172892,
+        190451,
+        731498,
+        928154,
+        17093
+      ]
+    },
+    {
+      "query_index": 450,
+      "query_id": 450,
+      "recursive": false,
+      "anchor": 249747,
+      "scope_card": 1,
+      "gt_ids": [
+        586829
+      ]
+    },
+    {
+      "query_index": 451,
+      "query_id": 451,
+      "recursive": true,
+      "anchor": 399907,
+      "scope_card": 2,
+      "gt_ids": [
+        1441478,
+        1368570
+      ]
+    },
+    {
+      "query_index": 452,
+      "query_id": 452,
+      "recursive": false,
+      "anchor": 13418,
+      "scope_card": 1,
+      "gt_ids": [
+        7295
+      ]
+    },
+    {
+      "query_index": 453,
+      "query_id": 453,
+      "recursive": false,
+      "anchor": 85015,
+      "scope_card": 0,
+      "gt_ids": []
+    },
+    {
+      "query_index": 454,
+      "query_id": 454,
+      "recursive": false,
+      "anchor": 427766,
+      "scope_card": 2,
+      "gt_ids": [
+        1571846,
+        1939125
+      ]
+    },
+    {
+      "query_index": 455,
+      "query_id": 455,
+      "recursive": true,
+      "anchor": 269396,
+      "scope_card": 2,
+      "gt_ids": [
+        946104,
+        669141
+      ]
+    }
+  ]
+}

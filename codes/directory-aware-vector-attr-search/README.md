@@ -93,3 +93,9 @@ production/nested-attr-vector-search/work/venv/bin/python \
 
 自检：每个 DSM op 后可设 `DSM_AUDIT_EACH=1` 逐 op 重算 Inclusive 集合
 audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。
+
+## 新索引研究的固定 autoresearch 基准
+
+仓库根目录运行 `bash autoresearch.sh`：完整WIKI、独立冻结NumPy GT、局部全HNSW起点，串行3次重复；输出主指标 `METRIC recursive_e2e_ms=...` 与召回/构建/RSS等副指标。每次重复均须通过质量及资源门槛，否则非零退出。`result_ids` 为新增per-query列，输出与独立质量审计均在查询计时外。
+
+[固定协议及新颖性边界](../../researches/nested-attr-vector-search/2026-10-28-exps/experiments/autoresearch-harness.md)；[已观测baseline](../../researches/nested-attr-vector-search/2026-10-28-exps/data/autoresearch_harness_baseline.json)。这是评测起点，不是已实现或已确认新颖的新算法。

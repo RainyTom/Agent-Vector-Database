@@ -661,7 +661,7 @@ int main(int argc, char** argv) {
                    "dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms\n";
         csv_perquery << "dataset,design,executor,query_type,anchor_depth,scope_card,dir_us,"
                         "enum_us,bitmap_us,e2e_ms,recall10,ndcg10,"
-                        "gt_count,hit_count,valid_return_count,query_index,search_us\n";
+                        "gt_count,hit_count,valid_return_count,query_index,search_us,result_ids\n";
     }
     if (want_dsm) {
         csv_dsm.open(csv + "_dsm.csv");
@@ -1125,7 +1125,12 @@ int main(int argc, char** argv) {
                                      << "," << e2e_ms << "," << (double)hit / K << ","
                                      << ndcg << "," << gts[qi].size() << "," << hit
                                      << "," << quality.valid << "," << qi << ","
-                                     << search_us << "\n";
+                                     << search_us << ",";
+                        for (size_t j = 0; j < I.size(); ++j) {
+                            if (j) csv_perquery << " ";
+                            csv_perquery << I[j];
+                        }
+                        csv_perquery << "\n";
                         dir[r].add(d_us);
                         e2e[r].add(e2e_ms);
                         rec[r].add((double)hit / K);
