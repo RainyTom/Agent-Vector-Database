@@ -1,0 +1,186 @@
+# 分层属性向量混合搜索：问题定义、方案对比与优化路线
+
+日期：2026-10-27。范围：`researches/nested-attr-vector-search/` 全部已完成工作（TrieHI 复现 + 选择率测量 + 属性分区索引 baseline）。数据与图均来自本地实测，未核实处单独标注。
+
+**一句话结论**：目录 scope 解析层是端到端延迟的决定性变量（全局 ANN 方案在 query-time 展开时慢 2–3 个数量级）；新引入的**属性分区索引（NodeANN）**在同一 scope 语义下以精确质量（nDCG=1.0）完成检索，非递归查询快 3 个数量级、100k 递归端到端最快，但在 1M 深树递归上受"每节点搜索调用数"拖累（28–38 ms 目录开销）——这正是下一步优化的靶点。
+
+---
+
+## 1. 研究问题
+
+### 1.1 形式化定义
+
+数据：向量集合 $D=\{x_i\in\mathbb{R}^d\}$，每个对象绑定一个**目录节点** $h(x_i)\in V$（前缀树节点，非叶可绑定），节点 $v$ 的递归 scope 为子树全体成员：
+
+$$
+S_{\text{rec}}(v)=\{\,x \mid h(x)\in \mathrm{Desc}(v)\,\},\qquad
+S_{\text{nrec}}(v)=\{\,x \mid h(x)=v\,\}.
+$$
+
+查询：$(q, v, \text{rec})$，返回 scope 内按距离 $d(q,\cdot)$ 最近的 $k$ 个对象。
+
+**优化目标**（四维同时约束）：① recall@k 对齐 scope 内精确 top-k；② 端到端延迟（含 scope 解析）；③ 构建/存储开销；④ 结构可维护性——MOVE/MERGE 后三种表示必须解析出同一节点集与成员集（语义等价）。
+
+### 1.2 与相邻问题的边界
+
+- **不是 vector join**：单查询、top-k 输出、无 pair 语义；与 A 类几何向量连接不混同。
+- **不是普通 filtered ANN**：谓词是**拓扑的**（祖先/后代/子树），不是 flat 标量；scope 解析有独立成本可测（directory-only latency）。
+- 目录 scope 层独立于 ANN 布局：同一 scope 可喂给 PG（图索引）或 IVF（分区倒排）。
+
+### 1.3 三类目录表示（论文空间）
+
+| 表示 | 存储 | 递归查询 | 非递归查询 | MOVE |
+|---|---|---|---|---|
+| PE-Online | 每 entry 1 条父路径 posting | 查询时枚举子树 key + posting OR | 1 次 path 查找 | 子树 key 重映射 O(m_u) |
+| PE-Offline | 每 entry t 条祖先 posting | 1 次祖先 key 查找 | 全集 ∖ 子集差 | O(m_u) 重映射 + O(t) 祖先更新 |
+| TrieHI | trie + 每节点 inclusive 位图 | 路径遍历 + 1 次聚合集访问 | 局域网差集 | 子树重链 + 祖先位图更新 O(t) |
+
+### 1.4 应用场景
+
+| 场景 | 分层结构 | scope 查询示例 |
+|---|---|---|
+| 代码库语义检索 | `/src/core/payment.py` 前缀即 scope | "在 `/src/core/` 子树内找相似实现" |
+| 企业文档管理 | HR/Policies、Finance、Legal/Archive | "HR 全部政策（含历史归档）中与 query 最相关的 10 篇" |
+| Agent 记忆（OpenViking） | `viking://resources/...`、memories/skills | 先定位用户/会话 scope，再 scope 内语义检索 |
+| 学术论文检索 | arXiv subject（`/cs/AI/`）+ temporal（`/2024/05/`）双命名空间 | "2024 年 5 月的 cs.AI 论文里最相关 10 篇" |
+| 电商品类 | 品类树 × 属性 facet | "手机 > 拍照旗舰 子树内相似商品" |
+
+---
+
+## 2. 新 baseline：属性分区索引（NodeANN）
+
+与前三者的本质区别：前三者都是「**全局 ANN 索引 + scope 位图过滤**」（目录层只产出候选 ID 集，ANN 在整个数据集上遍历并跳过不合格节点）；NodeANN 是「**每目录节点独立 ANN 索引**」——item 按绑定节点分区，查询只进入候选节点的索引。
+
+- 构建：每节点一个 Flat 索引（v1 暴力），存向量副本 + 全局 ID 映射；空节点不建。
+- 查询：递归 = 锚点子树中所有**含 item 的节点**，各搜 top-N，按距离全局合并 top-K；非递归 = 锚节点索引一次 top-N（N 是效率-精度旋钮）。
+- 目录解析成本 = 子树节点枚举（无位图构造）；MOVE = 纯指针重挂（索引随节点走，零重建）。
+
+---
+
+## 3. 实验设置
+
+| 数据集 | 规模 | 目录结构 | 查询 | 向量 |
+|---|---|---|---|---|
+| SIFT100k 合成 | 100k×128d | wiki 合成树 19k 目录均深 13.4 + subject/temporal | 500 + 1000 | ann-benchmarks SIFT |
+| SIFT1M 合成属性 | 1M×128d | 同上（生成规则/seed 不变，仅放大条目） | 500 + 1000 | ann-benchmarks SIFT |
+| WIKI-Dir 全量 | 1,941,679×1024d | 468,031 目录（论文 363,467；未做规范路径裁剪，偏离已记录） | 457 | bge-m3 |
+| WIKI-Dir 1M | 1M 子采样×1024d | 同上全量树 | 457 | bge-m3（Drive 配额只取到 1,029,778 条） |
+| ARXIV-Dir 全量 | 2,763,543×1024d | subject 168 + temporal 432 目录（与论文一致） | 2000（1000 真实 category 约束） | mxb-ai-embed-large-v1 |
+
+执行器：HNSW（M16, efSearch 可扫描）≈ 论文 PG；IVF（nlist=1024, nprobe 可扫描）；NodeANN-Flat。GT：每查询 scope 内暴力 top-10。固定单线程、固定 seed、每点只测一次（运行间方差 DSQ ±10%，PE-Online 大子树 MOVE 方差更大，已记录）。
+
+---
+
+## 4. 结果
+
+### 4.1 目录解析延迟（Table IV 对应，µs mean）
+
+| 数据集 | 类型 | PE-Online | PE-Offline | TrieHI | 论文（WIKI / ARXIV） |
+|---|---|---|---|---|---|
+| WIKI 全量 1.94M | recursive | **1964.9** | 2.57 | 3.22 | 365000 / — |
+| WIKI 全量 | non-recursive | **0.95** | 44.2 | 50.1 | 29.07 / — |
+| ARXIV 全量 2.76M | recursive | **852.2** | 8.93 | 9.66 | — / 1089.2 |
+| ARXIV 全量 | non-recursive | **6.27** | 30.6 | 31.4 | — / 4.35 |
+
+排序在 4/4 组与论文一致。绝对值小于论文（目录结构差异：468k vs 363k 节点、浅层展开集小一个量级）。**PE-Online 的 recursive 是唯一随规模爆炸的设计**——这就是"目录解析层决定端到端"的直接证据。
+
+### 4.2 DSM（Fig 9 对应，ms mean，2000 ops）
+
+| 运行 | MOVE：PE-Online / PE-Offline / TrieHI | MERGE |
+|---|---|---|
+| WIKI 全量 1.94M | 38.1 / 14.9 / **2.75** | 0.077 / 0.431 / 0.120 |
+| WIKI 1M 子采样 | 17.1 / 5.90 / 2.38 | 0.039 / 0.129 / 0.095 |
+| SIFT1M 合成 | 7.87 / 1.25 / **1.14** | 5.11 / 1.42 / 1.28 |
+
+TrieHI 的子树重链在真实深树（max depth 31）上稳定最优；PE-Online 的 MOVE 随子树 entry 数增长且方差大。
+
+![DSM 逐操作延迟（100k 合成，Fig 9 复现）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures/fig_repro_fig9_dsm_perop.png)
+
+### 4.3 端到端质量-延迟（帕累托，加密超参数网格）
+
+![帕累托前沿：SIFT100k（PG/IVF 各 15/11 档，NODE 8 档）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures/fig_repro_pareto_recall_latency.png)
+
+![帕累托前沿：真实 WIKI-Dir 1M](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures_real_wiki1m/fig_repro_pareto_recall_latency.png)
+
+读图要点：
+- 三设计在同一执行器参数下 recall 逐点相同（scope 语义等价、同一 GT），曲线按 y 分层——**目录表示只移动延迟轴，不改变质量**。
+- 真实 1M：PE-Online 在 PG 子图呈高位平台（目录展开 0.6–2.4 ms 固定成本压制 recall 收益）；TrieHI/PE-Offline 曲线在其下方贯穿 recall 全区间。
+- **NODE（紫线）出现在高 recall 区（0.85–0.98）**：它是精确方法（每节点暴力），recall 由 GT 覆盖度而非 ANN 近似决定；代价是 1M 深树递归的节点枚举 + 每节点搜索调用。
+
+### 4.4 目录结构复杂度（Fig 10 对应，真实 WIKI 全量树）
+
+![真实 WIKI-Dir 深度结构：浅层锚点展开上万子目录](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures_real_wiki1m/fig_repro_fig10_structure.png)
+
+depth-1 锚点平均展开 ≈10,800 个子目录（论文同位置 236,903/363k 规模比例更高）——PE-Online 与 NodeANN 的递归成本都源于此。
+
+### 4.5 NodeANN 首轮测量（关键发现）
+
+| 数据集/执行器 | 方案 | recursive：ndcg / recall / e2e | non-recursive：e2e |
+|---|---|---|---|
+| SIFT100k，PG | TrieHI | 0.673 / 0.597 / 12.8 ms | 12.8 ms |
+| SIFT100k，PG | PE-Online | 0.673 / 0.597 / 14.5 ms | 13.2 ms |
+| SIFT100k，**NODE-Flat** | NodeANN | **1.000 / 0.892 / 8.4 ms** | **0.004 ms** |
+| SIFT1M，PG | TrieHI | 0.679 / 0.628 / 48.9 ms | 47.4 ms |
+| SIFT1M，**NODE-Flat** | NodeANN | **1.000 / 0.983 / 68.7 ms** | **0.012 ms** |
+
+- **质量**：NodeANN nDCG=1.0（精确），三设计 0.67–0.68（HNSW 近似 + 位图过滤在深锚小 scope 下召回塌陷）。
+- **非递归**：NodeANN 比全局 ANN 方案快 **3 个数量级**（12 µs vs 47 ms）——scope 只有单节点时无需全局索引遍历。
+- **递归**：100k 上 NodeANN 端到端最快（8.4 vs 12.8 ms）；1M 上被目录枚举（37.7 ms）+ 每节点搜索调用拖累反超（68.7 ms）。**这是优化重点，不是方案缺陷**。
+
+---
+
+## 5. 优化路线（待审批，未实验）
+
+来源：`agent://NodeAnnOptPaths` 调研（本地 29 篇索引 + 2024–2026 web 检索），共 5 方向 11 条；此处只列推荐 top-3 与两条备选。
+
+### 推荐 #1：Lane 责任划分 + top-N 合并的召回证书（P1）
+
+- **机制**：Coordination-Free Lane Partitioning（arXiv:2511.04221）的确定性候选责任划分。
+- **改法**：把"每节点各搜 top-N 再合并"改为"每 lane 输出其责任集内精确 top-N" → 合并即全集精确 top-K（v1 Flat 已自动成立，可直接给出**精确性证明**）。N<K 时给出反例与"最小 N"的界；换近似图索引后，责任划分给出可陈述的召回下界。
+- **收益**：top-N 旋钮从经验值变成带证书参数；理论增量是 ACORN/StitchedVamana/湖仓方案都没有的。实现只改合并器。
+- **风险**：低。注意 arXiv:2608.05441（IBM 2026-08）已做 per-file ANN + 合并——必须把"目录层级 + 递归 scope + MOVE 动态"作为差异化主轴。
+
+### 推荐 #2：层级下降路由器（质心下界 + 分支定界）（P4）
+
+- **机制**：NaviX（VLDB 2026 adaptive-g/l）+ VADER（声明式召回）+ RaBitQ 类距离下界。
+- **改法**：每目录节点维护质心/条目数；查询自顶向下用"查询到子树质心的下界距离"排序，按还需多少候选决定进入哪些子树，整支剪掉不可能贡献 top-K 的子树；early-stop 阈值按 workload 学习。
+- **收益**：直接打在 1M 递归 37.7 ms 的目录枚举上（预期降至与 TrieHI 位图同量级或更低）。
+- **风险**：中。Curator 有构建期子树过滤（非查询期路由）；需引用对比。实验可在现有 WIKI 1M fixture 上直接做。
+
+### 推荐 #3：MOVE 语义下的分区图动态维护（P8）
+
+- **机制**：CleANN（arXiv:2507.19802）局内有界度修复 + FreshDiskANN 短边冻结/懒惰重建。
+- **改法**：分区内图索引增量修复；跨分区边只做**懒惰失效**（查询期校验 + 批量重建），给 MOVE/INSERT/DELETE 摊销界。NodeANN 的"索引随节点走"在 MOVE 下已是零重建，这是天然优势的兑现。
+- **收益**：DSM 是 TrieHI 已测、Filtered-DiskANN/ACORN 完全没覆盖的场景；与本仓库已有 MOVE 测量直接衔接。
+- **风险**：中低。
+
+### 备选
+
+- **P3 多分区 top-N 的数学界限**（我们推导）：v1 精确性证明 + 近似化后的 union 召回界；与 P1 合并做更自然。
+- **P6 跨节点稀疏叠加图**：把 ACORN 的全局跨边收敛到"目录父子边界"，图规模 O(n·R)→边界规模；需证明边界边 ≪ 全局边的空间优势。撞车风险中（ACORN/UNG/iRangeGraph 组合感）。
+
+### 撞车警报（必须正视）
+
+| 工作 | 同构点 | 我们的差异 |
+|---|---|---|
+| arXiv:2608.05441（IBM 2026-08） | per-file ANN + 协调器合并 top-k | 目录层级语义、递归 scope、MOVE 动态、召回证书 |
+| Filtered-DiskANN StitchedVamana（WWW'23） | 每标签独立图 | 层级前缀闭包分区（非标签子集）、DSM |
+| MA-NSW（FANNS survey 引用） | 逐属性组合多索引 | 同上；需显式作为 related work |
+| NaviX（VLDB'26） | 全局/局部双模式 | 层级下降 + 下界剪枝 |
+
+---
+
+## 6. 下一步（建议顺序）
+
+1. **补完 NodeANN 对比数据**（纯跑数，无代码改动）：WIKI 1M 的 DSQ 段（`--mode dsq --executor all3`）、SIFT1M 加密 scan。
+2. **实现 P1**（合并器 + 精确性证明 + N<K 反例）→ 论文级理论节。
+3. **实现 P4**（质心 + 下界 + 分支定界）→ 攻 1M 递归目录开销。
+4. **P8**（MOVE 协议 + 摊销界）→ DSM 差异化章节。
+5. 新颖性再排查：以"层级语义 + 递归 scope + MOVE"为关键词检索 2026 下半年的分层 filtered ANN 工作。
+
+## 附：数据与可复现
+
+- 协议：`01-directory-aware-acceleration/2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-protocol.md`
+- 实验记录：`2026-10-26-triehi-repro-results.md`（100k）、`2026-10-26-figures-7to12-completion.md`（Fig 7–12 + 全量真实数据 + SIFT1M）
+- NodeANN 代码：`codes/directory-aware-vector-attr-search/src/repro.cpp`（`--executor node|all3`，`--noden-list`）
+- 论文解析：`01-directory-aware-acceleration/paper-notes-2606.16903.md`
