@@ -74,7 +74,7 @@ Fig 7 观察（100k 合成）：wiki-IVF 与 arxiv 两子图中 PE-Offline 与 T
 - **wiki corpus_vectors（7.96 GB）**：Google Drive 触发"too many users"24h 配额，四次尝试后稳定在 4.22 GB（1,029,778 条完整 fvecs 记录，尾部 2 条半记录截断）。提取完整记录 → 子采样 1,000,000 条（seed 20261026，重编号）作为 ANN 端到端输入；**全量 1.94M 的目录解析与 DSM 实验不依赖向量，已用全量目录树完成**。全量向量待配额恢复后补（`data/real_fixtures/wiki/corpus_vectors.partial` 保留）。
 - **arxiv 语料向量**：发布方未提供下载（SOURCES.md D 节无此文件，F 节亦无）；arxiv 只完成目录解析（scope 模式），ANN 端到端不可跑。
 - 发布方文件名与 build 脚本期望名的差异全部用符号链接适配（`corpus_paths.jsonl`→`dbpedia_dir_2m_corpus_paths.json`、`arxiv_category_constraint.json`(116KB，SOURCES.md 标 29MB 有误)→`arxiv_category_query_constraint.json` 等）；`corpus_paths.jsonl`/`corpus_metadata.jsonl` 实为 JSON array，`arxiv_query_constraint.json` 实为查询向量 fvecs（与 SOURCES.md 记录一致）。
-- **数据集核对**：arxiv 构建出 2,763,543 条目、subject 168 / temporal 432 目录、max depth 3/2，与论文 §V-A 完全一致；GT 校验 1000/1000 查询全在 scope 内。wiki 构建出 1,941,679 条目、**468,031 目录**（论文 363,467）、max depth 31——目录数多 28.7%，因为 build 脚本对每对象的全部路径建 trie，未复现论文"取一规范路径 + 丢弃 invalid links"的裁剪；目录解析绝对值因此小于论文，排序不受影响。workload 457 查询（生成器 round 累积，论文 456）。
+- **数据集核对**：arxiv 构建出 2,763,543 条目、subject 168 / temporal 432 目录、max depth 3/2，与论文 §V-A 完全一致；GT 校验 1000/1000 查询全在 scope 内。wiki 构建出 1,941,679 条目、trie 468,031 节点、max depth 31；**其中有绑定的节点恰好 363,467 个——与论文报告的 363,467 directories 精确一致**（差集是仅作路径前缀存在的中间节点，PE-Online/Offline 的 path_key 需要它们）。此前记作"目录数多 28.7%"属口径差异而非结构偏离（`scripts/tag_scale_check.py` 实测，2026-10-27）。目录解析绝对值仍小于论文（浅层展开集规模差异），排序不受影响。workload 457 查询（生成器 round 累积，论文 456）。
 
 ## Table IV 对应：全量目录解析延迟（directory-only，µs mean，单线程）
 

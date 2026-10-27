@@ -51,7 +51,7 @@ $$
 
 ---
 
-## 2. 新 baseline：属性分区索引（NodeANN）
+## 2. baseline：属性分区索引（NodeANN）
 
 与前三者的本质区别：前三者都是「**全局 ANN 索引 + scope 位图过滤**」（目录层只产出候选 ID 集，ANN 在整个数据集上遍历并跳过不合格节点）；NodeANN 是「**每目录节点独立 ANN 索引**」——item 按绑定节点分区，查询只进入候选节点的索引。
 
@@ -60,6 +60,53 @@ $$
 - 目录解析成本 = 子树节点枚举（无位图构造）；MOVE = 纯指针重挂（索引随节点走，零重建）。
 
 ![架构对比：全局索引 + 位图过滤（上）vs 每节点分区索引（下）](assets/grsai-arch-compare.png)
+
+### 2.5 方案 E：目录 → 单标签过滤 ANNS 的归约
+
+目录范围查询可以归约为标准的单标签过滤 ANNS：把对象绑定的目录节点换成它的**递归范围标签**与**非递归精确标签**。设 $h(x)=u$：
+
+$$
+F_x=\{(\mathrm{rec},a): a\in \mathrm{Anc}(u)\cup\{u\}\}\ \cup\ \{(\mathrm{nrec},u)\}.
+$$
+
+则 $x\in S_{\mathrm{rec}}(v)\iff(\mathrm{rec},v)\in F_x$，$x\in S_{\mathrm{nrec}}(v)\iff(\mathrm{nrec},v)\in F_x$（`rec`/`nrec` 前缀防止两种语义互撞）。注意我们的 $S_{\mathrm{rec}}$ 含 $v$ 自身绑定（$\mathrm{Inc}(v)$ 含 $\mathrm{Local}(v)$），所以递归标签沿祖先链**含自身**。
+
+**等价性（本项目的观察）**：对任何**谓词无关**后端（HNSW / IVF / ACORN / NaviX / FAISS 的 FilteredHNSW），标签 $(\mathrm{rec},v)$ 的倒排点集 $\equiv$ PE-Offline 的 $\mathrm{Inc}(v)$ 位图；$(\mathrm{nrec},v)$ 的点集 $\equiv\mathrm{Local}(v)$。证明：$(\mathrm{rec},v)\in F_x \iff h(x)\in\mathrm{Desc}(v)\cup\{v\}$，即 PE-Offline 的祖先物化定义。∎
+
+由此得到两个直接推论：
+
+1. **标签展开的存储与 PE-Offline 同构**：$O(n\cdot\overline{d})$ 条标签 $\equiv$ 祖先 posting 物化。wiki 真实数据 $\overline{d}\approx 13$、1.94M 对象 → ≈2500 万条标签项。
+2. **查询阶段没有增量**：标签编码 + 谓词无关后端的查询结果就是已测过的 PE-Offline 行（同一 scope 位图、同一 HNSW/IVF 搜索）。**方案 E 的全部潜在增量在图构建阶段——标签感知剪枝**（FilteredVamana 的 FilteredRobustPrune、StitchedVamana 的每标签子图），这才是需要新后端才能验证的部分。
+
+**规模错配（关键挑战，已实测）**：Filtered-DiskANN 论文的实验规模是"数千种过滤标签、每点关联数十至数百个标签"。用 `scripts/tag_scale_check.py` 从现有 fixture 直接核算：
+
+| 数据集 | 目录节点 | 有绑定节点 | 标签基数（rec+nrec） | 每对象标签数 | 标签总条目 |
+|---|---|---|---|---|---|
+| WIKI-Dir 真实 | 468,031 | **363,467** | **831,498** | 15.58（rec 13.58+1） | 28.3 M |
+| SIFT100k 合成 | 19,000 | 18,889 | 37,889 | 16.45 | 1.5 M |
+| ARXIV subject | 168 | 159 | 327 | 5.22 | 24.1 M（多绑定） |
+| ARXIV temporal | 432 | 397 | 829 | 5.00 | 11.1 M |
+
+结论：**每对象标签数（5–16）落在论文的"数十"范围内，但 WIKI 的标签基数（83 万）超论文规模两个数量级**；ARXIV（327/829 标签）完全落在论文范围内。由此：
+- **StitchedVamana 在 WIKI 不可行**（46.8 万 rec 子图）；在 ARXIV 可行（168/432 子图），可直接对比。
+- **FilteredVamana 在 WIKI 的剪枝质量待验证**：每标签平均仅 ~4 个对象（1.94M/468k），标签共现极稀疏，FilteredRobustPrune 能否选出"过滤后仍连通"的边是开放问题。
+
+**数据口径澄清**：WIKI trie 的 468,031 节点中有绑定的恰好 **363,467** 个——与论文报告的 "363,467 directories" 精确一致；差集是仅作路径前缀存在的中间节点（PE-Online/Offline 的 path_key 需要，TrieHI 可折叠）。此前记录为"目录数多 28.7%"的偏离应更正为**口径差异**而非结构差异。
+
+**维护维度（决定性对比）**：MOVE 一棵子树时，标签编码需要重写子树内**每个对象**的祖先链标签（$O(n_{\text{sub}}\cdot d)$），并重剪受影响的图边；而：
+
+| 方案 | MOVE 开销 | 是否触对象 |
+|---|---|---|
+| PE-Online / PE-Offline | $O(m_u)$ 目录 key 重映射 | 否 |
+| TrieHI | $O(t)$ 祖先位图更新 | 否 |
+| NodeANN | $O(1)$ 指针重挂（索引随节点走） | 否 |
+| **标签编码 + FilteredVamana** | $O(n_{\text{sub}}\cdot d)$ 标签重写 + 边重剪 | **是** |
+
+**取舍轴**：用户最后指出的对偶成立——「展开祖先标签（查询单标签、更新贵）」vs「只存直接绑定、查询时拆子树多节点合并（更新便宜、查询扇出）」；**后者正是 NodeANN baseline**。两者间的取舍是更新成本与查询扇出的交换，本方向的实验矩阵应把两者放在同一 scope 语义与同一 GT 下对比。
+
+**近似性边界**：标签编码 + FilteredVamana 仍是 recall@k 近似（不保证精确 top-k）；NodeANN v1（每节点 Flat）是精确的。若要求严格精确，只能 scope 内精确扫描或 NodeANN-Flat。
+
+**实现计划（待批准）**：本地 PathSeer fork 只有 `IndexACORNFlat` / `IndexFilteredHNSW`（查询期 bool 过滤，非标签感知）/ `IndexNaviX`，**没有 FilteredVamana/StitchedVamana**。要验证方案 E 需引入 Microsoft DiskANN，并用现有 `wiki_tree.txt`+bindings 直接导出 rec/nrec 标签表（导出脚本纯数据转换）。
 
 ---
 
@@ -181,10 +228,12 @@ depth-1 锚点平均展开 ≈10,800 个子目录（论文同位置 236,903/363k
 ## 6. 下一步（建议顺序）
 
 1. **补完 NodeANN 对比数据**（纯跑数，无代码改动）：WIKI 1M 的 DSQ 段（`--mode dsq --executor all3`）、SIFT1M 加密 scan。
-2. **实现 P1**（合并器 + 精确性证明 + N<K 反例）→ 论文级理论节。
-3. **实现 P4**（质心 + 下界 + 分支定界）→ 攻 1M 递归目录开销。
-4. **P8**（MOVE 协议 + 摊销界）→ DSM 差异化章节。
-5. 新颖性再排查：以"层级语义 + 递归 scope + MOVE"为关键词检索 2026 下半年的分层 filtered ANN 工作。
+2. **方案 E 的标签表导出与规模核算**（纯数据转换，无新后端）：从 `wiki_tree.txt` + bindings 导出 rec/nrec 标签，统计标签基数（预计 ≈2×目录数）、每点标签数（≈深度+1）、标签总条目（≈$n\cdot d$）。**仅这一步就能判定 StitchedVamana 是否可行**（46.8 万子图）。
+3. **引入 Microsoft DiskANN** 实现 FilteredVamana/StitchedVamana，在 100k 与 wiki1M 上跑方案 E（同 scope 语义、同 GT、同查询），记录 recall@k / QPS / 构建 / 内存 / MOVE 后标签重写量。
+4. **实现 P1**（合并器 + 精确性证明 + N<K 反例）→ 论文级理论节。
+5. **实现 P4**（质心 + 下界 + 分支定界）→ 攻 1M 递归目录开销。
+6. **P8**（MOVE 协议 + 摊销界）→ DSM 差异化章节（对比标签编码的 $O(n_{\text{sub}}d)$ 重写）。
+7. 新颖性再排查：以"层级语义 + 递归 scope + MOVE"为关键词检索 2026 下半年的分层 filtered ANN 工作；重点覆盖 FilteredVamana/StitchedVamana 与 arXiv:2608.05441。
 
 ## 附：数据与可复现
 
@@ -192,3 +241,4 @@ depth-1 锚点平均展开 ≈10,800 个子目录（论文同位置 236,903/363k
 - 实验记录：`2026-10-26-triehi-repro-results.md`（100k）、`2026-10-26-figures-7to12-completion.md`（Fig 7–12 + 全量真实数据 + SIFT1M）
 - NodeANN 代码：`codes/directory-aware-vector-attr-search/src/repro.cpp`（`--executor node|all3`，`--noden-list`）
 - 论文解析：`01-directory-aware-acceleration/paper-notes-2606.16903.md`
+- 示意图生成：`scripts/grsai_draw.py`（grsai API，4 张概念图，key 存 `~/.config/grsai.key`）
