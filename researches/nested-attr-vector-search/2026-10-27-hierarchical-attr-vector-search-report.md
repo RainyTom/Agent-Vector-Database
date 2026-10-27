@@ -46,6 +46,9 @@ $$
 | Agent 记忆（OpenViking） | `viking://resources/...`、memories/skills | 先定位用户/会话 scope，再 scope 内语义检索 |
 | 学术论文检索 | arXiv subject（`/cs/AI/`）+ temporal（`/2024/05/`）双命名空间 | "2024 年 5 月的 cs.AI 论文里最相关 10 篇" |
 | 电商品类 | 品类树 × 属性 facet | "手机 > 拍照旗舰 子树内相似商品" |
+| **ACM CCS 论文检索** | CCS 2012 本体（**DAG**，1,928 概念/6 层，8.2% 多父） | "Information systems → Information retrieval 子树内与 query 最相关的 10 篇论文"；SciHTC 提供 186,160 篇真实标注 |
+
+CCS 背景的实测事实（本体 DAG 结构、SciHTC 标签分布、6.9% 多父归属、与合成假设的偏离）见 [`2026-10-27-ccs-background-and-data.md`](2026-10-27-ccs-background-and-data.md)。关键影响：CCS 是 DAG 而非树，四方案均需适配多父语义；真实标注 99.7% 落在非叶节点、69% 停在 L1–L3（与合成数据的深绑定假设相反）。
 
 ![四类典型应用场景](assets/grsai-app-scenarios.png)
 
