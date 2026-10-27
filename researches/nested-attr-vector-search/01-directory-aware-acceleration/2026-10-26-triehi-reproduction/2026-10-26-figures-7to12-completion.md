@@ -34,14 +34,14 @@ mode all（96–105 s）：DSM audit 全 ok；排序结论与前轮一致（Trie
 
 | 图文件 | 对应论文 | 数据源 |
 |---|---|---|
-| fig_repro_fig7_tradeoff | Fig 7 递归质量-延迟 | results_dsq_scan.csv |
+| fig_repro_pareto_recall_latency | Fig 7 递归权衡（帕累托前沿，x=Recall@10 / y=Latency 对数轴，三方案） | results_dsq_scan.csv |
 | fig_repro_fig9_dsm_perop | Fig 9 MOVE/MERGE 逐 op | results_dsm_perop.csv |
 | fig_repro_fig10_structure | Fig 10 深度结构复杂度 | wiki_tree + workload 现场统计 |
 | fig_repro_fig11_depth | Fig 11 深度敏感性（PG/IVF 双子图） | results_dsq_perquery.csv |
 | fig_repro_fig12_breakdown | Fig 12 解析延迟分解（递归/非递归） | results_dsq_perquery.csv |
 | fig_repro_dir_latency / ndcg_buckets / dsm / dir_size | Table IV / Fig 8 / Fig 9 聚合 / Table V | 既有 CSV |
 
-![Fig 7 递归质量-延迟](figures/fig_repro_fig7_tradeoff.png)
+![帕累托前沿：Recall-Latency，三方案对比（100k 合成）](figures/fig_repro_pareto_recall_latency.png)
 
 ![Fig 9 DSM 逐 op](figures/fig_repro_fig9_dsm_perop.png)
 
@@ -117,7 +117,7 @@ DSM audit 全 ok。
 
 固定点：PG e2e 32.4 ms / recall@10 0.107；IVF 3.09 ms / 0.168。三设计质量逐点相同（scope 语义等价），延迟差异体现在 directory-only（PE-Online recursive 616 µs vs 物化 20–28 µs）。`dsq_scan`（ef 64→4096 七档、nprobe 4→1024 五档，73 行）：**PE-Offline/TrieHI 曲线整体位于 PE-Online 左下方（同质量更低延迟）**，与论文 Fig 7 论断一致；arxiv 两子图标注 N/A（向量不可得）。wiki 低召回是深锚点小 scope 的指标饱和（全扫描 ndcg=1.0 已验证），非执行器缺陷。
 
-![真实 1M Fig 7：递归质量-延迟 trade-off](figures_real_wiki1m/fig_repro_fig7_tradeoff.png)
+![帕累托前沿：Recall-Latency，三方案对比（真实 WIKI-Dir 1M）](figures_real_wiki1m/fig_repro_pareto_recall_latency.png)
 
 ## 产物清单（本目录）
 

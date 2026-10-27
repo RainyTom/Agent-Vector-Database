@@ -166,6 +166,44 @@ def fig7_tradeoff(rows, out: Path):
     save(fig, out, "fig_repro_fig7_tradeoff")
 
 
+def fig_pareto_frontier(rows, out: Path):
+    """Pareto frontier: x=Recall@10, y=mean latency (log), one trade-off
+    curve per design.  Only non-dominated scan points are kept (recall
+    ascending, cumulative-min latency)."""
+    panels = [("wiki", "PG-hnsw-M16"), ("wiki", "IVF-nlist1024"),
+              ("arxiv", "PG-hnsw-M16"), ("arxiv", "IVF-nlist1024")]
+    fig, axes = plt.subplots(1, 4, figsize=(20, 4.6))
+    for ax, (ds, ex) in zip(axes, panels):
+        any_data = False
+        for d in DESIGNS:
+            pts = [(float(r["recall10"]), float(r["e2e_mean_ms"]), int(r["value"]))
+                   for r in rows if r["dataset"] == ds and r["design"] == d
+                   and r["executor"] == ex and r["query_type"] == "recursive"]
+            if not pts:
+                continue
+            any_data = True
+            # non-dominated filter: p is dominated if some q has
+            # q.recall >= p.recall AND q.latency <= p.latency
+            frontier = [p for p in pts if not any(
+                q is not p and q[0] >= p[0] and q[1] <= p[1] for q in pts)]
+            frontier.sort()  # by recall asc
+            ax.plot([p[0] for p in frontier], [p[1] for p in frontier], "-o",
+                    color=COLORS[d], label=d)
+        if not any_data:
+            ax.text(0.5, 0.5, "N/A (vectors unavailable)", ha="center", va="center",
+                    transform=ax.transAxes, fontsize=10, color="gray")
+        ax.set_xlabel("Recall@10")
+        ax.set_ylabel("mean latency (ms, log)")
+        ax.set_yscale("log")
+        ax.set_title(f"{ds}, {ex.split('-')[0]}")
+        ax.grid(True, which="both", alpha=0.3)
+    axes[0].legend()
+    fig.suptitle("Pareto frontier: recall vs latency per design (ef/nprobe sweep, "
+                 "recursive DSQ)")
+    fig.tight_layout()
+    save(fig, out, "fig_repro_pareto_recall_latency")
+
+
 def fig9_dsm_perop(rows, out: Path):
     """Fig 9 analog: per-operation MOVE/MERGE wall-clock latency."""
     fig, axes = plt.subplots(1, 2, figsize=(13, 4.6))
@@ -328,6 +366,7 @@ def main():
     fig_dir_size(size, args.out)
     if scan:
         fig7_tradeoff(scan, args.out)
+        fig_pareto_frontier(scan, args.out)
     if perop:
         fig9_dsm_perop(perop, args.out)
     fig10_structure(args.tree_dir, args.out)
