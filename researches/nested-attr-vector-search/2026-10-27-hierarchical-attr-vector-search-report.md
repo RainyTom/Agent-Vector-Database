@@ -169,19 +169,21 @@ TrieHI 的子树重链在真实深树（max depth 31）上稳定最优；PE-Onli
 
 depth-1 锚点平均展开 ≈10,800 个子目录（论文同位置 236,903/363k 规模比例更高）——PE-Online 与 NodeANN 的递归成本都源于此。
 
-### 4.5 NodeANN 首轮测量（关键发现）
+### 4.5 NodeANN 三数据集测量（完整）
 
-| 数据集/执行器 | 方案 | recursive：ndcg / recall / e2e | non-recursive：e2e |
+| 数据集 | 方案（最佳全局执行器） | recursive：nDCG@10 / recall@10 / e2e | non-recursive e2e |
 |---|---|---|---|
-| SIFT100k，PG | TrieHI | 0.673 / 0.597 / 12.8 ms | 12.8 ms |
-| SIFT100k，PG | PE-Online | 0.673 / 0.597 / 14.5 ms | 13.2 ms |
-| SIFT100k，**NODE-Flat** | NodeANN | **1.000 / 0.892 / 8.4 ms** | **0.004 ms** |
-| SIFT1M，PG | TrieHI | 0.679 / 0.628 / 48.9 ms | 47.4 ms |
-| SIFT1M，**NODE-Flat** | NodeANN | **1.000 / 0.983 / 68.7 ms** | **0.012 ms** |
+| SIFT100k | TrieHI + PG | 0.673 / 0.597 / 12.8 ms | 12.8 ms |
+| SIFT100k | **NodeANN-Flat** | **1.000 / 0.892 / 8.4 ms** | **0.004 ms** |
+| SIFT1M | TrieHI + PG | 0.679 / 0.628 / 48.9 ms | 47.4 ms |
+| SIFT1M | **NodeANN-Flat** | **1.000 / 0.983 / 68.7 ms** | **0.012 ms** |
+| WIKI-Dir 1M 真实 | TrieHI + IVF | 0.546 / 0.314 / 3.68 ms | 1.26 ms |
+| WIKI-Dir 1M 真实 | **NodeANN-Flat** | **1.000 / 0.575 / 4.49 ms** | **0.005 ms** |
 
-- **质量**：NodeANN nDCG=1.0（精确），三设计 0.67–0.68（HNSW 近似 + 位图过滤在深锚小 scope 下召回塌陷）。
-- **非递归**：NodeANN 比全局 ANN 方案快 **3 个数量级**（12 µs vs 47 ms）——scope 只有单节点时无需全局索引遍历。
-- **递归**：100k 上 NodeANN 端到端最快（8.4 vs 12.8 ms）；1M 上被目录枚举（37.7 ms）+ 每节点搜索调用拖累反超（68.7 ms）。**这是优化重点，不是方案缺陷**。
+- **质量**：NodeANN nDCG=1.0（每节点暴力 + top-10 合并，精确）；三设计 0.37–0.68（HNSW/IVF 近似 + 位图过滤）。
+- **非递归**：NodeANN 比全局 ANN 方案快 **100–3800 倍**（4.9 µs–12 µs vs 1.26–47 ms）——单节点 scope 无需全局索引遍历。
+- **递归**：100k 上最快（8.4 vs 12.8 ms）；SIFT1M 上慢于 TrieHI（68.7 vs 48.9 ms，19k 目录/1M 条目导致每查询枚举数千节点 + 37.7 ms 目录开销）；wiki1m 上与 TrieHI-IVF 接近（4.49 vs 3.68 ms）但比 PG 方案快 7 倍。**递归延迟由"候选节点数 × 每节点搜索调用开销"主导**，这正是 P1/P4 优化的靶点。
+- 帕累托图形态（SIFT1M，`figures_sift1m/fig_repro_pareto_recall_latency.png`）：wiki-PG 子图中只有 NodeANN 能进入 recall>0.7 区间（代价 ~20 ms 平台）；wiki-IVF 子图中三设计已能低延迟达到高 recall，NodeANN 呈现固定目录开销形成的水平线。
 
 ---
 

@@ -1,0 +1,17 @@
+dataset,design,executor,query_type,param,value,ndcg10,recall10,dir_mean_us,e2e_mean_ms
+wiki,NODE,NODE-flat,recursive,nodeTopN,2,0.81488,0.745957,3003.68,19.8066
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,2,0.449146,0.194717,1.5304,0.00436469
+wiki,NODE,NODE-flat,recursive,nodeTopN,4,0.910205,0.860851,2947.57,19.9977
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,4,0.64946,0.375094,1.45601,0.00432065
+wiki,NODE,NODE-flat,recursive,nodeTopN,6,0.958577,0.922553,2870.67,20.5083
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,6,0.785131,0.538113,1.47006,0.00460218
+wiki,NODE,NODE-flat,recursive,nodeTopN,8,0.980657,0.953617,2867.08,21.2135
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,8,0.899267,0.697358,1.45003,0.00467879
+wiki,NODE,NODE-flat,recursive,nodeTopN,10,1,0.983404,3036.18,22.5727
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,10,1,0.852075,1.45345,0.00464328
+wiki,NODE,NODE-flat,recursive,nodeTopN,20,1,0.983404,3545.6,27.6981
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,20,1,0.852075,1.59765,0.00561407
+wiki,NODE,NODE-flat,recursive,nodeTopN,40,1,0.983404,3782.68,34.1894
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,40,1,0.852075,1.58269,0.00609749
+wiki,NODE,NODE-flat,recursive,nodeTopN,80,1,0.983404,3734.71,36.6447
+wiki,NODE,NODE-flat,non-recursive,nodeTopN,80,1,0.852075,1.52168,0.00634617

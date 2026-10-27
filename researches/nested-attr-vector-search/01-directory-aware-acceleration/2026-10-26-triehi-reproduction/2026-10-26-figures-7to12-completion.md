@@ -119,6 +119,25 @@ DSM audit 全 ok。
 
 ![帕累托前沿：Recall-Latency，三方案对比（真实 WIKI-Dir 1M）](figures_real_wiki1m/fig_repro_pareto_recall_latency.png)
 
+## NodeANN（属性分区索引）完整实验（2026-10-27）
+
+实现：`--executor node|all3`，每节点一个 `IndexFlatL2`（空节点不建），递归查询枚举子树中含 item 的节点、各取 top-N（`--noden-list`）并在全局堆合并 top-10。单命名空间（wiki）数据可用；arxiv 双命名空间暂不支持（v1 限制）。
+
+三数据集固定工作点（ef2048/np256, nodeTopN=10）：
+
+| 数据集 | 节点数（有 item） | 构建 | NodeANN recursive e2e | 对比最佳全局方案 | NodeANN non-rec e2e |
+|---|---|---|---|---|---|
+| SIFT100k | 18,889 | 0.04 s / 51 MB | **8.4 ms**（ndcg 1.0） | 12.8 ms（TrieHI-PG，ndcg 0.67） | 4.1 µs |
+| SIFT1M | 19,000 | 0.69 s / 512 MB | 68.7 ms（ndcg 1.0） | 48.9 ms（TrieHI-PG，ndcg 0.68） | 12.3 µs |
+| WIKI-Dir 1M | 251,327 | 3.5 s / 4096 MB | 4.49 ms（ndcg 1.0） | 3.68 ms（TrieHI-IVF，ndcg 0.55） | 4.9 µs |
+
+SIFT1M 加密扫描（26 档 + NODE 8 档）因单次超时上限拆为三次执行器各自扫描（`results_sift1m_{hnsw,ivf,node}_dsq_scan.csv`，GT 各算一次），合并为 `results_sift1m_dsq_scan.csv`（329 行）后统一绘图。NODE 只有 16 行（2 qtype × 8 档，NODE 与目录设计无关只跑一次）。
+
+结论：
+1. **质量**：NodeANN 精确（nDCG=1.0），三设计受 ANN 近似与位图过滤影响 0.37–0.68；
+2. **非递归**：NodeANN 快 100–3800 倍；
+3. **递归**：NodeANN 的延迟 = 子树节点枚举（与 PE-Online 相同的目录成本，wiki1m 1706 µs）+ 每节点搜索调用开销（SIFT1M 19k 节点 × 37.7 ms 目录段）。100k 胜、SIFT1M 负、wiki1m 接近——**节点数 × 每节点调用**是 P1/P4 的优化靶点。
+
 ## SIFT1M 合成属性实验（2026-10-27）
 
 `gen_workload.py` 增加 `--n` 参数（树形状、workload 规模、seed 不变，仅放大条目数），在 ann-benchmarks `sift-128-euclidean.hdf5`（1M×128d）上生成同样结构的属性集：`data/sift1m/`（wiki 树 19k 目录均深 13.4、subject 225、temporal 261；500+1000 查询；2000 DSM ops）。跑 mode all（599 s）+ dsq_scan 加密网格（26 档，1173 s）。
