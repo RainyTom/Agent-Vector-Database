@@ -26,6 +26,8 @@ $$
 
 单绑定时等价于 $o\in S_{\mathrm{rec}}(c)\iff u_o\in\mathrm{Desc}(c)$，$o\in S_{\mathrm{nrec}}(c)\iff u_o=c$。递归作用域包含 $c$ 自身直接绑定的对象（因 $c\in\mathrm{Desc}(c)$）；非递归作用域只看**直接**绑定，不看派生标签 $L_o$。多父概念 $c$ 可能经不同路径进入同一作用域，集合运算须去重。
 
+![作用域语义示意：左为递归（琥珀色为后代闭包内的全部对象，含 c 自身绑定），右为非递归（仅 c 的直接绑定，后代灰化）。中间小插图表示多父情形下同一对象可同时落入两个父概念的 scope。](assets/grsai-ccs-scope.png)
+
 **例子 1.** 设 CCS 片段为 `Information systems → Information retrieval → Retrieval models and ranking`，且 `Retrieval models and ranking` 另有父 `Computing methodologies → Machine learning`（多父情形）。对象 $o$ 绑定最细概念 $u_o=$ `Retrieval models and ranking`，则 $L_o$ 含 4 个概念。于是 $o\in S_{\mathrm{rec}}$(`Information systems`)、$S_{\mathrm{rec}}$(`Information retrieval`)、$S_{\mathrm{rec}}$(`Computing methodologies`)、$S_{\mathrm{rec}}$(`Machine learning`)；但 $o\notin S_{\mathrm{nrec}}$(`Information retrieval`)（其直接标签不是该概念），且 $o\in S_{\mathrm{nrec}}$(`Retrieval models and ranking`)。若另一对象绑定在 `Information retrieval` 本身，则它属于 $S_{\mathrm{rec}}$(`Information systems`)、$S_{\mathrm{rec}}$(`Information retrieval`) 与 $S_{\mathrm{nrec}}$(`Information retrieval`)，但不属于 $S_{\mathrm{rec}}$(`Retrieval models and ranking`)。
 
 **定义 6（精确目录范围 top-$k$ 检索）.** 给定对象集 $\mathcal{O}$、查询向量 $\mathbf{q}\in\mathbb{R}^d$、概念 $c\in\mathcal{V}$、模式 $m\in\{\mathrm{rec},\mathrm{nrec}\}$ 与 $k\in\mathbb{N}^{+}$，精确检索返回

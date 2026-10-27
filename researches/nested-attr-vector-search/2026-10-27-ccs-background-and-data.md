@@ -32,6 +32,8 @@ ACM Computing Classification System（CCS）是 ACM 用于组织、索引和检�
 
 ## 3. SciHTC 数据集（真实 CCS 论文标注）
 
+![CCS 2012 本体结构：左侧 13 个真实顶级类目，右侧真实多父示例（Retrieval models and ranking 同时属于 Information retrieval 与 Machine learning）。实测 1,928 概念、6 层、扇出中位数 4；159 个概念（8.2%）有多个父，因此后代集合必须按可达闭包计算，单亲前缀树无法表示。](assets/ccs-ontology-dag.png)
+
 出处：Sadat & Caragea, EMNLP 2022, "Hierarchical Multi-Label Classification of Scientific Documents"（arXiv:2211.02810）。仓库 `github.com/msadat3/SciHTC`。
 
 | 项 | 事实 |
@@ -43,6 +45,8 @@ ACM Computing Classification System（CCS）是 ACM 用于组织、索引和检�
 | 标注格式 | `id,Category`，Category = `CCS->L1->L2->...->Ln`；**每论文一条路径**，"多标签" = 路径上每层都是一个标签（与我们的祖先继承语义一致） |
 
 ## 4. 真实标签分布（实测，train+dev+test 全量 186,160 篇）
+
+![SciHTC 主标签深度分布：L1 17.2%、L2 23.9%、L3 28.2%、L4 22.0%、L5 8.5%、L6 0.3%。99.7% 的主标签停在非叶节点，69% 停在 L1–L3——与合成数据"90% 绑定在深节点"的假设相反。](assets/scihtc-depth.png)
 
 | 主标签深度 | 论文数 | 占比 |
 |---|---|---|

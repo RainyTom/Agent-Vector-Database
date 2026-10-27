@@ -24,12 +24,35 @@ import urllib.request
 from pathlib import Path
 
 BASE = os.environ.get("GRSAI_BASE_URL", "https://grsai.dakka.com.cn/v1/api")
-MODEL = os.environ.get("GRSAI_MODEL", "gpt-image-1.5")
+MODEL = os.environ.get("GRSAI_MODEL", "nano-banana-pro")
 OUT = Path(__file__).resolve().parents[1] / "assets"
 
 # Prompt design notes: AI image models render text unreliably, so prompts ask
 # for minimal, English-only labels and emphasize layout/geometry.
 PROMPTS = {
+    "ccs-dag": (
+        "Clean flat infographic of a hierarchical DAG taxonomy for computer science, "
+        "white background, 16:9. Left: a column of 13 top-level category boxes in a "
+        "muted gray-blue palette, labeled with short English words like 'Networks', "
+        "'Theory', 'Information systems', 'Computing methodologies', 'Security', "
+        "'Human-centered computing'. Edges fan out to two or three layers of smaller "
+        "rounded boxes below, forming a tree-like DAG. Right: one concept box "
+        "highlighted in amber labeled 'Retrieval models' receiving TWO incoming "
+        "arrows from different parents, one from 'Information retrieval' and one from "
+        "'Machine learning', with a small badge 'multi-parent'. Minimal English "
+        "labels only, no fake numbers, modern vector style, blue and amber palette."
+    ),
+    "ccs-scope": (
+        "Clean flat diagram comparing two scope semantics on a hierarchy, white "
+        "background, 16:9, two panels. Left panel titled 'recursive scope': a small "
+        "concept tree; one highlighted node's entire subtree is tinted amber "
+        "including a mid-level node's own item dots, arrow labeled 'descendants'. "
+        "Right panel titled 'non-recursive scope': the same tree but only the "
+        "highlighted node's directly attached dots are tinted, with descendant nodes "
+        "grayed out, arrow labeled 'direct only'. A small inset shows one dot "
+        "belonging to two parents' subtrees (dashed outline on both sides). Minimal "
+        "English labels, blue and amber palette, no fake numbers."
+    ),
     "concept-scope": (
         "Clean flat vector infographic, white background, 16:9. Left: a directory "
         "tree with 3 levels, folders labeled only with short English words "
