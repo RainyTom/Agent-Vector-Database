@@ -1,0 +1,9 @@
+dataset,design,executor,query_type,scope_bucket,ndcg10,recall10,dir_mean_us,dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms
+wiki,NODE,NODE-hnsw-thr,recursive,all,1,0.85368,3029.62,10449,10931.3,12408.3,14462.7,13.2536
+wiki,NODE,NODE-hnsw-thr,recursive,card<10,1,,,,,,,
+wiki,NODE,NODE-hnsw-thr,recursive,card10-1000,1,,,,,,,
+wiki,NODE,NODE-hnsw-thr,recursive,card>=1000,1,,,,,,,
+wiki,NODE,NODE-hnsw-thr,non-recursive,all,1,0.420446,0.879468,1.573,1.704,1.914,2.044,0.00331019
+wiki,NODE,NODE-hnsw-thr,non-recursive,card<10,1,,,,,,,
+wiki,NODE,NODE-hnsw-thr,non-recursive,card10-1000,1,,,,,,,
+wiki,NODE,NODE-hnsw-thr,non-recursive,card>=1000,0,,,,,,,

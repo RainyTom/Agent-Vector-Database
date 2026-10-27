@@ -221,6 +221,8 @@ def main():
     ap.add_argument("--n", type=int, default=N,
                     help="number of base vectors / entries (tree shape, workload "
                          "sizes and seed are unchanged)")
+    ap.add_argument("--normalize", action="store_true",
+                    help="L2-normalise base/test (angular datasets: cosine via L2)")
     args = ap.parse_args()
     N = args.n
     out = Path(args.out)
@@ -232,6 +234,9 @@ def main():
     with h5py.File(args.dataset, "r") as f:
         base = np.asarray(f["train"][:N], dtype=np.float32)
         test = np.asarray(f["test"][:1000], dtype=np.float32)
+    if args.normalize:
+        base /= np.linalg.norm(base, axis=1, keepdims=True) + 1e-9
+        test /= np.linalg.norm(test, axis=1, keepdims=True) + 1e-9
     base.tofile(out / "base.f32")
     test.tofile(out / "test.f32")
 

@@ -601,7 +601,9 @@ int main(int argc, char** argv) {
     struct Exec {
         std::string name;
         std::unique_ptr<faiss::Index> ix;
-        std::vector<std::unique_ptr<faiss::IndexFlatL2>> node_ix;  // NODE exec
+        std::vector<std::unique_ptr<faiss::Index>> node_ix;        // NODE exec
+        std::vector<uint8_t> node_is_hnsw;                          // per-node type
+        int node_ef = 64;                                           // HNSW per-node efSearch
         std::vector<std::vector<int>> node_ids;                     // local -> global
         std::vector<std::vector<float>> node_centroid;              // per-node mean
         int node_topn = 10;                                         // scan knob
@@ -818,18 +820,34 @@ int main(int argc, char** argv) {
                     return e.name.rfind("NODE", 0) == 0;
                 })) {
             Exec ex;
-            ex.name = "NODE-flat";
+            int thr = std::atoi(arg_or("node-hnsw-threshold", "0").c_str());
+            ex.name = thr > 0 ? "NODE-hnsw-thr" : "NODE-hnsw";
+            ex.node_ef = std::atoi(arg_or("node-ef", "64").c_str());
             auto& nsd = wiki[0];
             int nodes = nsd.tree.n;
             ex.node_ix.resize(nodes);
             ex.node_ids.resize(nodes);
+            ex.node_is_hnsw.assign(nodes, 0);
             ex.node_centroid.assign(nodes, {});
             std::vector<std::vector<int>> ids(nodes);
             for (auto& [e, v] : nsd.bindings) ids[v].push_back(e);
             auto t0 = Clock::now();
+            size_t n_hnsw = 0, n_flat = 0;
             for (int v = 0; v < nodes; ++v) {
                 if (ids[v].empty()) continue;
-                auto ix = std::make_unique<faiss::IndexFlatL2>(base.d);
+                bool use_hnsw = (int)ids[v].size() > thr;
+                std::unique_ptr<faiss::Index> ix;
+                if (use_hnsw) {
+                    auto h = std::make_unique<faiss::IndexHNSWFlat>(base.d, 16);
+                    h->hnsw.efConstruction = 200;
+                    h->hnsw.efSearch = ex.node_ef;
+                    ix = std::move(h);
+                    ex.node_is_hnsw[v] = 1;
+                    ++n_hnsw;
+                } else {
+                    ix = std::make_unique<faiss::IndexFlatL2>(base.d);
+                    ++n_flat;
+                }
                 std::vector<float> buf((size_t)ids[v].size() * base.d);
                 std::vector<float> cen(base.d, 0.0f);
                 for (size_t j = 0; j < ids[v].size(); ++j) {
@@ -848,6 +866,8 @@ int main(int argc, char** argv) {
             std::cout << "executor " << ex.name << " nodes_with_items="
                       << std::count_if(ex.node_ix.begin(), ex.node_ix.end(),
                                        [](const auto& p) { return (bool)p; })
+                      << " hnsw=" << n_hnsw << " flat=" << n_flat
+                      << " thr=" << thr << " ef=" << ex.node_ef
                       << " build_s=" << ex.build_us / 1e6
                       << " size_MB=" << ex.bytes / 1e6 << "\n";
             execs.push_back(std::move(ex));
@@ -962,7 +982,14 @@ int main(int argc, char** argv) {
                                 int nn = std::min(ex.node_topn, (int)ex.node_ids[v].size());
                                 std::vector<float> Dn(nn);
                                 std::vector<faiss::idx_t> In(nn);
-                                ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
+                                if (ex.node_is_hnsw[v]) {
+                                    faiss::SearchParametersHNSW sp;
+                                    sp.efSearch = std::max(ex.node_ef, nn);
+                                    ex.node_ix[v]->search(1, qv, nn, Dn.data(),
+                                                         In.data(), &sp);
+                                } else {
+                                    ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
+                                }
                                 for (int j = 0; j < nn; ++j) {
                                     float dist = Dn[j];
                                     int gid = ex.node_ids[v][(size_t)In[j]];
@@ -1160,7 +1187,14 @@ int main(int argc, char** argv) {
                                         int nn = std::min(pv, (int)ex.node_ids[v].size());
                                         std::vector<float> Dn(nn);
                                         std::vector<faiss::idx_t> In(nn);
-                                        ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
+                                        if (ex.node_is_hnsw[v]) {
+                                    faiss::SearchParametersHNSW sp;
+                                    sp.efSearch = std::max(ex.node_ef, nn);
+                                    ex.node_ix[v]->search(1, qv, nn, Dn.data(),
+                                                         In.data(), &sp);
+                                } else {
+                                    ex.node_ix[v]->search(1, qv, nn, Dn.data(), In.data());
+                                }
                                         for (int j = 0; j < nn; ++j) {
                                             float dist = Dn[j];
                                             int gid = ex.node_ids[v][(size_t)In[j]];
