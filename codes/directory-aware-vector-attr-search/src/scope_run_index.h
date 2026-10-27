@@ -158,9 +158,12 @@ public:
     // heap threshold, then surviving candidates receive full FAISS L2.
     // Mode 3: transposed eight-vector tiles, SIMD across points; boundary
     // tiles may compute extra distances but only in-scope IDs enter top-k.
+    // Mode 4: tile-wide partial-distance cutoff feedback. All eligible lanes
+    // must exceed the global heap cutoff before skipping a tile; the float
+    // margin is conservative engineering practice, not a new rounding theorem.
     void search(const float* query, std::pair<size_t, size_t> scope, int k,
                 float* distances, faiss::idx_t* labels, int mode = 0) const {
-        if (mode < 0 || mode > 3 || transposed_ != (mode == 3))
+        if (mode < 0 || mode > 4 || transposed_ != (mode >= 3))
             throw std::invalid_argument("ScopeRunIndex: incompatible search mode/layout");
         if (scope.first > scope.second || scope.second > count_)
             throw std::out_of_range("ScopeRunIndex: invalid packed range");
@@ -170,7 +173,7 @@ public:
         std::fill_n(labels, capacity, static_cast<faiss::idx_t>(-1));
         size_t filled = 0;
         size_t pos = scope.first;
-        if (mode == 3) {
+        if (mode >= 3) {
             for (size_t first = scope.first / 8 * 8; first < scope.second; first += 8) {
                 const size_t width = std::min(size_t{8}, count_ - first);
                 const float* tile = packed_.get() + first * dim_;
@@ -178,6 +181,11 @@ public:
 #if defined(__AVX2__)
                 if (width == 8) {
                     __m256 s0 = _mm256_setzero_ps(), s1 = s0, s2 = s0, s3 = s0;
+                    bool abandoned = false;
+                    unsigned outside = 0;
+                    for (unsigned lane = 0; lane < 8; ++lane)
+                        if (first + lane < scope.first || first + lane >= scope.second)
+                            outside |= 1u << lane;
                     size_t j = 0;
                     for (; j + 4 <= dim_; j += 4) {
                         __m256 d0 = _mm256_sub_ps(_mm256_set1_ps(query[j]), _mm256_loadu_ps(tile + j * 8));
@@ -188,7 +196,21 @@ public:
                         s1 = _mm256_add_ps(s1, _mm256_mul_ps(d1, d1));
                         s2 = _mm256_add_ps(s2, _mm256_mul_ps(d2, d2));
                         s3 = _mm256_add_ps(s3, _mm256_mul_ps(d3, d3));
+                        if (mode == 4 && filled == capacity && (j + 4) % 64 == 0) {
+                            const float margin = 16 * std::numeric_limits<float>::epsilon() *
+                                                 (dim_ + 1) * std::max(1.0f, distances[0]);
+                            __m256 cutoff = _mm256_set1_ps(distances[0] + margin);
+                            __m256 partial = _mm256_add_ps(_mm256_add_ps(s0, s1),
+                                                          _mm256_add_ps(s2, s3));
+                            unsigned rejected = static_cast<unsigned>(_mm256_movemask_ps(
+                                _mm256_cmp_ps(partial, cutoff, _CMP_GT_OQ)));
+                            if ((rejected | outside) == 255u) {
+                                abandoned = true;
+                                break;
+                            }
+                        }
                     }
+                    if (abandoned) continue;
                     s0 = _mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3));
                     for (; j < dim_; ++j) {
                         __m256 delta = _mm256_sub_ps(_mm256_set1_ps(query[j]), _mm256_loadu_ps(tile + j * 8));

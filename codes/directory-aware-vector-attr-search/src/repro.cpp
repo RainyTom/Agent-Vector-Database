@@ -833,9 +833,9 @@ int main(int argc, char** argv) {
                 if (mode == "dsq_scan")
                     throw std::invalid_argument("scope-run uses exact scope search, not nodeTopN/limit scans");
                 auto t0 = Clock::now();
-                ex.scope_mode = std::atoi(arg_or("scope-mode", "3").c_str());
+                ex.scope_mode = std::atoi(arg_or("scope-mode", "4").c_str());
                 ex.scope_run = std::make_unique<ScopeRunIndex>(
-                    base.x, base.d, nsd.tree.children, nsd.bindings, ex.scope_mode == 3);
+                    base.x, base.d, nsd.tree.children, nsd.bindings, ex.scope_mode >= 3);
                 ex.name = "NODE-scope-run";
                 ex.build_us = us_since(t0);
                 ex.bytes = ex.scope_run->size_bytes();

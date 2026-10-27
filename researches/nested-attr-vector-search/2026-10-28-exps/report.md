@@ -155,6 +155,7 @@ all3整进程峰值RSS为35.492 GiB，局部Flat独立运行17.111 GiB，IVF全�
 | 4 | 四向量交错scalar累加，共享query载入 | 2.606194 | 1.000000/1.000000 | 丢弃，较run3慢21.61% |
 | 5 | chunk64部分距离提前终止，再完整L2 refinement | 2.807973 | 1.000000/1.000000 | 丢弃，较run3慢31.03% |
 | 6 | DFS scope-run + tile8转置 + 跨向量AVX2 | 1.856979 | 1.000000/1.000000 | 保留布局/内核对照 |
+| 7 | tile8共享global cutoff，每64维检查所有合法lane后共同提前终止 | 1.739233 | 1.000000/1.000000 | 保留探索性机制 |
 
 run2相对baseline降低约1.41%，不改变索引或召回；是消除逐节点临时分配的工程对照，**不宣称算法创新**。non-recursive mean=0.005055ms，build=69.0099s，peak RSS=19,742.234MiB。尚未测试动态维护或跨数据集泛化。
 
@@ -163,3 +164,5 @@ run3保留`--node-algorithm hnsw`原局部HNSW/Flat路径，新增静态single-b
 run3相对正式baseline降低约67.77%，build=5.29815s、peakRSS=16,031.953MiB，non-recursive mean=0.002883ms；全部2349个独立GT pairs命中。尚无新颖性认证：DFS-to-range是标准归约；[iRangeGraph §3](https://arxiv.org/abs/2409.02571)已有范围共享图，[Curator §4.2](https://arxiv.org/abs/2601.01291)已有子树连续ID及临时谓词索引。这里先把bulk exact scan作为强对照，不能把布局改造直接称为新算法。已核本地正文`2409.02571-irangegraph/paper.md:407-520`与`2601.01291-curator/paper.md:450-500,650-715`；经典VA-file正文读取仍未完成。搜索覆盖了vector similarity join/inner-product join的相邻分区机制后再查filtered ANN；未找到等价组合不作为新颖性证据。
 
 run6每8个物理相邻向量转置成dimension-major tile，一次query广播服务8条距离累加；区间边界tile可以多算距离，但只允许scope内ID进top-k。转置在索引build计时内，采用单tile scratch原地重排，不增加第二份持久向量。相比run3再降13.35%，相比baseline约降72.07%；build=6.19698s，peakRSS=16,032MiB，non-recursive mean=0.003906ms（较row布局回退，但仍过门槛）。独立GT全部命中；额外CLI独立Python排序验证非对齐local/subtree边界、最后partial tile及空scope。其SIMD与AoSoA布局仍按工程对照记录，不据此宣称学术创新。
+
+run7将原run5逐向量“部分距离后再完整refine”改为tile内SIMD累加直接延续，仅当8条合法lane均已超过同一global top-k cutoff才跳过余维；非scope lane显式屏蔽。相比run6降低6.34%，相比run3降低18.84%，而逐点run5反而变慢，形成一次机制消融。全部2349个独立GT pairs命中，build=5.92129s、peakRSS=16,032.035MiB。浮点margin是工程保守容差，不据此宣称形式化float等价保证。共享截止反馈与partial-distance本身都有前序，该tile执行组合尚未完成最近前序的完整逐步骤排查，**新颖性未确认**。
