@@ -214,10 +214,15 @@ def write_tree(path: Path, parent: np.ndarray):
 
 
 def main():
+    global N
     ap = argparse.ArgumentParser()
     ap.add_argument("--dataset", default="datasets/sift-128-euclidean.hdf5")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--n", type=int, default=N,
+                    help="number of base vectors / entries (tree shape, workload "
+                         "sizes and seed are unchanged)")
     args = ap.parse_args()
+    N = args.n
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(SEED)

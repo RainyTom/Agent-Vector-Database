@@ -119,6 +119,28 @@ DSM audit 全 ok。
 
 ![帕累托前沿：Recall-Latency，三方案对比（真实 WIKI-Dir 1M）](figures_real_wiki1m/fig_repro_pareto_recall_latency.png)
 
+## SIFT1M 合成属性实验（2026-10-27）
+
+`gen_workload.py` 增加 `--n` 参数（树形状、workload 规模、seed 不变，仅放大条目数），在 ann-benchmarks `sift-128-euclidean.hdf5`（1M×128d）上生成同样结构的属性集：`data/sift1m/`（wiki 树 19k 目录均深 13.4、subject 225、temporal 261；500+1000 查询；2000 DSM ops）。跑 mode all（599 s）+ dsq_scan 加密网格（26 档，1173 s）。
+
+关键数字（ef2048/np256 固定点）：
+
+| 数据集/执行器 | PE-Online | PE-Offline | TrieHI | 备注 |
+|---|---|---|---|---|
+| wiki-PG e2e ms | 26.8 | 27.6 | 27.3 | 目录解析 PE-Online 7424 µs vs 物化 ~34 µs，占端到端 28% |
+| wiki-IVF e2e ms | 11.8 | 4.23 | 4.37 | 目录开销 PE-Online 7.7 ms 为纯增加项 |
+| arxiv-PG e2e ms | 26.6 | 27.0 | 26.9 | 浅树，目录开销均小 |
+| DSM MOVE ms | 7.87 | 1.25 | **1.14** | TrieHI ≈ Offline ≪ Online |
+| DSM MERGE ms | 5.11 | 1.42 | 1.28 | 同上 |
+
+索引：HNSW M16 构建 215 s/656 MB；IVF nlist1024 53 s/520 MB；目录模块（19k+225+261 目录）PE-Online 8.1 MB/PE-Offline 22.6/TrieHI 17.2。
+
+1M 规模下 PE-Online 的 recursive 目录解析达 **7.4 ms**（100k 时为 0.6 ms，超线性放大：条目密度 ↑ → 子树 posting 变大），在 PG 低 ef 区成为端到端主导项；这是论文 Table IV WIKI 列（365 ms）的同一机制在小规模上的显现。帕累托图（加密网格，每方案 15/11 点）：
+
+![SIFT1M 帕累托前沿：Recall-Latency，三方案](figures_sift1m/fig_repro_pareto_recall_latency.png)
+
+wiki-PG 子图中 PE-Online 呈水平线（目录展开开销不随 ef 变化、压制 recall 收益），TrieHI/PE-Offline 曲线在其下方贯穿整个 recall 区间——三设计的端到端差异完全由 scope 解析层决定，与论文核心结论同向。全部 10 图（含 Fig 9 逐 op、Fig 10 结构、Fig 11 深度、Fig 12 分解）在 `figures_sift1m/`，数据 `data/results_sift1m_*.csv`。
+
 ## 产物清单（本目录）
 
 - 图：`figures_real_wiki1m/fig_repro_*.{png,svg}` ×9（100k 版图在 `figures/`）
