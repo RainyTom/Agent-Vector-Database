@@ -4,9 +4,14 @@
 
 ## 当前工作
 
-- [本方向入口与文档存放约定](01-directory-aware-acceleration/README.md)
+- [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
+- **[08 动态混合向量搜索（多属性 + 频繁更新 + 联邦视角，阶段 1–2 完成）](08-dynamic-hybrid-vector-search/README.md)**：[基线复述](08-dynamic-hybrid-vector-search/2026-10-29-exps/baselines.md)、[文献空白 G1–G7](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage1-literature.md)、[候选方向与推荐](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage2-candidates.md)
+
+## 01 方向文档
+
 - [问题、基线与优化路线](01-directory-aware-acceleration/2026-10-27-hierarchical-attr-vector-search-report.md)
 - [完整 WIKI 基线与 HLG 进展](01-directory-aware-acceleration/2026-10-28-exps/report.md)
+- [2026-10-29 hnswlib NodeANN 基线结果](01-directory-aware-acceleration/2026-10-29-exps/report.md)
 - [HLG 理论笔记](01-directory-aware-acceleration/2026-10-28-exps/hlg-theory.md)
 - [文献检索与新颖性记录](01-directory-aware-acceleration/search-log.md)
 - [TrieHI 论文笔记](01-directory-aware-acceleration/paper-notes-2606.16903.md)
