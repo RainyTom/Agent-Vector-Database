@@ -196,3 +196,59 @@ run12给出关键反证：关闭局部几何排序、保留顺序物化后仍为
 结束前构建最终保留源码并实际CLI验证mode0..4：独立Python距离排序核查scope>k、scope<k、内部节点绑定、非对齐区间、partial tile及空scope；另用35条128维、强远近分离数据覆盖tile cutoff及尾tile，返回ID完全符合独立期望。临时fixture已移除。大数据/索引不入库。
 
 交付时为保持旧caller的复现语义，`--executor all3`默认仍选择原局部HNSW，单独`--executor node`默认选择候选；未改冻结harness的node选择。修改后再次构建，六项现有Python回归通过；1,200×4d真实CLI烟测确认all3输出`NODE-hnsw`、node输出`NODE-scope-run`，各四查询，候选命中该小fixture全部GT。该变更仅影响非基准all3的默认选择，不是第13轮性能优化。
+
+## 10. 用户新问题：递归查询能否只搜索有希望的Node？
+
+### 10.1 创新边界与算法语义
+
+用户明确要求：**SIMD、物理布局均属于工程优化，不算创新贡献。** 第9节保留为性能强基线与工程证据；后续不能以这些改造独立立项。质心排序、球下界、best-first分支定界也都是已有方法，以下只做诊断，不认定创新。
+
+对候选Node的直接绑定集合$D_v$，保存质心$c_v$和覆盖半径$r_v=\max_{x\in D_v}\|x-c_v\|_2$。实数算术下
+
+$$L_v(q)=\max(0,\|q-c_v\|_2-r_v)\le\min_{x\in D_v}\|q-x\|_2.$$
+
+从已经找到的至少k个不同合法对象得到当前第k距离$\tau$。只有$L_v(q)>\tau$时才能安全排除整个Node；相等时还需处理tie，不能直接剪。按$L_v$的best-first顺序访问并收紧$\tau$，直至最小剩余下界也超过$\tau$。这不是离线预知top-k，而是查询时逐步证实“不需要再搜哪些Node”。
+
+ANN返回的k个合法候选也能形成真实第k距离的**上界**，但ANN访问frontier或返回最小距离不是未访问对象的安全下界。节点剪枝正确也不代表节点内部ANN没有漏结果；要保证全局精确top-k，局部搜索也需精确或独立验证。仅选质心最近的B个Node属于近似routing，不能保证召回。
+
+### 10.2 实际诊断设置
+
+完整WIKI原始向量、既有树/bindings、冻结独立GT与227条recursive查询，输入hash不变。本轮**未修改候选索引、评估器或基准**；不是第13轮autoresearch优化。节点统计仅使用corpus构建，query和GT只在评估阶段使用。
+
+- 对全部363,467非空Node建立float64质心与覆盖球，Python构建统计耗时42.227s；质心payload 2,977,521,664 bytes，半径2,907,736 bytes。未测压缩摘要或生产C++构建时间。
+- 质心排序预算B=1/2/4/8/16/32/64/128/256/512/1024/4096/16384；统计选中Node能够覆盖的GT pair。**这是节点routing能达到的召回上限，不是内部ANN实测recall。**
+- 另实际执行球下界best-first，逐个Node做精确局部距离扫描，在线维护global top-k与$\tau$；GT不参与选Node和停止。float64距离处理原float32向量，半径向上nextafter并增加1e-10 margin，不构成通用IEEE浮点认证。
+- 单独报告候选Node≥16的86条查询，避免大量只有1–3个候选Node的简单查询掩盖问题。该组候选节点中位数1,010，最大138,993；真实top-10的所属Node数中位数**9**，没有一条top-10全落在同一个Node。
+
+### 10.3 观测结果
+
+| 按质心距离只选最近B个Node（86条非平凡递归查询） | GT pair覆盖率 | 全部top-10均覆盖的query比例 |
+|---|---:|---:|
+| 1 | 10.12% | 0.00% |
+| 4 | 25.00% | 0.00% |
+| 16 | 48.37% | 9.30% |
+| 64 | 66.51% | 23.26% |
+| 256 | 86.05% | 46.51% |
+| 1024 | 97.67% | 89.53% |
+| 4096 | 99.88% | 98.84% |
+| 16384 | 100.00% | 100.00% |
+
+该组每个query均有10个GT，因此macro/global覆盖率相等；全部227条的macro与global不同，完整值见CSV。固定B=16384并非高效策略的证明：它累计访问66.74%的候选Node实例、78.45%的向量。
+
+球下界best-first在227条及86条组内均达到观测macro/global recall=1。86条组累计裁掉**48.15%的候选Node访问实例**，但仅裁掉**9.45%的向量扫描量**；全部227条分别为48.12%与9.44%。这些是跨query累加口径，不能解释为唯一Node比例或延迟降幅。真实第k距离的oracle阈值诊断给出的可剪Node数与该best-first执行一致；oracle只用于上限对照，不用于实际选Node。
+
+解释：可以跳过很多小Node，但大Node的覆盖球松，仍需访问大多数向量。还需要测摘要查询成本、局部ANN调用成本与端到端净收益，不能从“少访问一半Node”直接推出“延迟降一半”。
+
+### 10.4 新颖性初筛：已有直接前序
+
+[Quake: Adaptive Indexing for Vector Search，OSDI 2025](https://www.usenix.org/system/files/osdi25-mohoney.pdf#page=8)，§5、Eq.7–9、Algorithm1（PDF含封面页8–9）已做：估计分区含近邻的概率、优先搜索高概率分区、以当前第k距离在线更新估计，并在估计recall达到目标后停止。其模型包含**uniform-density假设**及Voronoi半空间近似；这是recall估计机制，不是本轮确认的任意数据精确保证。本轮只核相关正文，完整理论/实验及最近引用链待精读，不新增假造的完整论文记录。
+
+因此“每Node预测概率+自适应搜索多少Node”的宽泛想法已经有强前序，不能直接作为新贡献。与本任务的具体差异是：目录Node按语义/拓扑分组，不是由最近质心定义的Voronoi单元，直接套用Quake几何概率模型的假设未成立。**这只是待检验差异，不等于新颖性通过。**
+
+更窄的待研究问题：在不可重新聚类的目录Node内，多模态向量分布下如何获得比单球更紧、比全维质心更便宜的节点级证据，并分配跨Node和节点内ANN搜索预算，在明确误差定义下控制global pair recall？多球/混合模型、学习router、federated shard selection等仍需逐一排查；不能把普通统计模型组合直接改名创新。原D3停止决定不变，本轮不将经典分支定界重新立项。
+
+### 10.5 复现与范围
+
+运行：`production/nested-attr-vector-search/work/venv/bin/python researches/nested-attr-vector-search/2026-10-28-exps/experiments/node_routing_diagnostic.py`。本轮已实际运行成功，未创建永久单元测试（研究诊断，不改生产检索路径）。
+
+证据：[逐query诊断](data/node_routing_queries.csv)、[预算覆盖率](data/node_routing_centroid_budgets.csv)、[球界/访问量汇总](data/node_routing_summary.json)。未测端到端ANN加速、独立holdout、第二数据集、多绑定/DAG或动态维护。下一步只有在更便宜、更紧的节点决策机制与Quake等前序形成实质区别后，才进入新算法实现与同recall比较。

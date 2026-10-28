@@ -1,0 +1,38 @@
+{
+  "nodes": 363467,
+  "centroid_payload_bytes": 2977521664,
+  "radius_payload_bytes": 2907736,
+  "summary_build_seconds_python": 42.22712920606136,
+  "classification": "routing diagnostic; centroid GT coverage upper-bounds ANN recall, not end-to-end performance",
+  "arithmetic": "float64 summaries/local distances on raw float32 vectors; radius inflation1e-10; not formal floating-point certification",
+  "groups": [
+    {
+      "group": "all_recursive",
+      "queries": 227,
+      "candidate_nodes_total": 387717,
+      "median_candidate_nodes": 3.0,
+      "max_candidate_nodes": 138993,
+      "median_distinct_gt_nodes": 3.0,
+      "fraction_all_gt_in_one_node": 0.41409691629955947,
+      "oracle_ball_node_prune_fraction": 0.4811885989007446,
+      "best_first_node_prune_fraction": 0.4811885989007446,
+      "best_first_point_prune_fraction": 0.09444193721620342,
+      "best_first_macro_recall": 1.0,
+      "best_first_global_recall": 1.0
+    },
+    {
+      "group": "candidate_nodes_ge16",
+      "queries": 86,
+      "candidate_nodes_total": 387393,
+      "median_candidate_nodes": 1010.0,
+      "max_candidate_nodes": 138993,
+      "median_distinct_gt_nodes": 9.0,
+      "fraction_all_gt_in_one_node": 0.0,
+      "oracle_ball_node_prune_fraction": 0.4815136050470711,
+      "best_first_node_prune_fraction": 0.4815136050470711,
+      "best_first_point_prune_fraction": 0.09450066991151107,
+      "best_first_macro_recall": 1.0,
+      "best_first_global_recall": 1.0
+    }
+  ]
+}

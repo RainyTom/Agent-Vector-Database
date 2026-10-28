@@ -240,3 +240,11 @@
 本地原文证据：[iRangeGraph](https://arxiv.org/abs/2409.02571) `paper.md:407-520` 的范围/segment-tree共享图；[Curator](https://arxiv.org/abs/2601.01291) `paper.md:450-500,650-715` 的子树连续ID与按需谓词索引；Packing相关块组织沿用既有全文记录。VA-file原始PDF本轮未成功读取，不能把snippet当精读。没有新增未经完整书目核实的论文条目，既有D0–D5停止/暂停决定不变。
 
 实际完成12轮冻结WIKI实验，见[报告§9](../nested-attr-vector-search/2026-10-28-exps/report.md#9-autoresearch-静态dsq迭代)。scope-run/tile执行候选有效，但DFS区间、bulk scan、SIMD、partial-distance及局部top-k合并都不是单独新贡献；tile cutoff组合的新颖性仍未充分排查。未运行holdout、多数据集或动态维护，不宣称覆盖所有前序。
+
+## 2026-10-28 NodeANN递归路由诊断与APS前序
+
+用户明确SIMD/布局不算创新，本轮将其仅作为工程基线。先查论文/关系索引、TrieHI/Curator笔记及D3新颖性审计，再搜vector similarity join/high-dimensional similarity join/inner-product similarity join + partition/distance bounds，随后查adaptive partition/node search、recall budget与Quake。范围为单查询filtered top-k，不冒称join。
+
+新候选：[Quake: Adaptive Indexing for Vector Search，OSDI2025正式论文](https://www.usenix.org/system/files/osdi25-mohoney.pdf)，另有[arXiv:2506.03437](https://arxiv.org/abs/2506.03437)。本轮原文核到§2.3和§5 Eq.7–9/Alg1（PDF含封面页8–9）：uniform-density与Voronoi半空间近似下预测分区含近邻概率，利用当前第k距离更新概率并按估计recall停止。尚未完整精读理论、实验或引用闭包，列入待精读，不填造完整论文索引或精确recall保证。SPANN/LAET/Auncel为Quake正文引用的继续追查线索，未按二手描述认定完整等价。
+
+实际节点诊断见[报告§10](../nested-attr-vector-search/2026-10-28-exps/report.md#10-用户新问题递归查询能否只搜索有希望的node)：质心截断有较大漏召回；单球best-first保住GT但向量剪枝少。目录语义Node非Voronoi几何分区是待检验差异，不足认证新颖；多球/学习router/federated shard selection仍需补查。没有新算法SOTA或新颖性声明。
