@@ -6,13 +6,14 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <cstdint>
 #include <cstring>
 #include <limits>
 #include <memory>
 #include <stdexcept>
 #include <utility>
 #include <vector>
-#if defined(__AVX2__)
+#if defined(__AVX2__) || defined(__F16C__)
 #include <immintrin.h>
 #endif
 
@@ -36,7 +37,8 @@ public:
                   int dim,
                   const std::vector<std::vector<int>>& children,
                   const std::vector<std::pair<int, int>>& bindings,
-                  bool transposed = false, bool local_geometry_order = false) {
+                  bool transposed = false, bool local_geometry_order = false,
+                  bool half_scan = false, const float* rerank_rows = nullptr) {
         if (dim <= 0 || base.size() % static_cast<size_t>(dim) != 0)
             throw std::invalid_argument("ScopeRunIndex: invalid base dimensions");
         dim_ = static_cast<size_t>(dim);
@@ -150,6 +152,26 @@ public:
                             width * dim_ * sizeof(float));
             }
         }
+        half_scan_ = half_scan;
+        base_rows_ = rerank_rows;
+        if (half_scan_) {
+            // Shadow copy in the same eight-lane tile layout, but bfloat-free
+            // binary16. Halves the bytes streaming through the scope scan while
+            // keeping the FP32 payload as the exact reranking source.
+            static_assert(sizeof(uint16_t) == 2, "binary16 shadow needs 16-bit words");
+            half_.reset(new uint16_t[count_ * dim_]);
+            const size_t words = count_ * dim_;
+            size_t i = 0;
+#if defined(__F16C__)
+            for (; i + 8 <= words; i += 8) {
+                __m256 v = _mm256_loadu_ps(packed_.get() + i);
+                __m128i h = _mm256_cvtps_ph(v, _MM_FROUND_TO_NEAREST_INT |
+                                                    _MM_FROUND_NO_EXC);
+                _mm_storeu_si128(reinterpret_cast<__m128i*>(half_.get() + i), h);
+            }
+#endif
+            for (; i < words; ++i) half_[i] = float_to_half(packed_[i]);
+        }
     }
 
     // Offsets count packed vectors, not float components. Direct bindings are
@@ -179,11 +201,123 @@ public:
     // margin is conservative engineering practice, not a new rounding theorem.
     void search(const float* query, std::pair<size_t, size_t> scope, int k,
                 float* distances, faiss::idx_t* labels, int mode = 0) const {
-        if (mode < 0 || mode > 4 || transposed_ != (mode >= 3))
+        if (mode < 0 || mode > 5 || transposed_ != (mode >= 3))
             throw std::invalid_argument("ScopeRunIndex: incompatible search mode/layout");
         if (scope.first > scope.second || scope.second > count_)
             throw std::out_of_range("ScopeRunIndex: invalid packed range");
         if (k <= 0) return;
+        if (mode == 5) {
+            if (!half_scan_ || !half_ || !base_rows_)
+                throw std::invalid_argument(
+                        "ScopeRunIndex: mode 5 requires the binary16 shadow");
+            // Coarse pass streams binary16 tiles, then survivors are rescored
+            // against the FP32 payload. The extra rerank slots absorb binary16
+            // ordering error near the k-th distance; the returned distances are
+            // always exact FP32 squared L2.
+            const size_t capacity =
+                    std::min(scope.second - scope.first, static_cast<size_t>(k) + 8);
+            if (capacity == 0) {
+                std::fill_n(distances, k, std::numeric_limits<float>::infinity());
+                std::fill_n(labels, k, static_cast<faiss::idx_t>(-1));
+                return;
+            }
+            std::vector<float> coarse(capacity, std::numeric_limits<float>::infinity());
+            std::vector<faiss::idx_t> coarse_ids(capacity, static_cast<faiss::idx_t>(-1));
+            size_t filled = 0;
+            for (size_t first = scope.first / 8 * 8; first < scope.second; first += 8) {
+                const size_t width = std::min(size_t{8}, count_ - first);
+                const uint16_t* tile = half_.get() + first * dim_;
+                float sums[8] = {};
+#if defined(__AVX2__) && defined(__F16C__)
+                if (width == 8) {
+                    __m256 s0 = _mm256_setzero_ps(), s1 = s0, s2 = s0, s3 = s0;
+                    bool abandoned = false;
+                    unsigned outside = 0;
+                    for (unsigned lane = 0; lane < 8; ++lane)
+                        if (first + lane < scope.first || first + lane >= scope.second)
+                            outside |= 1u << lane;
+                    size_t j = 0;
+                    for (; j + 4 <= dim_; j += 4) {
+                        __m256 d0 = _mm256_sub_ps(
+                                _mm256_set1_ps(query[j]),
+                                _mm256_cvtph_ps(_mm_loadu_si128(
+                                        reinterpret_cast<const __m128i*>(tile + j * 8))));
+                        __m256 d1 = _mm256_sub_ps(
+                                _mm256_set1_ps(query[j + 1]),
+                                _mm256_cvtph_ps(_mm_loadu_si128(
+                                        reinterpret_cast<const __m128i*>(tile + (j + 1) * 8))));
+                        __m256 d2 = _mm256_sub_ps(
+                                _mm256_set1_ps(query[j + 2]),
+                                _mm256_cvtph_ps(_mm_loadu_si128(
+                                        reinterpret_cast<const __m128i*>(tile + (j + 2) * 8))));
+                        __m256 d3 = _mm256_sub_ps(
+                                _mm256_set1_ps(query[j + 3]),
+                                _mm256_cvtph_ps(_mm_loadu_si128(
+                                        reinterpret_cast<const __m128i*>(tile + (j + 3) * 8))));
+                        s0 = _mm256_add_ps(s0, _mm256_mul_ps(d0, d0));
+                        s1 = _mm256_add_ps(s1, _mm256_mul_ps(d1, d1));
+                        s2 = _mm256_add_ps(s2, _mm256_mul_ps(d2, d2));
+                        s3 = _mm256_add_ps(s3, _mm256_mul_ps(d3, d3));
+                        if (filled == capacity && (j + 4) % 64 == 0) {
+                            const float margin = 16 * std::numeric_limits<float>::epsilon() *
+                                                 (dim_ + 1) * std::max(1.0f, coarse[0]) +
+                                                 kHalfProbeMargin;
+                            __m256 cutoff = _mm256_set1_ps(coarse[0] + margin);
+                            __m256 partial = _mm256_add_ps(_mm256_add_ps(s0, s1),
+                                                          _mm256_add_ps(s2, s3));
+                            unsigned rejected = static_cast<unsigned>(_mm256_movemask_ps(
+                                _mm256_cmp_ps(partial, cutoff, _CMP_GT_OQ)));
+                            if ((rejected | outside) == 255u) {
+                                abandoned = true;
+                                break;
+                            }
+                        }
+                    }
+                    if (abandoned) continue;
+                    s0 = _mm256_add_ps(_mm256_add_ps(s0, s1), _mm256_add_ps(s2, s3));
+                    for (; j < dim_; ++j) {
+                        __m256 delta = _mm256_sub_ps(
+                                _mm256_set1_ps(query[j]),
+                                _mm256_cvtph_ps(_mm_loadu_si128(
+                                        reinterpret_cast<const __m128i*>(tile + j * 8))));
+                        s0 = _mm256_add_ps(s0, _mm256_mul_ps(delta, delta));
+                    }
+                    _mm256_storeu_ps(sums, s0);
+                } else
+#endif
+                {
+                    for (size_t j = 0; j < dim_; ++j)
+                        for (size_t lane = 0; lane < width; ++lane) {
+                            const float delta = query[j] - half_to_float(tile[j * width + lane]);
+                            sums[lane] += delta * delta;
+                        }
+                }
+                for (size_t lane = 0; lane < width; ++lane)
+                    if (first + lane >= scope.first && first + lane < scope.second)
+                        offer(sums[lane], ids_[first + lane], capacity, filled,
+                              coarse.data(), coarse_ids.data());
+            }
+            for (size_t i = 0; i < filled; ++i) {
+                // packed_ follows the eight-lane tile layout, so exact rescoring
+                // must read the caller's row-major base rows by global ID.
+                const float* row = base_rows_ +
+                        static_cast<size_t>(coarse_ids[i]) * dim_;
+                coarse[i] = faiss::fvec_L2sqr(query, row, dim_);
+            }
+            std::vector<size_t> order(filled);
+            for (size_t i = 0; i < filled; ++i) order[i] = i;
+            std::sort(order.begin(), order.end(), [&](size_t a, size_t b) {
+                return better(coarse[a], coarse_ids[a], coarse[b], coarse_ids[b]);
+            });
+            const size_t emit = std::min(filled, static_cast<size_t>(k));
+            std::fill_n(distances, k, std::numeric_limits<float>::infinity());
+            std::fill_n(labels, k, static_cast<faiss::idx_t>(-1));
+            for (size_t i = 0; i < emit; ++i) {
+                distances[i] = coarse[order[i]];
+                labels[i] = coarse_ids[order[i]];
+            }
+            return;
+        }
         const size_t capacity = static_cast<size_t>(k);
         std::fill_n(distances, capacity, std::numeric_limits<float>::infinity());
         std::fill_n(labels, capacity, static_cast<faiss::idx_t>(-1));
@@ -319,7 +453,8 @@ public:
     // No HNSW, workload, test vectors, ground truth, or query cache is stored.
     size_t size_bytes() const {
         return sizeof(*this) + count_ * dim_ * sizeof(float) +
-               count_ * sizeof(faiss::idx_t) + runs_.capacity() * sizeof(Run);
+               count_ * sizeof(faiss::idx_t) + runs_.capacity() * sizeof(Run) +
+               (half_ ? count_ * dim_ * sizeof(uint16_t) : 0);
     }
 
 private:
@@ -328,6 +463,62 @@ private:
         size_t local_end = 0;
         size_t subtree_end = 0;
     };
+
+    // binary16 <-> binary32 without requiring F16C at compile time. The F16C
+    // paths are what actually run on this host; the fallbacks exist so the
+    // header still compiles on machines without the extension.
+    static float half_to_float(uint16_t h) {
+#if defined(__F16C__)
+        return _cvtsh_ss(h);
+#else
+        const uint32_t sign = static_cast<uint32_t>(h >> 15) << 31;
+        const uint32_t exp = (h >> 10) & 0x1fu;
+        const uint32_t mant = h & 0x3ffu;
+        uint32_t bits;
+        if (exp == 0) {
+            bits = sign;                                    // subnormals flush to zero
+        } else if (exp == 0x1fu) {
+            bits = sign | 0x7f800000u | (mant << 13);
+        } else {
+            bits = sign | ((exp - 15u + 127u) << 23) | (mant << 13);
+        }
+        float value;
+        std::memcpy(&value, &bits, sizeof(value));
+        return value;
+#endif
+    }
+
+    static uint16_t float_to_half(float value) {
+#if defined(__F16C__)
+        return static_cast<uint16_t>(
+                _cvtss_sh(value, _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC));
+#else
+        uint32_t bits;
+        std::memcpy(&bits, &value, sizeof(bits));
+        const uint32_t sign = (bits >> 16) & 0x8000u;
+        int32_t exponent = static_cast<int32_t>((bits >> 23) & 0xffu) - 127;
+        uint32_t mantissa = bits & 0x7fffffu;
+        if (exponent > 15) return static_cast<uint16_t>(sign | 0x7c00u);
+        if (exponent < -14) return static_cast<uint16_t>(sign);
+        mantissa += 0x1000u;                               // round the 13 dropped bits
+        if (mantissa & 0x800000u) {
+            mantissa = 0;
+            if (++exponent > 15) return static_cast<uint16_t>(sign | 0x7c00u);
+        }
+        return static_cast<uint16_t>(sign |
+                (static_cast<uint32_t>(exponent + 15) << 10) | (mantissa >> 13));
+#endif
+    }
+
+    // Conservative extra slack for the binary16 coarse cutoff. Binary16 keeps
+    // 11 significand bits, so per-component error is bounded by 2^-11 relative;
+    // summed over unit-norm vectors this stays far below this constant. It is
+    // engineering conservatism, not a rounding-error theorem.
+    static constexpr float kHalfProbeMargin = 0.05f;
+
+    std::unique_ptr<uint16_t[]> half_;      // binary16 shadow, tile layout
+    const float* base_rows_ = nullptr;      // caller-owned row-major base
+    bool half_scan_ = false;
 
     static bool better(float a, faiss::idx_t aid, float b, faiss::idx_t bid) {
         return a < b || (a == b && aid < bid);
