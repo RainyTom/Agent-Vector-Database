@@ -248,3 +248,13 @@
 新候选：[Quake: Adaptive Indexing for Vector Search，OSDI2025正式论文](https://www.usenix.org/system/files/osdi25-mohoney.pdf)，另有[arXiv:2506.03437](https://arxiv.org/abs/2506.03437)。本轮原文核到§2.3和§5 Eq.7–9/Alg1（PDF含封面页8–9）：uniform-density与Voronoi半空间近似下预测分区含近邻概率，利用当前第k距离更新概率并按估计recall停止。尚未完整精读理论、实验或引用闭包，列入待精读，不填造完整论文索引或精确recall保证。SPANN/LAET/Auncel为Quake正文引用的继续追查线索，未按二手描述认定完整等价。
 
 实际节点诊断见[报告§10](../nested-attr-vector-search/2026-10-28-exps/report.md#10-用户新问题递归查询能否只搜索有希望的node)：质心截断有较大漏召回；单球best-first保住GT但向量剪枝少。目录语义Node非Voronoi几何分区是待检验差异，不足认证新颖；多球/学习router/federated shard selection仍需补查。没有新算法SOTA或新颖性声明。
+
+## 2026-10-28 树-图协同、双空间剪枝与图嫁接的前序核对
+
+用户提出以TrieHI"只做元数据层"为缺口的三个方向：目录层级与图对齐、双空间包络剪枝、MOVE图嫁接。先查本地论文索引/笔记与既有D2/D3决定，再核公开原文相关章节。
+
+已读本地原文/报告：Grant（2610.11563，属性平衡树+叶子图+概率节点验证；条件性次线性界）`paper.report.md`；Graph Range Filters（2607.00727，过滤图上distance-aware labeling）`paper.report.md:1-28`；ACORN（2403.04871，谓词子图遍历+邻域扩展，概率性可导航分析）`paper.report.md`；Filtered-DiskANN（WWW2023，StitchedVamana/FilteredRobustPrune，单标签为主，AND为future work）`paper.report.md`；ELI（PVLDB 19(4)，按选择比弹性选子索引）`paper.report.md`。在线实读Quake OSDI2025 §2.3、§5 Eq.7–9/Algorithm 1（APS：Voronoi半空间+uniform-density概率，在线更新第k距离并停止）。
+
+判断：树+图联合组织、过滤图连通性修复、按选择比选索引/分区、球界剪枝均有直接前序；"无条件的任意子树有界连通度"不成立，需条件化或按子树加边（后者已发表）。真正空白在**目录MOVE/MERGE与向量图的一致性维护**，但须先证明不修图会造成质量损失。
+
+本轮实测见[报告§11](../nested-attr-vector-search/2026-10-28-exps/report.md#11-审稿人视角树-图协同双空间剪枝与图嫁接的可检验性)：过滤图在高选择率下召回塌陷（PG 0.032–0.040）而非延迟上升；精确scope扫描在大scope尾部占99.6%时间（7.06ms@16.8k）；语义Node几何cohesion仅0.80–0.90且多球仅收缩1–4%，球界只裁9.45%向量。未实现新图索引，无SOTA或新颖性声明。
