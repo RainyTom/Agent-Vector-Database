@@ -1,0 +1,58 @@
+{
+ "tool": "hlg_tool move",
+ "ops_source": "codes/directory-aware-vector-attr-search/data/real/dsm_wiki_ops.txt",
+ "note": "MOVE ops applied in file order; MERGE ops skipped (metadata-only benchmark, see report). Static preorder/entry-ID layout is not maintained across moves; only the connector state is.",
+ "move_ops_timed": 1064,
+ "move_ops_in_file": 1087,
+ "merge_ops_skipped": 913,
+ "scnt_check_all_ok": true,
+ "verify_rebuild": {
+  "rep_mismatch": 0,
+  "sum_mismatch": 0,
+  "cnt_mismatch": 0
+ },
+ "buckets": {
+  "<1k": {
+   "n": 468,
+   "median_us": 24044.9,
+   "mean_us": 33864.9,
+   "p90_us": 74080.0,
+   "max_us": 271532.5,
+   "median_affected_nodes": 56.5,
+   "median_sum_k2": 54869.0,
+   "median_edges_replaced": 1183.5
+  },
+  "1k-10k": {
+   "n": 317,
+   "median_us": 25997.8,
+   "mean_us": 36655.3,
+   "p90_us": 85473.0,
+   "max_us": 284424.8,
+   "median_affected_nodes": 55,
+   "median_sum_k2": 57974,
+   "median_edges_replaced": 1179
+  },
+  ">=10k": {
+   "n": 279,
+   "median_us": 20676.8,
+   "mean_us": 28598.2,
+   "p90_us": 70044.9,
+   "max_us": 157716.1,
+   "median_affected_nodes": 51,
+   "median_sum_k2": 49359,
+   "median_edges_replaced": 1061
+  }
+ },
+ "corr_log10_subtree_size_vs_log10_us": -0.0843,
+ "corr_log10_sum_k2_vs_log10_us": 0.9554,
+ "g3_ratio_ge10k_over_lt1k": 0.86,
+ "g3_threshold": 3.0,
+ "g3_pass": true,
+ "overall_median_us": 22921.6,
+ "overall_mean_us": 33315.2,
+ "comparison_context": {
+  "triehi_move_mean_ms": 2.75,
+  "source": "researches/nested-attr-vector-search/2026-10-28-exps/report.md:266",
+  "note": "TrieHI metadata-only MOVE is ~2.75 ms/op measured; HLG's |S|-independent maintenance is ~8-12x larger in absolute terms because both root paths rebuild MSTs (sum k_a^2 d)."
+ }
+}

@@ -333,3 +333,88 @@ ANN返回的k个合法候选也能形成真实第k距离的**上界**，但ANN�
 - 几何探测为抽样（51个Node）与float64近似，非全量；diam首轮因对角线inf产生Infinity已修正后重跑，报告只用修正值。
 - 未实现任何新图索引，未测MOVE后图质量，未测第二数据集，未与Grant/iRangeGraph/ACORN/ELI/Quake做同设置对比。
 - 结论仅针对本workload与本嵌入模型（bge-m3 1024d，合成约束锚点）。
+
+## 12. HLG：层级血统连通图（单索引 + 可证连通 + 有界维护）
+
+理论与证明：[hlg-theory.md](hlg-theory.md)（G0 门槛载体）。工具：`codes/directory-aware-vector-attr-search/src/hlg_tool.cpp`（子命令 `index/build/check/bench/move`）。构造汇总：[data/hlg_build_summary.json](data/hlg_build_summary.json)。
+
+### 12.1 已测结论（只写实测）
+
+1. **连接边构造在全量 WIKI 上实测 $|E_{\text{conn}}| = n-1 = 1{,}941{,}678$**，与定理 1(ii) 的等式一致（不是不等式）；建边墙钟 **90.8 s**（12 线程；其中精确 Prim 76.9 s、质心 2.9 s、代表点 1.2 s、数据加载 9.7 s）。相对 M=16 的粗略无向边预算（$nM\approx31.07$M）占 **6.25%**。
+2. **维护（G3）通过**：dsm_wiki_ops 的 1064 个 MOVE 实测，≥10k 子树中位 **20.7 ms**、<1k 中位 **24.0 ms**，比值 **0.86**（门槛 ≤3）；$\log_{10}\text{move\_us}$ 与 $\log_{10}|S(u)|$ 相关 **−0.08**，与 $\log_{10}\sum_{a\in\mathcal A}k_a^2$ 相关 **0.96**。即耗时确实由两条根路径的簇数决定，与被移动子树规模无关（定理 2 的定性预测得到数据支持）。
+3. **连通性（G1）与检索（G2）尚未测**，缺一份 1.94M×1024 的 HNSW 图（前 10 万点串行建图实测 1.55 ms/点，外推约 50 min；索引只在最后落盘）。命令已交出（[§12.6](#126-未测项与待执行命令)）。**因此本轮不给出“连接边恢复召回/连通”的任何结论**——已测事实里没有这一条。
+
+### 12.2 方法与对计划的两处硬修正
+
+定义、构造、证明见 [hlg-theory.md](hlg-theory.md)。摘要：定理 1（对任意目录 $u$，$G_0[S(u)]\cup E_{\text{conn}}$ 连通；$|E_{\text{conn}}|=n-1$；给出度数上界）、定理 2（MOVE 只影响 $\mathcal A\subseteq\{p,w\}\cup\mathrm{Anc}(p)\cup\mathrm{Anc}(w)$ 的 MST，代价与 $|S(u)|$ 无关）、命题 3（连通不蕴含跳数/召回，含反例）、命题 4（scope 常驻入口 + 连通 ⇒ 非空 scope 不返回零结果）。
+
+计划里的三处必须修正之处（本轮的主要产出之一，均已写进理论笔记并落到实现）：
+
+| 计划原文 | 问题 | 修正 |
+|---|---|---|
+| 每节点只在**簇代表点**上建 MST | 局部簇 $L(u)$ 内部无连通保证；反例：叶子 $u$、$L(u)=\{x_1,x_2\}$、基础图无边 ⇒ $S(u)$ 不连通 | 补 $E_{\text{loc}}=\bigcup_{|L(u)|\ge2}\mathrm{MST}(L(u))$，WIKI 上 **1,578,212 条**（占 $E_{\text{conn}}$ 的 81%，不可省） |
+| 边数 $\le n-\#\{\text{非空节点}\}$ | 该式给 1,473,212，实测/正确值 1,941,678，**伪** | 正确为 $|E_{\text{conn}}|=n-1$（等号，已证 + 实测） |
+| 代表点 = 整簇 medoid | MOVE 后重算需扫 $S(a)$（路径上可达 $10^6$）⇒ 定理 2 的"与 $|S|$ 无关"失效 | 改组合式：$r_{\text{up}}(u)=\arg\min_{x\in K(u)}\lVert x-\overline{S(u)}\rVert$，$K(u)=\{r_{\text{loc}}(u)\}\cup\{r_{\text{up}}(c)\}$，重算 $O(k_u d)$ |
+
+编码细节：eID 按 DFS 先序重排，使 $S(u)$ 为连续区间 $[lo,hi)$、$L(u)$ 为该区间前缀，scope 判定 O(1)，且 `scope_card` 可直接与冻结 GT 对账（冒烟数据 0 不匹配；全量待 G2 独立核验）。
+
+### 12.3 实例结构（实测）
+
+| 量 | 值 |
+|---|---:|
+| 节点 $m$ / 绑定条目 $n$ | 468,031 / 1,941,679 |
+| 非空节点 $A$ / 直接绑定非空 $Z$ | 468,031 / 363,467 |
+| 最大深度 / 最大出度 | 31 / 408 |
+| $k_u$ 最大 / $\sum k_u$ / $\sum k_u^2$ | 408 / 831,497 / 7,294,109 |
+| 上层边 $\sum(k_u-1)$ / 局部边 $\sum(|L|-1)^+$ | 363,466 / 1,578,212 |
+| **$|E_{\text{conn}}|$** | **1,941,678 $=n-1$** |
+| 新增度数 max / mean / 非零点占比 | **66** / 2.0000 / 100%（1,941,679 点全部 ≥1 条） |
+| 有连接边的节点数 | 254,383 |
+
+$\sum k_u^2=7.29\times10^6$ 且 WIKI 最大 $k_u=408$；实测逐节点精确 Prim 为 76.9 s，说明本实例建边可用精确欧氏 MST，无需退化到近似生成树。
+
+### 12.4 冒烟（合成 7 节点树 / 12 个 4 维点，M=2）
+
+`check`：节点 2 的 scope 基础图 **6 个连通分量**、节点 5/6 各 2 个；加连接边后**全部节点 $\text{components}=1$**（$E_{\text{conn}}=11=n-1$ 条）。有向可达比例按入口计：基础图 0.167–1.0，HLG 全 1.0。
+
+旧版 `bench` 的 scope-strict 两臂得到集合命中：`on` 为 6/6、2/2、6/6，`on-noconn` 为 1/6、2/2、1/6；但同次 `off/self` 输出含 4 个 scope 外 ID，暴露其把 traversal beam 与 filtered result heap 混用的实现错误。该错误已在 `hlg_tool.cpp::search_layer0` 修正（两堆分离），同时修正结果由远到近排序及空 non-recursive scope 无入口却触发 fatal 的问题；用户要求停止实验后未重跑，故旧 CSV 已删除、上述检索数字**不作为 G2 证据**。修正版需先按 §12.6 的 smoke 命令复核。
+
+### 12.5 G3 维护（实测，`data/hlg_move_summary.json`、`data/hlg_move_timing.csv`）
+
+| 子树规模 | 样本 | MOVE 中位 | 均值 | p90 | 中位受影响节点 | 中位 $\sum k_a^2$ | 中位置换边数 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| <1k | 468 | **24.0 ms** | 33.9 ms | 74.1 ms | 56.5 | 54,869 | 1,184 |
+| 1k–10k | 317 | 26.0 ms | 36.7 ms | 85.5 ms | 55 | 57,974 | 1,179 |
+| ≥10k | 279 | **20.7 ms** | 28.6 ms | 70.0 ms | 51 | 49,359 | 1,061 |
+
+- 门槛：$\text{median}_{\ge10k}/\text{median}_{<1k}\le3$ ⇒ 实测 **0.86，PASS**。
+- 一致性：1064/1064 次 `scnt` 与从零重算一致；结尾 `--verify-rebuild` 对全树重算 $\text{rep\_up}$、质心和子树计数，三个 mismatch 计数均 **0**（说明定理 2 的受影响集合 $\mathcal A$ 完备）。
+- **绝对代价要诚实说**：TrieHI 的 MOVE 实测 2.75 ms/op（§11.4 引用行），HLG 中位 22.9 ms/op，**慢 8–12 倍**。HLG 的增量只有"代价与被移动子树规模无关"这一条，不是"更快"。主要成本是两条根路径上高扇出节点的 MST 重建（根 $k=408\Rightarrow k^2/2\approx8.3$ 万次距离/节点）；若要压绝对值，方向是受影响节点的**增量** MST 更新（删/插一个代表点）而不是重算，或按计划 contingency 对高扇出节点做二叉分组。
+- 未覆盖：图侧 MERGE 维护未实现（913 个 MERGE 被跳过，故树序与 repro 的 DSM 流不同）；eID 先序区间在 MOVE 后失效（元数据重编号不在本工具内，测的只是连接边维护）。
+
+### 12.6 未测项与待执行命令
+
+前置：`export LD_LIBRARY_PATH=$PWD/deps/PathSeer/faiss/build/faiss`；根目录运行；`--chunk` 取 1941679（**必须一次 `add` 全部点**：faiss 每次 `add` 用 `RandomGenerator(789)` 重排插入序并在锁下并发连边，分块会得到不同图实例——实测 20000×32 上 chunk=20000 vs 137 有 482,252/660,896 个邻居槽位不同）。
+
+| 步 | 命令要点 | 判定 |
+|---|---|---|
+| 冒烟 | 用现有 `work/hlg/smoke/{hnsw.index,overlay.bin,reps.bin}` 依次跑 `off/self`、`off/faiss`、`on` | `out_of_scope=0`；两个 off 臂 recall 差 ≤0.02；`on` 三查询 hit=6/6、2/2、6/6 |
+| 建图 | `hlg_tool index --data …/wiki_full --out work/hlg/hnsw_full.index --dim 1024 --M 16 --efc 200 --chunk 1941679` | 产出 ≈8.1 GB 文件；参数与 repro 的 PG-hnsw-M16 完全相同 |
+| **G1** | `hlg_tool check … --per-bucket 25 > data/hlg_structure_check.csv` | `hlg_gt1==0`（定理 1 必然；非 0 即实现 bug）、`base_gt1>0` |
+| **G2** | 4 个 bench 臂（`off/self`、`off/faiss`、`on`、`on-noconn`），ef 网格 16…2048 | `on` 的 recursive macro 比 `off` 高 ≥5 pp；`on` 在 ef=128 ≥0.60；`off/self` vs `off/faiss` 差 ≤0.02 |
+| 核验 | `experiments/verify_hlg_results.py`（numpy 独立重算 scope 与命中） | `scope_card_mismatch=0`、`out_of_scope=0`、`duplicates=0` |
+
+### 12.7 诚实边界（本轮必须写清）
+
+- **连通性定理不算新贡献**：单绑定 + 静态树在 DFS 先序下就是区间族，RNSG（arXiv:2603.12913v2，PVLDB 19 页面）的 structural heredity 已给出比"连通"更强的保证（含 monotonic search-ability）。本轮未与 RNSG 做同设置对照，因此"连接边是否优于直接上 RNSG"**无证据**。
+- 未做多绑定/DAG；未做真实发布方 constraint（锚点仍是 seed=20261026 的合成约束）。
+- 图实例不可复现（并发插入 + 每次 add 重排），归档 0.2124 属于另一实例，故 G2 的 0.2124 只作参考，不作硬判据。
+- `on-shortcut`（命题 3 的跳数消融，α=8）目前只有 bench 侧开关，**构造代码未写**；待 G1–G3 通过后补，不预先声称结果。
+
+### 12.8 本轮新增文件
+
+- 理论：[hlg-theory.md](hlg-theory.md)
+- 代码：`codes/directory-aware-vector-attr-search/src/hlg_tool.cpp`（新建）、`build.sh`（追加 hlg_tool 编译）
+- 数据：[data/hlg_build_summary.json](data/hlg_build_summary.json)、[data/hlg_move_summary.json](data/hlg_move_summary.json)、[data/hlg_move_timing.csv](data/hlg_move_timing.csv)
+- 脚本：[experiments/verify_hlg_results.py](experiments/verify_hlg_results.py)
+- 未提交（体积大，在 `.gitignore` 的 `work/` 下）：`work/hlg/overlay_full/{overlay.bin,reps.bin}`；`work/hlg/hnsw_full.index` 因建图中止、尚未产生。
