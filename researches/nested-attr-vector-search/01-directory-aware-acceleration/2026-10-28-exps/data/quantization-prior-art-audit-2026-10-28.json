@@ -49,6 +49,27 @@
     }
   ],
   "researcher_hypothesis_not_author_claim": "Frozen global codes with mergeable low-rank quantization-error summaries for laminar scope calibration and MOVE-stable encoding state; novelty and ranking benefit unverified",
+  "retracted_hypotheses": [
+    {
+      "hypothesis": "Per-scope mean/低秩均值校准 of reconstructed vectors improves DSQ top-k",
+      "status": "refuted_analytically",
+      "reason": "Within-scope ranking compares d_hat(q,y)-d_hat(q,x); any additive scope bias cancels and positive scale preserves order, so a mean correction is a ranking no-op. Independently consistent with arXiv:2609.09854 section 3.3, where the affine intercept survives only in alpha!=1 pruning as (1-alpha)b.",
+      "derivation_location": "2026-10-28-exps/igp-quantization-assessment.md section 10.1",
+      "not_new_theorem": true
+    }
+  ],
+  "decision_level_framework_absorbed": {
+    "id": "arxiv:2609.09854",
+    "read_level": "main text sections 1, 3.1-3.3, 5, 7, 8.2-8.3; appendices sampled",
+    "usable_results": ["flip probability bounded by boundary mass plus residual tail", "ranking difference-residual scale nu^2 = K_xx + K_yy - 2K_xy", "held-out block selective certificate (Theorem 15)", "standardized-margin bins predict flip rates"],
+    "not_covered_by_that_paper": ["filtered or directory-scope queries", "scope-aligned codec design", "metadata lifecycle invalidation"]
+  },
+  "certificate_prior_overlap": {
+    "VADER": {"id": "arxiv:2609.38053v2", "role": "filter-aware GBDT recall predictor with early termination at partition granularity", "limits": ["local report: no unconditional per-query recall certificate", "reported R_QUT 0.16-0.35"]},
+    "unread_candidates": ["conANN (PVLDB 2025)", "DARTH+ (HAL 2026)"],
+    "unread_note": "Known only from VADER reference list in this round; coverage not assessed",
+    "possible_residual_gap_unverified": "held-out certificates indexed by directory scope, with invalidation after MOVE/MERGE"
+  },
   "all_records_are_topic_local_audits": true,
   "new_global_full_paper_records_claimed": false
 }

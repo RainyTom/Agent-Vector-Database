@@ -194,13 +194,15 @@ iFVS §2 使用共享 memory bank、learned adjustment directions 和谓词编�
 |---|---|---|
 | [Locally Optimized Product Quantization for Approximate Nearest Neighbor Search](https://www.cv-foundation.org/openaccess/content_cvpr_2014/papers/Kalantidis_Locally_Optimized_Product_2014_CVPR_paper.pdf)，Yannis Kalantidis / Yannis Avrithis，CVPR 2014，pp.2321–2328 | §4.1、§5.4、§6 | 分区 residual、局部 PQ/旋转、每 cell query LUT 与模型开销已有；“把局部量化器放到各 Node”不是独立创新 |
 | [SymphonyQG](https://arxiv.org/html/2411.12229#S3)，Yutong Gou / Jianyang Gao / Yuexuan Xu / Cheng Long，arXiv v1，2024；正式版书目本轮未复核 | §2.2、§3.1–3.2 | 量化图遍历、批量距离、隐式精排及量化辅助构图已有，不能只靠这些组合立项 |
-| [When Does Low-Bit Quantization Preserve the Decisions of Vector Search?](https://arxiv.org/abs/2609.09854)，Wenxuan Xiao / Xu Cao，arXiv，2026-09-09 | 本轮仅核摘要，全文待读 | 其问题直接针对比较翻转与 margin；不能用平均量化 MSE 代替排序/图剪枝正确性证据 |
+| [When Does Low-Bit Quantization Preserve the Decisions of Vector Search?](https://arxiv.org/html/2609.09854)，Wenxuan Xiao / Xu Cao，arXiv v1，2026-09-09；正式 venue 未核实 | §1、§3.1–3.3、§5、§7 Table 4、§8.2–8.3；本轮已读正文（附录仅抽样） | 比较翻转的边界质量+残差尾分解、差分残差方差 `K_xx+K_yy-2K_xy`、未过滤 ANN 的 held-out 选择性证书都已有；`Table 4` 显示 int4 在最难 20% margin 上仍翻转 10.1% |
 
-### 8.3 收敛为可维护的层级条件校准问题
+### 8.3 已被否证的方向：scope 均值校准
 
-相比再造一个 residual quantizer，更窄的**待检验假设**是：**固定一份全局 codes，以可合并的小维度统计表示目录 scope 的量化残差偏差；查询仅生成一个 scope 共享校准，MOVE 只更新根路径摘要、不重写对象 codes。**
+> **状态更新（本轮新增）：** 本节原先的“按 scope 校正均值”假设**已在理论上被否证**，结论见 §10.1：DSQ 的所有比较都在同一 scope 内，公共加性偏差在排序比较中抵消，均值校准改变不了 top-k。以下内容保留作推理留痕与内存账参考，**不是当前候选方案**；当前方向见 §10.2。
 
-这不是已确认的新颖性结论。它必须与 iFVS 的固定 codes + 谓词条件评分、普通条件均值校正、动态聚合摘要及层级量化同时对照。差异若最终只是把关系谓词换成目录 ID，则不足立项。
+原先的待检验假设是：固定一份全局 codes，以可合并的小维度统计表示目录 scope 的量化残差偏差；查询仅生成一个 scope 共享校准，MOVE 只更新根路径摘要、不重写对象 codes。
+
+它必须与 iFVS 的固定 codes + 谓词条件评分、普通条件均值校正、动态聚合摘要及层级量化同时对照。差异若最终只是把关系谓词换成目录 ID，则不足立项。
 
 一个用于否证的具体模型如下，尚未实现或运行：
 
@@ -239,3 +241,99 @@ iFVS §2 使用共享 memory bank、learned adjustment directions 和谓词编�
 这只确认算法/布局意图，不是 CPU/GPU 字节一致性实测。GPU kernel 在尾维判断前有 `assert(dim < vec_dim)`，因此维度不是 pack宽度倍数时还需修正/验证；当前1024维满足1/2/4/8-bit的整除条件。应先固定 centroid、cutoff、weight、ID顺序，再逐块核对两端编码/解码，不能拿独立 GPU/CPU K-means 生成的不同中心去要求 codes 相同。
 
 Q0 至少覆盖：cutoff 相等、负残差、全零残差、ID重排、非整除尾维和格式版本；这些是未运行的验收要求，不是通过记录。GPU训练、编码或 CAGRA 构图首次运行必须保留独立命令、环境、hash 和真实总离线成本。
+
+## 10. 决策层面的理论修正与修订方向（本轮新增）
+
+### 10.1 命题：单 scope 排序中公共加性偏差必然抵消
+
+DSQ 的 top-k 只比较同一 scope $S$ 内的对象，因此考虑一个“scope 加性偏差”型近似器：
+
+$$
+\hat d(q,x)=c\,d(q,x)+b_S+\xi_x,\qquad x\in S,
+$$
+
+其中 $c>0$、$b_S$ 可依赖 query 与 scope 但不依赖 $x$，$\xi_x$ 是候选相关残差。对任意 $x,y\in S$：
+
+$$
+\hat d(q,y)-\hat d(q,x)=c\bigl(d(q,y)-d(q,x)\bigr)+\xi_y-\xi_x .
+$$
+
+$b_S$ 被完全消去，$c>0$ 不改变次序。故：
+
+- **任何按 scope 估计的公共加性偏差，对 scope 内 top-k 成员与次序都没有影响**；它能影响的只有跨 scope 比较（DSQ 不做）与 $\alpha\ne1$ 的剪枝规则。
+- 该结论与 [2609.09854](https://arxiv.org/html/2609.09854) §3.1–3.3 一致：其仿射标定 $b+a\,d$ 的截距在排序差分中抵消，只在剪枝量 $Z_\alpha=\xi_{tc}-\alpha\xi_{sc}$ 中以 $(1-\alpha)b$ 存活。这是独立推导与原文的双向印证，不是我们新发现的定理。
+
+**推论（撤回 §8.3）**：按 scope 校正均值、或为每 scope 生成“校准后的 query”，其系统性成分是排序 no-op。§8.3 的 67.4 MB 摘要因此**没有排序动机**；只有候选相关的那部分修正才可能移动 top-k，而那需要逐候选信息，等价于提高码率或重排，已不属于“均值校准”。同时，这也解释了为什么“每 scope 重算 query LUT”不会仅因消除偏差而改善排序。
+
+### 10.2 真正决定翻转率的是差分残差方差
+
+同文 Prop. 6 给出：对固定 $(q,x,y)$，排序翻转概率由
+
+$$
+\nu_{\text{rank}}^2=K_{xx}+K_{yy}-2K_{xy}
+$$
+
+控制（$K$ 为残差联合次高斯代理矩阵），翻转概率 $\le \exp[-c_Q^2\gamma^2/(2\nu^2)]$，$\gamma$ 为精确 margin。可操作杠杆只有三个：
+
+| 杠杆 | 手段 | 本项目的约束 |
+|---|---|---|
+| 减小边际残差 $K_{xx}$ | 更多 bit、更好码本、残差编码 | 增加内存/解码成本；§7 Table 4 显示 int4 在最难 20% margin 仍翻转 **10.1%**，加比特不移动边界 |
+| **增大共享误差 $K_{xy}$** | 让同 scope 候选共享粗质心/共享旋转，使公共分量抵消 | 可能牺牲 scope 内精度；且 label-aware 分区已有前序（见 §10.4） |
+| 增大精确 margin $\gamma$ | 由数据与 query 决定 | 索引无法改变 |
+
+原文 Table 7 的实证值得注意：候选对从 i.i.d. 换到 top-32 候选集，共享 query 相关从 0.39 升到 0.60（Cohere 2-bit）。也就是说**候选集本身就是产生相关性的来源**。目录 scope 是更强的候选集约束，理论上应当进一步抬高 $K_{xy}$ —— 但这是待测假设，不是已知结论。
+
+### 10.3 由此收敛的可测问题（评估协议，不是新机制）
+
+**问题**：在相同 bit 预算与相同候选覆盖下，**scope 对齐的粗量化**（同 Node/同子树的对象倾向共享质心）是否提高 scope 内候选对的残差相关 $\rho$、降低冻结候选集上的翻转率，从而在不加比特的前提下改善 recall？
+
+必须报告的量（缺一不可）：
+
+1. scope 内候选对的经验残差相关 $\rho$ 与“独立性比” $(\mathrm{Var}\,\xi_x+\mathrm{Var}\,\xi_y)/\mathrm{Var}(\xi_y-\xi_x)$；
+2. 标准化 margin $M=c_Q\gamma/\nu$ 的分箱翻转率（原文 Table 6 的协议：$M<0.25$ 时约一半翻转，$M>5$ 无翻转）；
+3. 端到端 recall / p95 / 峰值 RSS；
+4. held-out 块的**选择性失败率**（而非只看平均值）。
+
+**否证条件**：若 scope 对齐在固定 bit 下没有提高 $\rho$ 或没有降低翻转率，则该方向关闭，量化只作为纯内存压缩基线使用。
+
+**诚实边界**：**“按标签/属性分区再量化”不是新机制。** Filtered-ScaNN 的 IVF 分区、[ELI](https://www.vldb.org/pvldb/vol19/p617-yang.pdf) 的按标签子索引、[iRangeGraph](https://arxiv.org/abs/2409.02571) 的分段共享图都已按属性/范围组织索引。本项目可辩护的增量若存在，只在**目录层级的 scope 语义 + 决策级翻转度量 + 维护期失效**这一组合上，且尚未充分排查。
+
+### 10.4 证书角度的前序与剩余缝隙
+
+| 工作 | 已核内容 | 与本项目的关系 |
+|---|---|---|
+| [VADER](https://arxiv.org/abs/2609.38053)，Chatzakis 等，arXiv v2；页面自述 VLDB 2027，正式卷期/DOI 未核实 | 本地[报告](../../../../papers/filtered-ann/2609.38053-vader/paper.report.md)：filter-aware GBDT recall 预测 + 早停，Filtered-ScaNN 上按 partition 粒度预测；未提供无条件逐查询证书 | “filtered + 声明式召回”已被占据；其逐查询召回仍有 $R_{QUT}=0.16$–0.35 |
+| [2609.09854](https://arxiv.org/html/2609.09854) §6 Thm 15 | 未过滤 ANN 的 held-out block 选择性证书，$p_s\le(\hat U_{s,\tau}+\epsilon_n)/\hat C_s$ | 提供可直接搬用的统计工具；其 block 定义是 query，不是目录 scope |
+| conANN（PVLDB 2025）、DARTH+（HAL 2026） | **仅见 VADER 参考文献条目，正文未读**；不得据此判断覆盖范围 | 待读；若已覆盖 scope 级证书，则本缝隙关闭 |
+
+可能剩余的缝隙（**未证实**）：把证书的 block 定义在**目录 scope** 上，并处理 MOVE/MERGE 后统计量的**生命周期失效**——即“scope 的失败率证书在该 scope 拓扑改变后何时作废”。这与本项目已测的 HLG 维护问题是同一对象，但现有证书工作都在静态 query 分布上。
+
+### 10.5 对实现计划的具体影响
+
+1. **不实现** scope 均值校准（§8.3 撤回），不为其保留目录级摘要。
+2. NodeANN 量化的第一版只做：全局共享码本 + 每对象一次编码 + 展开平方 ADC（§9.1）；先作为内存基线，不宣称加速。
+3. 任何量化实验必须同时报告翻转率/margin，不能只报 recall 或压缩率；否则无法区分“码率不够”与“候选覆盖不够”。
+4. 若后续做 scope 级证书，才引入目录级统计与 MOVE 失效逻辑；届时必须单独计量维护成本，不能并入已测 G3。
+5. 上述全部仍是设计，**本轮未实现、未运行**；量化后端与环境准备完成后，命令由用户执行。
+
+### 10.6 预检脚本（廉价否证，先于任何 codec 实现）
+
+在写量化器之前，先用现有向量与目录树判断“同 scope 候选的量化误差是否更相关”。若答案是否定的，§10.3 的方向应直接关闭。
+
+脚本：[experiments/scope_quantization_probe.py](experiments/scope_quantization_probe.py)。它只用 `base.f32`、`wiki_tree.txt`、`wiki_bindings.txt`、`test.f32`，不读 GT、不建图、不做检索。
+
+方法：抽样向量上训练小 k-means（默认 256 中心、8 次迭代），用**仅质心重建**（0 残差 bit）作为最粗代理量化器；对抽样 scope 取“精确最近成员 vs 其余成员”配对，计算残差 $\xi=\hat d-d$ 的配对相关与独立性比，并与随机跨节点配对对照。
+
+运行时（示例；`R` 为结果目录）：
+
+```bash
+cd /home/daihua/projs/2026040404-yiming/Agent-Vector-Database
+PY=production/nested-attr-vector-search/work/venv/bin/python
+$PY researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/experiments/scope_quantization_probe.py \
+  --data codes/directory-aware-vector-attr-search/data/wiki_full \
+  --out researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/data/scope_quant_probe.json
+```
+
+判定：若 `within_scope.pearson <= cross_scope.pearson`，或 `same_centroid_fraction.within_scope` 相对 `cross_scope` 无明显抬升，则关闭 scope 对齐量化方向，量化退回纯内存压缩基线。注意“同质心比例高”本身不是低翻转风险的证据，必须同时看相关系数与翻转率。
+
+冒烟状态：脚本已用 `work/hlg/smoke`（12 个 4 维点、4 个质心）跑通全流程，输出结构符合预期；该次只有 2 对/组，相关系数为 `NaN`，**不构成任何研究结论**。全量预检尚未运行，由用户执行。

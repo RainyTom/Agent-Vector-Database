@@ -22,7 +22,9 @@
     "hnsw_M16_level0_capacity_32_uint32_slots_per_vector_bytes": 248534912
   },
   "hypothetical_rank8_laminar_calibration": {
-    "kind": "analytic_design_not_implementation",
+    "kind": "analytic_design_retained_for_memory_accounting_only",
+    "status": "hypothesis_refuted_for_ranking",
+    "refutation": "Per-scope additive bias cancels in within-scope ranking comparisons, so mean calibration cannot change DSQ top-k; see igp-quantization-assessment.md section 10.1. Bytes below are no longer a proposed design.",
     "directory_nodes": 468031,
     "rank": 8,
     "dense_local_and_subtree_float64_sum_bytes": 59907968,

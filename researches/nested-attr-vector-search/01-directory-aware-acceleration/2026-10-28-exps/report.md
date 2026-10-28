@@ -435,7 +435,10 @@ $\sum k_u^2=7.29\times10^6$ 且 WIKI 最大 $k_u=408$；实测逐节点精确 Pr
 - **原始来源**：IGP（SIGIR2025，Zheng Bian / Man Lung Yiu / Bo Tang）沿用ColBERTv2的VQ+残差SQ；推荐2bit/维。其图建在float质心上，当前CPU实现对有损重建向量算MaxSim，不是原始FP32精排，也没有证明缩短本项目全量HNSW构图。
 - **解析式内存账**：WIKI FP32 payload约7953 MB，2-bit残差码约497 MB；加VQ ID、假设1024质心与weight约509 MB，未含图/目录/raw精排/scratch。现有NodeANN不为每个祖先复制一份向量；基线同时保留原始base与局部索引向量，净内存需独立计量。均为算术推导，不是压缩实测。
 - **设备与工具**：只查询设备及包/构建元数据，看到RTX3090 24576MiB、driver591.86；现有Faiss为CPU构建，研究venv未发现所查GPU Python distributions。没有执行GPU计算、训练、编码或检索。[环境记录](data/igp_gpu_environment.json)、[内存模型](data/igp_quantization_memory_model.json)。
-- **继续查新**：新核iFVS arXiv:2607.22922v1 §2–4，其固定PQ codes、按query+filter校准码本是直接前序；LOPQ的局部量化、SymphonyQG的量化图/隐式精排也不能再直接命名为创新。更窄的待检验假设是固定codes、可合并低秩scope误差摘要与MOVE稳定校准；MSE下降不保证top-k，专项文档给出解析反例。尚未充分排查，不宣称新颖性成立。[前序核实边界](data/quantization-prior-art-audit-2026-10-28.json)。
-- **下一步与限制**：先明确离线GPU工具链和CPU评分/格式合同，再接全局压缩对照，最后验证NodeANN跨节点精化/校准；当前没有集成量化CLI，不给虚构参数命令。新实验均由用户执行，训练/传输/构图/序列化与CPU查询分别计时；GPU新图不得冒称原CPU HNSW图。IGP源码复用许可未核实，优先按论文独立实现。
-- **文档验证**：27份Markdown的211个本地链接（含6个章节锚点）均有效；5份新增JSON可解析，payload/码本/摘要内存算式一致。验证仅检查记录与路径，不执行研究实验。
+- **继续查新**：新核iFVS arXiv:2607.22922v1 §2–4，其固定PQ codes、按query+filter校准码本是直接前序；LOPQ的局部量化、SymphonyQG的量化图/隐式精排也不能再直接命名为创新。原先“固定codes + 低秩scope误差摘要”的均值校准假设已在理论上撤回（见下条），当前唯一待测问题是固定bit下scope对齐粗量化能否提高差分残差相关并降低翻转率。尚未充分排查，不宣称新颖性成立。[前序核实边界](data/quantization-prior-art-audit-2026-10-28.json)。
+- **下一步与限制**：先明确离线GPU工具链和CPU评分/格式合同，再接全局压缩对照，最后评估NodeANN共享码本与scope对齐量化；当前没有集成量化CLI，不给虚构参数命令。新实验均由用户执行，训练/传输/构图/序列化与CPU查询分别计时；GPU新图不得冒称原CPU HNSW图。IGP源码复用许可未核实，优先按论文独立实现。
+- **文档验证**：最终一轮检查 28 份 Markdown 的 220 个本地链接（含 8 个章节锚点）无失效目标；5 份新增 JSON 可解析且内存算式自洽；该方向 7 份 Python 脚本语法全部通过。验证只做路径/语法检查并跑过一次小样本冒烟，不执行研究实验。
+- **续：一条设计被否证**：补读 [2609.09854](https://arxiv.org/html/2609.09854) 正文后发现，DSQ 的 top-k 只在同一 scope 内比较，公共加性偏差在排序差分中必然抵消，因此“按 scope 做均值/低秩均值校准”是排序 no-op；该假设已撤回，目录级摘要内存账标记为 refuted。真正控制翻转的是差分残差 $\nu^2=K_{xx}+K_{yy}-2K_{xy}$。修订方向改为：固定 bit 下测 scope 对齐粗量化是否提高 scope 内候选残差相关并降低翻转率，需同时报告 $\rho$、标准化 margin 分箱翻转率、recall 与峰值 RSS。原文 Table 4 显示 int4 在最难 20% margin 仍翻 10.1%，加比特不移动边界。详见[专项调研 §10](igp-quantization-assessment.md#10-决策层面的理论修正与修订方向本轮新增)。
+- **续：证书前序**：本地 VADER 报告（arXiv 2609.38053v2）为 filter-aware GBDT 召回预测 + 早停，按 partition 粒度预测但无逐查询证书，$R_{QUT}$ 0.16–0.35；conANN/DARTH+ 本轮只见其参考文献条目、正文未读。可能残留的缝隙是“目录 scope 作 block 的证书 + MOVE/MERGE 失效”，**未证实**，不得据此声称新颖。
+- **续：预检脚本**：新增 [scope_quantization_probe.py](experiments/scope_quantization_probe.py)，用质心-only 重建作为最粗代理量化器，比较同 scope 与跨节点候选对的残差相关，可在写任何 codec 之前否证 §10.3 方向。已用 `work/hlg/smoke`（12 点/4 维/4 中心）跑通全流程，输出字段与判定规则符合预期；该冒烟每组仅 2 对、相关系数为 NaN，**不是研究结论**。全量预检未运行，命令交用户执行。
 

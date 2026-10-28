@@ -54,3 +54,13 @@
 
 本轮没有运行训练/建图/编码/检索实验；仅审计既有CSV/退出记录、查询GPU设备/包metadata并做解析内存计算。新增日期化[IGP书目/方法审计](2026-10-28-exps/data/igp-literature-audit-2026-10-28.json)、[直接前序审计](2026-10-28-exps/data/quantization-prior-art-audit-2026-10-28.json)，不声称新增完整全篇论文索引。后续详细研究仍只存本方向目录，实验由用户按命令执行。
 
+### 2026-10-28 续：决策级翻转理论使一条设计被否证
+
+补读 [2609.09854](https://arxiv.org/html/2609.09854) 正文 §1、§3.1–3.3、§5、§7 Table 4、§8.2–8.3（附录抽样）。该文：翻转概率 ≤ 边界质量 + 残差尾；排序差分残差尺度 $\nu^2=K_{xx}+K_{yy}-2K_{xy}$；仿射标定截距在排序差分中抵消、仅在 $\alpha\ne1$ 剪枝存活；held-out block 选择性证书（Thm 15）；Table 4 显示 int4 在最难20% margin 仍翻 10.1%。其范围是未过滤固定候选集，不涉及目录 scope 或过滤谓词。
+
+由此**撤回**先前“按 scope 做均值/低秩均值校准”的假设：DSQ 比较全在同一 scope 内，公共加性偏差必然抵消，均值校准是排序 no-op。推论：原计划的目录级摘要（约 67.4 MB 算术值）没有排序动机；该内存账仅留作记录并已标记 refuted。当前方向改为：在固定 bit 下测 scope 对齐粗量化能否提高 scope 内候选残差相关 $\rho$、降低翻转率；这是评估协议问题，且 label-aware 分区已有前序（Filtered-ScaNN/ELI/iRangeGraph），不称新机制。
+
+证书角度另核本地 [VADER 报告](../../../papers/filtered-ann/2609.38053-vader/paper.report.md)（arXiv 2609.38053v2，页面自述 VLDB 2027，正式卷期/DOI 未核实）：filter-aware GBDT 召回预测 + 早停、按 partition 粒度预测、无无条件逐查询证书、$R_{QUT}$ 0.16–0.35。conANN（PVLDB 2025）与 DARTH+（HAL 2026）本轮只见 VADER 参考文献条目，正文未读，不判断覆盖。可能残留缝隙是“以目录 scope 为 block 的证书 + MOVE/MERGE 后失效”，**未证实**。
+
+为使上述判断可执行，新增 [scope_quantization_probe.py](2026-10-28-exps/experiments/scope_quantization_probe.py)：质心-only 重建当最粗代理量化器，比较同 scope 与跨节点配对对的残差相关/独立性比/翻转率。脚本已在 `work/hlg/smoke`（12 点、4 维、4 中心）冒烟跑通，非研究结论；全量预检待用户执行。
+
