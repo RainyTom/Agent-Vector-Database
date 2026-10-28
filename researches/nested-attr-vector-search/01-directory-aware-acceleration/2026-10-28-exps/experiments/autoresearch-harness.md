@@ -6,7 +6,7 @@
 
 起点是[完整WIKI两类基线](../report.md)：A为全局ANN+目录scope ID过滤，B为直接绑定节点上的局部ANN，各节点top-k后合并。基准从B的默认全HNSW开始，A和纯Flat保留作外部对照，不重复构建耗时约4,962秒的全局HNSW。
 
-[TrieHI v1](https://arxiv.org/abs/2606.16903)已有公开预印本。正式venue尚未核实，**不意味着可不引用或只改名复用**。可借鉴DSQ/DSM定义、稳定节点身份、目录重挂及祖先聚合，但这些本身不是新方案的贡献。既有[新颖性审计](../../alphaxiv-novelty-audit.md)对D0/D1/D3/D5停止独立立项、D2/D4暂停的决定不因建立harness而撤销。
+[TrieHI v1](https://arxiv.org/abs/2606.16903)已有公开预印本。正式venue尚未核实，**不意味着可不引用或只改名复用**。可借鉴DSQ/DSM定义、稳定节点身份、目录重挂及祖先聚合，但这些本身不是新方案的贡献。既有[新颖性审计](../../../alphaxiv-novelty-audit.md)对D0/D1/D3/D5停止独立立项、D2/D4暂停的决定不因建立harness而撤销。
 
 两个特别需要纠正的方案表述：
 - 局部精确top-k合并仍为全局精确top-k，是基线性质，不足独立宣称召回证书创新。

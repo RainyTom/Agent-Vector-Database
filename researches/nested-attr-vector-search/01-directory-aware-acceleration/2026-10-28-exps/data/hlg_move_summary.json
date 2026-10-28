@@ -52,7 +52,7 @@
  "overall_mean_us": 33315.2,
  "comparison_context": {
   "triehi_move_mean_ms": 2.75,
-  "source": "researches/nested-attr-vector-search/2026-10-28-exps/report.md:266",
+  "source": "researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/report.md:266",
   "note": "TrieHI metadata-only MOVE is ~2.75 ms/op measured; HLG's |S|-independent maintenance is ~8-12x larger in absolute terms because both root paths rebuild MSTs (sum k_a^2 d)."
  }
 }

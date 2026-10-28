@@ -73,23 +73,24 @@ production/nested-attr-vector-search/work/venv/bin/python \
 ```bash
 bash codes/directory-aware-vector-attr-search/build.sh
 production/nested-attr-vector-search/work/venv/bin/python \
-  researches/nested-attr-vector-search/2026-10-27-exps/experiments/run_wiki_full.py
+  researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-27-exps/experiments/run_wiki_full.py
 production/nested-attr-vector-search/work/venv/bin/python \
-  researches/nested-attr-vector-search/2026-10-27-exps/experiments/summarize_wiki_full.py
+  researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-27-exps/experiments/summarize_wiki_full.py
 production/nested-attr-vector-search/work/venv/bin/python \
   codes/directory-aware-vector-attr-search/tests/test_fvecs_to_f32.py
 ```
 
-输入准备、固定约束、GT/empty-scope口径和内存限制见[复现协议](../../researches/nested-attr-vector-search/2026-10-27-exps/experiments/reproduction.md)，数字见[全量报告](../../researches/nested-attr-vector-search/2026-10-28-exps/report.md)。原CSV的 `recall10` 仍为历史 `hit/10`；标准macro/global recall由新增计数列汇总。NODE `bitmap_us=0`，局部搜索/合并计入独立 `search_us`。
+输入准备、固定约束、GT/empty-scope口径和内存限制见[复现协议](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-27-exps/experiments/reproduction.md)，数字见[全量报告](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/report.md)。原CSV的 `recall10` 仍为历史 `hit/10`；标准macro/global recall由新增计数列汇总。NODE `bitmap_us=0`，局部搜索/合并计入独立 `search_us`。
 
 历史选择率诊断给出过 ef 随选择率缩放的经验拟合，不是普适参数保证。完整 WIKI 本轮使用固定 ef=2048、nprobe=256，并单列 nprobe=1024 精确对照；极小 scope 下全局 ANN 召回仍低，不能称该默认值已覆盖 workload 或达到同召回最优。
 
 ## 实验报告(与代码分离)
 
-报告、数据、图统一放在
-[researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-results.md):
-`2026-10-26-triehi-repro-results.md`(论文对比与偏离声明)、`data/`(CSV 原始数据)、
-`figures/`(PNG+SVG 图)、`2026-10-26-triehi-repro-protocol.md`(复现命令)。
+本方向的协议、方案、文献笔记、报告、数据、图和实验命令统一放在
+[researches/nested-attr-vector-search/01-directory-aware-acceleration/](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/README.md)。
+每日记录按 `<YYYY-MM-DD>-exps/{report.md,data/,experiments/}` 保存；已有复现目录保留原名。
+例如 [TrieHI 复现](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-results.md)与[完整 WIKI / HLG 进展](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/report.md)。
+后续实验由用户执行；助手提供实验目的、完整命令、资源约束与判定标准，不自行启动。
 
 自检：每个 DSM op 后可设 `DSM_AUDIT_EACH=1` 逐 op 重算 Inclusive 集合
 audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。
@@ -98,7 +99,7 @@ audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。
 
 仓库根目录运行 `bash autoresearch.sh`：完整WIKI、独立冻结NumPy GT、局部全HNSW起点，串行3次重复；输出主指标 `METRIC recursive_e2e_ms=...` 与召回/构建/RSS等副指标。每次重复均须通过质量及资源门槛，否则非零退出。`result_ids` 为新增per-query列，输出与独立质量审计均在查询计时外。
 
-[固定协议及新颖性边界](../../researches/nested-attr-vector-search/2026-10-28-exps/experiments/autoresearch-harness.md)；[已观测baseline](../../researches/nested-attr-vector-search/2026-10-28-exps/data/autoresearch_harness_baseline.json)。已完成12轮静态DSQ迭代，最佳保留候选及消融见[报告§9](../../researches/nested-attr-vector-search/2026-10-28-exps/report.md#9-autoresearch-静态dsq迭代)，不是已通过新颖性认证的论文方案。
+[固定协议及新颖性边界](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/experiments/autoresearch-harness.md)；[已观测baseline](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/data/autoresearch_harness_baseline.json)。已完成12轮静态DSQ迭代，最佳保留候选及消融见[报告§9](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/report.md#9-autoresearch-静态dsq迭代)，不是已通过新颖性认证的论文方案。
 
 ### Scope-run 候选索引
 

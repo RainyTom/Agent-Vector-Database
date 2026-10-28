@@ -6,7 +6,7 @@ conceptual/architecture/scenario illustrations.
 
 Usage:
   export GRSAI_API_KEY=sk-...
-  python3 researches/nested-attr-vector-search/scripts/grsai_draw.py [--only name,...]
+  python3 researches/nested-attr-vector-search/01-directory-aware-acceleration/scripts/grsai_draw.py [--only name,...]
 
 API (async submit + poll):
   POST {BASE}/generate  {"model", "prompt", "aspectRatio", "imageSize", "replyType":"async"}

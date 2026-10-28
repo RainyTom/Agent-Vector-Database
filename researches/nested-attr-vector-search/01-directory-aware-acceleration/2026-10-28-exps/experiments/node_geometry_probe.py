@@ -9,7 +9,7 @@ from pathlib import Path
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[5]
 DAY = Path(__file__).resolve().parents[1]
 FIX = ROOT / "codes/directory-aware-vector-attr-search/data/wiki_full"
 SEED = 20261028

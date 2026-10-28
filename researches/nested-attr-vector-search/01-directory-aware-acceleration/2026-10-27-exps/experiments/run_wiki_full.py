@@ -14,7 +14,7 @@ import time
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[5]
 DAY = Path(__file__).resolve().parents[1]
 CODE = ROOT / "codes/directory-aware-vector-attr-search"
 FIXTURE = CODE / "data/wiki_full"

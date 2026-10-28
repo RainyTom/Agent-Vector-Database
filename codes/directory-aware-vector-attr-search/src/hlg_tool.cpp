@@ -1,7 +1,7 @@
 // HLG (hierarchical lineage graph): laminar connectors over a FAISS HNSW graph.
 //
 // Standalone tool (does not share symbols with repro.cpp).
-// Theory: researches/nested-attr-vector-search/2026-10-28-exps/hlg-theory.md
+// Theory: researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/hlg-theory.md
 //
 //   index : build a FAISS IndexHNSWFlat(M=16, efConstruction=200) and persist it
 //           (same constructor parameters as repro.cpp's PG-hnsw-M16 executor)

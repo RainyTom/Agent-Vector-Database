@@ -1,6 +1,6 @@
 # 分层属性向量混合搜索：问题定义、方案对比与优化路线
 
-日期：2026-10-27。范围：`researches/nested-attr-vector-search/` 全部已完成工作（TrieHI 复现 + 选择率测量 + 属性分区索引 baseline）。数据与图均来自本地实测，未核实处单独标注。
+日期：2026-10-27。范围：`researches/nested-attr-vector-search/01-directory-aware-acceleration/` 的 TrieHI 复现、选择率测量与属性分区索引 baseline。数据与图均来自本地实测，未核实处单独标注。
 
 **当前结论边界**：下文§4.1–4.7保留历史记录，不支持“NodeANN总是更快”或“目录解析是唯一瓶颈”的概括。完整WIKI两类基线已重跑，见§4.8及[完整报告](2026-10-28-exps/report.md)：局部全HNSW递归macro recall=0.999559、6.839 ms；全列表IVF达到recall=1、25.126 ms。默认threshold=0保持不变，Flat仅作对照。已修复转换脚本把int位模式数值转换的问题，并确认旧`data/real/test.f32`受影响；另修复457行约束对456条向量的越界，以及NODE双重scope解析。旧ANN质量/延迟不可与新结果直接连线；未逐一核查的历史实验不推断污染范围，向量无关的目录/DSM记录不自动失效。
 
@@ -178,19 +178,19 @@ $$
 
 TrieHI 的子树重链在真实深树（max depth 31）上稳定最优；PE-Online 的 MOVE 随子树 entry 数增长且方差大。
 
-![DSM 逐操作延迟（100k 合成，Fig 9 复现）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures/fig_repro_fig9_dsm_perop.png)
+![DSM 逐操作延迟（100k 合成，Fig 9 复现）](2026-10-26-triehi-reproduction/figures/fig_repro_fig9_dsm_perop.png)
 
 ### 4.3 端到端质量-延迟（帕累托，加密超参数网格）
 
 每数据集一张图（1×2：PG / IVF 两个执行器，横轴 Recall@10、纵轴延迟对数轴；PG 扫 ef 15 档、IVF 扫 nprobe 11 档；NodeANN 叠加为紫色虚线，双轴 limit×N 共 14 点，首尾点标注参数值）：
 
-![帕累托前沿：SIFT100k wiki 命名空间](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures/fig_pareto_wiki_recall_latency.png)
+![帕累托前沿：SIFT100k wiki 命名空间](2026-10-26-triehi-reproduction/figures/fig_pareto_wiki_recall_latency.png)
 
-![帕累托前沿：SIFT100k arxiv 命名空间（subject+temporal 双命名空间，NodeANN v1 不覆盖）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures/fig_pareto_arxiv_recall_latency.png)
+![帕累托前沿：SIFT100k arxiv 命名空间（subject+temporal 双命名空间，NodeANN v1 不覆盖）](2026-10-26-triehi-reproduction/figures/fig_pareto_arxiv_recall_latency.png)
 
-![帕累托前沿：SIFT1M wiki 命名空间（NodeANN 曲线 recall 0.27/3.8 ms → 0.98/21.7 ms）](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures_sift1m/fig_pareto_wiki_recall_latency.png)
+![帕累托前沿：SIFT1M wiki 命名空间（NodeANN 曲线 recall 0.27/3.8 ms → 0.98/21.7 ms）](2026-10-26-triehi-reproduction/figures_sift1m/fig_pareto_wiki_recall_latency.png)
 
-![帕累托前沿：真实 WIKI-Dir 1M](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures_real_wiki1m/fig_pareto_wiki_recall_latency.png)
+![帕累托前沿：真实 WIKI-Dir 1M](2026-10-26-triehi-reproduction/figures_real_wiki1m/fig_pareto_wiki_recall_latency.png)
 
 读图要点：
 - 三设计在同一执行器参数下 recall 逐点相同（scope 语义等价、同一 GT），曲线按 y 分层——**目录表示只移动延迟轴，不改变质量**。
@@ -200,7 +200,7 @@ TrieHI 的子树重链在真实深树（max depth 31）上稳定最优；PE-Onli
 
 ### 4.4 目录结构复杂度（Fig 10 对应，真实 WIKI 全量树）
 
-![真实 WIKI-Dir 深度结构：浅层锚点展开上万子目录](01-directory-aware-acceleration/2026-10-26-triehi-reproduction/figures_real_wiki1m/fig_repro_fig10_structure.png)
+![真实 WIKI-Dir 深度结构：浅层锚点展开上万子目录](2026-10-26-triehi-reproduction/figures_real_wiki1m/fig_repro_fig10_structure.png)
 
 depth-1 锚点平均展开 ≈10,800 个子目录（论文同位置 236,903/363k 规模比例更高）——PE-Online 与 NodeANN 的递归成本都源于此。
 
@@ -337,8 +337,8 @@ CCS 扫描明细（recursive，hsw/flat 节点数随阈值）：
 
 ## 附：数据与可复现
 
-- 协议：`01-directory-aware-acceleration/2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-protocol.md`
-- 实验记录：`2026-10-26-triehi-repro-results.md`（100k）、`2026-10-26-figures-7to12-completion.md`（Fig 7–12 + 全量真实数据 + SIFT1M）
+- [TrieHI 复现协议](2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-protocol.md)
+- 实验记录：[100k](2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-results.md)、[Fig 7–12 + 全量真实数据 + SIFT1M](2026-10-26-triehi-reproduction/2026-10-26-figures-7to12-completion.md)
 - NodeANN 代码：`codes/directory-aware-vector-attr-search/src/repro.cpp`（`--executor node|all3`，`--noden-list`）
-- 论文解析：`01-directory-aware-acceleration/paper-notes-2606.16903.md`
-- 示意图生成：`scripts/grsai_draw.py`（grsai API，4 张概念图，key 存 `~/.config/grsai.key`）
+- [论文解析](paper-notes-2606.16903.md)
+- [示意图生成脚本](scripts/grsai_draw.py)（grsai API，4 张概念图，key 存 `~/.config/grsai.key`）

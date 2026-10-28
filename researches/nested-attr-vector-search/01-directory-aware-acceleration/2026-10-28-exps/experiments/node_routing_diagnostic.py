@@ -14,7 +14,7 @@ for key in ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS", "BLIS_
     os.environ[key] = "1"
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[4]
+ROOT = Path(__file__).resolve().parents[5]
 DAY = Path(__file__).resolve().parents[1]
 FIXTURE = ROOT / "codes/directory-aware-vector-attr-search/data/wiki_full"
 BUDGETS = (1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384)

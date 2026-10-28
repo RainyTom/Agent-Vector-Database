@@ -102,7 +102,7 @@ all3整进程峰值RSS为35.492 GiB，局部Flat独立运行17.111 GiB，IVF全�
 - CLI smoke覆盖全HNSW/Flat、scope>k、scope<k、空scope、越界拒绝；转换回归测试实跑1项通过。
 - 全量3个进程exit code均0；日志无`RESULT_SCOPE_WARNING`；汇总验证全部执行器GT metadata一致，三种目录表示固定参数hit一致，局部Flat与IVF全列表均命中全部2,349个GT pairs。
 
-证据均留在上一日启动的实验目录，不搬迁、不覆盖：
+证据按上一日启动的实验日期保留；目录整体归入 `01-directory-aware-acceleration/`，不覆盖原始内容：
 - [原始输入校验与SHA-256](../2026-10-27-exps/data/wiki_full_inputs.json)
 - [ID顺序与旧转换影响核查](../2026-10-27-exps/data/wiki_full_alignment_check.json)
 - [逐配置/查询类型汇总CSV](../2026-10-27-exps/data/wiki_full_summary.csv)
@@ -249,7 +249,7 @@ ANN返回的k个合法候选也能形成真实第k距离的**上界**，但ANN�
 
 ### 10.5 复现与范围
 
-运行：`production/nested-attr-vector-search/work/venv/bin/python researches/nested-attr-vector-search/2026-10-28-exps/experiments/node_routing_diagnostic.py`。本轮已实际运行成功，未创建永久单元测试（研究诊断，不改生产检索路径）。
+运行：`production/nested-attr-vector-search/work/venv/bin/python researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/experiments/node_routing_diagnostic.py`。本轮已实际运行成功，未创建永久单元测试（研究诊断，不改生产检索路径）。
 
 证据：[逐query诊断](data/node_routing_queries.csv)、[预算覆盖率](data/node_routing_centroid_budgets.csv)、[球界/访问量汇总](data/node_routing_summary.json)。未测端到端ANN加速、独立holdout、第二数据集、多绑定/DAG或动态维护。下一步只有在更便宜、更紧的节点决策机制与Quake等前序形成实质区别后，才进入新算法实现与同recall比较。
 
@@ -418,3 +418,12 @@ $\sum k_u^2=7.29\times10^6$ 且 WIKI 最大 $k_u=408$；实测逐节点精确 Pr
 - 数据：[data/hlg_build_summary.json](data/hlg_build_summary.json)、[data/hlg_move_summary.json](data/hlg_move_summary.json)、[data/hlg_move_timing.csv](data/hlg_move_timing.csv)
 - 脚本：[experiments/verify_hlg_results.py](experiments/verify_hlg_results.py)
 - 未提交（体积大，在 `.gitignore` 的 `work/` 下）：`work/hlg/overlay_full/{overlay.bin,reps.bin}`；`work/hlg/hnsw_full.index` 因建图中止、尚未产生。
+
+## 13. 文档目录整理（未运行研究实验）
+
+- **目标与约定**：当前 Directory-Aware 研究文档统一归入 `researches/nested-attr-vector-search/01-directory-aware-acceleration/`；本方向 README 作为入口，上级 `index.md` 只做导航。
+- **归档范围**：整体迁移 `2026-10-27-exps/`、`2026-10-28-exps/`，以及 2026-10-27 的 CCS 背景、CCS 问题定义、层级检索方案报告和配套 `assets/`、`scripts/`。原总导航的定义/基线正文保存在 `historical-hierarchical-topk-notes.md`；本方向详细检索记录移入 `search-log.md`，vector-join 总日志仅保留关联入口。
+- **追溯与代码路径**：保留日期目录、实测 CSV/JSON 和原始日志；`.command.json`、`.time.txt` 中的旧路径是运行时证据，不改写成新路径。同步更新当前命令、交叉链接、脚本仓库根定位与 autoresearch 的结果/输入清单路径。源码、大数据与临时索引不随文档迁移。
+- **验证**：检查 26 份 Markdown 的 190 个本地链接（含 5 个章节锚点），无失效目标；修复旧复现报告中 3 处已失效的帕累托图引用，改用现存的分命名空间图。7 个相关 Python 脚本语法检查通过，18 个路径常量解析并定位到现有目标；只求值路径配置，未调用建图、检索、维护或图像生成函数。
+- **结论与下一步**：此次仅归档，不新增实验数字、不改变 G1/G2 待执行及 G3 已测状态。后续实验由用户执行，助手提供目的、完整命令、资源与判定标准。此前命令中的输出根需改为 `R=researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps`。
+

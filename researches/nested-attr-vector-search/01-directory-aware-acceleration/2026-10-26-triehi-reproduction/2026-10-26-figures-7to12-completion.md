@@ -34,14 +34,16 @@ mode all（96–105 s）：DSM audit 全 ok；排序结论与前轮一致（Trie
 
 | 图文件 | 对应论文 | 数据源 |
 |---|---|---|
-| fig_repro_pareto_recall_latency | Fig 7 递归权衡（帕累托前沿，x=Recall@10 / y=Latency 对数轴，三方案） | results_dsq_scan.csv |
+| fig_pareto_{wiki,arxiv}_recall_latency | Fig 7 递归权衡（按命名空间分图，x=Recall@10 / y=Latency 对数轴） | results_dsq_scan.csv |
 | fig_repro_fig9_dsm_perop | Fig 9 MOVE/MERGE 逐 op | results_dsm_perop.csv |
 | fig_repro_fig10_structure | Fig 10 深度结构复杂度 | wiki_tree + workload 现场统计 |
 | fig_repro_fig11_depth | Fig 11 深度敏感性（PG/IVF 双子图） | results_dsq_perquery.csv |
 | fig_repro_fig12_breakdown | Fig 12 解析延迟分解（递归/非递归） | results_dsq_perquery.csv |
 | fig_repro_dir_latency / ndcg_buckets / dsm / dir_size | Table IV / Fig 8 / Fig 9 聚合 / Table V | 既有 CSV |
 
-![帕累托前沿：Recall-Latency，三方案对比（100k 合成）](figures/fig_repro_pareto_recall_latency.png)
+![100k 合成 wiki 帕累托前沿](figures/fig_pareto_wiki_recall_latency.png)
+
+![100k 合成 arxiv 帕累托前沿](figures/fig_pareto_arxiv_recall_latency.png)
 
 ![Fig 9 DSM 逐 op](figures/fig_repro_fig9_dsm_perop.png)
 
@@ -117,7 +119,7 @@ DSM audit 全 ok。
 
 固定点：PG e2e 32.4 ms / recall@10 0.107；IVF 3.09 ms / 0.168。三设计质量逐点相同（scope 语义等价），延迟差异体现在 directory-only（PE-Online recursive 616 µs vs 物化 20–28 µs）。`dsq_scan`（ef 64→4096 七档、nprobe 4→1024 五档，73 行）：**PE-Offline/TrieHI 曲线整体位于 PE-Online 左下方（同质量更低延迟）**，与论文 Fig 7 论断一致；arxiv 两子图标注 N/A（向量不可得）。wiki 低召回是深锚点小 scope 的指标饱和（全扫描 ndcg=1.0 已验证），非执行器缺陷。
 
-![帕累托前沿：Recall-Latency，三方案对比（真实 WIKI-Dir 1M）](figures_real_wiki1m/fig_repro_pareto_recall_latency.png)
+![真实 WIKI-Dir 1M 帕累托前沿](figures_real_wiki1m/fig_pareto_wiki_recall_latency.png)
 
 ## SciHTC（真实 CCS 标签）基线实验（2026-10-27）
 
@@ -188,7 +190,9 @@ SIFT1M 加密扫描（26 档 + NODE 8 档）因单次超时上限拆为三次执
 
 1M 规模下 PE-Online 的 recursive 目录解析达 **7.4 ms**（100k 时为 0.6 ms，超线性放大：条目密度 ↑ → 子树 posting 变大），在 PG 低 ef 区成为端到端主导项；这是论文 Table IV WIKI 列（365 ms）的同一机制在小规模上的显现。帕累托图（加密网格，每方案 15/11 点）：
 
-![SIFT1M 帕累托前沿：Recall-Latency，三方案](figures_sift1m/fig_repro_pareto_recall_latency.png)
+![SIFT1M wiki 帕累托前沿](figures_sift1m/fig_pareto_wiki_recall_latency.png)
+
+![SIFT1M arxiv 帕累托前沿](figures_sift1m/fig_pareto_arxiv_recall_latency.png)
 
 wiki-PG 子图中 PE-Online 呈水平线（目录展开开销不随 ef 变化、压制 recall 收益），TrieHI/PE-Offline 曲线在其下方贯穿整个 recall 区间——三设计的端到端差异完全由 scope 解析层决定，与论文核心结论同向。全部 10 图（含 Fig 9 逐 op、Fig 10 结构、Fig 11 深度、Fig 12 分解）在 `figures_sift1m/`，数据 `data/results_sift1m_*.csv`。
 

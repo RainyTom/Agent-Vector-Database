@@ -17,9 +17,9 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[3]
 CODE = ROOT / "codes/directory-aware-vector-attr-search"
 FIXTURE = CODE / "data/wiki_full"
-DATA = ROOT / "researches/nested-attr-vector-search/2026-10-28-exps/data"
+DATA = ROOT / "researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/data"
 REFERENCE = DATA / "autoresearch_reference.json"
-MANIFEST = ROOT / "researches/nested-attr-vector-search/2026-10-27-exps/data/wiki_full_inputs.json"
+MANIFEST = ROOT / "researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-27-exps/data/wiki_full_inputs.json"
 WORK = ROOT / "production/nested-attr-vector-search/work/autoresearch_trie"
 N, DIM, K, REPEATS = 1941679, 1024, 10, 3
 MIN_RECALL = 0.999

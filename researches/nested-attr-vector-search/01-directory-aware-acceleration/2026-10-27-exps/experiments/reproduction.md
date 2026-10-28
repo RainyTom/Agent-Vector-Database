@@ -13,9 +13,9 @@
 ```bash
 bash codes/directory-aware-vector-attr-search/build.sh
 production/nested-attr-vector-search/work/venv/bin/python \
-  researches/nested-attr-vector-search/2026-10-27-exps/experiments/run_wiki_full.py
+  researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-27-exps/experiments/run_wiki_full.py
 production/nested-attr-vector-search/work/venv/bin/python \
-  researches/nested-attr-vector-search/2026-10-27-exps/experiments/summarize_wiki_full.py
+  researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-27-exps/experiments/summarize_wiki_full.py
 ```
 
 `run_wiki_full.py` 始终重做 fvecs 转换，并逐 float 位模式核对全部输出、验证有限值、保存 SHA-256 与范数范围。距离为发布浮点上的 squared L2，不再额外归一化。运行环境固定 OMP/OpenBLAS/MKL/BLIS=1，实验配置串行；每个配置只执行一遍 workload，不把单次运行当成多次重复统计。
