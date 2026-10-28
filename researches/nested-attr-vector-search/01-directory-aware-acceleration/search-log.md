@@ -64,3 +64,17 @@
 
 为使上述判断可执行，新增 [scope_quantization_probe.py](2026-10-28-exps/experiments/scope_quantization_probe.py)：质心-only 重建当最粗代理量化器，比较同 scope 与跨节点配对对的残差相关/独立性比/翻转率。脚本已在 `work/hlg/smoke`（12 点、4 维、4 中心）冒烟跑通，非研究结论；全量预检待用户执行。
 
+## 2026-10-28 属性频繁更新下的层级过滤 ANN 初筛
+
+先用 `update`、`incremental`、`mutable`、`dynamic`、`MOVE/MERGE` 查本地 `papers/papers.jsonl` 与关系索引；已收录 Filtered-DiskANN（静态构图）、iRangeGraph（tmp index）、TrieHI（MOVE/MERGE 元数据维护）。随后按用户给的两条链接核全文。
+
+**链接纠正**：`arxiv.org/abs/2604.22171` 不是 “Filter Index Updates”，而是 **MCI: A Maximal Clique Index for Efficient Arbitrary-Filtered ANNS**（Xiaowei Ye, Rong-Hua Li, Guoren Wang, Kaiwen Xue, Daiyin Wang, Xubin Li；arXiv v1 2026-04-24；正式 venue 未核实）。其 Table 1 的 “Upd.” 列（表注：构建后能否更新特征值而不重建）把 Filtered-DiskANN、NHQ、UNG 标为 ✗；附录 A 又自述当前实现为静态构建、动态策略留作 future work。**结论：MCI 不能作为“动态已解决”证据，但确实支持“Filtered-DiskANN 不支持属性更新”的表述。**
+
+**冲突记录**：[EMA](https://arxiv.org/html/2606.00734v1) Table 1 却把 Filtered DiskANN 标为 Dynamic ✓。两篇 2026 论文对同一事实判断相反；Filtered-DiskANN 原文该点本轮**未核**，故不采信任一方结论。
+
+[EMA](https://arxiv.org/abs/2606.00734v1)（Mocheng Li, Baotong Lu, James Cheng, Chenhao Ma；v1 2026-05-30；注释为提交 PVLDB Research Track，未核实接收）已核 §3.1–3.5、§4、§5.4–5.5：边级 Marker 汇总属性分桶；属性变更只对一跳反向边做 OR 合并；删除 lazy + 20% 触发 patch、每增 10% 再 patch、50% 全量重建；实测删除 1.3 s/1M、属性-only 2.5 s/1M、插入 90.8 s/1M、patch 45.2 s/次 ≈ 全量重建 371.1 s 的 12%。OR 单调、无法回收被删除属性的置位，这是其阈值重建的结构性原因（本文推断，非作者原话）。
+
+**动态 range 已非空白**：MCI §2.2 称 DSG、DIGRA、RangePQ+ 支持动态特征更新；书目另见 DIGRA（PACMMOD 3(3) 148, doi:10.1145/3725399）、Efficient Dynamic Indexing（PACMMOD 3(3) 152, doi:10.1145/3725401）、Dynamic range-filtering ANN（PVLDB 18(10) 3256–3268）。正文均**未读**，仅记录存在。
+
+**判定**：数值 range + 动态、flat label + 动态（EMA）都已有前序；“解耦 ANN 与属性索引”只能当基线。可辩护窄缝收敛为**祖先闭包（层级）谓词 + 高频 MOVE/重标注 + 查询快照一致性 + 可撤销聚合**，其结构优势是更新只沿一条祖先路径传播（$O(h)$），而边级摘要必须动 $O(M)$ 条边且无法撤销。方案、U1–U5 否证条件与指标见[专项记录](2026-10-28-exps/dynamic-attribute-updates.md)。本轮未实现、未运行；不声称该子问题无人研究，检索链未闭合。
+

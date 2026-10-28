@@ -20,6 +20,7 @@
 | 当前实验与 HLG 进展 | [2026-10-28 报告](2026-10-28-exps/report.md) | G3 已测；G1/G2 与修正版检索冒烟待用户执行 |
 | HLG 定义、证明与局限 | [理论笔记](2026-10-28-exps/hlg-theory.md) | 连通性不等于召回或跳数保证 |
 | 基线状态、IGP 量化与离线 GPU | [调研与最小实验设计](2026-10-28-exps/igp-quantization-assessment.md) | 原基线完成；量化未接入/未测；iFVS 为直接前序，NodeANN 新颖性未确认 |
+| 属性频繁更新下的层级过滤 ANN | [前序核实与窄缝](2026-10-28-exps/dynamic-attribute-updates.md) | 动态 range/label 已有前序；层级谓词+快照+撤销为未证实窄缝；未实现 |
 | 检索与前序核查 | [本方向检索日志](search-log.md) | 保留未精读、未核实及新颖性边界 |
 
 ## 既有复现与历史问题
