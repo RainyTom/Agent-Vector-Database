@@ -41,3 +41,16 @@
 判断：树+图联合组织、过滤图连通性修复、按选择比选索引/分区、球界剪枝均有直接前序；"无条件的任意子树有界连通度"不成立，需条件化或按子树加边（后者已发表）。真正空白在**目录MOVE/MERGE与向量图的一致性维护**，但须先证明不修图会造成质量损失。
 
 本轮实测见[报告§11](2026-10-28-exps/report.md#11-审稿人视角树-图协同双空间剪枝与图嫁接的可检验性)：过滤图在高选择率下召回塌陷（PG 0.032–0.040）而非延迟上升；精确scope扫描在大scope尾部占99.6%时间（7.06ms@16.8k）；语义Node几何cohesion仅0.80–0.90且多球仅收缩1–4%，球界只裁9.45%向量。未实现新图索引，无SOTA或新颖性声明。
+
+## 2026-10-28 IGP 量化、NodeANN 与离线 GPU
+
+先查 `papers/papers.jsonl`、`relations.jsonl` 和本方向报告/全文笔记，无IGP、iFVS、LOPQ、SymphonyQG现有完整索引条目。先检索 `vector similarity join`、`high-dimensional similarity join`、`inner-product similarity join` + quantization/compressed/residual，并补 `vector join`、`similarity self-join` 的SQ/PQ/残差变体；随后查 filtered ANN、hierarchical/local/partitioned quantization、quantized graph/refinement。没有把多向量MaxSim或普通ANN称为几何join，也不以无命中证明新颖性。
+
+核心核查：[IGP 作者全文](https://www4.comp.polyu.edu.hk/~csmlyiu/conf/SIGIR25_IGP.pdf) §3.1–3.2、§4–4.2、Table6，Crossref DOI `10.1145/3726302.3730004`，及用户指定仓库固定commit `1899e9316e71b023518f9090fc64fe66dbd0c202` 的CPU入口、共享VQ/SQ训练/打包/解码、质心图、GPU encoder。量化沿用ColBERTv2；当前CPU源码是GIGP+的较快单线程版本，不能与原2025配置混写。GPU训练/assignment/编码存在，非GPU HNSW构图证据；重建不normalize、精排不取raw FP32，迁移须保留原squared-L2。[完整调研与源码定位](2026-10-28-exps/igp-quantization-assessment.md)。
+
+继续核到直接前序：[iFVS arXiv:2607.22922v1](https://arxiv.org/html/2607.22922v1) §2–4，已做固定PQ codes、query+predicate条件码本及维度权重；正式venue未核实，HTML workshop模板不完整，不当作正式PVLDB论文。其GPU推理与本项目CPU测量不能直接比较。作者future work为unseen-query泛化及workload-shift自调整；目录MOVE下可合并低秩误差摘要是本项目综合推导的待验假设，不写成作者future work或已证空白。
+
+背景核查：[LOPQ CVPR2014原文](https://www.cv-foundation.org/openaccess/content_cvpr_2014/papers/Kalantidis_Locally_Optimized_Product_2014_CVPR_paper.pdf) §4.1/§5.4/§6 的局部residual量化及模型/LUT开销；[SymphonyQG arXiv v1](https://arxiv.org/html/2411.12229) §2.2/§3.1–3.2 的量化图与隐式精排；[low-bit decision study 2609.09854](https://arxiv.org/abs/2609.09854)仅核摘要，完整证明仍待读。多尺度量化/VA-file/RaBitQ及动态谓词编码的引用链未闭合，尚未充分查新。
+
+本轮没有运行训练/建图/编码/检索实验；仅审计既有CSV/退出记录、查询GPU设备/包metadata并做解析内存计算。新增日期化[IGP书目/方法审计](2026-10-28-exps/data/igp-literature-audit-2026-10-28.json)、[直接前序审计](2026-10-28-exps/data/quantization-prior-art-audit-2026-10-28.json)，不声称新增完整全篇论文索引。后续详细研究仍只存本方向目录，实验由用户按命令执行。
+

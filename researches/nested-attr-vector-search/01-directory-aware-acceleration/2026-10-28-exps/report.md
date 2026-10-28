@@ -267,9 +267,9 @@ ANN返回的k个合法候选也能形成真实第k距离的**上界**，但ANN�
 
 ### 11.2 实测：过滤图的失败形态与精确扫描的支配区
 
-全量WIKI、ef=2048、nprobe=256、227条递归查询（3次重复池化681行），按scope大小与锚点深度分组：
+全量WIKI、ef=2048、nprobe=256。PG/IVF 的681行来自**同一次 all3 运行的三种目录表示，各227条递归查询**，不是3次独立重复；下表记录数也不是唯一查询数。scope-run 的独立3次来源见§9。分桶 recall 使用标准 `hit/min(10,scope_card)`，与新增[存量结果审计](data/baseline-completion-audit-2026-10-28.json)一致。按scope大小与锚点深度分组：
 
-| scope条目 | 查询数 | PG recall | PG e2e | IVF recall | IVF e2e | 精确scope-run e2e |
+| scope条目 | 记录数（3种表示） | PG recall | PG e2e | IVF recall | IVF e2e | 精确scope-run e2e |
 |---|---:|---:|---:|---:|---:|---:|
 | 1–9 | 330 | 0.035 | 19.68 ms | 0.304 | 2.06 ms | **0.003 ms** |
 | 10–99 | 111 | 0.041 | 20.13 | 0.349 | 3.01 | **0.008** |
@@ -279,7 +279,7 @@ ANN返回的k个合法候选也能形成真实第k距离的**上界**，但ANN�
 
 按锚点深度（recursive）：
 
-| 深度 | 查询数 | scope中位 | PG recall | PG e2e | IVF recall | IVF e2e |
+| 深度 | 记录数（3种表示） | scope中位 | PG recall | PG e2e | IVF recall | IVF e2e |
 |---:|---:|---:|---:|---:|---:|---:|
 | 1 | 186 | 9,816 | 0.629 | 22.40 | 0.810 | 18.75 |
 | 2 | 102 | 30 | 0.129 | 20.88 | 0.380 | 5.28 |
@@ -426,4 +426,16 @@ $\sum k_u^2=7.29\times10^6$ 且 WIKI 最大 $k_u=408$；实测逐节点精确 Pr
 - **追溯与代码路径**：保留日期目录、实测 CSV/JSON 和原始日志；`.command.json`、`.time.txt` 中的旧路径是运行时证据，不改写成新路径。同步更新当前命令、交叉链接、脚本仓库根定位与 autoresearch 的结果/输入清单路径。源码、大数据与临时索引不随文档迁移。
 - **验证**：检查 26 份 Markdown 的 190 个本地链接（含 5 个章节锚点），无失效目标；修复旧复现报告中 3 处已失效的帕累托图引用，改用现存的分命名空间图。7 个相关 Python 脚本语法检查通过，18 个路径常量解析并定位到现有目标；只求值路径配置，未调用建图、检索、维护或图像生成函数。
 - **结论与下一步**：此次仅归档，不新增实验数字、不改变 G1/G2 待执行及 G3 已测状态。后续实验由用户执行，助手提供目的、完整命令、资源与判定标准。此前命令中的输出根需改为 `R=researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps`。
+
+## 14. 基线完成状态与 IGP 量化/GPU 调研（无新性能实验）
+
+- **当日目标**：核实各基线是否跑完，判断 IGP 量化可迁移部分，按用户要求规划“离线 GPU、在线 CPU”的探索流程。详细书目、源码、内存账、候选假设与未运行验收设计见[专项调研](igp-quantization-assessment.md)。
+- **存量结果**：原 all3、局部 Flat、IVF 全列表三个进程的 command 记录均 exit=0；A 类三种目录表示×全局 HNSW/IVFFlat、B 类局部 HNSW 和精确对照已完成。NodeANN 原单次6.839 ms、harness setup三次中位6.639 ms与正式run1三次中位6.649 ms分开记录；scope-run是另一个静态候选。没有已运行的量化基线，HLG全量G1/G2仍待用户执行。
+- **计量修正**：§11.2 的 PG/IVF 681行是三种目录表示各227行，而非三次独立运行。分桶标准recall数值核对一致，未改原CSV或已测数值，不再将这681行当作独立重复。
+- **原始来源**：IGP（SIGIR2025，Zheng Bian / Man Lung Yiu / Bo Tang）沿用ColBERTv2的VQ+残差SQ；推荐2bit/维。其图建在float质心上，当前CPU实现对有损重建向量算MaxSim，不是原始FP32精排，也没有证明缩短本项目全量HNSW构图。
+- **解析式内存账**：WIKI FP32 payload约7953 MB，2-bit残差码约497 MB；加VQ ID、假设1024质心与weight约509 MB，未含图/目录/raw精排/scratch。现有NodeANN不为每个祖先复制一份向量；基线同时保留原始base与局部索引向量，净内存需独立计量。均为算术推导，不是压缩实测。
+- **设备与工具**：只查询设备及包/构建元数据，看到RTX3090 24576MiB、driver591.86；现有Faiss为CPU构建，研究venv未发现所查GPU Python distributions。没有执行GPU计算、训练、编码或检索。[环境记录](data/igp_gpu_environment.json)、[内存模型](data/igp_quantization_memory_model.json)。
+- **继续查新**：新核iFVS arXiv:2607.22922v1 §2–4，其固定PQ codes、按query+filter校准码本是直接前序；LOPQ的局部量化、SymphonyQG的量化图/隐式精排也不能再直接命名为创新。更窄的待检验假设是固定codes、可合并低秩scope误差摘要与MOVE稳定校准；MSE下降不保证top-k，专项文档给出解析反例。尚未充分排查，不宣称新颖性成立。[前序核实边界](data/quantization-prior-art-audit-2026-10-28.json)。
+- **下一步与限制**：先明确离线GPU工具链和CPU评分/格式合同，再接全局压缩对照，最后验证NodeANN跨节点精化/校准；当前没有集成量化CLI，不给虚构参数命令。新实验均由用户执行，训练/传输/构图/序列化与CPU查询分别计时；GPU新图不得冒称原CPU HNSW图。IGP源码复用许可未核实，优先按论文独立实现。
+- **文档验证**：27份Markdown的211个本地链接（含6个章节锚点）均有效；5份新增JSON可解析，payload/码本/摘要内存算式一致。验证仅检查记录与路径，不执行研究实验。
 
