@@ -110,3 +110,22 @@ audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。
 - `--scope-local-order original`：关闭节点内部几何编组，保持顺序payload物化，用于关键消融。
 - `--node-algorithm hnsw`：保留原局部HNSW/Flat路径；全局HNSW/IVF与三种目录表示未移除。
 - 不支持多绑定/DAG及MOVE/MERGE；拒绝重复global ID。物理DFS布局不继承TrieHI的动态重挂优势，不能将静态查询收益写成维护收益。
+
+## NodeANN hnswlib 研究 runner（2026-10-29 起）
+
+独立于 `repro.cpp` 的新后端，固定 hnswlib revision
+`ca426729609b3221563047ceb269cc1213e0d376`（`deps/hnswlib` git submodule）。
+所有原始 FP32 squared-L2 距离统一经 `src/raw_l2_space.h` 的 `RawL2Space`，
+即 `hnswlib::L2Space(dim).get_dist_func()`；查询路径单线程，`--threads`
+仅并行构建。构建：`./build_nodeann.sh` → `build/nodeann_research`。
+
+```
+./build/nodeann_research --data DIR --dim 128 --mode nodeann \
+    --scan-threshold 32 --ef 64 --threads 8 --csv PREFIX
+```
+
+- `--mode exact`：整 scope shared-distance 扫描（GT/B3）；`nodeann --scan-threshold 0` 为 B0；`T>0` 为 B1（|L(v)|≤T 精确扫描，否则每节点 HNSW，M=16、efConstruction=200、seed=100）。
+- 输入：`base.f32`/`test.f32`（LE f32 无头）、`tree.txt`（首行 N，其后 `id parent`）、`bindings.txt`（每行一个节点 id，第 i 行 = global id i）、`workload.txt`（首行 `nq 0`，其后 `qidx rec anchor`）。
+- 输出：`PREFIX.perquery.csv`（25 列，含 scope/scan/hnsw/merge 计数与分阶段延迟，`hit_count=-1` 由驱动核对）与 `PREFIX.summary.json`（构建墙钟/CPU、峰值 RSS、序列化字节、延迟分位数）。
+- ties 统一 `(distance, global_id)`；空 scope 输出十个 `-1`。
+- smoke：`scripts/gen_smoke.py <dir>` 生成 2000×32/7 节点小样本，等价性校验脚本见 2026-10-29-exps。

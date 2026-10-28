@@ -20,7 +20,7 @@
 | 当前实验与 HLG 历史进展 | [2026-10-28 报告](2026-10-28-exps/report.md) | G3 为旧 FAISS/自写距离后端结果；新公平性合同下仅作历史证据 |
 | HLG 定义、证明与局限 | [理论笔记](2026-10-28-exps/hlg-theory.md) | 连通性命题保留；结构、召回、构建和维护实验需在 hnswlib 后端重做 |
 | 基线状态、IGP 量化与离线 GPU | [调研与最小实验设计](2026-10-28-exps/igp-quantization-assessment.md) | IGP VQ + residual SQ 是唯一候选量化路线；FAISS 只允许离线 k-means |
-| **当前主计划：NodeANN-first + hnswlib** | [2026-10-29 方案](2026-10-29-exps/nodeann-first-hnswlib-plan.md)、[当日报告](2026-10-29-exps/report.md) | 先重建 B0/B1 并诊断 D1–D6；WIKI + SIFT1M 六层级变体；未实现、未运行 |
+| **当前主计划与首轮回结果：NodeANN-first + hnswlib** | [2026-10-29 方案](2026-10-29-exps/nodeann-first-hnswlib-plan.md)、[当日报告](2026-10-29-exps/report.md) | B0/B1/B3 已重测（WIKI + SIFT1M 六变体，串行）；D1/D2/D4/D5 确认、D3/D6 否定；B0-WIKI 结构性不可行；下一步 hnswlib 共享图 G1/G2 |
 | 旧效率目标与扫描诊断 | [2026-10-28 记录](2026-10-28-exps/efficiency-target-baseline-gap.md) | run11/run14 与块剪枝是旧后端历史证据，不进入新性能前沿 |
 | 旧索引与搜索总体方案 | [2026-10-28 v1](2026-10-28-exps/index-search-scheme-plan.md) | **已被 2026-10-29 主计划取代**；只保留设计演化记录 |
 | 属性频繁更新下的层级过滤 ANN | [前序核实与窄缝](2026-10-28-exps/dynamic-attribute-updates.md) | **仅动机与补充**，非效率贡献；改名为 A 类，重命名判据 R1–R5 |
