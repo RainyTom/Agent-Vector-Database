@@ -17,11 +17,12 @@
 | 研究问题、两类基线与优化路线 | [2026-10-27 方案报告](2026-10-27-hierarchical-attr-vector-search-report.md) | 历史结果不与修正后的全量结果直接连线 |
 | 真实背景与问题定义 | [CCS 数据事实](2026-10-27-ccs-background-and-data.md)、[CCS 形式化定义](2026-10-27-ccs-problem-definition.md) | 区分 DAG 与单绑定树 |
 | 完整 WIKI 基线复现 | [启动日记录](2026-10-27-exps/report.md)、[复现协议](2026-10-27-exps/experiments/reproduction.md) | 原始输入、命令及日志保留 |
-| 当前实验与 HLG 进展 | [2026-10-28 报告](2026-10-28-exps/report.md) | G3 已测；G1/G2 与修正版检索冒烟待用户执行 |
-| HLG 定义、证明与局限 | [理论笔记](2026-10-28-exps/hlg-theory.md) | 连通性不等于召回或跳数保证 |
-| 基线状态、IGP 量化与离线 GPU | [调研与最小实验设计](2026-10-28-exps/igp-quantization-assessment.md) | 原基线完成；量化未接入/未测；iFVS 为直接前序，NodeANN 新颖性未确认 |
-| **效率目标与耗时分解** | [超越 run11 的量化目标](2026-10-28-exps/efficiency-target-baseline-gap.md) | 91% 时间在 ≥10k scope；带宽受限 28.7–33.9 GB/s；E1 微基准为门禁 |
-| **索引与搜索总体方案（待审核）** | [方案 v1](2026-10-28-exps/index-search-scheme-plan.md) | 建图侧连接边 + 搜索侧 scope 受限预算搜索；消融框架与 kill criteria 预注册；未实现 |
+| 当前实验与 HLG 历史进展 | [2026-10-28 报告](2026-10-28-exps/report.md) | G3 为旧 FAISS/自写距离后端结果；新公平性合同下仅作历史证据 |
+| HLG 定义、证明与局限 | [理论笔记](2026-10-28-exps/hlg-theory.md) | 连通性命题保留；结构、召回、构建和维护实验需在 hnswlib 后端重做 |
+| 基线状态、IGP 量化与离线 GPU | [调研与最小实验设计](2026-10-28-exps/igp-quantization-assessment.md) | IGP VQ + residual SQ 是唯一候选量化路线；FAISS 只允许离线 k-means |
+| **当前主计划：NodeANN-first + hnswlib** | [2026-10-29 方案](2026-10-29-exps/nodeann-first-hnswlib-plan.md)、[当日报告](2026-10-29-exps/report.md) | 先重建 B0/B1 并诊断 D1–D6；WIKI + SIFT1M 六层级变体；未实现、未运行 |
+| 旧效率目标与扫描诊断 | [2026-10-28 记录](2026-10-28-exps/efficiency-target-baseline-gap.md) | run11/run14 与块剪枝是旧后端历史证据，不进入新性能前沿 |
+| 旧索引与搜索总体方案 | [2026-10-28 v1](2026-10-28-exps/index-search-scheme-plan.md) | **已被 2026-10-29 主计划取代**；只保留设计演化记录 |
 | 属性频繁更新下的层级过滤 ANN | [前序核实与窄缝](2026-10-28-exps/dynamic-attribute-updates.md) | **仅动机与补充**，非效率贡献；改名为 A 类，重命名判据 R1–R5 |
 | 检索与前序核查 | [本方向检索日志](search-log.md) | 保留未精读、未核实及新颖性边界 |
 

@@ -2,6 +2,8 @@
 
 版本：2026-10-28 v1。状态：**设计稿，未实现新搜索、未跑 G1/G2。** 目的：把"索引结构 + 搜索算法 + 参数策略 + 评测与消融"一次说清，供审核后再动手。
 
+> **状态更新（2026-10-29）：已被新方案取代。** 审核决定先从 NodeANN 在统一 hnswlib 后端下重新测量，FAISS 不再用于检索索引，原始 FP32 距离统一走 hnswlib `L2Space`；因此本文的 FAISS $G_0$、旧 HLG 执行顺序和性能比较不再是活动计划。当前方案见 [2026-10-29 NodeANN-first hnswlib 计划](../2026-10-29-exps/nodeann-first-hnswlib-plan.md)。本文仅保留为设计演化记录。
+
 ## 1. 目标与非目标
 
 **目标**：在层级目录约束的 top-k（DSQ）上，以**建图或搜索的算法改动**取得比 NodeANN、PE-Online/PE-Offline（含其精确形态）更好的 recall–延迟曲线；同 recall 下更快，或更高 recall 下同样快。
