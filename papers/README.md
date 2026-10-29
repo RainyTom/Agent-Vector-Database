@@ -9,9 +9,12 @@
 | prefix-vector-search | 1 | [前缀与目录检索](prefix-vector-search/README.md)：Directory-Aware/TrieHI |
 | similarity-join | 1 | [一般相似连接](similarity-join/README.md)：多字段 equality/Hamming 等相邻问题 |
 | trajectory-search | 8 | [轨迹检索](trajectory-search/README.md)：完整轨迹/子轨迹 top-k、时空距离与混合范围查询 |
-| multi-vector-search | 1 | [多向量/向量集合检索](multi-vector-search/README.md)：BioVSS的表示与候选剪枝 |
+| multi-vector-search | 2 | [多向量/向量集合检索](multi-vector-search/README.md)：BioVSS表示与MSG组合空间图 |
+| vector-ann | 3 | [向量ANN机制](vector-ann/README.md)：Hubness、CDMG、Flash |
+| memory-systems | 1 | [记忆管理系统](memory-systems/README.md)：VikingMem |
+| hybrid-retrieval | 1 | [多路相关性检索](hybrid-retrieval/README.md)：Balancing the Blend；不是scalar-filtered ANN |
 
-总计 **30 篇论文、27 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **36 篇论文、29 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -24,6 +27,9 @@ papers/
 ├── prefix-vector-search/<id>-<slug>/
 ├── similarity-join/<id>-<slug>/
 ├── multi-vector-search/<id>-<slug>/
+├── vector-ann/<id>-<slug>/
+├── memory-systems/<id>-<slug>/
+├── hybrid-retrieval/<id>-<slug>/
 └── trajectory-search/<id>-<slug>/
 ```
 
@@ -31,8 +37,10 @@ papers/
 
 2026-10-29新增BioVSS按PDF页提取的完整Markdown与审读记录；原始PDF本地保存不纳入本轮小文件提交，来源URL与SHA见日期化元数据。新主题按其vector-set主问题归档，不错误归入vector join或filtered ANN。
 
+同日新增MSG、CDMG、Hubness、Flash、VikingMem、Blend六篇工作。保存工具取得的分页全文与文本SHA；CDMG仅2025历史作者报告，正式2026正文未取得；Flash分析arXiv v1。VikingMem/Blend按2026正式PVLDB稿归档。版本和获取限制见各目录日期化metadata。
 
-UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入 30 篇全文记录。获取受限与理论未提供是两种不同状态。
+
+UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述36篇工作。获取受限与理论未提供是两种不同状态。
 
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
 
@@ -59,13 +67,7 @@ UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../re
 
 ## 检索与维护
 
-从项目根目录运行：
+历史约定使用 `tools/research_index.py`，但2026-10-29当前checkout未包含此脚本，不应照抄不存在的命令。本轮以独立JSON/ID/主题目录/本地证据路径核验替代；没有新建同名工具或冒称旧验证器运行成功。
 
-```bash
-python tools/research_index.py search 'SSD' --topic vector-join
-python tools/research_index.py search 'containment' --topic filtered-ann --json
-python tools/research_index.py validate
-```
-
-更新顺序：查重 → 核实书目/版本 → 核对正文证据 → 更新论文与关系 → 修订综述/研究假设 → 写 changelog 与 search-log → 验证标识符和路径。验证脚本检查结构和本地引用完整性，不自动判断论文事实正确性。
+更新顺序：查重 → 核实书目/版本 → 核对正文证据 → 更新论文与关系 → 修订综述/研究假设 → 写 changelog 与 search-log → 验证标识符和路径。结构核验不自动判断论文事实正确性。
 

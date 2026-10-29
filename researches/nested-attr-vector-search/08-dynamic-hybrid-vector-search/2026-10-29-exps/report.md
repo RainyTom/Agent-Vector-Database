@@ -572,3 +572,13 @@ root828的native/balanced × 三ratio × 三臂 × 三重复，**54次两遍GT�
 - **工具/来源限制**：`pdftotext`缺失，改用PyMuPDF成功提取全文；README提到的`tools/research_index.py`本checkout不存在，改以独立JSON/路径核查；FCVI声明DOI的Crossref接口404，正式状态未独立确认；VA-file正文获取未成功，不以此作不存在证明。
 - **下一步**：服务器按[index-mechanism-server-prompt.md](index-mechanism-server-prompt.md)先过机制/信息价值门；不直接照搬BioVSS，不擅自把single-vector硬过滤改成Hausdorff或MaxSim，不通过改归一化改变原任务。
 
+
+# 七篇原文学习：继续研究层级＋多属性硬过滤
+
+- **目标**：学习MSG、Directory-Aware、VikingMem、Hubness、CDMG、Blend、Flash，找实质索引/剪枝机制，不改为多向量聚合、纯ANN或仅目录搜索。
+- **证据**：6篇新归档＋复核已有Directory-Aware；指定版本正文、正式书目与差异分开。CDMG仅历史作者16页，正式29页正文403；Flash分析arXiv v1。三个完整审读见data/，综合见[seven-paper-inspiration-review.md](seven-paper-inspiration-review.md)。
+- **本轮实测**：运行`experiments/hierarchical_multiattr_counterexamples.py`；5/5构造性检查为True：非laminar、AND诱导图断路、单属性top1并集漏ANDtop1、同合法数不同可达性、无界距离有限惩罚不能普遍实现硬过滤。完整输出见data/hierarchical-multiattr-counterexamples-20261029.json。
+- **结论**：A条件几何证书、B条件遮挡证据/边适用域并列理论与信息价值诊断；不再默认A优先，不自动重启D2/LES。共享边/soft分数/工作负载补边本身均不构成新颖性证明。Flash精度分配仅组件候选，VikingMem/Blend分别约束应用与实验设计。
+- **局限**：反例不构成真实ANN性能、创新定理或实际允许非法节点借道的搜索失败证明。没有新增QPS/recall矩阵，没有运行作者实现。直接重新下载PDF超时，保存已成功取得的原文提取并记文本SHA，不伪造PDF SHA。
+- **下一步**：按综合§5先做固定小切片信息价值与真实支持状态成本两项诊断；通过才实现一个小原型。保持同质量、同资源及完整生命周期计费，不以更换应用逃避公开前序。
+- **归档核验**：36个唯一论文ID、29条有效端点关系、6篇文本SHA、22次本地证据路径检查和83条相对Markdown链接通过；记录见[data/seven-paper-validation-20261029.json](data/seven-paper-validation-20261029.json)。该核验不自动证明文献事实或新颖性。

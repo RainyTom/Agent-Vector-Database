@@ -234,3 +234,7 @@
 
 直接join检索回溯到L2AP的部分倒排覆盖与prefix L2界，它是避免重复提出“残差范数剪枝”的重要A类前序；本轮未完整归档其书目和全文，作为待办保留。新增BioVSS属于B类vector-set检索表示借鉴，非join；正式ICDE2025、扩展稿分析与总库记录分开。见[机制审查](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)。未把本轮合成证书smoke当作向量连接性能结果。
 
+
+## 2026-10-29 七篇向量检索机制与记忆系统
+
+先做直接join术语范围核对，再研读用户指定七篇。新增6工作、复核Directory-Aware；均不直接提供vector join。MSG为固定多字段向量，Blend为相关性多路融合，VikingMem为记忆系统；不因迁移到本项目就改论文原问题分类。详见[检索与版本限制](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)和[机制综合](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/seven-paper-inspiration-review.md)。条件证据/导航适用域仍是未充分查重的研究假设。

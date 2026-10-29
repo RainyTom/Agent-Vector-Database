@@ -1,0 +1,28 @@
+{
+  "checked_on": "2026-10-29",
+  "papers": 36,
+  "relations": 29,
+  "topics": {
+    "vector-join": 7,
+    "similarity-join": 1,
+    "filtered-ann": 12,
+    "prefix-vector-search": 1,
+    "trajectory-search": 8,
+    "multi-vector-search": 2,
+    "vector-ann": 3,
+    "memory-systems": 1,
+    "hybrid-retrieval": 1
+  },
+  "new_primary_text_hashes_verified": 6,
+  "local_evidence_path_checks": 22,
+  "relative_markdown_links_checked": 83,
+  "synthetic_semantic_checks": 5,
+  "ann_benchmarks_run": 0,
+  "author_implementations_run": 0,
+  "missing_original_validator": "tools/research_index.py",
+  "limits": [
+    "Source/version correctness is not automatically proven by JSON/path validation.",
+    "CDMG formal body not read; historical author report archived.",
+    "No claim of new ANN speedup or novelty clearance."
+  ]
+}

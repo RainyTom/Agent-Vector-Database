@@ -1,0 +1,11 @@
+{
+  "source_url": "https://upenn.ferric.systems/dbscholar/sigmod_papers/2026/10.1145_3802120.pdf",
+  "version": "formal PACMMOD2026,27 pages,secondary PDF mirror",
+  "checked_on": "2026-10-29",
+  "extraction_method": "read tool / markit",
+  "extracted_text_sha256": "a50dc5b768be6e973c9c3ee64e155d8a4259e240b755aa369f19c30e2d3c16d1",
+  "pdf_sha256": null,
+  "pdf_binary_tracked": false,
+  "note": "保存工具已取得的带分页全文；直接再次下载超时，未声称获得PDF字节校验值。",
+  "review_path": "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/HubnessCPU-source-review.md"
+}

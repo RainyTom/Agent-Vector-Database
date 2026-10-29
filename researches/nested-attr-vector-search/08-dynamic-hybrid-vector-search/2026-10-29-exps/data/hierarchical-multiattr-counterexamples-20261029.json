@@ -1,0 +1,14 @@
+{
+  "kind": "constructive semantic counterexamples only; no ANN performance evidence",
+  "same_scope_attribute_family_is_not_laminar": true,
+  "single_attribute_reachability_does_not_compose_under_and": true,
+  "per_attribute_exact_top1_union_misses_conjunctive_top1": true,
+  "same_eligible_count_does_not_determine_reachability": true,
+  "fixed_finite_penalty_is_not_universal_hard_filter": true,
+  "limits": [
+    "Induced-graph failure does not prove failure for algorithms allowed to traverse ineligible vertices.",
+    "The per-attribute top-1 example rejects naive candidate union, not algorithms with sufficient expansion or bounds.",
+    "On bounded distances, a sufficiently large verified penalty can encode hard ranking; this says nothing about ANN navigation quality.",
+    "No current dataset, learned hubness, graph construction, speedup, or scientific novelty was measured."
+  ]
+}

@@ -175,3 +175,10 @@
 - [新机制审查](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)核对L2AP、Seismic、MUVERA、Curator、FINGER、FCVI和iFVS。未为未完整归档工作伪造总库条目或作者继承关系。
 - 用户停止默认维护主线；服务器改为先设计表示/条件几何证书，再做小型判别。已运行合成代数smoke，未运行真实ANN性能实验。
 
+
+## 2026-10-29 七篇机制学习与层级多属性边界
+
+- 新增MSG、CDMG、Hubness、Flash、VikingMem、Blend六条，复核已有Directory-Aware；总库36工作、29关系。新增Hubness→Flash、Directory-Aware→Blend两条原文明确引用，不按同作者建立继承边。
+- VikingMem/Blend改用2026正式PVLDB身份；CDMG只取得2025历史五作者16页报告，正式六作者29页书目另列，正文差异待补；Flash实际分析arXiv v1。保存6篇分页原文提取、文本SHA与完整机制审读，不伪造PDF字节校验。
+- 研究继续限定外部层级与多属性硬资格＋原始向量top-k；提出条件几何证书/条件遮挡证据两类并列待查候选，不默认重启D2/LES。5项合成语义反例运行通过，不是新ANN性能结果。
+- 修正README中当前checkout不存在的research_index.py命令；本轮以独立结构/路径核验替代，不新造工具或声称原验证器成功。

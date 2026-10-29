@@ -35,3 +35,11 @@
 - 待补：VA-file原文、range-min/successor/wavelet/bitmap条件极值数据结构、dense-to-sparse覆盖与signed/un-normalized L2转换、条件证书的属性更新复杂度。没有搜索到同名方案不是不存在证明。
 - 详证：[新机制判断](2026-10-29-exps/pruning-index-directions.md)、[前序对照](2026-10-29-exps/pruning-prior-art-2026-10-29.md)。本轮只运行合成逻辑smoke，无新ANN矩阵。
 
+
+## 2026-10-29 七篇指定论文的全文机制学习
+
+- 先查总库30条与27关系及原文；直接join范围检索使用`"vector similarity join" "hierarchical" OR "high-dimensional similarity join" "attributes" OR "inner-product similarity join"`，返回DiskJoin/PODS/FastAVJ/PHiDJ等范围线索，未当成新的join综述。随后按七篇精确题名、DOI、arXiv/作者主页/仓库核查。
+- MSG读正式SCIS全文；Hubness读正式PACMMOD镜像全文；VikingMem/Blend读官方PVLDB正式全文；Flash读arXiv v1并核正式元数据；Directory-Aware复核已有v1全文。CDMG正式ACM各入口403，经GitHub历史恢复2025-05-08技术报告，未冒称正式29页精读。
+- 发现MSG仍有指数级组合邻接，CDMG理想路径/融合近似/实际GreedySearch保证不可混同，Hubness不能简化成均匀入度更好，Blend相关性融合不等于属性过滤。用户再次明确层级＋多属性硬过滤，已写入任务书。
+- 详见[七篇原文复核](2026-10-29-exps/seven-paper-inspiration-review.md)；候选A/B均未完成最近前序证明级查重。待核：条件遮挡/剪枝证据、共享适用域的FilteredVamana/UNG/Packing等；条件极值的range/wavelet前序；CDMG正式版差异。
+- 新增6条、修订1条，2条原文引用；仅运行5项合成语义反例。没有作者代码复现或新ANN性能网格。

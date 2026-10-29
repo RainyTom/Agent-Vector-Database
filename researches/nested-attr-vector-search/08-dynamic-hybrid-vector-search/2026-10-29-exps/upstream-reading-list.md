@@ -41,6 +41,7 @@
 | 全局图/HLG/MST | [HLG理论及实现笔记](../../01-directory-aware-acceleration/2026-10-28-exps/hlg-theory.md)、交接§9 | 只完成旧连接边/部分MOVE；新后端G1/G2未跑；MST连接性不等于有限ef召回 |
 | LES共享图 | [closeout最终对照](../../07-laminar-edge-sharing/2026-10-20-exps/experiments/les-closeout-ee90400.md)、[追加报告](../../07-laminar-edge-sharing/2026-10-20-exps/report.md)、交接§11 | 使用共享向量PSG强对照；r98未达标不能算胜；旧paper.md不是发表证据或最新事实 |
 | 冻结设计与新颖性 | [审计](../../alphaxiv-novelty-audit.md)、[文献记录](stage1-literature.md)、交接§10/12 | “未实现/停止/暂停”不同；67篇/族不等于67篇全文均已核实；同义词/引用链仍有缺口 |
+| 七篇前沿论文与任务边界 | [七篇机制复核](seven-paper-inspiration-review.md)、[当前服务器任务书](index-mechanism-server-prompt.md) | 仍为外部层级AND多属性硬过滤；MSG不是任意过滤；CDMG正文仅历史版本；A/B未获新颖性确认，不默认实施上一轮路线 |
 
 ## P2：需要追溯历史时读
 
