@@ -1,11 +1,11 @@
 # 层级属性向量检索：导航
 
-当前研究统一归入 **[01-directory-aware-acceleration](01-directory-aware-acceleration/README.md)**。本文件只做导航，不承载方案正文、实验记录或结果表。
+静态目录感知加速位于 **[01-directory-aware-acceleration](01-directory-aware-acceleration/README.md)**，动态混合检索位于 **[08-dynamic-hybrid-vector-search](08-dynamic-hybrid-vector-search/README.md)**。本文件只做导航，不承载方案正文、实验记录或结果表。
 
 ## 当前工作
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
-- **[08 动态混合向量搜索（多属性 + 频繁更新 + 联邦视角，阶段 1–4 完成）](08-dynamic-hybrid-vector-search/README.md)**：[基线复述](08-dynamic-hybrid-vector-search/2026-10-29-exps/baselines.md)、[文献空白 G1–G7](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage1-literature.md)、[候选与 C1 负结果](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage2-candidates.md)、[churn 原型与并发/摘要结果](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)
+- **[08 动态混合向量搜索（动态三臂维护成本对照）](08-dynamic-hybrid-vector-search/README.md)**：[当前证据边界](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)、[同协议实验设计](08-dynamic-hybrid-vector-search/2026-10-29-exps/dynamic-triad-protocol.md)、[当日报告](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)。不预设高更新率优胜，不以旧并发探针证明一致性。
 
 ## 01 方向文档
 

@@ -90,7 +90,7 @@ production/nested-attr-vector-search/work/venv/bin/python \
 [researches/nested-attr-vector-search/01-directory-aware-acceleration/](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/README.md)。
 每日记录按 `<YYYY-MM-DD>-exps/{report.md,data/,experiments/}` 保存；已有复现目录保留原名。
 例如 [TrieHI 复现](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-results.md)与[完整 WIKI / HLG 进展](../../researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-28-exps/report.md)。
-后续实验由用户执行；助手提供实验目的、完整命令、资源约束与判定标准，不自行启动。
+历史静态复现曾要求用户执行；2026-10-29 动态研究按用户授权由助手运行。各实验需保留命令、资源约束、原始失败和判定标准，不混用不同协议。
 
 自检：每个 DSM op 后可设 `DSM_AUDIT_EACH=1` 逐 op 重算 Inclusive 集合
 audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。
@@ -129,3 +129,22 @@ audit;结构不变量(parent/children/path-key 一致）默认每 op 校验。
 - 输出：`PREFIX.perquery.csv`（25 列，含 scope/scan/hnsw/merge 计数与分阶段延迟，`hit_count=-1` 由驱动核对）与 `PREFIX.summary.json`（构建墙钟/CPU、峰值 RSS、序列化字节、延迟分位数）。
 - ties 统一 `(distance, global_id)`；空 scope 输出十个 `-1`。
 - smoke：`scripts/gen_smoke.py <dir>` 生成 2000×32/7 节点小样本，等价性校验脚本见 2026-10-29-exps。
+
+## 动态三臂 runner（2026-10-29）
+
+研究问题是维护策略的查询—更新成本交叉，**不是已证明的新索引胜出**。完整定义见 [dynamic-triad-protocol.md](../../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/dynamic-triad-protocol.md)。
+
+```bash
+bash codes/directory-aware-vector-attr-search/build_dynamic_triad.sh
+python -m unittest discover -s codes/directory-aware-vector-attr-search/tests -p test_dynamic_triad.py -v
+codes/directory-aware-vector-attr-search/build/dynamic_triad \
+  --data DIR --trace TRACE --arm A --ef 256 --scan-threshold 512 \
+  --compact-threshold 0.2 --out PREFIX
+```
+
+- A：直接节点局部 HNSW + 小节点扫描；B：路径直接 posting + 全局 HNSW；C：路径祖先 posting + 全局 HNSW。B/C 属性移动不改图。
+- `src/dynamic_triad.cpp` 同时实现三臂、独立 current-state 精确 GT 与计时；Python 只生成数据/trace、调度和绘图。所有原始距离仍统一 hnswlib；无 FAISS index、无 ANN 失败后的全局扫描兜底。
+- 事件 `Q/V/T/M/B/R/D/I` 对应查询/标量/标签/单 ITEM 移动/批量 ITEM 移动/子树重挂/删除/插入。标签支持四种集合语义；属性组 AND/OR，目录始终 AND。
+- 单线程提交可见性：查询看见之前全部成功更新；逐查询 GT 放在计时外、查询之后执行，避免用 oracle 决定是否跳过搜索或搜索 k。不是并发吞吐或多版本快照实验。
+- 结果 `.queries.csv` / `.updates.csv` / `.summary.json` 保留目录/ANN/GT、操作类型、ANN距离与跳数、压实、写操作、质量错误。HNSW字节真实计量，metadata单独标注估算，RSS包含输入与GT等进程开销。
+- 语义回归覆盖往返移动、恢复旧标签、局部扫描↔图转换、批量移动、子树重挂、空结果及四种标签语义。状态不一致报错，低召回保留失败，不伪装同质量更快。

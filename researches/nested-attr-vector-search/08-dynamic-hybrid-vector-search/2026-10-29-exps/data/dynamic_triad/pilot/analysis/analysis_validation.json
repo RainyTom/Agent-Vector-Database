@@ -1,0 +1,6 @@
+{
+  "cross_arm_gt_checks": 2,
+  "errors": [],
+  "percentile_method": "numpy linear",
+  "throughput_scope": "serialized event replay, not offered-load concurrency"
+}

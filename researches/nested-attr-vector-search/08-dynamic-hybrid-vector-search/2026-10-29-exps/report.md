@@ -1,5 +1,7 @@
 # 2026-10-29：阶段 1（文献与基线对齐）+ 阶段 2（候选方向）
 
+> **2026-10-29 动态三臂校正**：本文件为追加式历史记录。当前结论见 [scheme-status.md](scheme-status.md)，新实验约束见 [dynamic-triad-protocol.md](dynamic-triad-protocol.md)。下文关于“A 高更新率必胜”、旧 alpha 是独立 ITEM 覆盖、墓碑必然不损召回、节点锁足以保证一致性、分层路由已被否证的推断均撤回/降级。旧并发探针存在 `node_of` 同步缺陷；旧摘要结果为模型，非端到端实测。旧图5已修复字符串被当作分类纵轴的问题，并改为计划操作进度横轴。新实验结果将在文件末尾追加，不能混用历史目录-only/FAISS/节点内延迟作胜负。
+
 按任务书每轮 autoresearch 输出格式。
 
 ## 1. 本轮研究问题
@@ -251,3 +253,127 @@ WIKI 实测值：$k_\delta\approx82\,\mu s$，$c_r\approx 45.9$ s（全量）/ �
 三处否证之后，更新侧剩下的可测问题是：**在属性 churn 下，端到端（scope 级）召回与延迟如何随"更新率 × 查询率"变化**——即把本轮的局部索引 churn、并发窗口、摘要退化三者合成一个端到端曲线，并回答"何时必须压实/重建"由哪个量决定（死条目比例、锁等待、还是摘要分辨率）。
 
 这个实验需要把 churn_probe 的更新流接到 nodeann_research 的端到端查询上（同一进程、同一 scope 枚举），是本方向第一个真正的**合并实验**。
+
+---
+
+# 本轮：动态三臂同协议实测（当前有效结论）
+
+## 1. 本轮研究问题 / 假设
+
+**结论先行：已观察到维护成本交叉，而不是“A 高更新率必胜”。** 固定50%唯一 ITEM 更新覆盖、仅单 ITEM 跨节点移动时，SIFT/WIKI 均在 Q/U=0.1 时 A 输给 B/C、Q/U=1 时 A 胜出，三个重复各自成立。只能把已测排序翻转区间记为 `(0.1, 1)`，没有拟合或证明精确交叉点。
+
+H1 是随查询/更新配比、更新类型与局部性变化存在待测交叉；H2 是局部 HNSW 插入/墓碑/重建可能抵消 A 的查询收益；H3 是批量 ITEM 移动与子树重挂不能混成一个 move。完整定义与成本分析见 [协议](dynamic-triad-protocol.md)。
+
+## 2. 相关工作与可能重合点
+
+A 沿用 NodeANN 的直接节点局部 ANN；B/C 是 PE-ONLINE / PE-OFFLINE 的本仓库动态适配，定义见 [baselines.md](baselines.md)。问题背景沿用 [TrieHI 作者稿](https://arxiv.org/abs/2606.16903)。插入、墓碑、恢复标签、死比重建都是已有 HNSW 维护机制，**本轮没有新颖性声明，也不以实现组合宣称新索引**。公开论文数字、历史 FAISS 数字、directory-only 时间未参与本轮胜负。
+
+## 3. 算法 / 索引的明确改动
+
+新增 `codes/directory-aware-vector-attr-search/src/dynamic_triad.cpp`：
+
+- A：稳定节点树 + 直接绑定局部 HNSW，小节点扫描；单 ITEM 移动先插目标、后标删源；死比0.2和扫描/建图阈值触发同步局部图维护；递归 scatter-gather 后取全局 Top-10。
+- B：完整路径键→直接 `std::set` posting；前缀展开候选集合；全局 HNSW in-filter。C：路径键→inclusive posting；递归直接引用，非递归做父集合减子集合；全局 HNSW in-filter。
+- B/C 的纯属性/目录绑定修改不改全局图。子树重挂真实重写路径键；C 另维护新旧独有祖先中全部受影响 ITEM 的成员。没有把 C 偷换成稳定节点的 TrieHI。
+- V/T/M/B/R/D/I分别对应标量、标签、单 ITEM 移动、批量 ITEM 移动、整棵子树重挂、删除、插入。向量固定，同一旧标签恢复在局部/全局图统一使用 `unmarkDelete`，新标签才 `addPoint`。
+- 查询只读当前已提交状态。每次查询后从 canonical ITEM 表 + 父链独立计算完全相同谓词下的精确 Top-k；不借 oracle 的 eligible_count 决定跳过 ANN 或选 k。GT/计数审计不计入查询时间。
+- 原始距离、建图、ANN、精确扫描和 GT 全部 C++，统一 `RawL2Space` → pinned hnswlib L2；Python仅采样、事件生成、独立进程调度与绘图。无 FAISS index、无低召回后的整 scope 精确兜底。
+
+## 4. 相对三基线的预期与已测变化
+
+事前不指定赢家。A 减少范围外导航，代价是局部图维护、fan-out与固定图空间；B 少写目录成员但查询展开；C 查询可直接命中物化祖先集合，代价是受影响成员写。`O(1)`不能代表 A 的整体维护，`O(depth)`不能代表 C 的所有更新。
+
+实测中：A 的查询更快不保证总成本更低；B/C 纯 ITEM 移动确实零 ANN 写；C 的成员写次数受新旧独有祖先和受影响集合决定。下文同时保留 A 胜出和失败的负载。
+
+## 5. 已运行的实验与变量
+
+硬件为 Ryzen7 5800X（8核/16逻辑CPU），WSL2，g++15.2，`-O3 -march=native`；hnswlib `ca426729609b3221563047ceb269cc1213e0d376`，M16/efConstruction200/efSearch256/seed100。扫描阈值冻结为 SIFT128维1024、WIKI1024维512。各执行器单线程；独立任务多进程并行，driver各jobs2、窗口重叠时最多4个benchmark进程，**非隔离串行计时**。
+
+| 已完成组 | 数据与配置 | 重复 / 运行数 |
+|---|---|---|
+| 因子筛查 | SIFT/WIKI各2000活 ITEM；深度3/7，uniform/Zipf/热点迁移；七类更新；覆盖率0/10/20/50/80%因子化组合 | 42配置 × 3臂 × 1 = 126 |
+| 主覆盖率矩阵 | 各12000活 ITEM+1000 reserve；depth3、uniform、mixed(V/T/M/D/I等提交数)；覆盖率0–80%，Q/U0.25/1/4，零更新去重 | 26配置 × 3臂 × 3 = 234 |
+| 仅 ITEM 移动交叉 | 各12000活 ITEM；50%覆盖、6000次移动；Q/U0.01/0.1/1，对应60/600/6000查询 | 6配置 × 3臂 × 3 = 54 |
+| 质量pilot | 12000 ITEM、20%覆盖、Q/U0.25 | 2配置 × 3臂 × 1 = 6 |
+
+共420个完成运行、2,523,684次查询执行；每数据集复用64个 query vectors，**不是250万独立查询样本**。所有数据是**真实向量子集 + 受控合成层级/普通属性**，不是原始 WIKI 树或 SIFT1M 全量。
+
+本轮“更新率”严格定义为窗口内至少受更新一次的**初始活 ITEM 并集 / 初始活 ITEM 数**，不是操作数/N或事件比例。主矩阵非零覆盖率与Q/U精确达到，无cap/floor；批量移动/重挂分别实际覆盖56.65%/56.60%，只有3/5个结构操作，actual Q/U分别21.33/12.8，不能写成50%和Q/U1。
+
+每查询保存 scope/eligible size、深度、当前版本、Recall/GT/结果ID、目录解析/ANN/GT时间、distance calls、hops、fan-out、实际局部图数与扫描节点数；每更新保存类型、受影响ITEM/节点数、延迟、metadata/ANN写、同步维护时间。完整p50/p95/p99、吞吐、构建与空间在下列文件，未只选最优点：
+
+- [主矩阵 results.csv](data/dynamic_triad/crossover/results.csv)、[配置/命令](data/dynamic_triad/crossover/commands.json)、[分scope查询](data/dynamic_triad/crossover/analysis/query_slices.csv)、[分更新类型](data/dynamic_triad/crossover/analysis/update_slices.csv)、[服务成本/吞吐](data/dynamic_triad/crossover/analysis/workload_totals.csv)；
+- [ITEM移动 results.csv](data/dynamic_triad/move-crossover/results.csv)、[筛查 results.csv](data/dynamic_triad/screening/results.csv)；
+- [逐重复交叉审计](data/dynamic_triad/move-crossover/crossing-audit.json)、[同更新流/重新生成审计](data/dynamic_triad/stream-audit.json)、[复现命令及边界](experiments/dynamic-triad-reproduction.md)。
+
+原始逐查询/逐更新CSV、日志、trace、输入向量留在 `work/dynamic_triad/`，不提交大数据。主driver曾在3600秒命令上限被中止；确认无残留执行器后以同binary/config/input/trace/raw哈希resume，复用226个完成运行，仅重跑8个未完成运行，最终234个全完成。此为资源中断，不当作算法失败，也未删去已有结果。
+
+## 6. 实际结果与失败结果
+
+### 6.1 正确性 / 质量
+
+420运行全过统一质量门：最小macro recall=0.99957917，最小global pair recall=0.99934964；当前谓词外结果、重复结果、scope/状态不变量错误均为0。筛查126运行的两种Recall均为1。主矩阵78个config/repeat、移动18个、筛查42个的跨臂当前版本/GT序列审计全部一致。零结果查询正确空返回记query recall1，pair recall分母仅计真实GT。
+
+独立语义回归另覆盖非递归非空、四种集合语义及空集合、AND/OR、数值闭区间边界、往返移动、旧ID恢复、扫描↔图转换、批量与重挂。当前承诺是**单线程串行提交、查询看到全部先前更新**；没有用它证明并发MVCC或低staleness。
+
+### 6.2 成功与失败同时存在：单 ITEM 移动的交叉
+
+![SIFT仅ITEM移动：查询、更新、总服务成本](figures/dynamic_triad/move-crossover_sift_qu_rate0.5.png)
+
+![WIKI仅ITEM移动：查询、更新、总服务成本](figures/dynamic_triad/move-crossover_wiki_qu_rate0.5.png)
+
+图中左/中为重复内p95的均值，右为实测 `(查询服务时间和+更新服务时间和)/查询数`，误差条是3次重复的样本SD，不是置信区间。
+
+- **失败端**：Q/U=0.1时，SIFT A总服务时间2.041s、C1.118s；WIKI A6.213s、C3.271s。A虽查询更快，却支付更重的局部图维护。
+- **成功端**：Q/U=1时，SIFT A5.539s、C11.550s；WIKI A18.528s、C31.912s。查询收益足以摊销维护。B也在相同两个端点发生同方向排序翻转。
+- 三重复各自均发生上述翻转，故支持“所测点之间存在成本排序交叉”，**不将连线与横轴交点说成已经测准的最优切换阈值**。
+
+移动6000个ITEM时，B/C均为0次ANN插入/删除。A却记录SIFT36,526次、WIKI25,506次ANN插入（含重建重插），即6.09/4.25次图写调用/移动；同步图维护56/24次，Q/U0.1下约1.378/2.686s。该字段含阈值转换与墓碑重建，不能全叫纯墓碑压实。
+
+SIFT A更新平均279.5µs却p95约130.5µs，原因是少数高成本维护计入均值和总量；只看p95会隐藏这些暂停。WIKI对应平均796.3µs、p95约619.7µs。这里不是“每次移动常数级便宜”的证据。
+
+### 6.3 负结果：批量 ITEM 移动不能冒充一次树重挂
+
+![不同更新类型的筛查，单次重复](figures/dynamic_triad/screening_wiki_update_types.png)
+
+WIKI N2000、3次批量操作/64查询：A查询p95约323µs，比C约549µs低；但A总服务成本280.763ms，C22.222ms、B22.977ms。**A总成本约为C的12.6倍**，局部同步图维护约145.151ms、图插入2333次；B/C均不改全局图。SIFT同组A总成本约为C的4.64倍。这是否定“A查询快便总成本低”的直接反例，不是一般批量更新算法的下界。
+
+相反，5次子树重挂保留A局部图：WIKI A/B/C分别15/24/5552次metadata写、均0次ANN写。树合法性检查、节点枚举、路径键重写与祖先成员维护全部计入；15节点受控树上的微秒数字**不能证明整个R操作O(1)**。仅3/5个事件的p95/p99不作稳健尾延迟结论。
+
+### 6.4 mixed主矩阵的负面边界：没有测到交叉
+
+![SIFT mixed覆盖率主曲线，Q/U1](figures/dynamic_triad/crossover_sift_coverage_qu1.png)
+
+![WIKI mixed覆盖率主曲线，Q/U1](figures/dynamic_triad/crossover_wiki_coverage_qu1.png)
+
+在本轮mixed、uniform、depth3的26个已测配置均值上，A总服务成本均最低；C/A成本比SIFT约2.07–3.01，WIKI约1.78–2.77。**该矩阵内没有交叉**，不为满足假设捏造交叉点。mixed包含reserve新向量插入，与纯属性移动负载不同，不能把mixed赢家外推到高更新率的所有操作。
+
+Q/U维度其余完整曲线：[SIFT 50% mixed](figures/dynamic_triad/crossover_sift_qu_rate0.5.png)、[WIKI 50% mixed](figures/dynamic_triad/crossover_wiki_qu_rate0.5.png)；0.1/0.2/0.8及Q/U0.25/4的图均保存在同一目录。SIFT耗时随覆盖率并不单调，且独立进程存在资源重叠，不能据这组时间拟合“覆盖率→延迟”的普适单调规律。
+
+筛查的深度/局部性结果仅1次重复、多数A节点走扫描，不足以证明热点必然有利于A。计数证据更明确：mixed80%覆盖时，C metadata写随depth3→7从8383→12742（uniform），A/B仍5600；这是该trace的真实成员操作数，不是笼统的O(depth)时间断言。
+
+### 6.5 空间 / 构建的代价（仅ITEM移动、50%覆盖、Q/U0.1）
+
+| 数据 | 臂 | 初始构建均值(s) | 结束HNSW格式字节(MiB) | metadata估算(MiB) | 三重复最大进程RSS(MiB) |
+|---|---|---:|---:|---:|---:|
+| SIFT | A | 0.415 | 1.353 | 0.956 | 44.59 |
+| SIFT | B | 1.012 | 7.559 | 0.957 | 30.60 |
+| SIFT | C | 1.031 | 7.559 | 2.105 | 30.60 |
+| WIKI | A | 1.414 | 53.308 | 0.956 | 161.38 |
+| WIKI | B | 8.280 | 48.574 | 0.957 | 110.44 |
+| WIKI | C | 8.299 | 48.574 | 2.105 | 111.31 |
+
+**A不保证省空间**：WIKI局部图/墓碑/固定开销使RSS高于B/C。HNSW字节来自 `indexFileSize()`；metadata只是显式逻辑估算，排除共同raw input；RSS另含原始向量、GT、索引固定锁、临时分配等，不能把三个空间列相加或称其为精确磁盘占用。写放大是逻辑成员/图操作计数，未测物理设备写字节。
+
+## 7. 结果是否支持假设
+
+- H1：**在仅ITEM移动的受控负载支持**，交叉排序区间为Q/U0.1–1；mixed矩阵则没有交叉。没有推出任何更新率/热点下的普适赢家。
+- H2：支持核算局部插入、墓碑和同步维护的必要性；低Q/U和批量移动的负结果说明它们能反转查询优势。不能由这些点推导HNSW渐近复杂度。
+- H3：操作计数支持区分ITEM批量移动和子树重挂；更大子树/原始树/节点冲突MERGE未测，不推断整体O(1)或合并成本。
+- 仍然**不支持“新索引端到端优于公开作者实现”**；只支持同后端本仓库动态适配在明确工作负载下的成本取舍。
+
+限制：单一合成属性种子、每数据集64query vectors、25%固定空scope、非递归非空仅做语义测试；N2000因子筛查与N12000主曲线不是全因子实验，更不是全量原树。GT虽计时外但会扰动下次缓存；多进程重叠不是隔离测量。无并发多写者、后台压实、向量更新、无限标签域或MERGE；纯墓碑压实与阈值转换时间未分离。所有这些均不包装成已验证能力。
+
+## 8. 下一轮唯一最重要的问题
+
+**扩大到原始WIKI层级后，纯ITEM移动的Q/U成本排序交叉区间是否仍然存在？** 先保持本轮维护协议和质量目标不变，不同时引入新路由；需另补非递归非空与更多query vectors，并分离墓碑重建/阈值转换计数，防止把受控小树结果外推真实层级。
