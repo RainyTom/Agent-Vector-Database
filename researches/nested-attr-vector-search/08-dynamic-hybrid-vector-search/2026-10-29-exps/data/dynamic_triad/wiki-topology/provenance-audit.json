@@ -1,0 +1,29 @@
+{
+  "cohorts": [
+    {
+      "source_root": 410,
+      "all_original_source_rows_retained": true,
+      "vectors_bit_identical": true,
+      "original_edges_retained": true,
+      "bindings_match_source_rows": true,
+      "query_vectors_bit_identical_456": true,
+      "paired_only_tree_differs": true,
+      "literal_trace_equal_at_all_3_ratios": true,
+      "n_items": 11964,
+      "n_nodes": 2382
+    },
+    {
+      "source_root": 3626,
+      "all_original_source_rows_retained": true,
+      "vectors_bit_identical": true,
+      "original_edges_retained": true,
+      "bindings_match_source_rows": true,
+      "query_vectors_bit_identical_456": true,
+      "paired_only_tree_differs": true,
+      "literal_trace_equal_at_all_3_ratios": true,
+      "n_items": 11869,
+      "n_nodes": 151
+    }
+  ],
+  "all_pass": true
+}

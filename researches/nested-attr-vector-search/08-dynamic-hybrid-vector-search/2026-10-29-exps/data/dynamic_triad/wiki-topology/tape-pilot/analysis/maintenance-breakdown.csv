@@ -1,0 +1,13 @@
+config_id,cohort_root,topology,arm,repeat,actual_q_u,quality_pass,n_updates,mean_update_us,max_update_us,initial_hnsw_nodes,final_hnsw_nodes,final_index_live,final_index_dead,metadata_writes,ann_insertions,ann_deletions,tombstone_compaction_us,tombstone_compaction_count,tombstone_compaction_ann_insertions,threshold_build_us,threshold_build_count,threshold_build_ann_insertions,threshold_drop_us,threshold_drop_count,threshold_drop_ann_insertions
+wiki-root3626-balanced-item_move-r0p5-qu0p01,3626,balanced,A,1,0.009941027801179444,True,5935,310.1471769165965,710703.521,2,2,2669,188,17805,9527,2555,1802629.372,5,9457,0,0,0,0,0,0
+wiki-root3626-balanced-item_move-r0p5-qu0p01,3626,balanced,B,1,0.009941027801179444,True,5935,1.8052426284751475,41.297,1,1,11869,0,17805,0,0,0,0,0,0,0,0,0,0,0
+wiki-root3626-balanced-item_move-r0p5-qu0p01,3626,balanced,C,1,0.009941027801179444,True,5935,3.329963942712721,194.973,1,1,11869,0,34822,0,0,0,0,0,0,0,0,0,0,0
+wiki-root3626-native-item_move-r0p5-qu0p01,3626,native,A,1,0.009941027801179444,True,5935,318.86159326032015,747840.418,2,2,2669,188,17805,9527,2555,1854392.297,5,9457,0,0,0,0,0,0
+wiki-root3626-native-item_move-r0p5-qu0p01,3626,native,B,1,0.009941027801179444,True,5935,1.6807570345408593,37.099,1,1,11869,0,17805,0,0,0,0,0,0,0,0,0,0,0
+wiki-root3626-native-item_move-r0p5-qu0p01,3626,native,C,1,0.009941027801179444,True,5935,3.6338658803706823,40.706,1,1,11869,0,34682,0,0,0,0,0,0,0,0,0,0,0
+wiki-root410-balanced-item_move-r0p5-qu0p01,410,balanced,A,1,0.010030090270812437,True,5982,0.35012403878301573,9.898,0,0,0,0,17946,0,0,0,0,0,0,0,0,0,0,0
+wiki-root410-balanced-item_move-r0p5-qu0p01,410,balanced,B,1,0.010030090270812437,True,5982,1.9722714811099968,34.083,1,1,11964,0,17946,0,0,0,0,0,0,0,0,0,0,0
+wiki-root410-balanced-item_move-r0p5-qu0p01,410,balanced,C,1,0.010030090270812437,True,5982,7.491725677031093,68.829,1,1,11964,0,61001,0,0,0,0,0,0,0,0,0,0,0
+wiki-root410-native-item_move-r0p5-qu0p01,410,native,A,1,0.010030090270812437,True,5982,0.4015875961216984,12.543,0,0,0,0,17946,0,0,0,0,0,0,0,0,0,0,0
+wiki-root410-native-item_move-r0p5-qu0p01,410,native,B,1,0.010030090270812437,True,5982,2.1847246740220663,30.687,1,1,11964,0,17946,0,0,0,0,0,0,0,0,0,0,0
+wiki-root410-native-item_move-r0p5-qu0p01,410,native,C,1,0.010030090270812437,True,5982,9.763675860916083,187.459,1,1,11964,0,68420,0,0,0,0,0,0,0,0,0,0,0

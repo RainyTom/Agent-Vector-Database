@@ -1,0 +1,35 @@
+{
+  "driver_command": [
+    "production/nested-attr-vector-search/work/venv/bin/python",
+    "codes/directory-aware-vector-attr-search/scripts/run_dynamic_triad.py",
+    "--manifest",
+    "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/wiki-topology/manifest-wiki-topology-s20261029-q456-f7046c642b34.json",
+    "--binary",
+    "codes/directory-aware-vector-attr-search/build/dynamic_triad_gt_tape",
+    "--gt-mode",
+    "precomputed",
+    "--select",
+    "*qu0p01",
+    "--ef",
+    "1024",
+    "--repeats",
+    "1",
+    "--jobs",
+    "2",
+    "--work-root",
+    "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/dry-run-probe",
+    "--tracked-root",
+    "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/wiki-topology/dry-run-probe",
+    "--dry-run"
+  ],
+  "stage_order": [
+    "oracle",
+    "benchmark"
+  ],
+  "oracle_command_count": 4,
+  "benchmark_command_count": 12,
+  "planned_tape_hashes_are_null": true,
+  "all_benchmark_commands_use_gt_in": true,
+  "created_run_directories": false,
+  "engine_was_run": false
+}

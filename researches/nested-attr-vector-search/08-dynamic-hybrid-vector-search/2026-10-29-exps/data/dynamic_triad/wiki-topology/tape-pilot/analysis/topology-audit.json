@@ -1,0 +1,12 @@
+{
+  "runs": 12,
+  "topology_pair_checks": 6,
+  "quality_failed_runs": 0,
+  "gt_mode": "precomputed",
+  "benchmark_gt_distance_calls": 0,
+  "oracle_replays": 4,
+  "oracle_gt_distance_calls": 94051,
+  "errors": [],
+  "scope_caveat": "Only root-recursive and nonrecursive GT identical across topology; descendant predicates differ.",
+  "percentiles": "linear within repeat; plots mean and sample SD across repeats"
+}

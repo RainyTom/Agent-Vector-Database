@@ -1,0 +1,230 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/native",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt",
+        "--arm",
+        "A",
+        "--ef",
+        "1024",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-native-item_move-r0p5-qu0p01/ca238f595ba04d88/repeat-01/A"
+      ],
+      "arm": "A",
+      "config_id": "wiki-root828-native-item_move-r0p5-qu0p01",
+      "identity_sha256": "4bbf7dcbf8ebed4bb3305b9b4364c0de498a24d65658194c3bdba10375e2df5b",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/native --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt --arm A --ef 1024 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-native-item_move-r0p5-qu0p01/ca238f595ba04d88/repeat-01/A",
+      "trace_sha256": "a7b2128675c8f02ae04b6221a673754b4cb8dc3f5756db0b2e7db9f7057a2b5f"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/native",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt",
+        "--arm",
+        "B",
+        "--ef",
+        "1024",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-native-item_move-r0p5-qu0p01/ca238f595ba04d88/repeat-01/B"
+      ],
+      "arm": "B",
+      "config_id": "wiki-root828-native-item_move-r0p5-qu0p01",
+      "identity_sha256": "5e5966398dd51320cfa60dfe65ade7e610989656dbc2bcbae1af2a3a8f4695c5",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/native --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt --arm B --ef 1024 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-native-item_move-r0p5-qu0p01/ca238f595ba04d88/repeat-01/B",
+      "trace_sha256": "a7b2128675c8f02ae04b6221a673754b4cb8dc3f5756db0b2e7db9f7057a2b5f"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/native",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt",
+        "--arm",
+        "C",
+        "--ef",
+        "1024",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-native-item_move-r0p5-qu0p01/ca238f595ba04d88/repeat-01/C"
+      ],
+      "arm": "C",
+      "config_id": "wiki-root828-native-item_move-r0p5-qu0p01",
+      "identity_sha256": "09623cf585fbfeb3aa5fda809714ed9f076a793e6de6cc852337a5deaa4f7521",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/native --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt --arm C --ef 1024 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-native-item_move-r0p5-qu0p01/ca238f595ba04d88/repeat-01/C",
+      "trace_sha256": "a7b2128675c8f02ae04b6221a673754b4cb8dc3f5756db0b2e7db9f7057a2b5f"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/balanced",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt",
+        "--arm",
+        "A",
+        "--ef",
+        "1024",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-balanced-item_move-r0p5-qu0p01/e5c7deb49812c919/repeat-01/A"
+      ],
+      "arm": "A",
+      "config_id": "wiki-root828-balanced-item_move-r0p5-qu0p01",
+      "identity_sha256": "fe3a59b6c80a2775f5f23f58639fc819b20cd5fcbbfdc70edc6e770b7f82608f",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/balanced --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt --arm A --ef 1024 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-balanced-item_move-r0p5-qu0p01/e5c7deb49812c919/repeat-01/A",
+      "trace_sha256": "a7b2128675c8f02ae04b6221a673754b4cb8dc3f5756db0b2e7db9f7057a2b5f"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/balanced",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt",
+        "--arm",
+        "B",
+        "--ef",
+        "1024",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-balanced-item_move-r0p5-qu0p01/e5c7deb49812c919/repeat-01/B"
+      ],
+      "arm": "B",
+      "config_id": "wiki-root828-balanced-item_move-r0p5-qu0p01",
+      "identity_sha256": "8a5761b6b85208f834e8c0e30b7cac17bc72d0e211bbde45a106d019ff61c9f0",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/balanced --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt --arm B --ef 1024 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-balanced-item_move-r0p5-qu0p01/e5c7deb49812c919/repeat-01/B",
+      "trace_sha256": "a7b2128675c8f02ae04b6221a673754b4cb8dc3f5756db0b2e7db9f7057a2b5f"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/balanced",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt",
+        "--arm",
+        "C",
+        "--ef",
+        "1024",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-balanced-item_move-r0p5-qu0p01/e5c7deb49812c919/repeat-01/C"
+      ],
+      "arm": "C",
+      "config_id": "wiki-root828-balanced-item_move-r0p5-qu0p01",
+      "identity_sha256": "871d9073b84f226def2ca49ca774a7415f21b26708d2349b743f106ad302f89b",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/balanced --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/wiki-topology-s20261029-q456-f34c73d7cae4/root-828/traces/qu0p01.txt --arm C --ef 1024 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs/wiki-root828-balanced-item_move-r0p5-qu0p01/e5c7deb49812c919/repeat-01/C",
+      "trace_sha256": "a7b2128675c8f02ae04b6221a673754b4cb8dc3f5756db0b2e7db9f7057a2b5f"
+    }
+  ],
+  "execution": {
+    "arms": [
+      "A",
+      "B",
+      "C"
+    ],
+    "binary": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+    "binary_sha256": "a7f0b7f20a4676d076c17f3ea22bd9e7c4b966b61cd042d3723baacbdfeae402",
+    "driver_command": [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/production/nested-attr-vector-search/work/venv/bin/python",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/scripts/run_dynamic_triad.py",
+      "--manifest",
+      "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/wiki-topology/scale/manifest-wiki-topology-s20261029-q456-f34c73d7cae4.json",
+      "--select",
+      "*qu0p01",
+      "--ef",
+      "1024",
+      "--repeats",
+      "1",
+      "--jobs",
+      "2",
+      "--tracked-root",
+      "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/wiki-topology/scale/pilot-ef1024",
+      "--work-root",
+      "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs"
+    ],
+    "jobs": 2,
+    "manifest": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/wiki-topology/scale/manifest-wiki-topology-s20261029-q456-f34c73d7cae4.json",
+    "manifest_sha256": "0acb05022cd5c59f9b65961b1d566c3b4c2debe94086ab2c85d4d8498005157c",
+    "mode": "multi-process replay; NOT concurrent updates/queries within a process",
+    "quality_gate": {
+      "macro_recall": 0.999,
+      "pair_recall": 0.999
+    },
+    "repeats": 1,
+    "selection": {
+      "count": 2,
+      "limit": null,
+      "patterns": [
+        "*qu0p01"
+      ]
+    },
+    "settings": {
+      "compact_threshold": 0.2,
+      "ef": 1024,
+      "k": 10,
+      "scan_threshold": null,
+      "scan_threshold_by_dim": {
+        "1024": 512,
+        "128": 1024
+      },
+      "single_thread_environment": {
+        "MKL_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "VECLIB_MAXIMUM_THREADS": "1"
+      },
+      "visibility": "single-thread serialized synchronous commits, zero staleness"
+    },
+    "settings_sha256": "55cda7e637ae216314b38eae54fb1b176bf93d86b14d990e5e01a2567de77ded",
+    "tracked_root": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/wiki-topology/scale/pilot-ef1024",
+    "work_root": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/scale/pilot-ef1024-runs"
+  }
+}

@@ -2,6 +2,8 @@
 
 > **2026-10-29 动态三臂校正**：本文件为追加式历史记录。当前结论见 [scheme-status.md](scheme-status.md)，新实验约束见 [dynamic-triad-protocol.md](dynamic-triad-protocol.md)。下文关于“A 高更新率必胜”、旧 alpha 是独立 ITEM 覆盖、墓碑必然不损召回、节点锁足以保证一致性、分层路由已被否证的推断均撤回/降级。旧并发探针存在 `node_of` 同步缺陷；旧摘要结果为模型，非端到端实测。旧图5已修复字符串被当作分类纵轴的问题，并改为计划操作进度横轴。新实验结果将在文件末尾追加，不能混用历史目录-only/FAISS/节点内延迟作胜负。
 
+> **最终计时口径追加校正**：本页420次旧三臂及早期原树实验使用inline GT，计时外向量读取仍可能不对称扰动缓存；其计时降为诊断。正式计时采用 [两遍GT协议](wiki-topology-protocol.md)，原树正式结果及图在本文末尾§6.5起追加。GT/状态/操作计数等价审计、低召回失败点均保留；不将跨协议延迟差直接写成缓存收益。
+
 按任务书每轮 autoresearch 输出格式。
 
 ## 1. 本轮研究问题
@@ -377,3 +379,149 @@ Q/U维度其余完整曲线：[SIFT 50% mixed](figures/dynamic_triad/crossover_s
 ## 8. 下一轮唯一最重要的问题
 
 **扩大到原始WIKI层级后，纯ITEM移动的Q/U成本排序交叉区间是否仍然存在？** 先保持本轮维护协议和质量目标不变，不同时引入新路由；需另补非递归非空与更多query vectors，并分离墓碑重建/阈值转换计数，防止把受控小树结果外推真实层级。
+
+---
+
+# 续轮：完整原始WIKI子树的拓扑配对验证
+
+> **计时资格说明**：本节6.1–6.4先记录inline-GT诊断。GT虽在计时外，仍可能不对称热身A扫描使用的base数组。保留这些计数/失败与时间，不将其当最终公平性证据；本轮后续两遍GT对照才用于最终时间结论，见 [协议§8](wiki-topology-protocol.md)。
+
+## 1. 本轮研究问题 / 假设
+
+**原始子树上的交叉仍可出现，但不普适。** 在已完成的root3626（11,869 ITEM、2个初始局部HNSW）中，native与balanced两种拓扑、三个重复都在Q/U约0.01时A输、约0.1时A胜；root410（11,964 ITEM、全部小节点扫描）在已测范围始终A更低，没有交叉。
+
+本轮检验上一轮“原始WIKI层级上交叉是否保留”的唯一问题，同时检验：不改变直接节点占用与更新流、只改父子边时，A局部图维护计数应完全一致；C独有祖先成员写则可以改变。协议在计时前冻结，见 [wiki-topology-protocol.md](wiki-topology-protocol.md)。不能预设高更新率、深层级或热点使A必胜。
+
+## 2. 相关工作 / 可能重合点
+
+索引仍是NodeANN、PE-ONLINE、PE-OFFLINE的本仓库动态适配；参考问题定义沿用 [TrieHI作者稿](https://arxiv.org/abs/2606.16903) 与 [基线复述](baselines.md)。墓碑、局部重建和过滤HNSW均是既有机制；本轮是维护协议与过滤执行路径的实测，不宣称新索引或文献新颖性，也未将公开论文的FAISS/PG数字混入本轮端到端胜负。
+
+## 3. 算法或索引的明确改动
+
+**维护算法没有改变。** A仍插目标后标删源、死比0.2重建、固定512扫描阈值；B/C属性移动不改全局图。C仍维护新旧独有祖先成员，nonrecursive仍用inclusive减child inclusive，没有偷换基线。
+
+唯一执行器改动为互斥计量：`tombstone_compaction`（已有图死比重建）、`threshold_build`（扫描→图）、`threshold_drop`（图→扫描），各有time/count/ANN insertions，精确划分旧combined `compaction_*`。另记录真实初末图数与图内live/dead数；不把阈值转换说成墓碑压实。
+
+生成器新增完整原始子树与等占用balanced配对：共享全部原始向量、原始直接绑定、普通属性、稳定节点ID与同一字面M/Q trace，只改变parent边。balanced为同节点数4叉树，不再把“改拓扑”与“把几千节点压成8叶”混为一谈。索引/搜索/GT仍只有C++，原始距离统一hnswlib `RawL2Space`；Python只采样/生成/分析，未加入Python向量搜索。
+
+## 4. 相对三臂的预期变化
+
+事前不指定赢家：A是否付图维护成本取决于直接节点分布；A查询fan-out、B前缀枚举、C祖先成员与集合规模随拓扑改变。普通最大深度不能替代独有祖先数，图保持不动也不等于整个ITEM移动O(1)。root与nonrecursive的合法集合在配对间相同；宽/窄recursive的合法集合可以不同，不能据其总时间差直接声称同谓词更快。
+
+## 5. 已运行的设置与阶段门
+
+- 源数据1,941,679×1024、468,031目录、148个直接节点>512。按“完整子树ITEM数最接近12000”，分别选无局部图/有局部图两层，得到root410和root3626；没有按速度挑子树，没有ITEM下采样而稀释原始节点密度。
+- root410保留2,382目录/2,117非空节点，最大直接节点284、native相对最大深度14；root3626保留151目录/143非空节点，最大直接节点3843、native相对最大深度6。
+- native/balanced × Q/U0.01/0.1/1 × A/B/C × 三重复，共108正式运行已全部完成。每ITEM最多移动一次，唯一初始ITEM覆盖率50%（奇数N取ceil，报告actual）；目标均匀选初始非空目录。此轮仅M操作，不混入标量/标签、R重挂、批量、插删或向量更新。
+- 五类查询各约20%：root recursive、宽recursive、窄recursive、当前非空nonrecursive、保证空的nonrecursive。456个原始query vectors进入池；低Q/U仅60/59查询事件，实际只用60/59个query vectors；Q/U约0.1及1使用全部456。普通属性仍为合成cat/range/tag，四种集合语义与AND/OR独立轮换。
+- M16/efConstruction200/seed100/threshold512/dead ratio0.2保持不变。ef256首轮12pilot中4个B/C点未过门：同一root410的root query30，scope11964、eligible4228，漏掉一个GT ID1055；状态无误，但Recall不合格，**不把这些低质量时间作为A胜出证据**。
+- 按预登记质量分支，所有cohort/拓扑/臂统一改ef1024后，12pilot全过，108正式运行使用统一1024。与上一轮ef256、64-vector池、25%空scope的时间不作因果连线；本轮拓扑配对才是同协议对照。
+- 独立provenance审计确认完整保留原始子树全部vector rows，FP32 payload逐bit相同，456query vectors相同，原始边/绑定映射正确，配对只有tree不同、每ratio字面trace相同。见 [源审计](data/dynamic_triad/wiki-topology/source-audit.json)、[独立核对](data/dynamic_triad/wiki-topology/provenance-audit.json)。
+
+全部建图/搜索/更新单线程，独立driver各jobs2；小规模与放大窗口有重叠，最多4个benchmark进程，非隔离串行。原始WIKI标题路径字符串不在源tree文件内，执行器仍用稳定数字节点ID构造路径键，不声称复刻原始字符串长度成本。详见 [完整命令与边界](experiments/wiki-topology-reproduction.md)。
+
+## 6. 实际结果与失败结果
+
+### 6.1 质量、状态与配对控制
+
+108正式运行共238,104次查询执行，最低macro recall0.99986627、global pair recall0.99969195；当前谓词外、重复与状态不变量错误均0。两项行为回归通过，覆盖原动态语义及三类维护触发/恢复/插入归因。
+
+54个native/balanced run-pair审计全部通过：非tree输入/trace一致，初末图状态一致；A每条更新的维护计数与插入归因序列一致。root recursive与nonrecursive的GT、结果ID、距离调用、hops、fan-out也逐条一致。36组同拓扑三臂GT/当前版本序列全部一致。不是“观察到异常少所以无需一致性”，而是在串行提交协议下逐查询核对；不外推并发MVCC或多写者。
+
+结果入口：[正式results.csv](data/dynamic_triad/wiki-topology/main-ef1024/results.csv)、[更新维护分项](data/dynamic_triad/wiki-topology/main-ef1024/analysis/maintenance-breakdown.csv)、[scope-family分层](data/dynamic_triad/wiki-topology/main-ef1024/analysis/scope-family.csv)、[逐重复严格排序翻转](data/dynamic_triad/wiki-topology/main-ef1024/analysis/crossing-audit.json)、[配对审计](data/dynamic_triad/wiki-topology/main-ef1024/analysis/topology-audit.json)。失败pilot原样保留在 [pilot/results.csv](data/dynamic_triad/wiki-topology/pilot/results.csv)。
+
+### 6.2 有局部图的原始子树：交叉保留，但区间不能照搬
+
+![root3626的查询、维护与总服务成本](figures/wiki-topology/main-ef1024_root3626_frontier.png)
+
+左为重复内query p95，**中为每次移动的平均更新成本**（包含罕见重建），右为实测总服务时间/查询数；误差条为3重复SD，非置信区间。
+
+native的59查询/5935移动点，A总服务时间均值1.954s，C0.363s、B0.404s；594查询/5935移动点，A2.309s，C3.518s、B3.830s。两拓扑、每个重复对B/C都发生排序翻转，实际端点约为Q/U0.009941与0.100084；不拟合精确切换阈值，也不把它与旧区间的差异单独归因为真实层级。
+
+该cohort A每次运行恰有5次**真正墓碑重建**、0次扫描→图、0次图→扫描。ANN插入9527次，其中9457次来自这5次重建，只有70次普通插入；初末均2局部图，结束图内2669活记录/188墓碑。native Q/U约0.1下更新共1.912s，其中墓碑重建约1.867s（约97.6%）；更新p95仅2.146µs，平均却约322µs。**只看p95会几乎完全隐藏重建成本**，更不能据少量标删很快就宣称整体维护O(1)。
+
+### 6.3 稀疏原始子树：没有观察到交叉，不是HNSW改进的证据
+
+![root410的同协议曲线](figures/wiki-topology/main-ef1024_root410_frontier.png)
+
+root410在全部已测ratio/拓扑/重复中A总成本均较低，没有交叉；其A初末局部图数均0、ANN插入/删除及三类图维护均0。这是完整原始子树本来就由小节点构成、按已冻结阈值扫描，**不是随机下采样后“制造”小节点，更不是新的HNSW图算法获胜**。该点不能证明有大局部图时更新仍同样便宜。
+
+配对也给出C成本的直接计数：
+
+| cohort | 拓扑 | 最大相对深度 | M次数 | C metadata写次数 |
+|---|---|---:|---:|---:|
+| 410 | native | 14 | 5982 | 68420 |
+| 410 | balanced | 6 | 5982 | 61001 |
+| 3626 | native | 6 | 5935 | 34682 |
+| 3626 | balanced | 4 | 5935 | 34822 |
+
+这些写次数含每次catalog修改和新旧独有祖先成员操作；B与A分别固定3次metadata写/M，B/C均0次ANN写。最大深度下降不保证C写次数下降，LCA共享祖先、源/目标分布同样重要；这不否定按独有祖先数给操作上界，而是否定用一个最大depth数替代整个更新代价。
+
+### 6.4 非递归非空补测：基线过滤执行路径的风险
+
+![root410的scope family分层](figures/wiki-topology/main-ef1024_root410_scope.png)
+
+非递归非空不再只做语义测试。以root410 native、Q/U1、repeat1为例，1196个该类查询的平均scope仅6.112、eligible仅1.888，但C平均距离调用12014.3次、扩展列表/hops11969.0次，接近其11964条全局图规模。root3626同类scope均值83.143、eligible14.919，全局导航仍约整图规模。详见 [matched-predicate navigation audit](data/dynamic_triad/wiki-topology/main-ef1024/analysis/common-predicate-navigation-audit.json)。
+
+这是固定ef的全局filtered HNSW在极稀疏合格集合上的实测过搜索风险。root410该类C三重复的平均目录解析约15.0µs、search/merge阶段约7037.9µs，不能把目录解析改善直接写成端到端ANN改善；`dir_us`只含目录scope解析，额外属性的in-filter判定仍计入search阶段。
+
+源码定位进一步收紧解释：固定版本 [`searchBaseLayerST` 第379/425/438–440行](https://github.com/nmslib/hnswlib/blob/ca426729609b3221563047ceb269cc1213e0d376/hnswlib/hnswalg.h#L343-L460) 中，过滤结果堆只收合格活点，未满ef时既不能靠距离界停止、又继续扩展首次访问的邻居。**C<ef时会耗尽底层可达图**，不要求整图连通。root410所有非空非递归scope最多284项，小于ef1024；这不是只能用“高维难搜”解释的现象，而是该固定执行器的明确停止条件弱点。
+
+因此，即使A有数量级查询优势，**也不能把它全部归功于层级维护策略或当成新索引贡献**。后续需要排除候选基数/停止条件导致的全局图过搜索，仍须保持HNSW、共同距离与质量门，不能靠偷偷换整scope精确扫描“证明”新方法好。
+
+### 6.5 两遍GT正式结果：小规模结论保留，旧计时不再作为主证据
+
+完成 **108个正式运行、238104次query**：最小macro recall0.9998663、最小global pair recall0.9996920，全部通过两者≥0.999的门；非法/重复结果和状态违规均0。12次独立oracle真实执行12400619次GT距离调用，108次被测运行的GT距离调用合计严格0；GT生成成本单独保存，不计为免费。
+
+与旧inline逐行核对 **238104条query、643518条update**，当前状态、ranked GT/result IDs、ANN距离/hops、fan-out和维护计数全部相同；54组native/balanced配对审计无错误。此处证明移除了额外向量GT读取而未改搜索/维护算法；不同阶段的延迟差不全归因于缓存。
+
+![root3626两遍GT正式交叉曲线](figures/wiki-topology/tape-main-ef1024_root3626_frontier.png)
+
+- root3626在两种拓扑、三个重复中，对B/C的全部12个比较均在实际Q/U **[0.0099410, 0.1000842]** 两端发生胜负翻转：低端A总服务成本更高，高端A更低。该范围是离散观测夹区，未插值为精确阈值。
+- root410的36个同质量比较点A均更低，仍未观察到交叉；A全程无局部HNSW，不能据此声称改进了图搜索。
+- 真正墓碑重建和阈值转换的计数与inline相同；root3626每轮5次重建、0次转换。其native三点平均更新服务时间约319–321µs/M，而B约1.7–4.9µs/M、C约3.6–9.9µs/M；A的维护失败区间不是计时外GT造成的假象。
+
+![root410两遍GT的查询范围分层](figures/wiki-topology/tape-main-ef1024_root410_scope.png)
+
+主数据：[results](data/dynamic_triad/wiki-topology/tape-main-ef1024/results.json)、[全部查询/更新分层](data/dynamic_triad/wiki-topology/tape-main-ef1024/analysis/)、[逐重复交叉审计](data/dynamic_triad/wiki-topology/tape-main-ef1024/analysis/crossing-audit.json)、[GT模式工作量等价审计](data/dynamic_triad/wiki-topology/tape-main-ef1024/analysis/gt-mode-control-audit.json)。图误差线为3个重复的样本SD，不是置信区间；查询与更新均为串行提交语义，多进程只是独立重放。
+
+补充正式图：[root410查询—更新—总成本](figures/wiki-topology/tape-main-ef1024_root410_frontier.png)、[root3626 scope分层](figures/wiki-topology/tape-main-ef1024_root3626_scope.png)。三个cohort的六张正式图均已实际打开检查。
+
+### 6.6 放大到完整48,403 ITEM原始子树：A较低，但未观察到交叉
+
+root828的native/balanced × 三ratio × 三臂 × 三重复，**54次两遍GT正式运行全部过门**：483552次query，最小macro recall0.9995868、pair recall0.9992260，非法/重复/状态违规均0。6次oracle执行101782460次真实GT距离调用；被测54次GT距离调用合计0。与inline逐行核对483552条query和1306908条update，排名、GT、导航和维护计数完全一致，27组拓扑配对无错误。
+
+![root828两遍GT的查询—更新—总服务成本](figures/wiki-topology/tape-main-ef1024_root828_frontier.png)
+
+全部36个同质量比较点A总服务成本均低于B/C，没有观测交叉。**不能补画未测Q/U<0.01的交叉，也不能将其视为单纯N缩放规律**：与两个小cohort相比，向量/直接节点占用/候选相关性也变化。native三个ratio的A平均更新仍约99–102µs/M，高于B约3.2–9.4和C约13.6–30.6µs/M；较低总成本来自本协议下的查询优势，不是维护免费。
+
+维护分类揭示旧合计字段的陷阱：A从11个局部图降到5个，**17次墓碑重建 + 6次图→扫描，0次扫描→图**；旧 `compaction_count=23` 不能称为23次墓碑重建。ANN插入17190次中17137次来自墓碑重建，普通插入仅53次；标删4998次，结束图内4113活点/468墓碑。native Q/U约0.1下平均更新共2.426s，墓碑重建2.367s，约97.6%；更新p95仅3.163µs、p99约6.228µs，二者都漏掉主导维护总量的稀有长事件。
+
+| root828 native、Q/U约0.1，3重复 | 平均构建时间 s | 最大peak RSS MiB |
+|---|---:|---:|
+| A NodeANN | 1.817 | 281.17 |
+| B PE-ONLINE动态适配 | 45.484 | 408.54 |
+| C PE-OFFLINE动态适配 | 47.763 | 424.05 |
+
+这里A的RSS较低，但旧合成层级曾出现相反结果；不能宣称A始终省空间。`index_bytes` 另见原始summary，其口径为HNSW预计序列化字节+显式元数据估计，排除共享原始向量；**不是实际落盘文件或总RSS**。本轮未测真实磁盘写放大、后台压实或读写并发资源占用；同步维护时间已计入更新服务时间。
+
+![root828两遍GT的scope分层](figures/wiki-topology/tape-main-ef1024_root828_scope.png)
+
+本轮C的metadata写次数：native287111、balanced255005，A/B均72606；最大相对深度分别12/6。这是纯ITEM移动的实际成员维护计数，不是子树重挂复杂度结论。窄范围B/C的近全图过滤搜索弱点依旧存在，A的幅度优势不能冒充对公开作者实现的胜出。
+
+数据：[scale results](data/dynamic_triad/wiki-topology/scale/tape-main-ef1024/results.json)、[分层与维护指标](data/dynamic_triad/wiki-topology/scale/tape-main-ef1024/analysis/)、[逐重复排序](data/dynamic_triad/wiki-topology/scale/tape-main-ef1024/analysis/crossing-audit.json)、[模式等价审计](data/dynamic_triad/wiki-topology/scale/tape-main-ef1024/analysis/gt-mode-control-audit.json)。
+
+## 7. 结果是否支持本轮假设
+
+- **有限支持，不是普遍定律**：root3626的更新维护—查询收益交叉，在原始层级及占用匹配的平衡树中均保留；root410与root828在已测区间没有交叉。只能报告“特定cohort/执行器下存在交叉”，不能说每个真实层级都必然存在，更不能预设高更新率A胜。
+- **排除了一项测量偏置，未消除所有干扰**：两遍协议合计162次正式运行、721656次query、1950426次update，18次oracle实际GT距离调用114183079次，benchmark严格0次。81组拓扑配对及全部逐行GT模式等价检查通过；搜索/维护工作量没有改变。时延是非隔离多进程重放结果，不把跨阶段变化定量归因为缓存收益。完成小矩阵后的分析/制图与放大矩阵末段有短暂资源重叠。
+- **维护不是O(1)**：有图cohort的稀有重建占更新服务时间约97.6%；p95乃至p99都不足以描述总成本。C的实际成本按源/目标独有祖先成员操作核算，最大depth下降也不必然降低写次数。
+- **尚不支持新索引贡献**：三臂是本仓库动态适配；全局filtered HNSW在C<ef时的停止规则存在可定位弱点。现有收益混合了分区、允许的小节点扫描、过滤执行和维护策略，不将其包装为新图结构优于公开基线。
+
+边界：只有一个随机种子、三个完整原始子树，不是全量194万WIKI或SIFT1M动态结论；仅本续轮固定约50%唯一ITEM覆盖的纯M，未重测其他更新类型/热点迁移/更新率扫描。456个查询向量被重复使用，低Q/U实际不同query IDs为59/60/242，721656是执行次数而非独立向量数。balanced的wide/narrow递归谓词改变了合法集合，只将root/非递归当相同谓词控制。串行提交、零staleness不是并发一致性的证明。原始失败点和历史inline诊断均保留，不只挑最好参数。
+
+## 8. 下一轮唯一最重要的问题
+
+**给三臂统一使用更强的过滤HNSW执行器后，维护策略的交叉是否仍保留？**
+
+先查证已有filtered ANN的候选基数/停止机制，再做统一组件对照：当前快照精确候选基数已知时，不再等待不可能填满的ef结果堆；计入全部候选解析/计数成本，继续使用相同C++、hnswlib距离与质量门。A的局部图和B/C全局图都必须使用同一规则，不能只修某臂、不能切换大scope精确向量扫描、不能把固定参数调优称为新索引。若修正后交叉或优势消失，按负结果报告；基数感知停止本身也不默认具有新颖性。

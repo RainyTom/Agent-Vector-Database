@@ -1,0 +1,24 @@
+{
+  "pair_checks": 54,
+  "mismatches": [],
+  "nonrec_C_native_examples": [
+    {
+      "root": 3626,
+      "queries": 1187,
+      "mean_scope": 83.14321819713564,
+      "mean_eligible": 14.919123841617523,
+      "mean_distance_calls": 11916.96545914069,
+      "mean_hops": 11871.299915754002,
+      "index_items": 11869
+    },
+    {
+      "root": 410,
+      "queries": 1196,
+      "mean_scope": 6.1120401337792645,
+      "mean_eligible": 1.8879598662207357,
+      "mean_distance_calls": 12014.32525083612,
+      "mean_hops": 11968.998327759198,
+      "index_items": 11964
+    }
+  ]
+}

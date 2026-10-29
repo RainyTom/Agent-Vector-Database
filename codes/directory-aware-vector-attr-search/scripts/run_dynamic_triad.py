@@ -10,6 +10,8 @@ not concurrent query/update throughput. Every arm/repeat uses the same exact
 trace. No GT, indexing, search, or benchmark timings are implemented in Python.
 Resume requires exact config, executable, input-data, trace, and raw-output
 hashes; raw CSVs are always revalidated. Recall failures remain in results.
+--gt-mode precomputed first completes independent C++ inline oracles, then
+replays every measured arm against the same hash-bound query CSV tape.
 """
 
 import argparse
@@ -111,7 +113,7 @@ def close(left, right, relative=1e-5):
     return abs(left - right) <= max(1e-5, relative * max(abs(left), abs(right)))
 
 
-def validate_raw(prefix, config, arm, expected, k):
+def validate_raw(prefix, config, arm, expected, k, gt_mode="inline", require_gt=False):
     """Validate every raw row, not merely a plausible summary file."""
     errors = []
     summary = {}
@@ -120,6 +122,7 @@ def validate_raw(prefix, config, arm, expected, k):
     recall_sum = 0.0
     hits, ground_truth = 0, 0
     query_us, update_us = 0.0, 0.0
+    gt_us, gt_calls = 0.0, 0
     try:
         summary = read_json(str(prefix) + ".summary.json")
         missing = set(SUMMARY_COLUMNS) - summary.keys()
@@ -129,6 +132,14 @@ def validate_raw(prefix, config, arm, expected, k):
             errors.append("summary arm mismatch")
         if summary.get("complete") is False:
             errors.append("C++ reports incomplete replay: " + str(summary.get("error", "")))
+        if require_gt and summary.get("complete") is not True:
+            errors.append("C++ must explicitly report a complete replay")
+        if require_gt or "gt_mode" in summary:
+            if summary.get("gt_mode") != gt_mode:
+                errors.append(f"summary gt_mode must be {gt_mode}")
+            value = summary.get("gt_distance_calls")
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                errors.append("invalid summary gt_distance_calls")
         for key in SUMMARY_COLUMNS:
             value = summary.get(key)
             if key != "arm" and (not isinstance(value, (int, float)) or
@@ -182,6 +193,11 @@ def validate_raw(prefix, config, arm, expected, k):
                     value = float(row[key])
                     if not math.isfinite(value) or value < 0:
                         raise ValueError(f"query {index}: invalid {key}")
+                expected_calls = int(row["eligible_card"]) if gt_mode == "inline" else 0
+                if "gt_distance_calls" in row and int(row["gt_distance_calls"]) != expected_calls:
+                    raise ValueError(f"query {index}: GT distance call count mismatch")
+                gt_calls += expected_calls
+                gt_us += float(row["gt_us"])
                 # Current-state GT and scope must agree across all arms. GT
                 # output ordering may differ, so compare canonical sorted IDs.
                 identity = [*actual, int(row["anchor_depth"]), int(row["scope_card"]),
@@ -217,6 +233,11 @@ def validate_raw(prefix, config, arm, expected, k):
                             ("total_workload_us", query_us + update_us)):
             if key in summary and not close(float(summary[key]), actual):
                 errors.append(f"summary {key} inconsistent with raw rows")
+        if require_gt or "gt_distance_calls" in summary:
+            if summary.get("gt_distance_calls") != gt_calls:
+                errors.append("summary GT distance calls inconsistent with raw rows/mode")
+            if not close(float(summary.get("gt_total_us", -1)), gt_us):
+                errors.append("summary GT time inconsistent with raw rows")
     except (OSError, ValueError, KeyError, TypeError, csv.Error) as error:
         errors.append(str(error))
     quality = (not errors and float(summary.get("macro_recall", 0)) >= 0.999 and
@@ -224,25 +245,60 @@ def validate_raw(prefix, config, arm, expected, k):
     return summary, errors, quality, comparison.hexdigest()
 
 
+def validate_tape_binding(job):
+    """Reject a changed tape or oracle stamp before using/resuming a measurement."""
+    tape_hash = sha256_file(job["gt_tape"])
+    if tape_hash != job["gt_tape_sha256"]:
+        raise ValueError("oracle tape SHA mismatch")
+    stamp = read_json(job["oracle_record"])
+    if (sha256_file(job["oracle_record"]) != job["oracle_record_sha256"] or
+            stamp.get("identity_sha256") != job["oracle_identity_sha256"] or
+            stamp.get("gt_tape_sha256") != tape_hash or
+            stamp.get("raw_sha256", {}).get(".queries.csv") != tape_hash or
+            stamp.get("complete") is not True or stamp.get("returncode") != 0):
+        raise ValueError("oracle tape/stamp provenance mismatch")
+
+
 def execute(job, args, expected):
     prefix = Path(job["raw_prefix"])
     prefix.parent.mkdir(parents=True, exist_ok=True)
     stamp = Path(str(prefix) + ".run.json")
+    oracle = job["stage"] == "oracle"
     cached = False
     returncode = None
     process_error = None
-    if args.resume and stamp.is_file():
-        try:
+    preserve_stamp = False
+    previous = None
+    try:
+        if job["gt_mode"] == "precomputed":
+            validate_tape_binding(job)
+        existing_oracle = oracle and (stamp.exists() or
+                                     any(prefix.parent.glob(prefix.name + ".*")))
+        if (args.resume or existing_oracle) and stamp.is_file():
             previous = read_json(stamp)
             cached = (previous.get("identity_sha256") == job["identity_sha256"] and
                       previous.get("raw_sha256") == raw_hashes(prefix) and
                       len(previous.get("raw_sha256", {})) == len(RAW_SUFFIXES) and
                       previous.get("returncode") == 0)
+            if oracle:
+                preserve_stamp = True
+                cached = (cached and previous.get("complete") is True and
+                          all(previous.get(key) == value for key, value in job.items()) and
+                          previous.get("gt_tape") == str(prefix) + ".queries.csv" and
+                          previous.get("gt_tape_sha256") ==
+                          previous.get("raw_sha256", {}).get(".queries.csv"))
+                if not cached:
+                    raise ValueError("oracle cache identity/raw/tape/stamp mismatch; refusing fallback")
             if cached:
                 returncode = 0
-        except (OSError, ValueError):
-            cached = False
-    if not cached:
+        elif existing_oracle:
+            preserve_stamp = True
+            raise ValueError("oracle cache missing run stamp; refusing fallback")
+    except (OSError, ValueError, TypeError) as error:
+        if oracle:
+            preserve_stamp = stamp.exists()
+        process_error = str(error)
+    if not cached and not process_error:
         try:
             with Path(str(prefix) + ".stdout.log").open("w") as stdout, \
                     Path(str(prefix) + ".stderr.log").open("w") as stderr:
@@ -252,19 +308,66 @@ def execute(job, args, expected):
                 returncode = process.returncode
         except (OSError, subprocess.TimeoutExpired) as error:
             process_error = str(error)
-    summary, errors, quality, fingerprint = validate_raw(prefix, job["config"], job["arm"], expected, args.k)
+    summary, errors, ann_quality, fingerprint = validate_raw(
+        prefix, job["config"], job["arm"], expected, args.k,
+        gt_mode=job["gt_mode"], require_gt=oracle or job["gt_mode"] == "precomputed")
+    for key in ("ef", "scan_threshold"):
+        if summary.get(key) != job["runner_settings"][key]:
+            errors.append(f"summary {key} differs from requested settings")
+    if job["gt_mode"] == "precomputed":
+        try:
+            validate_tape_binding(job)
+        except (OSError, ValueError, TypeError) as error:
+            errors.append(str(error))
+        if fingerprint != job["oracle_current_state_gt_sha256"]:
+            errors.append("benchmark current-state GT/scope differs from oracle")
+    if oracle and cached and fingerprint != previous.get("current_state_gt_sha256"):
+        errors.append("oracle current-state GT fingerprint differs from stamp")
+    if oracle and cached:
+        if (previous.get("summary") != summary or
+                previous.get("gt_total_us") != summary.get("gt_total_us") or
+                previous.get("gt_distance_calls") != summary.get("gt_distance_calls")):
+            errors.append("oracle summary/time/calls differ from stamp")
     if process_error:
         errors.append(process_error)
     if returncode != 0:
         errors.append(f"runner exit status {returncode}")
-    quality = quality and not errors
+    quality = not errors and (oracle or ann_quality)
+    hashes = raw_hashes(prefix)
     record = dict(job, summary=summary, quality_pass=quality,
                   validation_errors=errors, returncode=returncode, resumed=cached,
                   current_state_gt_sha256=fingerprint,
                   status="failed" if errors else ("ok" if quality else "quality_failed"),
-                  raw_sha256=raw_hashes(prefix))
-    write_json(stamp, record)
+                  raw_sha256=hashes)
+    if oracle:
+        record.update(complete=not errors, ann_quality_pass=ann_quality,
+                      gt_tape=str(prefix) + ".queries.csv",
+                      gt_tape_sha256=hashes.get(".queries.csv"),
+                      gt_total_us=summary.get("gt_total_us"),
+                      gt_distance_calls=summary.get("gt_distance_calls"))
+    if not preserve_stamp:
+        write_json(stamp, record)
     return record
+
+
+def run_jobs(jobs, args, layouts):
+    records = []
+    with ThreadPoolExecutor(max_workers=args.jobs) as executor:
+        futures = {executor.submit(execute, job, args, layouts[job["config_id"]]): job
+                   for job in jobs}
+        for future in as_completed(futures):
+            job = futures[future]
+            try:
+                result = future.result()
+            except Exception as error:
+                result = dict(job, summary={}, quality_pass=False, complete=False,
+                              validation_errors=[f"driver exception: {error}"],
+                              returncode=None, resumed=False, status="failed",
+                              current_state_gt_sha256="", raw_sha256={})
+            records.append(result)
+            print(f"{result['config_id']} stage={result['stage']} "
+                  f"repeat={result['repeat']} arm={result['arm']} {result['status']}", flush=True)
+    return sorted(records, key=lambda run: (run["config_id"], run["repeat"], run["arm"]))
 
 
 def compare_arms(runs):
@@ -318,6 +421,11 @@ def save_results(output, document):
                "raw_prefix": run["raw_prefix"], "trace_sha256": run["trace_sha256"],
                "binary_sha256": run["binary_sha256"], "config_sha256": run["config_sha256"],
                "validation_errors": "; ".join(run["validation_errors"])}
+        for key in ("gt_mode", "gt_tape", "gt_tape_sha256", "oracle_record",
+                    "oracle_record_sha256", "oracle_identity_sha256", "oracle_gt_total_us",
+                    "oracle_gt_distance_calls"):
+            if key in run:
+                row[key] = run[key]
         row.update({key: value for key, value in run["config"].items()
                     if isinstance(value, (str, int, float, bool)) or value is None})
         row.update(run["summary"])
@@ -328,11 +436,26 @@ def save_results(output, document):
         writer.writeheader()
         writer.writerows(flattened)
 
+def command_records(execution, oracles, jobs, planned):
+    def describe(job):
+        return {**{key: job.get(key) for key in
+                   ("config_id", "arm", "repeat", "stage", "gt_mode", "trace_sha256",
+                    "identity_sha256", "gt_tape", "gt_tape_sha256", "oracle_record",
+                    "oracle_identity_sha256")},
+                "argv": job["command"], "shell": shlex.join(job["command"]),
+                "provenance_status": "planned" if planned else "verified"}
+    return {"execution": execution, "stage_order": ["oracle", "benchmark"] if oracles else ["benchmark"],
+            "oracle_commands": [describe(job) for job in oracles],
+            "commands": [describe(job) for job in jobs]}
+
+
 
 def parser():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--manifest", type=Path, required=True)
     ap.add_argument("--binary", type=Path, default=ROOT / "codes/directory-aware-vector-attr-search/build/dynamic_triad")
+    ap.add_argument("--gt-mode", choices=("inline", "precomputed"), default="inline",
+                    help="inline exact GT (legacy default), or two-stage hash-bound C++ GT tapes")
     ap.add_argument("--select", action="append", default=[], help="config ID glob or sweep name")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--arms", nargs="+", choices=("A", "B", "C"), default=["A", "B", "C"])
@@ -373,7 +496,8 @@ def main(argv=None):
     binary_hash = sha256_file(binary) if binary.is_file() else None
     if not args.dry_run and (binary_hash is None or not os.access(binary, os.X_OK)):
         raise ValueError(f"executable not available: {binary}")
-    settings = {"ef": args.ef, "k": args.k, "scan_threshold": args.scan_threshold,
+    settings = {"gt_mode": args.gt_mode, "ef": args.ef, "k": args.k,
+                "scan_threshold": args.scan_threshold,
                 "scan_threshold_by_dim": {"128": 1024, "1024": 512},
                 "compact_threshold": args.compact_threshold,
                 "single_thread_environment": SINGLE_THREAD_ENV,
@@ -384,6 +508,8 @@ def main(argv=None):
     work = (args.work_root or Path(manifest["work_dir"]) / "runs" /
             manifest_path.stem / settings_hash).resolve()
     jobs = []
+    oracles = []
+    oracle_keys = set()
     layouts = {}
     for config in configs:
         threshold = args.scan_threshold
@@ -405,21 +531,46 @@ def main(argv=None):
                 raise ValueError(f"trace counts do not match manifest: {config['id']}")
         config_hash = json_hash({"config": config, "runner_settings": effective_settings})
         identity = {"config_sha256": config_hash, "trace_sha256": config["trace_sha256"],
-                    "data_sha256": config["data_sha256"], "binary_sha256": binary_hash}
-        # Binary/config/trace hashes in the path prevent stale outputs from
-        # being mistaken for a newly failed invocation, even without resume.
+                    "data_sha256": config["data_sha256"], "binary_sha256": binary_hash,
+                    "gt_mode": args.gt_mode}
+        base_command = [str(binary), "--data", config["data_dir"], "--trace", config["trace"],
+                        "--ef", str(args.ef), "--k", str(args.k),
+                        "--scan-threshold", str(threshold),
+                        "--compact-threshold", str(args.compact_threshold)]
+        oracle = None
+        if args.gt_mode == "precomputed":
+            oracle_settings = dict(effective_settings, gt_mode="inline")
+            oracle_identity = dict(
+                identity, gt_mode="inline", stage="oracle", arm="A",
+                config_sha256=json_hash({"config": config, "runner_settings": oracle_settings}))
+            oracle_key = json_hash(oracle_identity)
+            oracle_prefix = work / "oracles" / oracle_key / "oracle"
+            oracle = dict(oracle_identity, config_id=config["id"], config=config, repeat=0,
+                          runner_settings=oracle_settings, identity_sha256=oracle_key,
+                          raw_prefix=str(oracle_prefix),
+                          command=[*base_command, "--arm", "A", "--out", str(oracle_prefix)])
+            if oracle_key not in oracle_keys:
+                oracles.append(oracle)
+                oracle_keys.add(oracle_key)
+        # Stage-two identities are completed with the actual tape hash only
+        # after every oracle has finished; dry runs never invent that hash.
         identity_short = json_hash(identity)[:16]
         for repeat in range(1, args.repeats + 1):
             for arm in args.arms:
                 prefix = work / config["id"] / identity_short / f"repeat-{repeat:02}" / arm
-                command = [str(binary), "--data", config["data_dir"], "--trace", config["trace"],
-                           "--arm", arm, "--ef", str(args.ef), "--k", str(args.k),
-                           "--scan-threshold", str(threshold),
-                           "--compact-threshold", str(args.compact_threshold), "--out", str(prefix)]
-                jobs.append(dict(identity, config_id=config["id"], config=config, arm=arm,
-                                 repeat=repeat, command=command, raw_prefix=str(prefix),
-                                 runner_settings=effective_settings,
-                                 identity_sha256=json_hash(dict(identity, arm=arm, repeat=repeat))))
+                command = [*base_command, "--arm", arm, "--out", str(prefix)]
+                job = dict(identity, config_id=config["id"], config=config, arm=arm,
+                           repeat=repeat, stage="benchmark", command=command, raw_prefix=str(prefix),
+                           runner_settings=effective_settings,
+                           identity_sha256=json_hash(dict(identity, arm=arm, repeat=repeat)))
+                if oracle is not None:
+                    tape = oracle["raw_prefix"] + ".queries.csv"
+                    command.extend(["--gt-in", tape])
+                    job.update(gt_tape=tape, gt_tape_sha256=None,
+                               oracle_record=oracle["raw_prefix"] + ".run.json",
+                               oracle_identity_sha256=oracle["identity_sha256"],
+                               identity_sha256=None)
+                jobs.append(job)
     execution = {"manifest": str(manifest_path), "manifest_sha256": sha256_file(manifest_path),
                  "settings": settings, "settings_sha256": json_hash(settings),
                  "binary": str(binary), "binary_sha256": binary_hash,
@@ -429,36 +580,49 @@ def main(argv=None):
                  "tracked_root": str(output), "work_root": str(work),
                  "quality_gate": {"macro_recall": 0.999, "pair_recall": 0.999},
                  "driver_command": [sys.executable, str(Path(__file__).resolve()), *argv]}
-    commands = {"execution": execution,
-                "commands": [{"config_id": job["config_id"], "arm": job["arm"], "repeat": job["repeat"],
-                              "argv": job["command"], "shell": shlex.join(job["command"]),
-                              "trace_sha256": job["trace_sha256"], "identity_sha256": job["identity_sha256"]}
-                             for job in jobs]}
+    commands = command_records(execution, oracles, jobs, planned=True)
     if args.dry_run:
         print(json.dumps(commands, indent=2, sort_keys=True))
         return 0
+    if oracles:
+        ignored = subprocess.run(
+            ["git", "check-ignore", "--quiet", "--no-index",
+             str(work / "oracles" / "probe" / "oracle.queries.csv")],
+            cwd=ROOT, check=False)
+        if ignored.returncode != 0:
+            raise ValueError(f"oracle raw work root must be git-ignored: {work}")
     write_json(output / "config.json", {"execution": execution, "configs": configs})
     write_json(output / "commands.json", commands)
-    runs = []
-    with ThreadPoolExecutor(max_workers=args.jobs) as executor:
-        futures = {executor.submit(execute, job, args, layouts[job["config_id"]]): job for job in jobs}
-        for future in as_completed(futures):
-            job = futures[future]
-            try:
-                result = future.result()
-            except Exception as error:
-                # Preserve a failed run rather than allowing one worker to
-                # erase the evidence/results of every other completed job.
-                result = dict(job, summary={}, quality_pass=False,
-                              validation_errors=[f"driver exception: {error}"],
-                              returncode=None, resumed=False, status="failed",
-                              current_state_gt_sha256="", raw_sha256={})
-            runs.append(result)
-            print(f"{result['config_id']} repeat={result['repeat']} arm={result['arm']} "
-                  f"{result['status']}", flush=True)
-    runs.sort(key=lambda run: (run["config_id"], run["repeat"], run["arm"]))
+    oracle_runs = run_jobs(oracles, args, layouts) if oracles else []
+    if oracles:
+        write_json(output / "oracles.json", {
+            "format_version": FORMAT_VERSION, "execution": execution, "oracles": oracle_runs})
+        if any(not record.get("complete") for record in oracle_runs):
+            save_results(output, {"format_version": FORMAT_VERSION, "execution": execution,
+                                 "oracles": oracle_runs, "oracle_stage_complete": False,
+                                 "runs": [], "aggregates": []})
+            print(json.dumps({"results": str(output / "results.json"),
+                              "oracle_failures": sum(not record.get("complete") for record in oracle_runs),
+                              "runs": 0, "all_pass": False}, sort_keys=True))
+            return 1
+        by_identity = {record["identity_sha256"]: record for record in oracle_runs}
+        for job in jobs:
+            oracle = by_identity[job["oracle_identity_sha256"]]
+            job.update(gt_tape_sha256=oracle["gt_tape_sha256"],
+                       oracle_record_sha256=sha256_file(job["oracle_record"]),
+                       oracle_current_state_gt_sha256=oracle["current_state_gt_sha256"],
+                       oracle_gt_total_us=oracle["gt_total_us"],
+                       oracle_gt_distance_calls=oracle["gt_distance_calls"])
+            job["identity_sha256"] = json_hash({
+                key: job[key] for key in
+                ("config_sha256", "trace_sha256", "data_sha256", "binary_sha256",
+                 "gt_mode", "gt_tape_sha256", "oracle_identity_sha256", "arm", "repeat")})
+    commands = command_records(execution, oracles, jobs, planned=False)
+    write_json(output / "commands.json", commands)
+    runs = run_jobs(jobs, args, layouts)
     compare_arms(runs)
     document = {"format_version": FORMAT_VERSION, "execution": execution, "runs": runs,
+                "oracles": oracle_runs, "oracle_stage_complete": True,
                 "aggregates": aggregate_runs(runs, args.repeats)}
     save_results(output, document)
     failed = sum(not run["quality_pass"] for run in runs)

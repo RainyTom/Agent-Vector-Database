@@ -1,11 +1,13 @@
-"""Current-state scope/predicate regression across all three dynamic index arms.
+"""Current-state scope/predicate and exact-GT tape regression for all three arms.
 
-Build build_dynamic_triad.sh first. Expected sets are computed without the runner's
-postings or GT; <=10 live records makes every eligible ID part of exact top-10.
-No Python vector distance or search implementation is used.
+Build build_dynamic_triad.sh first, or set DYNAMIC_TRIAD_BINARY to a separately
+built runner. Expected sets do not use the runner's postings or GT; <=10 live
+records makes every eligible ID part of exact top-10. Tape tests also use k=3
+to exercise genuine ranked IDs and compare measured algorithm work by mode.
 """
 import csv
 import json
+import os
 from pathlib import Path
 import struct
 import subprocess
@@ -14,11 +16,12 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[1]
+BINARY = Path(os.environ.get("DYNAMIC_TRIAD_BINARY", ROOT / "build/dynamic_triad"))
 
 
 class DynamicTriadSemantics(unittest.TestCase):
     def test_moves_reparents_resurrection_thresholds_and_set_semantics(self):
-        binary = ROOT / "build/dynamic_triad"
+        binary = BINARY
         self.assertTrue(binary.exists(), "run build_dynamic_triad.sh first")
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp)
@@ -143,9 +146,172 @@ class DynamicTriadSemantics(unittest.TestCase):
                     self.assertEqual(summary["state_violations"], 0)
                     self.assertEqual(summary["macro_recall"], 1.0)
                     self.assertEqual(summary["pair_recall"], 1.0)
+                    self.assertEqual(summary["gt_mode"], "inline")
+                    self.assertEqual(summary["gt_distance_calls"],
+                                     sum(int(row["eligible_card"]) for row in rows))
+                    self.assertEqual([int(row["gt_distance_calls"]) for row in rows],
+                                     [int(row["eligible_card"]) for row in rows])
+                    # One canonical inline oracle feeds every arm after every
+                    # move, reparent, predicate edit and resurrection above.
+                    tape = path / "A.queries.csv"
+                    replay = path / f"{arm}-precomputed"
+                    subprocess.run([str(binary), "--data", str(path), "--trace", str(trace),
+                                    "--arm", arm, "--ef", "256", "--scan-threshold", "2",
+                                    "--compact-threshold", "0.2", "--out", str(replay),
+                                    "--gt-in", str(tape)],
+                                   check=True, capture_output=True, text=True)
+                    with Path(str(replay) + ".queries.csv").open() as handle:
+                        replay_rows = list(csv.DictReader(handle))
+                    self.assertEqual(len(replay_rows), len(rows))
+                    for inline, precomputed in zip(rows, replay_rows):
+                        for field in rows[0]:
+                            if field not in ("dir_us", "search_us", "e2e_us", "gt_us",
+                                             "gt_distance_calls"):
+                                self.assertEqual(precomputed[field], inline[field],
+                                                 (arm, inline["event"], field))
+                        self.assertEqual(int(precomputed["gt_distance_calls"]), 0)
+                    replay_summary = json.loads(Path(str(replay) + ".summary.json").read_text())
+                    self.assertEqual(replay_summary["gt_mode"], "precomputed")
+                    self.assertEqual(replay_summary["gt_distance_calls"], 0)
+                    for field in ("state_violations", "macro_recall", "pair_recall",
+                                  "gt_count", "hit_count", "distance_calls", "ann_hops"):
+                        self.assertEqual(replay_summary[field], summary[field])
+
+    def test_ranked_tape_validation_and_query_work_invariance(self):
+        self.assertTrue(BINARY.exists(), "build the dynamic runner first")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            (path / "meta.txt").write_text("6 8 2\n")
+            # Deliberately non-ID rank order, including a distance tie in qidx=1.
+            (path / "base.f32").write_bytes(b"".join(
+                struct.pack("<8f", *([float(value)] * 8))
+                for value in (4, 0, 2, 1, 3, 5)))
+            (path / "test.f32").write_bytes(b"".join(
+                struct.pack("<8f", *([value] * 8)) for value in (0.25, 2.5)))
+            (path / "tree.txt").write_text("3\n0 -1\n1 0\n2 0\n")
+            (path / "bindings.txt").write_text("1\n1\n1\n2\n2\n2\n")
+            (path / "attrs.txt").write_text("0 0 0 1\n" * 5 + "0 0 0 0\n")
+            events = [
+                "Q 0 0 1 -1 -1 -1 0 0 0", "D 1",
+                "Q 0 0 1 -1 -1 -1 0 0 0", "I 5 1 0 0 0",
+                "Q 0 0 1 -1 -1 -1 0 0 0", "M 0 2",
+                "Q 0 0 1 -1 -1 -1 0 0 0", "R 1 2",
+                "Q 1 1 2 -1 -1 -1 0 0 0", "V 2 9 2",
+                "Q 0 1 2 0 -1 -1 0 0 0", "T 5 3",
+                "Q 0 1 2 -1 -1 -1 1 3 0",
+                "Q 0 1 2 99 -1 -1 0 0 0",
+            ]
+            trace = path / "trace.txt"
+            trace.write_text(f"{len(events)}\n" + "\n".join(events) + "\n")
+
+            def run(arm, name, tape=None):
+                out = path / name
+                command = [str(BINARY), "--data", str(path), "--trace", str(trace),
+                           "--arm", arm, "--ef", "256", "--scan-threshold", "2",
+                           "--compact-threshold", "0.3", "--k", "3", "--out", str(out)]
+                if tape is not None:
+                    command += ["--gt-in", str(tape)]
+                process = subprocess.run(command, capture_output=True, text=True)
+                summary = json.loads(Path(str(out) + ".summary.json").read_text())
+                with Path(str(out) + ".queries.csv").open() as handle:
+                    rows = list(csv.DictReader(handle))
+                return process, summary, rows
+
+            process, oracle_summary, oracle = run("A", "oracle")
+            self.assertEqual(process.returncode, 0, process.stderr)
+            self.assertEqual(oracle[0]["gt_ids"], "1;2;0")
+            self.assertEqual(oracle[1]["gt_ids"], "2;0")
+            self.assertEqual(oracle[4]["gt_ids"], "2;4;0")
+            self.assertEqual(oracle[-2]["gt_ids"], "5")
+            self.assertEqual(oracle[-1]["gt_ids"], "")
+            self.assertGreater(int(oracle[4]["eligible_card"]), 3)
+            fields = list(oracle[0])
+
+            def write_tape(name, rows, columns=None):
+                tape = path / f"{name}.csv"
+                columns = fields if columns is None else columns
+                with tape.open("w", newline="") as handle:
+                    writer = csv.DictWriter(handle, fieldnames=columns, extrasaction="ignore")
+                    writer.writeheader()
+                    writer.writerows(rows)
+                return tape
+
+            # The old schema is deliberately supported as an exact oracle tape.
+            valid = write_tape("legacy", oracle, fields[:-1])
+            modern = path / "oracle.queries.csv"
+            bad_tapes = {}
+            for field in ("event", "version", "query_index", "qidx", "recursive",
+                          "anchor", "anchor_depth", "scope_card", "eligible_card"):
+                rows = [dict(row) for row in oracle]
+                rows[0][field] = str(int(rows[0][field]) + 1)
+                bad_tapes[f"identity-{field}"] = write_tape(f"identity-{field}", rows)
+            for name, index, field, value in (
+                ("duplicate", 0, "gt_ids", "1;1;0"),
+                ("out-of-range", 0, "gt_ids", "1;2;999"),
+                ("stale-deleted", 1, "gt_ids", "2;1"),
+                ("stale-predicate", 5, "gt_ids", "2;4;0"),
+                ("wrong-scope", 0, "gt_ids", "1;2;3"),
+                ("missing-id", 0, "gt_ids", "1;2"),
+                ("extra-id", 0, "gt_ids", "1;2;0;3"),
+                ("negative-id", 0, "gt_ids", "1;2;-1"),
+                ("trailing-delimiter", 0, "gt_ids", "1;2;"),
+                ("malformed-id", 0, "gt_ids", "1;2;garbage"),
+                ("integer-overflow", 0, "event", str(2**64)),
+                ("negative-integer", 0, "scope_card", "-1"),
+                ("nonfinite-time", 0, "gt_us", "nan"),
+                ("gt-under-count", 0, "gt_count", "2"),
+                ("gt-over-k", 4, "gt_count", "4"),
+                ("invalid-oracle", 0, "invalid_count", "1"),
+                ("false-hit-count", 0, "hit_count", "0"),
+                ("false-call-count", 0, "gt_distance_calls", "0"),
+            ):
+                rows = [dict(row) for row in oracle]
+                rows[index][field] = value
+                bad_tapes[name] = write_tape(name, rows)
+            bad_tapes["missing-row"] = write_tape("missing-row", oracle[:-1])
+            bad_tapes["empty"] = write_tape("empty", [])
+            bad_tapes["extra-row"] = write_tape("extra-row", oracle + [oracle[-1]])
+            bad_tapes["bad-schema"] = write_tape("bad-schema", oracle, fields[1:])
+            malformed = path / "bad-columns.csv"
+            malformed.write_text(",".join(fields) + "\n1,2,3\n")
+            bad_tapes["bad-columns"] = malformed
+            bad_tapes["missing-file"] = path / "does-not-exist.csv"
+
+            for arm in "ABC":
+                process, inline_summary, inline = run(arm, f"{arm}-inline")
+                self.assertEqual(process.returncode, 0, process.stderr)
+                self.assertEqual(inline_summary["gt_mode"], "inline")
+                self.assertEqual(inline_summary["gt_distance_calls"],
+                                 sum(int(row["eligible_card"]) for row in inline))
+                self.assertEqual(inline_summary["gt_distance_calls"],
+                                 oracle_summary["gt_distance_calls"])
+                for tape in (valid, modern):
+                    with self.subTest(arm=arm, tape=tape.name):
+                        process, summary, rows = run(arm, f"{arm}-{tape.stem}", tape)
+                        self.assertEqual(process.returncode, 0, process.stderr)
+                        self.assertTrue(summary["complete"])
+                        self.assertEqual(summary["gt_mode"], "precomputed")
+                        self.assertEqual(summary["gt_distance_calls"], 0)
+                        self.assertEqual(len(rows), len(inline))
+                        for got, want, canonical in zip(rows, inline, oracle):
+                            self.assertEqual(got["gt_ids"], canonical["gt_ids"])
+                            self.assertEqual(int(got["gt_distance_calls"]), 0)
+                            for field in ("result_ids", "distance_calls", "ann_hops",
+                                          "scope_card", "eligible_card", "gt_count", "hit_count",
+                                          "recall", "valid_count", "invalid_count", "duplicate_count"):
+                                self.assertEqual(got[field], want[field], (arm, got["event"], field))
+                        self.assertEqual(summary["distance_calls"], inline_summary["distance_calls"])
+                        self.assertEqual(summary["state_violations"], 0)
+                for name, tape in bad_tapes.items():
+                    with self.subTest(arm=arm, malformed=name):
+                        process, summary, _ = run(arm, f"{arm}-bad-{name}", tape)
+                        self.assertNotEqual(process.returncode, 0)
+                        self.assertFalse(summary["complete"])
+                        self.assertEqual(summary["gt_mode"], "precomputed")
+                        self.assertEqual(summary["gt_distance_calls"], 0)
 
     def test_disjoint_maintenance_and_real_graph_state(self):
-        binary = ROOT / "build/dynamic_triad"
+        binary = BINARY
         self.assertTrue(binary.exists(), "run build_dynamic_triad.sh first")
         categories = ("tombstone_compaction", "threshold_build", "threshold_drop")
         with tempfile.TemporaryDirectory() as tmp:

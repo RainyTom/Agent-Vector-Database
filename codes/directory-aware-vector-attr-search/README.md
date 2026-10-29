@@ -145,7 +145,7 @@ codes/directory-aware-vector-attr-search/build/dynamic_triad \
 - A：直接节点局部 HNSW + 小节点扫描；B：路径直接 posting + 全局 HNSW；C：路径祖先 posting + 全局 HNSW。B/C 属性移动不改图。
 - `src/dynamic_triad.cpp` 同时实现三臂、独立 current-state 精确 GT 与计时；Python 只生成数据/trace、调度和绘图。所有原始距离仍统一 hnswlib；无 FAISS index、无 ANN 失败后的全局扫描兜底。
 - 事件 `Q/V/T/M/B/R/D/I` 对应查询/标量/标签/单 ITEM 移动/批量 ITEM 移动/子树重挂/删除/插入。标签支持四种集合语义；属性组 AND/OR，目录始终 AND。
-- 单线程提交可见性：查询看见之前全部成功更新；逐查询 GT 放在计时外、查询之后执行，避免用 oracle 决定是否跳过搜索或搜索 k。不是并发吞吐或多版本快照实验。
+- 单线程提交可见性：查询看见之前全部成功更新。`inline`在查询计时后计算GT，但仍可能不对称热身原始向量；正式性能测量推荐下面的两遍GT协议。两种模式均不让oracle决定跳过搜索或搜索k，均不证明并发吞吐/MVCC。
 - 结果 `.queries.csv` / `.updates.csv` / `.summary.json` 保留目录/ANN/GT、操作类型、ANN距离与跳数、压实、写操作、质量错误。HNSW字节真实计量，metadata单独标注估算，RSS包含输入与GT等进程开销。
 - 语义回归覆盖往返移动、恢复旧标签、局部扫描↔图转换、批量移动、子树重挂、空结果及四种标签语义。状态不一致报错，低召回保留失败，不伪装同质量更快。
 - 新增互斥计量 `{tombstone_compaction,threshold_build,threshold_drop}_{us,count,ann_insertions}`：三个分项精确划分原 `compaction_*` 总量，分别表示墓碑重建、扫描→图、图→扫描，不改变原触发策略。summary另给实际初始/结束HNSW图数及图内live/dead数。
@@ -160,3 +160,18 @@ production/nested-attr-vector-search/work/venv/bin/python \
 ```
 
 输出manifest沿用 `scripts/run_dynamic_triad.py` 调度。生成器拒绝覆盖历史生成目录；Python的Fenwick结构只用于生成查询锚点，不参与被测索引/搜索/GT或计时。完整协议见 [wiki-topology-protocol.md](../../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)。
+
+### 两遍GT协议：不在测量查询之间重算向量GT
+
+`run_dynamic_triad.py --gt-mode precomputed` 先由同一C++执行器按完整事件流逐查询生成精确GT，再结束oracle阶段，运行三臂测量并传入 `--gt-in ORACLE.queries.csv`。GT不是静态初始状态，也不是ANN输出；driver绑定数据/trace/binary/tape/stamp SHA。测量仍独立核对当前scope元数据，GT只在搜索/merge计时后读取，不影响执行预算。
+
+```bash
+python codes/directory-aware-vector-attr-search/scripts/run_dynamic_triad.py \
+  --manifest MANIFEST --gt-mode precomputed --ef 1024 --jobs 2 --repeats 3 \
+  --tracked-root NEW_RESULTS --work-root IGNORED_WORK
+```
+
+- `--gt-mode inline` 是明确保留的诊断/GT生成模式（driver默认值）；旧inline时间只作诊断，不能因“GT不计时”便声称无缓存偏置。
+- `oracles.json` 单列真实GT生成时间/距离调用；测量summary与每query `gt_distance_calls` 必须为0。测量中的 `gt_us` 是元数据核对与tape读取，不是向量GT生成成本。此协议不消除所有元数据/文件缓存干扰。
+- Oracle本身ANN召回不足不影响其独立精确GT生成；真正测量的低召回点仍失败，不做精确兜底。篡改tape或stamp拒绝复用，成功oracle stamp复用时保持不变。
+- 当前研究保留旧运行binary时，另编译 `build/dynamic_triad_gt_tape` 并用 `--binary` 指定；测试可用 `DYNAMIC_TRIAD_BINARY` 覆盖路径，不覆盖正在测量的旧执行器。新checkout正常构建默认binary即可支持两种模式。

@@ -50,7 +50,7 @@ private:
     }
 };
 struct Args {
-    std::string data, trace, out;
+    std::string data, trace, out, gt_in;
     char arm = 0;
     size_t ef = 256, scan = 512, k = 10;
     double compact = .2;
@@ -63,6 +63,7 @@ Args arguments(int argc, char** argv) {
         if (key == "--data") a.data = value;
         else if (key == "--trace") a.trace = value;
         else if (key == "--out") a.out = value;
+        else if (key == "--gt-in") a.gt_in = value;
         else if (key == "--arm") {
             if (value.size() != 1) fail("arm must be A, B or C");
             a.arm = value[0];
@@ -76,7 +77,7 @@ Args arguments(int argc, char** argv) {
         (a.arm != 'A' && a.arm != 'B' && a.arm != 'C') || !a.ef || !a.k ||
         !std::isfinite(a.compact) || a.compact <= 0 || a.compact > 1)
         fail("usage: dynamic_triad --data DIR --trace FILE --arm A|B|C --out PREFIX "
-             "[--ef 256 --scan-threshold 512 --compact-threshold .2 --k 10]");
+             "[--ef 256 --scan-threshold 512 --compact-threshold .2 --k 10 --gt-in PREFIX.queries.csv]");
     return a;
 }
 std::vector<float> floats(const std::string& path) {
@@ -108,6 +109,79 @@ bool extra(const Item& item, const Query& q) {
     else if (q.tagmode == 4) add((item.tags & q.tags) == item.tags);
     return !any || (q.combine ? disjunction : conjunction);
 }
+
+// Exact ranks are IDs, not search neighbors with synthetic distances. The
+// legacy queries CSV is also the tape format; no oracle data is read until the
+// measured search and merge have finished.
+constexpr const char* query_columns =
+    "event,version,query_index,qidx,recursive,anchor,anchor_depth,scope_card,eligible_card,dir_us,search_us,e2e_us,gt_us,gt_count,hit_count,recall,distance_calls,ann_hops,local_indexes,valid_count,invalid_count,duplicate_count,gt_ids,result_ids,fanout,scan_nodes";
+class GtTape {
+    std::ifstream in;
+    bool opened = false, has_calls = false;
+    static std::vector<std::string> fields(std::string line) {
+        if (!line.empty() && line.back() == '\r') line.pop_back();
+        std::vector<std::string> result;
+        size_t start = 0;
+        for (;;) {
+            size_t end = line.find(',', start);
+            result.push_back(line.substr(start, end == std::string::npos ? end : end - start));
+            if (end == std::string::npos) return result;
+            start = end + 1;
+        }
+    }
+    void open(const std::string& path) {
+        if (opened) return;
+        in.open(path);
+        if (!in) fail("GT tape: cannot open " + path);
+        opened = true;
+        std::string header;
+        if (!std::getline(in, header)) fail("GT tape: missing header");
+        if (!header.empty() && header.back() == '\r') header.pop_back();
+        has_calls = header == std::string(query_columns) + ",gt_distance_calls";
+        if (header != query_columns && !has_calls) fail("GT tape: invalid queries CSV schema");
+    }
+public:
+    static uint64_t integer(const std::string& value) {
+        if (value.empty()) fail("GT tape: empty integer");
+        uint64_t result = 0;
+        for (char c : value) {
+            if (c < '0' || c > '9' || result > (UINT64_MAX - unsigned(c - '0')) / 10)
+                fail("GT tape: malformed integer " + value);
+            result = result * 10 + unsigned(c - '0');
+        }
+        return result;
+    }
+    std::vector<std::string> next(const std::string& path) {
+        open(path);
+        std::string line;
+        if (!std::getline(in, line)) fail("GT tape: missing query row");
+        auto row = fields(std::move(line));
+        if (row.size() != (has_calls ? 27 : 26)) fail("GT tape: malformed query row column count");
+        // Require a genuine, well-formed query CSV, including unused diagnostics;
+        // ANN quality is deliberately not a prerequisite for an exact GT tape.
+        for (size_t i = 0; i < row.size(); ++i) {
+            if (i == 22 || i == 23) continue;
+            if ((i >= 9 && i <= 12) || i == 15) {
+                size_t used = 0;
+                double value;
+                try { value = std::stod(row[i], &used); }
+                catch (const std::exception&) { fail("GT tape: malformed numeric diagnostic"); }
+                if (used != row[i].size() || !std::isfinite(value) || value < 0 || (i == 15 && value > 1))
+                    fail("GT tape: invalid numeric diagnostic");
+            } else integer(row[i]);
+        }
+        if (integer(row[20]) || integer(row[21])) fail("GT tape: oracle reports invalid or duplicate results");
+        if (has_calls && integer(row[26]) != integer(row[8]))
+            fail("GT tape: expected inline oracle distance calls");
+        return row;
+    }
+    void finish(const std::string& path) {
+        open(path);
+        std::string line;
+        if (std::getline(in, line)) fail("GT tape: extra query row");
+        if (!in.eof()) fail("GT tape: read failure");
+    }
+};
 constexpr const char* maintenance_names[] = {"tombstone_compaction", "threshold_build", "threshold_drop"};
 struct Maintenance {
     uint64_t count = 0, insertions = 0;
@@ -139,6 +213,7 @@ class Runner {
     size_t dim = 0, root = NONE, version = 0, query_index = 0, update_count = 0;
     uint64_t invalid = 0, duplicates = 0, violations = 0, distances = 0, hops = 0;
     uint64_t total_gt = 0, total_hits = 0, zero_gt = 0;
+    uint64_t gt_distance_calls = 0;
     uint64_t build_insertions = 0;
     uint64_t total_fanout = 0, total_scan_nodes = 0;
     double build_s = 0, query_total = 0, update_total = 0, gt_total = 0, recall_sum = 0;
@@ -146,6 +221,7 @@ class Runner {
     GraphStats initial_graph_stats;
     std::vector<double> query_times, update_times;
     std::ofstream qout, uout;
+    GtTape gt_tape;
 
     const float* vector(Id id) const { return base.data() + id * dim; }
     void node(size_t n) const { if (n >= parent.size()) fail("node out of range: " + std::to_string(n)); }
@@ -355,6 +431,53 @@ class Runner {
         }
         std::sort(result.begin(), result.end());
     }
+    static std::string rankedIds(const std::vector<Id>& values) {
+        std::ostringstream out;
+        for (size_t i = 0; i < values.size(); ++i) { if (i) out << ';'; out << values[i]; }
+        return out.str();
+    }
+    std::vector<Id> tapedGt(size_t event, const Query& q, size_t anchor_depth,
+                            size_t scope, size_t eligible) {
+        const auto row = gt_tape.next(args.gt_in);
+        const uint64_t expected[] = {event, version, query_index, q.qidx,
+                                    uint64_t(q.recursive), q.anchor, anchor_depth, scope, eligible};
+        for (size_t i = 0; i < 9; ++i)
+            if (GtTape::integer(row[i]) != expected[i])
+                fail("GT tape: query identity/current-state mismatch at column " + std::to_string(i));
+        const size_t count = std::min(args.k, eligible);
+        if (GtTape::integer(row[13]) != count) fail("GT tape: GT count does not match k/current eligible count");
+        auto parse_ids = [&](const std::string& value) {
+            std::vector<Id> result;
+            std::unordered_set<Id> seen;
+            if (!value.empty()) {
+                size_t start = 0;
+                for (;;) {
+                    size_t end = value.find(';', start);
+                    uint64_t parsed = GtTape::integer(value.substr(start, end == std::string::npos ? end : end - start));
+                    if (parsed >= items.size()) fail("GT tape: ID out of range");
+                    Id id = static_cast<Id>(parsed);
+                    if (!seen.insert(id).second) fail("GT tape: duplicate ID");
+                    if (!matches(id, q)) fail("GT tape: ID violates current predicate");
+                    result.push_back(id);
+                    if (end == std::string::npos) break;
+                    start = end + 1;
+                }
+            }
+            return result;
+        };
+        auto result = parse_ids(row[22]);
+        if (result.size() != count) fail("GT tape: ranked ID count mismatch");
+        const auto oracle_result = parse_ids(row[23]);
+        if (oracle_result.size() > count || GtTape::integer(row[19]) != oracle_result.size())
+            fail("GT tape: oracle result count mismatch");
+        Posting gt_set(result.begin(), result.end());
+        size_t hits = 0;
+        for (Id id : oracle_result) hits += gt_set.count(id);
+        double recall = count ? double(hits) / count : 1.0;
+        if (GtTape::integer(row[14]) != hits || std::abs(std::stod(row[15]) - recall) > 1e-9)
+            fail("GT tape: oracle hit/recall mismatch");
+        return result;
+    }
     static std::string ids(const std::vector<Neighbor>& values) {
         std::ostringstream out;
         for (size_t i = 0; i < values.size(); ++i) { if (i) out << ';'; out << values[i].second; }
@@ -445,9 +568,10 @@ class Runner {
         uint64_t dc = space->calls - dc0 + scan_calls;
         // Independent current-state oracle, never consulting paths/postings.
         auto gt_start = Clock::now();
-        std::vector<Neighbor> gt;
+        std::vector<Neighbor> exact;
         Posting oracle_scope_ids;
         size_t oracle_scope = 0, oracle_eligible = 0;
+        uint64_t query_gt_calls = 0;
         for (Id id = 0; id < items.size(); ++id) {
             const auto& v = items[id];
             if (!v.alive || !(q.recursive ? beneath(v.node, q.anchor) : v.node == q.anchor)) continue;
@@ -455,13 +579,23 @@ class Runner {
             oracle_scope_ids.insert(id);
             if (!extra(v, q)) continue;
             ++oracle_eligible;
-            gt.emplace_back(space->dist(qvec, vector(id)), id);
+            if (args.gt_in.empty()) {
+                exact.emplace_back(space->dist(qvec, vector(id)), id);
+                ++query_gt_calls;
+            }
         }
-        top(gt, args.k);
+        std::vector<Id> gt;
+        if (args.gt_in.empty()) {
+            top(exact, args.k);
+            gt.reserve(exact.size());
+            for (const auto& neighbor : exact) gt.push_back(neighbor.second);
+        } else {
+            gt = tapedGt(event, q, anchor_depth, oracle_scope, oracle_eligible);
+        }
         double gt_us = elapsed(gt_start);
         size_t hit = 0;
         Posting gt_set;
-        for (auto v : gt) gt_set.insert(v.second);
+        for (Id id : gt) gt_set.insert(id);
         for (auto v : result) if (gt_set.count(v.second)) ++hit;
         // A mismatch is counted, recorded and fatal: no stale, silently filtered,
         // duplicated, or undercounted directory state is accepted as a data point.
@@ -485,13 +619,14 @@ class Runner {
              << q.anchor << ',' << anchor_depth << ',' << scope << ',' << oracle_eligible << ',' << dir_us << ','
              << search_us << ',' << e2e_us << ',' << gt_us << ',' << gt.size() << ',' << hit << ',' << recall << ','
              << dc << ',' << query_hops << ',' << local_indexes << ',' << valid_count
-             << ',' << bad << ',' << duplicate << ',' << ids(gt) << ',' << ids(result)
-             << ',' << fanout << ',' << scan_nodes << '\n';
+             << ',' << bad << ',' << duplicate << ',' << rankedIds(gt) << ',' << ids(result)
+             << ',' << fanout << ',' << scan_nodes << ',' << query_gt_calls << '\n';
         qout.flush();
         ++query_index;
         query_times.push_back(e2e_us);
         query_total += e2e_us; gt_total += gt_us; recall_sum += recall;
         total_gt += gt.size(); total_hits += hit; zero_gt += gt.empty();
+        gt_distance_calls += query_gt_calls;
         invalid += bad; duplicates += duplicate; violations += state_errors;
         distances += dc; hops += query_hops;
         total_fanout += fanout; total_scan_nodes += scan_nodes;
@@ -699,6 +834,8 @@ class Runner {
         number("update_p95_us", percentile(update_times, .95)); number("update_p99_us", percentile(update_times, .99));
         number("query_total_us", query_total); number("update_total_us", update_total);
         number("total_workload_us", query_total + update_total); number("gt_total_us", gt_total);
+        text("gt_mode", args.gt_in.empty() ? "inline" : "precomputed");
+        number("gt_distance_calls", gt_distance_calls);
         number("compaction_total_us", totals.compact_us); number("compaction_count", totals.compactions);
         for (size_t i = 0; i < 3; ++i) {
             const std::string prefix = maintenance_names[i];
@@ -808,7 +945,7 @@ public:
         if (!qout || !uout) fail("cannot open CSV outputs");
         qout << std::setprecision(12);
         uout << std::setprecision(12);
-        qout << "event,version,query_index,qidx,recursive,anchor,anchor_depth,scope_card,eligible_card,dir_us,search_us,e2e_us,gt_us,gt_count,hit_count,recall,distance_calls,ann_hops,local_indexes,valid_count,invalid_count,duplicate_count,gt_ids,result_ids,fanout,scan_nodes\n";
+        qout << query_columns << ",gt_distance_calls\n";
         uout << "event,version,op,latency_us,affected_items,affected_nodes,metadata_writes,ann_insertions,ann_deletions,compaction_us,compaction_count,path_key_bytes_written";
         for (const char* name : maintenance_names)
             uout << ',' << name << "_us," << name << "_count," << name << "_ann_insertions";
@@ -829,6 +966,7 @@ public:
             }
             while (std::getline(trace, line))
                 if (line.find_first_not_of(" \t\r") != std::string::npos) fail("extra trace event after declared count");
+            if (!args.gt_in.empty()) gt_tape.finish(args.gt_in);
             summary(true);
         } catch (const std::exception& e) {
             std::string context = "event " + std::to_string(current) + ": " + e.what();
