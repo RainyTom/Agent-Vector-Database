@@ -35,3 +35,12 @@
 - 待补：VA-file原文、range-min/successor/wavelet/bitmap条件极值数据结构、dense-to-sparse覆盖与signed/un-normalized L2转换、条件证书的属性更新复杂度。没有搜索到同名方案不是不存在证明。
 - 详证：[新机制判断](2026-10-29-exps/pruning-index-directions.md)、[前序对照](2026-10-29-exps/pruning-prior-art-2026-10-29.md)。本轮只运行合成逻辑smoke，无新ANN矩阵。
 
+
+## 2026-10-30 条件证书直接前序与真实信息诊断
+
+- 延续先查总库和关系的流程，直接join回溯L2AP，再核读BSI算术、Boolean potential-answer extrema、wavelet range quantile/next-value/交集、dynamic sequence rank/select。正文六篇已归档：L2AP在vector-join，BSI/论文/sequence/wavelet在data-indexing，Seismic在sparse-vector-search；不把所有组件归为filtered ANN。
+- L2AP DOI现由正式书目交叉核为10.1109/ICDE.2014.6816700；BSI两DOI别名对应同一work。Navarro/Nekrich分析的是arXiv v2/SODA2013，2014同名期刊映射仍单列而非强行合并。新增BioVSS日期化正文审读，保留尺度、同成员绑定及版本歧义。
+- 直接前序否定“共享排序+F极值”或“部分倒排+残差”本身为新机制；普通wavelet区间复杂度不能直接套任意Boolean F。BSI/range前序不代表所有联合条件证书都已解决。
+- 先冻结[协议](2026-10-30-exps/conditional-geometry-protocol.md)，后跑真实WIKI11869/SIFT12000、各8query的K/basis/F诊断。9216记录不是9216独立query。SIFT有条件信息但WIKI独立坐标界弱；当前取得成本和新颖性未过门，不进入C++新索引。
+- run1计时漏普通比较的失败保留；run2修正并完整重跑，信息/非时间工作量逐项相同。没有新ANN性能或动态更新实验。见[报告](2026-10-30-exps/report.md)、[复现](2026-10-30-exps/experiments/reproduction.md)。
+- 仍待核：VA-file原始正文、任意F与多顺序条件查询的更广前序、共享联合证书是否能填补WIKI真实块距离oracle与独立轴界鸿沟；不声称穷尽文献或已发明该结构。

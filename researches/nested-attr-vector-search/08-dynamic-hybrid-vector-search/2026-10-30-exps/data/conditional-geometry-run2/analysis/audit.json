@@ -1,0 +1,10 @@
+{
+  "queries": 9216,
+  "certificates": 192,
+  "indexed_costs": 384,
+  "eligible_below_k_rows": 0,
+  "false_pruned_blocks": 0,
+  "interpretation": "Pruning denominators exclude scope_only and eligible<k; empties never count as geometric pruning. Byte ratio is a logical access model, not actual DRAM traffic or runtime speedup.",
+  "reference_query_rows_identical": 9216,
+  "reference_indexed_nontime_rows_identical": 384
+}

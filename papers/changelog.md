@@ -175,3 +175,12 @@
 - [新机制审查](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)核对L2AP、Seismic、MUVERA、Curator、FINGER、FCVI和iFVS。未为未完整归档工作伪造总库条目或作者继承关系。
 - 用户停止默认维护主线；服务器改为先设计表示/条件几何证书，再做小型判别。已运行合成代数smoke，未运行真实ANN性能实验。
 
+
+## 2026-10-30 条件几何证书的信息门与经典直接前序
+
+- 新增BSI算术、Rinfret学位论文、wavelet条件查询、动态sequence、L2AP、Seismic共6条记录；新增data-indexing/sparse-vector-search主题，L2AP按自身threshold self-join问题归vector-join。共36条论文/学位记录、31条关系。
+- 完整作者、正式年份/预印本、已核DOI与版本分开。动态sequence读SODA2013对应arXiv v2；同题2014期刊书目保留待比对，不按标题强合并。BSI会议/Record双DOI只收一项。保存reader文本及文本SHA，原PDF SHA未取得不填造。
+- 4条新关系均researcher_synthesis，不捏造BioVSS/Seismic引用L2AP或BSI引用Curator。BioVSS新增日期化尺度/成员绑定审读，不覆盖旧报告。
+- [机制门](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/mechanism-assessment.md)：条件extrema/gap有BSI/wavelet直接解释，普通稀疏残差覆盖已有L2AP；不据此宣称新索引。
+- [实际小型信息诊断](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md)：WIKI64维无额外非空剪枝；SIFT有条件界增益但同基数打乱控制不更差，当前排序探测取得成本高；未实现在线索引、无新ANN性能胜出或动态维护结果。
+- VA-file原始扫描正文缺口仍未关闭，range-searching综述只作背景。旧文引用的tools/research_index.py在当前checkout不存在，本轮不伪称运行该工具。

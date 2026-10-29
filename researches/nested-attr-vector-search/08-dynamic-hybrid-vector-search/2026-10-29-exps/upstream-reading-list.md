@@ -8,6 +8,8 @@
 
 **用户最新纠偏：索引机制优先。** 上述维护任务书已暂停默认执行；当前入口是[新索引服务器提示词](index-mechanism-server-prompt.md)，依据为[条件化剪枝与稀疏表示候选](pruning-index-directions.md)。BioVSS原文机制与L2AP/Seismic等重合已核，不能把延迟迁移或普通稀疏倒排当新索引贡献。
 
+**2026-10-30服务器实测交付**：[当日报告及图](../2026-10-30-exps/report.md) → [至多两候选/前序/证明/成本](../2026-10-30-exps/mechanism-assessment.md) → [事前协议](../2026-10-30-exps/conditional-geometry-protocol.md) → [真实复现/计时修正](../2026-10-30-exps/experiments/reproduction.md) → [完整run2数据](../2026-10-30-exps/data/conditional-geometry-run2/)。SIFT经典条件界有信息，WIKI独立坐标界失败；取得成本和新颖性未通过，不构造“新索引赢了”结论。下列历史清单仍供回源，不替代此最新机制门结果。
+
 
 
 ## P0：必须先读

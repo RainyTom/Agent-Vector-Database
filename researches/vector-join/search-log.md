@@ -234,3 +234,10 @@
 
 直接join检索回溯到L2AP的部分倒排覆盖与prefix L2界，它是避免重复提出“残差范数剪枝”的重要A类前序；本轮未完整归档其书目和全文，作为待办保留。新增BioVSS属于B类vector-set检索表示借鉴，非join；正式ICDE2025、扩展稿分析与总库记录分开。见[机制审查](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)。未把本轮合成证书smoke当作向量连接性能结果。
 
+
+## 2026-10-30 L2AP归档与条件证书边界
+
+- 上轮待办L2AP已核正式ICDE2014书目/DOI10.1109/ICDE.2014.6816700，并保存作者全文及prefix-L2/部分倒排/coverage机制证据。属于A类cosine阈值self-join前序，不是当前filtered top-k系统。
+- 同轮归档Seismic、BSI、wavelet、dynamic sequence与Rinfret论文；后四按data-indexing自身问题存放，只有明确条件极值/共享表示迁移价值，不改称向量join。BioVSS日期审读保存，不与L2AP的语义和保证混淆。
+- [当前真实WIKI/SIFT条件界诊断](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md)只研究filtered-query信息与取得工作，不是join实验，也未形成新ANN胜出证据。WIKI的独立坐标失败不能推广为所有多维剪枝无效。
+- 当前总库36条/关系31条已做JSONL、主键、端点和六份新原文SHA审计；新边是researcher_synthesis，非伪造作者引用。VA-file全文和任意F联合证书查重仍待补。
