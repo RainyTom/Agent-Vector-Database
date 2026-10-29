@@ -22,7 +22,7 @@
 
 | 结果 | 对照对象 | 数字 | 证据 |
 |---|---|---|---|
-| **B1 > B0**（同后端、同 recall=1.0） | 自建 NodeANN 基线 | SIFT 六变体 1.2–2.8× 延迟、10–34× RSS、2.8–6.1× 构建 | 01 方向 [report](../01-directory-aware-acceleration/2026-10-29-exps/report.md) |
+| **B1 > B0**（同后端、同 recall=1.0） | 自建 NodeANN 基线 | SIFT 六变体 1.2–2.8× 延迟、10–34× RSS、2.8–6.1× 构建 | 01 方向 [report](../../01-directory-aware-acceleration/2026-10-29-exps/report.md) |
 | **B0 在 WIKI 结构性不可行** | 自建基线 | hnswlib 每索引 65,536 把锁 ≈2.6 MB × 363,467 节点 ≈ 950 GiB；40 GiB 上限下 18/18 SIGKILL | 同上 |
 | **插入优先 ≫ 删除优先** | 替代移动协议 | 异常窗口 1.5 µs vs 190 µs（热点 16 µs vs 967 µs） | 本文 §5 |
 | **压实 > 不压实（延迟）** | 纯墓碑 | 44% 死条目时延迟 79.3 → 47.9 µs（回到 +11%） | [report](report.md) |
