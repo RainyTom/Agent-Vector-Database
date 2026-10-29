@@ -14,8 +14,8 @@
 |---|---|---|
 | 1 文献与基线对齐 | [基线复述](2026-10-29-exps/baselines.md)、[文献核查](2026-10-29-exps/stage1-literature.md)、[检索日志](search-log.md) | **完成**（2026-10-29，67 篇/族） |
 | 2 候选方向 ≥5 + 排序 | [候选表](2026-10-29-exps/stage2-candidates.md)、[当日报告](2026-10-29-exps/report.md) | **完成**：主线 C1 层级联邦路由+不等预算，辅线 C3 层级更新协议 |
-| 3 形式化 + 伪代码 + 可证伪假设 | C1 已被门禁实验否证（[report.md](2026-10-29-exps/report.md)）；形式化目标转向可回收摘要 + 一致视图 | 待启动 |
-| 4 小数据原型 | 待定 | 未开始 |
+| 3 形式化 | [stage3-formalization.md](2026-10-29-exps/stage3-formalization.md)（局部索引 churn：T/C/R 三策略、成本模型、4 条预测与结果） | **完成**（P1 被否证） |
+| 4 原型 | `churn_probe.cpp`：WIKI + SIFT D4bal + D6skew 三数据集 × T/C 臂 × ef∈{8,16,64}；召回不降、延迟 1.8–2.6×、压实 ≈2× 维护成本、α*≈0.6–0.8 | **完成**（[report.md](2026-10-29-exps/report.md)） |
 | 5 单变量实验 | 待定 | 未开始 |
 
 ## 硬约束（继承）
