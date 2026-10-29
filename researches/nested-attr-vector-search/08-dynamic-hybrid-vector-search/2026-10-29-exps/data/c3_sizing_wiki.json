@@ -1,0 +1,58 @@
+{
+  "tree_nodes": 468031,
+  "nonempty_nodes": 363467,
+  "items_total": 1941679,
+  "seed": 20261026,
+  "measurement_limits": [
+    "real WIKI fixture stores node ids without names: MERGE 'same relative name' conflicts cannot be detected; conflict frequency is a workload parameter, conflict *size* is measured here",
+    "local ANN re-parent cost for MOVE is 0 by construction (index object moves with the node); renumbering of Euler/interval codes is O(subtree nodes)"
+  ],
+  "move": {
+    "n": 1000,
+    "nodes": {
+      "median": 3598.0,
+      "mean": 47010.025,
+      "p90": 170073.0,
+      "max": 175442.0,
+      "sum": 47010025.0
+    },
+    "items": {
+      "median": 21252.0,
+      "mean": 248812.34,
+      "p90": 903443.0,
+      "max": 925829.0,
+      "sum": 248812340.0
+    },
+    "local_items": {
+      "median": 2.0,
+      "mean": 44.248,
+      "p90": 35.0,
+      "max": 11097.0,
+      "sum": 44248.0
+    }
+  },
+  "conflict_size": {
+    "n": 1000,
+    "a_local": {
+      "median": 2.0,
+      "mean": 44.248,
+      "p90": 35.0,
+      "max": 11097.0,
+      "sum": 44248.0
+    },
+    "b_local": {
+      "median": 1.0,
+      "mean": 3.378,
+      "p90": 7.100000000000023,
+      "max": 76.0,
+      "sum": 3378.0
+    },
+    "merged_items": {
+      "median": 6.0,
+      "mean": 47.626,
+      "p90": 38.0,
+      "max": 11101.0,
+      "sum": 47626.0
+    }
+  }
+}
