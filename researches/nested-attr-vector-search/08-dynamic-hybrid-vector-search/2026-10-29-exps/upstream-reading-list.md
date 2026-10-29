@@ -4,6 +4,8 @@
 
 **独立复核入口（本轮新增）**：[事实/基线/候选排序/最小实验/论文门槛](independent-review.md)、[原文机制与新颖性证据](literature-mechanisms-review.md)、[162次离线重算及源SHA](data/independent-review-audit-20261029.json)。先完整阅读下列原交接，再对照复核；后者没有新增ANN性能数据，也不把历史方案推荐视为用户批准。
 
+**交付实验服务器**：[最终执行提示词](experiment-server-prompt.md)。按用户后续决策，以NodeANN为主基线、限制基线优化和实现规模；逻辑归属/物理驻留解耦是待判别的新候选，不覆盖历史实验结论，也不代表已验证的新颖方案。
+
 
 ## P0：必须先读
 
