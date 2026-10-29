@@ -16,7 +16,8 @@
 | 2 候选方向 ≥5 + 排序 | [候选表](2026-10-29-exps/stage2-candidates.md)、[当日报告](2026-10-29-exps/report.md) | **完成**：主线 C1 层级联邦路由+不等预算，辅线 C3 层级更新协议 |
 | 3 形式化 | [stage3-formalization.md](2026-10-29-exps/stage3-formalization.md)（局部索引 churn：T/C/R 三策略、成本模型、4 条预测与结果） | **完成**（P1 被否证） |
 | 4 原型 | `churn_probe.cpp`：WIKI + SIFT D4bal + D6skew 三数据集 × T/C 臂 × ef∈{8,16,64}；召回不降、延迟 1.8–2.6×、压实 ≈2× 维护成本、α*≈0.6–0.8 | **完成**（[report.md](2026-10-29-exps/report.md)） |
-| 5 单变量实验 | 待定 | 未开始 |
+| 5 单变量实验 | 线 1 并发一致性（[report.md](2026-10-29-exps/report.md)，`churn_concurrent.cpp`）；线 2 可回收摘要（`summary_reclaim_probe.py`） | **完成**：三处"显然的修复"被实测缩小/否证 |
+| 6 合并实验 | 端到端 churn：局部索引 + 并发窗口 + 摘要退化合成一条曲线 | 下一步 |
 
 ## 硬约束（继承）
 
