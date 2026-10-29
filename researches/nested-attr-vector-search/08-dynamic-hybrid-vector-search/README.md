@@ -6,6 +6,8 @@
 
 [**scheme-status.md**](2026-10-29-exps/scheme-status.md)：正式两遍GT完成162运行；原始WIKI子树root3626存在Q/U排序交叉，root410/root828在已测范围无交叉。旧420次及早期原树inline计时已降为诊断，失败与操作计数保留。见 [原树/GT协议](2026-10-29-exps/wiki-topology-protocol.md) 与 [报告及正式图§6.5起](2026-10-29-exps/report.md)；不宣称新索引优于公开作者实现。
 
+交给其他模型请先读 [**上游AI阅读清单**](2026-10-29-exps/upstream-reading-list.md) 与 [**完整研究交接**](2026-10-29-exps/research-handoff.md)：覆盖01–08路线、所有主要实验家族/失败/未实现候选，并新增旧报告数字、剪枝单位和静态计数的勘误，不能只沿用旧“方向已关闭”判词。
+
 ## 与既有方向的关系
 
 - **01-directory-aware-acceleration**：静态 DSQ 的 NodeANN-first 加速（hnswlib 后端、B0/B1/B3 基线、D1–D6 判决），数据/工具/测量纪律全部复用。

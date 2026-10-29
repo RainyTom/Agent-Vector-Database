@@ -69,3 +69,9 @@ hnswlib 65,536把锁 ×40B ×363,467局部图约952.8GB（十进制）/887.4GiB�
 - **边界**：约50%唯一ITEM覆盖、纯ITEM移动、一个seed、456查询向量池；并非全量WIKI/SIFT1M、并发/物理磁盘结论。balanced只改变父子关系，wide/narrow的候选集合随之变化。时间为非隔离多进程服务时间，构建/GT另列。
 
 正式图与完整指标见 [报告末尾§6.5起](report.md)、[原树协议](wiki-topology-protocol.md)、[复现与build SHA](experiments/wiki-topology-reproduction.md)。下一轮唯一优先项：统一强化三臂的过滤HNSW停止机制、计入候选计数成本后，检查维护交叉是否仍成立；不切换大scope精确扫描，不默认该机制有新颖性。
+
+## 交接追加审计
+
+完整盘点与证据地图见 [research-handoff.md](research-handoff.md)，外部模型入口见 [upstream-reading-list.md](upstream-reading-list.md)。下一步由上游模型独立判断，不将上一节“唯一优先项”当作用户已批准的新路线。
+
+本次回源发现：大scope质心GT依赖前缀ITEM节省中位50.50%而非旧文0%；旧块球probe混用欧氏下界与平方tau；静态runner的HNSW计数漏底层、B1不全面快于B3；静态77.9ms尾部数值与汇总不自洽、待核原run。动态runner显式开启底层计数并用CountedL2，不能把静态计数缺口套到正式动态162次。详细适用范围、旧T/C总数等勘误在完整交接§0/6–8中；原始数据不覆盖，本次未运行新ANN实验。

@@ -1,5 +1,7 @@
 # 2026-10-29：NodeANN-first 与 hnswlib 公平性重置
 
+> **2026-10-29交接勘误追加**：本页的“B1全面快于B3”、完整距离计数以及大scope“77.9ms/91%”不能直接继承。CSV存在B1慢于B3的clean点，`frontier_agg_clean.csv`混合pass1/clean来源；静态HNSW计数漏level0；尾部数字须核对原run/分母，本次未给出替代值。详见 [完整研究交接§0/7](../../08-dynamic-hybrid-vector-search/2026-10-29-exps/research-handoff.md)。这不自动撤回延迟/RSS观测，也不适用于已显式开启底层计数的动态runner。
+
 ## 当日目标
 
 根据审核意见，撤销“直接从 FAISS 全局图 + HLG 开始”的执行顺序，先在统一 hnswlib 后端下重建 NodeANN，测清其缺陷，再决定局部搜索、跨节点调度、量化或共享图的下一步。
