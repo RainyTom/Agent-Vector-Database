@@ -536,3 +536,17 @@ root828的native/balanced × 三ratio × 三臂 × 三重复，**54次两遍GT�
 6. **实际发现/负证据**：质心前缀节省分组混淆（大scope实际50.50%）；旧球剪枝欧氏lb与平方tau单位不一致；静态HNSW计数漏底层；clean CSV不支持B1全面快于B3；静态77.9ms尾部数值待原run复核。动态底层计量已显式开启，不受相同静态缺口影响。旧C臂维护总数、摘要rho混组等详见交接。
 7. **结论支持范围**：保留正式动态维护取舍，不升级为公开基线新索引胜出；修正“路由/剪枝/MVCC整个方向已否证”等过强推断。此次是证据整理，不是修正后重新实测。
 8. **下一问题**：由上游模型判断应先修哪些证据、补哪些强基线、保留/暂停/重启哪些路线，以及最少的可证伪实验；不要求接受此前“先改停止条件”的推荐。
+
+# 独立复核续记：证据、前序与下一轮判别（无新ANN性能实验）
+
+- **目标**：完整读取交接594行及P0/P1/P2清单，独立判断事实、强基线、候选排序、最小实验与论文门槛；不继承既定路线。
+- **设置/实际执行**：在`d6025f4`交接基础上核对源码、协议、正式small/scale的162个run summary和历史JSON/CSV；运行`python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/experiments/review_handoff_audit.py`。无新ANN运行、无算法修改。
+- **结果数字**：721656次Q、1950426次U；最低macro/pair recall=0.99958677686/0.999226006192；benchmark GT距离0；质量/维护分项/服务加和核查错误0。初建加单窗口后54个配对组全A最低；root3626 native低Q/U的A/B/C为3.1692/6.5938/6.8387s，稳态则1.9437/.4145/.3634s，两种成本目标分开。
+- **新增计量边界**：更新字段解析/校验在timer内，query字段解析在外；query临时集合析构未计入e2e。未量化遗漏，不据此改写胜负。两遍GT仍有计时外元数据审计/I/O干扰。
+- **历史勘误收紧**：保存球probe的tau=.940055<1；对同一摘要，修正为sqrt(tau)只提高阈值，故仍零剪枝，这是推导不是重跑。D5的77.9ms/91%无对应原run，暂撤数，不造替代值。
+- **文献**：核对TrieHI、ELI、PathSeer及ACORN/Curator/iRangeGraph/Filtered-DiskANN、Quake/VADER/EMA相关原文机制；不宣称67篇全文精读。TrieHI已定义MOVE/MERGE，Curator已有回收摘要和复杂布尔临时索引，Quake已有动态分区预算；“新问题/高置信空白”须降级。
+- **结论**：现结果支持固定维护策略实测，不支持新索引SOTA。C1/C2仅有界重启判别，C3保留窄维护问题；C7作强对照，其他路线按未实现/缺陷/有效负结果分别处理。
+- **局限/下一步**：原始逐事件CSV、tape和原始静态D5 run在本checkout不可达，不能称完整重放；E1基线解耦、E2真实计费路由、E3生命周期维护均未执行。全部预测、失败判据、同质量/完整成本合同见[独立复核](independent-review.md)，文献详证见[机制审计](literature-mechanisms-review.md)，机器结果见[data/independent-review-audit-20261029.json](data/independent-review-audit-20261029.json)。
+
+- **离线脚本扩展核查**：历史screening/crossover/move-crossover/pilot分别126/234/54/6次，共420次，summary质量失败数均0；保留inline-GT诊断口径，不与正式两遍计时拼接。单query球剪枝阈值单调性亦已由保存JSON计算确认（sqrt(tau)=0.9695644031791965），仍明确为推导，未重新运行剪枝器。
+

@@ -159,3 +159,11 @@
 - 同日按问题范围修订：将单父文件目录树背景改为共享虚拟目录 DAG，补四种精确基线与逻辑对象去重语义；旧树定义不再适用，原 D1 动态维护方案仍为独立历史方向。
 - 同日再次修订：文件夹快捷方式仍未摆脱文件目录背景，当前 Problem Formulation 改为多维商品目录的跨平台商品连接；基线更新为五种，前两版文件目录定义只作历史记录。
 - 同日层级语义修正：普通 facet 的约束细化不足以构成品类层级；当前定义明确为“品类树 × 属性 facet”，并将五种基线统一到品类祖先可比、属性兼容和 L2 阈值三重条件。
+
+## 2026-10-29 动态层级检索交接的独立机制复核
+
+- 完整读交接与P0/P1/P2清单，新增[独立判断](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/independent-review.md)、[原文机制审计](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/literature-mechanisms-review.md)及可复现的162次summary离线审计；没有新ANN性能实验。
+- 修订ACORN、iRangeGraph、Curator、VADER、ELI、Filtered-DiskANN、TrieHI、PathSeer共8条既有记录的项目启发与日期化证据；保留旧快照及正式稿/预印本差异待办。总论文29条，关系27条不变。
+- 撤回“层级MOVE无人研究/首次可回收摘要/动态预算基本空白”等泛化结论；区分新颖机制、正确实现、强对照与维护策略实测。Filtered-DiskANN原始剪枝为共同标签交集，不沿用EMA相关工作中的并集误述。
+- Quake正式OSDI稿与EMA预印本相关章节进入方向机制证据和待入库日志，未伪造完整归档/全文通读状态；本轮未新增引用或继承关系，既有关系索引保持不变。
+

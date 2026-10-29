@@ -14,3 +14,14 @@
 2. UniFilter（PACMMOD 3(6)'25）全文；Hierarchical BM25、Semord 全文。
 3. LSH Ensemble / set containment join × ANN 的结合（G6 的相邻领域）。
 4. "RFD" 任务书术语未定位到标准文献（按 RRF + sample-based 覆盖该语义）。
+
+## 2026-10-29 独立交接审计与前沿机制复核
+
+先查`papers/papers.jsonl`、`relations.jsonl`、现有全文/研究笔记及完整交接。先检索`vector similarity join hierarchical`、`vector join attribute`、`inner-product similarity join`，再查`PathSeer Adaptive Neighbor 2026`、`vector search subtree maintenance taxonomy reparenting`、`vector search adaptive partition Quake`；直接join首轮为范围核对，未完成全部同义词和引用闭包。本任务属于B类单查询filtered ANN，不是几何vector join。
+
+原始来源：TrieHI arXiv、ELI正式PVLDB全文、Quake OSDI正式稿；ACORN/Curator/iRangeGraph/Filtered-DiskANN核本地原文与Crossref；PathSeer ACM403，使用已有正式PDF镜像文本；VADER v2与EMA v1为预印本，正式发表状态不推断。所读章节及链接见[机制审计](2026-10-29-exps/literature-mechanisms-review.md)、[独立判断](2026-10-29-exps/independent-review.md)。
+
+纠正旧检索断言：TrieHI已有MOVE/MERGE，Curator已有Bloom删除重算、复杂布尔临时索引/缓存；Quake已有动态多层预算，VADER已有filter-aware召回预测。没有“更复杂图才能创新”或“没查到即空白”的结论。新增Quake/EMA的章节证据保存在机制审计，不因尚未完成统一主题归档、全书目/版本/实验字段就补造完整论文记录；作为重点候选待入总库。
+
+范围缺口：sample-ANN路由的完整引用链、taxonomy relabeling/subtree migration同义词、工业多库路由、MVCC二级索引、reverse-containment专用加速及SeRF/UNG/FreshDiskANN本轮独立正文复核仍待补。没有执行作者实现或新的ANN性能矩阵。
+

@@ -2,6 +2,9 @@
 
 日期：2026-10-29。三个并行检索线（动态/可更新 ANN、多属性混合过滤、联邦/分片搜索），每篇核实标题/作者/年份/venue；未核实项显式标注。完整清单见各线记录；本文是综合与空白判定。
 
+> **2026-10-29独立复核覆盖提示**：下文为历史检索快照，不能继续引用“高置信空白/唯一/无任何工作”的结论。TrieHI明确已有DSQ/DSM与MOVE/MERGE；Curator有复杂布尔virtual-label索引、Bloom删除重算和热点缓存；Quake有动态多层分区及逐查询分区预算，VADER有filter-aware召回预测停止。§4球剪枝单位错误且只一个query，B1也不全面快于exact。详见[独立判断](independent-review.md)与[逐篇原文机制审计](literature-mechanisms-review.md)。保留原文便于追溯，不将其当本轮查重认证。
+
+
 ## 1. 核查中解决的事实矛盾
 
 1. **Filtered-DiskANN 无更新协议**：原文 §5.4.4 仅定性论证 FilteredVamana 更适合插入，动态删除明确留 future work。EMA Table 1 的 "Dynamic=✓" 不成立，MCI Table 1 的 "Upd.=✗" 接近事实。此前本地记录的两表矛盾就此结案。

@@ -1,0 +1,991 @@
+{
+  "kind": "offline audit of committed summaries, not new ANN measurements",
+  "sources": [
+    {
+      "path": "data/dynamic_triad/wiki-topology/tape-main-ef1024/results.json",
+      "sha256": "ba446a98ee2d1cab1b3d1d987ccbf6bddb48518469091a0bf09d74b29cb513a8",
+      "runs": 108
+    },
+    {
+      "path": "data/dynamic_triad/wiki-topology/scale/tape-main-ef1024/results.json",
+      "sha256": "b3caf7f7be24a98d771f2a5363087975b6a6d2d110a4ad142a6be197f181badd",
+      "runs": 54
+    }
+  ],
+  "runs": 162,
+  "query_executions": 721656,
+  "update_executions": 1950426,
+  "min_macro_recall": 0.99958677686,
+  "min_pair_recall": 0.999226006192,
+  "benchmark_gt_distance_calls": 0,
+  "errors": [],
+  "points": [
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 0.016310010666666666,
+      "build_s": 0.0008154303333333333,
+      "cold_one_window_s": 0.017125440999999998,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 0.41029027933333334,
+      "build_s": 6.825821046,
+      "cold_one_window_s": 7.236111325333333,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 0.4057192766666667,
+      "build_s": 7.117888196333333,
+      "cold_one_window_s": 7.523607473,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 0.158844178,
+      "build_s": 0.000719715,
+      "cold_one_window_s": 0.15956389299999998,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 3.7974919899999997,
+      "build_s": 6.895402022,
+      "cold_one_window_s": 10.692894012,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 3.4810806383333333,
+      "build_s": 7.237639313333333,
+      "cold_one_window_s": 10.718719951666667,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 1.6144273583333333,
+      "build_s": 0.0007488456666666667,
+      "cold_one_window_s": 1.615176204,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 37.74496686766667,
+      "build_s": 6.307136831333334,
+      "cold_one_window_s": 44.052103699,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 33.77121043866667,
+      "build_s": 6.694951355,
+      "cold_one_window_s": 40.46616179366667,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 0.016899806666666666,
+      "build_s": 0.0007514206666666667,
+      "cold_one_window_s": 0.01765122733333333,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 0.42312277266666665,
+      "build_s": 6.897284403333333,
+      "cold_one_window_s": 7.320407176,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 0.386520484,
+      "build_s": 7.172765731,
+      "cold_one_window_s": 7.559286215,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 0.15841847133333334,
+      "build_s": 0.0007842953333333333,
+      "cold_one_window_s": 0.15920276666666666,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 3.774770686666667,
+      "build_s": 7.0519281603333335,
+      "cold_one_window_s": 10.826698847,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 3.5017529446666664,
+      "build_s": 7.022341837666667,
+      "cold_one_window_s": 10.524094782333334,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 1.7752684363333333,
+      "build_s": 0.0009574216666666666,
+      "cold_one_window_s": 1.7762258579999999,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 37.844468214,
+      "build_s": 6.377562855,
+      "cold_one_window_s": 44.222031069,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 410,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 34.96475912766667,
+      "build_s": 6.8317226123333334,
+      "cold_one_window_s": 41.79648174,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 2.996980151333333,
+      "build_s": 1.8306877636666667,
+      "cold_one_window_s": 4.827667915,
+      "tombstone_fraction_of_updates": 0.979834264135214
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 7.339162668666667,
+      "build_s": 47.36165425166667,
+      "cold_one_window_s": 54.70081692033334,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 6.753582925666667,
+      "build_s": 48.64351499233333,
+      "cold_one_window_s": 55.397097918,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 8.485661619333333,
+      "build_s": 1.841497552,
+      "cold_one_window_s": 10.327159171333333,
+      "tombstone_fraction_of_updates": 0.9758932272542213
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 72.03948160366667,
+      "build_s": 45.835401447,
+      "cold_one_window_s": 117.87488305066667,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 66.01641129066667,
+      "build_s": 48.038369773333336,
+      "cold_one_window_s": 114.054781064,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 62.457003852,
+      "build_s": 1.8552400243333333,
+      "cold_one_window_s": 64.31224387633334,
+      "tombstone_fraction_of_updates": 0.966131272181261
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 723.792525435,
+      "build_s": 42.770919179,
+      "cold_one_window_s": 766.563444614,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 656.442491033,
+      "build_s": 44.883318215,
+      "cold_one_window_s": 701.325809248,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 3.0149546526666664,
+      "build_s": 1.8356641783333334,
+      "cold_one_window_s": 4.850618831,
+      "tombstone_fraction_of_updates": 0.9797447478819925
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 7.408880801333333,
+      "build_s": 46.903259205,
+      "cold_one_window_s": 54.31214000633333,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 6.732897944333334,
+      "build_s": 48.72095207,
+      "cold_one_window_s": 55.453850014333334,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 8.839085476666666,
+      "build_s": 1.8174249826666666,
+      "cold_one_window_s": 10.656510459333333,
+      "tombstone_fraction_of_updates": 0.9757754791052631
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 72.37613295933333,
+      "build_s": 45.483584261,
+      "cold_one_window_s": 117.85971722033332,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 66.30062647,
+      "build_s": 47.76270220333333,
+      "cold_one_window_s": 114.06332867333333,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 64.25798131766666,
+      "build_s": 1.8360033946666667,
+      "cold_one_window_s": 66.09398471233334,
+      "tombstone_fraction_of_updates": 0.96647945681782
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 728.6458140146666,
+      "build_s": 42.29833162133333,
+      "cold_one_window_s": 770.9441456359999,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 828,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 657.123365735,
+      "build_s": 44.28242105766667,
+      "cold_one_window_s": 701.4057867926667,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 1.8898765873333334,
+      "build_s": 1.268663439,
+      "cold_one_window_s": 3.1585400263333336,
+      "tombstone_fraction_of_updates": 0.9789265548692264
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 0.42524449799999997,
+      "build_s": 6.373319722,
+      "cold_one_window_s": 6.79856422,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 0.01,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 0.36204064433333333,
+      "build_s": 6.492992334666667,
+      "cold_one_window_s": 6.855032979000001,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 2.3237572963333335,
+      "build_s": 1.198577662,
+      "cold_one_window_s": 3.5223349583333334,
+      "tombstone_fraction_of_updates": 0.9769430750583179
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 3.8048539946666664,
+      "build_s": 6.167332044666667,
+      "cold_one_window_s": 9.972186039333334,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 0.1,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 3.369346557,
+      "build_s": 6.549721408666667,
+      "cold_one_window_s": 9.919067965666667,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 5.9929061159999995,
+      "build_s": 1.2421935656666667,
+      "cold_one_window_s": 7.235099681666666,
+      "tombstone_fraction_of_updates": 0.9731196947027605
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 36.280181298,
+      "build_s": 5.769346083333334,
+      "cold_one_window_s": 42.049527381333334,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "balanced",
+      "nominal_q_u": 1.0,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 33.36226791,
+      "build_s": 6.235873884,
+      "cold_one_window_s": 39.598141794,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 1.94372648,
+      "build_s": 1.225491926,
+      "cold_one_window_s": 3.169218406,
+      "tombstone_fraction_of_updates": 0.9778288824466824
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 0.41448723733333337,
+      "build_s": 6.179303021333333,
+      "cold_one_window_s": 6.593790258666667,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 0.01,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 0.3634257066666666,
+      "build_s": 6.475261637,
+      "cold_one_window_s": 6.838687343666667,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 2.283509859,
+      "build_s": 1.2648126166666667,
+      "cold_one_window_s": 3.5483224756666667,
+      "tombstone_fraction_of_updates": 0.9773388890157344
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 3.8220371070000003,
+      "build_s": 6.233170237333334,
+      "cold_one_window_s": 10.055207344333333,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 0.1,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 3.506591913333333,
+      "build_s": 6.454458881666667,
+      "cold_one_window_s": 9.961050795,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "A",
+      "repeats": 3,
+      "service_s": 5.800096621,
+      "build_s": 1.241467535,
+      "cold_one_window_s": 7.041564156,
+      "tombstone_fraction_of_updates": 0.9744199333595019
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "B",
+      "repeats": 3,
+      "service_s": 36.63347759133333,
+      "build_s": 5.900978418666667,
+      "cold_one_window_s": 42.53445601,
+      "tombstone_fraction_of_updates": 0.0
+    },
+    {
+      "root": 3626,
+      "topology": "native",
+      "nominal_q_u": 1.0,
+      "arm": "C",
+      "repeats": 3,
+      "service_s": 35.90662630633334,
+      "build_s": 6.3040730363333335,
+      "cold_one_window_s": 42.21069934266667,
+      "tombstone_fraction_of_updates": 0.0
+    }
+  ],
+  "paired_winners": [
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu0p01",
+      "repeat": 1,
+      "service_winner": "C",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu0p01",
+      "repeat": 2,
+      "service_winner": "C",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu0p01",
+      "repeat": 3,
+      "service_winner": "C",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu0p1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu0p1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu0p1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-balanced-item_move-r0p5-qu1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu0p01",
+      "repeat": 1,
+      "service_winner": "C",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu0p01",
+      "repeat": 2,
+      "service_winner": "C",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu0p01",
+      "repeat": 3,
+      "service_winner": "C",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu0p1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu0p1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu0p1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root3626-native-item_move-r0p5-qu1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu0p01",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu0p01",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu0p01",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu0p1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu0p1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu0p1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-balanced-item_move-r0p5-qu1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu0p01",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu0p01",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu0p01",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu0p1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu0p1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu0p1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root410-native-item_move-r0p5-qu1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu0p01",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu0p01",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu0p01",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu0p1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu0p1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu0p1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-balanced-item_move-r0p5-qu1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu0p01",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu0p01",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu0p01",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu0p1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu0p1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu0p1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu1",
+      "repeat": 1,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu1",
+      "repeat": 2,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    },
+    {
+      "config": "wiki-root828-native-item_move-r0p5-qu1",
+      "repeat": 3,
+      "service_winner": "A",
+      "cold_one_window_winner": "A"
+    }
+  ],
+  "historical_inline": [
+    {
+      "family": "screening",
+      "sha256": "0122d3283357d8056709029ecbc8c6344dee82f0de0baf126fe10e5d5835edbd",
+      "runs": 126,
+      "query_executions": 130152,
+      "quality_failed": 0,
+      "timing_status": "inline GT; diagnostic only"
+    },
+    {
+      "family": "crossover",
+      "sha256": "5426cb877e0c8a4190cdb80193f6b10a85e1a091ef3675ca0da424fcc49dbd11",
+      "runs": 234,
+      "query_executions": 2269152,
+      "quality_failed": 0,
+      "timing_status": "inline GT; diagnostic only"
+    },
+    {
+      "family": "move-crossover",
+      "sha256": "5aec4344e8dd4ffbd74daeb96b6d870b4eaa83db5622c8759d57932904adbf7f",
+      "runs": 54,
+      "query_executions": 119880,
+      "quality_failed": 0,
+      "timing_status": "inline GT; diagnostic only"
+    },
+    {
+      "family": "pilot",
+      "sha256": "0924a9501c1d26929a1e67ee009888900d00a81d1e8d14772ba7456298ce7612",
+      "runs": 6,
+      "query_executions": 4500,
+      "quality_failed": 0,
+      "timing_status": "inline GT; diagnostic only"
+    }
+  ],
+  "single_query_pruning_inference": {
+    "query_index": 397,
+    "squared_tau": 0.9400551319122314,
+    "correct_euclidean_tau": 0.9695644031791965,
+    "saved_zero_slack_pruning_is_zero": true,
+    "unit_correction_cannot_increase_pruning_for_same_bounds": true,
+    "kind": "monotonicity inference from saved threshold; not a rerun"
+  },
+  "limits": [
+    "Original vectors, tape and per-event CSV are not independently revalidated here.",
+    "Cold cost is arithmetic for one measured window; no stationarity or future break-even implied.",
+    "Repeated query executions are not independent query samples."
+  ]
+}

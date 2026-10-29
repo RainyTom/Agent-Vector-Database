@@ -224,3 +224,8 @@
 
 本方向的问题背景、前序核查与检索边界已统一归档到 [Directory-Aware 检索日志](../nested-attr-vector-search/01-directory-aware-acceleration/search-log.md)。单查询 scope top-k 为 B 类可迁移检索，不冒称几何 vector join；详细记录不在本索引重复维护。
 
+
+## 2026-10-29 动态层级filtered ANN独立复核
+
+本轮先核直接vector similarity join/vector join/inner-product similarity join检索，再核混合ANN机制；结论属于B类可迁移检索，不是join算法结果。详见[08方向检索日志](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)及[独立审计](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/independent-review.md)。修订8条已有论文的项目证据，不新增未经完整归档的论文条目；无新ANN实验。
+
