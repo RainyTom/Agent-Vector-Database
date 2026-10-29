@@ -5,7 +5,7 @@
 ## 当前工作
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
-- **[08 动态混合向量搜索（多属性 + 频繁更新 + 联邦视角，阶段 1–2 完成）](08-dynamic-hybrid-vector-search/README.md)**：[基线复述](08-dynamic-hybrid-vector-search/2026-10-29-exps/baselines.md)、[文献空白 G1–G7](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage1-literature.md)、[候选方向与推荐](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage2-candidates.md)
+- **[08 动态混合向量搜索（多属性 + 频繁更新 + 联邦视角，阶段 1–4 完成）](08-dynamic-hybrid-vector-search/README.md)**：[基线复述](08-dynamic-hybrid-vector-search/2026-10-29-exps/baselines.md)、[文献空白 G1–G7](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage1-literature.md)、[候选与 C1 负结果](08-dynamic-hybrid-vector-search/2026-10-29-exps/stage2-candidates.md)、[churn 原型与并发/摘要结果](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)
 
 ## 01 方向文档
 
