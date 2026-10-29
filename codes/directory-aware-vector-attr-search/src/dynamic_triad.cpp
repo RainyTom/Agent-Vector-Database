@@ -108,10 +108,19 @@ bool extra(const Item& item, const Query& q) {
     else if (q.tagmode == 4) add((item.tags & q.tags) == item.tags);
     return !any || (q.combine ? disjunction : conjunction);
 }
+constexpr const char* maintenance_names[] = {"tombstone_compaction", "threshold_build", "threshold_drop"};
+struct Maintenance {
+    uint64_t count = 0, insertions = 0;
+    double us = 0;
+};
+struct GraphStats {
+    uint64_t hnsw_nodes = 0, live = 0, dead = 0;
+};
 struct Update {
     uint64_t items = 0, nodes = 0, writes = 0, insertions = 0, deletions = 0, compactions = 0;
     uint64_t path_bytes = 0;
     double compact_us = 0;
+    Maintenance maintenance[3];
 };
 struct Local { std::unique_ptr<Graph> graph; };
 
@@ -134,6 +143,7 @@ class Runner {
     uint64_t total_fanout = 0, total_scan_nodes = 0;
     double build_s = 0, query_total = 0, update_total = 0, gt_total = 0, recall_sum = 0;
     Update totals;
+    GraphStats initial_graph_stats;
     std::vector<double> query_times, update_times;
     std::ofstream qout, uout;
 
@@ -198,12 +208,26 @@ class Runner {
         }
         ++u.insertions;
     }
+    GraphStats graphStats() const {
+        GraphStats result;
+        auto add = [&](const Graph& g) {
+            ++result.hnsw_nodes;
+            result.dead += g.num_deleted_;
+            result.live += g.cur_element_count - g.num_deleted_;
+        };
+        if (global) add(*global);
+        for (const auto& l : local) if (l.graph) add(*l.graph);
+        return result;
+    }
     void reconcile(size_t n, Update& u) {
         auto& g = local[n].graph;
         bool wanted = direct[n].size() > args.scan;
         bool deleted = g && g->cur_element_count &&
             double(g->num_deleted_) / double(g->cur_element_count) >= args.compact;
         if ((!wanted && g) || (wanted && (!g || deleted))) {
+            // Classify before mutation, preserving reconciliation priority.
+            auto& category = u.maintenance[!wanted ? 2 : (!g ? 1 : 0)];
+            const auto insertions_before = u.insertions;
             auto start = Clock::now();
             if (!wanted) g.reset();
             else {
@@ -211,7 +235,11 @@ class Runner {
                 for (Id id : direct[n]) insertGraph(*fresh, id, u);
                 g = std::move(fresh);
             }
-            u.compact_us += elapsed(start);
+            const double duration = elapsed(start);
+            u.compact_us += duration;
+            category.us += duration;
+            ++category.count;
+            category.insertions += u.insertions - insertions_before;
             ++u.compactions;
         }
     }
@@ -604,11 +632,19 @@ class Runner {
         ++version; ++update_count;
         uout << number << ',' << version << ',' << op << ',' << latency << ',' << u.items << ',' << u.nodes << ','
              << u.writes << ',' << u.insertions << ',' << u.deletions << ',' << u.compact_us << ',' << u.compactions
-             << ',' << u.path_bytes << '\n';
+             << ',' << u.path_bytes;
+        for (const auto& category : u.maintenance)
+            uout << ',' << category.us << ',' << category.count << ',' << category.insertions;
+        uout << '\n';
         uout.flush();
         update_times.push_back(latency); update_total += latency;
         totals.writes += u.writes; totals.insertions += u.insertions; totals.deletions += u.deletions;
         totals.compactions += u.compactions; totals.compact_us += u.compact_us; totals.path_bytes += u.path_bytes;
+        for (size_t i = 0; i < 3; ++i) {
+            totals.maintenance[i].us += u.maintenance[i].us;
+            totals.maintenance[i].count += u.maintenance[i].count;
+            totals.maintenance[i].insertions += u.maintenance[i].insertions;
+        }
     }
     static double percentile(std::vector<double> v, double p) {
         if (v.empty()) return 0;
@@ -664,6 +700,19 @@ class Runner {
         number("query_total_us", query_total); number("update_total_us", update_total);
         number("total_workload_us", query_total + update_total); number("gt_total_us", gt_total);
         number("compaction_total_us", totals.compact_us); number("compaction_count", totals.compactions);
+        for (size_t i = 0; i < 3; ++i) {
+            const std::string prefix = maintenance_names[i];
+            number(prefix + "_us", totals.maintenance[i].us);
+            number(prefix + "_count", totals.maintenance[i].count);
+            number(prefix + "_ann_insertions", totals.maintenance[i].insertions);
+        }
+        const auto final_graph_stats = graphStats();
+        number("initial_hnsw_node_count", initial_graph_stats.hnsw_nodes);
+        number("initial_index_live_count", initial_graph_stats.live);
+        number("initial_index_dead_count", initial_graph_stats.dead);
+        number("final_hnsw_node_count", final_graph_stats.hnsw_nodes);
+        number("final_index_live_count", final_graph_stats.live);
+        number("final_index_dead_count", final_graph_stats.dead);
         number("metadata_writes", totals.writes); number("path_key_bytes_written", totals.path_bytes);
         number("ann_insertions", totals.insertions); number("ann_deletions", totals.deletions);
         number("build_ann_insertions", build_insertions);
@@ -752,6 +801,7 @@ public:
         }
         build_s = elapsed(start) / 1e6;
         build_insertions = build.insertions;
+        initial_graph_stats = graphStats();
         auto directory = std::filesystem::path(args.out).parent_path();
         if (!directory.empty()) std::filesystem::create_directories(directory);
         qout.open(args.out + ".queries.csv"); uout.open(args.out + ".updates.csv");
@@ -759,7 +809,10 @@ public:
         qout << std::setprecision(12);
         uout << std::setprecision(12);
         qout << "event,version,query_index,qidx,recursive,anchor,anchor_depth,scope_card,eligible_card,dir_us,search_us,e2e_us,gt_us,gt_count,hit_count,recall,distance_calls,ann_hops,local_indexes,valid_count,invalid_count,duplicate_count,gt_ids,result_ids,fanout,scan_nodes\n";
-        uout << "event,version,op,latency_us,affected_items,affected_nodes,metadata_writes,ann_insertions,ann_deletions,compaction_us,compaction_count,path_key_bytes_written\n";
+        uout << "event,version,op,latency_us,affected_items,affected_nodes,metadata_writes,ann_insertions,ann_deletions,compaction_us,compaction_count,path_key_bytes_written";
+        for (const char* name : maintenance_names)
+            uout << ',' << name << "_us," << name << "_count," << name << "_ann_insertions";
+        uout << '\n';
     }
     void run() {
         std::ifstream trace(args.trace);

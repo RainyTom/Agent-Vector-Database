@@ -148,3 +148,15 @@ codes/directory-aware-vector-attr-search/build/dynamic_triad \
 - 单线程提交可见性：查询看见之前全部成功更新；逐查询 GT 放在计时外、查询之后执行，避免用 oracle 决定是否跳过搜索或搜索 k。不是并发吞吐或多版本快照实验。
 - 结果 `.queries.csv` / `.updates.csv` / `.summary.json` 保留目录/ANN/GT、操作类型、ANN距离与跳数、压实、写操作、质量错误。HNSW字节真实计量，metadata单独标注估算，RSS包含输入与GT等进程开销。
 - 语义回归覆盖往返移动、恢复旧标签、局部扫描↔图转换、批量移动、子树重挂、空结果及四种标签语义。状态不一致报错，低召回保留失败，不伪装同质量更快。
+- 新增互斥计量 `{tombstone_compaction,threshold_build,threshold_drop}_{us,count,ann_insertions}`：三个分项精确划分原 `compaction_*` 总量，分别表示墓碑重建、扫描→图、图→扫描，不改变原触发策略。summary另给实际初始/结束HNSW图数及图内live/dead数。
+
+### 完整原始 WIKI 子树的拓扑配对
+
+`scripts/generate_wiki_topology_triad.py` 保留原始完整子树所有向量/目录与绑定；native与等节点数balanced树共享同一向量、直接占用、属性和字面trace，只有parent边不同。默认root410/3626、456个原始query vectors、Q/U0.01/0.1/1；这是完整子树cohort，不是全量WIKI。
+
+```bash
+production/nested-attr-vector-search/work/venv/bin/python \
+  codes/directory-aware-vector-attr-search/scripts/generate_wiki_topology_triad.py
+```
+
+输出manifest沿用 `scripts/run_dynamic_triad.py` 调度。生成器拒绝覆盖历史生成目录；Python的Fenwick结构只用于生成查询锚点，不参与被测索引/搜索/GT或计时。完整协议见 [wiki-topology-protocol.md](../../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)。

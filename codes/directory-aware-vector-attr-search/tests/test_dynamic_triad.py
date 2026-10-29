@@ -144,6 +144,95 @@ class DynamicTriadSemantics(unittest.TestCase):
                     self.assertEqual(summary["macro_recall"], 1.0)
                     self.assertEqual(summary["pair_recall"], 1.0)
 
+    def test_disjoint_maintenance_and_real_graph_state(self):
+        binary = ROOT / "build/dynamic_triad"
+        self.assertTrue(binary.exists(), "run build_dynamic_triad.sh first")
+        categories = ("tombstone_compaction", "threshold_build", "threshold_drop")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)
+            (path / "meta.txt").write_text("6 8 1\n")
+            (path / "base.f32").write_bytes(b"".join(
+                struct.pack("<8f", *[float(i * 3 + j) for j in range(8)])
+                for i in range(6)))
+            (path / "test.f32").write_bytes(struct.pack("<8f", *[0.25] * 8))
+            (path / "tree.txt").write_text("2\n0 -1\n1 0\n")
+            (path / "bindings.txt").write_text("1\n" * 6)
+            (path / "attrs.txt").write_text("0 0 0 1\n" * 6)
+            # First restore a tombstoned label without rebuilding; then cross
+            # dead-ratio, graph->scan, and scan->graph thresholds in that order.
+            updates = ["D 0", "I 0 1 0 0 0", "D 0", "D 1",
+                       "D 2", "D 3", "I 0 1 0 0 0"]
+            live = set(range(6))
+            expected = [live.copy()]
+            events = ["Q 0 0 1 -1 -1 -1 0 0 0"]
+            for update in updates:
+                item = int(update.split()[1])
+                if update.startswith("D"):
+                    live.remove(item)
+                else:
+                    live.add(item)
+                events.extend([update, "Q 0 0 1 -1 -1 -1 0 0 0"])
+                expected.append(live.copy())
+            trace = path / "trace.txt"
+            trace.write_text(f"{len(events)}\n" + "\n".join(events) + "\n")
+            for arm in "ABC":
+                with self.subTest(arm=arm):
+                    out = path / arm
+                    subprocess.run([str(binary), "--data", str(path), "--trace", str(trace),
+                                    "--arm", arm, "--ef", "256", "--scan-threshold", "2",
+                                    "--compact-threshold", "0.3", "--out", str(out)],
+                                   check=True, capture_output=True, text=True)
+                    with Path(str(out) + ".queries.csv").open() as handle:
+                        queries = list(csv.DictReader(handle))
+                    self.assertEqual(len(queries), len(expected))
+                    for row, want in zip(queries, expected):
+                        for field in ("result_ids", "gt_ids"):
+                            self.assertEqual({int(x) for x in row[field].split(";") if x},
+                                             want, (arm, row["event"], field))
+                        self.assertEqual(int(row["invalid_count"]), 0)
+                        self.assertEqual(int(row["duplicate_count"]), 0)
+                    with Path(str(out) + ".updates.csv").open() as handle:
+                        rows = list(csv.DictReader(handle))
+                    self.assertEqual(len(rows), len(updates))
+                    summary = json.loads(Path(str(out) + ".summary.json").read_text())
+                    expected_counts = [(0, 0, 0), (0, 0, 0), (0, 0, 0),
+                                       (1, 0, 0), (0, 0, 0), (0, 0, 1), (0, 1, 0)]
+                    expected_insertions = [(0, 0, 0)] * 3 + [
+                        (4, 0, 0), (0, 0, 0), (0, 0, 0), (0, 3, 0)]
+                    for row, counts, insertions in zip(rows, expected_counts, expected_insertions):
+                        actual_counts = tuple(int(row[c + "_count"]) for c in categories)
+                        actual_insertions = tuple(int(row[c + "_ann_insertions"]) for c in categories)
+                        self.assertEqual(actual_counts, counts if arm == "A" else (0, 0, 0))
+                        self.assertEqual(actual_insertions, insertions if arm == "A" else (0, 0, 0))
+                        self.assertEqual(sum(actual_counts), int(row["compaction_count"]))
+                        self.assertLessEqual(sum(actual_insertions), int(row["ann_insertions"]))
+                        self.assertAlmostEqual(sum(float(row[c + "_us"]) for c in categories),
+                                               float(row["compaction_us"]), delta=1e-5)
+                        for category in categories:
+                            duration = float(row[category + "_us"])
+                            if int(row[category + "_count"]):
+                                self.assertGreater(duration, 0)
+                            else:
+                                self.assertEqual(duration, 0)
+                    self.assertEqual(summary["compaction_count"], 3 if arm == "A" else 0)
+                    self.assertEqual(sum(summary[c + "_count"] for c in categories),
+                                     summary["compaction_count"])
+                    self.assertAlmostEqual(sum(summary[c + "_us"] for c in categories),
+                                           summary["compaction_total_us"], delta=1e-5)
+                    for category in categories:
+                        for suffix in ("_us", "_count", "_ann_insertions"):
+                            self.assertAlmostEqual(summary[category + suffix],
+                                                   sum(float(r[category + suffix]) for r in rows),
+                                                   delta=1e-5)
+                    self.assertEqual(summary["initial_hnsw_node_count"], 1)
+                    self.assertEqual(summary["initial_index_live_count"], 6)
+                    self.assertEqual(summary["initial_index_dead_count"], 0)
+                    self.assertEqual(summary["final_hnsw_node_count"], 1)
+                    self.assertEqual(summary["final_index_live_count"], 3)
+                    self.assertEqual(summary["final_index_dead_count"], 0 if arm == "A" else 3)
+                    self.assertEqual(summary["state_violations"], 0)
+                    self.assertEqual(summary["macro_recall"], 1)
+
 
 if __name__ == "__main__":
     unittest.main()
