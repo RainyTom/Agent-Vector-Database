@@ -167,3 +167,11 @@
 - 撤回“层级MOVE无人研究/首次可回收摘要/动态预算基本空白”等泛化结论；区分新颖机制、正确实现、强对照与维护策略实测。Filtered-DiskANN原始剪枝为共同标签交集，不沿用EMA相关工作中的并集误述。
 - Quake正式OSDI稿与EMA预印本相关章节进入方向机制证据和待入库日志，未伪造完整归档/全文通读状态；本轮未新增引用或继承关系，既有关系索引保持不变。
 
+
+## 2026-10-29 表示/过滤剪枝机制与BioVSS
+
+- 新增BioVSS/BioVSS++一条正式ICDE2025记录，aliases保留v1/v2改题及算法名；分析v2扩展稿，不将占位期刊当发表。建立multi-vector-search主题，完整按页文本、提取SHA与原文机制审读已保存。总库30篇，关系27条。
+- 纠正“FlyHash multi-vector”泛称：主要使用BioHash，核心目标是Hausdorff而非MaxSim；稀疏计数倒排/OR sketch是候选机制，不是硬属性逻辑。条件理论和作者表格矛盾保留。
+- [新机制审查](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)核对L2AP、Seismic、MUVERA、Curator、FINGER、FCVI和iFVS。未为未完整归档工作伪造总库条目或作者继承关系。
+- 用户停止默认维护主线；服务器改为先设计表示/条件几何证书，再做小型判别。已运行合成代数smoke，未运行真实ANN性能实验。
+

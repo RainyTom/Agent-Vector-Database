@@ -9,8 +9,9 @@
 | prefix-vector-search | 1 | [前缀与目录检索](prefix-vector-search/README.md)：Directory-Aware/TrieHI |
 | similarity-join | 1 | [一般相似连接](similarity-join/README.md)：多字段 equality/Hamming 等相邻问题 |
 | trajectory-search | 8 | [轨迹检索](trajectory-search/README.md)：完整轨迹/子轨迹 top-k、时空距离与混合范围查询 |
+| multi-vector-search | 1 | [多向量/向量集合检索](multi-vector-search/README.md)：BioVSS的表示与候选剪枝 |
 
-总计 **29 篇论文、27 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **30 篇论文、27 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -22,12 +23,16 @@ papers/
 ├── filtered-ann/<id>-<slug>/
 ├── prefix-vector-search/<id>-<slug>/
 ├── similarity-join/<id>-<slug>/
+├── multi-vector-search/<id>-<slug>/
 └── trajectory-search/<id>-<slug>/
 ```
 
 `paper.pdf` 是原始全文，`paper.md` 是文本提取，`paper.report.md` 是阅读报告。保留原有版本、日期化元数据、图片与 MinerU 产物，不因主题迁移改写论文身份。原有 8 篇有 MinerU 产物、13 篇为 PyMuPDF 文本；本轮 8 篇 trajectory-search 论文保存原始 PDF、日期化元数据与问题定义证据，尚未统一转换全文 Markdown。
 
-UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入 29 篇全文记录。获取受限与理论未提供是两种不同状态。
+2026-10-29新增BioVSS按PDF页提取的完整Markdown与审读记录；原始PDF本地保存不纳入本轮小文件提交，来源URL与SHA见日期化元数据。新主题按其vector-set主问题归档，不错误归入vector join或filtered ANN。
+
+
+UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入 30 篇全文记录。获取受限与理论未提供是两种不同状态。
 
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
 

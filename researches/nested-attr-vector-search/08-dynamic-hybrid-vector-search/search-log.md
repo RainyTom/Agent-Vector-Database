@@ -25,3 +25,13 @@
 
 范围缺口：sample-ANN路由的完整引用链、taxonomy relabeling/subtree migration同义词、工业多库路由、MVCC二级索引、reverse-containment专用加速及SeRF/UNG/FreshDiskANN本轮独立正文复核仍待补。没有执行作者实现或新的ANN性能矩阵。
 
+
+## 2026-10-29 表示变换与过滤剪枝
+
+- 先查总库/关系/本地材料，先搜`vector similarity join hash`和`inner-product similarity join filter`，再搜`FlyHash multi-vector`、`FlyHash MaxSim ColBERT`、`multi vector search fruit fly hashing sparse representation`。前几次窄词未定位，宽检索找到arXiv2412.03301v2；核v1/v2原文、正式出版方/机构书目和作者仓库关键代码，定位BioVSS/BioVSS++。
+- 机制检索：`filtered vector search lower bounds`、`predicate geometric pruning vector index`、`nearest neighbor sparse vector residual norm upper bound inverted index dense pruning`。核读MUVERA、Seismic、L2AP、Curator、FINGER相关正文；FCVI §3是soft filter objective，iFVS §2是条件codebook打分，均不等于原L2安全界。
+- 主要发现：普通稀疏倒排＋残差证书有L2AP直接前序；几何posting组摘要有Seismic前序。优先问题改为不扫描eligible、不逐谓词物化而取得条件extrema/区间排除证书。该问题新颖性尚未充分排查。
+- 来源失败保留：FCVI声明DOI的Crossref404；VA-file PDF提取/查询失败；L2AP正式页动态内容未给可读书目，本轮不补猜DOI。BioVSS正式ICDE身份由其他原始来源交叉核实。
+- 待补：VA-file原文、range-min/successor/wavelet/bitmap条件极值数据结构、dense-to-sparse覆盖与signed/un-normalized L2转换、条件证书的属性更新复杂度。没有搜索到同名方案不是不存在证明。
+- 详证：[新机制判断](2026-10-29-exps/pruning-index-directions.md)、[前序对照](2026-10-29-exps/pruning-prior-art-2026-10-29.md)。本轮只运行合成逻辑smoke，无新ANN矩阵。
+

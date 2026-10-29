@@ -6,6 +6,9 @@
 
 **交付实验服务器**：[最终执行提示词](experiment-server-prompt.md)。按用户后续决策，以NodeANN为主基线、限制基线优化和实现规模；逻辑归属/物理驻留解耦是待判别的新候选，不覆盖历史实验结论，也不代表已验证的新颖方案。
 
+**用户最新纠偏：索引机制优先。** 上述维护任务书已暂停默认执行；当前入口是[新索引服务器提示词](index-mechanism-server-prompt.md)，依据为[条件化剪枝与稀疏表示候选](pruning-index-directions.md)。BioVSS原文机制与L2AP/Seismic等重合已核，不能把延迟迁移或普通稀疏倒排当新索引贡献。
+
+
 
 ## P0：必须先读
 

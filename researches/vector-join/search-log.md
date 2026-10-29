@@ -229,3 +229,8 @@
 
 本轮先核直接vector similarity join/vector join/inner-product similarity join检索，再核混合ANN机制；结论属于B类可迁移检索，不是join算法结果。详见[08方向检索日志](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)及[独立审计](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/independent-review.md)。修订8条已有论文的项目证据，不新增未经完整归档的论文条目；无新ANN实验。
 
+
+## 2026-10-29 稀疏表示与条件化过滤剪枝
+
+直接join检索回溯到L2AP的部分倒排覆盖与prefix L2界，它是避免重复提出“残差范数剪枝”的重要A类前序；本轮未完整归档其书目和全文，作为待办保留。新增BioVSS属于B类vector-set检索表示借鉴，非join；正式ICDE2025、扩展稿分析与总库记录分开。见[机制审查](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)。未把本轮合成证书smoke当作向量连接性能结果。
+

@@ -560,3 +560,15 @@ root828的native/balanced × 三ratio × 三臂 × 三重复，**54次两遍GT�
 - **实验设置与数字**：本次仅编写任务书并检查本地链接，无新ANN实验、无新性能数字。服务器先做metadata-only trace诊断，再按证据决定一个小型C++原型；不预先批准大规模矩阵。
 - **关键边界**：清债指满足方案自身承诺的资源与查询界，不强迫候选恢复没有必要的物理布局；需报告终态并验证持续窗口稳定性。不能把无用强制整理计入候选，也不能用无限延期规避维护。
 
+
+# 表示与过滤剪枝索引研究（用户纠偏后的机制审查）
+
+- **目标**：停止默认执行owner/place维护主线，寻找独立或外挂的新过滤剪枝信息结构；有效性不等于创新充分。
+- **原始来源**：定位BioVSS/BioVSS++，正式ICDE2025与v2扩展稿分开；核其BioHash、计数倒排、OR sketch、Hausdorff和条件理论。补核MUVERA、Seismic、L2AP、Curator、FINGER相关原文及FCVI/iFVS机制边界，不宣称全面查重。
+- **方案状态**：[pruning-index-directions.md](pruning-index-directions.md)提出过滤条件化几何证书为优先结构研究假设；稀疏表示为次候选。前者快速取得条件界的共享结构尚未解决，后者普通残差倒排已受L2AP覆盖；不宣称已有新颖算法。
+- **实际实验**：运行`python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/experiments/pruning_representation_sanity.py`。固定种子20261029，128个8维合成点、16个query：48个条件box安全/单调性检查与6144个稀疏残差下界检查通过。二维构造整块界0、条件界100、真实条件距离平方100；还检查边际谓词witness不能合取、WTA零碰撞可漏近邻、输出拒绝不代表可删导航桥。
+- **局限**：以上是代数smoke而非WIKI剪枝率、ANN性能或新颖性证据；脚本枚举eligible求条件box，不是快速索引。没有新增真实ANN实验或大规模实现。
+- **持久化**：总库新增BioVSS一条，新增multi-vector-search主题；原始PDF本地下载并记录SHA，提交完整按页文本和审读报告。MUVERA/Seismic/L2AP等在方向证据中，尚未各自完整归档。
+- **工具/来源限制**：`pdftotext`缺失，改用PyMuPDF成功提取全文；README提到的`tools/research_index.py`本checkout不存在，改以独立JSON/路径核查；FCVI声明DOI的Crossref接口404，正式状态未独立确认；VA-file正文获取未成功，不以此作不存在证明。
+- **下一步**：服务器按[index-mechanism-server-prompt.md](index-mechanism-server-prompt.md)先过机制/信息价值门；不直接照搬BioVSS，不擅自把single-vector硬过滤改成Hausdorff或MaxSim，不通过改归一化改变原任务。
+
