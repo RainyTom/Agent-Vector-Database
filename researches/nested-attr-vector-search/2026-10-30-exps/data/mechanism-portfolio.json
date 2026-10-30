@@ -1,0 +1,237 @@
+{
+  "date": "2026-10-30",
+  "status": "research_protocol_only_not_executed",
+  "problem": "external hierarchy AND multi-attribute hard predicates; original FP32 squared-L2 top-k",
+  "reuse_existing_components_allowed": true,
+  "novelty_must_be_fully_proven_before_small_probe": false,
+  "global_geometric_certificate_gate": false,
+  "families": [
+    {
+      "id": "F1",
+      "name": "联合资格表示与索引接口",
+      "status": "not_implemented_not_experimentally_rejected_as_a_family",
+      "components": [
+        "Trie",
+        "bitmap",
+        "inverted-index",
+        "range-index"
+      ],
+      "target_work": "资格准备、重复谓词判断和消费开销",
+      "controls": [
+        "全量资格集合",
+        "逐点谓词",
+        "访问批次资格表示"
+      ],
+      "metrics": [
+        "membership-correctness",
+        "prepare-and-consume-time",
+        "metadata-bytes",
+        "update-touched-state"
+      ],
+      "nearest_prior_work": [
+        "Curator",
+        "TrieHI"
+      ],
+      "first_case": "wide_scope_selective_and",
+      "requires_E0_E1": false,
+      "novelty_status": "unresolved; concrete operations and closest-prior differences required"
+    },
+    {
+      "id": "F2",
+      "name": "共享查询视图与子索引",
+      "status": "not_implemented_not_experimentally_rejected_as_a_family",
+      "components": [
+        "shared-tree",
+        "local-HNSW",
+        "range-graph",
+        "index-collection"
+      ],
+      "target_work": "视图密度、搜索访问与重复索引空间",
+      "controls": [
+        "NodeANN",
+        "独立局部视图",
+        "资源匹配共享视图"
+      ],
+      "metrics": [
+        "recall",
+        "visited-candidates",
+        "index-bytes",
+        "build-cost",
+        "update-fanout"
+      ],
+      "nearest_prior_work": [
+        "Curator",
+        "ELI",
+        "SIEVE",
+        "iRangeGraph",
+        "LES"
+      ],
+      "first_case": "unseen_predicate_combinations",
+      "requires_E0_E1": false,
+      "novelty_status": "unresolved; concrete operations and closest-prior differences required"
+    },
+    {
+      "id": "F3",
+      "name": "过滤感知图导航",
+      "status": "not_implemented_not_experimentally_rejected_as_a_family",
+      "components": [
+        "HNSW",
+        "multi-hop-expansion",
+        "entry-index",
+        "adjacency-blocks"
+      ],
+      "target_work": "无效邻接展开、候选恢复和导航距离",
+      "controls": [
+        "结果集过滤",
+        "候选恢复",
+        "同边预算入口/邻接策略"
+      ],
+      "metrics": [
+        "recall",
+        "edge-reads",
+        "distance-calls",
+        "ineligible-transit",
+        "repair-cost"
+      ],
+      "nearest_prior_work": [
+        "ACORN",
+        "Filtered-DiskANN",
+        "PathSeer"
+      ],
+      "first_case": "equal_cardinality_different_dispersion",
+      "requires_E0_E1": false,
+      "novelty_status": "unresolved; concrete operations and closest-prior differences required"
+    },
+    {
+      "id": "F4",
+      "name": "属性—几何双空间分区与组织",
+      "status": "not_implemented_not_experimentally_rejected_as_a_family",
+      "components": [
+        "attribute-tree",
+        "geometry-clusters",
+        "partition-local-graph",
+        "layout"
+      ],
+      "target_work": "跨分区污染、局部访问和对象搬移",
+      "controls": [
+        "属性优先",
+        "几何优先",
+        "明确混合组织"
+      ],
+      "metrics": [
+        "recall",
+        "partitions-touched",
+        "eligible-density",
+        "bytes-moved",
+        "peak-memory"
+      ],
+      "nearest_prior_work": [
+        "Curator",
+        "Grant",
+        "Packing"
+      ],
+      "first_case": "fixed_attributes_changed_organization",
+      "requires_E0_E1": false,
+      "novelty_status": "unresolved; concrete operations and closest-prior differences required"
+    },
+    {
+      "id": "F5",
+      "name": "代理表示与近似候选",
+      "status": "not_implemented_not_experimentally_rejected_as_a_family",
+      "components": [
+        "sparse-code",
+        "hash",
+        "projection",
+        "inverted-index"
+      ],
+      "target_work": "昂贵候选发现与原距离计算",
+      "controls": [
+        "原表示候选",
+        "经典代理对照",
+        "候选策略变体"
+      ],
+      "metrics": [
+        "candidate-recall",
+        "final-recall",
+        "eligibility-errors",
+        "representation-bytes",
+        "encoding-and-update-cost"
+      ],
+      "nearest_prior_work": [
+        "BioVSS",
+        "L2AP",
+        "Seismic",
+        "FINGER"
+      ],
+      "first_case": "zero_collision_and_norm_variation",
+      "requires_E0_E1": false,
+      "novelty_status": "unresolved; concrete operations and closest-prior differences required"
+    },
+    {
+      "id": "F6",
+      "name": "条件几何证书",
+      "status": "not_implemented_not_experimentally_rejected_as_a_family",
+      "components": [
+        "box",
+        "gap",
+        "pivot",
+        "norm",
+        "joint-support"
+      ],
+      "target_work": "不能排除的合法候选与证书取得",
+      "controls": [
+        "whole-block-bound",
+        "conditional-bound",
+        "same-threshold-exact-oracle"
+      ],
+      "metrics": [
+        "additional-exclusion",
+        "certificate-cost",
+        "bound-errors",
+        "index-bytes",
+        "update-cost"
+      ],
+      "nearest_prior_work": [
+        "BSI",
+        "wavelet",
+        "Curator",
+        "metric-indexing"
+      ],
+      "first_case": "same_threshold_attribution",
+      "requires_E0_E1": true,
+      "novelty_status": "unresolved; concrete operations and closest-prior differences required"
+    }
+  ],
+  "first_noncertificate_probe_choices": [
+    "F1",
+    "F2",
+    "F3"
+  ],
+  "allowed_substitution": "F4 when bottleneck evidence supports it",
+  "maximum_surviving_small_prototypes": 2,
+  "quality": {
+    "k": 10,
+    "macro_recall_min": 0.999,
+    "pair_recall_min": 0.999,
+    "invalid_duplicate_state_errors": 0
+  },
+  "workload_cells": [
+    "scope_only",
+    "wide_scope_selective_and",
+    "narrow_scope_weak_filter",
+    "same_cardinality_different_dispersion",
+    "unseen_predicate_and_scope_combinations",
+    "short_update_before_after"
+  ],
+  "maintenance_accounting": [
+    "initial_build",
+    "training_projection",
+    "query",
+    "attribute_update",
+    "directory_update",
+    "vector_insert_delete",
+    "required_reclamation",
+    "peak_memory"
+  ],
+  "experiments_executed_this_revision": 0
+}

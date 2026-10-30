@@ -188,3 +188,9 @@
 - 新增Pivot-based Metric Indexing（PVLDB2017）§2.3、§5.1–5.2的[原文节选及来源](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/evidence/pivot-filtering-excerpts-20261030.md)，仅作为经典pivot/区间控制的证据候选；未完整核实验，不新增伪精读记录或引用关系。
 - 本分支仍36工作、29关系；服务器7756064的36工作、31关系来自不同分支，未自动合并，不将数量相加或覆盖旧记录。
 - [上游报告](../researches/nested-attr-vector-search/2026-10-30-exps/report.md)区分几何oracle能力与过滤特有增量，保存64条原CSV控制与可复现分析。条件遮挡路线未实施，不继承稀疏残差B的暂停为其实验失败。
+
+## 2026-10-30 复用组件与跨机制族研究
+
+- 复核ACORN §5.2的过滤遮挡反例、Curator §4.2的倒排/bitmap与虚拟谓词视图；不得将已有动机认作新发现，也不得仅因复用图/Trie/bitmap就否定候选。
+- 新增[SIEVE v2 §1原文节选](../researches/nested-attr-vector-search/2026-10-30-exps/evidence/sieve-component-reuse-20261030.md)，阅读§1–3及§4.1开头；未完整核实验和正式版本，作为候选证据不新增完整论文记录。总库与关系计数不变。
+- [机制研究方案](../researches/nested-attr-vector-search/2026-10-30-exps/index-mechanism-portfolio.md)明确允许已有原语上的实质索引/算法贡献，撤销证书诊断的全局门禁；六族及新工作负载均为待执行计划，不覆盖历史实测。

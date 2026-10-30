@@ -242,3 +242,7 @@
 ## 2026-10-30 条件几何诊断的归因边界
 
 先检索pivot/norm的直接vector similarity join与inner-product similarity join范围，再核经典metric indexing。Pivot-based Metric Indexing原文§2.3、§5.1–5.2用于避免将参考点距离区间当新过滤机制；未新增完整论文记录。研究仍为单查询层级多属性filtered ANN，不是join。真实CSV再分析与同阈值oracle分解见[上游报告](../nested-attr-vector-search/2026-10-30-exps/report.md)，不能把metric filtering等同属性过滤或将norm控制当新索引。
+
+## 2026-10-30 层级多属性索引机制范围拓宽
+
+直接join术语检索后转查filtered vector search/bitmap/Trie，复核已有ACORN与Curator原文，并阅读SIEVE v2相关引言/框架章节。问题仍是单查询filtered ANN，不称vector join。允许复用经典组件、以具体机制差异评估新颖性，研究范围拓宽至六族；见[协议](../nested-attr-vector-search/2026-10-30-exps/index-mechanism-portfolio.md)。SIEVE只新增章节证据候选，未做完整入库，无新ANN实验。

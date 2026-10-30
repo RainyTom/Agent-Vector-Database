@@ -8,7 +8,9 @@
 
 **用户最新纠偏：索引机制优先。** 上述维护任务书已暂停默认执行；当前入口是[新索引服务器提示词](index-mechanism-server-prompt.md)，依据为[条件化剪枝与稀疏表示候选](pruning-index-directions.md)。BioVSS原文机制与L2AP/Seismic等重合已核，不能把延迟迁移或普通稀疏倒排当新索引贡献。
 
-**2026-10-30真实诊断及上游判断：** [服务器固定7756064报告](https://github.com/RainyTom/Agent-Vector-Database/blob/7756064/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md) → [上游独立复核与E0/E1指令](../../2026-10-30-exps/report.md)。新增分析发现root/scope-only下真实距离oracle也很强，不能把全部oracle优势归给联合过滤；下一步先补同阈值D_B/D_H/D_F。服务器B=稀疏残差，上游后续B=条件遮挡，后者未测，勿混用。
+**2026-10-30真实诊断及上游判断：** [服务器固定7756064报告](https://github.com/RainyTom/Agent-Vector-Database/blob/7756064/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md) → [上游独立复核](../../2026-10-30-exps/report.md)。root/scope-only下oracle也很强，证书族需补同阈值D_B/D_H/D_F归因；该要求不限制其他机制族。服务器旧B=稀疏残差，上游后续B=条件遮挡，后者未测，勿混用。
+
+**用户最新范围修正：** [跨机制族研究方案](../../2026-10-30-exps/index-mechanism-portfolio.md)与[最新服务器任务书](index-mechanism-server-prompt.md)为执行入口。允许复用Trie/bitmap等组件；覆盖六个机制族，先做至少三个非证书族的小诊断，不再只沿安全几何界。新颖性待查不等于禁止受限探索，论文主张仍需实质差异与同质量证据。
 
 
 

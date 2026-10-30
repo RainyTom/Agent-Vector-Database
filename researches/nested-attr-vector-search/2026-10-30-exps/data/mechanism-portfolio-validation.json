@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-30",
+  "kind": "protocol and local-link validation; not a performance experiment",
+  "family_count": 6,
+  "E0_E1_required_only_for": [
+    "F6"
+  ],
+  "first_noncertificate_probe_choices": [
+    "F1",
+    "F2",
+    "F3"
+  ],
+  "workload_cell_count": 6,
+  "relative_links_checked": 64,
+  "quality_contract_preserved": true,
+  "planned_experiments_misreported_as_executed": false,
+  "new_performance_runs": 0,
+  "portfolio_sha256": "14bcddec40c2a3a0a95e12dc7583f9f9a5bd137f9735456e7db929583df9b018",
+  "sieve_excerpt_sha256": "12b1a938f8d8d5896183cc706c925fe8d21b811e8327e1a80b7825adae674f8f"
+}
