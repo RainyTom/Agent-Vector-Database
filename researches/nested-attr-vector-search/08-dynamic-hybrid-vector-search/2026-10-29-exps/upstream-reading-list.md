@@ -14,7 +14,7 @@
 
 **本地跨方向研究入口：** [6篇原始工作与4类具体迁移方案](../../2026-10-30-exps/cross-domain-index-transfer.md)，包括Memento/Grafite动态/静态范围过滤、Qd-tree谓词布局、F-IVM依赖键共享视图、FlexFlood低维属性索引，DBSP仅作delta语义基础。优先做访问轨迹的边际空/共现空/重复准备分解；不是要求服务器先实现六套系统，也不撤销其他机制族。
 
-**当前研究入口：** WQR已报负结果并停止扩规模，后续NPI又因未把层级用于核心机制而撤下论文主线；分别见[WQR收尾](../../2026-10-30-exps/wqr-c1c24e8-closeout.md)、[NPI历史设计](../../2026-10-30-exps/npi-complete-design.md)。最新为[子树闭包约束的可恢复邻接设计](../../2026-10-30-exps/hierarchy-closure-design.md)：层级参与几何剪枝见证与邻接恢复，尚未实现或实测胜出。用户要求方案描述，不把旧任务书当作自动实施授权。
+**当前研究与执行入口：** 服务器[502753c](https://github.com/RainyTom/Agent-Vector-Database/blob/502753c/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/neighborhood-report.md)已完成NPI E1/E2：取得成本胜普通二跳，但同质量e2e不及真实NodeANN，E3未跑。用户随后明确授权本地实现；现交付[子树闭包可恢复邻接的完整任务书/服务器提示词](../../2026-10-30-exps/closure-server-plan.md)、[方案推导](../../2026-10-30-exps/hierarchy-closure-design.md)、[真实C++及脚本验证证据](../../2026-10-30-exps/data/closure-local-check.json)。新方案已实现且小规模语义/流水线验证通过，WIKI/SIFT性能仍待服务器测量；不把旧“只要方案、不交代码”当成当前任务限制。
 
 
 

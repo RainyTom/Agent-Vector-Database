@@ -175,3 +175,24 @@ python codes/directory-aware-vector-attr-search/scripts/run_dynamic_triad.py \
 - `oracles.json` 单列真实GT生成时间/距离调用；测量summary与每query `gt_distance_calls` 必须为0。测量中的 `gt_us` 是元数据核对与tape读取，不是向量GT生成成本。此协议不消除所有元数据/文件缓存干扰。
 - Oracle本身ANN召回不足不影响其独立精确GT生成；真正测量的低召回点仍失败，不做精确兜底。篡改tape或stamp拒绝复用，成功oracle stamp复用时保持不变。
 - 当前研究保留旧运行binary时，另编译 `build/dynamic_triad_gt_tape` 并用 `--binary` 指定；测试可用 `DYNAMIC_TRIAD_BINARY` 覆盖路径，不覆盖正在测量的旧执行器。新checkout正常构建默认binary即可支持两种模式。
+
+## 子树闭包可恢复邻接（2026-10-30）
+
+`src/closure_index.h` / `closure_order.h` 为新研究候选，不替换NodeANN。固定64候选池、几何见证掩码、当前子树闭包选边、可恢复邻接与动态Euler序列；已实现V/T/M/B/R/D/I及同步墓碑压实。属性不合格点可导航但不可作为合法见证。递归子树限制性质不覆盖内部owner的direct范围，也不是有限ef召回保证。
+
+```bash
+bash build_closure.sh
+bash build_dynamic_triad.sh
+python -m unittest discover -s tests -p test_closure.py -v
+python scripts/run_closure.py \
+  --dataset "wiki=$WIKI_DATA" --trace "wiki=$WIKI_TRACE" \
+  --dataset "sift=$SIFT_DATA" --trace "sift=$SIFT_TRACE" \
+  --out ../../work/closure/static
+```
+
+六臂为真实NodeANN A、无剪枝U、普通几何G、DFS-between规则R、子树闭包H、禁用属性见证恢复H0。默认ef64/256/1024校准、按qidx分组确认、串行轮换三次；C++预计算GT，各臂计时消费同一tape。离线全scope/邻接审计与性能运行分开，防止全池指纹扫描污染查询缓存。静态模式冻结初始属性，不执行源trace中的更新。
+
+只在`<out>/<name>/result.json`的`dynamic_admitted=true`时，按相同输入与二进制运行 `--stage dynamic --static-results <out>`；自动回放动态前缀并生成独立R/B/M与强制压实维护包络。`--smoke`不能授权正式动态阶段。结果包含全部质量失败点、原始CSV、SHA、构建/更新/总成本、结构估算与峰值RSS。输出目录须为新目录。
+
+完整算法、预测、失败归因、计时边界和可复制服务器指令见[closure-server-plan.md](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-server-plan.md)。本地3项真实程序回归通过，不代表已赢WIKI/SIFT或新颖性已获确认。`neighborhood_filter.h`原样来自502753c，仅复用数据/谓词合同；其静态Qualifier不用于新索引动态状态。
+
