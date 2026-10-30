@@ -1,0 +1,12 @@
+{
+  "status": "finite set semantics only; no ANN implementation or performance experiment",
+  "nodes": 4,
+  "directed_loopless_graphs": 4096,
+  "page_size_in_probe": 2,
+  "candidate_filter_checks": 262144,
+  "single_adjacency_edit_checks": 49152,
+  "mismatches": 0,
+  "real_data_ann_runs": 0,
+  "new_index_novelty": "not established",
+  "production_prototype": "not implemented"
+}
