@@ -1,0 +1,39 @@
+{
+  "complete": true,
+  "kind": "local_new_property_and_offline_tool_smoke_not_reported_failure_retest",
+  "core_probe": {
+    "build_command": [
+      "g++",
+      "-O2",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Icodes/directory-aware-vector-attr-search/src",
+      "-Icodes/directory-aware-vector-attr-search/deps/hnswlib",
+      "researches/nested-attr-vector-search/2026-10-30-exps/experiments/closure_budget_probe.cpp",
+      "-lpthread",
+      "-o",
+      "work/vector-database-knowledge/closure_budget_probe"
+    ],
+    "build_exit": 0,
+    "run_exit": 0,
+    "build_stderr": "In file included from codes/directory-aware-vector-attr-search/src/raw_l2_space.h:14,\n                 from codes/directory-aware-vector-attr-search/src/closure_index.h:4,\n                 from researches/nested-attr-vector-search/2026-10-30-exps/experiments/closure_budget_probe.cpp:3:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h: In member function ‘virtual bool hnswlib::BaseFilterFunctor::operator()(hnswlib::labeltype)’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h:274:48: warning: unused parameter ‘id’ [-Wunused-parameter]\n  274 |     virtual bool operator()(hnswlib::labeltype id) { return true; }\n      |                             ~~~~~~~~~~~~~~~~~~~^~\nIn file included from codes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h:459:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<typename hnswlib::AlgorithmInterface<dist_t>::DistanceLabelPriorityQueue> hnswlib::HierarchicalNSW<dist_t>::searchKnnNoExceptions(const void*, size_t, hnswlib::BaseFilterFunctor*) const [with dist_t = float; typename hnswlib::AlgorithmInterface<dist_t>::DistanceLabelPriorityQueue = std::priority_queue<std::pair<float, long unsigned int>, std::vector<std::pair<float, long unsigned int>, std::allocator<std::pair<float, long unsigned int> > >, std::less<std::pair<float, long unsigned int> > >; size_t = long unsigned int]’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1416:5:   required from here\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1440:30: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]\n 1440 |                     if (cand < 0 || cand > max_elements_)\n      |                         ~~~~~^~~\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::addPointWithLevel(const void*, hnswlib::labeltype, int) [with dist_t = float; hnswlib::labeltype = long unsigned int]’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1047:40:   required from ‘hnswlib::Status hnswlib::HierarchicalNSW<dist_t>::addPointNoExceptions(const void*, hnswlib::labeltype, bool) [with dist_t = float; hnswlib::labeltype = long unsigned int]’\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1037:12:   required from here\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1366:38: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]\n 1366 |                             if (cand < 0 || cand > max_elements_)\n      |                                 ~~~~~^~~\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::mutuallyConnectNewElement(const void*, hnswlib::tableint, std::priority_queue<std::pair<dist_t, unsigned int>, std::vector<std::pair<dist_t, unsigned int> >, CompareByFirst>&, int, bool) [with dist_t = float; hnswlib::tableint = unsigned int]’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1393:21:   required from ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::addPointWithLevel(const void*, hnswlib::labeltype, int) [with dist_t = float; hnswlib::labeltype = long unsigned int]’\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1047:40:   required from ‘hnswlib::Status hnswlib::HierarchicalNSW<dist_t>::addPointNoExceptions(const void*, hnswlib::labeltype, bool) [with dist_t = float; hnswlib::labeltype = long unsigned int]’\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1037:12:   required from here\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:539:21: warning: unused parameter ‘data_point’ [-Wunused-parameter]\n  539 |         const void *data_point,\n      |         ~~~~~~~~~~~~^~~~~~~~~~\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h: At global scope:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h:95:13: warning: ‘bool AVX512Capable()’ defined but not used [-Wunused-function]\n   95 | static bool AVX512Capable() {\n      |             ^~~~~~~~~~~~~\n",
+    "rows": 10
+  },
+  "offline_analyzer_checks": {
+    "real_CLI_on_core_probe_derived_rows": "passed; zero timing fields are synthetic, not performance measurements",
+    "existing_output_refused": true,
+    "forced_property_counterexample_reported": true,
+    "original_query_SHA_enforced": true
+  },
+  "sha256": {
+    "codes/directory-aware-vector-attr-search/scripts/analyze_closure_termination.py": "343cd43012f759cf54d13c5ac4108eca2e3c58de1c7190a75088e89fc5fcd9a1",
+    "researches/nested-attr-vector-search/2026-10-30-exps/experiments/closure_budget_probe.cpp": "62fcb3f1e43594d151f4acf521988c2d39ce24ba78c2a6bbfec13f9d818fe8a1",
+    "codes/directory-aware-vector-attr-search/src/closure_index.h": "fcfaaee36283a1d937f57ef5e165d62604487027eaac7fe9163c09d72f1c6600"
+  },
+  "limitations": [
+    "No original raw CSV on local machine; real E<ef prevalence remains unmeasured.",
+    "Toy CSVs derived from the actual core probe are used only for offline-tool functionality.",
+    "No server ANN rerun, core change, parameter change or dynamic experiment."
+  ]
+}

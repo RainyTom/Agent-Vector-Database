@@ -1,0 +1,130 @@
+{
+  "complete": true,
+  "kind": "synthetic_E_lt_ef_property_not_server_reproduction",
+  "rows": [
+    {
+      "arm": "U",
+      "scope_card": 48,
+      "eligible_card": 4,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 384,
+      "pruned": 0,
+      "returned": 3
+    },
+    {
+      "arm": "G",
+      "scope_card": 48,
+      "eligible_card": 4,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 343,
+      "pruned": 41,
+      "returned": 3
+    },
+    {
+      "arm": "R",
+      "scope_card": 48,
+      "eligible_card": 4,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 368,
+      "pruned": 16,
+      "returned": 3
+    },
+    {
+      "arm": "H",
+      "scope_card": 48,
+      "eligible_card": 4,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 350,
+      "pruned": 34,
+      "returned": 3
+    },
+    {
+      "arm": "H0",
+      "scope_card": 48,
+      "eligible_card": 4,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 190,
+      "pruned": 194,
+      "returned": 3
+    },
+    {
+      "arm": "U",
+      "scope_card": 48,
+      "eligible_card": 0,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 384,
+      "pruned": 0,
+      "returned": 0
+    },
+    {
+      "arm": "G",
+      "scope_card": 48,
+      "eligible_card": 0,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 384,
+      "pruned": 0,
+      "returned": 0
+    },
+    {
+      "arm": "R",
+      "scope_card": 48,
+      "eligible_card": 0,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 384,
+      "pruned": 0,
+      "returned": 0
+    },
+    {
+      "arm": "H",
+      "scope_card": 48,
+      "eligible_card": 0,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 384,
+      "pruned": 0,
+      "returned": 0
+    },
+    {
+      "arm": "H0",
+      "scope_card": 48,
+      "eligible_card": 0,
+      "ef": 8,
+      "k": 3,
+      "expanded": 48,
+      "distance_calls": 48,
+      "retained": 190,
+      "pruned": 194,
+      "returned": 0
+    }
+  ],
+  "limits": [
+    "Proves a finite instance of a source-derived invariant; no real-data prevalence measured.",
+    "No timing, new ANN algorithm, general quality or dynamic claim."
+  ]
+}
