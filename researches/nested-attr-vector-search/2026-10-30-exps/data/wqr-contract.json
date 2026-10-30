@@ -8,6 +8,15 @@
   "problem": "external hierarchy AND scalar/category/tag filter; original FP32 squared-L2 top-k",
   "routing_predicate": "any(ExactMask(block, query) & ZoneMask(proxy))",
   "proxy_source_liveness": "independent immutable routing-vector copy; source deletion does not delete proxy",
+  "evidence_update": {
+    "server_commit": "0837918",
+    "effect": "limits the tested 64D safe-certificate families; neither validates nor refutes full-dimensional WQR",
+    "frozen_attribute_snapshots": true,
+    "regenerate_attributes_from_wqr_blocks": false,
+    "exact_proxy_reference": "all GeometryRoute/BlockGate/WQR configurations; same P/L/ties; diagnostic only, not a recall upper bound",
+    "coverage_difference": "signed, never clamp negative values to zero",
+    "macro_recall": "aggregate per-query values; never multiply macro coverage by macro conditional local recall"
+  },
   "defaults": {
     "block_target": 1024,
     "proxies_per_block": 4,

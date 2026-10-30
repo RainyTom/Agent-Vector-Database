@@ -8,6 +8,7 @@
 2. 原交接先§0勘误，按已有P0清单核语义/公共距离/两遍GT；历史审读用于避免已知错误，不覆盖最新冻结方案。
 3. [`data/wqr-contract.json`](data/wqr-contract.json)为机械参数合同。规范冲突时以正文为准并报告，不能静默省略。
 4. 本地探针不是生产代码：`experiments/wqr_semantics.py`实际验证bitplane/动态Euler；`experiments/wqr_hnsw_probe.cpp`实际验证proxy graph/zone gate及反例。Python不参与线上效率对比。
+5. 阅读服务器0837918的第二轮联合诊断及规格§0.1。本轮64维证书负结果不是WQR的失败或正证据；不再实施64维cell/tuple细化、径向lift，也不把另造余空间编码设为WQR实施前置条件。
 
 ## 唯一主方案
 
@@ -31,12 +32,12 @@
 ## 实验顺序，不需要自行选算法
 
 1. 先用小fixture实现并通过全部语义/生命周期。必须包含真实支持域投影正例与中心反例、空结果、R后旧rank失效、internal owner、空tag、D/I与源对象删除后的proxy保留。
-2. 再运行原WIKI/SIFT小数据；固定同一attributes/queries/tape，不另造有利分布。B0=1024,r=4,M16,efC200,local ef1024。
+2. 再运行原WIKI/SIFT小数据；固定同一attributes/queries/tape，不另造有利分布。B0=1024,r=4,M16,efC200,local ef1024。禁止按新几何分块重新生成属性；旧K32/96条件下不同属性快照保留独立身份。先保存GeometryRoute/BlockGate/WQR各自精确proxy排序、同P/L去重后的离线route coverage参考，再运行线上搜索；不是让你重新选机制。
 3. L取1,2,4,...到C并包含C；portal ef仅max(64,4L)、max(256,4L)。这不是开放搜索空间，不立即放大规模。
 4. 对照NodeANN、GeometryRoute、BlockGate、WQR；后三者共享完全相同几何块/代表/图。另跑Eager-WQR以分离lazy准备收益。不是复现所有外部ANN论文。
 5. 两遍GT；macro/pair均≥.999、invalid/duplicate/state=0才计胜出。记录实际mask块数、活跃zone、route coverage、conditional local recall、全部distance/edge/owner-rank工作及全成本。
 6. 加V/T/M/R与I/D短窗口；B按真实冻结批量移动语义运行。所有同步重建和窗口末未清偿工作计费；原始数组、local图、proxy两份payload、bitplanes、owner列表、Euler与峰值内存全计。
-7. 对每个未过质量点做离线exact-proxy排序归因；不得在线使用该排序的GT结果或假装免费。
+7. 对全部配置保留离线exact-proxy归因，而非仅质量失败点；这是固定proxy打分参考，不是Recall上界。近似路由的coverage可能偶然更高，差值必须带符号。逐query分别计算route coverage、conditional local recall与final recall后聚合，禁止将两个macro均值相乘。不得在线使用参考排序或GT，也不得把其成本写成免费线上操作。
 
 ## 明确不做
 

@@ -16,6 +16,16 @@
 
 证据：[支持域修订审查](wqr-prior-review.md)、[初稿对抗审查](wqr-adversarial-review.md)。后者针对旧的整块gate及数据对象portal，最终规则以本文的zone gate与独立proxy为准。新检索还出现Learning Cluster Representatives、Cracking Vector Search Indexes、lakehouse per-file ANN等线索，未核全文，不以未读材料认证新颖性。
 
+### 0.1 接收0837918第二轮证据后的边界
+
+完整核读服务器第二轮报告、分析、事前协议与复现说明，并按pooled.csv整数计数重算四行主表；见[本地追加审读](report.md#13-同日续轮接收0837918的联合信息诊断)与[data/wqr-round2-evidence.json](data/wqr-round2-evidence.json)。没有重跑服务器实验、没有逐条重审173568条原始记录。
+
+- WIKI相同64维的完整同对象投影min及径向lift都无排除，不能仅归因于不同坐标用了不同对象。暂停这两个具体安全界族；不把结论扩大到所有低维表示/近似路由。
+- WQR的slot共同资格用于保证硬谓词，不是修复投影距离。proxy保持原维FP32向量；没有投影下界、径向lift或安全几何停止。它仍有有限代表覆盖损失，第二轮既不验证也不否证WQR。
+- “必须先发明超出VA/PQ/simplex的表示”仅是若继续该证书族时的研究问题，不是所有过滤索引的准入条件。保留现有WQR机制与参数，不另起编码路线。
+- 冻结旧对象属性、scope、query和tape；不能按WQR的新分块重新生成合成属性。旧K32/96条件若产生不同属性，应保留各自快照身份，不能与B0=1024的新分块混同。
+
+
 ## 1. 问题与接口边界
 
 对象有稳定ID、单一直接owner node、int64 category/numeric、uint64 tags、alive、immutable FP32 vector。目录可在内部节点直接绑定对象。查询为：
@@ -276,7 +286,9 @@ apply_D(id); apply_I(id, owner, category, numeric, tags);
 
 质量沿现协议：raw FP32 squared-L2、k10、run级macro/pair均≥.999、invalid/duplicate/state=0。空GT按旧协议统计，但额外单列非空query质量，不能靠空query稀释。记录route_coverage=GT中位于最终选块的比例、条件local recall（分母为选块中的GT；0时NA），以及完整最终recall。
 
-**离线路由归因**：对同一snapshot，将全部active proxies精确排序，模拟同L选块；此过程只诊断，不进入在线计时或停止。若精确proxy路由也覆盖不足，是代表/块组织问题；精确路由好而HNSW路由差，是portal ANN损失；选块覆盖好而最终差，是local ANN损失。
+令单query的GT为G，选块中GT为G_S，最终输出为T。G非空且G_S非空时，最终recall=`(|G_S|/|G|) * (|T∩G|/|G_S|)`；G_S为空时local recall记NA且最终recall为0。必须逐query计算后各自聚合；**不能用macro route coverage乘macro conditional local recall还原macro final recall**。空GT另按现行规则处理。
+
+**离线路由归因**：在调portal/local参数前，对同一snapshot的GeometryRoute/BlockGate/WQR都计算一次相应准入proxy的精确排序，再按相同P、L、tie规则选块；保留所有L的结果，而非只保留在线未过质量点。它消除的是固定proxy打分中的HNSW近似误差，**不是任何路由方法可达Recall的上界**；近似排序偶然选入GT块时，coverage可能反而高于此参考。该差值带符号记录，不截为0。固定精确proxy排序覆盖不足，说明本版代表打分失配；精确路由好而HNSW路由差，支持portal ANN损失归因；实际选块覆盖好而最终差，支持local ANN损失归因。离线全proxy排序与GT均不得进入在线路径或伪装成免费取得。
 
 必要计数：portal/local真实距离次数、邻接访问、callback次数、U、owner rank查询/缓存命中、bitset word操作、active zone数、实际J、构建/更新/回收字节与时间、常驻/峰值内存、query全生命周期p50/p95/p99。所有未被最终选中但触发mask的块也计费。
 

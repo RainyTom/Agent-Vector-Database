@@ -1,0 +1,78 @@
+{
+  "source_commit": "0837918",
+  "source_url": "https://raw.githubusercontent.com/RainyTom/Agent-Vector-Database/0837918/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/joint-information-run2/analysis/pooled.csv",
+  "csv_payload_sha256": "138719e755ee36c2b8b90d1de1afc346cfcfc006b688c03e683169ded6d75752",
+  "csv_hash_scope": "reader CSV payload, stripped outer whitespace; not original file-byte SHA",
+  "pooled_rows": 452,
+  "selection": {
+    "family": "group",
+    "g": "r",
+    "order": "contiguous",
+    "threshold_mode": "filtered_topk",
+    "control": "correlated",
+    "scope_only": "excluded by upstream aggregation"
+  },
+  "selected_rows": [
+    {
+      "dataset": "wiki-root3626",
+      "r": 64,
+      "eligible_weight": 207904,
+      "whole_items": 0,
+      "conditional_items": 0,
+      "whole_pct": 0.0,
+      "conditional_pct": 0.0,
+      "filter_extra_pp": 0.0
+    },
+    {
+      "dataset": "wiki-root3626",
+      "r": 256,
+      "eligible_weight": 207904,
+      "whole_items": 50,
+      "conditional_items": 290,
+      "whole_pct": 0.02404956133600123,
+      "conditional_pct": 0.13948745574880714,
+      "filter_extra_pp": 0.11543789441280591
+    },
+    {
+      "dataset": "wiki-root3626",
+      "r": 1024,
+      "eligible_weight": 207904,
+      "whole_items": 121382,
+      "conditional_items": 163360,
+      "whole_pct": 58.38367708173003,
+      "conditional_pct": 78.57472679698323,
+      "filter_extra_pp": 20.191049715253193
+    },
+    {
+      "dataset": "sift12000",
+      "r": 64,
+      "eligible_weight": 210576,
+      "whole_items": 128299,
+      "conditional_items": 150474,
+      "whole_pct": 60.92764607552618,
+      "conditional_pct": 71.45828584454068,
+      "filter_extra_pp": 10.530639769014513
+    }
+  ],
+  "finite_constructions": {
+    "same_projection_and_residual_norm": true,
+    "raw_squared_distances": [
+      0,
+      36
+    ],
+    "projected_and_radial_bounds": [
+      0,
+      0
+    ],
+    "exact_proxy_coverage_not_universal_upper_bound": [
+      0.0,
+      1.0
+    ],
+    "macro_final_recall": 0.5,
+    "product_of_macro_components": 0.5625
+  },
+  "new_real_dataset_experiments": 0,
+  "new_ann_experiments": 0,
+  "upstream_code_reexecuted": false,
+  "original_query_rows_reaudited": false
+}
