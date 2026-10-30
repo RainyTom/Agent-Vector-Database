@@ -1,0 +1,34 @@
+{
+  "kind": "finite reasoning model, no C++/ANN experiment",
+  "scope_restriction_checks": 384,
+  "mismatches": 0,
+  "coordinates": {
+    "u": 0.0,
+    "v": 2.0,
+    "w": 1.0,
+    "z": 5.0
+  },
+  "subtree_A_before": [
+    "u",
+    "v",
+    "w"
+  ],
+  "source_u_selected_before": [
+    "w"
+  ],
+  "source_u_selected_after_w_subtree_move": [
+    "v"
+  ],
+  "source_u_selected_after_w_attribute_exclusion": [
+    "w",
+    "v"
+  ],
+  "same_geometric_witness_distances": {
+    "u_v_squared": 4,
+    "u_w_squared": 1,
+    "w_v_squared": 1
+  },
+  "range_prior_difference": "with attribute/DFS order u<v<w, w is outside interval [u,v] but inside their minimum directory subtree A",
+  "new_real_data_runs": 0,
+  "general_recall_guarantee": false
+}
