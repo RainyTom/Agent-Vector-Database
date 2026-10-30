@@ -238,3 +238,7 @@
 ## 2026-10-29 七篇向量检索机制与记忆系统
 
 先做直接join术语范围核对，再研读用户指定七篇。新增6工作、复核Directory-Aware；均不直接提供vector join。MSG为固定多字段向量，Blend为相关性多路融合，VikingMem为记忆系统；不因迁移到本项目就改论文原问题分类。详见[检索与版本限制](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)和[机制综合](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/seven-paper-inspiration-review.md)。条件证据/导航适用域仍是未充分查重的研究假设。
+
+## 2026-10-30 条件几何诊断的归因边界
+
+先检索pivot/norm的直接vector similarity join与inner-product similarity join范围，再核经典metric indexing。Pivot-based Metric Indexing原文§2.3、§5.1–5.2用于避免将参考点距离区间当新过滤机制；未新增完整论文记录。研究仍为单查询层级多属性filtered ANN，不是join。真实CSV再分析与同阈值oracle分解见[上游报告](../nested-attr-vector-search/2026-10-30-exps/report.md)，不能把metric filtering等同属性过滤或将norm控制当新索引。

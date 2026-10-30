@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-30",
+  "artifact_paths_checked": 14,
+  "relative_markdown_links_checked": 55,
+  "manifest_local_references_checked": 4,
+  "primary_excerpt_sha_verified": true,
+  "source_rows": 64,
+  "deduplicated_query_partition_cases": 32,
+  "smoke_command": "python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/experiments/upstream_joint_information_analysis.py",
+  "new_ann_runs": 0,
+  "server_experiment_reruns": 0,
+  "new_complete_paper_records": 0,
+  "limits": "Path/hash validation does not prove literature claims, novelty, or any unrun E0/E1 experiment."
+}

@@ -182,3 +182,9 @@
 - VikingMem/Blend改用2026正式PVLDB身份；CDMG只取得2025历史五作者16页报告，正式六作者29页书目另列，正文差异待补；Flash实际分析arXiv v1。保存6篇分页原文提取、文本SHA与完整机制审读，不伪造PDF字节校验。
 - 研究继续限定外部层级与多属性硬资格＋原始向量top-k；提出条件几何证书/条件遮挡证据两类并列待查候选，不默认重启D2/LES。5项合成语义反例运行通过，不是新ANN性能结果。
 - 修正README中当前checkout不存在的research_index.py命令；本轮以独立结构/路径核验替代，不新造工具或声称原验证器成功。
+
+## 2026-10-30 上游诊断复核的章节证据与版本边界
+
+- 新增Pivot-based Metric Indexing（PVLDB2017）§2.3、§5.1–5.2的[原文节选及来源](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/evidence/pivot-filtering-excerpts-20261030.md)，仅作为经典pivot/区间控制的证据候选；未完整核实验，不新增伪精读记录或引用关系。
+- 本分支仍36工作、29关系；服务器7756064的36工作、31关系来自不同分支，未自动合并，不将数量相加或覆盖旧记录。
+- [上游报告](../researches/nested-attr-vector-search/2026-10-30-exps/report.md)区分几何oracle能力与过滤特有增量，保存64条原CSV控制与可复现分析。条件遮挡路线未实施，不继承稀疏残差B的暂停为其实验失败。

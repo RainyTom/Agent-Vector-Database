@@ -8,6 +8,8 @@
 
 **用户最新纠偏：索引机制优先。** 上述维护任务书已暂停默认执行；当前入口是[新索引服务器提示词](index-mechanism-server-prompt.md)，依据为[条件化剪枝与稀疏表示候选](pruning-index-directions.md)。BioVSS原文机制与L2AP/Seismic等重合已核，不能把延迟迁移或普通稀疏倒排当新索引贡献。
 
+**2026-10-30真实诊断及上游判断：** [服务器固定7756064报告](https://github.com/RainyTom/Agent-Vector-Database/blob/7756064/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md) → [上游独立复核与E0/E1指令](../../2026-10-30-exps/report.md)。新增分析发现root/scope-only下真实距离oracle也很强，不能把全部oracle优势归给联合过滤；下一步先补同阈值D_B/D_H/D_F。服务器B=稀疏残差，上游后续B=条件遮挡，后者未测，勿混用。
+
 
 
 ## P0：必须先读

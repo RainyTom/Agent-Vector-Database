@@ -1,0 +1,70 @@
+{
+  "source_commit": "7756064",
+  "source_url": "https://raw.githubusercontent.com/RainyTom/Agent-Vector-Database/7756064/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/conditional-geometry-run2/queries.csv",
+  "selected_windows": [
+    {
+      "start": 2,
+      "end": 49,
+      "text_sha256": "1b56f2fb8805e3d712cc84aac7a736d0d83c6d4053d963c94c6b067a99aa6746"
+    },
+    {
+      "start": 1154,
+      "end": 1201,
+      "text_sha256": "69a350a2ad38e096f00922d7a6d6ab627e05c5cedbcb1c7ec5d859eeaa2426ef"
+    },
+    {
+      "start": 2306,
+      "end": 2353,
+      "text_sha256": "d3582ea1b0ece8bd292ce67cbba0cc87115caaa9e3a625a1552c6750c94f4c34"
+    },
+    {
+      "start": 3458,
+      "end": 3505,
+      "text_sha256": "2d57a64f1765c51908473dc77c3130d440aad0ff40a00ba74666181fa106f654"
+    },
+    {
+      "start": 4610,
+      "end": 4657,
+      "text_sha256": "215566c6206166c29034e068d055845a56f079625a50d6a30915caf74afe8b08"
+    },
+    {
+      "start": 5762,
+      "end": 5809,
+      "text_sha256": "21723b1b7e2ff8ad2897d149f73dd7e3e475e668bdb340980c3693749cc49453"
+    },
+    {
+      "start": 6914,
+      "end": 6961,
+      "text_sha256": "7d1f18ac7d102d5dcc46eee252127e34e0638e674e98b6027468229a8feb7632"
+    },
+    {
+      "start": 8066,
+      "end": 8113,
+      "text_sha256": "dbdc19e6ae336e30fa9cfa19dca510b880260d51fd22c30ac7c17925b8a2c9db"
+    }
+  ],
+  "summary": [
+    {
+      "dataset": "sift12000",
+      "configuration_rows": 32,
+      "source_queries": 8,
+      "eligible_weight": 384000,
+      "root_exact_oracle_skip_weight": 353420,
+      "root_exact_oracle_skip_fraction": 0.9203645833333334,
+      "threshold": "unfiltered root exact kth distance; NOT matched filtered threshold",
+      "interpretation": "No hierarchy restriction or ordinary attribute filtering is present. This is descriptive evidence that a strong exact oracle is not inherently filtering-specific; do not subtract from filtered pooled rate."
+    },
+    {
+      "dataset": "wiki-root3626",
+      "configuration_rows": 32,
+      "source_queries": 8,
+      "eligible_weight": 379808,
+      "root_exact_oracle_skip_weight": 336020,
+      "root_exact_oracle_skip_fraction": 0.8847101693487236,
+      "threshold": "unfiltered root exact kth distance; NOT matched filtered threshold",
+      "interpretation": "No hierarchy restriction or ordinary attribute filtering is present. This is descriptive evidence that a strong exact oracle is not inherently filtering-specific; do not subtract from filtered pooled rate."
+    }
+  ],
+  "new_ann_runs": 0,
+  "reran_source_experiment": false
+}

@@ -1,0 +1,25 @@
+{
+  "review_date": "2026-10-30",
+  "server_commit": "7756064",
+  "upstream_preceding_commit": "6b8f9cc",
+  "common_ancestor": "01ef7d65bd88a71f87b607721ec7fbdea1adae19",
+  "server_report": "https://github.com/RainyTom/Agent-Vector-Database/blob/7756064/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md",
+  "local_selected_source_rows": "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/upstream-review-7756064/root-scope-only-r64.csv",
+  "local_results": "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/upstream-review-7756064/joint-information-analysis.json",
+  "local_source_windows": "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/upstream-review-7756064/oracle-attribution.json",
+  "local_analysis_script": "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/experiments/upstream_joint_information_analysis.py",
+  "source_rows": 64,
+  "basis_deduplicated_cases": 32,
+  "unique_source_queries_total": 16,
+  "new_ann_runs": 0,
+  "original_experiment_reruns": 0,
+  "real_data_joint_bound_experiments": 0,
+  "new_complete_paper_records": 0,
+  "limitations": [
+    "The reviewed server commit and upstream branch diverged after 01ef7d6; no merge performed.",
+    "Server candidate B means sparse residual coverage, not the later conditional occlusion proposal.",
+    "Root and filtered pooled rates use different thresholds; their difference is not a filtering effect.",
+    "Original large vectors and distance matrices are absent from this checkout.",
+    "E0 matched-threshold attribution and E1 joint-order diagnostics are proposed, not executed."
+  ]
+}

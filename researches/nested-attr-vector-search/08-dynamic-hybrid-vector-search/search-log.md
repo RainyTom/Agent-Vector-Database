@@ -43,3 +43,12 @@
 - 发现MSG仍有指数级组合邻接，CDMG理想路径/融合近似/实际GreedySearch保证不可混同，Hubness不能简化成均匀入度更好，Blend相关性融合不等于属性过滤。用户再次明确层级＋多属性硬过滤，已写入任务书。
 - 详见[七篇原文复核](2026-10-29-exps/seven-paper-inspiration-review.md)；候选A/B均未完成最近前序证明级查重。待核：条件遮挡/剪枝证据、共享适用域的FilteredVamana/UNG/Packing等；条件极值的range/wavelet前序；CDMG正式版差异。
 - 新增6条、修订1条，2条原文引用；仅运行5项合成语义反例。没有作者代码复现或新ANN性能网格。
+
+## 2026-10-30 真实诊断的上游归因复核
+
+- 先核本分支论文/关系与既有机制审读，完整读7756064报告、机制审查、协议、阅读清单、复现及诊断源码。服务器与七篇审读分支共同祖先01ef7d6，不覆盖任一分支记录；服务器稀疏B与上游条件遮挡B不同。
+- 直接join范围检索：`"vector similarity join" "pivot" OR "inner-product similarity join" "norm"`；再检索`Omni family all purpose access methods similarity queries 2001 pivot distance lower bound pdf`、`"Pivot-based metric indexing" "pdf"`、`product quantization distance lower bounds exact nearest neighbor subspace minimum sum admissible`。搜索回答只作线索，不把AI推导当论文保证。
+- 原文核查PVLDB2017 Pivot-based Metric Indexing §2.3、§5.1–5.2，确认三角不等式pivot下界、球界及距离区间索引为经典控制。ACM入口403，改用官方PVLDB全文成功。OMNI2001出版页无可读正文，未冒称全文精读；PQ论文线索未核正文，不据此主张新的量化界或实施PQ。
+- 新数据分析仅用既有64行root/scope-only控制，去basis重复为32个case；WIKI/SIFT无过滤oracle分别88.4710%/92.0365%，阈值与过滤pooled不同，不直接相减。未重跑服务器失败/诊断或新ANN。具体来源、脚本、限制见[上游报告](../2026-10-30-exps/report.md)。
+- 下一步E0为同最终τ下D_B/D_H/D_F归因；有机会才E1嵌套联合阶数及范数/固定中心控制。候选仍未通过新颖性门；经典下界或范围查询不换名立项，但不要求所有基础原语全新。
+- 文献仅加章节证据候选，未新增完整总库记录；本分支仍36工作/29关系，与服务器36/31是不同集合，待显式整合后才能报联合计数。

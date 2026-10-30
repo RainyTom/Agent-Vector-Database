@@ -1,0 +1,70 @@
+{
+  "source_commit": "7756064",
+  "source_rows": 64,
+  "controls_after_projection_basis_deduplication": [
+    {
+      "dataset": "sift12000",
+      "unique_query_vectors": 8,
+      "query_partition_cases_after_basis_deduplication": 16,
+      "eligible_weight": 192000,
+      "exact_oracle_skip_weight": 176710,
+      "exact_oracle_skip_fraction": 0.9203645833333334,
+      "threshold": "each unfiltered-root query own exact top-10 threshold"
+    },
+    {
+      "dataset": "wiki-root3626",
+      "unique_query_vectors": 8,
+      "query_partition_cases_after_basis_deduplication": 16,
+      "eligible_weight": 189904,
+      "exact_oracle_skip_weight": 168010,
+      "exact_oracle_skip_fraction": 0.8847101693487236,
+      "threshold": "each unfiltered-root query own exact top-10 threshold"
+    }
+  ],
+  "constructive_examples": {
+    "convex_hull_and_norm_shell": {
+      "independent_coordinate_gap_sq": 0,
+      "coupled_two_coordinate_min_sq": 1,
+      "exact_min_sq": 1,
+      "convex_outer_distance_sq": 0,
+      "radial_norm_lower_sq": 1
+    },
+    "marginals_and_norms_are_insufficient": {
+      "same_coordinate_multisets": true,
+      "same_norm_multiset": true,
+      "diagonal_gap_sq": 0,
+      "antidiagonal_gap_sq": 0,
+      "diagonal_exact_min_sq": 0,
+      "antidiagonal_exact_min_sq": 4
+    },
+    "same_threshold_oracle_attribution": [
+      {
+        "D_B": 9,
+        "D_H": 9,
+        "D_F": 16,
+        "same_tau": 1,
+        "generic_exclusion": true,
+        "hierarchy_increment": false,
+        "ordinary_attribute_increment": false,
+        "conditional_oracle_exclusion": true
+      },
+      {
+        "D_B": 0,
+        "D_H": 1,
+        "D_F": 4,
+        "same_tau": 2,
+        "generic_exclusion": false,
+        "hierarchy_increment": false,
+        "ordinary_attribute_increment": true,
+        "conditional_oracle_exclusion": true
+      }
+    ]
+  },
+  "limits": [
+    "Descriptive reanalysis of existing CSV; no rerun of source experiment.",
+    "Root and filtered pooled thresholds differ; do not subtract their rates.",
+    "Integer toy examples are not new ANN performance or a floating-point certificate.",
+    "No proof that actual WIKI queries lie inside block convex hulls.",
+    "No new index, update benchmark, or novelty clearance."
+  ]
+}
