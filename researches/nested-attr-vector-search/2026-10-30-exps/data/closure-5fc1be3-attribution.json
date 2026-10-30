@@ -1,0 +1,882 @@
+{
+  "server_commit": "5fc1be3",
+  "implemented_commit": "7654f1e",
+  "inputs": {
+    "group_runs_url": "https://raw.githubusercontent.com/RainyTom/Agent-Vector-Database/5fc1be3/researches/nested-attr-vector-search/2026-10-30-exps/data/closure-server-run1/static/group-runs.json",
+    "group_runs_sha256": "17978f88ecb0780414acf5e0ed4386b711b6801633bbd014bb77f709e6f412ad",
+    "warning": "Text digest is of reader-extracted JSON body, not claimed identical to Git blob bytes."
+  },
+  "confirmation_nonempty_derived": [
+    {
+      "e2e_us_mean": 546.4106291666667,
+      "distance_calls_mean": 1461.825,
+      "dataset": "wiki",
+      "arm": "A",
+      "ef": 64,
+      "n": 80
+    },
+    {
+      "e2e_us_mean": 10067.924108333333,
+      "distance_calls_mean": 2690.15,
+      "dataset": "wiki",
+      "arm": "U",
+      "ef": 256,
+      "n": 80,
+      "expanded_mean": 1443.45,
+      "compile_us_mean": 8080.223687500004,
+      "pool_candidates_mean": 92380.8,
+      "retained_mean": 86054.775,
+      "hierarchy_steps_mean": 0.0,
+      "qualification_tests_mean": 1685.3499999999997,
+      "backbone_ids_mean": 2885.0625,
+      "compile_fraction": 0.8025709769516353,
+      "outside_compile_us": 1987.7004208333283,
+      "pool_per_expanded": 64.0
+    },
+    {
+      "e2e_us_mean": 11081.527516666667,
+      "distance_calls_mean": 2577.975,
+      "dataset": "wiki",
+      "arm": "R",
+      "ef": 256,
+      "n": 80,
+      "expanded_mean": 1443.6875,
+      "compile_us_mean": 9098.310150000012,
+      "pool_candidates_mean": 92396.0,
+      "retained_mean": 81453.85,
+      "hierarchy_steps_mean": 0.0,
+      "qualification_tests_mean": 87751.05,
+      "backbone_ids_mean": 2885.5375,
+      "compile_fraction": 0.8210339356479612,
+      "outside_compile_us": 1983.217366666655,
+      "pool_per_expanded": 64.0
+    },
+    {
+      "e2e_us_mean": 17473.35375,
+      "distance_calls_mean": 2980.0124999999994,
+      "dataset": "wiki",
+      "arm": "H",
+      "ef": 1024,
+      "n": 80,
+      "expanded_mean": 2011.1875,
+      "compile_us_mean": 14915.61883333334,
+      "pool_candidates_mean": 128716.0,
+      "retained_mean": 99321.2,
+      "hierarchy_steps_mean": 46072.6625,
+      "qualification_tests_mean": 124523.8875,
+      "backbone_ids_mean": 4020.4625,
+      "compile_fraction": 0.8536208358589055,
+      "outside_compile_us": 2557.734916666659,
+      "pool_per_expanded": 64.0
+    },
+    {
+      "e2e_us_mean": 22891.904566666668,
+      "distance_calls_mean": 2947.5500000000006,
+      "dataset": "wiki",
+      "arm": "H0",
+      "ef": 1024,
+      "n": 80,
+      "expanded_mean": 2012.0374999999997,
+      "compile_us_mean": 20466.731879166666,
+      "pool_candidates_mean": 128770.39999999998,
+      "retained_mean": 33966.9875,
+      "hierarchy_steps_mean": 171098.125,
+      "qualification_tests_mean": 2319.95,
+      "backbone_ids_mean": 4022.1625,
+      "compile_fraction": 0.8940598113871512,
+      "outside_compile_us": 2425.172687500002,
+      "pool_per_expanded": 64.0
+    },
+    {
+      "e2e_us_mean": 355.01167333333336,
+      "distance_calls_mean": 3710.5399999999995,
+      "dataset": "sift",
+      "arm": "A",
+      "ef": 64,
+      "n": 50
+    },
+    {
+      "e2e_us_mean": 21262.04018,
+      "distance_calls_mean": 4390.72,
+      "dataset": "sift",
+      "arm": "U",
+      "ef": 256,
+      "n": 50,
+      "expanded_mean": 2973.6999999999994,
+      "compile_us_mean": 18741.87888666667,
+      "pool_candidates_mean": 190316.79999999996,
+      "retained_mean": 92012.82,
+      "hierarchy_steps_mean": 0.0,
+      "qualification_tests_mean": 3378.16,
+      "backbone_ids_mean": 5945.8,
+      "compile_fraction": 0.8814713323839966,
+      "outside_compile_us": 2520.161293333331,
+      "pool_per_expanded": 64.0
+    },
+    {
+      "e2e_us_mean": 22726.288073333333,
+      "distance_calls_mean": 4362.8,
+      "dataset": "sift",
+      "arm": "R",
+      "ef": 256,
+      "n": 50,
+      "expanded_mean": 2973.66,
+      "compile_us_mean": 20221.314386666676,
+      "pool_candidates_mean": 190314.24,
+      "retained_mean": 84781.26,
+      "hierarchy_steps_mean": 0.0,
+      "qualification_tests_mean": 95394.82,
+      "backbone_ids_mean": 5945.72,
+      "compile_fraction": 0.8897763823734174,
+      "outside_compile_us": 2504.973686666657,
+      "pool_per_expanded": 64.0
+    },
+    {
+      "e2e_us_mean": 42418.07895999999,
+      "distance_calls_mean": 5521.32,
+      "dataset": "sift",
+      "arm": "H",
+      "ef": 1024,
+      "n": 50,
+      "expanded_mean": 4839.96,
+      "compile_us_mean": 38555.311080000014,
+      "pool_candidates_mean": 309757.44,
+      "retained_mean": 113980.58,
+      "hierarchy_steps_mean": 96522.52,
+      "qualification_tests_mean": 154611.82,
+      "backbone_ids_mean": 9678.06,
+      "compile_fraction": 0.9089358128725596,
+      "outside_compile_us": 3862.7678799999776,
+      "pool_per_expanded": 64.0
+    },
+    {
+      "e2e_us_mean": 49926.69888666667,
+      "distance_calls_mean": 5510.36,
+      "dataset": "sift",
+      "arm": "H0",
+      "ef": 1024,
+      "n": 50,
+      "expanded_mean": 4840.04,
+      "compile_us_mean": 46513.037893333334,
+      "pool_candidates_mean": 309762.56,
+      "retained_mean": 43241.46,
+      "hierarchy_steps_mean": 256310.04,
+      "qualification_tests_mean": 5170.56,
+      "backbone_ids_mean": 9678.22,
+      "compile_fraction": 0.9316265431231028,
+      "outside_compile_us": 3413.6609933333384,
+      "pool_per_expanded": 64.0
+    }
+  ],
+  "same_ef_calibration": [
+    {
+      "dataset": "sift",
+      "ef": 64,
+      "control": "U",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.981,
+        "pair": 0.9778554778554779
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.9840000000000001,
+        "pair": 0.9813519813519813
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 2052.61,
+      "control_mean_expanded": 2052.55,
+      "H_mean_e2e_us": 16460.9546,
+      "control_mean_e2e_us": 14687.36833,
+      "H_fewer_expanded_queries": 26,
+      "H_equal_expanded_queries": 57
+    },
+    {
+      "dataset": "sift",
+      "ef": 64,
+      "control": "G",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.981,
+        "pair": 0.9778554778554779
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.981,
+        "pair": 0.9778554778554779
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 2052.61,
+      "control_mean_expanded": 2052.25,
+      "H_mean_e2e_us": 16460.9546,
+      "control_mean_e2e_us": 14949.921199999999,
+      "H_fewer_expanded_queries": 4,
+      "H_equal_expanded_queries": 83
+    },
+    {
+      "dataset": "sift",
+      "ef": 64,
+      "control": "R",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.981,
+        "pair": 0.9778554778554779
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.98,
+        "pair": 0.9766899766899767
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 2052.61,
+      "control_mean_expanded": 2052.43,
+      "H_mean_e2e_us": 16460.9546,
+      "control_mean_e2e_us": 15384.36384,
+      "H_fewer_expanded_queries": 20,
+      "H_equal_expanded_queries": 61
+    },
+    {
+      "dataset": "sift",
+      "ef": 64,
+      "control": "H0",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.981,
+        "pair": 0.9778554778554779
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.978,
+        "pair": 0.9743589743589743
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 2052.61,
+      "control_mean_expanded": 2051.66,
+      "H_mean_e2e_us": 16460.9546,
+      "control_mean_e2e_us": 27608.99063,
+      "H_fewer_expanded_queries": 17,
+      "H_equal_expanded_queries": 40
+    },
+    {
+      "dataset": "sift",
+      "ef": 256,
+      "control": "U",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.9990000000000001,
+        "pair": 0.9988344988344988
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 3017.33,
+      "control_mean_expanded": 3016.74,
+      "H_mean_e2e_us": 26486.51531,
+      "control_mean_e2e_us": 20914.55405,
+      "H_fewer_expanded_queries": 21,
+      "H_equal_expanded_queries": 64
+    },
+    {
+      "dataset": "sift",
+      "ef": 256,
+      "control": "G",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.9990000000000001,
+        "pair": 0.9988344988344988
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.9990000000000001,
+        "pair": 0.9988344988344988
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 3017.33,
+      "control_mean_expanded": 3017.25,
+      "H_mean_e2e_us": 26486.51531,
+      "control_mean_e2e_us": 22194.71462,
+      "H_fewer_expanded_queries": 6,
+      "H_equal_expanded_queries": 85
+    },
+    {
+      "dataset": "sift",
+      "ef": 256,
+      "control": "R",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.9990000000000001,
+        "pair": 0.9988344988344988
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 3017.33,
+      "control_mean_expanded": 3017.21,
+      "H_mean_e2e_us": 26486.51531,
+      "control_mean_e2e_us": 23025.82196,
+      "H_fewer_expanded_queries": 15,
+      "H_equal_expanded_queries": 77
+    },
+    {
+      "dataset": "sift",
+      "ef": 256,
+      "control": "H0",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.9990000000000001,
+        "pair": 0.9988344988344988
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 0.9990000000000001,
+        "pair": 0.9988344988344988
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 3017.33,
+      "control_mean_expanded": 3016.81,
+      "H_mean_e2e_us": 26486.51531,
+      "control_mean_e2e_us": 40512.243760000005,
+      "H_fewer_expanded_queries": 13,
+      "H_equal_expanded_queries": 55
+    },
+    {
+      "dataset": "sift",
+      "ef": 1024,
+      "control": "U",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 4407.26,
+      "control_mean_expanded": 4407.24,
+      "H_mean_e2e_us": 44330.88119,
+      "control_mean_e2e_us": 31095.78576,
+      "H_fewer_expanded_queries": 12,
+      "H_equal_expanded_queries": 79
+    },
+    {
+      "dataset": "sift",
+      "ef": 1024,
+      "control": "G",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 4407.26,
+      "control_mean_expanded": 4407.07,
+      "H_mean_e2e_us": 44330.88119,
+      "control_mean_e2e_us": 32614.866690000003,
+      "H_fewer_expanded_queries": 5,
+      "H_equal_expanded_queries": 82
+    },
+    {
+      "dataset": "sift",
+      "ef": 1024,
+      "control": "R",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 4407.26,
+      "control_mean_expanded": 4407.26,
+      "H_mean_e2e_us": 44330.88119,
+      "control_mean_e2e_us": 35886.08534,
+      "H_fewer_expanded_queries": 11,
+      "H_equal_expanded_queries": 80
+    },
+    {
+      "dataset": "sift",
+      "ef": 1024,
+      "control": "H0",
+      "nonempty_queries": 100,
+      "H_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 100,
+        "empty": 0,
+        "unique_qidx": 32,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 4407.26,
+      "control_mean_expanded": 4407.31,
+      "H_mean_e2e_us": 44330.88119,
+      "control_mean_e2e_us": 60747.54610000001,
+      "H_fewer_expanded_queries": 8,
+      "H_equal_expanded_queries": 73
+    },
+    {
+      "dataset": "wiki",
+      "ef": 64,
+      "control": "U",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99125,
+        "pair": 0.987037037037037
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99375,
+        "pair": 0.9907407407407407
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 863.575,
+      "control_mean_expanded": 863.4,
+      "H_mean_e2e_us": 6881.275475,
+      "control_mean_e2e_us": 6282.350362499999,
+      "H_fewer_expanded_queries": 10,
+      "H_equal_expanded_queries": 62
+    },
+    {
+      "dataset": "wiki",
+      "ef": 64,
+      "control": "G",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99125,
+        "pair": 0.987037037037037
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99125,
+        "pair": 0.987037037037037
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 863.575,
+      "control_mean_expanded": 864.225,
+      "H_mean_e2e_us": 6881.275475,
+      "control_mean_e2e_us": 6668.059974999999,
+      "H_fewer_expanded_queries": 7,
+      "H_equal_expanded_queries": 71
+    },
+    {
+      "dataset": "wiki",
+      "ef": 64,
+      "control": "R",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99125,
+        "pair": 0.987037037037037
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.9925,
+        "pair": 0.9888888888888889
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 863.575,
+      "control_mean_expanded": 863.6375,
+      "H_mean_e2e_us": 6881.275475,
+      "control_mean_e2e_us": 6736.272350000001,
+      "H_fewer_expanded_queries": 11,
+      "H_equal_expanded_queries": 62
+    },
+    {
+      "dataset": "wiki",
+      "ef": 64,
+      "control": "H0",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99125,
+        "pair": 0.987037037037037
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.9800000000000001,
+        "pair": 0.9703703703703703
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 863.575,
+      "control_mean_expanded": 861.4625,
+      "H_mean_e2e_us": 6881.275475,
+      "control_mean_e2e_us": 9743.284975,
+      "H_fewer_expanded_queries": 5,
+      "H_equal_expanded_queries": 56
+    },
+    {
+      "dataset": "wiki",
+      "ef": 256,
+      "control": "U",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99875,
+        "pair": 0.9981481481481481
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 1322.55,
+      "control_mean_expanded": 1322.6125,
+      "H_mean_e2e_us": 11211.1141625,
+      "control_mean_e2e_us": 9625.1276,
+      "H_fewer_expanded_queries": 10,
+      "H_equal_expanded_queries": 65
+    },
+    {
+      "dataset": "wiki",
+      "ef": 256,
+      "control": "G",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99875,
+        "pair": 0.9981481481481481
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99875,
+        "pair": 0.9981481481481481
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 1322.55,
+      "control_mean_expanded": 1322.65,
+      "H_mean_e2e_us": 11211.1141625,
+      "control_mean_e2e_us": 10142.98835,
+      "H_fewer_expanded_queries": 4,
+      "H_equal_expanded_queries": 71
+    },
+    {
+      "dataset": "wiki",
+      "ef": 256,
+      "control": "R",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99875,
+        "pair": 0.9981481481481481
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 1322.55,
+      "control_mean_expanded": 1322.5,
+      "H_mean_e2e_us": 11211.1141625,
+      "control_mean_e2e_us": 10564.85655,
+      "H_fewer_expanded_queries": 10,
+      "H_equal_expanded_queries": 65
+    },
+    {
+      "dataset": "wiki",
+      "ef": 256,
+      "control": "H0",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99875,
+        "pair": 0.9981481481481481
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 0.99875,
+        "pair": 0.9981481481481481
+      },
+      "same_quality_pass": false,
+      "H_mean_expanded": 1322.55,
+      "control_mean_expanded": 1323.825,
+      "H_mean_e2e_us": 11211.1141625,
+      "control_mean_e2e_us": 15092.247899999998,
+      "H_fewer_expanded_queries": 12,
+      "H_equal_expanded_queries": 64
+    },
+    {
+      "dataset": "wiki",
+      "ef": 1024,
+      "control": "U",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 2176.5625,
+      "control_mean_expanded": 2176.7875,
+      "H_mean_e2e_us": 19571.978912500002,
+      "control_mean_e2e_us": 15170.4620625,
+      "H_fewer_expanded_queries": 8,
+      "H_equal_expanded_queries": 71
+    },
+    {
+      "dataset": "wiki",
+      "ef": 1024,
+      "control": "G",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 2176.5625,
+      "control_mean_expanded": 2176.475,
+      "H_mean_e2e_us": 19571.978912500002,
+      "control_mean_e2e_us": 16261.705937499999,
+      "H_fewer_expanded_queries": 1,
+      "H_equal_expanded_queries": 76
+    },
+    {
+      "dataset": "wiki",
+      "ef": 1024,
+      "control": "R",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 2176.5625,
+      "control_mean_expanded": 2176.8125,
+      "H_mean_e2e_us": 19571.978912500002,
+      "control_mean_e2e_us": 17866.598875,
+      "H_fewer_expanded_queries": 10,
+      "H_equal_expanded_queries": 70
+    },
+    {
+      "dataset": "wiki",
+      "ef": 1024,
+      "control": "H0",
+      "nonempty_queries": 80,
+      "H_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "control_quality": {
+        "nonempty": 80,
+        "empty": 0,
+        "unique_qidx": 80,
+        "macro": 1.0,
+        "pair": 1.0
+      },
+      "same_quality_pass": true,
+      "H_mean_expanded": 2176.5625,
+      "control_mean_expanded": 2176.925,
+      "H_mean_e2e_us": 19571.978912500002,
+      "control_mean_e2e_us": 24797.132749999997,
+      "H_fewer_expanded_queries": 4,
+      "H_equal_expanded_queries": 69
+    }
+  ],
+  "wiki_H_confirmation_miss": [
+    {
+      "event": "18",
+      "version": "0",
+      "qidx": "35",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "8511",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "H",
+      "ef": 1024,
+      "missing_gt_ids": [
+        8122
+      ],
+      "gt_ids": [
+        8122,
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361
+      ],
+      "result_ids": [
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361,
+        1430
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep2.queries.csv"
+      ]
+    }
+  ],
+  "limits": [
+    "Aggregates do not expose E<ef prevalence or first-discovery edge.",
+    "Same expanded counts do not prove identical sets/order.",
+    "Subtracting compile time is descriptive accounting, not predicted optimized runtime.",
+    "All reported ANN results accepted; no server failures rerun."
+  ]
+}
