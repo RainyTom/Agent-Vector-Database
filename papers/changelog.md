@@ -184,3 +184,11 @@
 - [机制门](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/mechanism-assessment.md)：条件extrema/gap有BSI/wavelet直接解释，普通稀疏残差覆盖已有L2AP；不据此宣称新索引。
 - [实际小型信息诊断](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md)：WIKI64维无额外非空剪枝；SIFT有条件界增益但同基数打乱控制不更差，当前排序探测取得成本高；未实现在线索引、无新ANN性能胜出或动态维护结果。
 - VA-file原始扫描正文缺口仍未关闭，range-searching综述只作背景。旧文引用的tools/research_index.py在当前checkout不存在，本轮不伪称运行该工具。
+
+## 2026-10-30 第2轮联合证据与归因修正
+
+- 新增simplex2017、IMI journal2015、CNN2001三条完整reader全文和日期化来源/SHA；按自身问题新建metric-search/vector-search主题，总库39条、关系33条。IMI journal不强并CVPR2012；CNN2001不误认同题2017百科。
+- 补核simplex正式DOI10.1007/978-3-319-68474-1_7与完整作者/年份/96–109；分析明确arXiv v1。两条新边均researcher_synthesis，非作者引用。
+- 并行核读VA-file镜像正文、UCSB VA+原始PS，以及metric/Ptolemaic/Hilbert邻近机制；未完整归档的版本不伪称库内完整已读。
+- [联合诊断](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/joint-certificate-report.md)修正“WIKI只缺联合见证”的推断：同对象完整64维投影min也无排除，原信息还被降维丢失；SIFT联合信息很大一部分在wholeB已存在。
+- 保留173568条逐case记录/两run及min-reduction计数修正；只有16条源query，不作ANN胜出或显著性主张。阶段门未通过，停止这两种经典结构的独立新索引立项，不否证其他表示/近似路线。

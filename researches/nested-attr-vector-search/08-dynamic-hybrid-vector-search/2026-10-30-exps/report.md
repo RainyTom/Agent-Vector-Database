@@ -130,3 +130,11 @@ SIFT full128条件box新增12.59%/13.31%，gap再增0.33%/0.35%；gap单独超�
 
 1. 条件box在本SIFT场景额外排除约11–12%的eligible权重，但WIKI64维没有新增排除；这是经典子集几何信息的实际诊断，不是已经发明新覆盖机制。
 2. 当前64维共享排序需约9.1–9.2MB额外数组及投影/F处理，逐次探测的逻辑读取远超额外避免的向量字节；动态维护未实测，因此目前不支持在线收益或新索引主张。
+
+## 9. 同日第2轮追加：联合证据与投影损失
+
+首轮§8提出的问题已进行小型判别，见[联合报告/图](joint-certificate-report.md)、[结构/前序/成本](joint-certificate-analysis.md)、[事前协议](joint-information-protocol.md)、[复现及失败修正](experiments/joint-reproduction.md)。历史首轮段落/数字不覆盖。
+
+**归因修正：**WIKI相同64维表示的同对象完整联合min也无排除，不能把raw oracle与独立轴界差距都解释为不同对象见证；投影丢失同样关键。SIFT联合界较强，但wholeB联合界已能做很多排除，不能将全部归为F贡献。两族有VA/PQ/simplex/CNN直接前序，未放行在线索引，也不否证其他表示或ANN近似机制。
+
+本轮实际两进程并行、两run保留173568逐case信息记录（仍只有16源query）；run1的工作计数定义不一致被修正，run2全部信息结果与之相同。GT复用先前C++矩阵而非重复声称新raw调用，没有PE/NodeANN端到端或更新新实验。当前文献库39条/33边，三份新全文及结构/SHA审计见data/joint-literature-audit.json。

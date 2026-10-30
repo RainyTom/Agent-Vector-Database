@@ -12,8 +12,10 @@
 | multi-vector-search | 1 | [多向量/向量集合检索](multi-vector-search/README.md)：BioVSS的表示与候选剪枝 |
 | data-indexing | 4 | [位图与压缩序列](data-indexing/README.md)：BSI、Boolean条件选择、wavelet、动态rank/select |
 | sparse-vector-search | 1 | [稀疏向量检索](sparse-vector-search/README.md)：Seismic posting与块摘要 |
+| vector-search | 2 | [几何约束与向量候选生成](vector-search/README.md)：CNN、IMI；精确与近似分开 |
+| metric-search | 1 | [度量/超度量搜索](metric-search/README.md)：simplex surrogate上下界 |
 
-总计 **36 篇论文/学位工作、31 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条记录用 `topic` 标明自身主问题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **39 篇论文/学位工作、33 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条记录用 `topic` 标明自身主问题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -28,6 +30,8 @@ papers/
 ├── multi-vector-search/<id>-<slug>/
 ├── data-indexing/<id>-slug/
 ├── sparse-vector-search/<id>-slug/
+├── vector-search/<id>-slug/
+├── metric-search/<id>-slug/
 └── trajectory-search/<id>-<slug>/
 ```
 
@@ -37,8 +41,10 @@ papers/
 
 2026-10-30新增6条相关工作和4条研究者机制比较：保存完整reader转换文本、日期化文本SHA及原始URL，未保存这6篇PDF二进制；只核读相关章节，不声称逐公式转换正确或作者实验复现。条件几何证书实测与经典前序差异见[机制审读](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/mechanism-assessment.md)。
 
+同日第2轮补齐simplex2017、IMI journal2015、CNN2001的完整reader全文及关键机制证据；CVPR2012不强合并为IMI journal别名，同题2017百科不误作CNN会议稿。新增联合信息诊断指出WIKI64维失败也包含投影损失，不仅是不同对象见证；见[联合结构与门禁](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/joint-certificate-analysis.md)。不宣称这些工作直接支持动态vector join。
 
-UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述36条全文记录。获取受限与理论未提供是两种不同状态。
+
+UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述39条全文记录。获取受限与理论未提供是两种不同状态。
 
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
 

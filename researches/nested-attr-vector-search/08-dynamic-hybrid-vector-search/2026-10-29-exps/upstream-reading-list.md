@@ -10,6 +10,8 @@
 
 **2026-10-30服务器实测交付**：[当日报告及图](../2026-10-30-exps/report.md) → [至多两候选/前序/证明/成本](../2026-10-30-exps/mechanism-assessment.md) → [事前协议](../2026-10-30-exps/conditional-geometry-protocol.md) → [真实复现/计时修正](../2026-10-30-exps/experiments/reproduction.md) → [完整run2数据](../2026-10-30-exps/data/conditional-geometry-run2/)。SIFT经典条件界有信息，WIKI独立坐标界失败；取得成本和新颖性未通过，不构造“新索引赢了”结论。下列历史清单仍供回源，不替代此最新机制门结果。
 
+**同日第2轮，先读这一归因修正**：[联合证据实测/图/阶段门](../2026-10-30-exps/joint-certificate-report.md)、[两族结构/前序/成本/反例](../2026-10-30-exps/joint-certificate-analysis.md)、[复现及失败](../2026-10-30-exps/experiments/joint-reproduction.md)。WIKI64维完整联合oracle仍无排除，说明不是简单加联合cell便能补回原信息；SIFT很多联合收益在不过滤界上已有。尚无新共享取得操作，不将VA/PQ/simplex+F改名立项。原始173568记录只有16条源query，不能读成新大规模ANN结果。
+
 
 
 ## P0：必须先读

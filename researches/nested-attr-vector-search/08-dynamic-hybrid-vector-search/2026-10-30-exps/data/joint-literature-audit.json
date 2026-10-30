@@ -1,0 +1,14 @@
+{
+  "paper_records": 39,
+  "relation_records": 33,
+  "unique_ids": true,
+  "alias_collisions": [],
+  "resolved_relation_endpoints": true,
+  "new_sources_file_sha256": {
+    "papers/metric-search/1707.08370-simplex/paper.md": "402b21323da951659a736425bccff26f23c9362314f9fffd2e0071801787beaf",
+    "papers/vector-search/2015-inverted-multi-index/paper.md": "aff645d5d5a87931484400055a90a6bb87f8ac23355a25dcabf93460e28f5663",
+    "papers/vector-search/2001-constrained-nearest-neighbor/paper.md": "c97677fa7d31b1b0c8f9b352f172a3c548850bf2a98f56bc52a759eca6d8afbd"
+  },
+  "new_relations_basis": "researcher_synthesis",
+  "limits": "Structure and stored reader-text hashes only; does not certify every paper claim or original PDF."
+}

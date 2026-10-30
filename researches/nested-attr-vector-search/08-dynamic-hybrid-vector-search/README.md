@@ -4,6 +4,8 @@
 
 ## 当前方案状态（先读这个）
 
+**同日第2轮最新结果**：[联合证据报告/图](2026-10-30-exps/joint-certificate-report.md)、[结构/复杂度/前序](2026-10-30-exps/joint-certificate-analysis.md)、[冻结协议](2026-10-30-exps/joint-information-protocol.md)。WIKI同对象完整64维联合投影仍排除0，首轮缺口不能只归因不同见证；SIFT联合收益也不全属于F。tuple/cell和residual-height有直接前序，本轮不放行在线索引；完整原始数据和计数失败均保留。
+
 **2026-10-30最新主线：索引机制优先，不再默认执行维护方案。** 先读[当日完整结果](2026-10-30-exps/report.md)、[事前协议](2026-10-30-exps/conditional-geometry-protocol.md)、[直接前序及证明/反例](2026-10-30-exps/mechanism-assessment.md)。真实WIKI/SIFT小诊断已完成：SIFT条件box有新增信息，但WIKI独立坐标界弱、取得成本和前序门未过，**不放行在线新索引原型**。这不否证所有条件证书方向，也不支持新索引端到端胜出。
 
 下述162运行属于历史动态维护基线证据；不作为当前论文路线或新索引贡献。

@@ -1,0 +1,8 @@
+{
+  "date": "2026-10-30",
+  "status": "Geometry results valid; old oracle_feature_terms is not a consistent cost counter",
+  "problem": "group rows counted C*r coordinate terms while radial rows counted C precomputed scalar values. The two quantities cannot be compared as acquisition work or vector distance calls.",
+  "correction": "run2 records eligible_min_reduction_values=C*number_of_group_columns and whole_min_reduction_values=N*number_of_group_columns; lift has one column. Transform/group-sum formation is separately excluded and full squared-coordinate terms recorded at run level.",
+  "preservation": "No run1 rows overwritten; run2 reruns the same frozen scenarios. Analyzer --reference checks every information row after excluding only the renamed instrumentation fields.",
+  "no_performance_claim": "Neither old nor corrected reduction counts estimate online C++ ANN cost. All conditional minima here enumerate selected objects offline."
+}

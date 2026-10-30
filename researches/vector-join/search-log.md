@@ -241,3 +241,9 @@
 - 同轮归档Seismic、BSI、wavelet、dynamic sequence与Rinfret论文；后四按data-indexing自身问题存放，只有明确条件极值/共享表示迁移价值，不改称向量join。BioVSS日期审读保存，不与L2AP的语义和保证混淆。
 - [当前真实WIKI/SIFT条件界诊断](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md)只研究filtered-query信息与取得工作，不是join实验，也未形成新ANN胜出证据。WIKI的独立坐标失败不能推广为所有多维剪枝无效。
 - 当前总库36条/关系31条已做JSONL、主键、端点和六份新原文SHA审计；新边是researcher_synthesis，非伪造作者引用。VA-file全文和任意F联合证书查重仍待补。
+
+## 2026-10-30 联合证据第2轮
+
+- 先搜similarity join/subspaces/lower bounds与vector/high-dimensional similarity join/projection；候选Ma/Jia/Zhang2017 DOI10.1002/cpe.3952尚未正文核读，待补，不纳入已读方法结论。
+- 新归档CNN2001、IMI journal2015和simplex2017均不是join；按vector-search/metric-search存放，借鉴联合表示/覆盖/过滤几何界，不据此声称动态join支持。正式版和预印本/扩展版明确区分，总库39条/33边。
+- [联合信息实测](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/joint-certificate-report.md)澄清投影丢失与多见证松弛，不是vector join性能实验；两条新比较边是researcher_synthesis，非作者引用。VA-file/VA+完整PDF和更广前序闭包仍未完成。

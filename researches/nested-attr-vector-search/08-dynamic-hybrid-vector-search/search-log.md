@@ -44,3 +44,12 @@
 - 先冻结[协议](2026-10-30-exps/conditional-geometry-protocol.md)，后跑真实WIKI11869/SIFT12000、各8query的K/basis/F诊断。9216记录不是9216独立query。SIFT有条件信息但WIKI独立坐标界弱；当前取得成本和新颖性未过门，不进入C++新索引。
 - run1计时漏普通比较的失败保留；run2修正并完整重跑，信息/非时间工作量逐项相同。没有新ANN性能或动态更新实验。见[报告](2026-10-30-exps/report.md)、[复现](2026-10-30-exps/experiments/reproduction.md)。
 - 仍待核：VA-file原始正文、任意F与多顺序条件查询的更广前序、共享联合证书是否能填补WIKI真实块距离oracle与独立轴界鸿沟；不声称穷尽文献或已发明该结构。
+
+## 2026-10-30 第2轮：联合几何、投影损失与更近前序
+
+- 父代理先发出`"similarity join" "lower bounds" "subspaces"`，窄词结果多不直接相关；换`"vector similarity join" OR "high-dimensional similarity join" "projection"`找到Ma/Jia/Zhang的2017候选DOI10.1002/cpe.3952，正文未读，列待办，不填造方法/实验。
+- 两个只读研究代理并行查joint cells/VA/PQ/受限NN与metric pivots/Hilbert；父代理核读IMI journal、CNN2001、simplex v1关键正文并归档三份完整reader文本。后者查询`"High-Dimensional Simplexes for Supermetric Search" DOI`并以Crossref核正式2017/96–109；CNN Crossref初次命中同名2017百科，按2001日期/作者过滤后核真正proceedings DOI，未混同。
+- VA-file已获得原始论文mirror转录§4.1，非原PDF；VA+已有UCSB2000-10原PS关键段，不能套CIKM不同页码。Omni PDF提取失败，仅摘要核；Ptolemaic/Hilbert线索未全部归档。更广dynamic任意F联合emptiness查重仍有缺口。
+- [事前协议](2026-10-30-exps/joint-information-protocol.md)后实际运行两进程。WIKI同对象64维oracle仍0排除，纠正“只缺联合见证”；SIFT联合收益需扣掉wholeB。全部r/g/order/control保留，不只报最佳点。
+- [结构分析](2026-10-30-exps/joint-certificate-analysis.md)说明联合tuple/余空间范数有直接前序；ANN返回近似min是上界，不能冒充安全下界。无新取得操作则不接入HNSW，不回退维护路线。
+- [报告](2026-10-30-exps/joint-certificate-report.md)保留计数instrumentation错误与完整run2重跑；173568记录只有16源query，不是ANN性能或动态更新结果。
