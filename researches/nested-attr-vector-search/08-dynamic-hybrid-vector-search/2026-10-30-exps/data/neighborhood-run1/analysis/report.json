@@ -1,0 +1,625 @@
+{
+  "E1": {
+    "errors": [],
+    "not_e2_performance": true,
+    "records": [
+      {
+        "artifacts": [
+          {
+            "bytes": 17131,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.B.csv",
+            "sha256": "54bdca55cf1c7cea3eb8128044783d5a3012964fd24a4ea91e23602d7d52df44"
+          },
+          {
+            "bytes": 17005,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.C.csv",
+            "sha256": "7a7099953dfa4d642b9ea9b03616f8e7308c0e01090488f3a4cec3b1aa4ba9eb"
+          },
+          {
+            "bytes": 0,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.stderr.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "bytes": 47,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.stdout.log",
+            "sha256": "6f455f1ac9b2daec6c40708047700f1c032571cc70a07bd94c128e2514062b9a"
+          },
+          {
+            "bytes": 215,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.summary.json",
+            "sha256": "9cd6b38fc5cd42e5541f9e92de524b0556d93ddcc0ff687489d5afa8aff7803f"
+          }
+        ],
+        "command": [
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/neighborhood_research",
+          "--data",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+          "--queries",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/sift/all.qtrace.txt",
+          "--arm",
+          "C",
+          "--ef",
+          "64",
+          "--e1-centers",
+          "8",
+          "--out",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift"
+        ],
+        "dataset": "sift",
+        "e1_centers": 8,
+        "note": "E1 diagnostics only; this is not an E2 quality/speed result",
+        "returncode": 0,
+        "trace_sha256": "17b0488c0afb8b3c0f84ff0b48fc1f262ea880192dbcce5ca756aca04c9ef114"
+      },
+      {
+        "artifacts": [
+          {
+            "bytes": 17672,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.B.csv",
+            "sha256": "e1c23ca16d7343494176b537c0281b7c2356d2477f3f1dac8f17d3a5eed57bf1"
+          },
+          {
+            "bytes": 17520,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.C.csv",
+            "sha256": "2042b42c50e7347f95cb460fd76a10da2146bec04783710bd34ccc40eacf9463"
+          },
+          {
+            "bytes": 0,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.stderr.log",
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          {
+            "bytes": 47,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.stdout.log",
+            "sha256": "6f455f1ac9b2daec6c40708047700f1c032571cc70a07bd94c128e2514062b9a"
+          },
+          {
+            "bytes": 215,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.summary.json",
+            "sha256": "3caa24788e0abf0dc27120d1149f5ebca5359e30fcf9cebaf7ff8d56757e7ae7"
+          }
+        ],
+        "command": [
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/neighborhood_research",
+          "--data",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+          "--queries",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/wiki/all.qtrace.txt",
+          "--arm",
+          "C",
+          "--ef",
+          "64",
+          "--e1-centers",
+          "8",
+          "--out",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki"
+        ],
+        "dataset": "wiki",
+        "e1_centers": 8,
+        "note": "E1 diagnostics only; this is not an E2 quality/speed result",
+        "returncode": 0,
+        "trace_sha256": "1f68988f077d526891ed296b23c41de38bf4a8573bfc4cedb5993d998811ea30"
+      }
+    ],
+    "status": "recorded"
+  },
+  "E1_errors": [],
+  "E3_eligibility": {
+    "sift": {
+      "C_gains_vs_A_and_B_at_quality": false,
+      "E3_executed": false,
+      "note": "Observed repeated means only; no significance claim and no E3 authorization from calibration.",
+      "ratios_C_over_baseline_mean_time": {
+        "A": 44.04950238520452,
+        "B": 0.12302413381918545
+      }
+    },
+    "wiki": {
+      "C_gains_vs_A_and_B_at_quality": false,
+      "E3_executed": false,
+      "note": "Observed repeated means only; no significance claim and no E3 authorization from calibration.",
+      "ratios_C_over_baseline_mean_time": {
+        "A": 31.997230214838396,
+        "B": 0.10629628447925824
+      }
+    }
+  },
+  "E3_executed": false,
+  "E3_query_gain_prerequisite_met_for_all_datasets": false,
+  "all_configurations_retained": true,
+  "baseline": {
+    "bytes": 239872,
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+    "sha256": "e51a31368ceba046dbb6a29917d29e51718409a22b8562c9381c9525906a8a7c"
+  },
+  "binary": {
+    "bytes": 215488,
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/neighborhood_research",
+    "sha256": "acbb13ada31c381a5b8feaa9e56d15b803d7c4334e4fa462f3a5dc5371b85e0e"
+  },
+  "configuration_count": 36,
+  "dataset_counts_and_shortages": {
+    "sift": {
+      "counts": {
+        "all": {
+          "middle/other": 28,
+          "middle/strong_and": 22,
+          "narrow/other": 29,
+          "narrow/strong_and": 21,
+          "rows": 200,
+          "unique_qidx": 64,
+          "wide/other": 57,
+          "wide/strong_and": 43
+        },
+        "calibration": {
+          "middle/other": 28,
+          "middle/strong_and": 22,
+          "narrow/other": 0,
+          "narrow/strong_and": 0,
+          "rows": 100,
+          "unique_qidx": 32,
+          "wide/other": 29,
+          "wide/strong_and": 21
+        },
+        "confirmation": {
+          "middle/other": 0,
+          "middle/strong_and": 0,
+          "narrow/other": 29,
+          "narrow/strong_and": 21,
+          "rows": 100,
+          "unique_qidx": 32,
+          "wide/other": 28,
+          "wide/strong_and": 22
+        }
+      },
+      "shortages": [
+        "calibration: no narrow/strong_and rows in literal selection",
+        "calibration: no narrow/other rows in literal selection",
+        "confirmation: no middle/strong_and rows in literal selection",
+        "confirmation: no middle/other rows in literal selection"
+      ]
+    },
+    "wiki": {
+      "counts": {
+        "all": {
+          "middle/other": 11,
+          "middle/strong_and": 3,
+          "narrow/other": 80,
+          "narrow/strong_and": 66,
+          "rows": 200,
+          "unique_qidx": 200,
+          "wide/other": 23,
+          "wide/strong_and": 17
+        },
+        "calibration": {
+          "middle/other": 6,
+          "middle/strong_and": 2,
+          "narrow/other": 39,
+          "narrow/strong_and": 33,
+          "rows": 100,
+          "unique_qidx": 100,
+          "wide/other": 11,
+          "wide/strong_and": 9
+        },
+        "confirmation": {
+          "middle/other": 5,
+          "middle/strong_and": 1,
+          "narrow/other": 41,
+          "narrow/strong_and": 33,
+          "rows": 100,
+          "unique_qidx": 100,
+          "wide/other": 12,
+          "wide/strong_and": 8
+        }
+      },
+      "shortages": []
+    }
+  },
+  "frozen_budgets": {
+    "calibration_protocol_errors": [],
+    "selected": {
+      "sift": {
+        "A": {
+          "calibration_mean_e2e_us": 391.04215,
+          "ef": 64,
+          "quality_failure": false,
+          "reason": null
+        },
+        "B": {
+          "calibration_mean_e2e_us": 41464.7121,
+          "ef": 64,
+          "quality_failure": false,
+          "reason": null
+        },
+        "C": {
+          "calibration_mean_e2e_us": 5270.22447,
+          "ef": 64,
+          "quality_failure": false,
+          "reason": null
+        }
+      },
+      "wiki": {
+        "A": {
+          "calibration_mean_e2e_us": 423.20193,
+          "ef": 64,
+          "quality_failure": false,
+          "reason": null
+        },
+        "B": {
+          "calibration_mean_e2e_us": 129901.27595,
+          "ef": 64,
+          "quality_failure": false,
+          "reason": null
+        },
+        "C": {
+          "calibration_mean_e2e_us": 13713.4654,
+          "ef": 64,
+          "quality_failure": false,
+          "reason": null
+        }
+      }
+    },
+    "selection_uses_confirmation": false
+  },
+  "hnsw_head": "ca426729609b3221563047ceb269cc1213e0d376",
+  "limitations": [
+    "This frozen first200 protocol differs from dynamic-state/update replay query sets; do not compare its timings or recall to those experiments.",
+    "WIKI is the complete supplied original root-3626 subtree, not the full WIKI corpus; SIFT uses the supplied synthetic hierarchy.",
+    "Calibration and confirmation are intentionally disjoint qidx groups; only confirmation arms share the same confirmation query set.",
+    "GT ID sets are checked across configurations at each split. Perfect recall alone does not establish identical GT tie handling.",
+    "Exact distance-tie prevalence is not emitted by the binaries; no tie frequency or statistical-significance claim is made.",
+    "Empty-GT rows are excluded from macro/pair quality gates and shown with separate empty correctness/counts.",
+    "No concurrent-vs-serial or mean-vs-median speed comparisons are made; all ratios compare serial arithmetic means.",
+    "A profile with no nonempty rows cannot pass the quality gate. Missing cells are shortages, never regenerated queries."
+  ],
+  "manifest": {
+    "bytes": 20265,
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/manifest.json",
+    "sha256": "d9d190141d2a1597b81bea21441bc6cafaa6f3ba20182507c196a13c961b08b4"
+  },
+  "performance_results": "recorded serial evidence; see complete configurations",
+  "protocol": {
+    "baseline": "dynamic_triad --arm A --scan-threshold 512 (true direct-node NodeANN)",
+    "execution": "serial single-worker; budget-major rotating A/B/C; confirmation 3 rotating repeats",
+    "no_e3": "no E3 execution; only assess eligibility after C gains against both at quality",
+    "quality": "nonempty macro>=.999 AND pair>=.999, no invalid/duplicate/state errors; empty results correct separately",
+    "query_selection": "first 200 existing Q rows in temporal order, no regeneration",
+    "scope_profiles": {
+      "narrow_max_fraction": 0.05,
+      "wide_min_fraction": 0.25
+    },
+    "selection": "minimum mean e2e_us passing calibration budget per arm, tie by smaller ef",
+    "snapshot": "initial attrs, bindings and tree; updates discarded; C++ inline initial GT",
+    "split": "sorted unique qidx rank: even calibration, odd confirmation; repeated qidx grouped",
+    "strong_and": "enabled(category,numeric,tags)>=2 and combine==0"
+  },
+  "protocol_errors": [],
+  "ratios": [
+    {
+      "C_mean_e2e_us": 7969.660036666667,
+      "C_time_over_baseline_time": 44.04950238520452,
+      "baseline_mean_e2e_us": 180.92508666666666,
+      "baseline_over_C_speedup": 0.022701732048076052,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "quality_comparable": true,
+      "reason_if_unavailable": null,
+      "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 7969.660036666667,
+      "C_time_over_baseline_time": 0.12302413381918545,
+      "baseline_mean_e2e_us": 64781.273310000004,
+      "baseline_over_C_speedup": 8.128486411208947,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "quality_comparable": true,
+      "reason_if_unavailable": null,
+      "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 7969.660036666667,
+      "C_time_over_baseline_time": 44.04950238520452,
+      "baseline_mean_e2e_us": 180.92508666666666,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "profile": "all",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 7969.660036666667,
+      "C_time_over_baseline_time": 0.12302413381918545,
+      "baseline_mean_e2e_us": 64781.273310000004,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "profile": "all",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 4233.464993333333,
+      "C_time_over_baseline_time": 11.703728839486967,
+      "baseline_mean_e2e_us": 361.71933333333334,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "profile": "wide",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 4233.464993333333,
+      "C_time_over_baseline_time": 0.12852186177243283,
+      "baseline_mean_e2e_us": 32939.64882666667,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "profile": "wide",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": null,
+      "C_time_over_baseline_time": null,
+      "baseline_mean_e2e_us": null,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "profile": "middle",
+      "quality_comparable": false,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": null,
+      "C_time_over_baseline_time": null,
+      "baseline_mean_e2e_us": null,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "profile": "middle",
+      "quality_comparable": false,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 11705.85508,
+      "C_time_over_baseline_time": null,
+      "baseline_mean_e2e_us": 0.13084,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "profile": "narrow",
+      "quality_comparable": false,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 11705.85508,
+      "C_time_over_baseline_time": null,
+      "baseline_mean_e2e_us": 96622.89779333334,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "profile": "narrow",
+      "quality_comparable": false,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 9941.428054263566,
+      "C_time_over_baseline_time": 38.2158696952911,
+      "baseline_mean_e2e_us": 260.1387364341085,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "profile": "strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 9941.428054263566,
+      "C_time_over_baseline_time": 0.12222232698907605,
+      "baseline_mean_e2e_us": 81338.88708527132,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "profile": "strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 8197.260181818183,
+      "C_time_over_baseline_time": 16.12581925796915,
+      "baseline_mean_e2e_us": 508.33139393939393,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "profile": "wide/strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 8197.260181818183,
+      "C_time_over_baseline_time": 0.12278644907582772,
+      "baseline_mean_e2e_us": 66760.30004545454,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "profile": "wide/strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 11768.65153968254,
+      "C_time_over_baseline_time": null,
+      "baseline_mean_e2e_us": 0.12738095238095237,
+      "comparison": "C/A",
+      "dataset": "sift",
+      "profile": "narrow/strong_and",
+      "quality_comparable": false,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 11768.65153968254,
+      "C_time_over_baseline_time": null,
+      "baseline_mean_e2e_us": 96611.69255555555,
+      "comparison": "C/B",
+      "dataset": "sift",
+      "profile": "narrow/strong_and",
+      "quality_comparable": false,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 14183.419916666668,
+      "C_time_over_baseline_time": 31.997230214838396,
+      "baseline_mean_e2e_us": 443.27024,
+      "baseline_over_C_speedup": 0.03125270510246415,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "quality_comparable": true,
+      "reason_if_unavailable": null,
+      "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 14183.419916666668,
+      "C_time_over_baseline_time": 0.10629628447925824,
+      "baseline_mean_e2e_us": 133432.88513,
+      "baseline_over_C_speedup": 9.407666551083746,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "quality_comparable": true,
+      "reason_if_unavailable": null,
+      "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 14183.419916666668,
+      "C_time_over_baseline_time": 31.997230214838396,
+      "baseline_mean_e2e_us": 443.27024,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "profile": "all",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 14183.419916666668,
+      "C_time_over_baseline_time": 0.10629628447925824,
+      "baseline_mean_e2e_us": 133432.88513,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "profile": "all",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 7006.117616666666,
+      "C_time_over_baseline_time": 3.2639082523928966,
+      "baseline_mean_e2e_us": 2146.54245,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "profile": "wide",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 7006.117616666666,
+      "C_time_over_baseline_time": 0.1256801276666461,
+      "baseline_mean_e2e_us": 55745.62778333333,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "profile": "wide",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 9849.554055555556,
+      "C_time_over_baseline_time": 93.35809637751028,
+      "baseline_mean_e2e_us": 105.50294444444444,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "profile": "middle",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 9849.554055555556,
+      "C_time_over_baseline_time": 0.1296741554621917,
+      "baseline_mean_e2e_us": 75956.18433333334,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "profile": "middle",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 16474.625878378378,
+      "C_time_over_baseline_time": 1597.4717948068374,
+      "baseline_mean_e2e_us": 10.312936936936937,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "profile": "narrow",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 16474.625878378378,
+      "C_time_over_baseline_time": 0.10355556901008017,
+      "baseline_mean_e2e_us": 159089.7142072072,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "profile": "narrow",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 16307.976682539682,
+      "C_time_over_baseline_time": 37.228388826771265,
+      "baseline_mean_e2e_us": 438.0521746031746,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "profile": "strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 16307.976682539682,
+      "C_time_over_baseline_time": 0.10228295995788064,
+      "baseline_mean_e2e_us": 159439.81958730158,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "profile": "strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 13921.3865,
+      "C_time_over_baseline_time": 6.122716238332094,
+      "baseline_mean_e2e_us": 2273.7272083333332,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "profile": "wide/strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 13921.3865,
+      "C_time_over_baseline_time": 0.10643107780725383,
+      "baseline_mean_e2e_us": 130801.89345833333,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "profile": "wide/strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 16848.326414141415,
+      "C_time_over_baseline_time": 3122.794206301064,
+      "baseline_mean_e2e_us": 5.395272727272728,
+      "comparison": "C/A",
+      "dataset": "wiki",
+      "profile": "narrow/strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    },
+    {
+      "C_mean_e2e_us": 16848.326414141415,
+      "C_time_over_baseline_time": 0.10137014514827045,
+      "baseline_mean_e2e_us": 166206.00068686868,
+      "comparison": "C/B",
+      "dataset": "wiki",
+      "profile": "narrow/strong_and",
+      "quality_comparable": true,
+      "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+    }
+  ],
+  "source_sha": "08379187fbc4cb84f61e72bd608a99aaa28f4161"
+}

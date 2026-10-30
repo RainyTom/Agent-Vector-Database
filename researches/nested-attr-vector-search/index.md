@@ -5,7 +5,7 @@
 ## 当前工作
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
-- **[08 动态混合向量搜索（动态三臂维护成本对照）](08-dynamic-hybrid-vector-search/README.md)**：[当前证据边界](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)、[原树/两遍GT协议](08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)、[当日报告与图](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)。旧inline计时仅诊断；不预设高更新率优胜，不以旧并发探针证明一致性。
+- **[08 动态混合向量搜索](08-dynamic-hybrid-vector-search/README.md)**：[最新谓词可寻址邻域E1/E2报告](08-dynamic-hybrid-vector-search/2026-10-30-exps/neighborhood-report.md)、[原型复现](08-dynamic-hybrid-vector-search/2026-10-30-exps/experiments/neighborhood-reproduction.md)、[上游阅读清单](08-dynamic-hybrid-vector-search/2026-10-29-exps/upstream-reading-list.md)；[历史维护对照证据边界](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)、[原树/两遍GT协议](08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)保留。
 
 ## 01 方向文档
 

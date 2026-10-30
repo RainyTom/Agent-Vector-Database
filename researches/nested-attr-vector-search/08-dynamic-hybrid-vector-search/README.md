@@ -4,6 +4,10 @@
 
 ## 当前方案状态（先读这个）
 
+**同日第3轮当前结果：谓词可寻址邻域E1/E2已实测。** [完整报告与正式图](2026-10-30-exps/neighborhood-report.md)、[事前协议](2026-10-30-exps/neighborhood-protocol.md)、[实际复现](2026-10-30-exps/experiments/neighborhood-reproduction.md)、[全部配置/失败](2026-10-30-exps/data/neighborhood-run1/analysis/report.json)。同图同候选时C快于普通二跳B，但同质量下慢于真实NodeANN；优先宽scope多属性AND仍未逆转，E3未放行。没有增加proxy或回到几何界；动态二跳维护未实现/未测，不冒称完整动态索引。
+
+### 先前证书诊断（保留原判断，不表示继续该路线）
+
 **同日第2轮最新结果**：[联合证据报告/图](2026-10-30-exps/joint-certificate-report.md)、[结构/复杂度/前序](2026-10-30-exps/joint-certificate-analysis.md)、[冻结协议](2026-10-30-exps/joint-information-protocol.md)。WIKI同对象完整64维联合投影仍排除0，首轮缺口不能只归因不同见证；SIFT联合收益也不全属于F。tuple/cell和residual-height有直接前序，本轮不放行在线索引；完整原始数据和计数失败均保留。
 
 **2026-10-30最新主线：索引机制优先，不再默认执行维护方案。** 先读[当日完整结果](2026-10-30-exps/report.md)、[事前协议](2026-10-30-exps/conditional-geometry-protocol.md)、[直接前序及证明/反例](2026-10-30-exps/mechanism-assessment.md)。真实WIKI/SIFT小诊断已完成：SIFT条件box有新增信息，但WIKI独立坐标界弱、取得成本和前序门未过，**不放行在线新索引原型**。这不否证所有条件证书方向，也不支持新索引端到端胜出。
@@ -31,6 +35,7 @@
 | 5 一致性与摘要 | `churn_concurrent.cpp`、`summary_reclaim_probe.py` | 旧并发探针有同步缺陷；摘要是模型，均不能替代同协议动态三臂 |
 | 6 同协议动态三臂 | NodeANN / PE-ONLINE / PE-OFFLINE，逐查询当前状态 GT | 历史420运行：126筛查+234主矩阵+54仅移动+6pilot；inline-GT计时降为诊断，非并发吞吐结论 |
 | 7 原始层级与GT干扰控制 | 完整WIKI子树、占用匹配平衡树、独立C++动态GT tape | 正式162运行全部过门；测量GT调用0、81拓扑配对与逐事件等价检查通过；root3626交叉，另两cohort无观测交叉 |
+| 8 谓词可寻址邻域小原型 | 同图普通二跳/邻域页＋真实NodeANN；[E1/E2报告](2026-10-30-exps/neighborhood-report.md) | 候选一致性与质量通过，C/B取得及查询收益成立，C/A端到端目标失败；未放行E3 |
 
 ## 硬约束（继承）
 

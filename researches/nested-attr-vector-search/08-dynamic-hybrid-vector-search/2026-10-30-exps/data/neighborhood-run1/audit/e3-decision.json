@@ -1,0 +1,13 @@
+{
+  "E3_executed": false,
+  "decision": "not_released_query_gain_prerequisite_failed",
+  "algorithms_changed_to_chase_positive_result": false,
+  "confirmation_repeats": 3,
+  "quality": "all three arms passed nonempty macro and pair recall >=0.999 with zero recorded invalid, duplicate and state errors",
+  "C_over_A_nonempty_mean_time": {"sift": 11.703728839486967, "wiki": 24.3819440098783},
+  "C_over_A_wide_AND_nonempty_mean_time": {"sift": 16.12581925796915, "wiki": 6.122716238332094},
+  "C_over_B_nonempty_mean_time": {"sift": 0.12852186177243283, "wiki": 0.10768712263737984},
+  "reason": "C beats ordinary two-hop B, but loses to real NodeANN A on both the complete nonempty confirmation population and the prespecified wide-scope multiattribute-AND population. Empty-query exclusion does not reverse the result.",
+  "dynamic_neighborhood_maintenance": "not implemented or measured in this gated prototype; no update-time, graph-mutation coverage or staleness claim",
+  "scope": "Negative query-cost result for the frozen prototype on these snapshots; not a general impossibility or completed novelty verdict"
+}

@@ -1,0 +1,372 @@
+{
+  "baseline": {
+    "bytes": 239872,
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+    "sha256": "e51a31368ceba046dbb6a29917d29e51718409a22b8562c9381c9525906a8a7c"
+  },
+  "binary": {
+    "bytes": 215488,
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/neighborhood_research",
+    "sha256": "acbb13ada31c381a5b8feaa9e56d15b803d7c4334e4fa462f3a5dc5371b85e0e"
+  },
+  "budgets": [
+    64,
+    256,
+    1024
+  ],
+  "datasets": {
+    "sift": {
+      "counts": {
+        "all": {
+          "middle/other": 28,
+          "middle/strong_and": 22,
+          "narrow/other": 29,
+          "narrow/strong_and": 21,
+          "rows": 200,
+          "unique_qidx": 64,
+          "wide/other": 57,
+          "wide/strong_and": 43
+        },
+        "calibration": {
+          "middle/other": 28,
+          "middle/strong_and": 22,
+          "narrow/other": 0,
+          "narrow/strong_and": 0,
+          "rows": 100,
+          "unique_qidx": 32,
+          "wide/other": 29,
+          "wide/strong_and": 21
+        },
+        "confirmation": {
+          "middle/other": 0,
+          "middle/strong_and": 0,
+          "narrow/other": 29,
+          "narrow/strong_and": 21,
+          "rows": 100,
+          "unique_qidx": 32,
+          "wide/other": 28,
+          "wide/strong_and": 22
+        }
+      },
+      "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "input_files": [
+        {
+          "bytes": 169110,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029/attrs.txt",
+          "sha256": "c1d9f95a490093c17bd600b82a77533ff578252dac00631f330be94a90f4902a"
+        },
+        {
+          "bytes": 6656000,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029/base.f32",
+          "sha256": "e65d3621562a2b35a54004c06220d5464b108b33b1f364eaa7c549ccdb66b423"
+        },
+        {
+          "bytes": 32625,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029/bindings.txt",
+          "sha256": "d516293e13351e996e40eeaeb4ed46207d51e55a7d366379c00a673f7e1d60fc"
+        },
+        {
+          "bytes": 1377,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029/meta.json",
+          "sha256": "bb3645a9b52bb248be4c924901d279e427e8f5cecd5ddf840932f259a51ce36d"
+        },
+        {
+          "bytes": 13,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029/meta.txt",
+          "sha256": "ba228df3c30101d2abb62087370a7daed8bd3957ada859efd29699cc457cd264"
+        },
+        {
+          "bytes": 32768,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029/test.f32",
+          "sha256": "452a96b1abd51e95fcaa7b0e6727baf27f86206fce11cdb5476e8abdabcb9892"
+        },
+        {
+          "bytes": 69,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029/tree.txt",
+          "sha256": "945f0bfa32962a2b0e425ecb06e489826bbfa330271ae00055f1d123efb0df9d"
+        }
+      ],
+      "native_metadata": {
+        "data_sha256": "0b602bd47030849242357806ae1590db284f679c9e3286db9461ab914fbb2096",
+        "dataset": "sift",
+        "depth": 3,
+        "dim": 128,
+        "empty_direct_node": 1,
+        "file_sha256": {
+          "attrs.txt": "c1d9f95a490093c17bd600b82a77533ff578252dac00631f330be94a90f4902a",
+          "base.f32": "e65d3621562a2b35a54004c06220d5464b108b33b1f364eaa7c549ccdb66b423",
+          "bindings.txt": "d516293e13351e996e40eeaeb4ed46207d51e55a7d366379c00a673f7e1d60fc",
+          "meta.txt": "ba228df3c30101d2abb62087370a7daed8bd3957ada859efd29699cc457cd264",
+          "test.f32": "452a96b1abd51e95fcaa7b0e6727baf27f86206fce11cdb5476e8abdabcb9892",
+          "tree.txt": "945f0bfa32962a2b0e425ecb06e489826bbfa330271ae00055f1d123efb0df9d"
+        },
+        "hierarchy_label": "SIFT-vector subset + controlled SYNTHETIC hierarchy",
+        "live_internal_items": 2400,
+        "live_leaf_items": 9600,
+        "n_leaves": 8,
+        "n_live": 12000,
+        "n_nodes": 15,
+        "n_query_vectors": 64,
+        "n_vectors": 13000,
+        "reserve": 1000,
+        "seed": 20261029,
+        "source_selection_sha256": "d780ffad0ec4a39af9e5c8b5871bfba2cb8cd161031c5ceed5dbf97e5d22ff97",
+        "vector_sampling": "deterministic uniform sampling without replacement; random sample order retained",
+        "vector_source_count": 1000000,
+        "vector_sources": [
+          {
+            "bytes": 525128288,
+            "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/datasets/sift-128-euclidean.hdf5"
+          }
+        ]
+      },
+      "selected_count": 200,
+      "selection": {
+        "bytes": 118146,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/sift/selection.json",
+        "sha256": "ed3793858f644a29c5ef9c8106a5b66373b1b4cfd5d9fff8b26d5820d8cabb15"
+      },
+      "shape": {
+        "dim": 128,
+        "n": 13000,
+        "n_live": 12000,
+        "n_nodes": 15,
+        "nq": 64
+      },
+      "shortages": [
+        "calibration: no narrow/strong_and rows in literal selection",
+        "calibration: no narrow/other rows in literal selection",
+        "confirmation: no middle/strong_and rows in literal selection",
+        "confirmation: no middle/other rows in literal selection"
+      ],
+      "source_query_count": 1500,
+      "source_trace": {
+        "bytes": 59101,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p1-qu1.txt",
+        "sha256": "88d383ed9643361db55db7efb0dd42375d58b348cb155f9016b1e352fc923be8"
+      },
+      "traces": {
+        "all": {
+          "bytes": 5364,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/sift/all.qtrace.txt",
+          "sha256": "17b0488c0afb8b3c0f84ff0b48fc1f262ea880192dbcce5ca756aca04c9ef114"
+        },
+        "calibration": {
+          "bytes": 2715,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/sift/calibration.qtrace.txt",
+          "sha256": "0ce2241ec49c780cb655eb4b3e5127ce9b5eae3f5ff646874bac1dd9f806e500"
+        },
+        "confirmation": {
+          "bytes": 2653,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/sift/confirmation.qtrace.txt",
+          "sha256": "1c0c6e92fb391454366670c020e8eca68693c97f0cc7e779a22671429e280e2a"
+        }
+      }
+    },
+    "wiki": {
+      "counts": {
+        "all": {
+          "middle/other": 11,
+          "middle/strong_and": 3,
+          "narrow/other": 80,
+          "narrow/strong_and": 66,
+          "rows": 200,
+          "unique_qidx": 200,
+          "wide/other": 23,
+          "wide/strong_and": 17
+        },
+        "calibration": {
+          "middle/other": 6,
+          "middle/strong_and": 2,
+          "narrow/other": 39,
+          "narrow/strong_and": 33,
+          "rows": 100,
+          "unique_qidx": 100,
+          "wide/other": 11,
+          "wide/strong_and": 9
+        },
+        "confirmation": {
+          "middle/other": 5,
+          "middle/strong_and": 1,
+          "narrow/other": 41,
+          "narrow/strong_and": 33,
+          "rows": 100,
+          "unique_qidx": 100,
+          "wide/other": 12,
+          "wide/strong_and": 8
+        }
+      },
+      "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "input_files": [
+        {
+          "bytes": 154330,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native/attrs.txt",
+          "sha256": "608d114a9b5713a8a49ee651ae9ed123b861f32c0d5b9adb669bb4e1ca90d195"
+        },
+        {
+          "bytes": 48615424,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native/base.f32",
+          "sha256": "d944e806dbce69776b053d6eae9326ee65809e8bca992f90f7aaff04e9152057"
+        },
+        {
+          "bytes": 31335,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native/bindings.txt",
+          "sha256": "e2a058567a796d2e32f765470f8fd29e2875f80e9a47caebe6d101b2308478ce"
+        },
+        {
+          "bytes": 4129,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native/meta.json",
+          "sha256": "278f13eed2c8fe263aff602cd5da3f82edc35f2db2278d9ac019570fd2ee67b3"
+        },
+        {
+          "bytes": 15,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native/meta.txt",
+          "sha256": "46099a5862be5542b5c18b7bc48f7b0ef4e5e5dba59446ab244fd4fee6edebc1"
+        },
+        {
+          "bytes": 1867776,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native/test.f32",
+          "sha256": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e"
+        },
+        {
+          "bytes": 907,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native/tree.txt",
+          "sha256": "87d88ad828d5a6788dd7c1f18a1a719abc86dbfe95af2650cf96d99203d7fa87"
+        }
+      ],
+      "native_metadata": {
+        "claim_boundary": "complete original rooted-subtree cohort, not full WIKI",
+        "cohort": "root-3626",
+        "cohort_root": 3626,
+        "cohort_selection": "preregistered nearest-to-12000 complete-subtree density strata; no performance-based selection",
+        "data_sha256": "235edfe59e7ce306efb22b5d2e8105e52cbd1f4ba549e0e6163376dc68565471",
+        "density_stats": {
+          "direct_items_above_threshold": 5154,
+          "empty_direct_nodes": 8,
+          "max_direct_items": 3843,
+          "nonempty_direct_nodes": 143,
+          "scan_threshold": 512
+        },
+        "density_stratum": "graph_present",
+        "depth": 6,
+        "dim": 1024,
+        "file_sha256": {
+          "attrs.txt": "608d114a9b5713a8a49ee651ae9ed123b861f32c0d5b9adb669bb4e1ca90d195",
+          "base.f32": "d944e806dbce69776b053d6eae9326ee65809e8bca992f90f7aaff04e9152057",
+          "bindings.txt": "e2a058567a796d2e32f765470f8fd29e2875f80e9a47caebe6d101b2308478ce",
+          "meta.txt": "46099a5862be5542b5c18b7bc48f7b0ef4e5e5dba59446ab244fd4fee6edebc1",
+          "test.f32": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e",
+          "tree.txt": "87d88ad828d5a6788dd7c1f18a1a719abc86dbfe95af2650cf96d99203d7fa87"
+        },
+        "hierarchy_label": "original WIKI subtree hierarchy",
+        "hnsw_count_definition": "direct live occupancy > 512; local per-node graphs only, not B/C global graphs",
+        "initial_hnsw_node_count": 2,
+        "n_leaves": 113,
+        "n_live": 11869,
+        "n_nodes": 151,
+        "n_query_vectors": 456,
+        "n_vectors": 11869,
+        "original_node_mapping": {
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/shared/original_to_local.json",
+          "sha256": "55d0c64a0f06237fc97a6e127a2e0eb56beabd1d3cc03f15815d5c6138b385a5"
+        },
+        "provenance": {
+          "node_mapping_sha256": "55d0c64a0f06237fc97a6e127a2e0eb56beabd1d3cc03f15815d5c6138b385a5",
+          "source_binding_rows": 1941679,
+          "source_dim": 1024,
+          "source_files": {
+            "base": {
+              "bytes": 7953117184,
+              "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full/base.f32",
+              "sha256": "a8502a406c474965a4d9db87b55addd59cf7e6c6d98c96969c5b24ba111d8e2e"
+            },
+            "bindings": {
+              "bytes": 12360851,
+              "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full/wiki_bindings.txt",
+              "sha256": "f1f8fd8b053f82883727e92436837def37d2a60c71fadfe0cfb7b87cc2e50b42"
+            },
+            "test": {
+              "bytes": 1867776,
+              "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full/test.f32",
+              "sha256": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e"
+            },
+            "tree": {
+              "bytes": 6109791,
+              "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full/wiki_tree.txt",
+              "sha256": "b6c5d9d2e63e0da89702f0674ea4d43f71e5601ce5816fa8812a7c8a16e90faf"
+            }
+          },
+          "source_nodes": 468031,
+          "source_query_rows": 456,
+          "source_root": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/data/wiki_full",
+          "source_selection_sha256": "0bc777667c27ba3cd08d75f5084e43034929aa9e39a8788601b810f7a16709c3",
+          "source_vector_rows": 1941679
+        },
+        "query_vector_selection": "original test rows 0..query_vectors-1, used in order cyclically",
+        "reserve": 0,
+        "seed": 20261029,
+        "source_selection_path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/shared/source_rows.json",
+        "source_selection_sha256": "0bc777667c27ba3cd08d75f5084e43034929aa9e39a8788601b810f7a16709c3",
+        "topology": "native",
+        "vector_sampling": "ALL source rows bound in original rooted subtree, retained in original vector-row order"
+      },
+      "selected_count": 200,
+      "selection": {
+        "bytes": 120600,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/wiki/selection.json",
+        "sha256": "c29d9c95a8dfc3f98f590c36da2e1bce603f1bd74b7244d3f262de9095dcb917"
+      },
+      "shape": {
+        "dim": 1024,
+        "n": 11869,
+        "n_live": 11869,
+        "n_nodes": 151,
+        "nq": 456
+      },
+      "shortages": [],
+      "source_query_count": 5935,
+      "source_trace": {
+        "bytes": 229693,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/traces/qu1.txt",
+        "sha256": "f43933c97884590723b031497a41ad589c12760b26e767e7ce1d83adfff50747"
+      },
+      "traces": {
+        "all": {
+          "bytes": 5652,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/wiki/all.qtrace.txt",
+          "sha256": "1f68988f077d526891ed296b23c41de38bf4a8573bfc4cedb5993d998811ea30"
+        },
+        "calibration": {
+          "bytes": 2826,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/wiki/calibration.qtrace.txt",
+          "sha256": "58f8038c35022369ebf16a0190875763f40dd26e7fe729fefe89b23a1cc62183"
+        },
+        "confirmation": {
+          "bytes": 2830,
+          "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/wiki/confirmation.qtrace.txt",
+          "sha256": "3c5b38161583494de898ca48be0fca74001a03455d8a3cedfc71b148c38f32ff"
+        }
+      }
+    }
+  },
+  "hnsw_head": "ca426729609b3221563047ceb269cc1213e0d376",
+  "hnsw_path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/deps/hnswlib",
+  "performance_results": "none yet",
+  "protocol": {
+    "baseline": "dynamic_triad --arm A --scan-threshold 512 (true direct-node NodeANN)",
+    "execution": "serial single-worker; budget-major rotating A/B/C; confirmation 3 rotating repeats",
+    "no_e3": "no E3 execution; only assess eligibility after C gains against both at quality",
+    "quality": "nonempty macro>=.999 AND pair>=.999, no invalid/duplicate/state errors; empty results correct separately",
+    "query_selection": "first 200 existing Q rows in temporal order, no regeneration",
+    "scope_profiles": {
+      "narrow_max_fraction": 0.05,
+      "wide_min_fraction": 0.25
+    },
+    "selection": "minimum mean e2e_us passing calibration budget per arm, tie by smaller ef",
+    "snapshot": "initial attrs, bindings and tree; updates discarded; C++ inline initial GT",
+    "split": "sorted unique qidx rank: even calibration, odd confirmation; repeated qidx grouped",
+    "strong_and": "enabled(category,numeric,tags)>=2 and combine==0"
+  },
+  "source_sha": "08379187fbc4cb84f61e72bd608a99aaa28f4161",
+  "version": 1
+}

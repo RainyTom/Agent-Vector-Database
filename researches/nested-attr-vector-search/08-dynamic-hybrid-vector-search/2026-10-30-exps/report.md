@@ -138,3 +138,15 @@ SIFT full128条件box新增12.59%/13.31%，gap再增0.33%/0.35%；gap单独超�
 **归因修正：**WIKI相同64维表示的同对象完整联合min也无排除，不能把raw oracle与独立轴界差距都解释为不同对象见证；投影丢失同样关键。SIFT联合界较强，但wholeB联合界已能做很多排除，不能将全部归为F贡献。两族有VA/PQ/simplex/CNN直接前序，未放行在线索引，也不否证其他表示或ANN近似机制。
 
 本轮实际两进程并行、两run保留173568逐case信息记录（仍只有16源query）；run1的工作计数定义不一致被修正，run2全部信息结果与之相同。GT复用先前C++矩阵而非重复声称新raw调用，没有PE/NodeANN端到端或更新新实验。当前文献库39条/33边，三份新全文及结构/SHA审计见data/joint-literature-audit.json。
+
+## 10. 同日第3轮追加：谓词可寻址邻域E1/E2
+
+按研究端2456849合同改为共享图上的精确资格二跳取得，不再沿低维证书或增加WQR proxy。**候选取得机制有正结果，但同质量下未超越真实NodeANN；E3没有放行。** 完整结论、非空/空查询分离、优先场景、空间、构建与失败见 [邻域报告](neighborhood-report.md)，[复现](experiments/neighborhood-reproduction.md)，[逐query与审计](data/neighborhood-run1/audit/)；历史几何报告保留，不当作现行路线。
+
+实现/搜索为C++、公共RawL2Space；NodeANN使用真正的dynamic_triad arm A/scan512。E1检查3200个真实中心候选；E2保存18次校准＋18次确认，B/C的1200对结果及导航/距离记录相同。原属性快照和query字面语义未重造，源更新有意不执行；不是动态replay、不是完整SIFT1M/WIKI，也没有动态维护收益主张。
+
+下图为全部校准预算，确认集结果和完整分位数在邻域报告；正式PNG已实际打开检查。首版不可移植主题SVG的失败保留在原analysis目录，不作为结果图。
+
+![谓词可寻址邻域：校准预算端到端非空时延](data/neighborhood-run1/figures/calibration-nonempty.png)
+
+[资格规模与实际扩展图](data/neighborhood-run1/figures/qualification-vs-expansion.png) 显示稀疏资格时仍大量展开；下一轮应由研究端判断是否继续该共享图路线，本轮不临时替换算法追正结果。

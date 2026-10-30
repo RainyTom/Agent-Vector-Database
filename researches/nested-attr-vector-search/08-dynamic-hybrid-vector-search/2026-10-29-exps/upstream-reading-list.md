@@ -1,5 +1,20 @@
 # 上游AI阅读清单
 
+## 2026-10-30最新追加：谓词可寻址邻域，不是WQR新胜出结果
+
+按研究端2456849固定方案完成C++小原型和E1/E2：同候选C快于普通二跳B，但同质量下慢于真实NodeANN A，优先宽scope＋多属性AND也未逆转；E3未放行。不要将候选取得成功改写为端到端胜出，也不要将这组静态结果当动态能力。
+
+1. [完整最新报告、分位数、空间与图](../2026-10-30-exps/neighborhood-report.md)。
+2. [事前协议](../2026-10-30-exps/neighborhood-protocol.md)、[实际构建与复现/输入限制](../2026-10-30-exps/experiments/neighborhood-reproduction.md)。
+3. [全36次配置与协议核验](../2026-10-30-exps/data/neighborhood-run1/analysis/report.json)、[B/C结果/导航/距离一致性](../2026-10-30-exps/data/neighborhood-run1/audit/audit.json)。
+4. [逐空/非空/profile/重复结果](../2026-10-30-exps/data/neighborhood-run1/audit/confirmation-populations.csv)、[原始逐query和失败预算](../2026-10-30-exps/data/neighborhood-run1/runs/)、[E3不放行记录](../2026-10-30-exps/data/neighborhood-run1/audit/e3-decision.json)。
+5. [邻域索引/共同搜索](../../../../codes/directory-aware-vector-attr-search/src/neighborhood_index.h)、[精确资格](../../../../codes/directory-aware-vector-attr-search/src/neighborhood_filter.h)、[执行器](../../../../codes/directory-aware-vector-attr-search/src/neighborhood_research.cpp)。基线仍是dynamic_triad arm A/scan512，不是PE-OFFLINE。
+
+WIKI是已有完整原始子树，SIFT为12000活对象的已有层级；每数据200条旧Q、qidx分组校准/确认，未运行源更新。大向量/二进制不上传，manifest给出SHA和本地来源；读取链接不等于拿到完整数据。WQR独立收尾没有被本轮冒称完成；新颖性正文核查仍属研究端，不能由C/B时间收益推出。
+
+## 历史总索引（以下原文保留）
+
+
 用途：独立审核全部已尝试路线、成功/负结果和证据缺口，决定下一步。**不要默认接受上一模型建议。** 实验/源码基线为 `19ad280`；本页与完整交接文档同一提交。默认GitHub `main` 可能落后，请使用分享者提供的固定commit链接或 `autoresearch/trie-20261028` 分支。相对链接从本页所在commit解析。
 
 **独立复核入口（本轮新增）**：[事实/基线/候选排序/最小实验/论文门槛](independent-review.md)、[原文机制与新颖性证据](literature-mechanisms-review.md)、[162次离线重算及源SHA](data/independent-review-audit-20261029.json)。先完整阅读下列原交接，再对照复核；后者没有新增ANN性能数据，也不把历史方案推荐视为用户批准。

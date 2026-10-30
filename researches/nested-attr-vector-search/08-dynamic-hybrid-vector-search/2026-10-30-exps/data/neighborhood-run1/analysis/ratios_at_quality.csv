@@ -1,0 +1,33 @@
+C_mean_e2e_us,C_time_over_baseline_time,baseline_mean_e2e_us,baseline_over_C_speedup,comparison,dataset,profile,quality_comparable,reason_if_unavailable,statistic
+7969.660036666667,44.04950238520452,180.92508666666666,0.022701732048076052,C/A,sift,,True,,mean of 3 serial confirmation repeat arithmetic mean e2e_us
+7969.660036666667,0.12302413381918545,64781.273310000004,8.128486411208947,C/B,sift,,True,,mean of 3 serial confirmation repeat arithmetic mean e2e_us
+7969.660036666667,44.04950238520452,180.92508666666666,,C/A,sift,all,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+7969.660036666667,0.12302413381918545,64781.273310000004,,C/B,sift,all,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+4233.464993333333,11.703728839486967,361.71933333333334,,C/A,sift,wide,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+4233.464993333333,0.12852186177243283,32939.64882666667,,C/B,sift,wide,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+,,,,C/A,sift,middle,False,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+,,,,C/B,sift,middle,False,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+11705.85508,,0.13084,,C/A,sift,narrow,False,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+11705.85508,,96622.89779333334,,C/B,sift,narrow,False,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+9941.428054263566,38.2158696952911,260.1387364341085,,C/A,sift,strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+9941.428054263566,0.12222232698907605,81338.88708527132,,C/B,sift,strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+8197.260181818183,16.12581925796915,508.33139393939393,,C/A,sift,wide/strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+8197.260181818183,0.12278644907582772,66760.30004545454,,C/B,sift,wide/strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+11768.65153968254,,0.12738095238095237,,C/A,sift,narrow/strong_and,False,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+11768.65153968254,,96611.69255555555,,C/B,sift,narrow/strong_and,False,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+14183.419916666668,31.997230214838396,443.27024,0.03125270510246415,C/A,wiki,,True,,mean of 3 serial confirmation repeat arithmetic mean e2e_us
+14183.419916666668,0.10629628447925824,133432.88513,9.407666551083746,C/B,wiki,,True,,mean of 3 serial confirmation repeat arithmetic mean e2e_us
+14183.419916666668,31.997230214838396,443.27024,,C/A,wiki,all,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+14183.419916666668,0.10629628447925824,133432.88513,,C/B,wiki,all,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+7006.117616666666,3.2639082523928966,2146.54245,,C/A,wiki,wide,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+7006.117616666666,0.1256801276666461,55745.62778333333,,C/B,wiki,wide,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+9849.554055555556,93.35809637751028,105.50294444444444,,C/A,wiki,middle,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+9849.554055555556,0.1296741554621917,75956.18433333334,,C/B,wiki,middle,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+16474.625878378378,1597.4717948068374,10.312936936936937,,C/A,wiki,narrow,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+16474.625878378378,0.10355556901008017,159089.7142072072,,C/B,wiki,narrow,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+16307.976682539682,37.228388826771265,438.0521746031746,,C/A,wiki,strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+16307.976682539682,0.10228295995788064,159439.81958730158,,C/B,wiki,strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+13921.3865,6.122716238332094,2273.7272083333332,,C/A,wiki,wide/strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+13921.3865,0.10643107780725383,130801.89345833333,,C/B,wiki,wide/strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+16848.326414141415,3122.794206301064,5.395272727272728,,C/A,wiki,narrow/strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us
+16848.326414141415,0.10137014514827045,166206.00068686868,,C/B,wiki,narrow/strong_and,True,,mean of 3 serial confirmation repeat profile arithmetic mean e2e_us

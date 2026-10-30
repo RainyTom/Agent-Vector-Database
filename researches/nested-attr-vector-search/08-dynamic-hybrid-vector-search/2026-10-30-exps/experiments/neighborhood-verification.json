@@ -1,0 +1,35 @@
+{
+  "build": {
+    "prototype_command": "bash codes/directory-aware-vector-attr-search/build_neighborhood.sh",
+    "baseline_command": "bash codes/directory-aware-vector-attr-search/build_dynamic_triad.sh",
+    "both_succeeded": true,
+    "compiler": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+    "flags": "-O3 -march=native -std=c++17 -Wall -Wextra",
+    "hnsw_revision": "ca426729609b3221563047ceb269cc1213e0d376",
+    "warnings": "Existing vendored hnswlib unused parameter/function and unsigned comparison warnings; dependency unchanged"
+  },
+  "smoke": {
+    "command": "codes/directory-aware-vector-attr-search/build/neighborhood_research --self-check",
+    "observed_stdout": {
+      "eligibility_checks": 6773,
+      "candidate_centers_checked": 104,
+      "B_C_result_path_distance_identical": true,
+      "errors": 0
+    }
+  },
+  "E1": {"datasets": 2, "queries_each": 200, "centers_each": 1600, "set_order_mismatches": 0},
+  "E2": {"calibration_runs": 18, "confirmation_runs": 18, "B_C_query_pairs": 1200, "result_navigation_distance_mismatches": 0, "protocol_errors": 0},
+  "analysis_replay_after_removing_SVG_path": {
+    "used_current_analyzer_on_original_saved_records": true,
+    "statistical_CSV_JSON_artifacts_byte_identical": 12,
+    "temporary_directory_removed": true,
+    "ANN_measurements_reexecuted_for_rendering_fix": false
+  },
+  "visual_check": {
+    "initial_theme_SVG": "unreadable in standalone raster preview; retained as failed rendering, not official figures",
+    "portable_actual_PNGs_opened": ["calibration-nonempty.png", "qualification-vs-expansion.png"],
+    "source": "neighborhood_figures.py uses existing measured rows only"
+  },
+  "E3": {"executed": false, "reason": "C lost to A on nonempty confirmation and prespecified wide-AND queries in both datasets"},
+  "limits": ["No dynamic neighborhood maintenance implementation or update result", "No new independent query set", "No full SIFT1M or full WIKI claim", "No timing significance or completed novelty claim"]
+}
