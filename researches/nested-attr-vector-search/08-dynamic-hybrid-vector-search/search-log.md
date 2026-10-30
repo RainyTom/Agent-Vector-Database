@@ -105,3 +105,10 @@
 - 本轮复用已读ACORN/Curator等前序判断，尚未新搜或精读图数据库bitmap邻接/可达性索引，明确新颖性待查；服务器可先做小原型，不等文献闭包。
 - 实际执行仅有限集合探针：4096图、262144资格交集、49152更新依赖核对，失败0；新真实ANN实验0。真实三臂查询、属性/目录及I/D短更新成本全部待做，不将计划数字当结果。
 
+## 2026-10-30 NPI完整描述与架构前序核读
+
+- 先查papers/relations与本地全文；核读TrieHI v1 §IV-A/B（paper.md657–875）、ACORN §5.1–5.3（453–511、590–633）、PathSeer §3–4（529–585、649–708）。TrieHI是元数据scope索引，不改ANN；NPI核心是二跳对象集合及其可寻址扩展，不能把目录维护或混合导航本身当首次。
+- Web检索：`filtered ANN bitmap two-hop index`、`graph two-hop bitmap index neighbors`、`filtered ANN materialized neighbors`。读[DiskANN官方过滤算法工程说明](https://github.com/microsoft/DiskANN/wiki/Evaluation-of-Filtered-Search-Algorithms)，不移植其QPS或recall结论。覆盖有限，无“查无前序”结论。
+- 待核命中：arXiv1812.10977图数据库压缩表示、2606.19898 Query-aware Routing、2604.00102 Fiber-Navigable Search及图bitmap邻接文献；只保留检索待办，不填算法/实验，也不判完全重合。
+- 交付[完整方案描述](../2026-10-30-exps/npi-complete-design.md)，非代码。768搜索等价、256有限全量结果和18容器边界模型检查通过；真实ANN0。现有论文元数据未变，不新增重复记录/推断引用边。
+

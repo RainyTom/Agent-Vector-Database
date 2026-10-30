@@ -1,0 +1,12 @@
+{
+  "status": "Python semantic model, not C++/HNSW performance",
+  "seed_count": 64,
+  "vertices_per_graph": 24,
+  "query_search_equivalence_cases": 768,
+  "large_ef_reachable_graph_exact_checks": 256,
+  "page_boundary_and_container_checks": 18,
+  "mismatches": 0,
+  "real_data_ann_runs": 0,
+  "implemented_production_index": false,
+  "quality_guarantee": "no general recall guarantee; exact result checks only on finite strongly connected fixtures with ef=N"
+}

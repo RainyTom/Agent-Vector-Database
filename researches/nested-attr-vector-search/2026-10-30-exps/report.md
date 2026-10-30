@@ -2,7 +2,7 @@
 
 **后续范围修正：** 用户指出不应排除Trie/bitmap等已有组件，实验不能仅限条件几何证书。最新安排见本文末尾§10及[跨机制族方案](index-mechanism-portfolio.md)。下文E0/E1的事实与归因建议保留，但只适用于证书族，不再是所有索引研究的全局前置条件。
 
-**当前状态：WQR冻结候选停止扩规模；新探索转向谓词可寻址邻域。** 用户最新明确效率优先、内存作为辅助；§16及[下一轮任务](next-neighborhood-plan.md)给出普通共享图上的邻域页原型、普通二跳对照与三个小实验。§12–15保留WQR设计、实现审查及负结果；其收尾独立推进，不阻塞新原型，也不改写旧失败。
+**当前状态：最新交付为[NPI完整方案描述](npi-complete-design.md)，不是代码。** 用户要求研究端自行完成设计与可行性判断，允许尚未超越基线；§17记录完整结构、搜索停止、资格/更新/回收和TrieHI架构比较。WQR仍停止，不改写历史；NPI尚未实现C++或取得真实数据性能胜出。
 
 日期：2026-10-30。审查对象为服务器固定提交[7756064](https://github.com/RainyTom/Agent-Vector-Database/commit/7756064)。本报告属于上游复核，不覆盖08方向服务器当日报告，不重跑其已报告失败，不声称完成新ANN实验。
 
@@ -284,4 +284,13 @@ python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/202
 - **本地实际验证**：Python Eval枚举4096个4点有向图，262144次资格页交集核对、49152次单邻接改变的依赖更新核对，失败0。只是有限集合语义，不是ANN召回、真实层级编译器或动态性能验证；新真实ANN运行0、C++原型尚未实施。
 - **新颖性边界**：ACORN扩邻、Curator局部谓词求值、bitmap邻接/可达性索引是直接重合风险；不把二跳本身、图+bitmap或“多一个层级场景”当贡献。研究端补查表示/候选消费/更新接口，服务器只按给定原型实施。若只赢NodeANN而不赢普通二跳，暂停新索引主张。
 - **交付**：[完整下一轮任务与服务器指令](next-neighborhood-plan.md)、[实际有限探针](experiments/neighborhood-page-semantics.md)、[小数据](data/neighborhood-page-probe.json)。本轮未新增论文精读记录；复用已有前序笔记。后续未知：页索引在真实图的密度/成本、同质量加速、I/D触达与直接前序重合程度。
+
+## 17. 同日续轮：交付当前首选完整方案，不以代码替代方案
+
+- **目标与决定**：用户明确要完整方案描述，不要代码。选择NPI作为当前首选设计，交付[npi-complete-design.md](npi-complete-design.md)；不声称“当前实测最快”或已获CCF-A创新性认证。
+- **补齐内容**：对象ID/slot/图节点映射、单图二跳集合及稀疏/稠密页、按访问字生成的完整资格、普通导航与合法直达的共同前沿、合法结果控制的停止条件、属性/目录与几何更新解耦、邻接变更反向依赖、墓碑及同步回收规则。没有让用户或服务器再选择核心算法。
+- **原文核查**：TrieHI v1 §IV-A/B明确是ANN之上的scope元数据索引，不是每目录一张ANN图；其核心是inclusive集合及祖先聚合。本方案核心改为可按谓词访问的二跳集合并改变ANN扩展，不物化祖先inclusive对象集合。高层“元数据+ANN”相似不等于差异已全部解决；实际更近的前序为ACORN二跳恢复、PathSeer混合邻居处理。
+- **新增检索**：filtered ANN bitmap two-hop；graph two-hop bitmap index；filtered ANN materialized neighbors。读取DiskANN过滤算法官方工程评测，记录multi-hop与标签检查成本；图压缩和新filtered-ANN检索命中未精读，未写成确证论文机制或新增完整条目。
+- **本地已运行**：搜索模型在64个24点图上768次普通/索引候选搜索结果、展开序列和visited一致；256次ef=N可达图结果核对；18次分页/容器边界核对；失败0。仅有限模型，无C++、真实数据ANN和性能运行。小数据见[data/npi-complete-spec-smoke.json](data/npi-complete-spec-smoke.json)。
+- **边界与下一步**：查询速度为主，内存可以更大。完整方案已交付；候选取得成本、同质量加速、插删维护及图索引直接重合仍需实施/研究，不将计划或有限模型当实验胜出。本轮没有交付生产代码。
 
