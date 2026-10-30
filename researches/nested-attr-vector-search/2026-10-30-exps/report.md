@@ -2,7 +2,7 @@
 
 **后续范围修正：** 用户指出不应排除Trie/bitmap等已有组件，实验不能仅限条件几何证书。最新安排见本文末尾§10及[跨机制族方案](index-mechanism-portfolio.md)。下文E0/E1的事实与归因建议保留，但只适用于证书族，不再是所有索引研究的全局前置条件。
 
-**当前执行入口：** 用户要求本地制定完整方案、服务器只实施。现为[WQR冻结索引/搜索/更新规格](wqr-index-spec.md)与[实施任务书](wqr-server-prompt.md)，见末尾§12；§13追加接收0837918后的归因与验收修正。此前E0/E1和多族筛选为历史研究过程，不再要求下游自行选择路线。
+**当前执行入口：** 用户要求本地制定完整方案、服务器只实施。现为[WQR冻结索引/搜索/更新规格](wqr-index-spec.md)与[实施任务书](wqr-server-prompt.md)，见§12；§13追加0837918后的归因修正。**§14及[8649e55实现审计](wqr-8649e55-implementation-review.md)为当前执行优先级：先修复并闭合E0，再继续E1/E2。** 此前E0/E1和多族筛选为历史研究过程，不再要求下游自行选择路线。
 
 日期：2026-10-30。审查对象为服务器固定提交[7756064](https://github.com/RainyTom/Agent-Vector-Database/commit/7756064)。本报告属于上游复核，不覆盖08方向服务器当日报告，不重跑其已报告失败，不声称完成新ANN实验。
 
@@ -254,4 +254,14 @@ python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/202
 ### 本轮结果与局限
 
 实际完成一次既有汇总CSV重算及三组有限解析构造的执行；新增真实数据诊断0、ANN实验0、生产索引实现0。旧实验错误不重跑确认，所有来源与有限执行片段见[本轮复现记录](experiments/wqr-round2-review.md)。更新规格、机器合同和服务器提示词；旧证据不覆盖。下一步仍是按冻结WQR方案做小规模机制与全成本实施验证，而非继续让服务器发明结构。
+
+## 14. 同日续轮：审计8649e55，不接受部分实现等同E0闭合
+
+- **目标**：核对服务器“WQR实现完成/E0通过”交付，并给出无需再次询问的后续指令。
+- **来源与设置**：固定8649e55，两个新增源码Git blob SHA核对一致；不修改实现、不合并其分支。两名只读reviewer独立审谓词/Euler和路由/runner/生命周期；父进程用真实hnswlib、公共RawL2Space、UBSan及checked vector运行新反例。用户原8对象fixture未重跑；该commit没有提交其输入、预期或测试脚本。
+- **结果**：兄弟目录contains误为true；类别不符和空overlap被scope重新放行；numeric[0,10]错误拒绝5，[-1,0]错误放行-2；IDs20/21在单块无过滤查询返回0而应2；proxy两次计数4/7而当次增量均3，local返回2对象但计数0；D不减live_count，I将原zone1改为0；reserve首次I触发blocks越界断言退出134。原runner在Q/V/Q实际只输出后一个Q并跳过V。
+- **已确认静态缺口**：binary读取正式text bindings、未读tree/attrs/alive、用owner作parent、Q字段不兼容；空活集合构建访问ids[0]；共享距离被手写构建内核绕开；缺少容量/split/墓碑和空块回收；初选proxy错误假定slot0是minID。未执行的路径明确记为源码证据，不包装成运行失败。
+- **环境限制**：ASan与-no-pie重试均因shadow-map冲突在main前失败，不归因程序。之后UBSan/checked-vector实际运行完成或捕获上述越界；没有声称ASan通过。
+- **决定**：先修硬资格、拓扑、ID映射、numeric、计数与正式replay，再补全B/D/I及边界E0，闭合后继续冻结E1/E2，不再问用户“先交E0还是做E1”。当前无性能结论，不能否证WQR机制。
+- **交付与局限**：[完整审计及服务器指令](wqr-8649e55-implementation-review.md)、[诊断源码](experiments/wqr_8649e55_review.cpp)、[实际命令](experiments/wqr-8649e55-reproduction.md)、[结构化证据](data/wqr-8649e55-review.json)。新增真实数据ANN实验0、生产修复0、修复后验证0；1963μs仅为用户报告的原fixture构建时间。本轮不新增论文、不更改论文/关系索引。
 

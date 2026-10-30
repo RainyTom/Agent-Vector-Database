@@ -1,0 +1,125 @@
+{
+  "source": {
+    "commit": "8649e55c3874b101a95edc0c2912601564790968",
+    "files": [
+      {
+        "source": "codes/directory-aware-vector-attr-search/src/wqr_index.h",
+        "git_blob_sha": "f93526dc4b8a62889ea5e09353f91a5623c55824",
+        "snapshot": "work/wqr-review-8649e55/wqr_index.h"
+      },
+      {
+        "source": "codes/directory-aware-vector-attr-search/src/wqr_research.cpp",
+        "git_blob_sha": "6aed0cec179a4efdb6bdf07af641180e8bd95233",
+        "snapshot": "work/wqr-review-8649e55/wqr_research.cpp"
+      }
+    ]
+  },
+  "original_report": {
+    "fixture_objects": 8,
+    "dimensions": 2,
+    "reported_queries": 3,
+    "events": [
+      "V",
+      "T",
+      "M",
+      "R"
+    ],
+    "build_us": 1963,
+    "independently_reran_original_fixture": false,
+    "fixture_artifacts_in_commit": false
+  },
+  "runtime": {
+    "sanitizers_executed": "UBSan + _GLIBCXX_ASSERTIONS",
+    "asan": "two startup failures due to shadow-memory mapping conflict; no program-body execution; not a WQR crash finding",
+    "diagnostic_sha256": "99c4cc285f94ae7e7e779ab80ffca84782a0563aff3ebbe37d8862b5b9662e22"
+  },
+  "observations": [
+    {
+      "case": "sibling_containment",
+      "actual": 1,
+      "expected": 0
+    },
+    {
+      "case": "category_reject",
+      "actual": 1,
+      "expected": 0
+    },
+    {
+      "case": "empty_overlap_reject",
+      "actual": 1,
+      "expected": 0
+    },
+    {
+      "case": "numeric_five_in_zero_ten",
+      "actual": 0,
+      "expected": 1
+    },
+    {
+      "case": "literal_minus_one_bound",
+      "actual": 1,
+      "expected": 0
+    },
+    {
+      "case": "external_id_result_count",
+      "actual": 0,
+      "expected": 2,
+      "selected_blocks": 1
+    },
+    {
+      "case": "portal_counter",
+      "reported": [
+        4,
+        7
+      ],
+      "actual_query_deltas": [
+        3,
+        3
+      ]
+    },
+    {
+      "case": "local_counter",
+      "reported": 0,
+      "returned_objects": 2,
+      "uncounted_space_wiring_confirmed": true
+    },
+    {
+      "case": "delete_live_count",
+      "actual": 2,
+      "expected": 1
+    },
+    {
+      "case": "restore_zone",
+      "actual": 0,
+      "expected": 1
+    }
+  ],
+  "reserve_insertion": {
+    "id": 2,
+    "initially_indexed": [
+      0,
+      1
+    ],
+    "canonical_vector_exists": true,
+    "exit_code": 134,
+    "result": "std::vector<Block>::operator[] assertion: __n < this->size()"
+  },
+  "mixed_replay": {
+    "input_types": [
+      "Q",
+      "V",
+      "Q"
+    ],
+    "expected_queries": 2,
+    "observed_queries": 1,
+    "expected_updates": 1,
+    "observed_updates": 0,
+    "observed_query_indices": [
+      1
+    ],
+    "fixture_format": "bespoke binary format accepted by committed runner; deliberately not a canonical dataset",
+    "runner_output": "build_us 3581.42\nQ 1 84.102 4 0 1 1 1 0 1:0 0:1\n"
+  },
+  "new_real_dataset_experiments": 0,
+  "production_fix_applied": false,
+  "post_fix_validation": false
+}
