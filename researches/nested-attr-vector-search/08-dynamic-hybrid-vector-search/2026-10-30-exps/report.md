@@ -150,3 +150,14 @@ SIFT full128条件box新增12.59%/13.31%，gap再增0.33%/0.35%；gap单独超�
 ![谓词可寻址邻域：校准预算端到端非空时延](data/neighborhood-run1/figures/calibration-nonempty.png)
 
 [资格规模与实际扩展图](data/neighborhood-run1/figures/qualification-vs-expansion.png) 显示稀疏资格时仍大量展开；下一轮应由研究端判断是否继续该共享图路线，本轮不临时替换算法追正结果。
+
+## 11. 同日第4轮追加：7654f1e closure六臂static
+
+按研究端实现接入502753c原WIKI/SIFT和动态trace，未改核心、候选池、停止规则或质量阈值。完整 [服务器报告](../../2026-10-30-exps/closure-server-report.md)、[复现](../../2026-10-30-exps/experiments/closure-server-reproduction.md)、[72次原runs小聚合](../../2026-10-30-exps/data/closure-server-run1/static/runs.json)、[全部失败诊断](../../2026-10-30-exps/data/closure-server-run1/failure-diagnostics.json) 已保存。
+
+结论：H改变了有效编译邻接，但同ef实际expanded几乎不变；WIKI确认质量未过门，不能报同质量胜负；SIFT质量通过但样本内效率失败，且非空仅16个不同qidx，覆盖不足单列。两个原脚本dynamic_admitted均false，因此未运行真实dynamic或维护包络，没有把未测维护成本写0。递归限制采样错误0；direct差异不套用该定理。
+
+下图为全部校准预算；确认集均值/分位数及同ef控制见完整报告，旧NPI/inline-GT时间不混入本轮结果。
+
+![closure六臂校准质量与端到端成本](../../2026-10-30-exps/data/closure-server-run1/figures-v2/calibration-quality-cost.png)
+

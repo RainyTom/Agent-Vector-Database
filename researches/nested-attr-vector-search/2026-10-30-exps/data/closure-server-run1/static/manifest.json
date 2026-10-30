@@ -1,0 +1,4529 @@
+{
+  "binaries": {
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research": "ac910b29ffb559cc5f1d81c60dbf30869bb1b9b3d7078556abdf9c7656eb61b5",
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad": "e51a31368ceba046dbb6a29917d29e51718409a22b8562c9381c9525906a8a7c"
+  },
+  "commands": [
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle",
+      "--oracle-only",
+      "--k",
+      "10"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle",
+      "--oracle-only",
+      "--k",
+      "10"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/audit",
+      "--audit-only",
+      "--audit-count",
+      "8"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/A-ef64-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/U-ef64-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef64-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef64-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef64-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/U-ef256-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef256-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef256-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef256-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef256-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/A-ef256-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef1024-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef1024-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef1024-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef1024-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/A-ef1024-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/U-ef1024-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/A-ef64-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/G-ef1024-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H0-ef1024-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep1",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/G-ef1024-rep1",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep1",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep1",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H0-ef1024-rep1",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/A-ef64-rep1",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/G-ef1024-rep2",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep2",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep2",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H0-ef1024-rep2",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/A-ef64-rep2",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep2",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle",
+      "--oracle-only",
+      "--k",
+      "10"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle",
+      "--oracle-only",
+      "--k",
+      "10"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/audit",
+      "--audit-only",
+      "--audit-count",
+      "8"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/A-ef64-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef256-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef256-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef256-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef256-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef256-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/A-ef256-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef1024-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef1024-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef1024-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef1024-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/A-ef1024-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef1024-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/A-ef64-rep0",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/U-ef256-rep0",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/G-ef1024-rep0",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/R-ef256-rep0",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/H-ef1024-rep0",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/H0-ef1024-rep0",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/U-ef256-rep1",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/G-ef1024-rep1",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/R-ef256-rep1",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/H-ef1024-rep1",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/H0-ef1024-rep1",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/A-ef64-rep1",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/G-ef1024-rep2",
+      "--arm",
+      "G",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/R-ef256-rep2",
+      "--arm",
+      "R",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/H-ef1024-rep2",
+      "--arm",
+      "H",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/H0-ef1024-rep2",
+      "--arm",
+      "H0",
+      "--ef",
+      "1024",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/A-ef64-rep2",
+      "--arm",
+      "A",
+      "--ef",
+      "64",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv",
+      "--scan-threshold",
+      "512"
+    ],
+    [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--trace",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation.trace",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation/U-ef256-rep2",
+      "--arm",
+      "U",
+      "--ef",
+      "256",
+      "--k",
+      "10",
+      "--gt-in",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/confirmation-oracle.queries.csv"
+    ]
+  ],
+  "complete": true,
+  "cpu_affinity": [
+    2
+  ],
+  "efs": [
+    64,
+    256,
+    1024
+  ],
+  "input": {
+    "sift": {
+      "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "files": {
+        "attrs.txt": "c1d9f95a490093c17bd600b82a77533ff578252dac00631f330be94a90f4902a",
+        "base.f32": "e65d3621562a2b35a54004c06220d5464b108b33b1f364eaa7c549ccdb66b423",
+        "bindings.txt": "d516293e13351e996e40eeaeb4ed46207d51e55a7d366379c00a673f7e1d60fc",
+        "meta.txt": "ba228df3c30101d2abb62087370a7daed8bd3957ada859efd29699cc457cd264",
+        "test.f32": "452a96b1abd51e95fcaa7b0e6727baf27f86206fce11cdb5476e8abdabcb9892",
+        "tree.txt": "945f0bfa32962a2b0e425ecb06e489826bbfa330271ae00055f1d123efb0df9d"
+      },
+      "source_trace": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p1-qu1.txt",
+      "source_trace_sha256": "88d383ed9643361db55db7efb0dd42375d58b348cb155f9016b1e352fc923be8"
+    },
+    "wiki": {
+      "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "files": {
+        "attrs.txt": "608d114a9b5713a8a49ee651ae9ed123b861f32c0d5b9adb669bb4e1ca90d195",
+        "base.f32": "d944e806dbce69776b053d6eae9326ee65809e8bca992f90f7aaff04e9152057",
+        "bindings.txt": "e2a058567a796d2e32f765470f8fd29e2875f80e9a47caebe6d101b2308478ce",
+        "meta.txt": "46099a5862be5542b5c18b7bc48f7b0ef4e5e5dba59446ab244fd4fee6edebc1",
+        "test.f32": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e",
+        "tree.txt": "87d88ad828d5a6788dd7c1f18a1a719abc86dbfe95af2650cf96d99203d7fa87"
+      },
+      "source_trace": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/traces/qu1.txt",
+      "source_trace_sha256": "f43933c97884590723b031497a41ad589c12760b26e767e7ce1d83adfff50747"
+    }
+  },
+  "k": 10,
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+  "pool_size": 64,
+  "quality": 0.999,
+  "repeats": 3,
+  "results": {
+    "sift": {
+      "audit_rows": 400,
+      "chosen": {
+        "A": {
+          "calibration_pass": true,
+          "ef": 64
+        },
+        "G": {
+          "calibration_pass": true,
+          "ef": 1024
+        },
+        "H": {
+          "calibration_pass": true,
+          "ef": 1024
+        },
+        "H0": {
+          "calibration_pass": true,
+          "ef": 1024
+        },
+        "R": {
+          "calibration_pass": true,
+          "ef": 256
+        },
+        "U": {
+          "calibration_pass": true,
+          "ef": 256
+        }
+      },
+      "complete": true,
+      "dynamic_admitted": false,
+      "experiment_contract": {
+        "binaries": {
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research": "ac910b29ffb559cc5f1d81c60dbf30869bb1b9b3d7078556abdf9c7656eb61b5",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad": "e51a31368ceba046dbb6a29917d29e51718409a22b8562c9381c9525906a8a7c"
+        },
+        "k": 10
+      },
+      "groups": {
+        "nonempty": {
+          "A": [
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 4937,
+                "mean": 3710.54,
+                "p50": 3198,
+                "p95": 4932,
+                "p99": 4937
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 728.889,
+                "mean": 355.22616,
+                "p50": 281.299,
+                "p95": 614.374,
+                "p99": 728.889
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 4937,
+                "mean": 3710.54,
+                "p50": 3198,
+                "p95": 4932,
+                "p99": 4937
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 730.052,
+                "mean": 361.79598,
+                "p50": 290.266,
+                "p95": 698.723,
+                "p99": 730.052
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 4937,
+                "mean": 3710.54,
+                "p50": 3198,
+                "p95": 4932,
+                "p99": 4937
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 726.956,
+                "mean": 348.01288,
+                "p50": 283.623,
+                "p95": 562.406,
+                "p99": 726.956
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "G": [
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 42035.41399999999,
+                "mean": 32189.782180000027,
+                "p50": 36495.274,
+                "p95": 41134.8609999998,
+                "p99": 42035.41399999999
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5515.56,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 47151.047,
+                "mean": 35905.515159999995,
+                "p50": 40493.242,
+                "p95": 45701.356,
+                "p99": 47151.047
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4839.76,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 41764.539000000215,
+                "mean": 32245.294560000013,
+                "p50": 36886.32099999989,
+                "p95": 40852.45099999988,
+                "p99": 41764.539000000215
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5515.56,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 47080.607,
+                "mean": 36025.72116,
+                "p50": 41371.003,
+                "p95": 45601.91,
+                "p99": 47080.607
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4839.76,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 41017.668000000194,
+                "mean": 32257.71756000002,
+                "p50": 37210.94500000007,
+                "p95": 40585.50500000001,
+                "p99": 41017.668000000194
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5515.56,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 46201.135,
+                "mean": 36041.757659999996,
+                "p50": 41583.28,
+                "p95": 45622.938,
+                "p99": 46201.135
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4839.76,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "H": [
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 54478.40200000009,
+                "mean": 38453.91276000002,
+                "p50": 39732.35499999996,
+                "p95": 51558.656999999876,
+                "p99": 54478.40200000009
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5521.32,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 59262.427,
+                "mean": 42317.166339999996,
+                "p50": 44581.634,
+                "p95": 56153.778,
+                "p99": 59262.427
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4839.96,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 57945.04899999991,
+                "mean": 38586.806360000024,
+                "p50": 38926.252999999946,
+                "p95": 52654.373999999974,
+                "p99": 57945.04899999991
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5521.32,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 63115.715,
+                "mean": 42427.769459999996,
+                "p50": 43655.881,
+                "p95": 57453.527,
+                "p99": 63115.715
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4839.96,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 53805.0390000001,
+                "mean": 38625.21412,
+                "p50": 39392.248000000094,
+                "p95": 52577.6959999999,
+                "p99": 53805.0390000001
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5521.32,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 58366.112,
+                "mean": 42509.30108,
+                "p50": 44198.031,
+                "p95": 57263.64,
+                "p99": 58366.112
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4839.96,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "H0": [
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 64393.94300000002,
+                "mean": 46052.8944,
+                "p50": 50183.23200000015,
+                "p95": 61365.181,
+                "p99": 64393.94300000002
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5510.36,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 68687.857,
+                "mean": 49456.98758,
+                "p50": 54070.482,
+                "p95": 65799.208,
+                "p99": 68687.857
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4840.04,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 62192.35700000008,
+                "mean": 46650.524460000015,
+                "p50": 51355.707999999926,
+                "p95": 60426.99900000003,
+                "p99": 62192.35700000008
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5510.36,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 66478.663,
+                "mean": 50094.86366,
+                "p50": 55111.137,
+                "p95": 64543.368,
+                "p99": 66478.663
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4840.04,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 63103.60999999991,
+                "mean": 46835.69482,
+                "p50": 50995.26700000009,
+                "p95": 62640.15900000011,
+                "p99": 63103.60999999991
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 5510.36,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 67261.395,
+                "mean": 50228.24542000001,
+                "p50": 54709.82,
+                "p95": 66938.971,
+                "p99": 67261.395
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4840.04,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "R": [
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 43254.48800000013,
+                "mean": 20080.51730000001,
+                "p50": 14347.896999999994,
+                "p95": 40671.22200000009,
+                "p99": 43254.48800000013
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4362.8,
+                "p50": 4604,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 48522.396,
+                "mean": 22587.43002,
+                "p50": 16321.646,
+                "p95": 45937.339,
+                "p99": 48522.396
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 2973.66,
+                "p50": 2060,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 41488.04599999982,
+                "mean": 20270.965360000002,
+                "p50": 14449.05900000004,
+                "p95": 40683.34499999997,
+                "p99": 41488.04599999982
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4362.8,
+                "p50": 4604,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 46527.182,
+                "mean": 22792.819079999997,
+                "p50": 16415.253,
+                "p95": 45421.834,
+                "p99": 46527.182
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 2973.66,
+                "p50": 2060,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 42084.16500000025,
+                "mean": 20312.460500000012,
+                "p50": 14638.030999999995,
+                "p95": 40848.88000000002,
+                "p99": 42084.16500000025
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4362.8,
+                "p50": 4604,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 47156.419,
+                "mean": 22798.615120000002,
+                "p50": 16547.692,
+                "p95": 45585.508,
+                "p99": 47156.419
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 2973.66,
+                "p50": 2060,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "U": [
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 41652.26800000003,
+                "mean": 18796.358500000017,
+                "p50": 12746.429000000026,
+                "p95": 38638.53100000004,
+                "p99": 41652.26800000003
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4390.72,
+                "p50": 4606,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 47014.615,
+                "mean": 21315.32014,
+                "p50": 14715.227,
+                "p95": 43520.418,
+                "p99": 47014.615
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 2973.7,
+                "p50": 2060,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 40583.54999999981,
+                "mean": 18773.953499999992,
+                "p50": 13070.797000000024,
+                "p95": 38521.167000000045,
+                "p99": 40583.54999999981
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4390.72,
+                "p50": 4606,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 45980.901,
+                "mean": 21306.72132,
+                "p50": 15181.846,
+                "p95": 43562.381,
+                "p99": 45980.901
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 2973.7,
+                "p50": 2060,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 50,
+                "maximum": 40499.67900000002,
+                "mean": 18655.324660000002,
+                "p50": 13033.001000000004,
+                "p95": 37933.973000000005,
+                "p99": 40499.67900000002
+              },
+              "distance_calls": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 4390.72,
+                "p50": 4606,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 50,
+                "maximum": 45511.503,
+                "mean": 21164.07908,
+                "p50": 15291.65,
+                "p95": 42765.72,
+                "p99": 45511.503
+              },
+              "expanded": {
+                "count": 50,
+                "maximum": 6000,
+                "mean": 2973.7,
+                "p50": 2060,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 50,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ]
+        },
+        "wide_scope_multi_and": {
+          "A": [
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 4937,
+                "mean": 4752.409090909091,
+                "p50": 4901,
+                "p95": 4935,
+                "p99": 4937
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 728.889,
+                "mean": 496.7701363636363,
+                "p50": 494.88,
+                "p95": 614.374,
+                "p99": 728.889
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 4937,
+                "mean": 4752.409090909091,
+                "p50": 4901,
+                "p95": 4935,
+                "p99": 4937
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 730.052,
+                "mean": 505.01259090909093,
+                "p50": 499.989,
+                "p95": 698.723,
+                "p99": 730.052
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 4937,
+                "mean": 4752.409090909091,
+                "p50": 4901,
+                "p95": 4935,
+                "p99": 4937
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 712.809,
+                "mean": 485.23895454545453,
+                "p50": 496.103,
+                "p95": 562.406,
+                "p99": 712.809
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "G": [
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 42035.41399999999,
+                "mean": 38213.67131818185,
+                "p50": 38238.68400000002,
+                "p95": 41920.47999999985,
+                "p99": 42035.41399999999
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 47151.047,
+                "mean": 42699.95531818182,
+                "p50": 42973.873,
+                "p95": 47015.016,
+                "p99": 47151.047
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 41764.539000000215,
+                "mean": 38617.9421818182,
+                "p50": 38573.72800000004,
+                "p95": 40852.45099999988,
+                "p99": 41764.539000000215
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 47080.607,
+                "mean": 43211.04713636364,
+                "p50": 43272.351,
+                "p95": 45867.06,
+                "p99": 47080.607
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 41004.019999999924,
+                "mean": 38696.417136363656,
+                "p50": 38889.53100000001,
+                "p95": 40585.50500000001,
+                "p99": 41004.019999999924
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 46201.135,
+                "mean": 43321.5185,
+                "p50": 43101.099,
+                "p95": 45705.614,
+                "p99": 46201.135
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "H": [
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 54478.40200000009,
+                "mean": 41459.718181818214,
+                "p50": 39732.35499999996,
+                "p95": 49765.61500000022,
+                "p99": 54478.40200000009
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 59262.427,
+                "mean": 46103.561636363636,
+                "p50": 44581.634,
+                "p95": 54446.569,
+                "p99": 59262.427
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 52654.373999999974,
+                "mean": 41345.27086363639,
+                "p50": 38926.252999999946,
+                "p95": 48731.32100000003,
+                "p99": 52654.373999999974
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 57453.527,
+                "mean": 45926.88559090909,
+                "p50": 43655.881,
+                "p95": 53630.555,
+                "p99": 57453.527
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 52577.6959999999,
+                "mean": 41652.905318181845,
+                "p50": 39392.248000000094,
+                "p95": 50820.547999999944,
+                "p99": 52577.6959999999
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 57373.277,
+                "mean": 46292.118863636366,
+                "p50": 44198.031,
+                "p95": 55380.141,
+                "p99": 57373.277
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "H0": [
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 64393.94300000002,
+                "mean": 55421.453818181784,
+                "p50": 57571.52900000018,
+                "p95": 61816.53999999988,
+                "p99": 64393.94300000002
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 68687.857,
+                "mean": 59341.85954545454,
+                "p50": 61349.842,
+                "p95": 66165.755,
+                "p99": 68687.857
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 62192.35700000008,
+                "mean": 55588.31168181824,
+                "p50": 52666.55499999997,
+                "p95": 60426.99900000003,
+                "p99": 62192.35700000008
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 66478.663,
+                "mean": 59518.51581818182,
+                "p50": 56464.338,
+                "p95": 64495.809,
+                "p99": 66478.663
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 63103.60999999991,
+                "mean": 56037.39790909092,
+                "p50": 53559.79400000005,
+                "p95": 62820.93899999997,
+                "p99": 63103.60999999991
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 67261.395,
+                "mean": 59938.31545454545,
+                "p50": 57257.529,
+                "p95": 67028.319,
+                "p99": 67261.395
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5800.0,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "R": [
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 43254.48800000013,
+                "mean": 34849.78150000002,
+                "p50": 37864.68999999985,
+                "p95": 40968.37400000003,
+                "p99": 43254.48800000013
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5669.227272727273,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 48522.396,
+                "mean": 39085.355363636365,
+                "p50": 42579.129,
+                "p95": 46134.63,
+                "p99": 48522.396
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5229.909090909091,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 41488.04599999982,
+                "mean": 35289.70245454546,
+                "p50": 38649.60899999993,
+                "p95": 41096.78799999999,
+                "p99": 41488.04599999982
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5669.227272727273,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 46527.182,
+                "mean": 39558.45440909091,
+                "p50": 43437.656,
+                "p95": 45976.423,
+                "p99": 46527.182
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5229.909090909091,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 42084.16500000025,
+                "mean": 34888.56963636367,
+                "p50": 36647.571000000025,
+                "p95": 41240.0410000001,
+                "p99": 42084.16500000025
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5669.227272727273,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 47156.419,
+                "mean": 39060.277272727275,
+                "p50": 40833.162,
+                "p95": 46082.385,
+                "p99": 47156.419
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5229.909090909091,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ],
+          "U": [
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 41652.26800000003,
+                "mean": 33093.41922727277,
+                "p50": 35178.82200000008,
+                "p95": 39497.270000000084,
+                "p99": 41652.26800000003
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5673.772727272727,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 47014.615,
+                "mean": 37294.53777272727,
+                "p50": 39539.55,
+                "p95": 44539.262,
+                "p99": 47014.615
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5230.090909090909,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 40583.54999999981,
+                "mean": 33112.60754545453,
+                "p50": 35566.34499999989,
+                "p95": 39430.62399999977,
+                "p99": 40583.54999999981
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5673.772727272727,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 45980.901,
+                "mean": 37340.251954545456,
+                "p50": 40224.088,
+                "p95": 44277.913,
+                "p99": 45980.901
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5230.090909090909,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            },
+            {
+              "compile_us": {
+                "count": 22,
+                "maximum": 40499.67900000002,
+                "mean": 32764.17904545455,
+                "p50": 35627.96900000001,
+                "p95": 39239.26999999992,
+                "p99": 40499.67900000002
+              },
+              "distance_calls": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5673.772727272727,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "e2e_us": {
+                "count": 22,
+                "maximum": 45511.503,
+                "mean": 36949.29618181818,
+                "p50": 39919.715,
+                "p95": 44616.589,
+                "p99": 45511.503
+              },
+              "expanded": {
+                "count": 22,
+                "maximum": 6000,
+                "mean": 5230.090909090909,
+                "p50": 5600,
+                "p95": 6000,
+                "p99": 6000
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 22,
+                "pair": 1.0,
+                "unique_qidx": 16
+              }
+            }
+          ]
+        }
+      },
+      "hereditary_checks": 400,
+      "inputs": {
+        "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+        "files": {
+          "attrs.txt": "c1d9f95a490093c17bd600b82a77533ff578252dac00631f330be94a90f4902a",
+          "base.f32": "e65d3621562a2b35a54004c06220d5464b108b33b1f364eaa7c549ccdb66b423",
+          "bindings.txt": "d516293e13351e996e40eeaeb4ed46207d51e55a7d366379c00a673f7e1d60fc",
+          "meta.txt": "ba228df3c30101d2abb62087370a7daed8bd3957ada859efd29699cc457cd264",
+          "test.f32": "452a96b1abd51e95fcaa7b0e6727baf27f86206fce11cdb5476e8abdabcb9892",
+          "tree.txt": "945f0bfa32962a2b0e425ecb06e489826bbfa330271ae00055f1d123efb0df9d"
+        },
+        "source_trace": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p1-qu1.txt",
+        "source_trace_sha256": "88d383ed9643361db55db7efb0dd42375d58b348cb155f9016b1e352fc923be8"
+      },
+      "limitations": [
+        "Old query vectors; qidx-disjoint, not a new independent test set.",
+        "Initial metadata frozen; updates discarded only in static stage.",
+        "Audit samples sources, not a proof for all real-data edges."
+      ],
+      "mechanism": {
+        "H_vs_G_diff": 231,
+        "H_vs_H0_diff": 383,
+        "H_vs_R_diff": 265
+      },
+      "pool_fingerprint": 13753379437129980222,
+      "quality_pass": true,
+      "smoke_only": false,
+      "speed_groups": [],
+      "stage": "static",
+      "tape_sha256": {
+        "calibration": "9e2b73435121e7eded00e6523844233eec83827d7cefe66d33d7c6fbe76d4c0a",
+        "confirmation": "021928113bd55cf03729602cbcf3c127667481fa647cd1da4cd2902368d42d83"
+      }
+    },
+    "wiki": {
+      "audit_rows": 601,
+      "chosen": {
+        "A": {
+          "calibration_pass": true,
+          "ef": 64
+        },
+        "G": {
+          "calibration_pass": true,
+          "ef": 1024
+        },
+        "H": {
+          "calibration_pass": true,
+          "ef": 1024
+        },
+        "H0": {
+          "calibration_pass": true,
+          "ef": 1024
+        },
+        "R": {
+          "calibration_pass": true,
+          "ef": 256
+        },
+        "U": {
+          "calibration_pass": true,
+          "ef": 256
+        }
+      },
+      "complete": true,
+      "dynamic_admitted": false,
+      "experiment_contract": {
+        "binaries": {
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research": "ac910b29ffb559cc5f1d81c60dbf30869bb1b9b3d7078556abdf9c7656eb61b5",
+          "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad": "e51a31368ceba046dbb6a29917d29e51718409a22b8562c9381c9525906a8a7c"
+        },
+        "k": 10
+      },
+      "groups": {
+        "nonempty": {
+          "A": [
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 7091,
+                "mean": 1461.825,
+                "p50": 24,
+                "p95": 5822,
+                "p99": 7091
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 2897.565,
+                "mean": 543.7721625,
+                "p50": 16.842,
+                "p95": 2381.324,
+                "p99": 2897.565
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 80,
+                "pair": 1.0,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 7091,
+                "mean": 1461.825,
+                "p50": 24,
+                "p95": 5822,
+                "p99": 7091
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 3311.402,
+                "mean": 556.043675,
+                "p50": 14.257,
+                "p95": 2361.046,
+                "p99": 3311.402
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 80,
+                "pair": 1.0,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 7091,
+                "mean": 1461.825,
+                "p50": 24,
+                "p95": 5822,
+                "p99": 7091
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 2982.043,
+                "mean": 539.41605,
+                "p50": 15.299,
+                "p95": 2346.068,
+                "p99": 2982.043
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 80,
+                "pair": 1.0,
+                "unique_qidx": 80
+              }
+            }
+          ],
+          "G": [
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 79911.81800000001,
+                "mean": 12644.46776250001,
+                "p50": 721.3740000000003,
+                "p95": 73655.49800000049,
+                "p99": 79911.81800000001
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2973.925,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 93285.218,
+                "mean": 15231.9714625,
+                "p50": 823.447,
+                "p95": 86343.247,
+                "p99": 93285.218
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2011.325,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 78752.5170000003,
+                "mean": 12620.256850000023,
+                "p50": 756.1400000000002,
+                "p95": 72091.87899999956,
+                "p99": 78752.5170000003
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2973.925,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 91831.578,
+                "mean": 15155.2758125,
+                "p50": 874.192,
+                "p95": 84627.882,
+                "p99": 91831.578
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2011.325,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 76909.3710000006,
+                "mean": 12347.930475000026,
+                "p50": 760.3900000000001,
+                "p95": 71635.87700000052,
+                "p99": 76909.3710000006
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2973.925,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 90132.736,
+                "mean": 14923.068437500002,
+                "p50": 858.363,
+                "p95": 85111.845,
+                "p99": 90132.736
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2011.325,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            }
+          ],
+          "H": [
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 90310.76699999967,
+                "mean": 15004.753324999998,
+                "p50": 722.3929999999998,
+                "p95": 76961.14300000003,
+                "p99": 90310.76699999967
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2980.0125,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 102442.992,
+                "mean": 17523.61765,
+                "p50": 815.442,
+                "p95": 89813.672,
+                "p99": 102442.992
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2011.1875,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 90271.03700000004,
+                "mean": 14837.242524999998,
+                "p50": 717.372,
+                "p95": 73263.54200000002,
+                "p99": 90271.03700000004
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2980.0125,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 102797.651,
+                "mean": 17377.7508625,
+                "p50": 820.872,
+                "p95": 85032.431,
+                "p99": 102797.651
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2011.1875,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 92614.74900000056,
+                "mean": 14904.86065000002,
+                "p50": 742.925,
+                "p95": 73866.0750000006,
+                "p99": 92614.74900000056
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2980.0125,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 105488.697,
+                "mean": 17518.6927375,
+                "p50": 860.837,
+                "p95": 87965.434,
+                "p99": 105488.697
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2011.1875,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            }
+          ],
+          "H0": [
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 128197.23799999972,
+                "mean": 20538.07134999999,
+                "p50": 797.9359999999998,
+                "p95": 125542.46000000027,
+                "p99": 128197.23799999972
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2947.55,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 140767.598,
+                "mean": 22956.1823125,
+                "p50": 912.474,
+                "p95": 137867.756,
+                "p99": 140767.598
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2012.0375,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 128779.10600000019,
+                "mean": 20496.309000000005,
+                "p50": 755.0289999999998,
+                "p95": 123299.68500000061,
+                "p99": 128779.10600000019
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2947.55,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 141065.596,
+                "mean": 22902.305262500002,
+                "p50": 846.861,
+                "p95": 134934.296,
+                "p99": 141065.596
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2012.0375,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 129624.89999999998,
+                "mean": 20365.815287500005,
+                "p50": 688.9780000000002,
+                "p95": 124073.41200000055,
+                "p99": 129624.89999999998
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2947.55,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 141441.474,
+                "mean": 22817.226125,
+                "p50": 796.948,
+                "p95": 136125.066,
+                "p99": 141441.474
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2012.0375,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.99875,
+                "nonempty": 80,
+                "pair": 0.9981447124304267,
+                "unique_qidx": 80
+              }
+            }
+          ],
+          "R": [
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 75929.21800000036,
+                "mean": 9024.476525000024,
+                "p50": 765.7520000000001,
+                "p95": 71122.70000000067,
+                "p99": 75929.21800000036
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2577.975,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 88480.551,
+                "mean": 10984.1641875,
+                "p50": 867.77,
+                "p95": 83915.374,
+                "p99": 88480.551
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 1443.6875,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.9962500000000001,
+                "nonempty": 80,
+                "pair": 0.9944341372912802,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 78994.61199999989,
+                "mean": 9174.698600000007,
+                "p50": 780.3750000000002,
+                "p95": 71198.28600000046,
+                "p99": 78994.61199999989
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2577.975,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 92222.772,
+                "mean": 11218.6654375,
+                "p50": 882.739,
+                "p95": 84494.335,
+                "p99": 92222.772
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 1443.6875,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.9962500000000001,
+                "nonempty": 80,
+                "pair": 0.9944341372912802,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 76418.48499999988,
+                "mean": 9095.755325000007,
+                "p50": 712.3100000000001,
+                "p95": 71543.16100000046,
+                "p99": 76418.48499999988
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2577.975,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 88666.041,
+                "mean": 11041.752925,
+                "p50": 801.796,
+                "p95": 84187.827,
+                "p99": 88666.041
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 1443.6875,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.9962500000000001,
+                "nonempty": 80,
+                "pair": 0.9944341372912802,
+                "unique_qidx": 80
+              }
+            }
+          ],
+          "U": [
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 68574.4050000002,
+                "mean": 8060.972575000005,
+                "p50": 750.4900000000001,
+                "p95": 65836.24300000006,
+                "p99": 68574.4050000002
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2690.15,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 81237.144,
+                "mean": 10005.2118625,
+                "p50": 819.279,
+                "p95": 78427.303,
+                "p99": 81237.144
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 1443.45,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.9962500000000001,
+                "nonempty": 80,
+                "pair": 0.9944341372912802,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 70015.47800000044,
+                "mean": 8137.348512500006,
+                "p50": 799.5960000000001,
+                "p95": 66078.09599999999,
+                "p99": 70015.47800000044
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2690.15,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 83250.596,
+                "mean": 10135.8689625,
+                "p50": 923.595,
+                "p95": 79270.107,
+                "p99": 83250.596
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 1443.45,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.9962500000000001,
+                "nonempty": 80,
+                "pair": 0.9944341372912802,
+                "unique_qidx": 80
+              }
+            },
+            {
+              "compile_us": {
+                "count": 80,
+                "maximum": 69324.85700000012,
+                "mean": 8042.349975000002,
+                "p50": 715.769,
+                "p95": 65156.448000000004,
+                "p99": 69324.85700000012
+              },
+              "distance_calls": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 2690.15,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 80,
+                "maximum": 82509.545,
+                "mean": 10062.691499999999,
+                "p50": 810.293,
+                "p95": 78144.714,
+                "p99": 82509.545
+              },
+              "expanded": {
+                "count": 80,
+                "maximum": 11869,
+                "mean": 1443.45,
+                "p50": 126,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 0.9962500000000001,
+                "nonempty": 80,
+                "pair": 0.9944341372912802,
+                "unique_qidx": 80
+              }
+            }
+          ]
+        },
+        "wide_scope_multi_and": {
+          "A": [
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 5501,
+                "mean": 5286.0,
+                "p50": 5239,
+                "p95": 5501,
+                "p99": 5501
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 2897.565,
+                "mean": 2199.901875,
+                "p50": 2106.658,
+                "p95": 2897.565,
+                "p99": 2897.565
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 5501,
+                "mean": 5286.0,
+                "p50": 5239,
+                "p95": 5501,
+                "p99": 5501
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 3311.402,
+                "mean": 2298.134,
+                "p50": 2232.054,
+                "p95": 3311.402,
+                "p99": 3311.402
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 5501,
+                "mean": 5286.0,
+                "p50": 5239,
+                "p95": 5501,
+                "p99": 5501
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 2982.043,
+                "mean": 2220.885375,
+                "p50": 2049.09,
+                "p95": 2982.043,
+                "p99": 2982.043
+              },
+              "expanded": {
+                "count": 0,
+                "maximum": null,
+                "mean": null,
+                "p50": null,
+                "p95": null,
+                "p99": null
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            }
+          ],
+          "G": [
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 79911.81800000001,
+                "mean": 74045.8378750001,
+                "p50": 73655.49800000049,
+                "p95": 79911.81800000001,
+                "p99": 79911.81800000001
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 93285.218,
+                "mean": 87115.667625,
+                "p50": 86343.247,
+                "p95": 93285.218,
+                "p99": 93285.218
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 78752.5170000003,
+                "mean": 74139.62375000019,
+                "p50": 72091.87899999956,
+                "p95": 78752.5170000003,
+                "p99": 78752.5170000003
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 91831.578,
+                "mean": 86998.052875,
+                "p50": 84627.882,
+                "p95": 91831.578,
+                "p99": 91831.578
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 76909.3710000006,
+                "mean": 72830.61137500018,
+                "p50": 71635.87700000052,
+                "p95": 76909.3710000006,
+                "p99": 76909.3710000006
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 90132.736,
+                "mean": 85918.35825,
+                "p50": 85111.845,
+                "p95": 90132.736,
+                "p99": 90132.736
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            }
+          ],
+          "H": [
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 90310.76699999967,
+                "mean": 78266.23875000003,
+                "p50": 76961.14300000003,
+                "p95": 90310.76699999967,
+                "p99": 90310.76699999967
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 102442.992,
+                "mean": 91223.4365,
+                "p50": 89813.672,
+                "p95": 102442.992,
+                "p99": 102442.992
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 90271.03700000004,
+                "mean": 77067.96437500003,
+                "p50": 72158.7340000001,
+                "p95": 90271.03700000004,
+                "p99": 90271.03700000004
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 102797.651,
+                "mean": 89991.946375,
+                "p50": 85032.431,
+                "p95": 102797.651,
+                "p99": 102797.651
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 92614.74900000056,
+                "mean": 77833.26575000022,
+                "p50": 73866.0750000006,
+                "p95": 92614.74900000056,
+                "p99": 92614.74900000056
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 105488.697,
+                "mean": 91138.090625,
+                "p50": 87965.434,
+                "p95": 105488.697,
+                "p99": 105488.697
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            }
+          ],
+          "H0": [
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 128197.23799999972,
+                "mean": 125419.4211249999,
+                "p50": 125542.46000000027,
+                "p95": 128197.23799999972,
+                "p99": 128197.23799999972
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 140767.598,
+                "mean": 137537.247125,
+                "p50": 137867.756,
+                "p95": 140767.598,
+                "p99": 140767.598
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 128779.10600000019,
+                "mean": 124028.41412500008,
+                "p50": 123299.68500000061,
+                "p95": 128779.10600000019,
+                "p99": 128779.10600000019
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 141065.596,
+                "mean": 136124.402125,
+                "p50": 134934.296,
+                "p95": 141065.596,
+                "p99": 141065.596
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 129624.89999999998,
+                "mean": 124899.08375000006,
+                "p50": 124073.41200000055,
+                "p95": 129624.89999999998,
+                "p99": 129624.89999999998
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 141441.474,
+                "mean": 137121.0515,
+                "p50": 136125.066,
+                "p95": 141441.474,
+                "p99": 141441.474
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11869.0,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            }
+          ],
+          "R": [
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 75929.21800000036,
+                "mean": 68245.83525000024,
+                "p50": 71122.70000000067,
+                "p95": 75929.21800000036,
+                "p99": 75929.21800000036
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11867.125,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 88480.551,
+                "mean": 80418.0215,
+                "p50": 83915.374,
+                "p95": 88480.551,
+                "p99": 88480.551
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11042.125,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 78994.61199999989,
+                "mean": 69560.42962500006,
+                "p50": 71198.28600000046,
+                "p95": 78994.61199999989,
+                "p99": 78994.61199999989
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11867.125,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 92222.772,
+                "mean": 82142.950625,
+                "p50": 84494.335,
+                "p95": 92222.772,
+                "p99": 92222.772
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11042.125,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 76418.48499999988,
+                "mean": 68798.89475000006,
+                "p50": 71543.16100000046,
+                "p95": 76418.48499999988,
+                "p99": 76418.48499999988
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11867.125,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 88666.041,
+                "mean": 80999.0295,
+                "p50": 84187.827,
+                "p95": 88666.041,
+                "p99": 88666.041
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11042.125,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            }
+          ],
+          "U": [
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 68574.4050000002,
+                "mean": 62566.14662500006,
+                "p50": 65836.24300000006,
+                "p95": 68574.4050000002,
+                "p99": 68574.4050000002
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11867.25,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 81237.144,
+                "mean": 74570.290375,
+                "p50": 78427.303,
+                "p95": 81237.144,
+                "p99": 81237.144
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11042.25,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 70015.47800000044,
+                "mean": 63196.56887500007,
+                "p50": 66078.09599999999,
+                "p95": 70015.47800000044,
+                "p99": 70015.47800000044
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11867.25,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 83250.596,
+                "mean": 75531.83675,
+                "p50": 79270.107,
+                "p95": 83250.596,
+                "p99": 83250.596
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11042.25,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            },
+            {
+              "compile_us": {
+                "count": 8,
+                "maximum": 69324.85700000012,
+                "mean": 62495.62200000002,
+                "p50": 65156.448000000004,
+                "p95": 69324.85700000012,
+                "p99": 69324.85700000012
+              },
+              "distance_calls": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11867.25,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "e2e_us": {
+                "count": 8,
+                "maximum": 82509.545,
+                "mean": 74854.48275,
+                "p50": 78144.714,
+                "p95": 82509.545,
+                "p99": 82509.545
+              },
+              "expanded": {
+                "count": 8,
+                "maximum": 11869,
+                "mean": 11042.25,
+                "p50": 11869,
+                "p95": 11869,
+                "p99": 11869
+              },
+              "quality": {
+                "empty": 0,
+                "macro": 1.0,
+                "nonempty": 8,
+                "pair": 1.0,
+                "unique_qidx": 8
+              }
+            }
+          ]
+        }
+      },
+      "hereditary_checks": 480,
+      "inputs": {
+        "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+        "files": {
+          "attrs.txt": "608d114a9b5713a8a49ee651ae9ed123b861f32c0d5b9adb669bb4e1ca90d195",
+          "base.f32": "d944e806dbce69776b053d6eae9326ee65809e8bca992f90f7aaff04e9152057",
+          "bindings.txt": "e2a058567a796d2e32f765470f8fd29e2875f80e9a47caebe6d101b2308478ce",
+          "meta.txt": "46099a5862be5542b5c18b7bc48f7b0ef4e5e5dba59446ab244fd4fee6edebc1",
+          "test.f32": "10beb57fd15089042b6f102422a92a3967774b7137a940c329fdd73f3602c92e",
+          "tree.txt": "87d88ad828d5a6788dd7c1f18a1a719abc86dbfe95af2650cf96d99203d7fa87"
+        },
+        "source_trace": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/traces/qu1.txt",
+        "source_trace_sha256": "f43933c97884590723b031497a41ad589c12760b26e767e7ce1d83adfff50747"
+      },
+      "limitations": [
+        "Old query vectors; qidx-disjoint, not a new independent test set.",
+        "Initial metadata frozen; updates discarded only in static stage.",
+        "Audit samples sources, not a proof for all real-data edges."
+      ],
+      "mechanism": {
+        "H_vs_G_diff": 106,
+        "H_vs_H0_diff": 452,
+        "H_vs_R_diff": 270
+      },
+      "pool_fingerprint": 6420998096607981501,
+      "quality_pass": false,
+      "smoke_only": false,
+      "speed_groups": [],
+      "stage": "static",
+      "tape_sha256": {
+        "calibration": "449825dca5fec6240636f5b2470b27a24d25f985f2d12c5eeac1022641966627",
+        "confirmation": "0e0d601c2597c639a9bfebdefb8fd40014f436ba6b18f3d1069569b5b594635d"
+      }
+    }
+  },
+  "scan_threshold": 512,
+  "smoke_only": false,
+  "stage": "static"
+}

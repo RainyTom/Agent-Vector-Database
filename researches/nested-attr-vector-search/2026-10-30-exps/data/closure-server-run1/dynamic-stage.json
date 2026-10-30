@@ -1,0 +1,82 @@
+{
+  "sift": {
+    "scheduler_dynamic_admitted": false,
+    "A_H_quality_pass": true,
+    "speed_groups": [],
+    "dynamic_executed": false,
+    "maintenance_probe_executed": false,
+    "reason": "No scheduler admission; no dynamic or maintenance performance result inferred from toy E0.",
+    "groups": {
+      "nonempty": {
+        "nonempty_unique_qidx": [
+          16,
+          16,
+          16
+        ],
+        "coverage_at_least_20": false,
+        "H_over_A_repeat_mean_time": [
+          119.12739292624168,
+          117.26987530375544,
+          122.14864311918569
+        ],
+        "H_A_quality_pass_this_group": true,
+        "ratios_are_only_diagnostic_when_quality_or_coverage_fails": true
+      },
+      "wide_scope_multi_and": {
+        "nonempty_unique_qidx": [
+          16,
+          16,
+          16
+        ],
+        "coverage_at_least_20": false,
+        "H_over_A_repeat_mean_time": [
+          92.80662878377169,
+          90.94206049048103,
+          95.40066482708566
+        ],
+        "H_A_quality_pass_this_group": true,
+        "ratios_are_only_diagnostic_when_quality_or_coverage_fails": true
+      }
+    }
+  },
+  "wiki": {
+    "scheduler_dynamic_admitted": false,
+    "A_H_quality_pass": false,
+    "speed_groups": [],
+    "dynamic_executed": false,
+    "maintenance_probe_executed": false,
+    "reason": "No scheduler admission; no dynamic or maintenance performance result inferred from toy E0.",
+    "groups": {
+      "nonempty": {
+        "nonempty_unique_qidx": [
+          80,
+          80,
+          80
+        ],
+        "coverage_at_least_20": true,
+        "H_over_A_repeat_mean_time": [
+          32.22602931609247,
+          31.25249264367588,
+          32.47714401063891
+        ],
+        "H_A_quality_pass_this_group": false,
+        "ratios_are_only_diagnostic_when_quality_or_coverage_fails": true
+      },
+      "wide_scope_multi_and": {
+        "nonempty_unique_qidx": [
+          8,
+          8,
+          8
+        ],
+        "coverage_at_least_20": false,
+        "H_over_A_repeat_mean_time": [
+          41.46704793367204,
+          39.15870283238488,
+          41.03682776739434
+        ],
+        "H_A_quality_pass_this_group": true,
+        "ratios_are_only_diagnostic_when_quality_or_coverage_fails": true
+      }
+    }
+  }
+}

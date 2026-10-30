@@ -1,0 +1,4372 @@
+{
+  "implementation_errors_observed": {
+    "invalid_count": 0,
+    "duplicate_count": 0,
+    "state_errors": 0,
+    "gt_distance_calls": 0
+  },
+  "quality_failed_run_count": 31,
+  "quality_failed_runs_by_dataset_phase_arm": [
+    {
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "count": 2
+    },
+    {
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "count": 2
+    },
+    {
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "count": 2
+    },
+    {
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "count": 1
+    },
+    {
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "count": 1
+    },
+    {
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "count": 2
+    },
+    {
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "count": 2
+    },
+    {
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "count": 2
+    },
+    {
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "R",
+      "count": 1
+    },
+    {
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "U",
+      "count": 1
+    },
+    {
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "G",
+      "count": 3
+    },
+    {
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "H",
+      "count": 3
+    },
+    {
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "H0",
+      "count": 3
+    },
+    {
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "R",
+      "count": 3
+    },
+    {
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "U",
+      "count": 3
+    }
+  ],
+  "unique_approximate_miss_rows": 85,
+  "approximate_misses_not_state_errors": [
+    {
+      "event": "1",
+      "version": "0",
+      "qidx": "0",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2359",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        6515,
+        10862
+      ],
+      "gt_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        10862,
+        1604,
+        346
+      ],
+      "result_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        1604,
+        346,
+        1631,
+        888
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "71",
+      "version": "0",
+      "qidx": "140",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3624",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        7038,
+        9388
+      ],
+      "gt_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7038,
+        7445,
+        4109,
+        189,
+        8924,
+        9388
+      ],
+      "result_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7445,
+        4109,
+        189,
+        8924,
+        211,
+        75
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "91",
+      "version": "0",
+      "qidx": "180",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4128",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        9524
+      ],
+      "gt_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        9524,
+        3736,
+        8227
+      ],
+      "result_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        3736,
+        8227,
+        1212
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "1",
+      "version": "0",
+      "qidx": "0",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2359",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        10862
+      ],
+      "gt_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        10862,
+        1604,
+        346
+      ],
+      "result_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        1604,
+        346,
+        1631
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "14",
+      "version": "0",
+      "qidx": "26",
+      "recursive": "1",
+      "anchor": "28",
+      "scope_card": "1311",
+      "eligible_card": "369",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        1035
+      ],
+      "gt_ids": [
+        9731,
+        2364,
+        4597,
+        649,
+        5292,
+        6829,
+        1035,
+        2649,
+        10040,
+        11763
+      ],
+      "result_ids": [
+        9731,
+        2364,
+        4597,
+        649,
+        5292,
+        6829,
+        2649,
+        10040,
+        11763,
+        734
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4238",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        5516
+      ],
+      "gt_ids": [
+        6517,
+        2858,
+        5516,
+        1444,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314
+      ],
+      "result_ids": [
+        6517,
+        2858,
+        1444,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314,
+        3477
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "66",
+      "version": "0",
+      "qidx": "130",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3398",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        3139
+      ],
+      "gt_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        3139,
+        7532,
+        6787
+      ],
+      "result_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        7532,
+        6787,
+        269
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "71",
+      "version": "0",
+      "qidx": "140",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3624",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        7038,
+        9388
+      ],
+      "gt_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7038,
+        7445,
+        4109,
+        189,
+        8924,
+        9388
+      ],
+      "result_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7445,
+        4109,
+        189,
+        8924,
+        75,
+        7173
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "91",
+      "version": "0",
+      "qidx": "180",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4128",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        9524
+      ],
+      "gt_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        9524,
+        3736,
+        8227
+      ],
+      "result_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        3736,
+        8227,
+        1212
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "1",
+      "version": "0",
+      "qidx": "0",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2359",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        10862
+      ],
+      "gt_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        10862,
+        1604,
+        346
+      ],
+      "result_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        1604,
+        346,
+        1631
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4238",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        1444
+      ],
+      "gt_ids": [
+        6517,
+        2858,
+        5516,
+        1444,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314
+      ],
+      "result_ids": [
+        6517,
+        2858,
+        5516,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314,
+        3477
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "66",
+      "version": "0",
+      "qidx": "130",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3398",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        3139
+      ],
+      "gt_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        3139,
+        7532,
+        6787
+      ],
+      "result_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        7532,
+        6787,
+        269
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "71",
+      "version": "0",
+      "qidx": "140",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3624",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        7038,
+        9388
+      ],
+      "gt_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7038,
+        7445,
+        4109,
+        189,
+        8924,
+        9388
+      ],
+      "result_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7445,
+        4109,
+        189,
+        8924,
+        211,
+        75
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "91",
+      "version": "0",
+      "qidx": "180",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4128",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        9524
+      ],
+      "gt_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        9524,
+        3736,
+        8227
+      ],
+      "result_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        3736,
+        8227,
+        1212
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "1",
+      "version": "0",
+      "qidx": "0",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2359",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        10862
+      ],
+      "gt_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        10862,
+        1604,
+        346
+      ],
+      "result_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        1604,
+        346,
+        1631
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "14",
+      "version": "0",
+      "qidx": "26",
+      "recursive": "1",
+      "anchor": "28",
+      "scope_card": "1311",
+      "eligible_card": "369",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        1035
+      ],
+      "gt_ids": [
+        9731,
+        2364,
+        4597,
+        649,
+        5292,
+        6829,
+        1035,
+        2649,
+        10040,
+        11763
+      ],
+      "result_ids": [
+        9731,
+        2364,
+        4597,
+        649,
+        5292,
+        6829,
+        2649,
+        10040,
+        11763,
+        734
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4238",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        5516
+      ],
+      "gt_ids": [
+        6517,
+        2858,
+        5516,
+        1444,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314
+      ],
+      "result_ids": [
+        6517,
+        2858,
+        1444,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314,
+        3477
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "66",
+      "version": "0",
+      "qidx": "130",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3398",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        3139
+      ],
+      "gt_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        3139,
+        7532,
+        6787
+      ],
+      "result_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        7532,
+        6787,
+        269
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "71",
+      "version": "0",
+      "qidx": "140",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3624",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        7038,
+        9388
+      ],
+      "gt_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7038,
+        7445,
+        4109,
+        189,
+        8924,
+        9388
+      ],
+      "result_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7445,
+        4109,
+        189,
+        8924,
+        75,
+        7173
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "91",
+      "version": "0",
+      "qidx": "180",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4128",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        9524
+      ],
+      "gt_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        9524,
+        3736,
+        8227
+      ],
+      "result_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        3736,
+        8227,
+        1212
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "1",
+      "version": "0",
+      "qidx": "0",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2359",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        6515,
+        10862
+      ],
+      "gt_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        6515,
+        10862,
+        1604,
+        346
+      ],
+      "result_ids": [
+        4135,
+        1872,
+        2630,
+        1875,
+        4584,
+        3562,
+        1604,
+        346,
+        1631,
+        888
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "14",
+      "version": "0",
+      "qidx": "26",
+      "recursive": "1",
+      "anchor": "28",
+      "scope_card": "1311",
+      "eligible_card": "369",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        1035
+      ],
+      "gt_ids": [
+        9731,
+        2364,
+        4597,
+        649,
+        5292,
+        6829,
+        1035,
+        2649,
+        10040,
+        11763
+      ],
+      "result_ids": [
+        9731,
+        2364,
+        4597,
+        649,
+        5292,
+        6829,
+        2649,
+        10040,
+        11763,
+        734
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4238",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        1444,
+        5516
+      ],
+      "gt_ids": [
+        6517,
+        2858,
+        5516,
+        1444,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314
+      ],
+      "result_ids": [
+        6517,
+        2858,
+        8100,
+        30,
+        2220,
+        268,
+        100,
+        9314,
+        3477,
+        4134
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "21",
+      "version": "0",
+      "qidx": "40",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "1510",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        5829
+      ],
+      "gt_ids": [
+        7985,
+        8000,
+        10792,
+        4832,
+        5829,
+        6463,
+        5413,
+        875,
+        4709,
+        10040
+      ],
+      "result_ids": [
+        7985,
+        8000,
+        10792,
+        4832,
+        6463,
+        5413,
+        875,
+        4709,
+        10040,
+        7578
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "46",
+      "version": "0",
+      "qidx": "90",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2492",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        3894,
+        5560
+      ],
+      "gt_ids": [
+        5662,
+        5560,
+        3894,
+        1934,
+        4614,
+        8689,
+        214,
+        6788,
+        87,
+        7996
+      ],
+      "result_ids": [
+        5662,
+        1934,
+        4614,
+        8689,
+        214,
+        6788,
+        87,
+        7996,
+        5773,
+        10248
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "66",
+      "version": "0",
+      "qidx": "130",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3398",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        3139,
+        7262
+      ],
+      "gt_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        3139,
+        7532,
+        6787
+      ],
+      "result_ids": [
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        7532,
+        6787,
+        269,
+        2833
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "71",
+      "version": "0",
+      "qidx": "140",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3624",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        5706,
+        7038,
+        9388
+      ],
+      "gt_ids": [
+        10450,
+        3219,
+        5706,
+        4628,
+        7038,
+        7445,
+        4109,
+        189,
+        8924,
+        9388
+      ],
+      "result_ids": [
+        10450,
+        3219,
+        4628,
+        7445,
+        4109,
+        189,
+        8924,
+        75,
+        7173,
+        1149
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "81",
+      "version": "0",
+      "qidx": "160",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "899",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        10235,
+        11066
+      ],
+      "gt_ids": [
+        4884,
+        10235,
+        11066,
+        1702,
+        8291,
+        3013,
+        1703,
+        11149,
+        1984,
+        8293
+      ],
+      "result_ids": [
+        4884,
+        1702,
+        8291,
+        3013,
+        1703,
+        11149,
+        1984,
+        8293,
+        7757,
+        8539
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "91",
+      "version": "0",
+      "qidx": "180",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "4128",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        9524
+      ],
+      "gt_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        9524,
+        3736,
+        8227
+      ],
+      "result_ids": [
+        5031,
+        350,
+        121,
+        821,
+        73,
+        71,
+        38,
+        3736,
+        8227,
+        1212
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "66",
+      "version": "0",
+      "qidx": "130",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3398",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 256,
+      "missing_gt_ids": [
+        3139
+      ],
+      "gt_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        3139,
+        7532,
+        6787
+      ],
+      "result_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        7532,
+        6787,
+        269
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/G-ef256-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "66",
+      "version": "0",
+      "qidx": "130",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "3398",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 256,
+      "missing_gt_ids": [
+        3139
+      ],
+      "gt_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        3139,
+        7532,
+        6787
+      ],
+      "result_ids": [
+        7262,
+        8029,
+        4290,
+        2116,
+        3402,
+        7423,
+        6729,
+        7532,
+        6787,
+        269
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H-ef256-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "81",
+      "version": "0",
+      "qidx": "160",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "899",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 256,
+      "missing_gt_ids": [
+        10235
+      ],
+      "gt_ids": [
+        4884,
+        10235,
+        11066,
+        1702,
+        8291,
+        3013,
+        1703,
+        11149,
+        1984,
+        8293
+      ],
+      "result_ids": [
+        4884,
+        11066,
+        1702,
+        8291,
+        3013,
+        1703,
+        11149,
+        1984,
+        8293,
+        7757
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/calibration/H0-ef256-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "18",
+      "version": "0",
+      "qidx": "35",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "8511",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "U",
+      "ef": 256,
+      "missing_gt_ids": [
+        8122
+      ],
+      "gt_ids": [
+        8122,
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361
+      ],
+      "result_ids": [
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361,
+        1430
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep2.queries.csv"
+      ]
+    },
+    {
+      "event": "98",
+      "version": "0",
+      "qidx": "195",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2484",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "U",
+      "ef": 256,
+      "missing_gt_ids": [
+        1848,
+        3913
+      ],
+      "gt_ids": [
+        3913,
+        1387,
+        1025,
+        7878,
+        6132,
+        6236,
+        5111,
+        1899,
+        7642,
+        1848
+      ],
+      "result_ids": [
+        1387,
+        1025,
+        7878,
+        6132,
+        6236,
+        5111,
+        1899,
+        7642,
+        8290,
+        5144
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/U-ef256-rep2.queries.csv"
+      ]
+    },
+    {
+      "event": "18",
+      "version": "0",
+      "qidx": "35",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "8511",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "G",
+      "ef": 1024,
+      "missing_gt_ids": [
+        8122
+      ],
+      "gt_ids": [
+        8122,
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361
+      ],
+      "result_ids": [
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361,
+        1430
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/G-ef1024-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/G-ef1024-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/G-ef1024-rep2.queries.csv"
+      ]
+    },
+    {
+      "event": "18",
+      "version": "0",
+      "qidx": "35",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "8511",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "R",
+      "ef": 256,
+      "missing_gt_ids": [
+        8122
+      ],
+      "gt_ids": [
+        8122,
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361
+      ],
+      "result_ids": [
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361,
+        1430
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep2.queries.csv"
+      ]
+    },
+    {
+      "event": "98",
+      "version": "0",
+      "qidx": "195",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "2484",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "R",
+      "ef": 256,
+      "missing_gt_ids": [
+        1848,
+        3913
+      ],
+      "gt_ids": [
+        3913,
+        1387,
+        1025,
+        7878,
+        6132,
+        6236,
+        5111,
+        1899,
+        7642,
+        1848
+      ],
+      "result_ids": [
+        1387,
+        1025,
+        7878,
+        6132,
+        6236,
+        5111,
+        1899,
+        7642,
+        8290,
+        5144
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/R-ef256-rep2.queries.csv"
+      ]
+    },
+    {
+      "event": "18",
+      "version": "0",
+      "qidx": "35",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "8511",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "H",
+      "ef": 1024,
+      "missing_gt_ids": [
+        8122
+      ],
+      "gt_ids": [
+        8122,
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361
+      ],
+      "result_ids": [
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361,
+        1430
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H-ef1024-rep2.queries.csv"
+      ]
+    },
+    {
+      "event": "18",
+      "version": "0",
+      "qidx": "35",
+      "recursive": "1",
+      "anchor": "0",
+      "scope_card": "11869",
+      "eligible_card": "8511",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "wiki",
+      "phase": "confirmation",
+      "arm": "H0",
+      "ef": 1024,
+      "missing_gt_ids": [
+        8122
+      ],
+      "gt_ids": [
+        8122,
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361
+      ],
+      "result_ids": [
+        6531,
+        202,
+        2196,
+        1324,
+        10157,
+        3988,
+        6726,
+        6091,
+        1361,
+        1430
+      ],
+      "repeats": [
+        0,
+        1,
+        2
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H0-ef1024-rep0.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H0-ef1024-rep1.queries.csv",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/wiki/confirmation/H0-ef1024-rep2.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "6",
+      "recall": "0.59999999999999998",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        1379,
+        3336,
+        3796,
+        6643
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        3610,
+        3966,
+        3414,
+        630,
+        5199,
+        11697,
+        9423
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "20",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "342",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        2542,
+        10147
+      ],
+      "gt_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        10147,
+        2542,
+        949,
+        8336
+      ],
+      "result_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        949,
+        8336,
+        4695,
+        1923
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "22",
+      "version": "0",
+      "qidx": "42",
+      "recursive": "1",
+      "anchor": "7",
+      "scope_card": "1200",
+      "eligible_card": "240",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        2209,
+        10332
+      ],
+      "gt_ids": [
+        11637,
+        9516,
+        2209,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        10332,
+        4435
+      ],
+      "result_ids": [
+        11637,
+        9516,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        4435,
+        11628,
+        2415
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "36",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "9",
+      "scope_card": "1200",
+      "eligible_card": "778",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        6207
+      ],
+      "gt_ids": [
+        4485,
+        2290,
+        9471,
+        11930,
+        6207,
+        11981,
+        11016,
+        3144,
+        7345,
+        1540
+      ],
+      "result_ids": [
+        4485,
+        2290,
+        9471,
+        11930,
+        11981,
+        11016,
+        3144,
+        7345,
+        1540,
+        9325
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "42",
+      "version": "0",
+      "qidx": "18",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "144",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        11801
+      ],
+      "gt_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        11801,
+        9307
+      ],
+      "result_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        9307,
+        4244
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "52",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "265",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        7567,
+        11457
+      ],
+      "gt_ids": [
+        7567,
+        10540,
+        11457,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250
+      ],
+      "result_ids": [
+        10540,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250,
+        7083,
+        3401
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "56",
+      "version": "0",
+      "qidx": "46",
+      "recursive": "1",
+      "anchor": "8",
+      "scope_card": "1200",
+      "eligible_card": "699",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        2086
+      ],
+      "gt_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        2086
+      ],
+      "result_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        6615
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "100",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "11",
+      "scope_card": "1200",
+      "eligible_card": "261",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "U",
+      "ef": 64,
+      "missing_gt_ids": [
+        3287,
+        9717,
+        10079
+      ],
+      "gt_ids": [
+        1287,
+        9786,
+        4830,
+        9717,
+        10079,
+        10471,
+        7989,
+        3287,
+        9954,
+        11029
+      ],
+      "result_ids": [
+        1287,
+        9786,
+        4830,
+        10471,
+        7989,
+        9954,
+        11029,
+        10159,
+        11803,
+        3691
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/U-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "5",
+      "recall": "0.5",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        1379,
+        3336,
+        3414,
+        3796,
+        6643
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        3610,
+        3966,
+        630,
+        5199,
+        11697,
+        9423,
+        9825
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "20",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "342",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        2542,
+        10147
+      ],
+      "gt_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        10147,
+        2542,
+        949,
+        8336
+      ],
+      "result_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        949,
+        8336,
+        4695,
+        1923
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "22",
+      "version": "0",
+      "qidx": "42",
+      "recursive": "1",
+      "anchor": "7",
+      "scope_card": "1200",
+      "eligible_card": "240",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        2209,
+        10332
+      ],
+      "gt_ids": [
+        11637,
+        9516,
+        2209,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        10332,
+        4435
+      ],
+      "result_ids": [
+        11637,
+        9516,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        4435,
+        11628,
+        2415
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "36",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "9",
+      "scope_card": "1200",
+      "eligible_card": "778",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        6207,
+        9471,
+        11981
+      ],
+      "gt_ids": [
+        4485,
+        2290,
+        9471,
+        11930,
+        6207,
+        11981,
+        11016,
+        3144,
+        7345,
+        1540
+      ],
+      "result_ids": [
+        4485,
+        2290,
+        11930,
+        11016,
+        3144,
+        7345,
+        1540,
+        9325,
+        10969,
+        5552
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "42",
+      "version": "0",
+      "qidx": "18",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "144",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        11801
+      ],
+      "gt_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        11801,
+        9307
+      ],
+      "result_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        9307,
+        4244
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "52",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "265",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        7567,
+        11457
+      ],
+      "gt_ids": [
+        7567,
+        10540,
+        11457,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250
+      ],
+      "result_ids": [
+        10540,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250,
+        7083,
+        3401
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "56",
+      "version": "0",
+      "qidx": "46",
+      "recursive": "1",
+      "anchor": "8",
+      "scope_card": "1200",
+      "eligible_card": "699",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        2086
+      ],
+      "gt_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        2086
+      ],
+      "result_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        6615
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "100",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "11",
+      "scope_card": "1200",
+      "eligible_card": "261",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 64,
+      "missing_gt_ids": [
+        3287,
+        9717,
+        10079
+      ],
+      "gt_ids": [
+        1287,
+        9786,
+        4830,
+        9717,
+        10079,
+        10471,
+        7989,
+        3287,
+        9954,
+        11029
+      ],
+      "result_ids": [
+        1287,
+        9786,
+        4830,
+        10471,
+        7989,
+        9954,
+        11029,
+        10159,
+        11803,
+        3691
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "5",
+      "recall": "0.5",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        1379,
+        3336,
+        3414,
+        3796,
+        6643
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        3610,
+        3966,
+        630,
+        5199,
+        11697,
+        9423,
+        9825
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "20",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "342",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        2542,
+        10147
+      ],
+      "gt_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        10147,
+        2542,
+        949,
+        8336
+      ],
+      "result_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        949,
+        8336,
+        4695,
+        1923
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "22",
+      "version": "0",
+      "qidx": "42",
+      "recursive": "1",
+      "anchor": "7",
+      "scope_card": "1200",
+      "eligible_card": "240",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        2209,
+        10332
+      ],
+      "gt_ids": [
+        11637,
+        9516,
+        2209,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        10332,
+        4435
+      ],
+      "result_ids": [
+        11637,
+        9516,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        4435,
+        11628,
+        2415
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "36",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "9",
+      "scope_card": "1200",
+      "eligible_card": "778",
+      "gt_count": "10",
+      "hit_count": "6",
+      "recall": "0.59999999999999998",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        4485,
+        6207,
+        9471,
+        11981
+      ],
+      "gt_ids": [
+        4485,
+        2290,
+        9471,
+        11930,
+        6207,
+        11981,
+        11016,
+        3144,
+        7345,
+        1540
+      ],
+      "result_ids": [
+        2290,
+        11930,
+        11016,
+        3144,
+        7345,
+        1540,
+        9325,
+        10969,
+        5552,
+        3040
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "42",
+      "version": "0",
+      "qidx": "18",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "144",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        11801
+      ],
+      "gt_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        11801,
+        9307
+      ],
+      "result_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        9307,
+        4244
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "52",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "265",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        7567,
+        11457
+      ],
+      "gt_ids": [
+        7567,
+        10540,
+        11457,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250
+      ],
+      "result_ids": [
+        10540,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250,
+        7083,
+        3401
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "56",
+      "version": "0",
+      "qidx": "46",
+      "recursive": "1",
+      "anchor": "8",
+      "scope_card": "1200",
+      "eligible_card": "699",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        2086
+      ],
+      "gt_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        2086
+      ],
+      "result_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        6615
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "100",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "11",
+      "scope_card": "1200",
+      "eligible_card": "261",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "R",
+      "ef": 64,
+      "missing_gt_ids": [
+        3287,
+        9717,
+        10079
+      ],
+      "gt_ids": [
+        1287,
+        9786,
+        4830,
+        9717,
+        10079,
+        10471,
+        7989,
+        3287,
+        9954,
+        11029
+      ],
+      "result_ids": [
+        1287,
+        9786,
+        4830,
+        10471,
+        7989,
+        9954,
+        11029,
+        10159,
+        11803,
+        3691
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/R-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "5",
+      "recall": "0.5",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        1379,
+        3336,
+        3414,
+        3796,
+        6643
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        3610,
+        3966,
+        630,
+        5199,
+        11697,
+        9423,
+        9825
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "20",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "342",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        2542,
+        10147
+      ],
+      "gt_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        10147,
+        2542,
+        949,
+        8336
+      ],
+      "result_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        949,
+        8336,
+        4695,
+        1923
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "22",
+      "version": "0",
+      "qidx": "42",
+      "recursive": "1",
+      "anchor": "7",
+      "scope_card": "1200",
+      "eligible_card": "240",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        2209,
+        10332
+      ],
+      "gt_ids": [
+        11637,
+        9516,
+        2209,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        10332,
+        4435
+      ],
+      "result_ids": [
+        11637,
+        9516,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        4435,
+        11628,
+        2415
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "36",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "9",
+      "scope_card": "1200",
+      "eligible_card": "778",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        6207,
+        9471,
+        11981
+      ],
+      "gt_ids": [
+        4485,
+        2290,
+        9471,
+        11930,
+        6207,
+        11981,
+        11016,
+        3144,
+        7345,
+        1540
+      ],
+      "result_ids": [
+        4485,
+        2290,
+        11930,
+        11016,
+        3144,
+        7345,
+        1540,
+        9325,
+        10969,
+        5552
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "42",
+      "version": "0",
+      "qidx": "18",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "144",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        11801
+      ],
+      "gt_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        11801,
+        9307
+      ],
+      "result_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        9307,
+        4244
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "52",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "265",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        7567,
+        11457
+      ],
+      "gt_ids": [
+        7567,
+        10540,
+        11457,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250
+      ],
+      "result_ids": [
+        10540,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250,
+        7083,
+        3401
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "56",
+      "version": "0",
+      "qidx": "46",
+      "recursive": "1",
+      "anchor": "8",
+      "scope_card": "1200",
+      "eligible_card": "699",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        2086
+      ],
+      "gt_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        2086
+      ],
+      "result_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        6615
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "100",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "11",
+      "scope_card": "1200",
+      "eligible_card": "261",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 64,
+      "missing_gt_ids": [
+        3287,
+        9717,
+        10079
+      ],
+      "gt_ids": [
+        1287,
+        9786,
+        4830,
+        9717,
+        10079,
+        10471,
+        7989,
+        3287,
+        9954,
+        11029
+      ],
+      "result_ids": [
+        1287,
+        9786,
+        4830,
+        10471,
+        7989,
+        9954,
+        11029,
+        10159,
+        11803,
+        3691
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "6",
+      "recall": "0.59999999999999998",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        1379,
+        3336,
+        3796,
+        6643
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        3610,
+        3966,
+        3414,
+        630,
+        5199,
+        11697,
+        9423
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "20",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "342",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        2542,
+        10147
+      ],
+      "gt_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        10147,
+        2542,
+        949,
+        8336
+      ],
+      "result_ids": [
+        10116,
+        5533,
+        10408,
+        11186,
+        3242,
+        6599,
+        949,
+        8336,
+        4695,
+        1923
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "22",
+      "version": "0",
+      "qidx": "42",
+      "recursive": "1",
+      "anchor": "7",
+      "scope_card": "1200",
+      "eligible_card": "240",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        2209,
+        10332
+      ],
+      "gt_ids": [
+        11637,
+        9516,
+        2209,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        10332,
+        4435
+      ],
+      "result_ids": [
+        11637,
+        9516,
+        11538,
+        2098,
+        3707,
+        4112,
+        799,
+        4435,
+        11628,
+        2415
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "36",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "9",
+      "scope_card": "1200",
+      "eligible_card": "778",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        6207,
+        9471,
+        11981
+      ],
+      "gt_ids": [
+        4485,
+        2290,
+        9471,
+        11930,
+        6207,
+        11981,
+        11016,
+        3144,
+        7345,
+        1540
+      ],
+      "result_ids": [
+        4485,
+        2290,
+        11930,
+        11016,
+        3144,
+        7345,
+        1540,
+        9325,
+        10969,
+        5552
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "42",
+      "version": "0",
+      "qidx": "18",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "144",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        11801
+      ],
+      "gt_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        11801,
+        9307
+      ],
+      "result_ids": [
+        7584,
+        9545,
+        4010,
+        484,
+        7998,
+        2227,
+        10216,
+        3854,
+        9307,
+        4244
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "52",
+      "version": "0",
+      "qidx": "38",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "265",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        7567,
+        11457
+      ],
+      "gt_ids": [
+        7567,
+        10540,
+        11457,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250
+      ],
+      "result_ids": [
+        10540,
+        2483,
+        2684,
+        630,
+        1340,
+        11746,
+        3966,
+        5250,
+        7083,
+        3401
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "54",
+      "version": "0",
+      "qidx": "42",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "376",
+      "gt_count": "10",
+      "hit_count": "8",
+      "recall": "0.80000000000000004",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        1053,
+        5820
+      ],
+      "gt_ids": [
+        1053,
+        4896,
+        2361,
+        11589,
+        1299,
+        7711,
+        5820,
+        406,
+        10671,
+        8742
+      ],
+      "result_ids": [
+        4896,
+        2361,
+        11589,
+        1299,
+        7711,
+        406,
+        10671,
+        8742,
+        9296,
+        5316
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "56",
+      "version": "0",
+      "qidx": "46",
+      "recursive": "1",
+      "anchor": "8",
+      "scope_card": "1200",
+      "eligible_card": "699",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        2086
+      ],
+      "gt_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        2086
+      ],
+      "result_ids": [
+        3077,
+        3560,
+        1492,
+        3103,
+        3881,
+        2453,
+        6101,
+        5123,
+        86,
+        6615
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "92",
+      "version": "0",
+      "qidx": "54",
+      "recursive": "1",
+      "anchor": "14",
+      "scope_card": "1200",
+      "eligible_card": "363",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        9713
+      ],
+      "gt_ids": [
+        7905,
+        10594,
+        792,
+        8389,
+        5997,
+        5515,
+        1190,
+        4816,
+        9713,
+        8974
+      ],
+      "result_ids": [
+        7905,
+        10594,
+        792,
+        8389,
+        5997,
+        5515,
+        1190,
+        4816,
+        8974,
+        10203
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "98",
+      "version": "0",
+      "qidx": "2",
+      "recursive": "1",
+      "anchor": "11",
+      "scope_card": "1200",
+      "eligible_card": "259",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        5012
+      ],
+      "gt_ids": [
+        10779,
+        3731,
+        3591,
+        8261,
+        9285,
+        5473,
+        5012,
+        9135,
+        560,
+        11622
+      ],
+      "result_ids": [
+        10779,
+        3731,
+        3591,
+        8261,
+        9285,
+        5473,
+        9135,
+        560,
+        11622,
+        9288
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "100",
+      "version": "0",
+      "qidx": "6",
+      "recursive": "1",
+      "anchor": "11",
+      "scope_card": "1200",
+      "eligible_card": "261",
+      "gt_count": "10",
+      "hit_count": "7",
+      "recall": "0.69999999999999996",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 64,
+      "missing_gt_ids": [
+        3287,
+        9717,
+        10079
+      ],
+      "gt_ids": [
+        1287,
+        9786,
+        4830,
+        9717,
+        10079,
+        10471,
+        7989,
+        3287,
+        9954,
+        11029
+      ],
+      "result_ids": [
+        1287,
+        9786,
+        4830,
+        10471,
+        7989,
+        9954,
+        11029,
+        10159,
+        11803,
+        3691
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef64-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "G",
+      "ef": 256,
+      "missing_gt_ids": [
+        1379
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        3414,
+        3796,
+        630
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/G-ef256-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H",
+      "ef": 256,
+      "missing_gt_ids": [
+        1379
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        3414,
+        3796,
+        630
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H-ef256-rep0.queries.csv"
+      ]
+    },
+    {
+      "event": "16",
+      "version": "0",
+      "qidx": "30",
+      "recursive": "1",
+      "anchor": "10",
+      "scope_card": "1200",
+      "eligible_card": "846",
+      "gt_count": "10",
+      "hit_count": "9",
+      "recall": "0.90000000000000002",
+      "dataset": "sift",
+      "phase": "calibration",
+      "arm": "H0",
+      "ef": 256,
+      "missing_gt_ids": [
+        6643
+      ],
+      "gt_ids": [
+        1081,
+        4243,
+        4796,
+        6643,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796
+      ],
+      "result_ids": [
+        1081,
+        4243,
+        4796,
+        3610,
+        3966,
+        3336,
+        1379,
+        3414,
+        3796,
+        630
+      ],
+      "repeats": [
+        0
+      ],
+      "raw_paths": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1/sift/calibration/H0-ef256-rep0.queries.csv"
+      ]
+    }
+  ],
+  "source_fixes": [],
+  "source_implementation_changed_after_static": false,
+  "loadavg_after_static_and_packaging": [
+    0.03466796875,
+    0.4580078125,
+    0.42578125
+  ],
+  "time_after_static_utc": "2026-10-30T10:11:02.847967+00:00"
+}

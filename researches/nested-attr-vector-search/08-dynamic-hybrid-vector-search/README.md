@@ -4,6 +4,10 @@
 
 ## 当前方案状态（先读这个）
 
+**最新服务器实测：7654f1e子树闭包可恢复邻接。** [完整六臂报告](../2026-10-30-exps/closure-server-report.md)、[冻结任务书](../2026-10-30-exps/closure-server-plan.md)、[复现/输入与SHA](../2026-10-30-exps/experiments/closure-server-reproduction.md)。原实现未改，static共72次：H有效邻接改变，但同ef实际expanded几乎不变；WIKI确认质量不足，SIFT样本内同质量效率失败且独立qidx覆盖不足。脚本两个数据集均未放行dynamic/维护探针，未绕过阶段门。
+
+### 前轮NPI结果（以下原文保留，不表示恢复该路线）
+
 **同日第3轮当前结果：谓词可寻址邻域E1/E2已实测。** [完整报告与正式图](2026-10-30-exps/neighborhood-report.md)、[事前协议](2026-10-30-exps/neighborhood-protocol.md)、[实际复现](2026-10-30-exps/experiments/neighborhood-reproduction.md)、[全部配置/失败](2026-10-30-exps/data/neighborhood-run1/analysis/report.json)。同图同候选时C快于普通二跳B，但同质量下慢于真实NodeANN；优先宽scope多属性AND仍未逆转，E3未放行。没有增加proxy或回到几何界；动态二跳维护未实现/未测，不冒称完整动态索引。
 
 ### 先前证书诊断（保留原判断，不表示继续该路线）

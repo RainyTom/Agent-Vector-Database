@@ -1,0 +1,87 @@
+{
+  "requested_commit": "7654f1e79bef6ce3b1aaaffe399b6e17609c7da1",
+  "working_base": "502753c6c903be9f8ce34ddd9d99797cc78f1c74",
+  "source_blobs_equal_requested_commit": {
+    "codes/directory-aware-vector-attr-search/src/closure_index.h": "67131bf10c96d3efbc0b0ee8eb57e43ac6332ecd",
+    "codes/directory-aware-vector-attr-search/src/closure_order.h": "17fc3c4a2cb53b354a68ca2365b2b5b93520152f",
+    "codes/directory-aware-vector-attr-search/src/closure_research.cpp": "e3fcd8e1eb8dfd3573b2bf9b723ba2eeb67db29a",
+    "codes/directory-aware-vector-attr-search/src/neighborhood_filter.h": "f5bdb1df095f833952d82c69fab3ad5859fb598d",
+    "codes/directory-aware-vector-attr-search/build_closure.sh": "f630e570cb01a60c3a0ffaeebbbc8b36e887f075",
+    "codes/directory-aware-vector-attr-search/scripts/run_closure.py": "04e2d5cc2c35c432b634c5065c8788c482c861f8",
+    "codes/directory-aware-vector-attr-search/tests/test_closure.py": "627e3f27851c9a8134ae72547939cb0b40107461",
+    "codes/directory-aware-vector-attr-search/src/dynamic_triad.cpp": "e3789114f2e1adbe6b316dc699020ae8449b5266",
+    "codes/directory-aware-vector-attr-search/src/raw_l2_space.h": "d08d747bec69343fd254ae13eaf1e515fffa909a"
+  },
+  "import": "selected closure deliverables only; no whole-branch or literature-index merge",
+  "inputs": {
+    "sift": {
+      "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "source_trace": {
+        "bytes": 59101,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p1-qu1.txt",
+        "sha256": "88d383ed9643361db55db7efb0dd42375d58b348cb155f9016b1e352fc923be8"
+      },
+      "shape": {
+        "dim": 128,
+        "n": 13000,
+        "n_live": 12000,
+        "n_nodes": 15,
+        "nq": 64
+      },
+      "all_502753c_input_hashes_match": true
+    },
+    "wiki": {
+      "data": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "source_trace": {
+        "bytes": 229693,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/traces/qu1.txt",
+        "sha256": "f43933c97884590723b031497a41ad589c12760b26e767e7ce1d83adfff50747"
+      },
+      "shape": {
+        "dim": 1024,
+        "n": 11869,
+        "n_live": 11869,
+        "n_nodes": 151,
+        "nq": 456
+      },
+      "all_502753c_input_hashes_match": true
+    }
+  },
+  "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+  "available_cpu_affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "selected_cpu": 2,
+  "loadavg_before_static": [
+    0.07177734375,
+    0.0576171875,
+    0.0087890625
+  ],
+  "time_before_static_utc": "2026-10-30T09:56:40.528331+00:00",
+  "build_commands": [
+    "bash codes/directory-aware-vector-attr-search/build_closure.sh",
+    "bash codes/directory-aware-vector-attr-search/build_dynamic_triad.sh"
+  ],
+  "regression": {
+    "command": "python3 -m unittest discover -s codes/directory-aware-vector-attr-search/tests -p test_closure.py -v",
+    "tests": 3,
+    "passed": true
+  },
+  "source_fixes": [],
+  "static_output": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/closure/static-7654f1e-run1"
+}

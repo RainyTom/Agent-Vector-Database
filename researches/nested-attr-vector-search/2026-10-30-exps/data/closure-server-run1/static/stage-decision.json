@@ -1,0 +1,198 @@
+{
+  "sift": {
+    "dynamic_admitted": false,
+    "quality_pass": true,
+    "chosen": {
+      "A": {
+        "calibration_pass": true,
+        "ef": 64
+      },
+      "G": {
+        "calibration_pass": true,
+        "ef": 1024
+      },
+      "H": {
+        "calibration_pass": true,
+        "ef": 1024
+      },
+      "H0": {
+        "calibration_pass": true,
+        "ef": 1024
+      },
+      "R": {
+        "calibration_pass": true,
+        "ef": 256
+      },
+      "U": {
+        "calibration_pass": true,
+        "ef": 256
+      }
+    },
+    "speed_groups": [],
+    "group_coverage": {
+      "nonempty": {
+        "A": [
+          16,
+          16,
+          16
+        ],
+        "G": [
+          16,
+          16,
+          16
+        ],
+        "H": [
+          16,
+          16,
+          16
+        ],
+        "H0": [
+          16,
+          16,
+          16
+        ],
+        "R": [
+          16,
+          16,
+          16
+        ],
+        "U": [
+          16,
+          16,
+          16
+        ]
+      },
+      "wide_scope_multi_and": {
+        "A": [
+          16,
+          16,
+          16
+        ],
+        "G": [
+          16,
+          16,
+          16
+        ],
+        "H": [
+          16,
+          16,
+          16
+        ],
+        "H0": [
+          16,
+          16,
+          16
+        ],
+        "R": [
+          16,
+          16,
+          16
+        ],
+        "U": [
+          16,
+          16,
+          16
+        ]
+      }
+    },
+    "reason_boundary": "Only supplied scheduler admits dynamic. Insufficient qidx coverage is not a performance failure."
+  },
+  "wiki": {
+    "dynamic_admitted": false,
+    "quality_pass": false,
+    "chosen": {
+      "A": {
+        "calibration_pass": true,
+        "ef": 64
+      },
+      "G": {
+        "calibration_pass": true,
+        "ef": 1024
+      },
+      "H": {
+        "calibration_pass": true,
+        "ef": 1024
+      },
+      "H0": {
+        "calibration_pass": true,
+        "ef": 1024
+      },
+      "R": {
+        "calibration_pass": true,
+        "ef": 256
+      },
+      "U": {
+        "calibration_pass": true,
+        "ef": 256
+      }
+    },
+    "speed_groups": [],
+    "group_coverage": {
+      "nonempty": {
+        "A": [
+          80,
+          80,
+          80
+        ],
+        "G": [
+          80,
+          80,
+          80
+        ],
+        "H": [
+          80,
+          80,
+          80
+        ],
+        "H0": [
+          80,
+          80,
+          80
+        ],
+        "R": [
+          80,
+          80,
+          80
+        ],
+        "U": [
+          80,
+          80,
+          80
+        ]
+      },
+      "wide_scope_multi_and": {
+        "A": [
+          8,
+          8,
+          8
+        ],
+        "G": [
+          8,
+          8,
+          8
+        ],
+        "H": [
+          8,
+          8,
+          8
+        ],
+        "H0": [
+          8,
+          8,
+          8
+        ],
+        "R": [
+          8,
+          8,
+          8
+        ],
+        "U": [
+          8,
+          8,
+          8
+        ]
+      }
+    },
+    "reason_boundary": "Only supplied scheduler admits dynamic. Insufficient qidx coverage is not a performance failure."
+  }
+}

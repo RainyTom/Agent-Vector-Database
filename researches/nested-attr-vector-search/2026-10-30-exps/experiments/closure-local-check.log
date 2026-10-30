@@ -1,0 +1,11 @@
+$ python -m unittest discover -s tests -p test_closure.py -v
+test_actual_core_semantics (test_closure.ClosureReplay.test_actual_core_semantics) ... ok
+test_frozen_pipeline_and_smoke_gate_cannot_authorize_real_dynamic (test_closure.ClosureReplay.test_frozen_pipeline_and_smoke_gate_cannot_authorize_real_dynamic) ... ok
+test_oracle_is_usable_by_both_replays_and_rejects_stale_gt (test_closure.ClosureReplay.test_oracle_is_usable_by_both_replays_and_rejects_stale_gt) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 3.288s
+
+OK
+
+exit=0

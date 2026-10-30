@@ -1,6 +1,18 @@
 # 上游AI阅读清单
 
-## 2026-10-30最新追加：谓词可寻址邻域，不是WQR新胜出结果
+## 最新：7654f1e closure真实数据六臂static
+
+先读 [服务器完整报告](../../2026-10-30-exps/closure-server-report.md)、[冻结任务书](../../2026-10-30-exps/closure-server-plan.md)、[实际复现](../../2026-10-30-exps/experiments/closure-server-reproduction.md)。原核心和调度未改，WIKI/SIFT路径及SHA沿用502753c，完成72次计时、4次独立GT和2次机制审计。
+
+- **机制**：[真实池采样邻接及heredity](../../2026-10-30-exps/data/closure-server-run1/static/mechanism.json)、[同ef实际展开与质量](../../2026-10-30-exps/data/closure-server-run1/static/matched-ef-calibration.json)。H改变有效邻接，但expanded没有有量级下降。
+- **六臂所有点**：[配置/质量失败](../../2026-10-30-exps/data/closure-server-run1/static/configurations.json)、[每重复分层结果](../../2026-10-30-exps/data/closure-server-run1/static/group-runs.json)、[逐漏召回诊断](../../2026-10-30-exps/data/closure-server-run1/failure-diagnostics.json)。WIKI H确认质量不足；SIFT H质量达标但本样本明显慢于真实NodeANN。不要将WIKI时延比写成同质量效率结论。
+- **门控**：[原stage-decision](../../2026-10-30-exps/data/closure-server-run1/static/stage-decision.json)、[执行说明](../../2026-10-30-exps/data/closure-server-run1/dynamic-stage.json)。两个数据集均未放行；SIFT非空仅16个qidx，覆盖不足与样本内成本负结果分开。真实dynamic和维护包络未跑，不能填0或外推E0。
+- **追溯**：[manifest](../../2026-10-30-exps/data/closure-server-run1/static/manifest.json)、[全部runs](../../2026-10-30-exps/data/closure-server-run1/static/runs.json)、[work原始CSV/日志路径与SHA](../../2026-10-30-exps/data/closure-server-run1/static/raw-inventory.json)。大raw/向量不上传。
+
+此前NPI、WQR、维护和几何路线仍按各自历史边界阅读，不与本轮预计算GT、绑核和时间口径混比。
+
+
+## 上一轮：谓词可寻址邻域，不是WQR新胜出结果
 
 按研究端2456849固定方案完成C++小原型和E1/E2：同候选C快于普通二跳B，但同质量下慢于真实NodeANN A，优先宽scope＋多属性AND也未逆转；E3未放行。不要将候选取得成功改写为端到端胜出，也不要将这组静态结果当动态能力。
 
