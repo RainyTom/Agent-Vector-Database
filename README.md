@@ -1,11 +1,13 @@
 # Vector Database Research Workspace
 
-研究型仓库：论文索引 + 研究笔记 + 可复现实验。**当前主线是语义时空 episode 检索**；早期 vector join、前缀/包含过滤、层级属性检索三条线已暂停，保留历史文档。
+研究型仓库：论文索引、技术知识、研究笔记与可复现实验。本轮推进**带层级特性的多属性向量过滤**及向量数据库知识学习；语义时空 episode、vector join、前缀/包含过滤等既有研究与结果保留，具体任务状态以方向级交接为准。
 
 ## 入口
 
 | 用途 | 文件 |
 |---|---|
+| **向量数据库知识与学习路径** | [researches/vector-database-knowledge/README.md](researches/vector-database-knowledge/README.md) |
+| **当前层级过滤实验交付** | [子树闭包方案与服务器任务书](researches/nested-attr-vector-search/2026-10-30-exps/closure-server-plan.md) |
 | **项目移交与服务器迁移** | [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) |
 | **Planner/Executor 协议** | [coordination/README.md](coordination/README.md) |
 | 项目状态（机器可读） | [coordination/state.json](coordination/state.json) |
@@ -17,7 +19,7 @@
 | 查重与边界 | [novelty-audit.md](researches/semantic-spatiotemporal-hybrid-search/novelty-audit.md) |
 | 候选新问题 | [open-problems.md](researches/semantic-spatiotemporal-hybrid-search/open-problems.md) |
 
-## 当前结论（6 城、1.84M 签到、500 查询、1 年窗、50 km）
+## 语义时空方向已记录结果（6 城、1.84M 签到、500 查询、1 年窗）
 
 | 方法 | Recall@10 | mean ms | p95 ms |
 |---|---:|---:|---:|
@@ -35,15 +37,16 @@ EST 的硬约束结果与全量扫描 500/500 逐条一致。详见 `researches/
 ├── AGENTS.md                  # 研究规则
 ├── PROJECT_HANDOFF.md         # 项目移交手册
 ├── coordination/              # planner/executor 任务、结果、状态
-├── papers/                    # 论文库：29 篇、27 条关系
+├── papers/                    # 论文库：身份、版本、全文与关系的统一索引
 │   ├── papers.jsonl / relations.jsonl / changelog.md
 │   └── vector-join/ filtered-ann/ prefix-vector-search/
 │       similarity-join/ trajectory-search/
 ├── researches/
-│   ├── semantic-spatiotemporal-hybrid-search/   # 当前主线
-│   ├── vector-join/                             # 暂停
-│   ├── containment-filtered-vector-search/      # 暂停
-│   └── nested-attr-vector-search/               # 暂停
+│   ├── vector-database-knowledge/              # 技术知识、学习路径与小探针
+│   ├── semantic-spatiotemporal-hybrid-search/   # 语义时空研究及既有结果
+│   ├── vector-join/                             # 几何向量连接研究
+│   ├── containment-filtered-vector-search/      # 前缀/包含过滤
+│   └── nested-attr-vector-search/               # 层级多属性过滤与服务器实验
 ├── production/semantic-mobility-search/         # 实验代码与 workload
 │   ├── src/（prep_potion、bench、bench_est、bench_pq）
 │   └── work/（大文件，gitignored）
@@ -59,3 +62,4 @@ EST 的硬约束结果与全量扫描 500/500 逐条一致。详见 `researches/
 - 研究笔记与实验记录在 `researches/<方向>/`；每日实验在 `<YYYY-MM-DD>-exps/`，含 `data/` 与 `experiments/`。
 - 大数据、workload、模型、venv、第三方源码不入库。
 - 结果必须可复现：命令、环境、产物路径、指标一起记录。
+- 向量数据库学习按[学习记录](researches/vector-database-knowledge/learning-log.md)增量维护；已读、已运行与计划分开，未配置的后台/定时学习不称为自动完成。

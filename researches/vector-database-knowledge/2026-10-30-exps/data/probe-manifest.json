@@ -1,0 +1,36 @@
+{
+  "complete": true,
+  "date": "2026-10-30",
+  "hnswlib_revision": "ca426729609b3221563047ceb269cc1213e0d376",
+  "commands": [
+    [
+      "python",
+      "researches/vector-database-knowledge/2026-10-30-exps/experiments/semantic_probes.py"
+    ],
+    [
+      "g++",
+      "-O2",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Icodes/directory-aware-vector-attr-search/src",
+      "-Icodes/directory-aware-vector-attr-search/deps/hnswlib",
+      "researches/vector-database-knowledge/2026-10-30-exps/experiments/hnsw_lifecycle_probe.cpp",
+      "-lpthread",
+      "-o",
+      "work/vector-database-knowledge/hnsw_lifecycle_probe"
+    ],
+    [
+      "work/vector-database-knowledge/hnsw_lifecycle_probe"
+    ]
+  ],
+  "sources_sha256": {
+    "researches/vector-database-knowledge/2026-10-30-exps/experiments/semantic_probes.py": "80488f1ed67727d581426afc0efe539c45eed106c1f76f87e8e7b734fef40192",
+    "researches/vector-database-knowledge/2026-10-30-exps/experiments/hnsw_lifecycle_probe.cpp": "c9ba9b7169d3f9f21a501c70a1648de3ea20ad4fcc5c4fb6c0e71502cb086460",
+    "codes/directory-aware-vector-attr-search/src/raw_l2_space.h": "f159787e15095e6e08d6a3f08d20d5b677a18c09a1d6afe37bce94aa04cf6331"
+  },
+  "limits": [
+    "No database installation or server ANN experiment.",
+    "No performance comparison; mathematical examples plus a four-object pinned library API execution."
+  ]
+}

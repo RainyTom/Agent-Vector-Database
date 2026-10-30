@@ -1,0 +1,13 @@
+{
+  "complete": true,
+  "markdown_files_checked": 11,
+  "local_links_checked": 85,
+  "external_links_syntax_only": 27,
+  "source_records": 24,
+  "source_ids_unique": true,
+  "broken": [],
+  "limits": [
+    "External HTTP links not automatically crawled/revalidated; citations were read during research.",
+    "Heading-anchor check uses the common GitHub slug convention, not a full Markdown renderer."
+  ]
+}

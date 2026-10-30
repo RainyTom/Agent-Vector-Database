@@ -1,0 +1,37 @@
+[
+  {
+    "command": [
+      "python",
+      "researches/vector-database-knowledge/2026-10-30-exps/experiments/semantic_probes.py"
+    ],
+    "exit_code": 0,
+    "stdout": "{\n  \"complete\": true,\n  \"kind\": \"mathematical_counterexamples_not_ANN_performance\",\n  \"metric\": {\n    \"inner_products\": [\n      10.0,\n      1.0\n    ],\n    \"cosine\": [\n      0.7071067811865475,\n      1.0\n    ],\n    \"normalized_squared_l2\": [\n      0.5857864376269049,\n      0.0\n    ],\n    \"zero_normalization_rejected\": true\n  },\n  \"projection\": {\n    \"original_squared_l2\": 100,\n    \"projected_squared_l2\": 0\n  },\n  \"filtering\": {\n    \"n\": 1000,\n    \"eligible_each\": 10,\n    \"budget\": 50,\n    \"k\": 5,\n    \"near_results\": [\n      1,\n      2,\n      3,\n      4,\n      5\n    ],\n    \"far_results\": [],\n    \"independence_expected_matches\": 0.5,\n    \"independence_zero_probability\": 0.5973112929066544\n  },\n  \"joint_predicate\": {\n    \"marginal_A\": [\n      1\n    ],\n    \"marginal_B\": [\n      2\n    ],\n    \"joint\": []\n  },\n  \"recall\": {\n    \"nonempty_macro\": 0.5,\n    \"pair\": 0.9090909090909091,\n    \"macro_including_successful_empty\": 0.6666666666666666\n  },\n  \"rerank\": {\n    \"gt\": [\n      1,\n      2\n    ],\n    \"candidates\": [\n      3,\n      2\n    ],\n    \"reranked\": [\n      2,\n      3\n    ],\n    \"recall\": 0.5\n  },\n  \"dag\": {\n    \"left\": [\n      1,\n      3\n    ],\n    \"right\": [\n      2,\n      3\n    ],\n    \"nonlaminar\": true\n  },\n  \"limitations\": [\n    \"Constructed finite examples; no runtime comparison or product API validation.\",\n    \"Double-precision Python arithmetic is not a certified FP32 pruning kernel.\"\n  ]\n}\n",
+    "stderr": ""
+  },
+  {
+    "command": [
+      "g++",
+      "-O2",
+      "-std=c++17",
+      "-Wall",
+      "-Wextra",
+      "-Icodes/directory-aware-vector-attr-search/src",
+      "-Icodes/directory-aware-vector-attr-search/deps/hnswlib",
+      "researches/vector-database-knowledge/2026-10-30-exps/experiments/hnsw_lifecycle_probe.cpp",
+      "-lpthread",
+      "-o",
+      "work/vector-database-knowledge/hnsw_lifecycle_probe"
+    ],
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "In file included from codes/directory-aware-vector-attr-search/src/raw_l2_space.h:14,\n                 from researches/vector-database-knowledge/2026-10-30-exps/experiments/hnsw_lifecycle_probe.cpp:3:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h: In member function ‘virtual bool hnswlib::BaseFilterFunctor::operator()(hnswlib::labeltype)’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h:274:48: warning: unused parameter ‘id’ [-Wunused-parameter]\n  274 |     virtual bool operator()(hnswlib::labeltype id) { return true; }\n      |                             ~~~~~~~~~~~~~~~~~~~^~\nIn file included from codes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h:459:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<typename hnswlib::AlgorithmInterface<dist_t>::DistanceLabelPriorityQueue> hnswlib::HierarchicalNSW<dist_t>::searchKnnNoExceptions(const void*, size_t, hnswlib::BaseFilterFunctor*) const [with dist_t = float; typename hnswlib::AlgorithmInterface<dist_t>::DistanceLabelPriorityQueue = std::priority_queue<std::pair<float, long unsigned int>, std::vector<std::pair<float, long unsigned int> >, std::less<std::pair<float, long unsigned int> > >; size_t = long unsigned int]’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1416:5:   required from here\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1440:30: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]\n 1440 |                     if (cand < 0 || cand > max_elements_)\n      |                         ~~~~~^~~\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::addPointWithLevel(const void*, hnswlib::labeltype, int) [with dist_t = float; hnswlib::labeltype = long unsigned int]’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1047:40:   required from ‘hnswlib::Status hnswlib::HierarchicalNSW<dist_t>::addPointNoExceptions(const void*, hnswlib::labeltype, bool) [with dist_t = float; hnswlib::labeltype = long unsigned int]’\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1037:12:   required from here\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1366:38: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]\n 1366 |                             if (cand < 0 || cand > max_elements_)\n      |                                 ~~~~~^~~\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::mutuallyConnectNewElement(const void*, hnswlib::tableint, std::priority_queue<std::pair<dist_t, unsigned int>, std::vector<std::pair<dist_t, unsigned int> >, CompareByFirst>&, int, bool) [with dist_t = float; hnswlib::tableint = unsigned int]’:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1393:21:   required from ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::addPointWithLevel(const void*, hnswlib::labeltype, int) [with dist_t = float; hnswlib::labeltype = long unsigned int]’\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1047:40:   required from ‘hnswlib::Status hnswlib::HierarchicalNSW<dist_t>::addPointNoExceptions(const void*, hnswlib::labeltype, bool) [with dist_t = float; hnswlib::labeltype = long unsigned int]’\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:1037:12:   required from here\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswalg.h:539:21: warning: unused parameter ‘data_point’ [-Wunused-parameter]\n  539 |         const void *data_point,\n      |         ~~~~~~~~~~~~^~~~~~~~~~\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h: At global scope:\ncodes/directory-aware-vector-attr-search/deps/hnswlib/hnswlib/hnswlib.h:95:13: warning: ‘bool AVX512Capable()’ defined but not used [-Wunused-function]\n   95 | static bool AVX512Capable() {\n      |             ^~~~~~~~~~~~~\n"
+  },
+  {
+    "command": [
+      "work/vector-database-knowledge/hnsw_lifecycle_probe"
+    ],
+    "exit_code": 0,
+    "stdout": "{\"complete\":true,\"kind\":\"finite_pinned_hnsw_API_probe_not_performance\",\"stored_before_delete\":4,\"stored_after_markDelete\":4,\"tombstones_after_markDelete\":1,\"filter_before_ids\":[20,40],\"filter_after_delete_ids\":[40],\"filter_after_restore_ids\":[20,40],\"squared_distances_before\":[0.5625,7.5625],\"filter_callback_calls\":11,\"limitations\":[\"Four constructed points only; no finite-ef recall theorem.\",\"No persistence, physical erasure, concurrent safety or database transaction tested.\"]}\n",
+    "stderr": ""
+  }
+]

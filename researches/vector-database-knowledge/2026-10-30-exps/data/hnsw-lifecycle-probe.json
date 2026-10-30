@@ -1,0 +1,27 @@
+{
+  "complete": true,
+  "kind": "finite_pinned_hnsw_API_probe_not_performance",
+  "stored_before_delete": 4,
+  "stored_after_markDelete": 4,
+  "tombstones_after_markDelete": 1,
+  "filter_before_ids": [
+    20,
+    40
+  ],
+  "filter_after_delete_ids": [
+    40
+  ],
+  "filter_after_restore_ids": [
+    20,
+    40
+  ],
+  "squared_distances_before": [
+    0.5625,
+    7.5625
+  ],
+  "filter_callback_calls": 11,
+  "limitations": [
+    "Four constructed points only; no finite-ef recall theorem.",
+    "No persistence, physical erasure, concurrent safety or database transaction tested."
+  ]
+}
