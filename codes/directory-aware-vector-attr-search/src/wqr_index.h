@@ -1,24 +1,19 @@
-// WQR: Witness-Qualified Routing — production C++ implementation for dynamic
-// hierarchical multi-attribute filtered vector search. Frozen spec: researches/
-// nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md. No modification
-// to existing NodeANN/dynamic_triad behavior; no new search space exploration.
+// WQR: Witness-Qualified Routing — production C++ implementation.
+// Frozen spec: researches/nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md
+// All raw FP32 squared-L2 distances go through RawL2Space (pinned hnswlib kernel).
+// No hand-written scalar distance implementations anywhere.
 #pragma once
 
 #include "raw_l2_space.h"
-#include "hnswlib/hnswlib.h"
 
 #include <algorithm>
-#include <array>
-#include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <functional>
 #include <limits>
 #include <memory>
 #include <numeric>
 #include <queue>
 #include <random>
-#include <set>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
@@ -27,346 +22,257 @@
 
 namespace wqr {
 
-using Id = uint32_t;
-using NodeId = uint32_t;
-using BlockId = uint32_t;
-using ProxyId = uint32_t;
+using Id = size_t;
+using NodeId = size_t;
+constexpr size_t NONE = std::numeric_limits<size_t>::max();
+constexpr size_t B0 = 1024;                 // target block size
+constexpr size_t BLOCK_MAX_LIVE = 2 * B0;   // split threshold
+constexpr size_t BLOCK_MIN_CAP = 64;        // capacity stays word-aligned
+constexpr size_t PROXIES_PER_BLOCK = 4;
+constexpr size_t HNSW_M = 16;
+constexpr size_t HNSW_EFC = 200;
+constexpr uint64_t HNSW_SEED = 100;
+constexpr double DEAD_RATIO = 0.2;
 
-// ---------------------------------------------------------------------------
-// Immutable raw vector container (canonical copy). HNSW copies payload again;
-// we do not pretend there is only one copy in memory.
-// ---------------------------------------------------------------------------
-struct VectorStore {
-    size_t dim = 0;
-    std::vector<float> data;
-    void init(size_t d) { dim = d; }
-    const float* at(Id id) const { return data.data() + size_t(id) * dim; }
-    void set(Id id, const float* v) {
-        if (id * dim >= data.size()) data.resize((id + 1) * dim);
-        std::copy(v, v + dim, data.begin() + id * dim);
+[[noreturn]] inline void fail(const std::string& m) { throw std::runtime_error(m); }
+
+class CountedL2 : public RawL2Space {
+public:
+    explicit CountedL2(size_t dim) : RawL2Space(dim) {}
+    mutable uint64_t calls = 0;
+    // Ad-hoc counted call for build/oracle paths (RawL2Space::dist bypasses the counter).
+    float cdist(const float* a, const float* b) const {
+        ++calls;
+        return dist(a, b);
     }
-    float l2(const float* a, const float* b) const {
-        float s = 0;
-        for (size_t i = 0; i < dim; ++i) { const float d = a[i] - b[i]; s += d * d; }
-        return s;
-    }
-};
-
-// ---------------------------------------------------------------------------
-// Deterministic geometric partitioning (spec §4.1). No attribute input.
-// ---------------------------------------------------------------------------
-struct Partitioner {
-    static constexpr size_t B0 = 1024;
-    const VectorStore& vs;
-    size_t dim;
-    explicit Partitioner(const VectorStore& v) : vs(v), dim(v.dim) {}
-
-    // Split items into two halves by median of (rawL2(x,b) - rawL2(x,c)).
-    // Deterministic: ties broken by object ID.
-    std::pair<std::vector<Id>, std::vector<Id>> split(const std::vector<Id>& items) const {
-        if (items.size() <= B0) return {items, {}};
-        const Id a = *std::min_element(items.begin(), items.end());
-        auto farthest = [&](Id pivot) -> Id {
-            Id best = pivot;
-            float bestD = -1;
-            for (Id x : items) {
-                if (x == pivot) continue;
-                const float d = vs.l2(vs.at(x), vs.at(pivot));
-                if (d > bestD || (d == bestD && x < best)) { bestD = d; best = x; }
-            }
-            return best;
-        };
-        const Id b = farthest(a), c = farthest(b);
-        std::vector<std::pair<float, Id>> keyed;
-        keyed.reserve(items.size());
-        for (Id x : items) {
-            const float db = vs.l2(vs.at(x), vs.at(b));
-            const float dc = vs.l2(vs.at(x), vs.at(c));
-            keyed.emplace_back(db - dc, x);
-        }
-        std::sort(keyed.begin(), keyed.end());
-        const size_t mid = keyed.size() / 2;
-        std::vector<Id> left, right;
-        for (size_t i = 0; i < mid; ++i) left.push_back(keyed[i].second);
-        for (size_t i = mid; i < keyed.size(); ++i) right.push_back(keyed[i].second);
-        return {left, right};
-    }
-
-    // Recursive balanced partition until every block <= B0.
-    std::vector<std::vector<Id>> blocks(std::vector<Id> items) const {
-        std::vector<std::vector<Id>> result;
-        std::vector<std::vector<Id>> stack{std::move(items)};
-        while (!stack.empty()) {
-            auto current = std::move(stack.back()); stack.pop_back();
-            if (current.size() <= B0) { result.push_back(std::move(current)); continue; }
-            auto [l, r] = split(current);
-            stack.push_back(std::move(l)); stack.push_back(std::move(r));
-        }
-        return result;
+    hnswlib::DISTFUNC<float> get_dist_func() override { return counted; }
+    void* get_dist_func_param() override { return this; }
+private:
+    static float counted(const void* a, const void* b, const void* param) {
+        const auto* self = static_cast<const CountedL2*>(param);
+        ++self->calls;
+        return self->dist(static_cast<const float*>(a), static_cast<const float*>(b));
     }
 };
 
 // ---------------------------------------------------------------------------
-// Euler tour implicit treap (spec §3.1). Order-statistics, cut/link, rank.
-// Each directory node contributes enter(u) and exit(u) tokens.
+// Euler tour over an implicit treap. Build follows real DFS event order:
+// enter(u) emitted on first visit, exit(u) after all children finish.
 // ---------------------------------------------------------------------------
-struct EulerTour {
-    struct Token {
-        NodeId node = 0;
-        bool is_enter = false;
-        uint64_t priority = 0;
-    };
-    struct TreapNode {
-        Token token;
-        TreapNode* left = nullptr;
-        TreapNode* right = nullptr;
-        TreapNode* parent = nullptr;
+class EulerTour {
+    struct TNode {
+        NodeId node;
+        bool is_enter;
+        uint64_t prio;
+        TNode *l = nullptr, *r = nullptr, *p = nullptr;
         size_t size = 1;
     };
-    // Deterministic random priorities seeded from spec seed 100.
     std::mt19937_64 rng{100};
+    std::vector<TNode*> enter_tok, exit_tok;
+    TNode* root_ = nullptr;
+    size_t nodes_ = 0;
+    NodeId root_node_ = NONE;
 
-    std::unordered_map<NodeId, TreapNode*> enter_token;
-    std::unordered_map<NodeId, TreapNode*> exit_token;
-    TreapNode* root = nullptr;
-    size_t total_tokens = 0;
-
-    static size_t sz(TreapNode* t) { return t ? t->size : 0; }
-    static void pull(TreapNode* t) {
-        if (!t) return;
-        t->size = 1 + sz(t->left) + sz(t->right);
-        if (t->left) t->left->parent = t;
-        if (t->right) t->right->parent = t;
+    static size_t sz(TNode* t) { return t ? t->size : 0; }
+    static void pull(TNode* t) {
+        t->size = 1 + sz(t->l) + sz(t->r);
+        if (t->l) t->l->p = t;
+        if (t->r) t->r->p = t;
     }
-    static void setParent(TreapNode* t, TreapNode* p) { if (t) t->parent = p; }
-
-    // Split root into left (first pos elements) and right (rest).
-    static std::pair<TreapNode*, TreapNode*> split(TreapNode* t, size_t pos) {
+    static std::pair<TNode*, TNode*> split(TNode* t, size_t pos) {
         if (!t) return {nullptr, nullptr};
-        const size_t leftSize = sz(t->left);
-        if (pos <= leftSize) {
-            auto [l, r] = split(t->left, pos);
-            setParent(l, nullptr);
-            t->left = r; pull(t); t->parent = nullptr;
-            return {l, t};
+        if (pos <= sz(t->l)) {
+            auto [a, b] = split(t->l, pos);
+            t->l = b; pull(t); t->p = nullptr;
+            if (a) a->p = nullptr;
+            return {a, t};
         }
-        auto [l, r] = split(t->right, pos - leftSize - 1);
-        t->right = l; pull(t); t->parent = nullptr;
-        setParent(r, nullptr);
-        return {t, r};
+        auto [a, b] = split(t->r, pos - sz(t->l) - 1);
+        t->r = a; pull(t); t->p = nullptr;
+        if (b) b->p = nullptr;
+        return {t, b};
     }
-
-    static TreapNode* merge(TreapNode* l, TreapNode* r) {
-        if (!l) return r;
-        if (!r) return l;
-        if (l->token.priority > r->token.priority) {
-            l->right = merge(l->right, r); pull(l); return l;
+    static TNode* merge(TNode* a, TNode* b) {
+        if (!a) { if (b) b->p = nullptr; return b; }
+        if (!b) { a->p = nullptr; return a; }
+        if (a->prio > b->prio) { a->r = merge(a->r, b); pull(a); a->p = nullptr; return a; }
+        b->l = merge(a, b->l); pull(b); b->p = nullptr; return b;
+    }
+    static size_t rank(TNode* t) {
+        size_t r = sz(t->l);
+        while (t->p) {
+            if (t == t->p->r) r += 1 + sz(t->p->l);
+            t = t->p;
         }
-        r->left = merge(l, r->left); pull(r); return r;
+        return r;
     }
 
-    // Rank of token in current sequence (0-based).
-    static size_t rank(TreapNode* node) {
-        size_t result = sz(node->left);
-        while (node->parent) {
-            if (node == node->parent->right) result += 1 + sz(node->parent->left);
-            node = node->parent;
+public:
+    void build(const std::vector<int>& parent) {
+        nodes_ = parent.size();
+        enter_tok.assign(nodes_, nullptr);
+        exit_tok.assign(nodes_, nullptr);
+        // Real DFS event order, iterative, children in ascending id.
+        std::vector<std::vector<NodeId>> children(nodes_);
+        for (NodeId v = 0; v < nodes_; ++v) {
+            if (parent[v] < 0) {
+                if (root_node_ != NONE) fail("multiple roots");
+                root_node_ = v;
+            } else children[parent[v]].push_back(v);
         }
-        return result;
-    }
-
-    TreapNode* newToken(NodeId node, bool enter) {
-        auto* t = new TreapNode{{node, enter, rng()}, nullptr, nullptr, nullptr, 1};
-        return t;
-    }
-
-    // Build initial Euler sequence from parent array (iterative, no recursion).
-    void build(const std::vector<NodeId>& parent) {
-        std::vector<std::vector<NodeId>> children(parent.size());
-        for (NodeId v = 0; v < parent.size(); ++v)
-            if (parent[v] != v && parent[v] < parent.size()) children[parent[v]].push_back(v);
-        std::vector<NodeId> order;
-        {
-            std::vector<std::pair<NodeId, bool>> stack;
-            for (NodeId v = 0; v < parent.size(); ++v)
-                if (parent[v] == v) stack.emplace_back(v, true);
-            while (!stack.empty()) {
-                auto [v, entering] = stack.back(); stack.pop_back();
-                if (entering) {
-                    order.push_back(v);
-                    stack.emplace_back(v, false);
-                    for (auto it = children[v].rbegin(); it != children[v].rend(); ++it)
-                        stack.emplace_back(*it, true);
-                } else {
-                    // exit token appended implicitly by loop
-                }
+        if (root_node_ == NONE) fail("missing root");
+        std::vector<TNode*> seq;
+        seq.reserve(2 * nodes_);
+        std::vector<std::pair<NodeId, size_t>> stack{{root_node_, 0}};
+        std::vector<bool> entered(nodes_, false);
+        while (!stack.empty()) {
+            NodeId v = stack.back().first;
+            size_t& ci = stack.back().second;
+            if (!entered[v]) {
+                entered[v] = true;
+                auto* e = new TNode{v, true, rng()};
+                enter_tok[v] = e; seq.push_back(e);
+            }
+            if (ci < children[v].size()) {
+                const NodeId child = children[v][ci];
+                ++ci;  // increment before emplace (reference may dangle after)
+                stack.emplace_back(child, 0);
+            } else {
+                auto* x = new TNode{v, false, rng()};
+                exit_tok[v] = x; seq.push_back(x);
+                stack.pop_back();
             }
         }
-        // Build treap from the enter/exit sequence.
-        for (NodeId v : order) {
-            auto* e = newToken(v, true);
-            enter_token[v] = e;
-            auto [l, r] = split(root, total_tokens);
-            root = merge(merge(l, e), r);
-            ++total_tokens;
-        }
-        // Append exit tokens in reverse order of enter (to close subtrees).
-        for (auto it = order.rbegin(); it != order.rend(); ++it) {
-            auto* x = newToken(*it, false);
-            exit_token[*it] = x;
-            auto [l, r] = split(root, total_tokens);
-            root = merge(merge(l, x), r);
-            ++total_tokens;
-        }
+        if (seq.size() != 2 * nodes_) fail("DFS token count mismatch");
+        for (TNode* t : seq) root_ = merge(root_, t);
     }
-
-    // Cut subtree [enter(src), exit(src)] from sequence.
-    std::pair<TreapNode*, TreapNode*> cut(NodeId src) {
-        const size_t a = rank(enter_token.at(src));
-        const size_t b = rank(exit_token.at(src)) + 1;
-        auto [l, rest] = split(root, a);
-        auto [mid, r] = split(rest, b - a);
-        root = merge(l, r);
-        return {mid, nullptr};
-    }
-
-    // Insert cut sequence before exit(dst).
-    void link(TreapNode* seq, NodeId dst) {
-        const size_t pos = rank(exit_token.at(dst));
-        auto [l, r] = split(root, pos);
-        root = merge(merge(l, seq), r);
-    }
-
-    // R: reparent src under dst. src must not be root; dst not inside src subtree.
-    void reparent(NodeId src, NodeId dst) {
-        if (src == dst) throw std::invalid_argument("R: src == dst");
-        // Check dst not inside src subtree.
-        const size_t es = rank(enter_token.at(src));
-        const size_t xs = rank(exit_token.at(src));
-        const size_t ed = rank(enter_token.at(dst));
-        const size_t xd = rank(exit_token.at(dst));
-        if (ed >= es && ed <= xs && xd >= es && xd <= xs)
-            throw std::invalid_argument("R: dst inside src subtree");
-        auto [seq, _] = cut(src);
-        // After cut, recompute dst exit rank (it may have shifted).
-        link(seq, dst);
-    }
-
-    // Recursive containment check: is `owner` inside subtree rooted at `anchor`?
+    size_t enterRank(NodeId v) const { return rank(enter_tok.at(v)); }
+    size_t exitRank(NodeId v) const { return rank(exit_tok.at(v)); }
     bool contains(NodeId anchor, NodeId owner) const {
-        const size_t ea = rank(enter_token.at(anchor));
-        const size_t xa = rank(exit_token.at(anchor));
-        const size_t eo = rank(enter_token.at(owner));
-        return ea <= eo && eo < xa;
+        return enterRank(anchor) <= enterRank(owner) && enterRank(owner) < exitRank(anchor);
     }
-
+    NodeId root() const { return root_node_; }
+    void reparent(NodeId src, NodeId dst) {
+        if (src == root_node_) fail("R: cannot move root");
+        if (contains(src, dst)) fail("R: destination inside source subtree");
+        const size_t a = rank(enter_tok[src]);
+        const size_t b = rank(exit_tok[src]) + 1;
+        auto [l, rest] = split(root_, a);
+        auto [mid, rr] = split(rest, b - a);
+        root_ = merge(l, rr);
+        // Recompute destination exit rank after the cut.
+        const size_t pos = rank(exit_tok[dst]);
+        auto [l2, r2] = split(root_, pos);
+        root_ = merge(merge(l2, mid), r2);
+    }
     ~EulerTour() {
-        std::function<void(TreapNode*)> free = [&](TreapNode* t) {
-            if (!t) return;
-            free(t->left); free(t->right); delete t;
-        };
-        free(root);
+        for (TNode* t : enter_tok) delete t;
+        for (TNode* t : exit_tok) delete t;
     }
 };
 
 // ---------------------------------------------------------------------------
-// Block: slots, attributes, owner postings, zone masks, local HNSW.
+// Block state. All bitmaps indexed by slot; word count = ceil(capacity/64).
+// Planes hold the LSB-indexed bit of the (encoded) value: plane[b][w] bit w%64
+// is bit b of the slot's value.
 // ---------------------------------------------------------------------------
 struct Block {
-    static constexpr size_t B0 = 1024;
-    static constexpr size_t MAX_CAPACITY = 2 * B0;
-    static constexpr size_t MIN_CAPACITY = 16;
-
-    size_t dim = 0;
-    size_t capacity = B0;
-    size_t live_count = 0;
-    size_t generation = 0;
-
-    // slot → object ID; SIZE_MAX = empty slot
-    std::vector<Id> slot_to_id;
-    // object ID → slot
-    std::unordered_map<Id, size_t> id_to_slot;
-    // alive bitmap (1 = alive)
+    size_t dim = 0, capacity = 0, generation = 0, live = 0;
+    bool retired = false;
+    std::vector<Id> slot_to_id;              // NONE = free slot
+    std::vector<size_t> free_slots;
+    size_t next_slot = 0;
     std::vector<uint64_t> alive_bits;
-    // zone assignment per slot
-    std::vector<uint8_t> zone_of;
-    // zone masks: zone → bitmap of slots
+    std::vector<std::vector<uint64_t>> category_planes;  // [bit 0..63][word]
+    std::vector<std::vector<uint64_t>> numeric_planes;   // encoded int64
+    std::vector<std::vector<uint64_t>> tag_planes;
+    std::unordered_map<NodeId, std::vector<size_t>> owner_posting;
+    std::unordered_map<Id, size_t> owner_pos;            // id → position in owner posting
+    std::vector<uint8_t> zone_of;                        // 255 = none
     std::vector<std::vector<uint64_t>> zone_bits;
-
-    // Attribute bitplanes (64 bits each, MSB first).
-    std::vector<std::vector<uint64_t>> category_planes;  // category[bit][word]
-    std::vector<std::vector<uint64_t>> numeric_bits;
-    std::vector<std::vector<uint64_t>> tag_bits;
-
-    // owner → list of slots (sparse posting)
-    std::unordered_map<NodeId, std::vector<size_t>> owner_slots;
-    // object ID → position in owner's posting list
-    std::unordered_map<Id, size_t> owner_pos;
-
-    // Local HNSW
+    std::vector<std::vector<float>> proxies;             // independent copies
+    std::vector<size_t> proxy_labels;                    // global proxy label per zone
+    std::unique_ptr<CountedL2> space;
     std::unique_ptr<hnswlib::HierarchicalNSW<float>> graph;
-    std::unique_ptr<RawL2Space> space;
-
-    // Proxy vectors (independent copies, not source object IDs)
-    std::vector<std::vector<float>> proxies;
-    // Proxy → zone index within this block
-    std::vector<uint8_t> proxy_zone;
-    // zone → proxy index within block (SIZE_MAX = no proxy)
-    std::vector<size_t> zone_proxy;
 
     explicit Block(size_t d) : dim(d) {
-        slot_to_id.resize(capacity, SIZE_MAX);
-        alive_bits.resize(capacity / 64);
-        zone_of.resize(capacity, 255);
-        category_planes.resize(64, std::vector<uint64_t>(capacity / 64));
-        numeric_bits.resize(64, std::vector<uint64_t>(capacity / 64));
-        tag_bits.resize(64, std::vector<uint64_t>(capacity / 64));
+        category_planes.resize(64);
+        numeric_planes.resize(64);
+        tag_planes.resize(64);
+        space = std::make_unique<CountedL2>(d);
     }
-
-    static uint64_t encodeSigned(int64_t v) {
-        return static_cast<uint64_t>(v) ^ (1ULL << 63);
+    size_t words() const { return (capacity + 63) / 64; }
+    void setCapacity(size_t cap) {
+        capacity = cap;
+        const size_t w = words();
+        slot_to_id.resize(cap, NONE);
+        alive_bits.assign(w, 0);
+        for (auto& p : category_planes) p.assign(w, 0);
+        for (auto& p : numeric_planes) p.assign(w, 0);
+        for (auto& p : tag_planes) p.assign(w, 0);
+        zone_of.assign(cap, 255);
     }
-
+    void growCapacity(size_t cap) {
+        const size_t oldWords = words();
+        capacity = cap;
+        const size_t w = words();
+        slot_to_id.resize(cap, NONE);
+        alive_bits.resize(w, 0);
+        for (auto& p : category_planes) p.resize(w, 0);
+        for (auto& p : numeric_planes) p.resize(w, 0);
+        for (auto& p : tag_planes) p.resize(w, 0);
+        zone_of.resize(cap, 255);
+        for (auto& z : zone_bits) z.resize(w, 0);
+        (void)oldWords;
+    }
+    static uint64_t encodeNumeric(int64_t v) { return static_cast<uint64_t>(v) ^ (1ULL << 63); }
     void setBit(std::vector<uint64_t>& plane, size_t slot, bool value) {
         const size_t w = slot / 64, b = slot % 64;
-        if (value) plane[w] |= uint64_t(1) << b;
-        else plane[w] &= ~(uint64_t(1) << b);
+        if (value) plane[w] |= (1ULL << b); else plane[w] &= ~(1ULL << b);
     }
-    bool getBit(const std::vector<uint64_t>& plane, size_t slot) const {
-        return (plane[slot / 64] >> (slot % 64)) & 1;
+    void writeAttrs(size_t slot, int64_t cat, int64_t num, uint64_t tags) {
+        const uint64_t enc = encodeNumeric(num);
+        for (size_t b = 0; b < 64; ++b) {
+            setBit(category_planes[b], slot, (static_cast<uint64_t>(cat) >> b) & 1);
+            setBit(numeric_planes[b], slot, (enc >> b) & 1);
+            setBit(tag_planes[b], slot, (tags >> b) & 1);
+        }
     }
-
-    void setAlive(size_t slot, bool alive) { setBit(alive_bits, slot, alive); }
-    bool isAlive(size_t slot) const { return getBit(alive_bits, slot); }
-
-    void setCategory(size_t slot, int64_t value) {
-        for (size_t bit = 0; bit < 64; ++bit)
-            setBit(category_planes[bit], slot, (value >> (63 - bit)) & 1);
+    void clearAttrs(size_t slot) {
+        for (size_t b = 0; b < 64; ++b) {
+            setBit(category_planes[b], slot, false);
+            setBit(numeric_planes[b], slot, false);
+            setBit(tag_planes[b], slot, false);
+        }
     }
-    void setNumeric(size_t slot, int64_t value) {
-        const uint64_t enc = encodeSigned(value);
-        for (size_t bit = 0; bit < 64; ++bit)
-            setBit(numeric_planes(bit), slot, (enc >> (63 - bit)) & 1);
+    void setAlive(size_t slot, bool v) { setBit(alive_bits, slot, v); }
+    bool isAlive(size_t slot) const { return (alive_bits[slot / 64] >> (slot % 64)) & 1; }
+    void setZone(size_t slot, uint8_t zone) {
+        const uint8_t old = zone_of[slot];
+        if (old != 255) {
+            auto& zb = zone_bits[old];
+            zb[slot / 64] &= ~(1ULL << (slot % 64));
+        }
+        zone_of[slot] = zone;
+        if (zone != 255) {
+            if (zone_bits.size() <= zone) zone_bits.resize(zone + 1, std::vector<uint64_t>(words(), 0));
+            auto& zb = zone_bits[zone];
+            if (zb.size() < words()) zb.resize(words(), 0);
+            zb[slot / 64] |= (1ULL << (slot % 64));
+        }
     }
-    // MSB-first bitplane storage for numeric (bit 63 = MSB).
-    std::vector<uint64_t>& numeric_planes(size_t bit) { return numeric_bits[63 - bit]; }
-    const std::vector<uint64_t>& numeric_planes(size_t bit) const { return numeric_bits[63 - bit]; }
-
-    void setTags(size_t slot, uint64_t tags) {
-        for (size_t bit = 0; bit < 64; ++bit)
-            setBit(tag_bits[bit], slot, (tags >> bit) & 1);
-    }
-
-    // owner posting maintenance
-    void addOwnerSlot(NodeId owner, size_t slot, Id id) {
-        auto& list = owner_slots[owner];
+    void ownerAdd(NodeId owner, size_t slot, Id id) {
+        auto& list = owner_posting[owner];
         owner_pos[id] = list.size();
         list.push_back(slot);
     }
-    void removeOwnerSlot(NodeId owner, size_t slot, Id id) {
-        auto& list = owner_slots.at(owner);
-        const size_t pos = owner_pos.at(id);
-        const size_t last = list.size() - 1;
+    void ownerRemove(NodeId owner, Id id) {
+        auto it = owner_posting.find(owner);
+        if (it == owner_posting.end()) fail("ownerRemove: missing owner posting");
+        auto& list = it->second;
+        auto pit = owner_pos.find(id);
+        if (pit == owner_pos.end()) fail("ownerRemove: missing position");
+        const size_t pos = pit->second, last = list.size() - 1;
         if (pos != last) {
             const size_t lastSlot = list[last];
             const Id lastId = slot_to_id[lastSlot];
@@ -374,600 +280,877 @@ struct Block {
             owner_pos[lastId] = pos;
         }
         list.pop_back();
-        owner_pos.erase(id);
-        if (list.empty()) owner_slots.erase(owner);
+        owner_pos.erase(pit);
+        if (list.empty()) owner_posting.erase(it);
     }
-
-    // zone maintenance
-    void setZone(size_t slot, uint8_t zone) {
-        const uint8_t old = zone_of[slot];
-        if (old != 255) setBit(zone_bits[old], slot, false);
-        zone_of[slot] = zone;
-        if (zone != 255) {
-            if (zone_bits.size() <= zone) zone_bits.resize(zone + 1, std::vector<uint64_t>(capacity / 64));
-            setBit(zone_bits[zone], slot, true);
-        }
-    }
-
-    size_t words() const { return capacity / 64; }
 };
 
 // ---------------------------------------------------------------------------
-// Query-local ExactMask computation (spec §5). Bitplane-based, no per-object
-// interpretation of values.
+// Query predicate (matches dynamic_triad semantics exactly).
+// Numeric field enabled iff NOT(lo == -1 && hi == -1); endpoints are literal.
 // ---------------------------------------------------------------------------
-struct ExactMaskComputer {
-    const Block& block;
+struct Query {
+    size_t qidx = 0;
+    int recursive = 0;
+    NodeId anchor = 0;
+    int64_t category = -1, lo = -1, hi = -1;
+    int tagmode = 0;
+    uint64_t tags = 0;
+    int combine = 0;  // 0 = AND, 1 = OR
+};
+
+struct MaskWork {
+    uint64_t bitset_word_ops = 0;
+    uint64_t owner_rank_queries = 0;
+    uint64_t owner_cache_hits = 0;
+    uint64_t posting_slots_read = 0;
+};
+
+// Computes Live / Scope / Extra separately, then Live & Scope & Extra.
+class MaskComputer {
+    const Block& blk;
     const EulerTour& euler;
-    const std::vector<NodeId>& parent;  // directory parent for non-recursive scope
+    const Query& q;
+    MaskWork& work;
+    std::unordered_map<NodeId, bool> scope_cache;
 
-    // Result: bitmap of live slots satisfying all enabled filters.
-    struct Result {
-        std::vector<uint64_t> mask;
-        size_t words_used = 0;
-        size_t owner_lookups = 0;
-        size_t owner_cache_hits = 0;
-    };
+    size_t words() const { return blk.words(); }
 
-    struct Query {
-        size_t qidx = 0;
-        NodeId anchor = 0;
-        bool recursive = false;
-        int64_t category = -1;
-        int64_t lo = -1, hi = -1;
-        int tagmode = 0;      // 0=disabled,1=Q⊆ITEM,2=Q∩ITEM,3=ITEM=Q,4=ITEM⊆Q
-        uint64_t tags = 0;
-        bool combine_or = false;  // false=AND, true=OR
-    };
-
-    Result compute(const Query& q, size_t capacity) const {
-        Result result;
-        const size_t words = capacity / 64;
-        result.mask.assign(words, 0);
-        result.words_used = words;
-
-        // Start with live mask.
-        for (size_t w = 0; w < words; ++w)
-            result.mask[w] = block.alive_bits[w];
-
-        // Category equality (64-bit bitplanes, MSB first).
-        if (q.category != -1) {
-            for (size_t w = 0; w < words; ++w) {
-                uint64_t match = UINT64_MAX;
-                for (size_t bit = 0; bit < 64; ++bit) {
-                    const bool want = (q.category >> (63 - bit)) & 1;
-                    match &= want ? block.category_planes[bit][w] : ~block.category_planes[bit][w];
-                }
-                result.mask[w] &= match;
+    std::vector<uint64_t> categoryEq(int64_t cat) {
+        const uint64_t cv = static_cast<uint64_t>(cat);
+        std::vector<uint64_t> acc(words(), ~0ULL);
+        for (size_t b = 0; b < 64; ++b) {
+            const bool want = (cv >> b) & 1;
+            for (size_t w = 0; w < words(); ++w) {
+                acc[w] &= want ? blk.category_planes[b][w] : ~blk.category_planes[b][w];
+                ++work.bitset_word_ops;
             }
         }
-
-        // Numeric closed range [lo, hi] using less/equal circuit.
-        if (q.lo != -1 || q.hi != -1) {
-            const int64_t lo = q.lo == -1 ? std::numeric_limits<int64_t>::min() : q.lo;
-            const int64_t hi = q.hi == -1 ? std::numeric_limits<int64_t>::max() : q.hi;
-            const uint64_t loEnc = Block::encodeSigned(lo);
-            const uint64_t hiEnc = Block::encodeSigned(hi);
-            for (size_t w = 0; w < words; ++w) {
-                uint64_t lt_lo = 0, eq_lo = UINT64_MAX;
-                uint64_t lt_hi = 0, eq_hi = UINT64_MAX;
-                for (int bit = 63; bit >= 0; --bit) {
-                    const uint64_t p = block.numeric_bits[63 - bit][w];
-                    const bool blo = (loEnc >> bit) & 1;
-                    const bool bhi = (hiEnc >> bit) & 1;
-                    if (blo) { lt_lo |= eq_lo & ~p; eq_lo &= p; }
-                    else eq_lo &= ~p;
-                    if (bhi) { lt_hi |= eq_hi & ~p; eq_hi &= p; }
-                    else eq_hi &= ~p;
-                }
-                const uint64_t ge_lo = ~(lt_lo & ~eq_lo) & ~(lt_lo);  // NOT less-than-lo
-                const uint64_t in_range = (lt_hi | eq_hi) & ~lt_lo;    // ≤ hi AND ≥ lo
-                result.mask[w] &= in_range;
-            }
-        }
-
-        // Tags (four modes).
-        if (q.tagmode != 0) {
-            std::vector<uint64_t> tag_mask(words, 0);
-            switch (q.tagmode) {
-                case 1: { // Q ⊆ ITEM
-                    for (size_t w = 0; w < words; ++w) tag_mask[w] = UINT64_MAX;
-                    for (size_t t = 0; t < 64; ++t) {
-                        if (!((q.tags >> t) & 1)) continue;
-                        for (size_t w = 0; w < words; ++w)
-                            tag_mask[w] &= block.tag_bits[t][w];
-                    }
-                    break;
-                }
-                case 2: { // Q ∩ ITEM ≠ ∅
-                    for (size_t t = 0; t < 64; ++t) {
-                        if (!((q.tags >> t) & 1)) continue;
-                        for (size_t w = 0; w < words; ++w)
-                            tag_mask[w] |= block.tag_bits[t][w];
-                    }
-                    break;
-                }
-                case 4: { // ITEM ⊆ Q
-                    for (size_t w = 0; w < words; ++w) tag_mask[w] = UINT64_MAX;
-                    for (size_t t = 0; t < 64; ++t) {
-                        if ((q.tags >> t) & 1) continue;
-                        for (size_t w = 0; w < words; ++w)
-                            tag_mask[w] &= ~block.tag_bits[t][w];
-                    }
-                    break;
-                }
-                case 3: { // ITEM = Q
-                    for (size_t w = 0; w < words; ++w) {
-                        uint64_t sub = UINT64_MAX, sup = UINT64_MAX;
-                        for (size_t t = 0; t < 64; ++t) {
-                            if ((q.tags >> t) & 1) sub &= block.tag_bits[t][w];
-                            else sup &= ~block.tag_bits[t][w];
-                        }
-                        tag_mask[w] = sub & sup;
-                    }
-                    break;
-                }
-            }
-            for (size_t w = 0; w < words; ++w) result.mask[w] &= tag_mask[w];
-        }
-
-        // Scope: recursive containment or direct owner match.
-        {
-            std::unordered_map<NodeId, bool> cache;
-            for (const auto& [owner, slots] : block.owner_slots) {
-                bool pass;
-                auto it = cache.find(owner);
-                if (it != cache.end()) { pass = it->second; ++result.owner_cache_hits; }
-                else {
-                    pass = q.recursive ? euler.contains(q.anchor, owner) : (owner == q.anchor);
-                    cache[owner] = pass;
-                    ++result.owner_lookups;
-                }
-                if (pass) for (size_t s : cache.size() ? std::vector<size_t>{} : std::vector<size_t>{}) {}
-                if (pass) for (size_t s : block.owner_slots.at(owner)) {}
-                if (pass) {
-                    for (size_t s : block.owner_slots.at(owner)) {
-                        const size_t w = s / 64, b = s % 64;
-                        result.mask[w] |= uint64_t(1) << b;
-                    }
+        return acc;
+    }
+    // MSB→LSB less-than circuit on encoded numeric planes.
+    void numericLT(uint64_t bound, std::vector<uint64_t>& lt, std::vector<uint64_t>& eq) {
+        lt.assign(words(), 0);
+        eq.assign(words(), ~0ULL);
+        for (int b = 63; b >= 0; --b) {
+            const bool bit = (bound >> b) & 1;
+            const auto& p = blk.numeric_planes[b];
+            for (size_t w = 0; w < words(); ++w) {
+                if (bit) {
+                    lt[w] |= eq[w] & ~p[w];
+                    eq[w] &= p[w];
                 } else {
-                    for (size_t s : block.owner_slots.at(owner)) {
-                        const size_t w = s / 64, b = s % 64;
-                        result.mask[w] &= ~(uint64_t(1) << b);
+                    eq[w] &= ~p[w];
+                }
+                ++work.bitset_word_ops;
+            }
+        }
+    }
+    std::vector<uint64_t> numericRange(int64_t lo, int64_t hi) {
+        std::vector<uint64_t> ltLo, eqLo, ltHi, eqHi;
+        numericLT(Block::encodeNumeric(lo), ltLo, eqLo);
+        numericLT(Block::encodeNumeric(hi), ltHi, eqHi);
+        std::vector<uint64_t> acc(words());
+        for (size_t w = 0; w < words(); ++w) {
+            acc[w] = ~ltLo[w] & (ltHi[w] | eqHi[w]);
+            ++work.bitset_word_ops;
+        }
+        return acc;
+    }
+    std::vector<uint64_t> tagMask() {
+        std::vector<uint64_t> acc;
+        switch (q.tagmode) {
+            case 1: {  // Q ⊆ ITEM
+                acc.assign(words(), ~0ULL);
+                for (size_t t = 0; t < 64; ++t) {
+                    if (!((q.tags >> t) & 1)) continue;
+                    for (size_t w = 0; w < words(); ++w) { acc[w] &= blk.tag_planes[t][w]; ++work.bitset_word_ops; }
+                }
+                break;
+            }
+            case 2: {  // Q ∩ ITEM ≠ ∅
+                acc.assign(words(), 0);
+                for (size_t t = 0; t < 64; ++t) {
+                    if (!((q.tags >> t) & 1)) continue;
+                    for (size_t w = 0; w < words(); ++w) { acc[w] |= blk.tag_planes[t][w]; ++work.bitset_word_ops; }
+                }
+                break;
+            }
+            case 4: {  // ITEM ⊆ Q
+                acc.assign(words(), ~0ULL);
+                for (size_t t = 0; t < 64; ++t) {
+                    if ((q.tags >> t) & 1) continue;
+                    for (size_t w = 0; w < words(); ++w) { acc[w] &= ~blk.tag_planes[t][w]; ++work.bitset_word_ops; }
+                }
+                break;
+            }
+            case 3: {  // ITEM == Q  (mode1 AND mode4)
+                acc.assign(words(), ~0ULL);
+                for (size_t t = 0; t < 64; ++t) {
+                    const bool in = (q.tags >> t) & 1;
+                    for (size_t w = 0; w < words(); ++w) {
+                        acc[w] &= in ? blk.tag_planes[t][w] : ~blk.tag_planes[t][w];
+                        ++work.bitset_word_ops;
                     }
+                }
+                break;
+            }
+            default: fail("unknown tagmode");
+        }
+        return acc;
+    }
+    std::vector<uint64_t> scopeMask() {
+        std::vector<uint64_t> acc(words(), 0);
+        for (const auto& [owner, slots] : blk.owner_posting) {
+            auto it = scope_cache.find(owner);
+            bool pass;
+            if (it != scope_cache.end()) { pass = it->second; ++work.owner_cache_hits; }
+            else {
+                pass = q.recursive ? euler.contains(q.anchor, owner) : (owner == q.anchor);
+                scope_cache[owner] = pass;
+                ++work.owner_rank_queries;
+            }
+            if (!pass) continue;
+            for (size_t s : slots) {
+                acc[s / 64] |= (1ULL << (s % 64));
+                ++work.posting_slots_read;
+            }
+        }
+        return acc;
+    }
+
+public:
+    MaskComputer(const Block& b, const EulerTour& e, const Query& query, MaskWork& w)
+        : blk(b), euler(e), q(query), work(w) {}
+
+    // Extra mask over enabled fields only. AND: start all-ones; OR: start zero.
+    // No enabled field → all-ones (extra = true in canonical semantics).
+    std::vector<uint64_t> extraMask() {
+        const bool useOr = q.combine != 0;
+        std::vector<uint64_t> acc(words(), useOr ? 0 : ~0ULL);
+        bool any = false;
+        auto add = [&](const std::vector<uint64_t>& m) {
+            any = true;
+            for (size_t w = 0; w < words(); ++w) {
+                acc[w] = useOr ? (acc[w] | m[w]) : (acc[w] & m[w]);
+                ++work.bitset_word_ops;
+            }
+        };
+        if (q.category != -1) add(categoryEq(q.category));
+        if (!(q.lo == -1 && q.hi == -1)) add(numericRange(q.lo, q.hi));
+        if (q.tagmode != 0) add(tagMask());
+        if (!any) acc.assign(words(), ~0ULL);
+        return acc;
+    }
+
+    // Final: Live & Scope & Extra. Components constructed independently.
+    std::vector<uint64_t> compute() {
+        auto scope = scopeMask();
+        auto extra = extraMask();
+        std::vector<uint64_t> acc(words());
+        for (size_t w = 0; w < words(); ++w) {
+            acc[w] = blk.alive_bits[w] & scope[w] & extra[w];
+            ++work.bitset_word_ops;
+        }
+        return acc;
+    }
+};
+
+// ---------------------------------------------------------------------------
+// WQR index.
+// ---------------------------------------------------------------------------
+enum class Arm { GeometryRoute, BlockGate, WQR, EagerWQR };
+
+struct ProxyMeta {
+    size_t block = NONE;     // block index (registry index; NONE = retired)
+    size_t generation = 0;
+    uint8_t zone = 0;
+    bool live = false;
+};
+
+struct Location { size_t block = NONE, slot = NONE; };
+
+struct Item { NodeId node = 0; int64_t category = 0, numeric = 0; uint64_t tags = 0; bool alive = false; };
+
+struct QueryCounters {
+    uint64_t portal_distances = 0, local_distances = 0;
+    uint64_t masks_prepared = 0;
+    MaskWork mask_work;
+    size_t portal_returned = 0, blocks_selected = 0;
+    size_t local_searches = 0;
+    std::vector<size_t> selected_blocks;
+    std::vector<size_t> reference_blocks;  // exact portal order, offline attribution
+};
+
+struct MaintenanceCounters {
+    uint64_t distance_calls = 0;    // graph build/rebuild/insert distances this event
+    uint64_t ann_insertions = 0, ann_deletions = 0;
+    uint64_t rebuilds = 0, splits = 0, compactions = 0, registry_compactions = 0;
+    uint64_t posting_writes = 0;
+};
+
+class WQRIndex {
+public:
+    // Canonical state.
+    std::vector<Item> items;
+    std::vector<int> parent;
+    size_t dim = 0;
+    std::vector<float> vectors;   // canonical vectors (n * dim)
+
+    EulerTour euler;
+    std::vector<std::vector<Id>> direct;      // directory node → direct live ids
+    std::unordered_map<Id, size_t> direct_pos;
+
+    std::vector<Block> blocks;                // registry, retired entries kept until compaction
+    size_t retired_blocks = 0;
+    std::vector<Location> loc;                // id → (block, slot)
+    std::vector<ProxyMeta> proxies;
+    size_t live_proxies = 0, dead_proxies = 0;
+    std::unique_ptr<CountedL2> pspace;
+    std::unique_ptr<hnswlib::HierarchicalNSW<float>> pgraph;
+    std::unique_ptr<CountedL2> build_space;                 // partitioning / proxy / zone distances
+    size_t registry_generation = 0;
+
+    const float* vec(Id id) const { return vectors.data() + id * dim; }
+
+    void init(size_t n_items, size_t dimension) {
+        dim = dimension;
+        items.assign(n_items, Item{});
+        loc.assign(n_items, Location{});
+        vectors.assign(n_items * dim, 0);
+        pspace = std::make_unique<CountedL2>(dimension);
+        build_space = std::make_unique<CountedL2>(dimension);
+    }
+
+    // ---- geometry helpers: ALL distances via CountedL2 (RawL2Space kernel) ----
+    float dist(const float* a, const float* b) const { return build_space->cdist(a, b); }
+
+    // Deterministic balanced partition (spec §4.1). Returns blocks of ids.
+    std::vector<std::vector<Id>> partition(std::vector<Id> ids) const {
+        std::vector<std::vector<Id>> out;
+        std::vector<std::vector<Id>> stack{std::move(ids)};
+        while (!stack.empty()) {
+            auto cur = std::move(stack.back()); stack.pop_back();
+            if (cur.size() <= B0) { out.push_back(std::move(cur)); continue; }
+            const Id a = *std::min_element(cur.begin(), cur.end());
+            auto farthest = [&](Id pivot) {
+                Id best = pivot; float bd = -1;
+                for (Id x : cur) {
+                    if (x == pivot) continue;
+                    const float d = build_space->cdist(vec(x), vec(pivot));
+                    if (d > bd || (d == bd && x < best)) { bd = d; best = x; }
+                }
+                return best;
+            };
+            const Id b = farthest(a), c = farthest(b);
+            std::vector<std::pair<float, Id>> keyed;
+            keyed.reserve(cur.size());
+            for (Id x : cur)
+                keyed.emplace_back(build_space->cdist(vec(x), vec(b)) - build_space->cdist(vec(x), vec(c)), x);
+            std::sort(keyed.begin(), keyed.end());
+            const size_t mid = keyed.size() / 2;
+            std::vector<Id> left, right;
+            for (size_t i = 0; i < mid; ++i) left.push_back(keyed[i].second);
+            for (size_t i = mid; i < keyed.size(); ++i) right.push_back(keyed[i].second);
+            stack.push_back(std::move(left));
+            stack.push_back(std::move(right));
+        }
+        return out;
+    }
+
+    // Farthest-first proxy selection (spec §3.3): first = smallest id; then
+    // max min-distance, tie by id. Copies vectors into independent proxies.
+    void selectProxies(Block& blk, const std::vector<Id>& ids) {
+        const size_t r = std::min(PROXIES_PER_BLOCK, ids.size());
+        std::vector<Id> chosen{*std::min_element(ids.begin(), ids.end())};
+        std::vector<float> nearest(ids.size(), std::numeric_limits<float>::infinity());
+        for (size_t i = 0; i < ids.size(); ++i)
+            nearest[i] = build_space->cdist(vec(ids[i]), vec(chosen[0]));
+        while (chosen.size() < r) {
+            Id best = NONE; float bd = -1;
+            for (size_t i = 0; i < ids.size(); ++i) {
+                const Id x = ids[i];
+                if (std::find(chosen.begin(), chosen.end(), x) != chosen.end()) continue;
+                if (nearest[i] > bd || (nearest[i] == bd && x < best)) { bd = nearest[i]; best = x; }
+            }
+            chosen.push_back(best);
+            for (size_t i = 0; i < ids.size(); ++i)
+                nearest[i] = std::min(nearest[i], build_space->cdist(vec(ids[i]), vec(best)));
+        }
+        blk.proxies.clear();
+        blk.proxy_labels.clear();
+        blk.zone_bits.clear();
+        for (Id pid : chosen)
+            blk.proxies.emplace_back(vec(pid), vec(pid) + dim);
+        blk.zone_bits.assign(chosen.size(), std::vector<uint64_t>(blk.words(), 0));
+        // Assign every live object to its nearest proxy (tie → lower zone).
+        for (Id id : ids) {
+            const size_t slot = loc[id].slot;
+            uint8_t winner = 0; float bd = std::numeric_limits<float>::infinity();
+            for (size_t z = 0; z < blk.proxies.size(); ++z) {
+                const float d = build_space->cdist(vec(id), blk.proxies[z].data());
+                if (d < bd) { bd = d; winner = static_cast<uint8_t>(z); }
+            }
+            blk.setZone(slot, winner);
+        }
+        // Register proxies globally and insert into proxy graph.
+        for (size_t z = 0; z < blk.proxies.size(); ++z) {
+            proxies.push_back({registryIndexOf(blk), blk.generation, static_cast<uint8_t>(z), true});
+            const size_t label = proxies.size() - 1;
+            blk.proxy_labels.push_back(label);
+            ++live_proxies;
+            pgraphAdd(label, blk.proxies[z].data());
+        }
+    }
+
+    size_t registryIndexOf(const Block& blk) const {
+        return static_cast<size_t>(&blk - blocks.data());
+    }
+
+    void pgraphAdd(size_t label, const float* data) {
+        if (!pgraph) {
+            pgraph = std::make_unique<hnswlib::HierarchicalNSW<float>>(
+                pspace.get(), std::max<size_t>(64, proxies.size() * 2), HNSW_M, HNSW_EFC, HNSW_SEED);
+        }
+        if (pgraph->cur_element_count == pgraph->max_elements_)
+            pgraph->resizeIndex(std::max(pgraph->max_elements_ * 2, pgraph->cur_element_count + 1));
+        pgraph->addPoint(data, label);
+    }
+
+    void pgraphRemove(size_t label) {
+        if (!pgraph) return;
+        pgraph->markDelete(label);
+        proxies[label].live = false;
+        --live_proxies; ++dead_proxies;
+    }
+
+    // Rebuild proxy graph from live proxies; labels kept stable via new build.
+    void rebuildProxyGraph(MaintenanceCounters& mc) {
+        auto fresh = std::make_unique<hnswlib::HierarchicalNSW<float>>(
+            pspace.get(), std::max<size_t>(64, live_proxies * 2), HNSW_M, HNSW_EFC, HNSW_SEED);
+        for (size_t label = 0; label < proxies.size(); ++label) {
+            if (!proxies[label].live) continue;
+            const auto& pm = proxies[label];
+            fresh->addPoint(blocks[pm.block].proxies[pm.zone].data(), label);
+            ++mc.ann_insertions;
+        }
+        pgraph = std::move(fresh);
+        dead_proxies = 0;
+        ++mc.rebuilds;
+    }
+
+    // Build a block from the given ids (all live). Slots assigned in id order.
+    Block& buildBlockFromIds(const std::vector<Id>& ids, size_t capacity) {
+        blocks.emplace_back(dim);
+        Block& blk = blocks.back();
+        blk.setCapacity(capacity);
+        blk.generation = registry_generation;
+        blk.graph = std::make_unique<hnswlib::HierarchicalNSW<float>>(
+            blk.space.get(), std::max<size_t>(BLOCK_MIN_CAP, 2 * capacity), HNSW_M, HNSW_EFC, HNSW_SEED);
+        for (Id id : ids) {
+            const size_t slot = blk.live++;
+            blk.slot_to_id[slot] = id;
+            blk.next_slot = blk.live;
+            blk.setAlive(slot, true);
+            blk.writeAttrs(slot, items[id].category, items[id].numeric, items[id].tags);
+            blk.ownerAdd(items[id].node, slot, id);
+            loc[id] = {blocks.size() - 1, slot};
+            blk.graph->addPoint(vec(id), id);
+        }
+        selectProxies(blk, ids);
+        return blk;
+    }
+
+    // ---- lifecycle -------------------------------------------------------
+
+    void retireBlock(size_t bi, MaintenanceCounters& mc) {
+        Block& blk = blocks[bi];
+        for (size_t label : blk.proxy_labels) pgraphRemove(label);
+        blk.retired = true;
+        blk.graph.reset();
+        ++retired_blocks;
+        ++mc.registry_compactions;  // retire event recorded; physical compaction below
+        if (pgraph && live_proxies + dead_proxies > 0 &&
+            double(dead_proxies) / double(live_proxies + dead_proxies) > DEAD_RATIO)
+            rebuildProxyGraph(mc);
+        if (blocks.size() > 0 && retired_blocks * 5 > blocks.size())
+            compactRegistry(mc);
+    }
+
+    void compactRegistry(MaintenanceCounters& mc) {
+        // Move live blocks to front; remap proxy block references.
+        std::vector<size_t> remap(blocks.size(), NONE);
+        size_t out = 0;
+        for (size_t i = 0; i < blocks.size(); ++i) {
+            if (blocks[i].retired) continue;
+            remap[i] = out;
+            if (out != i) {
+                blocks[out] = std::move(blocks[i]);
+                for (Id id = 0; id < items.size(); ++id)
+                    if (loc[id].block == i) loc[id].block = out;
+            }
+            ++out;
+        }
+        blocks.erase(blocks.begin() + out, blocks.end());
+        for (auto& pm : proxies) if (pm.live) pm.block = remap[pm.block];
+        retired_blocks = 0;
+        ++mc.registry_compactions;
+    }
+
+    // Rebuild local graph live-only, keeping slots.
+    void rebuildLocalGraph(Block& blk, MaintenanceCounters& mc) {
+        auto fresh = std::make_unique<hnswlib::HierarchicalNSW<float>>(
+            blk.space.get(), std::max<size_t>(BLOCK_MIN_CAP, blk.capacity), HNSW_M, HNSW_EFC, HNSW_SEED);
+        for (size_t s = 0; s < blk.capacity; ++s) {
+            if (blk.slot_to_id[s] == NONE || !blk.isAlive(s)) continue;
+            fresh->addPoint(vec(blk.slot_to_id[s]), blk.slot_to_id[s]);
+            ++mc.ann_insertions;
+        }
+        blk.graph = std::move(fresh);
+        ++mc.rebuilds;
+    }
+
+    // Compact slots (tombstone compaction): live objects to front, rebuild
+    // bitplanes/postings/zone bits; keep proxy vectors and per-object zones.
+    void compactBlock(Block& blk, MaintenanceCounters& mc) {
+        std::vector<Id> liveIds;
+        std::vector<uint8_t> zones;
+        for (size_t s = 0; s < blk.capacity; ++s)
+            if (blk.slot_to_id[s] != NONE && blk.isAlive(s)) {
+                liveIds.push_back(blk.slot_to_id[s]);
+                zones.push_back(blk.zone_of[s]);
+            }
+        size_t cap = blk.capacity;
+        if (blk.live < cap / 4) cap = std::max(BLOCK_MIN_CAP, 2 * blk.live);
+        auto savedProxies = blk.proxies;
+        auto savedLabels = blk.proxy_labels;
+        blk.setCapacity(cap);
+        blk.free_slots.clear();
+        blk.owner_posting.clear();
+        blk.owner_pos.clear();
+        blk.live = 0;
+        blk.proxies = std::move(savedProxies);
+        blk.proxy_labels = std::move(savedLabels);
+        blk.zone_bits.assign(blk.proxies.size(), std::vector<uint64_t>(blk.words(), 0));
+        for (size_t i = 0; i < liveIds.size(); ++i) {
+            const Id id = liveIds[i];
+            const size_t slot = blk.live++;
+            blk.slot_to_id[slot] = id;
+            blk.setAlive(slot, true);
+            blk.writeAttrs(slot, items[id].category, items[id].numeric, items[id].tags);
+            blk.ownerAdd(items[id].node, slot, id);
+            loc[id] = {registryIndexOf(blk), slot};
+            blk.setZone(slot, zones[i]);
+        }
+        blk.next_slot = blk.live;
+        rebuildLocalGraph(blk, mc);
+        ++mc.compactions;
+    }
+
+    // Split a block whose live count hit 2*B0 when inserting newId.
+    void splitBlock(size_t bi, Id newId, MaintenanceCounters& mc) {
+        std::vector<Id> ids;
+        for (size_t s = 0; s < blocks[bi].capacity; ++s)
+            if (blocks[bi].slot_to_id[s] != NONE && blocks[bi].isAlive(s))
+                ids.push_back(blocks[bi].slot_to_id[s]);
+        if (newId != NONE) ids.push_back(newId);
+        // Balanced 2-way split by median key (spec §7: same §4 method).
+        const Id a = *std::min_element(ids.begin(), ids.end());
+        auto farthest = [&](Id pivot) {
+            Id best = pivot; float bd = -1;
+            for (Id x : ids) {
+                if (x == pivot) continue;
+                const float d = build_space->cdist(vec(x), vec(pivot));
+                if (d > bd || (d == bd && x < best)) { bd = d; best = x; }
+            }
+            return best;
+        };
+        const Id b = farthest(a), c = farthest(b);
+        std::vector<std::pair<float, Id>> keyed;
+        for (Id x : ids)
+            keyed.emplace_back(build_space->cdist(vec(x), vec(b)) - build_space->cdist(vec(x), vec(c)), x);
+        std::sort(keyed.begin(), keyed.end());
+        const size_t mid = keyed.size() / 2;
+        std::vector<Id> left, right;
+        for (size_t i = 0; i < mid; ++i) left.push_back(keyed[i].second);
+        for (size_t i = mid; i < keyed.size(); ++i) right.push_back(keyed[i].second);
+        retireBlock(bi, mc);
+        ++registry_generation;
+        ++mc.splits;
+        buildBlockFromIds(left, B0);
+        buildBlockFromIds(right, B0);
+        mc.ann_insertions += ids.size();  // local inserts counted inside buildBlock addPoint? counted separately
+    }
+
+    // Choose zone for an object within a block: nearest proxy.
+    uint8_t nearestZone(const Block& blk, Id id) {
+        uint8_t winner = 0; float bd = std::numeric_limits<float>::infinity();
+        for (size_t z = 0; z < blk.proxies.size(); ++z) {
+            const float d = build_space->cdist(vec(id), blk.proxies[z].data());
+            if (d < bd) { bd = d; winner = static_cast<uint8_t>(z); }
+        }
+        return winner;
+    }
+
+    // Route an unqualified insert: nearest proxy's block (spec §7).
+    size_t routeInsertBlock(const float* qvec) {
+        if (!pgraph || live_proxies == 0) return NONE;
+        const size_t k = std::min<size_t>(8, live_proxies);
+        auto hits = pgraph->searchKnn(qvec, k);
+        float bd = std::numeric_limits<float>::infinity();
+        size_t best = NONE;
+        while (!hits.empty()) {
+            if (hits.top().first < bd) { bd = hits.top().first; best = hits.top().second; }
+            hits.pop();
+        }
+        if (best == NONE) return NONE;
+        return proxies[best].block;
+    }
+
+    void insertPhysical(Id id, MaintenanceCounters& mc) {
+        if (blocks.empty()) {
+            buildBlockFromIds({id}, B0);
+            ++mc.ann_insertions;
+            return;
+        }
+        size_t bi = routeInsertBlock(vec(id));
+        if (bi == NONE || blocks[bi].retired) { buildBlockFromIds({id}, B0); ++mc.ann_insertions; return; }
+        if (blocks[bi].live == BLOCK_MAX_LIVE) {
+            splitBlock(bi, id, mc);  // new object is included in the split halves
+            return;
+        }
+        insertIntoBlock(bi, id, mc);
+    }
+
+    void insertIntoBlock(size_t bi, Id id, MaintenanceCounters& mc) {
+        Block& blk = blocks[bi];
+        // Slot selection: reuse free slot, else extend.
+        size_t slot;
+        if (!blk.free_slots.empty()) { slot = blk.free_slots.back(); blk.free_slots.pop_back(); }
+        else if (blk.next_slot < blk.capacity) slot = blk.next_slot++;
+        else {
+            const size_t newCap = std::min(BLOCK_MAX_LIVE, blk.capacity * 2);
+            if (newCap <= blk.capacity) fail("insert: block at max capacity without split");
+            blk.growCapacity(newCap);
+            slot = blk.next_slot++;
+        }
+        blk.slot_to_id[slot] = id;
+        blk.setAlive(slot, true);
+        blk.writeAttrs(slot, items[id].category, items[id].numeric, items[id].tags);
+        blk.ownerAdd(items[id].node, slot, id);
+        blk.setZone(slot, blk.proxies.empty() ? 255 : nearestZone(blk, id));
+        loc[id] = {bi, slot};
+        ++blk.live;
+        // Graph insert: same label tombstone with same vector → unmark; else add.
+        auto it = blk.graph->label_lookup_.find(id);
+        if (it != blk.graph->label_lookup_.end() && blk.graph->isMarkedDeleted(it->second)) {
+            blk.graph->unmarkDelete(id);
+        } else {
+            if (blk.graph->cur_element_count == blk.graph->max_elements_) {
+                if (blk.live <= blk.capacity) rebuildLocalGraph(blk, mc);  // reclaim tombstones first
+                else blk.graph->resizeIndex(blk.graph->max_elements_ * 2);
+            }
+            blk.graph->addPoint(vec(id), id);
+        }
+        ++mc.ann_insertions;
+    }
+
+    // ---- public event API --------------------------------------------------
+
+    void build(const std::vector<int>& parentArr,
+               const std::vector<Item>& initialItems,
+               const std::vector<float>& base) {
+        parent = parentArr;
+        items = initialItems;
+        vectors = base;
+        euler.build(parent);
+        direct.assign(parent.size(), {});
+        std::vector<Id> liveIds;
+        for (Id id = 0; id < items.size(); ++id) {
+            if (!items[id].alive) continue;
+            liveIds.push_back(id);
+            direct_pos[id] = direct[items[id].node].size();
+            direct[items[id].node].push_back(id);
+        }
+        if (liveIds.empty()) return;  // empty index: no blocks, no proxy graph
+        for (const auto& part : partition(liveIds))
+            buildBlockFromIds(part, B0);
+    }
+
+    void apply_V(Id id, int64_t cat, int64_t num) {
+        if (!items[id].alive) fail("V: item not live");
+        auto& blk = blocks[loc[id].block];
+        blk.writeAttrs(loc[id].slot, cat, num, items[id].tags);
+        items[id].category = cat; items[id].numeric = num;
+    }
+    void apply_T(Id id, uint64_t tags) {
+        if (!items[id].alive) fail("T: item not live");
+        auto& blk = blocks[loc[id].block];
+        blk.writeAttrs(loc[id].slot, items[id].category, items[id].numeric, tags);
+        items[id].tags = tags;
+    }
+    void apply_M(Id id, NodeId dst) {
+        if (!items[id].alive) fail("M: item not live");
+        auto& blk = blocks[loc[id].block];
+        blk.ownerRemove(items[id].node, id);
+        blk.ownerAdd(dst, loc[id].slot, id);
+        // direct directory posting
+        auto& from = direct[items[id].node];
+        const size_t pos = direct_pos.at(id), last = from.size() - 1;
+        if (pos != last) { from[pos] = from[last]; direct_pos[from[last]] = pos; }
+        from.pop_back();
+        direct_pos[id] = direct[dst].size();
+        direct[dst].push_back(id);
+        items[id].node = dst;
+    }
+    void apply_B(NodeId src, NodeId dst, MaintenanceCounters& mc) {
+        // Freeze current live ids in subtree(src), then move each (spec: B ≠ R).
+        std::vector<NodeId> stack{src};
+        std::vector<NodeId> subtreeNodes;
+        while (!stack.empty()) {
+            const NodeId v = stack.back(); stack.pop_back();
+            subtreeNodes.push_back(v);
+            for (NodeId c = 0; c < parent.size(); ++c)
+                if (parent[c] >= 0 && static_cast<NodeId>(parent[c]) == v) stack.push_back(c);
+        }
+        std::vector<Id> frozen;
+        for (NodeId n : subtreeNodes)
+            for (Id id : direct[n]) frozen.push_back(id);
+        for (Id id : frozen) { apply_M(id, dst); ++mc.posting_writes; }
+    }
+
+    void apply_R(NodeId src, NodeId dst) {
+        euler.reparent(src, dst);
+        parent[src] = static_cast<int>(dst);
+    }
+    void apply_D(Id id, MaintenanceCounters& mc) {
+        if (!items[id].alive) fail("D: item not live");
+        const auto lc = loc[id];
+        Block& blk = blocks[lc.block];
+        blk.setAlive(lc.slot, false);
+        blk.clearAttrs(lc.slot);
+        blk.ownerRemove(items[id].node, id);
+        blk.setZone(lc.slot, 255);
+        blk.graph->markDelete(id);
+        ++mc.ann_deletions;
+        // Slot retained for potential restore; also available for reuse.
+        blk.free_slots.push_back(lc.slot);
+        // direct posting removal
+        auto& from = direct[items[id].node];
+        const size_t pos = direct_pos.at(id), last = from.size() - 1;
+        if (pos != last) { from[pos] = from[last]; direct_pos[from[last]] = pos; }
+        from.pop_back();
+        direct_pos.erase(id);
+        items[id].alive = false;
+        --blk.live;
+        if (blk.live == 0) { retireBlock(lc.block, mc); return; }
+        const size_t dead = blk.graph->num_deleted_;
+        const size_t total = blk.graph->cur_element_count;
+        if (total > 0 && double(dead) / double(total) > DEAD_RATIO) compactBlock(blk, mc);
+    }
+    void apply_I(Id id, NodeId node, int64_t cat, int64_t num, uint64_t tags, MaintenanceCounters& mc) {
+        if (items[id].alive) fail("I: item already live");
+        items[id].node = node; items[id].category = cat; items[id].numeric = num;
+        items[id].tags = tags; items[id].alive = true;
+        // direct posting add
+        direct_pos[id] = direct[node].size();
+        direct[node].push_back(id);
+        // Restore old location when retained and block alive.
+        const auto lc = loc[id];
+        if (lc.block != NONE && lc.block < blocks.size() && !blocks[lc.block].retired) {
+            Block& blk = blocks[lc.block];
+            if (lc.slot < blk.capacity && blk.slot_to_id[lc.slot] == id && !blk.isAlive(lc.slot)) {
+                auto git = blk.graph->label_lookup_.find(id);
+                if (git != blk.graph->label_lookup_.end() && blk.graph->isMarkedDeleted(git->second)) {
+                    // Remove slot from free list (it was retained).
+                    auto fit = std::find(blk.free_slots.begin(), blk.free_slots.end(), lc.slot);
+                    if (fit != blk.free_slots.end()) blk.free_slots.erase(fit);
+                    blk.setAlive(lc.slot, true);
+                    blk.writeAttrs(lc.slot, cat, num, tags);
+                    blk.ownerAdd(node, lc.slot, id);
+                    blk.setZone(lc.slot, blk.proxies.empty() ? 255 : nearestZone(blk, id));
+                    blk.graph->unmarkDelete(id);
+                    ++blk.live;
+                    ++mc.ann_insertions;
+                    return;
                 }
             }
         }
+        insertPhysical(id, mc);
+    }
 
-        // AND/OR combine: if combine_or, at least one enabled field must pass.
-        // The above computed AND; for OR we need to recompute with OR semantics.
-        // For simplicity, if combine_or and any field is enabled, recompute.
-        if (q.combine_or && (q.category != -1 || q.lo != -1 || q.hi != -1 || q.tagmode != 0)) {
-            // Recompute with OR: start from 0, OR each enabled field's mask.
-            std::vector<uint64_t> or_mask(words, 0);
-            if (q.category != -1) {
-                for (size_t w = 0; w < words; ++w) {
-                    uint64_t match = UINT64_MAX;
-                    for (size_t bit = 0; bit < 64; ++bit) {
-                        const bool want = (q.category >> (63 - bit)) & 1;
-                        match &= want ? block.category_planes[bit][w] : ~block.category_planes[bit][w];
-                    }
-                    or_mask[w] |= match;
-                }
-            }
-            if (q.lo != -1 || q.hi != -1) {
-                const int64_t lo = q.lo == -1 ? std::numeric_limits<int64_t>::min() : q.lo;
-                const int64_t hi = q.hi == -1 ? std::numeric_limits<int64_t>::max() : q.hi;
-                const uint64_t loEnc = Block::encodeSigned(lo);
-                const uint64_t hiEnc = Block::encodeSigned(hi);
-                for (size_t w = 0; w < words; ++w) {
-                    uint64_t lt_lo = 0, eq_lo = UINT64_MAX;
-                    uint64_t lt_hi = 0, eq_hi = UINT64_MAX;
-                    for (int bit = 63; bit >= 0; --bit) {
-                        const uint64_t p = block.numeric_bits[63 - bit][w];
-                        const bool blo = (loEnc >> bit) & 1;
-                        const bool bhi = (hiEnc >> bit) & 1;
-                        if (blo) { lt_lo |= eq_lo & ~p; eq_lo &= p; }
-                        else eq_lo &= ~p;
-                        if (bhi) { lt_hi |= eq_hi & ~p; eq_hi &= p; }
-                        else eq_hi &= ~p;
-                    }
-                    or_mask[w] |= (lt_hi | eq_hi) & ~lt_lo;
-                }
-            }
-            if (q.tagmode != 0) {
-                std::vector<uint64_t> tag_mask(words, 0);
-                switch (q.tagmode) {
-                    case 1: {
-                        for (size_t w = 0; w < words; ++w) tag_mask[w] = UINT64_MAX;
-                        for (size_t t = 0; t < 64; ++t) {
-                            if (!((q.tags >> t) & 1)) continue;
-                            for (size_t w = 0; w < words; ++w)
-                                tag_mask[w] &= block.tag_bits[t][w];
-                        }
-                        break;
-                    }
-                    case 2: {
-                        for (size_t t = 0; t < 64; ++t) {
-                            if (!((q.tags >> t) & 1)) continue;
-                            for (size_t w = 0; w < words; ++w)
-                                tag_mask[w] |= block.tag_bits[t][w];
-                        }
-                        break;
-                    }
-                    case 4: {
-                        for (size_t w = 0; w < words; ++w) tag_mask[w] = UINT64_MAX;
-                        for (size_t t = 0; t < 64; ++t) {
-                            if ((q.tags >> t) & 1) continue;
-                            for (size_t w = 0; w < words; ++w)
-                                tag_mask[w] &= ~block.tag_bits[t][w];
-                        }
-                        break;
-                    }
-                    case 3: {
-                        for (size_t w = 0; w < words; ++w) {
-                            uint64_t sub = UINT64_MAX, sup = UINT64_MAX;
-                            for (size_t t = 0; t < 64; ++t) {
-                                if ((q.tags >> t) & 1) sub &= block.tag_bits[t][w];
-                                else sup &= ~block.tag_bits[t][w];
-                            }
-                            tag_mask[w] = sub & sup;
-                        }
-                        break;
-                    }
-                }
-                for (size_t w = 0; w < words; ++w) or_mask[w] |= tag_mask[w];
-            }
-            // Combine OR with scope and live.
-            for (size_t w = 0; w < words; ++w)
-                result.mask[w] = result.mask[w] & or_mask[w];
+    // ---- query --------------------------------------------------------------
+
+    struct PreparedMasks {
+        std::vector<std::vector<uint64_t>> exact;
+        std::vector<std::vector<uint64_t>> active_zones;
+        std::vector<bool> ready;
+    };
+
+    PreparedMasks prepareAll(const Query& q, QueryCounters& qc) const {
+        PreparedMasks pm;
+        pm.exact.resize(blocks.size());
+        pm.active_zones.resize(blocks.size());
+        pm.ready.assign(blocks.size(), false);
+        for (size_t bi = 0; bi < blocks.size(); ++bi) {
+            if (blocks[bi].retired) continue;
+            prepareBlock(bi, q, qc, pm);
         }
+        return pm;
+    }
 
+    void prepareBlock(size_t bi, const Query& q, QueryCounters& qc, PreparedMasks& pm) const {
+        if (pm.ready[bi] || blocks[bi].retired) return;
+        pm.ready[bi] = true;
+        ++qc.masks_prepared;
+        MaskComputer mc(blocks[bi], euler, q, qc.mask_work);
+        pm.exact[bi] = mc.compute();
+        const auto& blk = blocks[bi];
+        auto& az = pm.active_zones[bi];
+        az.assign(blk.proxies.size(), 0);
+        for (size_t z = 0; z < blk.proxies.size(); ++z) {
+            bool any = false;
+            if (z < blk.zone_bits.size()) {
+                for (size_t w = 0; w < blk.words(); ++w)
+                    if (pm.exact[bi][w] & blk.zone_bits[z][w]) { any = true; break; }
+            }
+            az[z] = any;
+        }
+    }
+
+    struct PortalFilter : hnswlib::BaseFilterFunctor {
+        const WQRIndex& idx;
+        const Query& q;
+        Arm arm;
+        QueryCounters& qc;
+        PreparedMasks& pm;
+        PortalFilter(const WQRIndex& i, const Query& query, Arm a, QueryCounters& c, PreparedMasks& p)
+            : idx(i), q(query), arm(a), qc(c), pm(p) {}
+        bool operator()(hnswlib::labeltype label) override {
+            const auto& meta = idx.proxies[label];
+            if (!meta.live) return false;
+            const size_t bi = meta.block;
+            if (bi == NONE || bi >= idx.blocks.size()) return false;
+            const auto& blk = idx.blocks[bi];
+            if (blk.retired || blk.generation != meta.generation) return false;
+            if (arm == Arm::GeometryRoute) return true;
+            idx.prepareBlock(bi, q, qc, pm);
+            if (arm == Arm::BlockGate) {
+                for (size_t w = 0; w < blk.words(); ++w)
+                    if (pm.exact[bi][w]) return true;
+                return false;
+            }
+            return meta.zone < pm.active_zones[bi].size() && pm.active_zones[bi][meta.zone];
+        }
+    };
+
+    struct LocalFilter : hnswlib::BaseFilterFunctor {
+        const WQRIndex& idx;
+        size_t bi;
+        const std::vector<uint64_t>& mask;
+        LocalFilter(const WQRIndex& i, size_t b, const std::vector<uint64_t>& m)
+            : idx(i), bi(b), mask(m) {}
+        bool operator()(hnswlib::labeltype label) override {
+            const Id id = static_cast<Id>(label);      // external object ID
+            const auto lc = idx.loc[id];               // id → (block, slot)
+            if (lc.block != bi) return false;
+            const size_t slot = lc.slot;
+            if (slot >= mask.size() * 64) return false;
+            return (mask[slot / 64] >> (slot % 64)) & 1;
+        }
+    };
+
+    // Exact portal order for offline attribution (not used online).
+    std::vector<size_t> exactPortalBlocks(const float* qvec, const Query& q, Arm arm,
+                                          size_t P, size_t L, QueryCounters& qc) const {
+        auto pm = prepareAll(q, qc);
+        std::vector<std::pair<float, size_t>> order;
+        for (size_t label = 0; label < proxies.size(); ++label) {
+            const auto& meta = proxies[label];
+            if (!meta.live) continue;
+            const size_t bi = meta.block;
+            const auto& blk = blocks[bi];
+            if (blk.retired || blk.generation != meta.generation) continue;
+            bool allow = true;
+            if (arm == Arm::BlockGate) {
+                allow = false;
+                for (size_t w = 0; w < blk.words(); ++w) if (pm.exact[bi][w]) { allow = true; break; }
+            } else if (arm == Arm::WQR || arm == Arm::EagerWQR) {
+                allow = meta.zone < pm.active_zones[bi].size() && pm.active_zones[bi][meta.zone];
+            }
+            if (!allow) continue;
+            const float d = build_space->cdist(qvec, blk.proxies[meta.zone].data());
+            order.emplace_back(d, label);
+        }
+        std::sort(order.begin(), order.end());
+        std::vector<size_t> result;
+        std::unordered_set<size_t> seen;
+        for (size_t i = 0; i < order.size() && i < P; ++i) {
+            const size_t bi = proxies[order[i].second].block;
+            if (seen.insert(bi).second) {
+                result.push_back(bi);
+                if (result.size() >= L) break;
+            }
+        }
         return result;
     }
-};
 
-// Counted RawL2Space wrapper for instrumentation.
-struct CountedL2 : RawL2Space {
-    mutable size_t calls = 0;
-    explicit CountedL2(size_t d) : RawL2Space(d) {}
-    static float count(const void* a, const void* b, const void* p) {
-        auto* self = static_cast<const CountedL2*>(p);
-        ++self->calls;
-        return self->dist(static_cast<const float*>(a), static_cast<const float*>(b));
-    }
-    hnswlib::DISTFUNC<float> get_dist_func() override { return count; }
-    void* get_dist_func_param() override { return this; }
-};
-
-// ---------------------------------------------------------------------------
-// WQR index: geometry blocks + proxy graph + Euler directory + attributes.
-// ---------------------------------------------------------------------------
-struct WQRIndex {
-    static constexpr size_t B0 = 1024;
-    static constexpr size_t PROXIES_PER_BLOCK = 4;
-    static constexpr size_t M = 16;
-    static constexpr size_t EF_CONSTRUCTION = 200;
-    static constexpr uint64_t SEED = 100;
-
-    VectorStore vectors;
-    EulerTour euler;
-    std::vector<NodeId> parent;  // directory parent array
-    std::vector<Block> blocks;
-    std::unique_ptr<hnswlib::HierarchicalNSW<float>> proxy_graph;
-    std::unique_ptr<CountedL2> proxy_space;
-    std::vector<std::unique_ptr<CountedL2>> local_spaces;
-
-    // Global reverse mapping: object ID → (block, slot)
-    struct Location { BlockId block; size_t slot; };
-    std::vector<Location> location;
-    std::vector<bool> alive;
-    std::vector<NodeId> owner;
-    std::vector<int64_t> category;
-    std::vector<int64_t> numeric;
-    std::vector<uint64_t> tags;
-
-    // Proxy metadata: proxy label → (block, zone)
-    struct ProxyMeta { BlockId block; uint8_t zone; };
-    std::vector<ProxyMeta> proxy_meta;
-
-    size_t dim = 0;
-    size_t n_items = 0;
-
-    void init(size_t dimension, size_t max_items) {
-        dim = dimension;
-        n_items = max_items;
-        vectors.init(dimension);
-        vectors.data.resize(max_items * dimension);
-        location.resize(max_items, {BlockId(-1), size_t(-1)});
-        alive.assign(max_items, false);
-        owner.resize(max_items, 0);
-        category.resize(max_items, 0);
-        numeric.resize(max_items, 0);
-        tags.resize(max_items, 0);
-        proxy_space = std::make_unique<CountedL2>(dimension);
-    }
-
-    // Build from canonical items + parent + vectors.
-    void build(const std::vector<Id>& item_ids,
-               const std::vector<NodeId>& parent_arr,
-               const VectorStore& canonical) {
-        parent = parent_arr;
-        vectors = canonical;
-        euler.build(parent);
-        Partitioner partitioner(vectors);
-        auto block_ids = partitioner.blocks(item_ids);
-        for (const auto& ids : block_ids) {
-            blocks.emplace_back(dim);
-            Block& b = blocks.back();
-            local_spaces.emplace_back(std::make_unique<CountedL2>(dim));
-            b.space = std::make_unique<RawL2Space>(dim);
-            b.graph = std::make_unique<hnswlib::HierarchicalNSW<float>>(
-                b.space.get(), b.capacity, M, EF_CONSTRUCTION, SEED);
-            for (Id id : ids) {
-                const size_t slot = b.live_count++;
-                b.slot_to_id[slot] = id;
-                b.id_to_slot[id] = slot;
-                b.setAlive(slot, true);
-                b.setCategory(slot, category[id]);
-                b.setNumeric(slot, numeric[id]);
-                b.setTags(slot, tags[id]);
-                b.addOwnerSlot(owner[id], slot, id);
-                location[id] = {BlockId(blocks.size() - 1), slot};
-                alive[id] = true;
-                b.graph->addPoint(vectors.at(id), id);
-            }
-            // Farthest-first proxy selection (spec §3.3).
-            std::vector<size_t> selected;
-            selected.push_back(0);  // smallest object ID is slot 0 by construction
-            while (selected.size() < std::min(PROXIES_PER_BLOCK, ids.size())) {
-                size_t best = SIZE_MAX;
-                float bestD = -1;
-                for (size_t i = 0; i < ids.size(); ++i) {
-                    if (std::find(selected.begin(), selected.end(), i) != selected.end()) continue;
-                    float nearest = std::numeric_limits<float>::infinity();
-                    for (size_t j : selected)
-                        nearest = std::min(nearest, vectors.l2(vectors.at(ids[i]), vectors.at(ids[j])));
-                    if (nearest > bestD || (nearest == bestD && ids[i] < ids[best])) {
-                        bestD = nearest; best = i;
-                    }
-                }
-                selected.push_back(best);
-            }
-            // Copy proxy vectors.
-            for (size_t s : selected) {
-                b.proxies.emplace_back(vectors.at(ids[s]), vectors.at(ids[s]) + dim);
-                proxy_meta.push_back({BlockId(blocks.size() - 1), uint8_t(b.proxies.size() - 1)});
-            }
-            // Assign zones: each object to nearest proxy.
-            b.zone_bits.resize(selected.size(), std::vector<uint64_t>(b.capacity / 64));
-            for (size_t i = 0; i < ids.size(); ++i) {
-                size_t winner = 0;
-                float nearest = std::numeric_limits<float>::infinity();
-                for (size_t j = 0; j < selected.size(); ++j) {
-                    const float d = vectors.l2(vectors.at(ids[i]), b.proxies[j].data());
-                    if (d < nearest || (d == nearest && j < winner)) { nearest = d; winner = j; }
-                }
-                b.setZone(i, uint8_t(winner));
-            }
-            b.proxy_zone.resize(selected.size());
-            for (size_t j = 0; j < selected.size(); ++j) b.proxy_zone[j] = uint8_t(j);
+    std::vector<std::pair<float, Id>> query(const float* qvec, const Query& q, size_t k,
+                                            size_t L, size_t portal_ef, size_t local_ef,
+                                            Arm arm, QueryCounters& qc) {
+        if (!pgraph || live_proxies == 0) return {};
+        const size_t P = std::min(4 * L, live_proxies);
+        if (P == 0) return {};
+        PreparedMasks pm;
+        pm.exact.resize(blocks.size());
+        pm.active_zones.resize(blocks.size());
+        pm.ready.assign(blocks.size(), false);
+        if (arm == Arm::EagerWQR) {
+            for (size_t bi = 0; bi < blocks.size(); ++bi)
+                if (!blocks[bi].retired) prepareBlock(bi, q, qc, pm);
         }
-        // Build proxy graph.
-        proxy_graph = std::make_unique<hnswlib::HierarchicalNSW<float>>(
-            proxy_space.get(), proxy_meta.size() + 1, M, EF_CONSTRUCTION, SEED);
-        for (size_t i = 0; i < proxy_meta.size(); ++i) {
-            const auto& pm = proxy_meta[i];
-            proxy_graph->addPoint(blocks[pm.block].proxies[pm.zone].data(), i);
-        }
-    }
-
-    // Query: WQR portal routing + local search.
-    struct QueryResult {
-        std::vector<std::pair<float, Id>> results;  // (distance, object ID)
-        size_t qidx = 0;
-        double us = 0;
-        size_t portal_distances = 0;
-        size_t local_distances = 0;
-        size_t masks_prepared = 0;
-        size_t blocks_selected = 0;
-        size_t owner_lookups = 0;
-        size_t owner_cache_hits = 0;
-    };
-
-    QueryResult query(const float* q, size_t k, size_t probe_blocks,
-                      size_t portal_ef, size_t local_ef,
-                      const ExactMaskComputer::Query& filter) const {
-        QueryResult result;
-        if (blocks.empty() || proxy_meta.empty()) return result;
-
-        const size_t P = std::min(4 * probe_blocks, proxy_meta.size());
-        if (P == 0) return result;
-
-        // Query-local mask cache per block.
-        std::vector<std::vector<uint64_t>> masks(blocks.size());
-        std::vector<bool> ready(blocks.size(), false);
-        std::vector<std::vector<uint64_t>> active_zones(blocks.size());
-
-        auto getMask = [&](BlockId b) -> const std::vector<uint64_t>& {
-            if (!ready[b]) {
-                ready[b] = true;
-                ++result.masks_prepared;
-                ExactMaskComputer computer{blocks[b], euler, parent};
-                auto r = computer.compute(filter, blocks[b].capacity);
-                masks[b] = std::move(r.mask);
-                result.owner_lookups += r.owner_lookups;
-                result.owner_cache_hits += r.owner_cache_hits;
-                // Compute active zones.
-                const auto& blk = blocks[b];
-                active_zones[b].assign(blk.zone_bits.size(), 0);
-                for (size_t z = 0; z < blk.zone_bits.size(); ++z) {
-                    bool any = false;
-                    for (size_t w = 0; w < blk.words(); ++w) {
-                        if (masks[b][w] & blk.zone_bits[z][w]) { any = true; break; }
-                    }
-                    active_zones[b][z] = any;
-                }
-            }
-            return masks[b];
-        };
-
-        // Portal filter: WQR zone gate.
-        struct PortalFilter : hnswlib::BaseFilterFunctor {
-            const WQRIndex& idx;
-            std::function<const std::vector<uint64_t>&(BlockId)> getMask;
-            std::vector<bool>& ready;
-            std::vector<std::vector<uint64_t>>& active_zones;
-            PortalFilter(const WQRIndex& i,
-                         std::function<const std::vector<uint64_t>&(BlockId)> gm,
-                         std::vector<bool>& r,
-                         std::vector<std::vector<uint64_t>>& az)
-                : idx(i), getMask(std::move(gm)), ready(r), active_zones(az) {}
-            bool operator()(hnswlib::labeltype label) override {
-                const auto& pm = idx.proxy_meta[label];
-                if (!ready[pm.block]) getMask(pm.block);
-                return active_zones[pm.block][pm.zone];
-            }
-        };
-        PortalFilter portal_filter(*this, getMask, ready, active_zones);
-        proxy_graph->setEf(std::max(portal_ef, P));
-        auto portal_hits = proxy_graph->searchKnn(q, P, &portal_filter);
-        result.portal_distances = proxy_space->calls;
-
-        // Sort by (distance, proxy_label), deduplicate blocks.
-        std::vector<std::pair<float, ProxyId>> ordered;
-        ordered.reserve(portal_hits.size());
-        while (!portal_hits.empty()) {
-            ordered.emplace_back(portal_hits.top().first, portal_hits.top().second);
-            portal_hits.pop();
-        }
+        PortalFilter pf(*this, q, arm, qc, pm);
+        pgraph->setEf(std::max(portal_ef, P));
+        const uint64_t p0 = pspace->calls;
+        auto hits = pgraph->searchKnn(qvec, P, &pf);
+        qc.portal_distances += pspace->calls - p0;
+        qc.portal_returned = hits.size();
+        std::vector<std::pair<float, size_t>> ordered;
+        while (!hits.empty()) { ordered.emplace_back(hits.top().first, hits.top().second); hits.pop(); }
         std::sort(ordered.begin(), ordered.end());
-        std::vector<BlockId> selected_blocks;
-        std::unordered_set<BlockId> seen;
-        for (const auto& [dist, pid] : ordered) {
-            const BlockId b = proxy_meta[pid].block;
-            if (seen.insert(b).second) {
-                seen.insert(b);
-                selected_blocks.push_back(b);
-                if (selected_blocks.size() >= probe_blocks) break;
+        std::unordered_set<size_t> seen;
+        for (const auto& [d, label] : ordered) {
+            const size_t bi = proxies[label].block;
+            if (seen.insert(bi).second) {
+                qc.selected_blocks.push_back(bi);
+                if (qc.selected_blocks.size() >= L) break;
             }
         }
-        result.blocks_selected = selected_blocks.size();
-
-        // Local search per selected block.
-        struct LocalFilter : hnswlib::BaseFilterFunctor {
-            const Block& block;
-            const std::vector<uint64_t>& mask;
-            LocalFilter(const Block& b, const std::vector<uint64_t>& m) : block(b), mask(m) {}
-            bool operator()(hnswlib::labeltype label) override {
-                const size_t slot = label;  // HNSW label = slot index
-                return (mask[slot / 64] >> (slot % 64)) & 1;
-            }
-        };
-
+        qc.blocks_selected = qc.selected_blocks.size();
         std::priority_queue<std::pair<float, Id>> heap;
-        for (BlockId b : selected_blocks) {
-            const auto& blk = blocks[b];
-            if (!blk.graph) continue;
-            const auto& mask = getMask(b);
-            size_t popcount = 0;
-            for (size_t w = 0; w < blk.words(); ++w)
-                popcount += __builtin_popcountll(mask[w]);
-            if (popcount == 0) continue;
-            const size_t kb = std::min(k, popcount);
-            LocalFilter local_filter(blk, mask);
+        for (size_t bi : qc.selected_blocks) {
+            prepareBlock(bi, q, qc, pm);
+            const auto& blk = blocks[bi];
+            size_t pop = 0;
+            for (size_t w = 0; w < blk.words(); ++w) pop += __builtin_popcountll(pm.exact[bi][w]);
+            if (pop == 0) continue;
+            const size_t kb = std::min(k, pop);
+            LocalFilter lf(*this, bi, pm.exact[bi]);
             blk.graph->setEf(std::max(local_ef, kb));
-            auto local_hits = blk.graph->searchKnn(q, kb, &local_filter);
-            result.local_distances += local_spaces[b]->calls;
-            while (!local_hits.empty()) {
-                heap.emplace(local_hits.top().first, local_hits.top().second);
-                local_hits.pop();
+            const uint64_t l0 = blk.space->calls;
+            auto lh = blk.graph->searchKnn(qvec, kb, &lf);
+            qc.local_distances += blk.space->calls - l0;
+            ++qc.local_searches;
+            while (!lh.empty()) {
+                heap.emplace(lh.top().first, static_cast<Id>(lh.top().second));
+                lh.pop();
                 if (heap.size() > k) heap.pop();
             }
         }
-        while (!heap.empty()) {
-            result.results.emplace_back(heap.top().first, heap.top().second);
-            heap.pop();
-        }
-        std::reverse(result.results.begin(), result.results.end());
-        return result;
-    }
-
-    // Update events: V/T/M/B/R/D/I.
-    void apply_V(Id id, int64_t cat, int64_t num) {
-        const auto& loc = location[id];
-        auto& b = blocks[loc.block];
-        b.setCategory(loc.slot, cat);
-        b.setNumeric(loc.slot, num);
-        category[id] = cat;
-        numeric[id] = num;
-    }
-    void apply_T(Id id, uint64_t t) {
-        const auto& loc = location[id];
-        blocks[loc.block].setTags(loc.slot, t);
-        tags[id] = t;
-    }
-    void apply_M(Id id, NodeId dst) {
-        const auto& loc = location[id];
-        auto& b = blocks[loc.block];
-        b.removeOwnerSlot(owner[id], loc.slot, id);
-        b.addOwnerSlot(dst, loc.slot, id);
-        owner[id] = dst;
-    }
-    void apply_B(NodeId src, NodeId dst) {
-        // Freeze source subtree, then move each object.
-        std::vector<Id> to_move;
-        for (Id id = 0; id < n_items; ++id)
-            if (alive[id] && euler.contains(src, owner[id])) to_move.push_back(id);
-        for (Id id : to_move) apply_M(id, dst);
-    }
-    void apply_R(NodeId src, NodeId dst) {
-        euler.reparent(src, dst);
-        parent[src] = dst;
-    }
-    void apply_D(Id id) {
-        const auto& loc = location[id];
-        auto& b = blocks[loc.block];
-        b.setAlive(loc.slot, false);
-        b.removeOwnerSlot(owner[id], loc.slot, id);
-        b.setZone(loc.slot, 255);
-        b.graph->markDelete(id);
-        alive[id] = false;
-    }
-    void apply_I(Id id, NodeId own, int64_t cat, int64_t num, uint64_t t) {
-        // Restore or insert. For now, assume slot is available.
-        const auto& loc = location[id];
-        auto& b = blocks[loc.block];
-        if (loc.slot != SIZE_MAX && b.slot_to_id[loc.slot] == id) {
-            b.setAlive(loc.slot, true);
-            b.setCategory(loc.slot, cat);
-            b.setNumeric(loc.slot, num);
-            b.setTags(loc.slot, t);
-            b.addOwnerSlot(own, loc.slot, id);
-            b.setZone(loc.slot, 0);  // simplified: always zone 0
-            b.graph->unmarkDelete(id);
-        } else {
-            // Physical new insert: find empty slot or split.
-            size_t slot = SIZE_MAX;
-            for (size_t s = 0; s < b.capacity; ++s)
-                if (b.slot_to_id[s] == SIZE_MAX) { slot = s; break; }
-            if (slot == SIZE_MAX) throw std::runtime_error("I: no capacity");
-            b.slot_to_id[slot] = id;
-            b.id_to_slot[id] = slot;
-            b.setAlive(slot, true);
-            b.setCategory(slot, cat);
-            b.setNumeric(slot, num);
-            b.setTags(slot, t);
-            b.addOwnerSlot(own, slot, id);
-            b.setZone(slot, 0);
-            b.graph->addPoint(vectors.at(id), id);
-            location[id] = {loc.block, slot};
-        }
-        alive[id] = true;
-        owner[id] = own;
-        category[id] = cat;
-        numeric[id] = num;
-        tags[id] = t;
+        std::vector<std::pair<float, Id>> out;
+        while (!heap.empty()) { out.push_back(heap.top()); heap.pop(); }
+        std::sort(out.begin(), out.end());
+        return out;
     }
 };
 
