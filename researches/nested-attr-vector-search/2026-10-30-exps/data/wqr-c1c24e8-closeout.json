@@ -1,0 +1,106 @@
+{
+  "source_commit": "c1c24e87631c8b519caa32b2819c017d6347119a",
+  "experiment_rerun": false,
+  "raw_aggregate_available_locally": false,
+  "remote_access": "GitHub committed files; no configured SSH hosts",
+  "numbers_source": "user correction plus committed report; not independently recomputed from query CSVs",
+  "user_corrected_comparison": {
+    "wqr_mean_us": 6052,
+    "reported_baseline_mean_us": 5323,
+    "baseline_arm": "dynamic_triad C = PE-OFFLINE, not NodeANN A",
+    "wqr_distances": 5634,
+    "baseline_distances": 9440,
+    "wqr_peak_rss_reported_MB": 206,
+    "baseline_peak_rss_reported_MB": 113
+  },
+  "derived": {
+    "mean_time_increase_pct": 13.695284613939517,
+    "distance_reduction_pct": 40.31779661016949,
+    "peak_rss_ratio": 1.823008849557522,
+    "retained_extra_input_vector_bytes": 48615424
+  },
+  "sampled_L": [
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "unmeasured_interior_L": [
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15
+  ],
+  "summary_checks": [
+    {
+      "L": 1,
+      "reported_macro_recall": 0.469,
+      "reported_route_coverage": 0.337,
+      "recall_exceeds_coverage_if_same_population": true,
+      "empty_query_fraction_that_would_reconcile_under_equal_nonempty_recall": 0.1990950226244343,
+      "empty_fraction_status": "illustrative algebra, not measured; aggregation script unavailable"
+    },
+    {
+      "L": 2,
+      "reported_macro_recall": 0.574,
+      "reported_route_coverage": 0.468,
+      "recall_exceeds_coverage_if_same_population": true,
+      "empty_query_fraction_that_would_reconcile_under_equal_nonempty_recall": 0.19924812030075173,
+      "empty_fraction_status": "illustrative algebra, not measured; aggregation script unavailable"
+    },
+    {
+      "L": 4,
+      "reported_macro_recall": 0.712,
+      "reported_route_coverage": 0.64,
+      "recall_exceeds_coverage_if_same_population": true,
+      "empty_query_fraction_that_would_reconcile_under_equal_nonempty_recall": 0.19999999999999987,
+      "empty_fraction_status": "illustrative algebra, not measured; aggregation script unavailable"
+    },
+    {
+      "L": 8,
+      "reported_macro_recall": 0.878,
+      "reported_route_coverage": 0.848,
+      "recall_exceeds_coverage_if_same_population": true,
+      "empty_query_fraction_that_would_reconcile_under_equal_nonempty_recall": 0.19736842105263172,
+      "empty_fraction_status": "illustrative algebra, not measured; aggregation script unavailable"
+    }
+  ],
+  "coverage_equality_counterexample": {
+    "GT": [
+      "a"
+    ],
+    "block_of_a": "A",
+    "selected": [
+      "A",
+      "B"
+    ],
+    "reference": [
+      "A",
+      "C"
+    ],
+    "same_GT_coverage": true,
+    "same_block_set": false
+  },
+  "new_split_boundary_probe": {
+    "source_commit": "c1c24e87631c8b519caa32b2819c017d6347119a",
+    "source_header_git_blob": "5c7ebd3e71354008367ac76e6ddb7b1213a482e2",
+    "header_unmodified": true,
+    "compile_flag": "-D_GLIBCXX_ASSERTIONS",
+    "initial_block_live_and_capacity": 2048,
+    "incoming_id": 2048,
+    "child_counts": [1024, 1025],
+    "child_capacities_in_source": [1024, 1024],
+    "observed_exit_code": 134,
+    "observed_failure": "std::vector<size_t>::operator[] assertion __n < this->size()",
+    "reported_E0_rerun": false,
+    "E1_performance_rerun": false,
+    "fix_applied": false,
+    "E1_impact": "check existing update logs for split triggers; not presumed"
+  },
+  "new_ann_runs": 0,
+  "finite_invariant_cases": 1296
+}
