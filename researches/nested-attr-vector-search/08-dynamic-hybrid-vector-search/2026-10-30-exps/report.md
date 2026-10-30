@@ -161,3 +161,11 @@ SIFT full128条件box新增12.59%/13.31%，gap再增0.33%/0.35%；gap单独超�
 
 ![closure六臂校准质量与端到端成本](../../2026-10-30-exps/data/closure-server-run1/figures-v2/calibration-quality-cost.png)
 
+## 12. 同日第5轮追加：ef15/20固定小预算
+
+按用户纠偏，正常查询预算改为k附近的efSearch=15/20；算法、候选池、骨架、停止规则、scope与质量定义均未改。完整 [小预算报告](../../2026-10-30-exps/closure-small-ef-report.md)、[复现](../../2026-10-30-exps/experiments/closure-small-ef-reproduction.md)、[48次原始结果与聚合](../../2026-10-30-exps/data/closure-small-ef-run1/) 已保存；5fc1be3全部结果保留。
+
+结论：A的macro 0.995～1.000、均值0.280～0.412ms；H仅0.934～0.953、5.716～12.007ms。同预算H慢14～41倍且Recall更低，小预算下没有有竞争力的质量—时间点。H/R同ef的expanded仍几乎相同；`E<ef`强制全scope占非空查询20.0%～51.9%、占总展开76.9%～84.8%（3627条强制行零违反）；U同样慢，编译占e2e 79.8%～89.3%，说明主要成本在每展开源的池编译与强制遍历，不是LCA独有。
+
+旧CSV归因（只读）在同一提交：`termination-attribution-7654f1e.json`，`all_forced_property_checks_pass=true`。本轮无Dynamic、无维护包络、无扩大N；更新与维护成本仍记未测。
+

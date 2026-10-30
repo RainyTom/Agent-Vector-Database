@@ -1,6 +1,15 @@
 # 上游AI阅读清单
 
-## 最新：7654f1e closure真实数据六臂static
+## 最新：ef15/20固定小预算（用户纠偏后的正常查询预算）
+
+先读 [小预算完整报告](../../2026-10-30-exps/closure-small-ef-report.md)、[复现命令](../../2026-10-30-exps/experiments/closure-small-ef-reproduction.md)、[48次原始结果与聚合](../../2026-10-30-exps/data/closure-small-ef-run1/)。算法与网格未改，固定k=10、efSearch=15/20，A/U/R/H×3次串行。
+
+- **结论**：A的macro 0.995～1.000、0.28～0.41ms；H仅0.934～0.953、5.7～12.0ms。同预算H比A慢14～41倍且Recall更低，不构成有竞争力的质量—时间点。
+- **机制**：[H/R expanded配对](../../2026-10-30-exps/data/closure-small-ef-run1/comparisons.json)在同ef下仍几乎相同；[强制遍历与编译占比](../../2026-10-30-exps/data/closure-small-ef-run1/aggregate.json)显示`eligible<ef`占非空查询20%～52%、占总展开77%～85%，U同样慢（编译占80%～89%）。
+- **旧CSV归因**：[termination-attribution](../../2026-10-30-exps/data/closure-small-ef-run1/termination-attribution-7654f1e.json) 只读分析大预算结果，`all_forced_property_checks_pass=true`。
+- 边界：两数据各200条旧query、一个快照；SIFT确认仅16个非空qidx；无Dynamic、无维护包络、无扩大N，更新成本仍记未测。
+
+## 上一轮：7654f1e closure真实数据六臂static
 
 先读 [服务器完整报告](../../2026-10-30-exps/closure-server-report.md)、[冻结任务书](../../2026-10-30-exps/closure-server-plan.md)、[实际复现](../../2026-10-30-exps/experiments/closure-server-reproduction.md)。原核心和调度未改，WIKI/SIFT路径及SHA沿用502753c，完成72次计时、4次独立GT和2次机制审计。
 
