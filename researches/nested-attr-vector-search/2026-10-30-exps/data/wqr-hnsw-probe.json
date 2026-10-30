@@ -1,0 +1,15 @@
+{
+  "kind": "finite_real_hnsw_mechanism_probe",
+  "hnsw_revision": "ca426729609b3221563047ceb269cc1213e0d376",
+  "block_gate_squared_distance": 900,
+  "zone_gate_squared_distance": 1,
+  "routing_counterexample_squared_distance": 1,
+  "counterexample_gt_squared_distance": 0,
+  "all_blocks_recovers_counterexample": true,
+  "deleted_source_proxy_retained": true,
+  "undersampled_distinct_blocks": 1,
+  "oversampled_distinct_blocks": 2,
+  "empty_query_masks_prepared": 2,
+  "empty_query_portal_distance_calls": 8,
+  "performance_claim": false
+}

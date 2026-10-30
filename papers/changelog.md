@@ -200,3 +200,9 @@
 - 新增Memento、Grafite、FlexFlood、Qd-tree、F-IVM、DBSP六条C类可迁移工作，按自身问题归入data-indexing(4)/incremental-views(2)，不是vector join或ANN论文。总库42工作、30关系；Memento→Grafite为原文明示比较和benchmark复用，未按研究者相似推断继承。
 - 每篇保存原文reader提取、日期化文本SHA、分析章节/版本、完整作者与未核边界。Memento采用v3不混v1定理；FlexFlood为workshop；F-IVM区分2018前身及2023在线/2024卷期；DBSP正式五作者不能被arXiv四作者覆盖。
 - 新增[具体迁移研究](../researches/nested-attr-vector-search/2026-10-30-exps/cross-domain-index-transfer.md)及7组已执行有限语义构造，未运行作者实现或新增真实ANN实验。组件替换不是已确认新颖性，未实现不称实验失败；服务器7756064分支未合并。
+
+## 2026-10-30 WQR具体设计与多代表路由前序
+
+- 新增《Unleashing Graph Partitioning for Large-Scale Nearest Neighbor Search》，正式PVLDB2025，完整四作者顺序、DOI、原文提取与文本SHA；核§1–3.2、§4.3–4.5，不冒称核完hRt证明或复现作者实现。总库43工作/30关系；无新的作者引用边，避免把项目类比当原文关系。
+- Curator总记录补强§4.2局部/延迟求值说明；该能力本库更早已有，不能在后续草案中遗漏后再声称自身独有。相关机制综述增加勘误。
+- [WQR](../researches/nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md)冻结资格到proxy支持域的投影、搜索与动态维护；交付完整服务器实施合同。实际运行120960次mask比较、135次额外cut/link及指定hnswlib有限路由探针；不作真实数据性能或领域首次主张。

@@ -1,0 +1,20 @@
+{
+  "date": "2026-10-30",
+  "paper_records": 43,
+  "relations": 30,
+  "new_paper_text_sha_valid": true,
+  "relative_links_checked": 20,
+  "mask_comparisons": 120960,
+  "mask_mismatches": 0,
+  "valid_cut_link_moves": 135,
+  "real_hnsw_probe_executed": true,
+  "real_dataset_ann_experiments": 0,
+  "production_wqr_implemented": false,
+  "sha256": {
+    "researches/nested-attr-vector-search/2026-10-30-exps/experiments/wqr_hnsw_probe.cpp": "b3fd79b2612f65561d45d47473ddcc2b51a7204f1de09174afdf2412befae44d",
+    "researches/nested-attr-vector-search/2026-10-30-exps/experiments/wqr_semantics.py": "08267b0d35dcd28f8cc51c19f65b7d3230905edfe7f80b902e207a84fd36a54b",
+    "researches/nested-attr-vector-search/2026-10-30-exps/data/wqr-hnsw-probe.json": "84b3dab3849f18b3422dfe62ef22b21a522cf5acb3d7b86bda2ee9223b69996d",
+    "researches/nested-attr-vector-search/2026-10-30-exps/data/wqr-semantics.json": "5a11a65026d38ac79de4ac773f3d666abd0e73cef02824b0d6d6effa84582d5c"
+  },
+  "limits": "有限机制与数据结构语义验证；不认证性能、新颖性或最坏ANN召回。"
+}

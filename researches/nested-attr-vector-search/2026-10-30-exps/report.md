@@ -2,6 +2,8 @@
 
 **后续范围修正：** 用户指出不应排除Trie/bitmap等已有组件，实验不能仅限条件几何证书。最新安排见本文末尾§10及[跨机制族方案](index-mechanism-portfolio.md)。下文E0/E1的事实与归因建议保留，但只适用于证书族，不再是所有索引研究的全局前置条件。
 
+**当前执行入口：** 用户要求本地制定完整方案、服务器只实施。现为[WQR冻结索引/搜索/更新规格](wqr-index-spec.md)与[实施任务书](wqr-server-prompt.md)，见末尾§12。此前E0/E1和多族筛选为历史研究过程，不再要求下游自行选择路线。
+
 日期：2026-10-30。审查对象为服务器固定提交[7756064](https://github.com/RainyTom/Agent-Vector-Database/commit/7756064)。本报告属于上游复核，不覆盖08方向服务器当日报告，不重跑其已报告失败，不声称完成新ANN实验。
 
 ## 1. 决定先行
@@ -193,3 +195,13 @@ python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/202
 - **实际运行**：`python3 researches/nested-attr-vector-search/2026-10-30-exps/experiments/cross_domain_semantics.py`。7组有限语义构造，其中26个AND/OR可放行组合无误拒；发现并明确同对象合取、NOT反转、MOVE旧scope、重复坐标及top-k删除逆的边界；共享局部selector与直接ID交一致。详见[data/cross-domain-semantics.json](data/cross-domain-semantics.json)。
 - **结果限制**：新增真实数据性能实验0、ANN实现0、作者系统运行0。有限构造不是filter实现认证或浮点证明。WIKI/SIFT大数组本机缺失，不制造端到端数字。
 - **下一步**：服务器先做一次实际访问轨迹机会分解，再选最多两个机制不同的小原型；同质量、同内存控制和所有维护债务计费。换组件/场景不自动新颖，前序存在也不否决受限探索。
+
+## 12. 同日续轮：完成具体WQR设计，而非继续交付候选方向
+
+- **目标与决定**：由本地研究端冻结一个索引方案，下游只负责C++实施。WQR将完整同对象资格投影到固定proxy支持域，以其非空性控制多代表图的结果准入；同一非空块内不同proxy可因谓词不同而激活。目录/属性变化与几何结构解耦，不以回收阈值作为核心。
+- **完整交付**：[索引规格](wqr-index-spec.md)、[服务器提示词](wqr-server-prompt.md)、[机器合同](data/wqr-contract.json)。固定构建、精确mask电路、搜索调用、L与4L去重、四种tag、V/T/M/B/R/D/I、proxy生命周期、split/墓碑/slot、成本与五项对照。没有将算法选择留给服务器。
+- **前序纠正**：多代表→统一HNSW→局部HNSW骨架已有PVLDB2025直接前序；Curator v3 §4.2已明确局部/延迟谓词求值，且本库更早已有记录。新增1篇B类路由论文，总库43/30；不把基础骨架或lazy求值单独认作新贡献。
+- **已执行语义**：`wqr_semantics.py`完成120960次精确mask对独立scalar语义比较，0差异；覆盖现行全部更新事件类型与135次额外合法Euler cut/link，每次核49对祖先关系；R无对象owner重写。有限运行不是全称证明。
+- **已执行C++机制**：`wqr_hnsw_probe.cpp`使用指定revision真实hnswlib与公共RawL2Space。正例BlockGate/WQR返回平方距离900/1；代表混叠反例WQR仍返回1而GT0，L=2恢复；源对象删除后独立proxy保留有效。2/8个proxy得到1/2块；空query仍准备2块mask并算8次proxy距离。上述全部是合成机制构造，不是数据集性能或速度倍数。
+- **构建情况**：编译/运行成功，保留第三方header warnings。目标deps目录为空，使用另一现有副本，核指定HEAD及headers无修改；未运行作者GP-ANN/Curator实现。命令与原日志见[复现](experiments/wqr-reproduction.md)。
+- **限制与下一步**：无WIKI/SIFT端到端，无完整生产C++WQR；现有数组本机不可用。服务器按冻结规格实施，用NodeANN及相同图GeometryRoute/BlockGate/WQR/Eager-WQR分离机制，再用exact-proxy离线归因区分表示损失、portal ANN损失和local ANN损失。不由服务器自行换索引；原型失败回传本地修订。

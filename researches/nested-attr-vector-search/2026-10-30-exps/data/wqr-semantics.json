@@ -1,0 +1,21 @@
+{
+  "kind": "finite_executable_semantics",
+  "mask_comparisons": 120960,
+  "mask_mismatches": 0,
+  "events": [
+    "initial",
+    "V",
+    "T",
+    "M",
+    "B",
+    "R",
+    "D",
+    "I-restore",
+    "I-reserve"
+  ],
+  "additional_valid_cut_link_moves": 135,
+  "ancestor_pairs_per_topology_check": 49,
+  "move_object_owner_rewrites": 0,
+  "common_witness_counterexample_rejected": true,
+  "performance_claim": false
+}

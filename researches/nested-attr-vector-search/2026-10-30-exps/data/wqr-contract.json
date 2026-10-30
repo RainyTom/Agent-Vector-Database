@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-30",
+  "name": "WQR",
+  "status": "algorithm_frozen; finite probes executed; production C++ and real-data performance not yet implemented/measured",
+  "spec": "researches/nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md",
+  "server_prompt": "researches/nested-attr-vector-search/2026-10-30-exps/wqr-server-prompt.md",
+  "problem": "external hierarchy AND scalar/category/tag filter; original FP32 squared-L2 top-k",
+  "routing_predicate": "any(ExactMask(block, query) & ZoneMask(proxy))",
+  "proxy_source_liveness": "independent immutable routing-vector copy; source deletion does not delete proxy",
+  "defaults": {
+    "block_target": 1024,
+    "proxies_per_block": 4,
+    "M": 16,
+    "efConstruction": 200,
+    "seed": 100,
+    "local_ef": 1024,
+    "k": 10,
+    "dead_ratio": 0.2
+  },
+  "sweep": {
+    "probe_blocks": "unique powers of two from 1 through C, include C",
+    "portal_ef": [
+      "max(64,4L)",
+      "max(256,4L)"
+    ]
+  },
+  "query_calls": "one portal search with min(4L,R) result capacity, then at most L distinct local searches",
+  "no_hidden_retries": true,
+  "hnsw_revision": "ca426729609b3221563047ceb269cc1213e0d376",
+  "supported_events": [
+    "Q",
+    "V",
+    "T",
+    "M",
+    "B",
+    "R",
+    "D",
+    "I"
+  ],
+  "not_added": [
+    "embedding replacement",
+    "MERGE conflict semantics",
+    "MVCC",
+    "new quantization",
+    "RL",
+    "new graph pruning"
+  ],
+  "quality": {
+    "macro_recall_min": 0.999,
+    "pair_recall_min": 0.999,
+    "invalid_max": 0,
+    "duplicate_max": 0,
+    "state_violations_max": 0,
+    "scope": "run-level, not per-query exactness"
+  },
+  "arms": [
+    "NodeANN",
+    "GeometryRoute",
+    "BlockGate",
+    "WQR",
+    "Eager-WQR control"
+  ],
+  "failure_attribution": [
+    "implementation error",
+    "proxy representation loss",
+    "portal HNSW loss",
+    "local HNSW loss",
+    "qualification cost",
+    "complete maintenance/memory cost"
+  ]
+}

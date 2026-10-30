@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-30",
+  "url": "https://www.vldb.org/pvldb/vol18/p1649-gottesbueren.pdf",
+  "version": "PVLDB18(6),1649–1662,2025",
+  "sha256_text_utf8": "455a3eb686b2b4febe721f7da0926a05a24b308b0915acdd1f802b2a3cbbbe0e",
+  "pdf_bytes_archived": false,
+  "author_code_executed": false,
+  "sections_read": [
+    "§1–3.2",
+    "§4.3–4.5"
+  ],
+  "theory_boundary": "hRt完整LSH证明本轮未逐项核验；不能转给kRt/HNSW或WQR。"
+}

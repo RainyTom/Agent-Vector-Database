@@ -250,3 +250,7 @@
 ## 2026-10-30 跨方向属性索引与IVM
 
 直接vector similarity join/inner-product similarity join术语范围检索后，转查动态range filters、learned multidimensional index和factorized IVM。新增Memento/Grafite/FlexFlood/Qd-tree/F-IVM/DBSP六个邻近问题C类工作，不将关系join或普通range search写成几何vector join。详见[迁移研究与边界](../nested-attr-vector-search/2026-10-30-exps/cross-domain-index-transfer.md)。本轮只执行有限语义构造，无新向量实验；近期相关工作覆盖不穷尽。
+
+## 2026-10-30 资格投影与代理图具体方案
+
+直接join/signature范围检索后，核多代表分区ANN、Curator/SIEVE的局部资格与路由接口。新增PVLDB2025图分区/多代表路由B类工作，不当作vector join。交付[WQR冻结方案](../nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md)：完整对象资格到proxy支持域的存在性投影，非新几何join问题。本轮有限语义和真实hnswlib路径已运行，真实数据性能未测；其他新检索近邻工作仍待核。

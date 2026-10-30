@@ -24,6 +24,7 @@
 - 几何 hierarchical k-means base tree 存一份向量；各 label 复用分区但以 buffer 容量决定停止深度，稀疏 label 在较高节点聚合。这不是每 label 复制完整 ANN。
 - Bloom 的不变量是无假阴性；假阳性只多走树，external node 无 buffer 不会产生结果。label insertion/deletion 触发 buffer 下沉/合并；删除后**根据子节点及本地 buffer 递归重算 Bloom**，直到无变化（918–934）。所以“EMA OR 不可回收→本项目首次可回收摘要”不能成立。
 - §4.2 明确 AND/OR/NOT 任意复杂谓词→外部执行器提供 sorted qualified IDs→按连续路径编码二分构造临时 virtual-label tree。§4.2 后半明确缓存热点临时索引或永久集成并复用更新例程。因此 `stage1:36`“复杂布尔索引级仅 ACORN”若无狭义定义就是错误；它在输出合格ID后直接构造索引内加速结构，不只是 callback。
+- **2026-10-30具体设计复核补注：** 同节本地673–684行明确提出只在预计搜索子树求值谓词/构造临时索引；本库更早审计已有记录。不能将算法的sorted-ID输入强化成“必须先全局枚举”，也不能独占lazy/local求值思想。WQR需比较支持域proxy准入接口，而非以此作虚假差异。
 - §5 局部重建以 U_n/|P_n| 阈值触发，并原子替换；这不等价于全局快照/MVCC证明。几何树不是语义 taxonomy，但语义层级不是排除其基线资格的理由。
 - 查询使用 beam+best-first，score 为质心距离减加权平均半径；buffer 不再改进结果集时停（599–640），是启发式，不是 admissible lower bound。低维/高维质心失败并未自动否定这整个方法空间。
 - 对 C1：层级 coarse-to-fine 搜索、稀疏区域升层聚合已有；新贡献需指出语义树不能自由重分区时如何仍获得可校准路由。对 C3：需同时打败“OR 单调＋周期重算”和 Curator 式局部重算，不能只选永不回收的弱基线。对 C7：热点缓存/预物化直接重合，单独做不够。

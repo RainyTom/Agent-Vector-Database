@@ -1,0 +1,29 @@
+In file included from codes/directory-aware-vector-attr-search/src/raw_l2_space.h:14,
+                 from researches/nested-attr-vector-search/2026-10-30-exps/experiments/wqr_hnsw_probe.cpp:4:
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswlib.h: In member function ‘virtual bool hnswlib::BaseFilterFunctor::operator()(hnswlib::labeltype)’:
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswlib.h:274:48: warning: unused parameter ‘id’ [-Wunused-parameter]
+  274 |     virtual bool operator()(hnswlib::labeltype id) { return true; }
+      |                             ~~~~~~~~~~~~~~~~~~~^~
+In file included from codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswlib.h:459:
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<typename hnswlib::AlgorithmInterface<dist_t>::DistanceLabelPriorityQueue> hnswlib::HierarchicalNSW<dist_t>::searchKnnNoExceptions(const void*, size_t, hnswlib::BaseFilterFunctor*) const [with dist_t = float; typename hnswlib::AlgorithmInterface<dist_t>::DistanceLabelPriorityQueue = std::priority_queue<std::pair<float, long unsigned int>, std::vector<std::pair<float, long unsigned int>, std::allocator<std::pair<float, long unsigned int> > >, std::less<std::pair<float, long unsigned int> > >; size_t = long unsigned int]’:
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1416:5:   required from here
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1440:30: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]
+ 1440 |                     if (cand < 0 || cand > max_elements_)
+      |                         ~~~~~^~~
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::addPointWithLevel(const void*, hnswlib::labeltype, int) [with dist_t = float; hnswlib::labeltype = long unsigned int]’:
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1047:40:   required from ‘hnswlib::Status hnswlib::HierarchicalNSW<dist_t>::addPointNoExceptions(const void*, hnswlib::labeltype, bool) [with dist_t = float; hnswlib::labeltype = long unsigned int]’
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1037:12:   required from here
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1366:38: warning: comparison of unsigned expression in ‘< 0’ is always false [-Wtype-limits]
+ 1366 |                             if (cand < 0 || cand > max_elements_)
+      |                                 ~~~~~^~~
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h: In instantiation of ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::mutuallyConnectNewElement(const void*, hnswlib::tableint, std::priority_queue<std::pair<dist_t, unsigned int>, std::vector<std::pair<dist_t, unsigned int> >, CompareByFirst>&, int, bool) [with dist_t = float; hnswlib::tableint = unsigned int]’:
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1393:21:   required from ‘hnswlib::StatusOr<unsigned int> hnswlib::HierarchicalNSW<dist_t>::addPointWithLevel(const void*, hnswlib::labeltype, int) [with dist_t = float; hnswlib::labeltype = long unsigned int]’
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1047:40:   required from ‘hnswlib::Status hnswlib::HierarchicalNSW<dist_t>::addPointNoExceptions(const void*, hnswlib::labeltype, bool) [with dist_t = float; hnswlib::labeltype = long unsigned int]’
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:1037:12:   required from here
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswalg.h:539:21: warning: unused parameter ‘data_point’ [-Wunused-parameter]
+  539 |         const void *data_point,
+      |         ~~~~~~~~~~~~^~~~~~~~~~
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswlib.h: At global scope:
+codes/vector-join-reproduction/build/_deps/hnswlib-src/hnswlib/hnswlib.h:95:13: warning: ‘bool AVX512Capable()’ defined but not used [-Wunused-function]
+   95 | static bool AVX512Capable() {
+      |             ^~~~~~~~~~~~~

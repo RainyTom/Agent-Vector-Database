@@ -67,3 +67,12 @@
 - 核读Memento2408.05625v3、Grafite2311.15380v2、FlexFlood2411.09205v2、Qd-tree作者SIGMOD2020 PDF、F-IVM正式期刊正文、DBSP正式PVLDB2023 PDF的相关章节。保存全文提取和文本SHA；作者代码未运行。FlexFlood workshop身份另核官方accepted papers页；Memento/Grafite正式书目另核Crossref。
 - 具体存储/查询/更新、保证条件、退化、最近前序与实验见[综合报告](../2026-10-30-exps/cross-domain-index-transfer.md)。本地执行7组语义构造，不是新WIKI/SIFT实验；不能把range filter误差与合取共现歧义混为一谈。
 - 新增6工作、1关系，总库42/30；未合并服务器分支。覆盖限制：NeuroCuts仅由Qd-tree引用链确认；其他新近range filter/Oasis/Proteus及布局工作未全部深读；FlexFlood后续正式venue未核。方案级最近前序、作者代码固定commit/许可证兼容与真实共同见证机会待补，不宣称穷尽或新颖性已通过。
+
+## 2026-10-30 具体WQR方案与最近同构核查
+
+- 用户要求本地完成设计，下游只实施。先核论文库、现行源码与三臂语义；LSP无可用C++server，按已定位源码读取，不改现有执行器。
+- 先搜`"vector similarity join" "signature" OR "inner-product similarity join" "filter"`，再检索conjunctive/bit-sliced signatures、filtered centroids/bitmap routing、vector partition pruning representatives；旧signature机制仅作查重线索，不将哈希签名换名立项。
+- 核Curator v3 §4.2与SIEVE v2 §2.2/§6，新增PVLDB2025多代表图路由直接前序。Curator的local/lazy早有本地证据，修正近期草案的过强差异；本方案最终使用zone支持域而非整块非空激活。
+- 最终结构与证明/退化/全部当前事件见[WQR冻结规格](../2026-10-30-exps/wqr-index-spec.md)。初稿对抗审查中的“删源对象须重选portal”被独立proxy生命周期规则取代；完整记录保留，不能混用旧草案。
+- 已运行bitplane/Euler有限枚举与真实hnswlib proxy/local路径，正例和失败反例均保留；未运行WIKI/SIFT。新检索候选Learning Cluster Representatives for ANN、Cracking Vector Search Indexes、Filtered Vector Search in a Disaggregated Lakehouse未核全文，待补，不宣称穷尽。
+- 总库43/30，不合并服务器7756064。结构性新颖性只认已读前序间的具体组合差异；“首次”和端到端收益仍未证实。下游不再承担方案选择。
