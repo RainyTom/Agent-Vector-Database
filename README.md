@@ -7,7 +7,7 @@
 | 用途 | 文件 |
 |---|---|
 | **向量数据库知识与学习路径** | [researches/vector-database-knowledge/README.md](researches/vector-database-knowledge/README.md) |
-| **当前层级过滤实验交付** | [子树闭包方案与服务器任务书](researches/nested-attr-vector-search/2026-10-30-exps/closure-server-plan.md) |
+| **当前层级过滤实验交付** | [efSearch15/20固定重跑代码与提示词](researches/nested-attr-vector-search/2026-10-30-exps/closure-small-ef-server-prompt.md) |
 | **项目移交与服务器迁移** | [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md) |
 | **Planner/Executor 协议** | [coordination/README.md](coordination/README.md) |
 | 项目状态（机器可读） | [coordination/state.json](coordination/state.json) |

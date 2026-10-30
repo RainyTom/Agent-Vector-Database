@@ -313,3 +313,12 @@ python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/202
 - **下一实验**：真实WIKI/SIFT默认六臂×三个ef校准及三次冻结确认，主要看同质量e2e和实际expanded。只对出现稳定效率优势与真实H/R差异的数据放行短动态及独立合成维护包络；内存不作淘汰门。门槛只是资源调度，不是论文充分条件。
 - **交付**：[完整任务书与服务器提示词](closure-server-plan.md)、[结构化证据及源码/二进制SHA](data/closure-local-check.json)、[实际日志](experiments/closure-local-check.log)。生成fixture的源码保留在`tests/test_closure.py`，临时输入/输出自动清理。没有声称真实数据已胜出、并发正确或新颖性已确认；本轮复用既有RNSG前序分析，未新增论文记录。
 
+## 20. 同日续轮：接收5fc1be3、定位遍历下限并交付小ef重跑
+
+- **接收结果**：完整核读服务器报告、复现、聚合/失败与打包代码，接受static质量/效率负结果，不重跑确认。WIKI H确认未达原质量门；SIFT样本内同质量效率差，16个非空确认qidx不足覆盖另计；真实Dynamic/维护仍未测。
+- **源码推导**：当前合法堆要求ef个合格结果才启用距离早停，若E<ef，连通次序骨架使expanded=distance=scope。真实占比尚缺本机raw，不能当全部归因；WIKI漏ID8122的query E8511>1024不属此分支。equal expanded不证明访问集合/顺序相同。
+- **聚合新事实**：U无见证规则时编译仍占WIKI80.26%/SIFT88.15%，H分别85.36%/90.89%；所有新臂每展开源仍检查64池候选。动态rank与访问侧编译是共同成本，不只LCA。见[派生数据](data/closure-5fc1be3-attribution.json)。
+- **用户纠偏**：正常工作点应优先k附近小查询ef。保持efConstruction200/M16/池64/构建期取池ef200，在线k10、efSearch15/20。当前hnswlib ef即efSearch，不能混成两个查询参数；原`.999`选参结果保留，不作为小预算自动淘汰/升预算依据。
+- **实际本地执行**：原C++48对象、E4<ef8/k3，五臂保留边数不同但expanded/distance均48，空GT亦如此；不是服务器失败重跑。新脚本用真实A/U/R/H×15/20×3在80对象fixture完成24次静态计时流程、每次180Q，GT距离0、不选参/不Dynamic；输入快照变更拒绝、smoke不能冒充真实输入。证据见[data/closure-budget-probe.json](data/closure-budget-probe.json)、[小预算流水线](data/closure-small-ef-local-check.json)、[离线工具](data/closure-5fc1be3-local-check.json)。
+- **交付**：仅新增代码提交`e0cd9f6`，包含[固定小ef重跑提示词](closure-small-ef-server-prompt.md)、[完整归因](closure-5fc1be3-review.md)、两脚本、性质探针与小证据。服务器在5fc1be3分支单独cherry-pick即可，不整分支合并知识库。真实新WIKI/SIFT运行0、核心变更0；下一步先读旧CSV，再48次小预算固定重跑，不改停止/扩池/加入口或扩大N。
+

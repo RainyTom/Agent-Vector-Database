@@ -50,3 +50,12 @@ C++距离复用仓库`RawL2Space`，编译`g++ -O2 -std=c++17 -Wall -Wextra`，�
 ## 下一步
 
 先在一次性、固定版本环境做pgvector EXPLAIN与迭代过滤小实验，再做两会话可见性；并在服务器结果返回后将新的机制/失败归因追加进知识页。按[队列](../learning-log.md)推进，不预先填写未执行结果。
+
+## 同日续学：查询预算与合法结果堆
+
+服务器5fc1be3结果到达后新增[学习记录](../learning-log.md#2026-10-30续学从5fc1be3负结果学停止规则与预算口径)与[评测知识续节](../evaluation-and-cost.md#续学查询预算应靠近工作点不能由极高质量门单向驱动)。核固定hnswlib参数说明及项目源码：efConstruction与在线ef独立，hnswlib ef即efSearch；当前全scope合法堆在E<ef时不能距离早停，连通骨架将导致全展开。
+
+实际在原C++48对象探针执行E4<ef8及空GT，五臂编译边数不同但expanded/distance均48；另完成小预算A/U/R/H×15/20×3的24次构造输入回放，每次180Q。见[性质输出](../../nested-attr-vector-search/2026-10-30-exps/data/closure-budget-probe.json)及[流水线证据](../../nested-attr-vector-search/2026-10-30-exps/data/closure-small-ef-local-check.json)。不是原真实失败重跑或新的WIKI/SIFT结果。
+
+按用户纠偏已交付[服务器小ef固定重跑](../../nested-attr-vector-search/2026-10-30-exps/closure-small-ef-server-prompt.md)，保留全部Recall—time点，不再为`.999`自动升到1024。历史质量/效率失败与未测Dynamic不改写；同预算不自动等于同质量，真实E<ef比例待只读原CSV统计。
+

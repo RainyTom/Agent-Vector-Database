@@ -91,3 +91,12 @@ $$T_{kernel}=T_{build}+\sum_jT_{query,j}+\sum_iT_{update,i}+T_{rebuild/compact,n
 2. 读一份现有CSV，指出其GT口径、重复query、空查询、时间单位、距离计数覆盖层次。
 3. 从一个维护日志找出压实究竟计在哪个操作；找不到时写未核实，不填0。
 4. 下一轮可做一个固定版本系统的EXPLAIN与迭代过滤实测；本轮未启动DB，也未运行ANN-Benchmarks/VIBE。
+
+## 续学：查询预算应靠近工作点，不能由极高质量门单向驱动
+
+服务器[闭包static结果](https://github.com/RainyTom/Agent-Vector-Database/blob/5fc1be3/researches/nested-attr-vector-search/2026-10-30-exps/closure-server-report.md)之后，用户指出正常实验常先看ef20或efSearch=k+5。研究端接受：当前k10时先固定查询ef15/20，建图efConstruction200保持独立；hnswlib的ef/setEf就是efSearch，不是两个旋钮。
+
+新的[小预算实验](../nested-attr-vector-search/2026-10-30-exps/closure-small-ef-server-prompt.md)保留每点实际Recall—time，不再用`.999`筛小预算、自动升到1024，亦不更换质量线事后宣布历史胜出。同预算耗时比不等于同质量加速；低Recall点是取舍数据，不是语义错误。
+
+对“同ef”还需核物理语义：本方案是整个scope的合法堆宽度，NodeANN是多个direct-owner局部图分别搜索再合并。相同数字不代表相同总访问。源码表明E<ef时当前结构会全scope遍历；已在48对象原C++小探针执行，真实占比仍待原CSV分层。少边、连通和heredity都不能替代少展开证明。完整[源码归因](../nested-attr-vector-search/2026-10-30-exps/closure-5fc1be3-review.md)。
+

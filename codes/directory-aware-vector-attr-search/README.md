@@ -196,3 +196,20 @@ python scripts/run_closure.py \
 
 完整算法、预测、失败归因、计时边界和可复制服务器指令见[closure-server-plan.md](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-server-plan.md)。本地3项真实程序回归通过，不代表已赢WIKI/SIFT或新颖性已获确认。`neighborhood_filter.h`原样来自502753c，仅复用数据/谓词合同；其静态Qualifier不用于新索引动态状态。
 
+### 当前执行：固定efSearch15/20，不再自动升预算
+
+服务器5fc1be3已完成上述大预算static，未放行Dynamic。用户要求正常小查询预算，新入口保持原核心/候选池/停止规则及建图efConstruction200，只重跑A/U/R/H×查询ef15/20×三次；k10，复用原始200条Q和初始快照：
+
+```bash
+python scripts/analyze_closure_termination.py \
+  --raw ../../work/closure/static-7654f1e-run1 \
+  --out ../../work/closure/termination-7654f1e-run1.json
+python scripts/run_closure_small_ef.py \
+  --previous-raw ../../work/closure/static-7654f1e-run1 \
+  --out ../../work/closure/small-ef-15-20-run1 --cpu 2
+```
+
+生产模式重新构建原程序，校验原始11份源码blob、数据/trace SHA，独立GT后串行轮换。保留所有Recall—time点，不按`.999`筛选或补高ef，不自动调用Dynamic。两数据集共48次计时、2次GT；旧qidx分组另列，不冒称新的独立测试集。
+
+源码可确定E<ef时合法堆填不满，加上次序骨架会遍历全scope；工具只读旧CSV量化真实占比。该现象不是全部query归因，尤其WIKI漏召回query的E8511>1024。完整[服务器提示词](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-small-ef-server-prompt.md)及[归因](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-5fc1be3-review.md)。代码仅新增提交`e0cd9f6`可单独cherry-pick，不要求合并知识库文档。
+

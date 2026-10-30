@@ -14,7 +14,7 @@
 
 **本地跨方向研究入口：** [6篇原始工作与4类具体迁移方案](../../2026-10-30-exps/cross-domain-index-transfer.md)，包括Memento/Grafite动态/静态范围过滤、Qd-tree谓词布局、F-IVM依赖键共享视图、FlexFlood低维属性索引，DBSP仅作delta语义基础。优先做访问轨迹的边际空/共现空/重复准备分解；不是要求服务器先实现六套系统，也不撤销其他机制族。
 
-**当前研究与执行入口：** 服务器[502753c](https://github.com/RainyTom/Agent-Vector-Database/blob/502753c/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/neighborhood-report.md)已完成NPI E1/E2：取得成本胜普通二跳，但同质量e2e不及真实NodeANN，E3未跑。用户随后明确授权本地实现；现交付[子树闭包可恢复邻接的完整任务书/服务器提示词](../../2026-10-30-exps/closure-server-plan.md)、[方案推导](../../2026-10-30-exps/hierarchy-closure-design.md)、[真实C++及脚本验证证据](../../2026-10-30-exps/data/closure-local-check.json)。新方案已实现且小规模语义/流水线验证通过，WIKI/SIFT性能仍待服务器测量；不把旧“只要方案、不交代码”当成当前任务限制。
+**当前研究与执行入口：** 服务器[5fc1be3报告](https://github.com/RainyTom/Agent-Vector-Database/blob/5fc1be3/researches/nested-attr-vector-search/2026-10-30-exps/closure-server-report.md)确认H改变编译邻接但同ef展开几乎不变；WIKI确认质量不足，SIFT样本内效率负结果并有独立覆盖限制，Dynamic未跑。研究端完成[源码/聚合归因](../../2026-10-30-exps/closure-5fc1be3-review.md)，接受用户小查询预算纠偏，交付[efSearch15/20固定重跑代码与服务器提示词](../../2026-10-30-exps/closure-small-ef-server-prompt.md)，独立仅新增代码提交`e0cd9f6`。不改核心、不重新用`.999`筛选小预算、不升ef、不扩N或放行Dynamic；原高预算负结果不撤销。
 
 
 
