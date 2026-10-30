@@ -60,3 +60,10 @@
 - 修正过强门禁：基础组件已有不等于不能使用；不要求所有方法产生安全L2下界或先完成证书E0/E1。新增六族研究卡与跨族筛选协议，区别探索门和贡献门，详见[机制方案](../2026-10-30-exps/index-mechanism-portfolio.md)。
 - 同时收紧旧“新观察”：过滤遮挡点造成剪枝路径失效已在ACORN正文明确论述，可作设计起点，不可当首次发现；可研究具体共享/恢复/更新机制，不能据前序存在关闭整个图族。
 - 无新ANN或真实数据筛选实验；所有新机制卡未执行。待补查项按入选具体方案展开：F1资格接口与联合视图、F2共享集合/层级布局、F3候选恢复、F4双空间分区、F5代理候选覆盖；不一次穷尽全领域才允许小探索。
+
+## 2026-10-30 本地跨研究方向迁移
+
+- 先查papers/relations与本地六族边界。先搜`"vector similarity join" "index" "factorized" OR "inner-product similarity join" "filter"`，再搜`"FlexFlood" multidimensional learned index`、`"query" "data layout" "index" "SIGMOD 2025" workload tree`及动态range filter/factorized IVM原始来源。
+- 核读Memento2408.05625v3、Grafite2311.15380v2、FlexFlood2411.09205v2、Qd-tree作者SIGMOD2020 PDF、F-IVM正式期刊正文、DBSP正式PVLDB2023 PDF的相关章节。保存全文提取和文本SHA；作者代码未运行。FlexFlood workshop身份另核官方accepted papers页；Memento/Grafite正式书目另核Crossref。
+- 具体存储/查询/更新、保证条件、退化、最近前序与实验见[综合报告](../2026-10-30-exps/cross-domain-index-transfer.md)。本地执行7组语义构造，不是新WIKI/SIFT实验；不能把range filter误差与合取共现歧义混为一谈。
+- 新增6工作、1关系，总库42/30；未合并服务器分支。覆盖限制：NeuroCuts仅由Qd-tree引用链确认；其他新近range filter/Oasis/Proteus及布局工作未全部深读；FlexFlood后续正式venue未核。方案级最近前序、作者代码固定commit/许可证兼容与真实共同见证机会待补，不宣称穷尽或新颖性已通过。

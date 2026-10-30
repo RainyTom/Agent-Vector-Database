@@ -194,3 +194,9 @@
 - 复核ACORN §5.2的过滤遮挡反例、Curator §4.2的倒排/bitmap与虚拟谓词视图；不得将已有动机认作新发现，也不得仅因复用图/Trie/bitmap就否定候选。
 - 新增[SIEVE v2 §1原文节选](../researches/nested-attr-vector-search/2026-10-30-exps/evidence/sieve-component-reuse-20261030.md)，阅读§1–3及§4.1开头；未完整核实验和正式版本，作为候选证据不新增完整论文记录。总库与关系计数不变。
 - [机制研究方案](../researches/nested-attr-vector-search/2026-10-30-exps/index-mechanism-portfolio.md)明确允许已有原语上的实质索引/算法贡献，撤销证书诊断的全局门禁；六族及新工作负载均为待执行计划，不覆盖历史实测。
+
+## 2026-10-30 跨方向索引与共享视图
+
+- 新增Memento、Grafite、FlexFlood、Qd-tree、F-IVM、DBSP六条C类可迁移工作，按自身问题归入data-indexing(4)/incremental-views(2)，不是vector join或ANN论文。总库42工作、30关系；Memento→Grafite为原文明示比较和benchmark复用，未按研究者相似推断继承。
+- 每篇保存原文reader提取、日期化文本SHA、分析章节/版本、完整作者与未核边界。Memento采用v3不混v1定理；FlexFlood为workshop；F-IVM区分2018前身及2023在线/2024卷期；DBSP正式五作者不能被arXiv四作者覆盖。
+- 新增[具体迁移研究](../researches/nested-attr-vector-search/2026-10-30-exps/cross-domain-index-transfer.md)及7组已执行有限语义构造，未运行作者实现或新增真实ANN实验。组件替换不是已确认新颖性，未实现不称实验失败；服务器7756064分支未合并。

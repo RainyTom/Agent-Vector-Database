@@ -1,0 +1,40 @@
+{
+  "kind": "finite_semantic_probes",
+  "author_code_executed": false,
+  "ann_experiment": false,
+  "performance_claim": false,
+  "checks": {
+    "safe_positive_predicate_gates": {
+      "cases": 26,
+      "false_rejections": 0
+    },
+    "marginal_vs_same_object": {
+      "marginal_positive": [
+        true,
+        true
+      ],
+      "eligible_objects": 0
+    },
+    "negation_is_not_filter_inversion": {
+      "not_p_eligible_objects": 1,
+      "may_p": true
+    },
+    "move_requires_current_topology": {
+      "object_key_rewrites": 0,
+      "stale_scope_wrong_ids": [
+        10
+      ]
+    },
+    "coordinate_set_is_not_object_set": {
+      "objects": 2,
+      "distinct_coordinate_tuples": 1
+    },
+    "truncated_topk_is_not_a_deletion_ring": {
+      "next_a": "y",
+      "next_b": "z"
+    },
+    "shared_local_views_preserve_ids": {
+      "scopes_checked": 2
+    }
+  }
+}

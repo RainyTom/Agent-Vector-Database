@@ -12,6 +12,8 @@
 
 **用户最新范围修正：** [跨机制族研究方案](../../2026-10-30-exps/index-mechanism-portfolio.md)与[最新服务器任务书](index-mechanism-server-prompt.md)为执行入口。允许复用Trie/bitmap等组件；覆盖六个机制族，先做至少三个非证书族的小诊断，不再只沿安全几何界。新颖性待查不等于禁止受限探索，论文主张仍需实质差异与同质量证据。
 
+**本地跨方向研究入口：** [6篇原始工作与4类具体迁移方案](../../2026-10-30-exps/cross-domain-index-transfer.md)，包括Memento/Grafite动态/静态范围过滤、Qd-tree谓词布局、F-IVM依赖键共享视图、FlexFlood低维属性索引，DBSP仅作delta语义基础。优先做访问轨迹的边际空/共现空/重复准备分解；不是要求服务器先实现六套系统，也不撤销其他机制族。
+
 
 
 ## P0：必须先读

@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-30",
+  "primary_texts": {
+    "artifact://126": "papers/data-indexing/2408.05625-memento/paper.md",
+    "artifact://122": "papers/data-indexing/2311.15380-grafite/paper.md",
+    "artifact://121": "papers/data-indexing/2411.09205-flexflood/paper.md",
+    "artifact://129": "papers/data-indexing/2020-qd-tree/paper.md",
+    "artifact://123": "papers/incremental-views/2303.08583-fivm/paper.md",
+    "artifact://130": "papers/incremental-views/2023-dbsp/paper.md"
+  },
+  "agent_reviews": "Archived reports from read-only research slices; their no-edit statements apply to those slices, not the integrating parent.",
+  "code_artifacts": "Author source snippets 127/128 were inspected but not archived or executed; repository links and license caveats remain in the range review."
+}

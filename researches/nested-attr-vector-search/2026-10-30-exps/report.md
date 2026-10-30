@@ -184,3 +184,12 @@ python3 researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/202
 - **原文复核**：ACORN v1 §5.2已明确说明被过滤遮挡点使原剪枝替代路径失效，不能当项目新发现；Curator v3 §4.2明确使用倒排/压缩位图输入构造虚拟谓词视图。新读SIEVE v2 §1–3及§4.1开头，作者明确一般收益/成本集合选择方法不新，贡献在具体模型和query serving；保存[原文节选](evidence/sieve-component-reuse-20261030.md)，未完整核实验，不新增完整精读记录。
 - **本轮结果数字与边界**：形成6个机制族、6类工作负载现象；新增性能实验0、在线索引实现0、作者实现复现0。此前真实诊断与上游CSV分析不改写，不将计划写成实验。
 - **下一步**：服务器按最新任务书开展跨族探索；NodeANN主基线、raw L2/高质量门、精确硬资格及完整维护成本保持不变。不再统一用“比box额外剪了多少”衡量每个方案。
+
+## 11. 同日续轮：本地跨方向索引研究
+
+- **目标**：从范围过滤、分析数据库布局、因式分解IVM和learned多维索引寻找具体迁移，不继续只枚举几何界参数。保持外部层级AND多属性硬资格与raw L2。
+- **证据与交付**：[跨方向综合研究](cross-domain-index-transfer.md)、[Memento/Grafite审读](dynamic-range-transfer-review.md)、[F-IVM/DBSP审读](factorized-views-transfer-review.md)。新增6篇指定版本原文提取、书目和日期化文本SHA，总库42工作/30关系；相关章节核读不是作者实现复现。
+- **排序**：先用一次轨迹诊断区分边际可否定空块、无共同见证的结构性空块和资格状态重复；range gate低成本筛选，共同分块与依赖键共享视图为结构候选，FlexFlood仅作低维数值属性模块。均未实现或实测在线效果，不列为失败。
+- **实际运行**：`python3 researches/nested-attr-vector-search/2026-10-30-exps/experiments/cross_domain_semantics.py`。7组有限语义构造，其中26个AND/OR可放行组合无误拒；发现并明确同对象合取、NOT反转、MOVE旧scope、重复坐标及top-k删除逆的边界；共享局部selector与直接ID交一致。详见[data/cross-domain-semantics.json](data/cross-domain-semantics.json)。
+- **结果限制**：新增真实数据性能实验0、ANN实现0、作者系统运行0。有限构造不是filter实现认证或浮点证明。WIKI/SIFT大数组本机缺失，不制造端到端数字。
+- **下一步**：服务器先做一次实际访问轨迹机会分解，再选最多两个机制不同的小原型；同质量、同内存控制和所有维护债务计费。换组件/场景不自动新颖，前序存在也不否决受限探索。

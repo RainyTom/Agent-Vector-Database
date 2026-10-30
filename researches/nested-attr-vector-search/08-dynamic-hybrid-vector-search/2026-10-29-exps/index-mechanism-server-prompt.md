@@ -2,6 +2,8 @@
 
 更新：2026-10-30，用户最新纠偏。此任务书取代“所有下一步只做E0→E1联合几何证书”的安排，也不恢复以维护阈值/延迟搬运为默认论文主线。最新详细协议：[跨机制族研究方案](../../2026-10-30-exps/index-mechanism-portfolio.md)。
 
+本地研究新增：[跨方向索引迁移与最小实验](../../2026-10-30-exps/cross-domain-index-transfer.md)。优先按其§7一次轨迹诊断，同时判别动态范围否定、谓词共同分块、共享资格视图三个机会；最多选两个小原型。该研究具体化下列F1/F2/F4，不关闭F3/F5/F6，也不要求先做所有结构。完整文献核读由本地承担，服务器负责真实数据机会与C++同质量验证。
+
 ## 1. 目标与不可改变的问题
 
 仍做带层级特性的多属性向量混合过滤：外部树的subtree/祖先后代语义，与类别、范围、多值标签等谓词共同决定同一对象的资格；在合法集合按原始向量距离取top-k。不是HNSW层级，不改为多向量聚合、soft属性距离、DAG授权或LLM谓词。
@@ -16,6 +18,7 @@
 2. [七篇机制复核](seven-paper-inspiration-review.md)与[已有过滤索引机制审读](literature-mechanisms-review.md)。它们用于定位前序，不约束只能沿某条路线。
 3. [服务器7756064报告](https://github.com/RainyTom/Agent-Vector-Database/blob/7756064/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md)与[上游归因复核](../../2026-10-30-exps/report.md)。WIKI轴界弱、SIFT经典界有信息且当前取得成本偏高，不否决其他过滤/索引家族。
 4. [最新跨机制族协议](../../2026-10-30-exps/index-mechanism-portfolio.md)。该文优先于归因报告中“下一步唯一E0/E1”的旧安排；E0/E1只属于F6证书族。
+5. [跨方向综合研究](../../2026-10-30-exps/cross-domain-index-transfer.md)及其两份详细审读。Memento无假阴性不等于ANN召回；Grafite静态；F-IVM的q-hierarchical不是目录层级；FlexFlood不是高维向量ANN。
 
 版本防错：7756064基于01ef7d6，旧B指稀疏残差；6b8f9cc后B指条件遮挡/导航证据，后者未实施。以后使用下列F1–F6及机制名，不继续混用A/B。
 

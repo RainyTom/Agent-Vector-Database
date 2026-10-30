@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-30",
+  "paper_records": 42,
+  "relation_records": 30,
+  "unique_ids": true,
+  "relation_endpoints_valid": true,
+  "new_evidence_paths_checked": 18,
+  "text_sha256_verified": 6,
+  "new_navigation_relative_links_checked": 19,
+  "semantic_probe_groups": 7,
+  "safe_predicate_combinations": 26,
+  "new_ann_experiments": 0,
+  "author_implementations_executed": 0,
+  "scope": "结构/路径/文本完整性和有限语义构造；不是论文新颖性/作者性能复现认证"
+}

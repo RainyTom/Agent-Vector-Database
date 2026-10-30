@@ -13,8 +13,10 @@
 | vector-ann | 3 | [向量ANN机制](vector-ann/README.md)：Hubness、CDMG、Flash |
 | memory-systems | 1 | [记忆管理系统](memory-systems/README.md)：VikingMem |
 | hybrid-retrieval | 1 | [多路相关性检索](hybrid-retrieval/README.md)：Balancing the Blend；不是scalar-filtered ANN |
+| data-indexing | 4 | [属性索引与范围过滤](data-indexing/README.md)：Memento、Grafite、FlexFlood、Qd-tree |
+| incremental-views | 2 | [增量与因式分解视图](incremental-views/README.md)：F-IVM、DBSP |
 
-总计 **36 篇论文、29 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **42 篇论文、30 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -30,6 +32,8 @@ papers/
 ├── vector-ann/<id>-<slug>/
 ├── memory-systems/<id>-<slug>/
 ├── hybrid-retrieval/<id>-<slug>/
+├── data-indexing/<id>-<slug>/
+├── incremental-views/<id>-<slug>/
 └── trajectory-search/<id>-<slug>/
 ```
 
@@ -39,8 +43,10 @@ papers/
 
 同日新增MSG、CDMG、Hubness、Flash、VikingMem、Blend六篇工作。保存工具取得的分页全文与文本SHA；CDMG仅2025历史作者报告，正式2026正文未取得；Flash分析arXiv v1。VikingMem/Blend按2026正式PVLDB稿归档。版本和获取限制见各目录日期化metadata。
 
+2026-10-30新增6篇跨方向工作，归档reader提取原文与文本SHA，未运行作者实现。FlexFlood为NeurIPS2024 ML for Systems workshop，不是主会；Memento正式出版2024/SIGMOD2025；F-IVM在线2023/卷期2024且有2018前身；DBSP使用正式五作者版。详见[迁移研究](../researches/nested-attr-vector-search/2026-10-30-exps/cross-domain-index-transfer.md)。服务器7756064分支未自动合并，计数不相加。
 
-UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述36篇工作。获取受限与理论未提供是两种不同状态。
+
+UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述42篇工作。获取受限与理论未提供是两种不同状态。
 
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
 

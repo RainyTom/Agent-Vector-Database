@@ -246,3 +246,7 @@
 ## 2026-10-30 层级多属性索引机制范围拓宽
 
 直接join术语检索后转查filtered vector search/bitmap/Trie，复核已有ACORN与Curator原文，并阅读SIEVE v2相关引言/框架章节。问题仍是单查询filtered ANN，不称vector join。允许复用经典组件、以具体机制差异评估新颖性，研究范围拓宽至六族；见[协议](../nested-attr-vector-search/2026-10-30-exps/index-mechanism-portfolio.md)。SIEVE只新增章节证据候选，未做完整入库，无新ANN实验。
+
+## 2026-10-30 跨方向属性索引与IVM
+
+直接vector similarity join/inner-product similarity join术语范围检索后，转查动态range filters、learned multidimensional index和factorized IVM。新增Memento/Grafite/FlexFlood/Qd-tree/F-IVM/DBSP六个邻近问题C类工作，不将关系join或普通range search写成几何vector join。详见[迁移研究与边界](../nested-attr-vector-search/2026-10-30-exps/cross-domain-index-transfer.md)。本轮只执行有限语义构造，无新向量实验；近期相关工作覆盖不穷尽。
