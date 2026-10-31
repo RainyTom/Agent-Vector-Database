@@ -6,6 +6,8 @@
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
 - **[08 动态混合向量搜索](08-dynamic-hybrid-vector-search/README.md)**：[最新ef15/20小预算报告](2026-10-30-exps/closure-small-ef-report.md)、[复现](2026-10-30-exps/experiments/closure-small-ef-reproduction.md)、[六臂大预算报告](2026-10-30-exps/closure-server-report.md)、[上游阅读清单](08-dynamic-hybrid-vector-search/2026-10-29-exps/upstream-reading-list.md)；[前轮NPI](08-dynamic-hybrid-vector-search/2026-10-30-exps/neighborhood-report.md)、[历史维护对照](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)保留。
+- [当前状态：闭包候选收尾，停止当前原型扩展](2026-10-31-exps/report.md)；[原方案与历史任务书](2026-10-30-exps/closure-server-plan.md)、[小预算原始执行任务](2026-10-30-exps/closure-small-ef-server-prompt.md)。已接收2f8c4e0，不再自动重跑或启动Dynamic。
+- **[最新执行任务：资格感知查询＋NodeANN速度审计](2026-10-31-exps/eligibility-server-prompt.md)**：[方案](2026-10-31-exps/eligibility-execution-plan.md)、[本地实现与烟测](2026-10-31-exps/eligibility-local-report.md)。用户明确要求后新增；旧H负结果不撤回，静态和有限维护诊断不等于重开论文主张。
 
 ## 01 方向文档
 

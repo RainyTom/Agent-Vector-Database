@@ -175,3 +175,62 @@ python codes/directory-aware-vector-attr-search/scripts/run_dynamic_triad.py \
 - `oracles.json` 单列真实GT生成时间/距离调用；测量summary与每query `gt_distance_calls` 必须为0。测量中的 `gt_us` 是元数据核对与tape读取，不是向量GT生成成本。此协议不消除所有元数据/文件缓存干扰。
 - Oracle本身ANN召回不足不影响其独立精确GT生成；真正测量的低召回点仍失败，不做精确兜底。篡改tape或stamp拒绝复用，成功oracle stamp复用时保持不变。
 - 当前研究保留旧运行binary时，另编译 `build/dynamic_triad_gt_tape` 并用 `--binary` 指定；测试可用 `DYNAMIC_TRIAD_BINARY` 覆盖路径，不覆盖正在测量的旧执行器。新checkout正常构建默认binary即可支持两种模式。
+
+## 子树闭包可恢复邻接（2026-10-30）
+
+`src/closure_index.h` / `closure_order.h` 为新研究候选，不替换NodeANN。固定64候选池、几何见证掩码、当前子树闭包选边、可恢复邻接与动态Euler序列；已实现V/T/M/B/R/D/I及同步墓碑压实。属性不合格点可导航但不可作为合法见证。递归子树限制性质不覆盖内部owner的direct范围，也不是有限ef召回保证。
+
+```bash
+bash build_closure.sh
+bash build_dynamic_triad.sh
+python -m unittest discover -s tests -p test_closure.py -v
+python scripts/run_closure.py \
+  --dataset "wiki=$WIKI_DATA" --trace "wiki=$WIKI_TRACE" \
+  --dataset "sift=$SIFT_DATA" --trace "sift=$SIFT_TRACE" \
+  --out ../../work/closure/static
+```
+
+六臂为真实NodeANN A、无剪枝U、普通几何G、DFS-between规则R、子树闭包H、禁用属性见证恢复H0。默认ef64/256/1024校准、按qidx分组确认、串行轮换三次；C++预计算GT，各臂计时消费同一tape。离线全scope/邻接审计与性能运行分开，防止全池指纹扫描污染查询缓存。静态模式冻结初始属性，不执行源trace中的更新。
+
+只在`<out>/<name>/result.json`的`dynamic_admitted=true`时，按相同输入与二进制运行 `--stage dynamic --static-results <out>`；自动回放动态前缀并生成独立R/B/M与强制压实维护包络。`--smoke`不能授权正式动态阶段。结果包含全部质量失败点、原始CSV、SHA、构建/更新/总成本、结构估算与峰值RSS。输出目录须为新目录。
+
+完整算法、预测、失败归因、计时边界和可复制服务器指令见[closure-server-plan.md](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-server-plan.md)。本地3项真实程序回归通过，不代表已赢WIKI/SIFT或新颖性已获确认。`neighborhood_filter.h`原样来自502753c，仅复用数据/谓词合同；其静态Qualifier不用于新索引动态状态。
+
+### 历史复现：固定efSearch15/20，已完成并停止当前原型扩展
+
+服务器5fc1be3已完成上述大预算static，未放行Dynamic。用户要求正常小查询预算，新入口保持原核心/候选池/停止规则及建图efConstruction200，只重跑A/U/R/H×查询ef15/20×三次；k10，复用原始200条Q和初始快照：
+
+**2026-10-31状态：** 服务器2f8c4e0已完成下述48次小预算运行；A及同池U在四个全部非空点的时间、macro/pair均优于H，停止当前原型扩展。完整[收尾](../../researches/nested-attr-vector-search/2026-10-31-exps/report.md)。下列命令只作历史复现，不是新的自动任务；Dynamic/真实维护未测。
+
+```bash
+python scripts/analyze_closure_termination.py \
+  --raw ../../work/closure/static-7654f1e-run1 \
+  --out ../../work/closure/termination-7654f1e-run1.json
+python scripts/run_closure_small_ef.py \
+  --previous-raw ../../work/closure/static-7654f1e-run1 \
+  --out ../../work/closure/small-ef-15-20-run1 --cpu 2
+```
+
+生产模式重新构建原程序，校验原始11份源码blob、数据/trace SHA，独立GT后串行轮换。保留所有Recall—time点，不按`.999`筛选或补高ef，不自动调用Dynamic。两数据集共48次计时、2次GT；旧qidx分组另列，不冒称新的独立测试集。
+
+源码可确定E<ef时合法堆填不满，加上次序骨架会遍历全scope；工具只读旧CSV量化真实占比。该现象不是全部query归因，尤其WIKI漏召回query的E8511>1024。完整[服务器提示词](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-small-ef-server-prompt.md)及[归因](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-5fc1be3-review.md)。代码仅新增提交`e0cd9f6`可单独cherry-pick，不要求合并知识库文档。
+
+## 资格感知执行与NodeANN调用审计（2026-10-31）
+
+用户要求的新执行修正，非旧H论文主张复活。[完整方案](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-execution-plan.md)、[服务器任务](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-server-prompt.md)、[本地实测](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-local-report.md)。
+
+`eligibility_index.h`以真实目录树、稀疏direct-owner word postings及属性bitplanes取得完整资格mask/E，计入查询成本；V/T/M/B/R/D/I同步维护。两程序新增 `--eligibility-policy off|cap|hybrid|exact`、`--eligible-scan-threshold 512`。默认off保留原算法；cap截断合法堆容量，hybrid在小E上直接精确扫描，exact提供同资格取得的扫描控制。图/pool仍构建维护，Exact不代表独立无图内存成绩。原rank编译/候选池/剪枝不改。
+
+**基线版本不要混用：** 上文早期`nodeann_research/repro`可以要求每个非空节点建图；本轮`dynamic_triad`的A默认scan-threshold512，小direct组先过滤再扫描，大组才有局部HNSW。新A-graph-only仅以threshold0诊断这一差异，不替换真实A或故意削弱主基线。新增逐query实际graph calls、扫描组、距离分账及局部ef范围；索引容器数与图内对象数分开。
+
+```bash
+python scripts/run_eligibility.py \
+  --previous-raw ../../work/closure/static-7654f1e-run1 \
+  --out ../../work/eligibility/static-run1 --cpu 2
+python scripts/run_eligibility.py \
+  --previous-raw ../../work/closure/static-7654f1e-run1 \
+  --out ../../work/eligibility/maintenance-run1 --stage maintenance --cpu 2
+```
+
+真实两数据集固定114次静态、48次有限维护，ef15/20；保留全部点，不自动升预算或扩N。源SHA、输入SHA、独立GT、完整e2e与维护成本入账。新版本新增诊断列的GT CSV可由baseline按固定GT前缀读取。历史`run_closure_small_ef.py`仍绑定7654f1e的原始blob；要复现旧版本请用相应独立checkout，不绕过其校验。
+
