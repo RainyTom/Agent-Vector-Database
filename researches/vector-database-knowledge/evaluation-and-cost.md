@@ -100,3 +100,12 @@ $$T_{kernel}=T_{build}+\sum_jT_{query,j}+\sum_iT_{update,i}+T_{rebuild/compact,n
 
 对“同ef”还需核物理语义：本方案是整个scope的合法堆宽度，NodeANN是多个direct-owner局部图分别搜索再合并。相同数字不代表相同总访问。源码表明E<ef时当前结构会全scope遍历；已在48对象原C++小探针执行，真实占比仍待原CSV分层。少边、连通和heredity都不能替代少展开证明。完整[源码归因](../nested-attr-vector-search/2026-10-30-exps/closure-5fc1be3-review.md)。
 
+
+## 2026-10-31续学：低预算也没有形成折中点时应收尾
+
+服务器[2f8c4e0](https://github.com/RainyTom/Agent-Vector-Database/blob/2f8c4e0/researches/nested-attr-vector-search/2026-10-30-exps/closure-small-ef-report.md)完成固定ef15/20后，四个全部非空点中A和同池U均在时间、macro、pair上优于H。此时无需先调低硬质量门再争胜负：当前点已被支配，不存在以较低质量换较低时延的收益。支配关系只限观测数据/设置，不等于所有分布上的理论结论。
+
+强制遍历在真实非空行中贡献约77.0%～84.8%的expanded，但E≥ef中H/R也无系统性减少，因此不能把“改停止”直接当已证实救法。U已支付约80%～88%的编译占比，共同路径控制比只看新增LCA更有解释力。占比和计数仍不是硬件profile，也不允许扣掉编译预测新算法胜出。
+
+将校验分母拆清：3627条包含三臂、三重复及空scope；按报告计数为2007非空重复记录和1620空scope记录。空scope的0=0=0核对不扩展成大量独立非空样本。当前原型收尾见[研究报告](../nested-attr-vector-search/2026-10-31-exps/report.md)，对应[学习记录](2026-10-31-exps/report.md)；真实动态与维护仍未测。
+

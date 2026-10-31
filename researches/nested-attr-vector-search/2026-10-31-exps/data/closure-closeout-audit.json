@@ -1,0 +1,124 @@
+{
+  "complete": true,
+  "review_date": "2026-10-31",
+  "server_commit": "2f8c4e0",
+  "source_url": "https://raw.githubusercontent.com/RainyTom/Agent-Vector-Database/2f8c4e0/researches/nested-attr-vector-search/2026-10-30-exps/data/closure-small-ef-run1/table1-points.csv",
+  "source_reader_text_sha256": "0ef991ea0230630d2affa50bd56d6c0e6dbbe5c9961431b6c8a12283421a2c53",
+  "compact_rows_read": 64,
+  "primary_cases": [
+    {
+      "dataset": "wiki",
+      "ef": 15,
+      "nonempty_per_repeat": [
+        160,
+        160,
+        160
+      ],
+      "unique_qidx_per_repeat": [
+        160,
+        160,
+        160
+      ],
+      "A_mean_ms": 0.39229262500000006,
+      "H_mean_ms": 5.715961420833334,
+      "same_budget_H_over_A_ratio_of_repeat_means": 14.57065735261613,
+      "macro_gap_A_minus_H_pp": 6.062499999999993,
+      "pair_gap_A_minus_H_pp": 8.989805375347537,
+      "A_strictly_dominates_H_on_time_macro_pair": true,
+      "U_strictly_dominates_H_on_time_macro_pair": true,
+      "H_expanded": 753.7937500000002,
+      "R_expanded": 753.8312499999998,
+      "H_compile_fraction": 0.8219384865060415,
+      "U_compile_fraction": 0.8011275003062083
+    },
+    {
+      "dataset": "wiki",
+      "ef": 20,
+      "nonempty_per_repeat": [
+        160,
+        160,
+        160
+      ],
+      "unique_qidx_per_repeat": [
+        160,
+        160,
+        160
+      ],
+      "A_mean_ms": 0.41233709999999996,
+      "H_mean_ms": 5.937435408333334,
+      "same_budget_H_over_A_ratio_of_repeat_means": 14.399469289407463,
+      "macro_gap_A_minus_H_pp": 4.812500000000042,
+      "pair_gap_A_minus_H_pp": 7.136237256719191,
+      "A_strictly_dominates_H_on_time_macro_pair": true,
+      "U_strictly_dominates_H_on_time_macro_pair": true,
+      "H_expanded": 782.5187499999998,
+      "R_expanded": 782.3250000000002,
+      "H_compile_fraction": 0.8195677687295105,
+      "U_compile_fraction": 0.7982544850374493
+    },
+    {
+      "dataset": "sift",
+      "ef": 15,
+      "nonempty_per_repeat": [
+        150,
+        150,
+        150
+      ],
+      "unique_qidx_per_repeat": [
+        48,
+        48,
+        48
+      ],
+      "A_mean_ms": 0.27969580666666666,
+      "H_mean_ms": 11.171444986666668,
+      "same_budget_H_over_A_ratio_of_repeat_means": 39.94141034792299,
+      "macro_gap_A_minus_H_pp": 6.133333333333335,
+      "pair_gap_A_minus_H_pp": 7.0823710546574326,
+      "A_strictly_dominates_H_on_time_macro_pair": true,
+      "U_strictly_dominates_H_on_time_macro_pair": true,
+      "H_expanded": 1487.2133333333334,
+      "R_expanded": 1487.26,
+      "H_compile_fraction": 0.8928693759167464,
+      "U_compile_fraction": 0.8802048454451712
+    },
+    {
+      "dataset": "sift",
+      "ef": 20,
+      "nonempty_per_repeat": [
+        150,
+        150,
+        150
+      ],
+      "unique_qidx_per_repeat": [
+        48,
+        48,
+        48
+      ],
+      "A_mean_ms": 0.29592113555555555,
+      "H_mean_ms": 12.007401100000001,
+      "same_budget_H_over_A_ratio_of_repeat_means": 40.576355174690654,
+      "macro_gap_A_minus_H_pp": 4.666666666666652,
+      "pair_gap_A_minus_H_pp": 5.388760585065421,
+      "A_strictly_dominates_H_on_time_macro_pair": true,
+      "U_strictly_dominates_H_on_time_macro_pair": true,
+      "H_expanded": 1561.7666666666667,
+      "R_expanded": 1561.86,
+      "H_compile_fraction": 0.890200300065118,
+      "U_compile_fraction": 0.8830196816780211
+    }
+  ],
+  "forced_record_denominator_check": {
+    "nonempty_records": 2007,
+    "empty_scope_records": 1620,
+    "total": 3627,
+    "meaning": "Query-budget cases repeated across U/R/H and three repeats; not independent query count. Counts taken from published report, not re-read from original raw."
+  },
+  "limits": [
+    "No server ANN or tests rerun to confirm reported results.",
+    "Original raw CSVs and input vectors are not available locally.",
+    "Equal expanded counts do not prove identical expanded sets or order.",
+    "Dominance applies to the observed fixed workload and snapshots; not all graph filtering algorithms.",
+    "Compilation fractions are nested timing shares, not causal attribution or optimized-runtime predictions.",
+    "True dynamic maintenance remains unmeasured."
+  ]
+}

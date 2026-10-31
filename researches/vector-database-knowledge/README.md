@@ -21,7 +21,7 @@
 - 五章是首轮已写成的知识，不是五份未完成占位页；每章有机制、边界、来源和自测。
 - 本轮已读参考站点的总路径、一周、一月AI、一季度及向量数据库页；已核相关官方资料和指定源码。没有声称读完整个参考站点或完整覆盖向量数据库。
 - 已运行：[数学语义探针](2026-10-30-exps/data/semantic-probes.json)、[固定版本hnswlib API探针](2026-10-30-exps/data/hnsw-lifecycle-probe.json)。只有构造输入，不能推广成真实数据的速度/召回结果。
-- 未运行：pgvector/Milvus/Qdrant/Weaviate服务、数据库故障恢复、并发隔离、SSD ANN或新WIKI/SIFT对照。相应章节明确为阅读/推导，不填造实验结果。
+- 首轮本地未运行pgvector/Milvus/Qdrant/Weaviate服务、故障恢复、并发隔离或SSD ANN；后续已接收服务器WIKI/SIFT闭包实验，见[2026-10-31学习记录](2026-10-31-exps/report.md)。来源阅读、本地探针与服务器结果分开，不填造产品实验。
 - 原始命令、构建输出、SHA与限制见[本轮report](2026-10-30-exps/report.md)及[复现说明](2026-10-30-exps/experiments/reproduction.md)。
 
 ## 与已有研究连接，不另造论文库

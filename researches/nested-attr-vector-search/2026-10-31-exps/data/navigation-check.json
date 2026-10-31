@@ -1,0 +1,15 @@
+{
+  "complete": true,
+  "local_links_checked": 16,
+  "broken": [],
+  "documents_checked": [
+    "researches/nested-attr-vector-search/2026-10-31-exps/report.md",
+    "researches/vector-database-knowledge/2026-10-31-exps/report.md",
+    "researches/vector-database-knowledge/learning-log.md",
+    "researches/vector-database-knowledge/evaluation-and-cost.md"
+  ],
+  "limits": [
+    "External report/CSV URLs were read, not exhaustively recrawled.",
+    "Original raw not available; arithmetic uses compact published CSV and stated report counts."
+  ]
+}

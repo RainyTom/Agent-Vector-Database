@@ -196,9 +196,11 @@ python scripts/run_closure.py \
 
 完整算法、预测、失败归因、计时边界和可复制服务器指令见[closure-server-plan.md](../../researches/nested-attr-vector-search/2026-10-30-exps/closure-server-plan.md)。本地3项真实程序回归通过，不代表已赢WIKI/SIFT或新颖性已获确认。`neighborhood_filter.h`原样来自502753c，仅复用数据/谓词合同；其静态Qualifier不用于新索引动态状态。
 
-### 当前执行：固定efSearch15/20，不再自动升预算
+### 历史复现：固定efSearch15/20，已完成并停止当前原型扩展
 
 服务器5fc1be3已完成上述大预算static，未放行Dynamic。用户要求正常小查询预算，新入口保持原核心/候选池/停止规则及建图efConstruction200，只重跑A/U/R/H×查询ef15/20×三次；k10，复用原始200条Q和初始快照：
+
+**2026-10-31状态：** 服务器2f8c4e0已完成下述48次小预算运行；A及同池U在四个全部非空点的时间、macro/pair均优于H，停止当前原型扩展。完整[收尾](../../researches/nested-attr-vector-search/2026-10-31-exps/report.md)。下列命令只作历史复现，不是新的自动任务；Dynamic/真实维护未测。
 
 ```bash
 python scripts/analyze_closure_termination.py \
