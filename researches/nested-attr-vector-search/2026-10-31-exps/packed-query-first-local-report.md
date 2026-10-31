@@ -73,6 +73,72 @@
 
 数据：[data/query-first-all.csv](data/query-first-all.csv)（含 `all_queries`、`confirmation_nonempty` 分组），汇总脚本 [experiments/summarize_query_first.py](experiments/summarize_query_first.py)。
 
+
+## 资格索引表示重构：从指针追赶到顺序扫描（本轮算法改动）
+
+### 问题定位
+
+1M 上 P-dfs-aware 的查询均值 37.6 ms，其中 `eligibility_us` 30.9 ms（82%）。实测每 query：`qualification_posting_words` 329,477、`qualification_attribute_words` 577,576、`scope_card` 492,296。
+
+原实现两处结构性成本：
+
+1. **每个目录的 postings 用 `std::map<word, bitmap>`**：目录内对象散布在整个 id 空间时，一个目录就占近 15,625 个 word 节点；一次递归查询要并集约 36 个目录 → 约 33 万次红黑树节点跳转（每次一次指针追逐 + 缓存缺失）。
+2. **属性用 64 层 bit-sliced planes**：每个 word 需读 64 个 plane 才能求 category / range / tags，planes 总量 3×64×(N/64)×8B = 24 B/对象（1M 时 24 MB），随机访问。
+
+### 两步改动与逐步测量（1M l64-random，P-dfs-aware，`all_nonempty`）
+
+| 版本 | e2e | eligibility_us | 结论 |
+|---|---:|---:|---|
+| 原实现（map + bit-sliced） | 37,602 µs | 30,924 µs | 基线 |
+| 只把属性判断改为稠密逐对象（去掉 planes） | 36,091 µs | 29,256 µs | −5%，**planes 不是瓶颈** |
+| 再把 postings 改为有序 `vector<(word,bits)>` | **8,972 µs** | **2,166 µs** | −92.6%，**指针追逐才是瓶颈** |
+
+合计：`eligibility_us` 14.3×、端到端 4.19×，相对同轮 NodeANN 从 0.495× 降到 **0.122×**。
+
+### 为什么这是索引表示问题而不是常数优化
+
+- 目录 postings 的访问模式由"每 word 一次树节点跳转"变为"每 word 一次顺序读"；同一目录的 word 列表连续存放，可被预取。条目数不变，内存访问次数与缓存缺失量改变。
+- planes 被完全删除：属性比较直接读 `items_[id]`（category / numeric / tags 与 owner 同结构），一个候选对象三次字段比较，顺序访问。
+- 更新路径同步变短：不再需要为每个属性维护 64 个 plane；属性写入是 O(1) 字段写。
+
+### 更新约束下的代价（实测，非估算）
+
+1M l2048-random 维护单次运行（20,062 个事件，mixed）：
+
+| 指标 | 原实现 | 新实现 | 变化 |
+|---|---:|---:|---|
+| build | 57.90 s | 57.98 s | 持平（构建路径未改） |
+| query（256 条） | 20.06 s | 9.70 s | 2.07× 更快 |
+| update（20,062 事件） | 0.017 s | 0.029 s | +0.6 µs/事件 |
+| final repack | 56.80 s | 57.23 s | 持平 |
+| eligibility index | 112.0 MB | 59.7 MB | −47% |
+| peak RSS | 2,702 MB | 2,645 MB | −57 MB |
+
+postings 的更新代价理论上是"在该目录的 word 列表上 O(log W) 定位 + O(W) 搬移"，W 为该目录触及的 word 数（1M l2048 约 2,340）；实测每次事件 1.4 µs，相对 build/repack 可忽略。属性侧更新由 O(64 plane) 降为 O(1)。结构在任何时刻都是精确的，不需要重建或 repack 来保持正确性。
+
+### 全矩阵结果（8 单元，2 构建 + 9 遍，256 query）
+
+| 单元 | A-graph | P-dfs | P-dfs-aware | macro（A / aware） |
+|---|---:|---:|---:|---|
+| 100k l64-random | 6.140 ms | 4.759 (0.775×) | **2.416 (0.394×)** | .99840 / .99880 |
+| 100k l64-coordinate | 6.128 ms | 4.626 (0.755×) | **2.361 (0.385×)** | .99760 / .99760 |
+| 100k l2048-random | 6.084 ms | 4.726 (0.777×) | **2.165 (0.356×)** | 1.00000 / .99959 |
+| 100k l2048-coordinate | 6.212 ms | 5.093 (0.820×) | **2.429 (0.391×)** | 1.00000 / .99959 |
+| 1M l64-random | 73.807 ms | 43.385 (0.588×) | **8.972 (0.122×)** | .99297 / .99336 |
+| 1M l64-coordinate | 74.094 ms | 43.163 (0.583×) | **9.095 (0.123×)** | .99258 / .99297 |
+| 1M l2048-random | 70.753 ms | 27.038 (0.382×) | **10.993 (0.155×)** | .99921 / .99921 |
+| 1M l2048-coordinate | 71.229 ms | 27.321 (0.384×) | **10.903 (0.153×)** | .99881 / .99920 |
+
+### 等价性核验
+
+新旧实现在 8 个查询单元上逐条比对 18,432 行（`result_ids`、`gt_ids`、`distance_calls`、`ann_hops`、`graph_calls`、`eligible_card`、`scope_card`、`hit_count`、`execution_path`）：**0 处差异**。100k l64-random 维护的 3,840 行同样是 0 差异。也就是说，本轮改动只改变成本，不改变返回结果、召回或执行路径。
+
+数据：[data/query-first-dense2.csv](data/query-first-dense2.csv)。上一节的 0.48–0.71× 是改动前的数字，保留作为对照，不删除。
+
+### 偏差披露
+
+本轮修改了 `src/eligibility_index.h`（postings 容器、属性求值、`bytes()`），这是相对 `d4add37` 的源码改动；`run_packed_query.py` 与 C++ 查询调度未改。维护轮仍是单臂单次探针，未重跑完整 1M 维护矩阵。
+
 ## 复现命令
 
 代码目录 `codes/directory-aware-vector-attr-search`：

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "neighborhood_filter.h"
-#include <map>
+#include <algorithm>
 
 // Exact metadata-only qualification. Direct-owner postings are sparse words;
 // descendants are enumerated at query time, never materialized per directory.
@@ -15,41 +15,28 @@ struct Result {
     bool in_scope(Id id) const { return id / 64 < scope.size() && (scope[id / 64] & (UINT64_C(1) << (id % 64))); }
 };
 class Index {
-    using Posting = std::map<size_t, uint64_t>;
+    // Sorted (word, bits) pairs: the scope union streams a directory's words
+    // sequentially, so a contiguous vector avoids one pointer chase per word.
+    using Posting = std::vector<std::pair<uint32_t, uint64_t>>;
     std::vector<npi::Item> items_;
     std::vector<int> parent_;
     std::vector<std::vector<Id>> children_;
     std::vector<Posting> owners_;
     std::vector<uint64_t> live_;
-    std::array<std::vector<uint64_t>, 64> category_, numeric_, tags_;
     std::vector<Id> stack_;
     Result result_;
     static uint64_t ordered(int64_t n) { return static_cast<uint64_t>(n) ^ (UINT64_C(1) << 63); }
     void posting(Id owner, size_t word, uint64_t bit, bool add) {
-        if (add) owners_[owner][word] |= bit;
-        else {
-            auto it = owners_[owner].find(word);
-            if (it != owners_[owner].end() && !(it->second &= ~bit)) owners_[owner].erase(it);
+        auto& list = owners_[owner];
+        const uint32_t key = static_cast<uint32_t>(word);
+        auto it = std::lower_bound(list.begin(), list.end(), key,
+                                   [](const Posting::value_type& e, uint32_t k) { return e.first < k; });
+        if (add) {
+            if (it != list.end() && it->first == key) it->second |= bit;
+            else list.insert(it, Posting::value_type(key, bit));
+        } else if (it != list.end() && it->first == key) {
+            if (!(it->second &= ~bit)) list.erase(it);
         }
-    }
-    static void planes(std::array<std::vector<uint64_t>, 64>& p, size_t word,
-                       uint64_t bit, uint64_t old_value, uint64_t value) {
-        uint64_t changed = old_value ^ value;
-        while (changed) {
-            const unsigned b = static_cast<unsigned>(__builtin_ctzll(changed));
-            p[b][word] ^= bit;
-            changed &= changed - 1;
-        }
-    }
-    uint64_t less(size_t word, uint64_t value, uint64_t universe) {
-        uint64_t equal = universe, lower = 0;
-        for (int b = 63; b >= 0; --b) {
-            const uint64_t plane = numeric_[b][word];
-            ++result_.attribute_words;
-            if (value & (UINT64_C(1) << b)) { lower |= equal & ~plane; equal &= plane; }
-            else equal &= ~plane;
-        }
-        return lower;
     }
 public:
     Index(const std::vector<npi::Item>& items, const std::vector<int>& parent)
@@ -63,8 +50,6 @@ public:
                 children_[parent[i]].push_back(static_cast<Id>(i));
             }
         }
-        for (auto* planes : {&category_, &numeric_, &tags_})
-            for (auto& p : *planes) p.resize(live_.size());
         result_.scope.resize(live_.size()); result_.eligible.resize(live_.size());
         stack_.reserve(parent.size());
         for (size_t i = 0; i < items.size(); ++i) update(static_cast<Id>(i), items[i]);
@@ -77,12 +62,9 @@ public:
         if (old.alive && (!next.alive || old.owner != next.owner)) posting(old.owner, word, bit, false);
         if (next.alive && (!old.alive || old.owner != next.owner)) posting(next.owner, word, bit, true);
         if (next.alive) live_[word] |= bit; else live_[word] &= ~bit;
-        // Dead objects have zero planes. Stored old metadata remains authoritative
-        // even when the caller has already overwritten its Dataset copy.
-        planes(category_, word, bit, old.alive ? static_cast<uint64_t>(old.category) : 0,
-               next.alive ? static_cast<uint64_t>(next.category) : 0);
-        planes(numeric_, word, bit, old.alive ? ordered(old.numeric) : 0, next.alive ? ordered(next.numeric) : 0);
-        planes(tags_, word, bit, old.alive ? old.tags : 0, next.alive ? next.tags : 0);
+        // Stored old metadata remains authoritative even when the caller has
+        // already overwritten its Dataset copy. Attribute values live only here:
+        // no bit-sliced planes to repair on update.
         items_[id] = next;
     }
     Id owner(Id id) const { return items_.at(id).owner; }
@@ -97,6 +79,10 @@ public:
         children_[parent].push_back(node);
         parent_[node] = static_cast<int>(parent);
     }
+    // Predicate evaluation walks the scope bitmap word by word and tests the
+    // dense per-object record. The previous bit-sliced form read 64 scattered
+    // planes per word, which is cache-miss bound once the scope spans most
+    // words; this form touches each candidate's fields sequentially instead.
     const Result& prepare(const npi::Query& q) {
         if (q.anchor >= parent_.size()) npi::filter_detail::fail("invalid qualification anchor");
         std::fill(result_.scope.begin(), result_.scope.end(), 0);
@@ -106,45 +92,50 @@ public:
         stack_.clear(); stack_.push_back(q.anchor);
         while (!stack_.empty()) {
             const Id dir = stack_.back(); stack_.pop_back(); ++result_.directory_visits;
-            for (const auto& posting : owners_[dir]) {
-                result_.scope[posting.first] |= posting.second;
+            for (const auto& entry : owners_[dir]) {
+                result_.scope[entry.first] |= entry.second;
                 ++result_.posting_words;
             }
             if (q.recursive) for (Id child : children_[dir]) stack_.push_back(child);
         }
+        const bool has_category = q.category != -1;
+        const bool has_range = q.lo != -1 || q.hi != -1;
+        const bool no_upper = q.hi == std::numeric_limits<int64_t>::max();
+        const bool has_tags = q.tagmode != 0;
         for (size_t w = 0; w < live_.size(); ++w) {
-            const uint64_t scope = result_.scope[w] &= live_[w];
-            result_.scope_count += static_cast<size_t>(__builtin_popcountll(scope));
-            if (!scope) continue;
-            bool any = false;
-            uint64_t extra = q.combine ? 0 : scope;
-            auto add = [&](uint64_t mask) { any = true; if (q.combine) extra |= mask; else extra &= mask; };
-            if (q.category != -1) {
-                uint64_t match = scope, value = static_cast<uint64_t>(q.category);
-                for (unsigned b = 0; b < 64; ++b) {
-                    const uint64_t plane = category_[b][w]; ++result_.attribute_words;
-                    match &= value & (UINT64_C(1) << b) ? plane : ~plane;
+            uint64_t bits = result_.scope[w] & live_[w];
+            result_.scope[w] = bits;
+            result_.scope_count += static_cast<size_t>(__builtin_popcountll(bits));
+            if (!bits) continue;
+            uint64_t keep = 0;
+            for (uint64_t rest = bits; rest; rest &= rest - 1) {
+                const Id id = static_cast<Id>(w) * 64 + static_cast<Id>(__builtin_ctzll(rest));
+                const npi::Item& item = items_[id];
+                bool any = false;
+                bool accept = q.combine ? false : true;
+                const auto add = [&](bool value) {
+                    any = true;
+                    accept = q.combine ? (accept || value) : (accept && value);
+                };
+                if (has_category) { ++result_.attribute_words; add(item.category == q.category); }
+                if (has_range) {
+                    ++result_.attribute_words;
+                    add(item.numeric >= q.lo && (no_upper || item.numeric <= q.hi));
                 }
-                add(match);
-            }
-            if (q.lo != -1 || q.hi != -1) {
-                const uint64_t lower = less(w, ordered(q.lo), scope);
-                const uint64_t upper = q.hi == std::numeric_limits<int64_t>::max() ? scope : less(w, ordered(q.hi) + 1, scope);
-                add(upper & ~lower);
-            }
-            if (q.tagmode) {
-                uint64_t match = q.tagmode == 2 ? 0 : scope;
-                for (unsigned b = 0; b < 64; ++b) {
-                    const bool set = (q.tags & (UINT64_C(1) << b)) != 0;
-                    if ((q.tagmode <= 2 && !set) || (q.tagmode == 4 && set)) continue;
-                    const uint64_t plane = tags_[b][w]; ++result_.attribute_words;
-                    if (q.tagmode == 2) match |= plane & scope;
-                    else match &= (q.tagmode == 1 || (q.tagmode == 3 && set)) ? plane : ~plane;
+                if (has_tags) {
+                    ++result_.attribute_words;
+                    bool hit = false;
+                    switch (q.tagmode) {
+                        case 1: hit = (item.tags & q.tags) == q.tags; break;
+                        case 2: hit = (item.tags & q.tags) != 0; break;
+                        case 3: hit = item.tags == q.tags; break;
+                        default: hit = (item.tags & ~q.tags) == 0; break;
+                    }
+                    add(hit);
                 }
-                add(match);
+                if (any ? accept : true) { keep |= UINT64_C(1) << (id % 64); ++result_.count; }
             }
-            result_.eligible[w] = any ? extra & scope : scope;
-            result_.count += static_cast<size_t>(__builtin_popcountll(result_.eligible[w]));
+            result_.eligible[w] = keep;
         }
         return result_;
     }
@@ -156,9 +147,7 @@ public:
             + stack_.capacity() * sizeof(Id)
             + (live_.capacity() + result_.scope.capacity() + result_.eligible.capacity()) * sizeof(uint64_t);
         for (const auto& child : children_) n += child.capacity() * sizeof(Id);
-        for (const auto& owner : owners_) n += owner.size() * (sizeof(Posting::value_type) + 4 * sizeof(void*));
-        for (const auto* planes : {&category_, &numeric_, &tags_})
-            for (const auto& p : *planes) n += p.capacity() * sizeof(uint64_t);
+        for (const auto& owner : owners_) n += owner.capacity() * sizeof(Posting::value_type);
         return n;
     }
 };
