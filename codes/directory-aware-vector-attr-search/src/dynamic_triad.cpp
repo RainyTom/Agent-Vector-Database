@@ -52,7 +52,7 @@ private:
     }
 };
 struct Args {
-    std::string data, trace, out, gt_in;
+    std::string data, trace, out, gt_in, static_batch;
     char arm = 0;
     size_t ef = 256, scan = 512, k = 10, eligible_scan_threshold = 512;
     std::string eligibility_policy = "off";
@@ -70,6 +70,7 @@ Args arguments(int argc, char** argv) {
         else if (key == "--trace") a.trace = value;
         else if (key == "--out") a.out = value;
         else if (key == "--gt-in") a.gt_in = value;
+        else if (key == "--static-batch") a.static_batch = value;
         else if (key == "--arm") {
             if (value.size() != 1) fail("arm must be A, B, C or P");
             a.arm = value[0];
@@ -98,13 +99,22 @@ Args arguments(int argc, char** argv) {
         fail("pack-layout must be dfs, shuffle or node");
     if (a.arm == 'P' && a.eligibility_policy == "off") fail("P requires eligibility-policy cap, hybrid or exact");
     if (a.arm != 'P' && a.pack_final_repack) fail("pack-final-repack requires arm P");
-    if (a.data.empty() || a.trace.empty() || a.out.empty() ||
+    if (!a.static_batch.empty()) {
+        if (a.arm != 'A' && a.arm != 'P') fail("static-batch requires arm A or P");
+        if (a.gt_in.empty()) fail("static-batch requires precomputed --gt-in");
+        if (a.pack_final_repack) fail("static-batch forbids final repack");
+        if (a.arm == 'A' && (a.scan || a.eligibility_policy != "off"))
+            fail("static-batch A requires scan-threshold 0 and eligibility-policy off");
+        if (a.arm == 'P' && a.eligibility_policy != "cap")
+            fail("static-batch P requires initial eligibility-policy cap");
+    }
+    if (a.data.empty() || a.trace.empty() || (a.out.empty() && a.static_batch.empty()) ||
         (a.arm != 'A' && a.arm != 'B' && a.arm != 'C' && a.arm != 'P') || !a.ef || !a.k ||
         !std::isfinite(a.compact) || a.compact <= 0 || a.compact > 1)
         fail("usage: dynamic_triad --data DIR --trace FILE --arm A|B|C|P --out PREFIX "
              "[--ef 256 --scan-threshold 512 --compact-threshold .2 --k 10 --gt-in PREFIX.queries.csv "
              "--eligibility-policy off|cap|hybrid|exact --eligible-scan-threshold 512 "
-             "--pack-layout dfs|shuffle|node --pack-size 1024 --pack-final-repack 0|1]");
+             "--pack-layout dfs|shuffle|node --pack-size 1024 --pack-final-repack 0|1 --static-batch FILE]");
     return a;
 }
 std::vector<float> floats(const std::string& path) {
@@ -179,6 +189,14 @@ class GtTape {
         column_count = names.size();
     }
 public:
+    void rewind(const std::string& path) {
+        in.close();
+        in.clear();
+        opened = false;
+        column_count = 0;
+        calls_column = NONE;
+        open(path);
+    }
     static uint64_t integer(const std::string& value) {
         if (value.empty()) fail("GT tape: empty integer");
         uint64_t result = 0;
@@ -278,6 +296,13 @@ class Runner {
     std::vector<double> query_times, update_times;
     std::ofstream qout, uout;
     GtTape gt_tape;
+    struct StaticPass {
+        size_t ef;
+        std::string policy, out;
+    };
+    std::vector<StaticPass> static_passes;
+    std::vector<Query> static_queries;
+    size_t static_pass = 0;
 
     static npi::Item eligibilityItem(const Item& item) {
         return {static_cast<npi::Id>(item.node), item.category, item.numeric, item.tags, item.alive};
@@ -568,12 +593,15 @@ class Runner {
         for (size_t i = 0; i < values.size(); ++i) { if (i) out << ';'; out << values[i].second; }
         return out.str();
     }
-    void query(size_t event, const Query& q) {
+    void validateQuery(const Query& q) const {
         node(q.anchor);
         if (q.qidx >= tests.size() / dim || (q.recursive != 0 && q.recursive != 1) ||
             q.tagmode < 0 || q.tagmode > 4 ||
             (q.combine != 0 && q.combine != 1) ||
             ((q.lo != -1 || q.hi != -1) && q.lo > q.hi)) fail("invalid Q fields");
+    }
+    void query(size_t event, const Query& q) {
+        validateQuery(q);
         const float* qvec = tests.data() + q.qidx * dim;
         size_t anchor_depth = depth(q.anchor); // Output-only diagnostic, as in the frozen runner.
         auto e2e_start = Clock::now();
@@ -1122,6 +1150,13 @@ class Runner {
         number("eligible_scan_us_total", eligible_scan_us_total);
         number("n_vectors", items.size()); number("n_nodes", parent.size()); number("dim", dim);
         number("n_queries", query_index); number("n_updates", update_count); number("build_s", build_s);
+        if (!static_passes.empty()) {
+            number("static_batch_pass", static_pass);
+            number("static_batch_passes", static_passes.size());
+            number("static_index_reused", static_pass ? 1 : 0);
+            number("session_build_s", build_s);
+            number("build_charged_this_pass", static_pass ? 0 : 1);
+        }
         metadata += local_eligible_counts.capacity() * sizeof(size_t);
         const size_t packed_bytes = packed_index ? packed_index->bytes() : 0;
         const size_t packed_metadata = packed_index ? packed_index->metadata_bytes() : 0;
@@ -1223,6 +1258,112 @@ class Runner {
         out << "  \"complete\": " << (complete ? "true" : "false") << "\n}\n";
         if (!out) fail("failed writing summary");
     }
+    void prepareStaticBatch() {
+        if (args.static_batch.empty()) return;
+        std::ifstream schedule(args.static_batch);
+        if (!schedule) fail("cannot open static-batch schedule");
+        std::string line, token, trailing;
+        if (!std::getline(schedule, line)) fail("missing static-batch count");
+        std::istringstream header(line);
+        if (!(header >> token) || (header >> trailing)) fail("invalid static-batch header");
+        const uint64_t count = GtTape::integer(token);
+        if (!count) fail("empty static-batch schedule");
+        std::set<std::filesystem::path> outputs;
+        for (uint64_t i = 0; i < count; ++i) {
+            if (!std::getline(schedule, line)) fail("static-batch ends before declared count");
+            std::istringstream row(line);
+            StaticPass pass;
+            if (!(row >> token >> pass.policy)) fail("malformed static-batch row");
+            const uint64_t ef = GtTape::integer(token);
+            if (!ef || ef > std::numeric_limits<size_t>::max()) fail("invalid static-batch ef");
+            pass.ef = static_cast<size_t>(ef);
+            row >> std::ws;
+            if (row.peek() != '"' || !(row >> std::quoted(pass.out)) || pass.out.empty() ||
+                (row >> trailing)) fail("static-batch requires quoted output prefix and no extra fields");
+            for (unsigned char c : pass.out)
+                if (c < 32 || c == 127) fail("static-batch output prefix contains control character");
+            if ((args.arm == 'A' && pass.policy != "off") ||
+                (args.arm == 'P' && pass.policy != "cap" && pass.policy != "hybrid" && pass.policy != "exact"))
+                fail("invalid static-batch eligibility policy");
+            // Resolve existing parent symlinks when comparing output aliases.
+            const auto prefix = std::filesystem::weakly_canonical(std::filesystem::absolute(pass.out));
+            if (!outputs.insert(prefix).second) fail("duplicate static-batch output prefix");
+            for (const char* suffix : {"", ".queries.csv", ".updates.csv", ".summary.json"}) {
+                const std::filesystem::path path(pass.out + suffix);
+                if (std::filesystem::exists(path) || std::filesystem::is_symlink(path))
+                    fail("static-batch output already exists: " + path.string());
+            }
+            static_passes.push_back(std::move(pass));
+        }
+        if (std::getline(schedule, line)) fail("extra static-batch row");
+        if (!schedule.eof()) fail("static-batch read failure");
+        std::ifstream trace(args.trace);
+        if (!std::getline(trace, line)) fail("missing static trace count");
+        std::istringstream trace_header(line);
+        if (!(trace_header >> token) || (trace_header >> trailing)) fail("invalid static trace header");
+        const uint64_t queries = GtTape::integer(token);
+        if (!queries) fail("empty static trace");
+        for (uint64_t i = 0; i < queries; ++i) {
+            if (!std::getline(trace, line)) fail("static trace ends before declared count");
+            std::istringstream row(line);
+            char op = 0;
+            row >> op;
+            if (op != 'Q') fail("static-batch trace must contain only Q events");
+            Query q;
+            fields(row, q.qidx, q.recursive, q.anchor, q.category, q.lo, q.hi, q.tagmode, q.tags, q.combine);
+            validateQuery(q);
+            static_queries.push_back(q);
+        }
+        if (std::getline(trace, line)) fail("extra static trace row");
+        if (!trace.eof()) fail("static trace read failure");
+        gt_tape.rewind(args.gt_in);
+    }
+    void resetStaticPass() {
+        query_index = update_count = 0;
+        invalid = duplicates = violations = distances = hops = 0;
+        total_gt = total_hits = zero_gt = gt_distance_calls = 0;
+        total_fanout = total_scan_nodes = 0;
+        total_graph_calls = total_scan_groups = total_scanned_live = 0;
+        total_graph_distances = total_scan_distances = total_merged_candidates = 0;
+        total_directory_visits = total_qualification_directories = 0;
+        total_qualification_postings = total_qualification_attributes = total_mask_mismatches = 0;
+        effective_ef_min = NONE; effective_ef_max = 0;
+        eligibility_update_us_total = eligibility_us_total = eligible_scan_us_total = 0;
+        update_distances = packed_qualified_ids = 0;
+        query_total = update_total = gt_total = recall_sum = 0;
+        totals = Update{};
+        final_repack_us = 0; final_repack_work = packed::UpdateWork{}; final_repack_complete = false;
+        query_times.clear(); update_times.clear();
+        // Distance deltas are query-local; keep recorded build provenance.
+        space->calls = 0;
+        gt_tape.rewind(args.gt_in);
+    }
+    void runStaticBatch() {
+        const uint64_t canonical = canonicalFingerprint();
+        for (static_pass = 0; static_pass < static_passes.size(); ++static_pass) {
+            const auto& pass = static_passes[static_pass];
+            args.ef = pass.ef; args.eligibility_policy = pass.policy; args.out = pass.out;
+            resetStaticPass();
+            openOutputs();
+            size_t current = 0;
+            try {
+                for (const auto& q : static_queries) {
+                    query(++current, q);
+                    if (!qout || !uout) fail("CSV write failure");
+                }
+                gt_tape.finish(args.gt_in);
+                auditPacked();
+                if (canonicalFingerprint() != canonical) fail("static-batch changed canonical state");
+                summary(true);
+                qout.close(); uout.close();
+                if (!qout || !uout) fail("CSV close failure");
+            } catch (const std::exception& e) {
+                const std::string context = "event " + std::to_string(current) + ": " + e.what();
+                summary(false, context, current);
+                throw std::runtime_error(context);
+            }
+        }
+    }
 public:
     explicit Runner(Args a) : args(std::move(a)) {}
     void load() {
@@ -1274,6 +1415,7 @@ public:
         if (attr >> surplus) fail("extra attrs rows");
         if (args.eligibility_policy != "off" && items.size() > size_t(std::numeric_limits<npi::Id>::max()))
             fail("eligibility index item IDs exceed uint32 range");
+        prepareStaticBatch();
         auto start = Clock::now();
         space = std::make_unique<CountedL2>(dim);
         Update build;
@@ -1317,6 +1459,10 @@ public:
         initial_pack_fingerprint = packed_index ? packed_index->fingerprint() : 0;
         auditPacked();
         initial_graph_stats = graphStats();
+        if (static_passes.empty()) openOutputs();
+    }
+    void openOutputs() {
+        qout.clear(); uout.clear();
         auto directory = std::filesystem::path(args.out).parent_path();
         if (!directory.empty()) std::filesystem::create_directories(directory);
         qout.open(args.out + ".queries.csv"); uout.open(args.out + ".updates.csv");
@@ -1334,6 +1480,7 @@ public:
         uout << ",eligibility_update_us,graph_distance_calls,packed_splits,packed_rebuild_us,physical_block_count,pack_layout,pack_size\n";
     }
     void run() {
+        if (!static_passes.empty()) { runStaticBatch(); return; }
         std::ifstream trace(args.trace);
         size_t count = 0, current = 0;
         std::string line;
