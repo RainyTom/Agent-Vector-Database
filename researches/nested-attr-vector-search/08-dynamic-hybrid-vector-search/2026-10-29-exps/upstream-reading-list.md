@@ -16,7 +16,7 @@
 
 **当前状态（2026-10-31）：** 已接收服务器[2f8c4e0小预算结果](https://github.com/RainyTom/Agent-Vector-Database/blob/2f8c4e0/researches/nested-attr-vector-search/2026-10-30-exps/closure-small-ef-report.md)：ef15/20下A及同池U均在时间、macro/pair上支配H，E<ef贡献大多数展开，而E≥ef中H/R也无系统性下降。研究端[收尾报告](../../2026-10-31-exps/report.md)停止当前原型扩展；旧代码/协议保留复现，不再自动升预算、扩N或启动Dynamic。该结论不否证全部层级/图索引；真实维护仍未测。
 
-**后续明确授权的当前任务：** 用户要求资格基数感知ef与完整本地实现，新增[资格感知执行方案](../../2026-10-31-exps/eligibility-execution-plan.md)、[服务器提示词](../../2026-10-31-exps/eligibility-server-prompt.md)、[本地烟测/错误修复](../../2026-10-31-exps/eligibility-local-report.md)。按用户最新定义，主基线A-graph对全部非空direct目录使用HNSW，禁止扫描回退和资格规划；旧scan512仅历史参考，A-aware不运行。任务修订为102次静态/36次有限维护；旧H负结果不撤回，不自动扩N或宣称论文创新通过。
+**最新完成状态：** 服务器3aaa0ed完成纯NodeANN主基线的102次静态/36次有限维护。先读[独立复核与勘误](../../2026-10-31-exps/eligibility-3aaa0ed-review.md)：执行修正有效，H在四个整体非空点被U-aware支配，停止H扩展；E<ef与E≤512重叠导致原总expanded及45%占比错误，双Recall门、有效ef均值和内存归因亦有修正。[方案](../../2026-10-31-exps/eligibility-execution-plan.md)与[服务器任务书](../../2026-10-31-exps/eligibility-server-prompt.md)仅保留历史复现，不自动扩N或启动新任务。有限维护已实测，长期动态/并发仍未测。
 
 
 

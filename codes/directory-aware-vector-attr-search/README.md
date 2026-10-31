@@ -219,6 +219,8 @@ python scripts/run_closure_small_ef.py \
 
 用户要求的新执行修正，非旧H论文主张复活。[完整方案](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-execution-plan.md)、[服务器任务](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-server-prompt.md)、[本地实测](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-local-report.md)。
 
+**完成状态：** 服务器3aaa0ed已完成102次静态与36次有限维护；资格执行改进成立，H无独立收益，停止扩展。见[结果复核与分析勘误](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-3aaa0ed-review.md)。以下命令是历史复现，不是新任务；未修改查询算法或基线去追正结果。
+
 `eligibility_index.h`以真实目录树、稀疏direct-owner word postings及属性bitplanes取得完整资格mask/E，计入查询成本；V/T/M/B/R/D/I同步维护。两程序新增 `--eligibility-policy off|cap|hybrid|exact`、`--eligible-scan-threshold 512`。默认off保留原算法；cap截断合法堆容量，hybrid在小E上直接精确扫描，exact提供同资格取得的扫描控制。图/pool仍构建维护，Exact不代表独立无图内存成绩。原rank编译/候选池/剪枝不改。
 
 **当前主基线为纯NodeANN（用户后续指定）：** 驱动显式传入 `--scan-threshold 0 --eligibility-policy off`，每个非空direct目录建立局部HNSW，不做小目录扫描、资格前置或自适应规划。变体名A-graph；旧scan512为A-hybrid-reference，仅作历史参考。A-aware不纳入本轮。C++默认参数保留以便历史复现，不能用默认值代替驱动中的纯图合同。逐query自动核对扫描组/扫描距离为0、graph_calls=fanout。

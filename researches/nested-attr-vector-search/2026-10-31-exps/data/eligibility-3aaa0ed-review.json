@@ -1,0 +1,252 @@
+{
+  "source_commit": "3aaa0ed",
+  "source_urls": {
+    "static-summary": "https://raw.githubusercontent.com/RainyTom/Agent-Vector-Database/3aaa0ed/researches/nested-attr-vector-search/2026-10-31-exps/data/eligibility-static-run1/static-summary.json",
+    "bands": "https://raw.githubusercontent.com/RainyTom/Agent-Vector-Database/3aaa0ed/researches/nested-attr-vector-search/2026-10-31-exps/data/eligibility-static-run1/bands.json",
+    "nodeann-audit": "https://raw.githubusercontent.com/RainyTom/Agent-Vector-Database/3aaa0ed/researches/nested-attr-vector-search/2026-10-31-exps/data/eligibility-static-run1/nodeann-audit.json"
+  },
+  "parsed_rows": {
+    "static_summary": 34,
+    "bands": 204
+  },
+  "no_ann_rerun": true,
+  "counts_kind": "per-repeat nonempty totals reconstructed from source means and counts; overlaps not summed",
+  "expanded_corrections": [
+    {
+      "dataset": "wiki",
+      "ef": 20,
+      "rows": [
+        {
+          "variant": "U-off",
+          "unique_query_expanded_total_per_repeat": 125142.00000000003,
+          "E_lt_ef_expanded": 106060.0,
+          "low_share": 0.8475172204375827,
+          "overlapping_band_sum": 231202.0,
+          "macro": 0.9625,
+          "pair": 0.9443929564411492
+        },
+        {
+          "variant": "U-cap",
+          "unique_query_expanded_total_per_repeat": 105976.0,
+          "E_lt_ef_expanded": 86894.0,
+          "low_share": 0.8199403638559674,
+          "overlapping_band_sum": 192870.0,
+          "macro": 0.9625,
+          "pair": 0.9443929564411492
+        },
+        {
+          "variant": "U-aware",
+          "unique_query_expanded_total_per_repeat": 2879.0,
+          "E_lt_ef_expanded": 0.0,
+          "low_share": 0.0,
+          "overlapping_band_sum": 2879.0,
+          "macro": 0.9724999999999999,
+          "pair": 0.959221501390176
+        },
+        {
+          "variant": "H-off",
+          "unique_query_expanded_total_per_repeat": 125202.99999999997,
+          "E_lt_ef_expanded": 106060.0,
+          "low_share": 0.8471043026125574,
+          "overlapping_band_sum": 231263.0,
+          "macro": 0.9481249999999999,
+          "pair": 0.9230769230769231
+        },
+        {
+          "variant": "H-cap",
+          "unique_query_expanded_total_per_repeat": 106037.0,
+          "E_lt_ef_expanded": 86894.0,
+          "low_share": 0.8194686760281789,
+          "overlapping_band_sum": 192931.0,
+          "macro": 0.9481249999999999,
+          "pair": 0.9230769230769231
+        },
+        {
+          "variant": "H-aware",
+          "unique_query_expanded_total_per_repeat": 2930.0,
+          "E_lt_ef_expanded": 0.0,
+          "low_share": 0.0,
+          "overlapping_band_sum": 2930.0,
+          "macro": 0.96125,
+          "pair": 0.9425393883225208
+        }
+      ]
+    },
+    {
+      "dataset": "sift",
+      "ef": 20,
+      "rows": [
+        {
+          "variant": "U-off",
+          "unique_query_expanded_total_per_repeat": 234244.00000000003,
+          "E_lt_ef_expanded": 194399.99999999997,
+          "low_share": 0.8299038609313363,
+          "overlapping_band_sum": 428644.0,
+          "macro": 0.9613333333333333,
+          "pair": 0.9553502694380293
+        },
+        {
+          "variant": "U-cap",
+          "unique_query_expanded_total_per_repeat": 169216.0,
+          "E_lt_ef_expanded": 129371.99999999999,
+          "low_share": 0.764537632375189,
+          "overlapping_band_sum": 298587.99999999994,
+          "macro": 0.9613333333333333,
+          "pair": 0.9553502694380293
+        },
+        {
+          "variant": "U-aware",
+          "unique_query_expanded_total_per_repeat": 6625.999999999999,
+          "E_lt_ef_expanded": 0.0,
+          "low_share": 0.0,
+          "overlapping_band_sum": 6626.0,
+          "macro": 0.9833333333333333,
+          "pair": 0.9807544264819091
+        },
+        {
+          "variant": "H-off",
+          "unique_query_expanded_total_per_repeat": 234265.0,
+          "E_lt_ef_expanded": 194399.99999999997,
+          "low_share": 0.8298294666296714,
+          "overlapping_band_sum": 428665.0,
+          "macro": 0.9533333333333334,
+          "pair": 0.9461123941493457
+        },
+        {
+          "variant": "H-cap",
+          "unique_query_expanded_total_per_repeat": 169237.0,
+          "E_lt_ef_expanded": 129371.99999999999,
+          "low_share": 0.7644427636982456,
+          "overlapping_band_sum": 298609.0,
+          "macro": 0.9533333333333334,
+          "pair": 0.9461123941493457
+        },
+        {
+          "variant": "H-aware",
+          "unique_query_expanded_total_per_repeat": 6643.999999999999,
+          "E_lt_ef_expanded": 0.0,
+          "low_share": 0.0,
+          "overlapping_band_sum": 6644.0,
+          "macro": 0.9773333333333333,
+          "pair": 0.9738260200153964
+        }
+      ]
+    }
+  ],
+  "quality_targets_require_macro_and_pair": {
+    "wiki": {
+      "0.95": [
+        "A-graph/ef15",
+        "A-graph/ef20",
+        "U-aware/ef15",
+        "U-aware/ef20",
+        "Exact/ef20",
+        "A-hybrid-reference/ef15",
+        "A-hybrid-reference/ef20"
+      ],
+      "0.99": [
+        "A-graph/ef20",
+        "Exact/ef20",
+        "A-hybrid-reference/ef15",
+        "A-hybrid-reference/ef20"
+      ]
+    },
+    "sift": {
+      "0.95": [
+        "A-graph/ef15",
+        "A-graph/ef20",
+        "U-off/ef20",
+        "U-cap/ef20",
+        "U-aware/ef15",
+        "U-aware/ef20",
+        "H-aware/ef15",
+        "H-aware/ef20",
+        "Exact/ef20",
+        "A-hybrid-reference/ef15",
+        "A-hybrid-reference/ef20"
+      ],
+      "0.99": [
+        "A-graph/ef15",
+        "A-graph/ef20",
+        "Exact/ef20",
+        "A-hybrid-reference/ef15",
+        "A-hybrid-reference/ef20"
+      ]
+    }
+  },
+  "dominance": [
+    {
+      "dataset": "wiki",
+      "ef": 15,
+      "U_dominates_H": true,
+      "H_over_U_time": 1.0595989302831867,
+      "H_over_A_time": 0.3388630335355417,
+      "H_quality_no_worse_A": false
+    },
+    {
+      "dataset": "wiki",
+      "ef": 20,
+      "U_dominates_H": true,
+      "H_over_U_time": 1.077664064284218,
+      "H_over_A_time": 0.4020822102565158,
+      "H_quality_no_worse_A": false
+    },
+    {
+      "dataset": "sift",
+      "ef": 15,
+      "U_dominates_H": true,
+      "H_over_U_time": 1.3835095786236715,
+      "H_over_A_time": 1.4582133670178874,
+      "H_quality_no_worse_A": false
+    },
+    {
+      "dataset": "sift",
+      "ef": 20,
+      "U_dominates_H": true,
+      "H_over_U_time": 1.3889376696841862,
+      "H_over_A_time": 1.8324826757235415,
+      "H_quality_no_worse_A": false
+    }
+  ],
+  "local_mutex_probe": {
+    "sizeof_std_mutex": 40,
+    "locks_per_graph": 65536,
+    "bytes_143_graphs": 374865920,
+    "server_ABI_measured": false
+  },
+  "effective_ef_mean_is_not_range": {
+    "sift": {
+      "A-graph": {
+        "mean": 15.0,
+        "p50": 20.0,
+        "p95": 20.0,
+        "p99": 20.0,
+        "maximum": 20.0
+      },
+      "A-hybrid-reference": {
+        "mean": 15.0,
+        "p50": 20.0,
+        "p95": 20.0,
+        "p99": 20.0,
+        "maximum": 20.0
+      }
+    },
+    "wiki": {
+      "A-graph": {
+        "mean": 16.0,
+        "p50": 20.0,
+        "p95": 20.0,
+        "p99": 20.0,
+        "maximum": 20.0
+      },
+      "A-hybrid-reference": {
+        "mean": 16.0,
+        "p50": 20.0,
+        "p95": 20.0,
+        "p99": 20.0,
+        "maximum": 20.0
+      }
+    }
+  },
+  "raw_query_csv_not_available_locally": true
+}

@@ -104,3 +104,15 @@ U编译占e2e约79.8%～88.3%，H约82.0%～89.3%；共同路径已支付绝大�
 
 复现：使用§8的`work/eligibility-execution-local/original-static`输入，运行新驱动的`--smoke`静态至`work/eligibility-execution-local/pure-static`，`--stage maintenance --smoke`至`pure-maintenance`；源码/输入/二进制SHA及完整命令在各manifest。下一步以更新后的[服务器提示词](eligibility-server-prompt.md)为准，禁止复用旧输出目录或混淆两种NodeANN。
 
+## 10. 接收3aaa0ed：停止H，保留执行修正并纠正汇总
+
+服务器已完成102次static与36次有限maintenance，报告语义零错误。研究端读取34个静态聚合点、204条分组记录和打包源码，重算质量/展开口径；没有重跑ANN。详见[独立复核](eligibility-3aaa0ed-review.md)及[data/eligibility-3aaa0ed-review.json](data/eligibility-3aaa0ed-review.json)。
+
+主要实验结论成立：资格前置与小集合精确扫描有效；H-aware在两个数据集、两个预算共四点均被U-aware的质量与时间支配，没有同质量击败纯NodeANN的证据。结束当前任务，不继续H追参或扩大规模。
+
+纠正报告分母：E<ef包含在E≤512内，两组相加重复计数；U-off ef20正确总展开为WIKI125142、SIFT234244，E<ef占84.75%/82.99%，不是45%。U-cap降幅15.32%/27.76%，U-aware降幅97.70%/97.17%。双Recall门、有效ef均值/范围及SIFT RSS叙述也有勘误，见新复核。
+
+本地另外实际运行C++尺寸探针：std::mutex为40字节；固定hnswlib每图65536个标签操作锁，143图该payload在本地ABI下374.87MB。服务器ABI未实测，不能把485.5MB全部归因于2倍容量，也不能宣称精确RSS拆账。已视觉检查服务器PNG，未修改图；其macro轴不代表联合质量门。
+
+已有真实输入上的有限维护证据：H/U的便宜M与昂贵I/全量压实必须一起计费。未测的是长期动态、并发、稳态债务与大N，不再笼统写“维护未测”。Exact是有效可执行的查询控制，但尚无独立无图结构build/RSS测量。下一步仅保存勘误与研究状态；无新的服务器性能任务。
+
