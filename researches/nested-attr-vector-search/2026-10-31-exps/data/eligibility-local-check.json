@@ -1,0 +1,284 @@
+{
+  "kind": "synthetic_actual_cpp_execution_not_performance_evidence",
+  "fixture": {
+    "objects": 80,
+    "dimensions": 4,
+    "source_queries": 6,
+    "mixed_queries": 180
+  },
+  "regressions": {
+    "test_eligibility": 2,
+    "test_dynamic_triad": 3,
+    "test_closure": 3,
+    "final_all_passed": true
+  },
+  "frozen_off_behavior": [
+    {
+      "arm": "A",
+      "scan_threshold": 512,
+      "ef": 15,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes"
+      ],
+      "mismatches": 0
+    },
+    {
+      "arm": "A",
+      "scan_threshold": 512,
+      "ef": 20,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes"
+      ],
+      "mismatches": 0
+    },
+    {
+      "arm": "A",
+      "scan_threshold": 0,
+      "ef": 15,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes"
+      ],
+      "mismatches": 0
+    },
+    {
+      "arm": "A",
+      "scan_threshold": 0,
+      "ef": 20,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes"
+      ],
+      "mismatches": 0
+    },
+    {
+      "arm": "U",
+      "scan_threshold": 512,
+      "ef": 15,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes",
+        "expanded",
+        "pool_candidates",
+        "retained",
+        "pruned"
+      ],
+      "mismatches": 0
+    },
+    {
+      "arm": "U",
+      "scan_threshold": 512,
+      "ef": 20,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes",
+        "expanded",
+        "pool_candidates",
+        "retained",
+        "pruned"
+      ],
+      "mismatches": 0
+    },
+    {
+      "arm": "H",
+      "scan_threshold": 512,
+      "ef": 15,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes",
+        "expanded",
+        "pool_candidates",
+        "retained",
+        "pruned"
+      ],
+      "mismatches": 0
+    },
+    {
+      "arm": "H",
+      "scan_threshold": 512,
+      "ef": 20,
+      "paired_queries": 180,
+      "compared_fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "ann_hops",
+        "scope_card",
+        "eligible_card",
+        "fanout",
+        "scan_nodes",
+        "expanded",
+        "pool_candidates",
+        "retained",
+        "pruned"
+      ],
+      "mismatches": 0
+    }
+  ],
+  "stages": {
+    "static-final": {
+      "complete": true,
+      "timed_runs": 57,
+      "query_records": 10260,
+      "paths": {
+        "legacy": 4320,
+        "exact": 2520,
+        "empty": 1980,
+        "graph": 1440
+      },
+      "error_or_gt_distance_total": 0,
+      "distance_split_violations": 0,
+      "observed_compaction_events_sum_over_repeats": 0,
+      "examples_not_independent_samples": [
+        {
+          "scope_card": "75",
+          "eligible_card": "75",
+          "execution_path": "legacy",
+          "effective_ef": "20",
+          "distance_calls": "75",
+          "graph_calls": "0",
+          "scalar_scan_group_calls": "8",
+          "expanded": null,
+          "variant": "A-off",
+          "initial_hnsw_index_containers": 0,
+          "initial_index_live_count": 0
+        },
+        {
+          "scope_card": "75",
+          "eligible_card": "75",
+          "execution_path": "exact",
+          "effective_ef": "20",
+          "distance_calls": "75",
+          "graph_calls": "0",
+          "scalar_scan_group_calls": "0",
+          "expanded": null,
+          "variant": "A-aware",
+          "initial_hnsw_index_containers": 0,
+          "initial_index_live_count": 0
+        },
+        {
+          "scope_card": "75",
+          "eligible_card": "75",
+          "execution_path": "legacy",
+          "effective_ef": "20",
+          "distance_calls": "35",
+          "graph_calls": null,
+          "scalar_scan_group_calls": null,
+          "expanded": "20",
+          "variant": "H-off",
+          "initial_hnsw_index_containers": null,
+          "initial_index_live_count": null
+        },
+        {
+          "scope_card": "75",
+          "eligible_card": "75",
+          "execution_path": "graph",
+          "effective_ef": "20",
+          "distance_calls": "35",
+          "graph_calls": null,
+          "scalar_scan_group_calls": null,
+          "expanded": "20",
+          "variant": "H-cap",
+          "initial_hnsw_index_containers": null,
+          "initial_index_live_count": null
+        },
+        {
+          "scope_card": "75",
+          "eligible_card": "75",
+          "execution_path": "exact",
+          "effective_ef": "20",
+          "distance_calls": "75",
+          "graph_calls": null,
+          "scalar_scan_group_calls": null,
+          "expanded": "0",
+          "variant": "H-aware",
+          "initial_hnsw_index_containers": null,
+          "initial_index_live_count": null
+        },
+        {
+          "scope_card": "75",
+          "eligible_card": "75",
+          "execution_path": "legacy",
+          "effective_ef": "20",
+          "distance_calls": "83",
+          "graph_calls": "8",
+          "scalar_scan_group_calls": "0",
+          "expanded": null,
+          "variant": "A-graph-only",
+          "initial_hnsw_index_containers": 8,
+          "initial_index_live_count": 75
+        }
+      ],
+      "manifest_sha256": "18e3c5ec4a043dc11f07cdca9dbc3a893e8ef36b90416d24cad977169701a5c0",
+      "raw_root": "work/eligibility-execution-local/static-final"
+    },
+    "maintenance-final": {
+      "complete": true,
+      "timed_runs": 24,
+      "query_records": 3768,
+      "paths": {
+        "legacy": 942,
+        "exact": 2214,
+        "empty": 612
+      },
+      "error_or_gt_distance_total": 0,
+      "distance_split_violations": 0,
+      "observed_compaction_events_sum_over_repeats": 6,
+      "examples_not_independent_samples": [],
+      "manifest_sha256": "381f4d991531c36cf8340878aa4bcab3b56ba7b7ad80ad7453247326d61d5757",
+      "raw_root": "work/eligibility-execution-local/maintenance-final"
+    }
+  },
+  "initial_failure": "Appended diagnostics made dynamic_triad reject its own GT tape schema; fixed stable-prefix parsing with duplicate-column and gt_distance validation; all three existing dynamic regressions then passed."
+}

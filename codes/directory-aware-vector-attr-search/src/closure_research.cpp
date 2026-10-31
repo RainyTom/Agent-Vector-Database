@@ -63,6 +63,8 @@ std::string json(const std::string& s) {
 struct Args {
     std::string data, trace, out, arm = "H", gt;
     size_t ef = 100, k = 10, pool = 64, audit_count = 8;
+    std::string eligibility_policy = "off";
+    size_t eligible_scan_threshold = 512;
     bool oracle = false, self = false, audit = false;
     closure::Mode mode() const {
         if (arm == "U") return closure::Mode::Unpruned;
@@ -88,10 +90,15 @@ void parse(Args& a, int argc, char** argv) {
         else if (flag == "--k") a.k = number<size_t>(value);
         else if (flag == "--pool-size") a.pool = number<size_t>(value);
         else if (flag == "--audit-count") a.audit_count = number<size_t>(value);
+        else if (flag == "--eligibility-policy") a.eligibility_policy = value;
+        else if (flag == "--eligible-scan-threshold") a.eligible_scan_threshold = number<size_t>(value);
         else fail("unknown option " + flag);
     }
     require(a.arm == "U" || a.arm == "G" || a.arm == "R" || a.arm == "H" || a.arm == "H0", "invalid arm");
-    require(a.k && a.ef >= a.k && a.pool && a.pool <= 64 && a.audit_count, "require ef >= k > 0, pool in [1,64], audit-count > 0");
+    require(a.eligibility_policy == "off" || a.eligibility_policy == "cap" ||
+            a.eligibility_policy == "hybrid" || a.eligibility_policy == "exact", "invalid eligibility policy");
+    require(a.k && (a.eligibility_policy != "off" || a.ef >= a.k) && a.pool && a.pool <= 64 && a.audit_count,
+            "require k > 0 (off requires ef >= k), pool in [1,64], audit-count > 0");
     require(!(a.oracle && a.audit) && (!(a.oracle || a.audit) || a.gt.empty()), "oracle/audit/gt-in options conflict");
     require(a.self || (!a.data.empty() && !a.trace.empty() && !a.out.empty()), "require --data --trace --out (or --self-check)");
     require(a.gt.empty() || a.gt != a.out + ".queries.csv", "GT input must not be overwritten by output");
@@ -287,20 +294,22 @@ struct Runner {
     uint64_t total_gt = 0, total_hits = 0, nonempty = 0, invalid = 0, duplicates = 0, state_errors = 0;
     uint64_t gt_calls = 0, distance_calls = 0, update_geometry_calls = 0, compactions = 0;
     double recall_sum = 0, nonempty_recall_sum = 0, query_us = 0, update_us = 0, validation_us = 0;
+    double eligibility_update_us_total = 0;
+    uint64_t qualification_mask_mismatches = 0;
     std::vector<double> query_times, update_times;
     explicit Runner(const Args& a) : args(a), data(npi::Dataset::load(a.data)), shadow(data) {
         qout.open(a.out + ".queries.csv"); uout.open(a.out + ".updates.csv");
         require(bool(qout) && bool(uout), "cannot open output CSV");
         qout << std::setprecision(17) << query_columns;
         if (a.oracle) qout << ",gt_distance_calls\n";
-        else qout << ",gt_distance_calls,expanded,visited_checks,pool_candidates,scope_rejected,pruned,retained,witness_tests,hierarchy_steps,backbone_ids,qualification_tests,compile_us,state_errors,validation_us\n";
-        uout << std::setprecision(17) << "event,version,op,latency_us,geometry_calls,pools_rebuilt,graph_insertions,graph_deletions,compactions,metadata_writes,affected_items,rebuild_us,validation_us\n";
+        else qout << ",gt_distance_calls,expanded,visited_checks,pool_candidates,scope_rejected,pruned,retained,witness_tests,hierarchy_steps,backbone_ids,qualification_tests,compile_us,state_errors,validation_us,eligibility_us,eligible_scan_us,eligibility_policy,execution_path,effective_ef,qualification_directory_visits,qualification_posting_words,qualification_attribute_words,qualification_mask_mismatches\n";
+        uout << std::setprecision(17) << "event,version,op,latency_us,geometry_calls,pools_rebuilt,graph_insertions,graph_deletions,compactions,metadata_writes,affected_items,rebuild_us,validation_us,eligibility_update_us\n";
         if (a.audit) {
             aout.open(a.out + ".audit.csv"); require(bool(aout), "cannot open audit CSV");
             aout << "event,qidx,source,scope_anchor,local_H_edges,restricted_root_H_edges,G_edges,R_edges,H0_edges,U_edges,H_vs_R_diff,H_vs_G_diff,H_vs_H0_diff,heredity_mismatch,heredity_applicable\n";
         }
         if (!a.gt.empty()) tape = std::make_unique<GtTape>(a.gt);
-        if (!a.oracle) index = std::make_unique<closure::Index>(data, a.pool);
+        if (!a.oracle) index = std::make_unique<closure::Index>(data, a.pool, a.eligibility_policy, a.eligible_scan_threshold);
     }
     void audit(const Query& q) {
         require(index->scope_size(q) == shadow.counts(q).first, "offline scope cardinality mismatch");
@@ -339,6 +348,7 @@ struct Runner {
         }
         // Tape I/O, oracle scans, result validation and state checks are all outside e2e.
         auto validation_start = Clock::now();
+        Event checked; checked.op = 'Q'; checked.q = q; shadow.validate(checked);
         auto counts = shadow.counts(q);
         auto gt_start = Clock::now();
         uint64_t calls = 0;
@@ -348,6 +358,18 @@ struct Runner {
         double gt_us = elapsed(gt_start);
         if (args.oracle) { scope = counts.first; result.clear(); for (Id id : gt) result.emplace_back(0, id); }
         size_t bad = 0, dup = 0, valid = 0, errors = scope != counts.first, hits = 0;
+        size_t mask_errors = 0;
+        if (index && index->prepared_eligibility()) {
+            const auto& mask = *index->prepared_eligibility();
+            mask_errors += mask.scope_count != counts.first;
+            mask_errors += mask.count != counts.second;
+            for (size_t i = 0; i < shadow.items.size(); ++i) {
+                mask_errors += mask.in_scope(Id(i)) != shadow.scope(Id(i), q);
+                mask_errors += mask.contains(Id(i)) != shadow.eligible(Id(i), q);
+            }
+        }
+        errors += mask_errors;
+        qualification_mask_mismatches += mask_errors;
         std::unordered_set<Id> seen, wanted(gt.begin(), gt.end());
         for (auto p : result) {
             bool ok = shadow.eligible(p.second, q); valid += ok; bad += !ok;
@@ -362,7 +384,10 @@ struct Runner {
              << valid << ',' << bad << ',' << dup << ',' << ids(gt) << ',' << ids(labels(result)) << ',' << size_t(scope != 0) << ",0," << calls;
         if (!args.oracle) qout << ',' << work.expanded << ',' << work.visited_checks << ',' << work.pool_candidates << ',' << work.scope_rejected
              << ',' << work.pruned << ',' << work.retained << ',' << work.witness_tests << ',' << work.hierarchy_steps << ',' << work.backbone_ids
-             << ',' << work.qualification_tests << ',' << work.compile_us << ',' << errors << ',' << checking_us;
+             << ',' << work.qualification_tests << ',' << work.compile_us << ',' << errors << ',' << checking_us
+             << ',' << work.eligibility_us << ',' << work.eligible_scan_us << ',' << args.eligibility_policy
+             << ',' << work.execution_path << ',' << work.effective_ef << ',' << work.qualification_directory_visits
+             << ',' << work.qualification_posting_words << ',' << work.qualification_attribute_words << ',' << mask_errors;
         qout << '\n'; qout.flush(); require(bool(qout), "query CSV write failed");
         ++queries; query_times.push_back(e2e_us); query_us += e2e_us; validation_us += checking_us;
         total_gt += gt.size(); total_hits += hits; recall_sum += recall;
@@ -383,9 +408,10 @@ struct Runner {
         double checking_us = elapsed(validation_start);
         ++version; ++updates; state_errors += errors; update_geometry_calls += work.geometry_calls; compactions += work.compactions;
         update_times.push_back(latency); update_us += latency; validation_us += checking_us;
+        eligibility_update_us_total += work.eligibility_update_us;
         uout << event_number << ',' << version << ',' << e.op << ',' << latency << ',' << work.geometry_calls << ',' << work.pools_rebuilt << ','
              << work.graph_insertions << ',' << work.graph_deletions << ',' << work.compactions << ',' << work.metadata_writes << ','
-             << work.affected_items << ',' << work.rebuild_us << ',' << checking_us << '\n';
+             << work.affected_items << ',' << work.rebuild_us << ',' << checking_us << ',' << work.eligibility_update_us << '\n';
         uout.flush(); require(bool(uout), "update CSV write failed");
         require(!errors, "metadata-only update changed geometry/pools");
     }
@@ -396,8 +422,9 @@ struct Runner {
         for (size_t i = 0; i < count; ++i) {
             event_number = i + 1;
             require(bool(std::getline(in, line)), "trace shorter than event count");
-            Event e = parse_event(line); shadow.validate(e);
-            if (e.op == 'Q') query(e.q); else update(e);
+            Event e = parse_event(line);
+            if (e.op == 'Q') query(e.q);
+            else { shadow.validate(e); update(e); }
         }
         require(!std::getline(in, line), "trace has extra event lines"); require(in.eof(), "trace read failure");
         if (tape) tape->finish();
@@ -421,6 +448,15 @@ struct Runner {
         num("recall_pair", total_gt ? double(total_hits) / total_gt : 0); num("total_gt", total_gt); num("total_hits", total_hits);
         num("invalid", invalid); num("duplicates", duplicates); num("state_errors", state_errors);
         num("build_s", build.total_s); num("build_graph_s", build.graph_s); num("build_pools_s", build.pools_s); num("build_geometry_calls", build.geometry_calls);
+        text("eligibility_policy", args.eligibility_policy); num("eligible_scan_threshold", args.eligible_scan_threshold);
+        num("eligibility_build_us", build.eligibility_build_us);
+        num("eligibility_index_bytes", index ? index->eligibility_bytes() : 0);
+        num("eligibility_update_us_total", eligibility_update_us_total);
+        num("qualification_mask_mismatches", qualification_mask_mismatches);
+        text("qualification_work_kind", "logical directory visits, direct posting words ORed, attribute bitplane words read; not hardware counters");
+        text("qualification_representation", "sparse direct-owner word maps; actual descendant traversal O(directories); dense categorical/numeric/tag bitplanes; live and reusable scratch included in bytes; no descendant materialization");
+        text("eligibility_geometry_policy", "all policies retain graph/pool construction and maintenance, including exact; no standalone exact-index memory claim");
+        text("eligibility_compile_policy", "unchanged pool/rank/LCA compilation and scalar Extra witnesses in every policy; qualification only chooses empty/exact/capped execution");
         num("distance_calls", distance_calls); num("gt_distance_calls", gt_calls);
         num("update_geometry_calls", update_geometry_calls); num("compaction_count", compactions);
         num("query_total_us", query_us); num("update_total_us", update_us); num("total_workload_us", query_us + update_us);
@@ -440,13 +476,16 @@ struct Runner {
 void verify(closure::Index& index, const npi::Dataset& d, const Canonical& shadow) {
     const std::array<closure::Mode, 5> modes = {closure::Mode::Unpruned, closure::Mode::Geometric, closure::Mode::Interval, closure::Mode::Hierarchy, closure::Mode::Hierarchy};
     for (size_t anchor = 0; anchor < shadow.parent.size(); ++anchor) for (int recursive = 0; recursive <= 1; ++recursive) {
-        for (int predicate = 0; predicate < 9; ++predicate) {
+        for (int predicate = 0; predicate < 15; ++predicate) {
             Query q; q.anchor = Id(anchor); q.recursive = recursive; q.qidx = size_t(predicate) % d.nq;
             if (predicate == 1) { q.lo = -1; q.hi = 2; }
             if (predicate == 2) { q.lo = std::numeric_limits<int64_t>::min(); q.hi = -1; }
             if (predicate >= 3 && predicate <= 6) { q.tagmode = predicate - 2; q.tags = 3; }
             if (predicate == 7) { q.category = 2; q.tagmode = 3; q.tags = 1; q.combine = 1; }
             if (predicate == 8) { q.lo = std::numeric_limits<int64_t>::max(); q.hi = q.lo; }
+            if (predicate >= 9 && predicate <= 12) { q.tagmode = predicate - 8; q.tags = 0; }
+            if (predicate == 13) { q.category = std::numeric_limits<int64_t>::min(); }
+            if (predicate == 14) { q.combine = 1; }
             auto counts = shadow.counts(q);
             require(index.scope_size(q) == counts.first, "self-check scope cardinality mismatch");
             for (size_t i = 0; i < shadow.items.size(); ++i)
@@ -456,6 +495,24 @@ void verify(closure::Index& index, const npi::Dataset& d, const Canonical& shado
                 closure::Work work;
                 auto result = index.search(q, modes[mode], d.n + 10, 10, work, mode != 4);
                 require(result == gt, "self-check high-ef exact mismatch mode=" + std::to_string(mode) + " anchor=" + std::to_string(anchor));
+                if (const auto* mask = index.prepared_eligibility()) {
+                    require(mask->scope_count == counts.first && mask->count == counts.second, "self-check qualification counts");
+                    for (size_t id = 0; id < shadow.items.size(); ++id)
+                        require(mask->in_scope(Id(id)) == shadow.scope(Id(id), q) &&
+                                mask->contains(Id(id)) == shadow.eligible(Id(id), q), "self-check qualification masks");
+                    require(work.effective_ef == counts.second, "self-check high-ef cap");
+                    if (!counts.second) require(std::string(work.execution_path) == "empty" && !work.distance_calls && !work.expanded, "self-check empty bypass");
+                    if (std::string(work.execution_path) == "exact")
+                        require(!work.expanded && !work.pool_candidates && work.distance_calls == counts.second, "self-check exact bypass");
+                }
+            }
+            if (index.prepared_eligibility()) {
+                closure::Work low_work;
+                const auto low = index.search(q, closure::Mode::Hierarchy, 1, 10, low_work);
+                require(low.size() == std::min<size_t>(10, counts.second), "self-check E<k/ef<k cardinality");
+                require(low_work.effective_ef == std::min<size_t>(10, counts.second), "self-check effective ef lower bound");
+                for (const auto& neighbor : low) require(shadow.eligible(neighbor.second, q), "self-check low-ef eligibility");
+                if (std::string(low_work.execution_path) == "exact") require(low == gt, "self-check low-ef exact tie order");
             }
             Query root = q; root.anchor = shadow.root(); root.recursive = 1;
             // Heredity is a recursive-subtree property, not a direct-owner property.
@@ -476,7 +533,7 @@ void checked_update(closure::Index& index, Canonical& shadow, const Event& e) {
         require(index.pool_fingerprint() == fingerprint, "self-check metadata update changed pools");
     }
 }
-void self_check() {
+void self_check(const std::string& policy) {
     // Literal -1 bounds are active whenever the other bound differs from -1.
     Item v{0, 2, -2, 1, true}; Query q; q.lo = -1; q.hi = 3;
     require(!npi::filter_detail::extra(v, q), "literal -1 lower bound treated as wildcard");
@@ -492,7 +549,7 @@ void self_check() {
     npi::Dataset tiny; tiny.n = 3; tiny.dim = 1; tiny.nq = 2;
     tiny.base = {0, 2, 1}; tiny.tests = {.25f, 1.75f}; tiny.parent = {-1, 0, 1, 1, 1, 0};
     tiny.items = {{3, 0, 0, 1, true}, {4, 0, 0, 1, true}, {2, 0, 0, 1, true}}; tiny.rank_tree();
-    Canonical canonical(tiny); closure::Index small(tiny, 64);
+    Canonical canonical(tiny); closure::Index small(tiny, 64, policy);
     Query witness; witness.anchor = 0; witness.recursive = 1; witness.tagmode = 1; witness.tags = 1;
     auto edges = [&](closure::Mode mode, bool attr = true) { return small.neighbors_for_test(0, witness, mode, attr); };
     auto has = [](const std::vector<Id>& v, Id id) { return std::find(v.begin(), v.end(), id) != v.end(); };
@@ -515,7 +572,7 @@ void self_check() {
     }
     d.items[0].numeric = std::numeric_limits<int64_t>::min(); d.items[1].numeric = std::numeric_limits<int64_t>::max();
     d.tests = {0, 0, 3, 7, 12, 28}; d.rank_tree();
-    Canonical shadow(d); closure::Index index(d, 64); verify(index, d, shadow);
+    Canonical shadow(d); closure::Index index(d, 64, policy); verify(index, d, shadow);
     Query root; root.anchor = 0; root.recursive = 1;
     require(index.neighbors_for_test(0, root, closure::Mode::Unpruned).size() == 64, "64-candidate cap not exercised with >64 live objects");
     const std::vector<std::string> trace = {"V 0 -9223372036854775808 9223372036854775807", "T 1 18446744073709551615", "M 0 4", "B 2 3", "R 1 6", "R 1 0", "D 1", "I 1 2 2 -1 3", "I 99 5 1 8 7", "M 99 5", "V 99 1 8", "T 99 7"};
@@ -541,16 +598,19 @@ void self_check() {
     checked_update(index, shadow, parse_event("D 97")); verify(index, d, shadow);
     checked_update(index, shadow, parse_event("I 97 0 2 4 1")); verify(index, d, shadow);
     npi::Dataset empty = tiny; for (auto& item : empty.items) item.alive = false;
-    Canonical empty_shadow(empty); closure::Index empty_index(empty, 64); verify(empty_index, empty, empty_shadow);
+    Canonical empty_shadow(empty); closure::Index empty_index(empty, 64, policy); verify(empty_index, empty, empty_shadow);
     checked_update(empty_index, empty_shadow, parse_event("I 2 1 0 0 1")); verify(empty_index, empty, empty_shadow);
-    std::cout << "closure self-check passed: runtime core, five arms, literal predicates, hierarchy heredity, witness restoration, lifecycle, compaction, sparse IDs, empty-first-insert, high-ef exact\n";
+    std::cout << "closure self-check passed: policy=" << policy << ", runtime core, five arms, literal predicates, hierarchy heredity, witness restoration, lifecycle, compaction, sparse IDs, empty-first-insert, high-ef exact, qualification masks\n";
 }
 } // namespace
 int main(int argc, char** argv) {
     Args args; std::unique_ptr<Runner> runner;
     try {
         parse(args, argc, argv);
-        if (args.self) { self_check(); return 0; }
+        if (args.self) {
+            for (const auto& policy : {"off", "cap", "hybrid", "exact"}) self_check(policy);
+            return 0;
+        }
         runner = std::make_unique<Runner>(args); runner->run(); runner->summary(true); return 0;
     } catch (const std::exception& e) {
         std::cerr << "closure_research: " << e.what() << '\n';

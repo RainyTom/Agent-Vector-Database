@@ -1,5 +1,6 @@
 // Dynamic A/B/C replay. The frozen static/autoresearch runners are independent.
 #include "raw_l2_space.h"
+#include "eligibility_index.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -52,7 +53,8 @@ private:
 struct Args {
     std::string data, trace, out, gt_in;
     char arm = 0;
-    size_t ef = 256, scan = 512, k = 10;
+    size_t ef = 256, scan = 512, k = 10, eligible_scan_threshold = 512;
+    std::string eligibility_policy = "off";
     double compact = .2;
 };
 Args arguments(int argc, char** argv) {
@@ -69,15 +71,21 @@ Args arguments(int argc, char** argv) {
             a.arm = value[0];
         } else if (key == "--ef") a.ef = std::stoull(value);
         else if (key == "--scan-threshold") a.scan = std::stoull(value);
+        else if (key == "--eligibility-policy") a.eligibility_policy = value;
+        else if (key == "--eligible-scan-threshold") a.eligible_scan_threshold = std::stoull(value);
         else if (key == "--compact-threshold") a.compact = std::stod(value);
         else if (key == "--k") a.k = std::stoull(value);
         else fail("unknown option " + key);
     }
+    if (a.eligibility_policy != "off" && a.eligibility_policy != "cap" &&
+        a.eligibility_policy != "hybrid" && a.eligibility_policy != "exact")
+        fail("eligibility-policy must be off, cap, hybrid or exact");
     if (a.data.empty() || a.trace.empty() || a.out.empty() ||
         (a.arm != 'A' && a.arm != 'B' && a.arm != 'C') || !a.ef || !a.k ||
         !std::isfinite(a.compact) || a.compact <= 0 || a.compact > 1)
         fail("usage: dynamic_triad --data DIR --trace FILE --arm A|B|C --out PREFIX "
-             "[--ef 256 --scan-threshold 512 --compact-threshold .2 --k 10 --gt-in PREFIX.queries.csv]");
+             "[--ef 256 --scan-threshold 512 --compact-threshold .2 --k 10 --gt-in PREFIX.queries.csv "
+             "--eligibility-policy off|cap|hybrid|exact --eligible-scan-threshold 512]");
     return a;
 }
 std::vector<float> floats(const std::string& path) {
@@ -117,7 +125,8 @@ constexpr const char* query_columns =
     "event,version,query_index,qidx,recursive,anchor,anchor_depth,scope_card,eligible_card,dir_us,search_us,e2e_us,gt_us,gt_count,hit_count,recall,distance_calls,ann_hops,local_indexes,valid_count,invalid_count,duplicate_count,gt_ids,result_ids,fanout,scan_nodes";
 class GtTape {
     std::ifstream in;
-    bool opened = false, has_calls = false;
+    bool opened = false;
+    size_t column_count = 0, calls_column = NONE;
     static std::vector<std::string> fields(std::string line) {
         if (!line.empty() && line.back() == '\r') line.pop_back();
         std::vector<std::string> result;
@@ -137,8 +146,18 @@ class GtTape {
         std::string header;
         if (!std::getline(in, header)) fail("GT tape: missing header");
         if (!header.empty() && header.back() == '\r') header.pop_back();
-        has_calls = header == std::string(query_columns) + ",gt_distance_calls";
-        if (header != query_columns && !has_calls) fail("GT tape: invalid queries CSV schema");
+        const auto names = fields(header);
+        const auto required = fields(query_columns);
+        if (names.size() < required.size() ||
+            !std::equal(required.begin(), required.end(), names.begin()))
+            fail("GT tape: invalid queries CSV schema");
+        std::set<std::string> unique;
+        for (size_t i = 0; i < names.size(); ++i) {
+            if (names[i].empty() || !unique.insert(names[i]).second)
+                fail("GT tape: empty or duplicate column");
+            if (names[i] == "gt_distance_calls") calls_column = i;
+        }
+        column_count = names.size();
     }
 public:
     static uint64_t integer(const std::string& value) {
@@ -156,10 +175,10 @@ public:
         std::string line;
         if (!std::getline(in, line)) fail("GT tape: missing query row");
         auto row = fields(std::move(line));
-        if (row.size() != (has_calls ? 27 : 26)) fail("GT tape: malformed query row column count");
-        // Require a genuine, well-formed query CSV, including unused diagnostics;
-        // ANN quality is deliberately not a prerequisite for an exact GT tape.
-        for (size_t i = 0; i < row.size(); ++i) {
+        if (row.size() != column_count) fail("GT tape: malformed query row column count");
+        // Validate the stable GT contract; appended query diagnostics may include
+        // policy/path strings and are not oracle evidence.
+        for (size_t i = 0; i < 26; ++i) {
             if (i == 22 || i == 23) continue;
             if ((i >= 9 && i <= 12) || i == 15) {
                 size_t used = 0;
@@ -171,7 +190,7 @@ public:
             } else integer(row[i]);
         }
         if (integer(row[20]) || integer(row[21])) fail("GT tape: oracle reports invalid or duplicate results");
-        if (has_calls && integer(row[26]) != integer(row[8]))
+        if (calls_column != NONE && integer(row[calls_column]) != integer(row[8]))
             fail("GT tape: expected inline oracle distance calls");
         return row;
     }
@@ -195,6 +214,7 @@ struct Update {
     uint64_t path_bytes = 0;
     double compact_us = 0;
     Maintenance maintenance[3];
+    double eligibility_us = 0;
 };
 struct Local { std::unique_ptr<Graph> graph; };
 
@@ -210,12 +230,22 @@ class Runner {
     std::vector<Local> local;
     std::unique_ptr<CountedL2> space;
     std::unique_ptr<Graph> global;
+    std::unique_ptr<eligibility::Index> eligibility_index;
+    std::vector<size_t> local_eligible_counts;
     size_t dim = 0, root = NONE, version = 0, query_index = 0, update_count = 0;
     uint64_t invalid = 0, duplicates = 0, violations = 0, distances = 0, hops = 0;
     uint64_t total_gt = 0, total_hits = 0, zero_gt = 0;
     uint64_t gt_distance_calls = 0;
     uint64_t build_insertions = 0;
     uint64_t total_fanout = 0, total_scan_nodes = 0;
+    uint64_t total_graph_calls = 0, total_scan_groups = 0, total_scanned_live = 0;
+    uint64_t total_graph_distances = 0, total_scan_distances = 0, total_merged_candidates = 0;
+    uint64_t total_directory_visits = 0, total_qualification_directories = 0;
+    uint64_t total_qualification_postings = 0, total_qualification_attributes = 0;
+    uint64_t total_mask_mismatches = 0;
+    size_t effective_ef_min = NONE, effective_ef_max = 0;
+    double eligibility_build_us = 0, eligibility_update_us_total = 0;
+    double eligibility_us_total = 0, eligible_scan_us_total = 0;
     double build_s = 0, query_total = 0, update_total = 0, gt_total = 0, recall_sum = 0;
     Update totals;
     GraphStats initial_graph_stats;
@@ -223,6 +253,19 @@ class Runner {
     std::ofstream qout, uout;
     GtTape gt_tape;
 
+    static npi::Item eligibilityItem(const Item& item) {
+        return {static_cast<npi::Id>(item.node), item.category, item.numeric, item.tags, item.alive};
+    }
+    static npi::Query eligibilityQuery(const Query& q) {
+        return {q.qidx, q.recursive, static_cast<npi::Id>(q.anchor),
+                q.category, q.lo, q.hi, q.tagmode, q.tags, q.combine};
+    }
+    void syncEligibility(Id id, Update& u) {
+        if (!eligibility_index) return;
+        const auto start = Clock::now();
+        eligibility_index->update(static_cast<npi::Id>(id), eligibilityItem(items[id]));
+        u.eligibility_us += elapsed(start);
+    }
     const float* vector(Id id) const { return base.data() + id * dim; }
     void node(size_t n) const { if (n >= parent.size()) fail("node out of range: " + std::to_string(n)); }
     void item(Id id, bool live) const {
@@ -374,12 +417,14 @@ class Runner {
         }
         items[id].node = destination;
         ++u.writes;
+        syncEligibility(id, u);
     }
 
     // Same pinned hnswlib searchKnn algorithm, enabling its base-layer hop
     // instrumentation (searchKnn's default disables it). No exact ANN fallback.
     std::vector<Neighbor> searchGraph(Graph& g, const float* q, size_t k,
-                                      hnswlib::BaseFilterFunctor& filter, uint64_t& query_hops) {
+                                      hnswlib::BaseFilterFunctor& filter, uint64_t& query_hops,
+                                      size_t effective_ef) {
         std::vector<Neighbor> result;
         if (!k || !g.cur_element_count) return result;
         long h0 = g.metric_hops.load();
@@ -401,7 +446,7 @@ class Runner {
                 }
             }
         }
-        auto found = g.searchBaseLayerST<false, true>(current, q, std::max(args.ef, k), &filter);
+        auto found = g.searchBaseLayerST<false, true>(current, q, effective_ef, &filter);
         while (found.size() > k) found.pop();
         while (!found.empty()) {
             result.emplace_back(found.top().first, g.getExternalLabel(found.top().second));
@@ -415,9 +460,14 @@ class Runner {
         const Query& query;
         const Posting* allowed;
         size_t direct_node;
-        Filter(const Runner& r, const Query& q, const Posting* a, size_t n)
-            : runner(r), query(q), allowed(a), direct_node(n) {}
+        const eligibility::Result* eligible;
+        Filter(const Runner& r, const Query& q, const Posting* a, size_t n,
+               const eligibility::Result* e = nullptr)
+            : runner(r), query(q), allowed(a), direct_node(n), eligible(e) {}
         bool operator()(hnswlib::labeltype id) override {
+            if (eligible)
+                return eligible->contains(static_cast<npi::Id>(id)) &&
+                    (direct_node == NONE || runner.eligibility_index->owner(static_cast<npi::Id>(id)) == direct_node);
             if (id >= runner.items.size()) return false;
             const Item& v = runner.items[id];
             return v.alive && extra(v, query) &&
@@ -490,31 +540,66 @@ class Runner {
             (q.combine != 0 && q.combine != 1) ||
             ((q.lo != -1 || q.hi != -1) && q.lo > q.hi)) fail("invalid Q fields");
         const float* qvec = tests.data() + q.qidx * dim;
-        size_t anchor_depth = depth(q.anchor);
+        size_t anchor_depth = depth(q.anchor); // Output-only diagnostic, as in the frozen runner.
         auto e2e_start = Clock::now();
-        size_t scope = 0;
+        double eligibility_us = 0, eligible_scan_us = 0;
+        const eligibility::Result* eligible = nullptr;
+        bool exact_scan = false;
+        size_t effective_ef = std::max(args.ef, args.k);
+        if (eligibility_index) {
+            const auto qualification_start = Clock::now();
+            eligible = &eligibility_index->prepare(eligibilityQuery(q));
+            effective_ef = std::min(eligible->count, std::max(args.ef, std::min(args.k, eligible->count)));
+            exact_scan = args.eligibility_policy == "exact" ||
+                (args.eligibility_policy == "hybrid" &&
+                 eligible->count <= std::max({args.k, args.ef, args.eligible_scan_threshold}));
+            if (args.arm == 'A' && !exact_scan) {
+                // Bucket only qualified set bits using the index's stored owner;
+                // never scan canonical objects to discover eligibility.
+                for (size_t word = 0; word < eligible->eligible.size(); ++word)
+                    for (uint64_t bits = eligible->eligible[word]; bits; bits &= bits - 1) {
+                        const auto id = static_cast<npi::Id>(word * 64 + __builtin_ctzll(bits));
+                        ++local_eligible_counts[eligibility_index->owner(id)];
+                    }
+            }
+            eligibility_us = elapsed(qualification_start);
+        }
+        const bool bypass = eligible && (exact_scan || !eligible->count);
+        const char* execution_path = !eligible ? "legacy" :
+            (!eligible->count ? "empty" : (exact_scan ? "exact" : "graph"));
+        size_t scope = bypass ? eligible->scope_count : 0;
+        size_t directory_visits = 0;
         std::vector<std::pair<size_t, size_t>> local_work;
         Posting candidates;
         const Posting* allowed = &candidates;
-        if (args.arm == 'A') {
+        if (bypass) {
+            // Exact/empty execution needs no local fanout or catalog compilation.
+        } else if (args.arm == 'A') {
             auto nodes = q.recursive ? subtree(q.anchor) : std::vector<size_t>{q.anchor};
+            directory_visits = nodes.size();
             for (size_t n : nodes) {
                 if (direct[n].empty()) continue;
                 scope += direct[n].size();
-                local_work.emplace_back(n, direct[n].size());
+                const size_t count = eligible ? local_eligible_counts[n] : direct[n].size();
+                if (eligible) local_eligible_counts[n] = 0;
+                if (count) local_work.emplace_back(n, count);
             }
         } else if (args.arm == 'B') {
             const std::string& key = paths[q.anchor];
+            directory_visits = 1;
             if (!q.recursive) allowed = &catalog.at(key);
             else {
                 const auto own = catalog.find(key);
                 candidates.insert(own->second.begin(), own->second.end());
                 const std::string prefix = key + '/';
                 for (auto it = catalog.lower_bound(prefix);
-                     it != catalog.end() && it->first.compare(0, prefix.size(), prefix) == 0; ++it)
+                     it != catalog.end() && it->first.compare(0, prefix.size(), prefix) == 0; ++it) {
+                    ++directory_visits;
                     candidates.insert(it->second.begin(), it->second.end());
+                }
             }
         } else {
+            directory_visits = 1 + (q.recursive ? 0 : children[q.anchor].size());
             if (q.recursive) allowed = &catalog.at(paths[q.anchor]);
             else {
                 candidates = catalog.at(paths[q.anchor]);
@@ -522,23 +607,54 @@ class Runner {
                     for (Id id : catalog.at(paths[child])) candidates.erase(id);
             }
         }
-        if (args.arm != 'A') scope = allowed->size();
+        if (args.arm != 'A' && !bypass) scope = allowed->size();
+        if (!eligible) effective_ef = scope ? std::max(args.ef, std::min(args.k, scope)) : 0;
         double dir_us = elapsed(e2e_start);
         auto search_start = Clock::now();
         uint64_t dc0 = space->calls, scan_calls = 0, query_hops = 0;
-        size_t local_indexes = 0;
+        size_t local_indexes = 0, graph_calls = 0, scan_groups = 0, scanned_live = 0;
+        size_t local_ef_min = NONE, local_ef_max = 0;
+        auto record_ef = [&](size_t ef) {
+            local_ef_min = std::min(local_ef_min, ef);
+            local_ef_max = std::max(local_ef_max, ef);
+        };
         std::vector<Neighbor> result;
-        if (args.arm == 'A') {
+        if (bypass && eligible->count) {
+            const auto scan_start = Clock::now();
+            const size_t k = std::min(args.k, eligible->count);
+            result.reserve(k);
+            for (size_t word = 0; word < eligible->eligible.size(); ++word)
+                for (uint64_t bits = eligible->eligible[word]; bits; bits &= bits - 1) {
+                    const Id id = word * 64 + __builtin_ctzll(bits);
+                    const Neighbor candidate{space->dist(qvec, vector(id)), id};
+                    ++scan_calls; ++scanned_live;
+                    if (result.size() < k) {
+                        result.push_back(candidate);
+                        std::push_heap(result.begin(), result.end());
+                    } else if (candidate < result.front()) {
+                        std::pop_heap(result.begin(), result.end());
+                        result.back() = candidate;
+                        std::push_heap(result.begin(), result.end());
+                    }
+                }
+            eligible_scan_us = elapsed(scan_start);
+        } else if (!bypass && args.arm == 'A') {
             for (auto [n, count] : local_work) {
                 size_t k = std::min(args.k, count);
                 std::vector<Neighbor> found;
                 if (local[n].graph) {
-                    ++local_indexes;
-                    Filter filter(*this, q, nullptr, n);
-                    found = searchGraph(*local[n].graph, qvec, k, filter, query_hops);
+                    ++local_indexes; ++graph_calls;
+                    const size_t ef = eligible ? std::max(k, std::min(args.ef, count)) : std::max(args.ef, k);
+                    record_ef(ef);
+                    Filter filter(*this, q, nullptr, n, eligible);
+                    found = searchGraph(*local[n].graph, qvec, k, filter, query_hops, ef);
                 } else {
                     if (direct[n].size() > args.scan) fail("missing A index above scan threshold");
-                    for (Id id : direct[n]) if (items[id].alive && extra(items[id], q)) {
+                    ++scan_groups;
+                    for (Id id : direct[n]) {
+                        ++scanned_live;
+                        if (!(eligible ? eligible->contains(static_cast<npi::Id>(id)) :
+                              items[id].alive && extra(items[id], q))) continue;
                         found.emplace_back(space->dist(qvec, vector(id)), id);
                         ++scan_calls;
                     }
@@ -546,10 +662,15 @@ class Runner {
                 }
                 result.insert(result.end(), found.begin(), found.end());
             }
-        } else if (scope) {
-            Filter filter(*this, q, allowed, NONE);
-            result = searchGraph(*global, qvec, std::min(args.k, scope), filter, query_hops);
+        } else if (!bypass && scope) {
+            ++graph_calls;
+            const size_t k = std::min(args.k, eligible ? eligible->count : scope);
+            const size_t ef = eligible ? effective_ef : std::max(args.ef, k);
+            record_ef(ef);
+            Filter filter(*this, q, allowed, NONE, eligible);
+            result = searchGraph(*global, qvec, k, filter, query_hops, ef);
         }
+        const size_t merged_candidates = result.size();
         // Validate before merge so deduplication never hides a broken local arm.
         std::unordered_set<Id> seen;
         size_t bad = 0, duplicate = 0;
@@ -565,16 +686,22 @@ class Runner {
         }
         top(result, args.k);
         double search_us = elapsed(search_start), e2e_us = elapsed(e2e_start);
-        uint64_t dc = space->calls - dc0 + scan_calls;
+        const uint64_t graph_distances = space->calls - dc0;
+        uint64_t dc = graph_distances + scan_calls;
         // Independent current-state oracle, never consulting paths/postings.
         auto gt_start = Clock::now();
         std::vector<Neighbor> exact;
         Posting oracle_scope_ids;
         size_t oracle_scope = 0, oracle_eligible = 0;
-        uint64_t query_gt_calls = 0;
+        uint64_t query_gt_calls = 0, mask_mismatches = 0;
         for (Id id = 0; id < items.size(); ++id) {
             const auto& v = items[id];
-            if (!v.alive || !(q.recursive ? beneath(v.node, q.anchor) : v.node == q.anchor)) continue;
+            const bool in_scope = v.alive && (q.recursive ? beneath(v.node, q.anchor) : v.node == q.anchor);
+            if (eligible) {
+                mask_mismatches += eligible->in_scope(static_cast<npi::Id>(id)) != in_scope;
+                mask_mismatches += eligible->contains(static_cast<npi::Id>(id)) != (in_scope && extra(v, q));
+            }
+            if (!in_scope) continue;
             ++oracle_scope;
             oracle_scope_ids.insert(id);
             if (!extra(v, q)) continue;
@@ -600,11 +727,13 @@ class Runner {
         // A mismatch is counted, recorded and fatal: no stale, silently filtered,
         // duplicated, or undercounted directory state is accepted as a data point.
         for (const auto& v : result) if (!matches(v.second, q)) ++bad;
-        size_t state_errors = (scope != oracle_scope) + bad + duplicate;
+        size_t state_errors = (scope != oracle_scope) + bad + duplicate + mask_mismatches;
+        if (eligible)
+            state_errors += (eligible->scope_count != oracle_scope) + (eligible->count != oracle_eligible);
         if (args.arm == 'A') {
             for (Id id : oracle_scope_ids)
                 if (!direct[items[id].node].count(id)) ++state_errors;
-        } else if (*allowed != oracle_scope_ids) {
+        } else if (!bypass && *allowed != oracle_scope_ids) {
             // Full set equality, not merely matching cardinalities. Oracle work
             // remains outside dir/search/e2e timing.
             ++state_errors;
@@ -613,14 +742,23 @@ class Runner {
         size_t valid_count = 0;
         for (const auto& v : result) valid_count += matches(v.second, q);
         double recall = gt.empty() ? (result.empty() ? 1.0 : 0.0) : double(hit) / gt.size();
-        const size_t fanout = args.arm == 'A' ? local_work.size() : size_t(scope != 0);
-        const size_t scan_nodes = args.arm == 'A' ? local_work.size() - local_indexes : 0;
+        const size_t fanout = args.arm == 'A' ? local_work.size() : graph_calls;
+        const size_t scan_nodes = scan_groups;
         qout << event << ',' << version << ',' << query_index << ',' << q.qidx << ',' << q.recursive << ','
              << q.anchor << ',' << anchor_depth << ',' << scope << ',' << oracle_eligible << ',' << dir_us << ','
              << search_us << ',' << e2e_us << ',' << gt_us << ',' << gt.size() << ',' << hit << ',' << recall << ','
              << dc << ',' << query_hops << ',' << local_indexes << ',' << valid_count
              << ',' << bad << ',' << duplicate << ',' << rankedIds(gt) << ',' << ids(result)
-             << ',' << fanout << ',' << scan_nodes << ',' << query_gt_calls << '\n';
+             << ',' << fanout << ',' << scan_nodes << ',' << query_gt_calls
+             << ',' << eligibility_us << ',' << eligible_scan_us << ',' << args.eligibility_policy
+             << ',' << execution_path << ',' << effective_ef
+             << ',' << (eligible ? eligible->directory_visits : 0)
+             << ',' << (eligible ? eligible->posting_words : 0)
+             << ',' << (eligible ? eligible->attribute_words : 0)
+             << ',' << directory_visits << ',' << graph_calls << ',' << scan_groups << ',' << scanned_live
+             << ',' << graph_distances << ',' << scan_calls << ',' << merged_candidates
+             << ',' << (local_ef_min == NONE ? 0 : local_ef_min) << ',' << local_ef_max
+             << ',' << mask_mismatches << ',' << (args.arm == 'A' ? graph_calls : 0) << '\n';
         qout.flush();
         ++query_index;
         query_times.push_back(e2e_us);
@@ -630,6 +768,18 @@ class Runner {
         invalid += bad; duplicates += duplicate; violations += state_errors;
         distances += dc; hops += query_hops;
         total_fanout += fanout; total_scan_nodes += scan_nodes;
+        total_mask_mismatches += mask_mismatches;
+        total_graph_calls += graph_calls; total_scan_groups += scan_groups; total_scanned_live += scanned_live;
+        total_graph_distances += graph_distances; total_scan_distances += scan_calls;
+        total_merged_candidates += merged_candidates; total_directory_visits += directory_visits;
+        eligibility_us_total += eligibility_us; eligible_scan_us_total += eligible_scan_us;
+        if (local_ef_min != NONE) effective_ef_min = std::min(effective_ef_min, local_ef_min);
+        effective_ef_max = std::max(effective_ef_max, local_ef_max);
+        if (eligible) {
+            total_qualification_directories += eligible->directory_visits;
+            total_qualification_postings += eligible->posting_words;
+            total_qualification_attributes += eligible->attribute_words;
+        }
         if (state_errors) fail("query state violation: scope=" + std::to_string(scope) + "/" + std::to_string(oracle_scope) +
             " eligible=" + std::to_string(oracle_eligible) +
             " invalid=" + std::to_string(bad) + " duplicate=" + std::to_string(duplicate));
@@ -689,6 +839,11 @@ class Runner {
             }
         }
         u.nodes = touched.size();
+        if (eligibility_index) {
+            const auto start = Clock::now();
+            eligibility_index->reparent(static_cast<npi::Id>(src), static_cast<npi::Id>(dst));
+            u.eligibility_us += elapsed(start);
+        }
     }
     template<class... T> static void fields(std::istringstream& in, T&... values) {
         auto parse = [&](auto& value) {
@@ -718,11 +873,13 @@ class Runner {
             if (u.writes) {
                 items[id].category = cat; items[id].numeric = num;
                 u.items = u.nodes = 1;
+                syncEligibility(id, u);
             }
         } else if (op == 'T') {
             Id id; uint64_t tags; fields(in, id, tags); item(id, true);
             if (items[id].tags != tags) {
                 items[id].tags = tags; u.items = u.nodes = u.writes = 1;
+                syncEligibility(id, u);
             }
         } else if (op == 'M') {
             Id id; size_t dst; fields(in, id, dst); item(id, true); node(dst);
@@ -755,6 +912,7 @@ class Runner {
             eraseMembership(id, items[id].node, u);
             if (global) { global->markDelete(id); ++u.deletions; }
             items[id].alive = false; ++u.writes; u.items = u.nodes = 1;
+            syncEligibility(id, u);
         } else if (op == 'I') {
             Id id; size_t n; int64_t cat, num; uint64_t tags;
             fields(in, id, n, cat, num, tags); item(id, false); node(n);
@@ -762,6 +920,7 @@ class Runner {
             addMembership(id, n, u);
             if (global) insertGraph(*global, id, u);
             u.items = u.nodes = 1;
+            syncEligibility(id, u);
         } else fail("unknown event op " + std::string(1, op));
         double latency = elapsed(start);
         ++version; ++update_count;
@@ -770,9 +929,10 @@ class Runner {
              << ',' << u.path_bytes;
         for (const auto& category : u.maintenance)
             uout << ',' << category.us << ',' << category.count << ',' << category.insertions;
-        uout << '\n';
+        uout << ',' << u.eligibility_us << '\n';
         uout.flush();
         update_times.push_back(latency); update_total += latency;
+        eligibility_update_us_total += u.eligibility_us;
         totals.writes += u.writes; totals.insertions += u.insertions; totals.deletions += u.deletions;
         totals.compactions += u.compactions; totals.compact_us += u.compact_us; totals.path_bytes += u.path_bytes;
         for (size_t i = 0; i < 3; ++i) {
@@ -822,12 +982,23 @@ class Runner {
         auto number = [&](const std::string& key, auto value) { out << "  \"" << key << "\": " << value << ",\n"; };
         text("arm", std::string(1, args.arm)); number("ef", args.ef); number("k", args.k);
         number("scan_threshold", args.scan); number("compact_threshold", args.compact);
+        text("eligibility_policy", args.eligibility_policy);
+        number("eligible_scan_threshold", args.eligible_scan_threshold);
+        number("eligibility_build_us", eligibility_build_us);
+        const size_t eligibility_bytes = eligibility_index ? eligibility_index->bytes() : 0;
+        number("eligibility_index_bytes", eligibility_bytes);
+        number("eligibility_local_count_bytes", local_eligible_counts.capacity() * sizeof(size_t));
+        number("eligibility_update_us_total", eligibility_update_us_total);
+        number("eligibility_us_total", eligibility_us_total);
+        number("eligible_scan_us_total", eligible_scan_us_total);
         number("n_vectors", items.size()); number("n_nodes", parent.size()); number("dim", dim);
         number("n_queries", query_index); number("n_updates", update_count); number("build_s", build_s);
-        number("index_bytes", graph_bytes + metadata); number("hnsw_serialized_bytes", graph_bytes);
+        metadata += local_eligible_counts.capacity() * sizeof(size_t);
+        number("index_bytes", graph_bytes + metadata + eligibility_bytes);
+        number("hnsw_serialized_bytes", graph_bytes);
         number("metadata_bytes_estimate", metadata);
-        text("index_bytes_kind", "hnsw_indexFileSize_plus_explicit_metadata_estimate_not_RSS");
-        text("metadata_estimate_model", "canonical_Item_and_tree_container_sizes+path_characters+ordered_posting_entries(size_t+4_pointers);raw_input_vectors_excluded");
+        text("index_bytes_kind", "hnsw_indexFileSize_plus_explicit_metadata_and_eligibility_estimate_not_RSS");
+        text("metadata_estimate_model", "canonical_Item_and_tree_container_sizes+path_characters+ordered_posting_entries(size_t+4_pointers)+local_eligibility_counts;eligibility_index_reported_separately;raw_input_vectors_excluded");
         number("peak_rss_bytes", uint64_t(usage.ru_maxrss) * 1024);
         number("query_p50_us", percentile(query_times, .5)); number("query_p95_us", percentile(query_times, .95));
         number("query_p99_us", percentile(query_times, .99)); number("update_p50_us", percentile(update_times, .5));
@@ -850,6 +1021,10 @@ class Runner {
         number("final_hnsw_node_count", final_graph_stats.hnsw_nodes);
         number("final_index_live_count", final_graph_stats.live);
         number("final_index_dead_count", final_graph_stats.dead);
+        number("initial_local_hnsw_index_count", args.arm == 'A' ? initial_graph_stats.hnsw_nodes : 0);
+        number("final_local_hnsw_index_count", args.arm == 'A' ? final_graph_stats.hnsw_nodes : 0);
+        number("initial_indexed_vectors", initial_graph_stats.live + initial_graph_stats.dead);
+        number("final_indexed_vectors", final_graph_stats.live + final_graph_stats.dead);
         number("metadata_writes", totals.writes); number("path_key_bytes_written", totals.path_bytes);
         number("ann_insertions", totals.insertions); number("ann_deletions", totals.deletions);
         number("build_ann_insertions", build_insertions);
@@ -859,8 +1034,26 @@ class Runner {
         number("gt_count", total_gt); number("hit_count", total_hits); number("zero_gt_queries", zero_gt);
         number("invalid_results", invalid); number("duplicate_results", duplicates); number("state_violations", violations);
         number("fanout_total", total_fanout); number("scan_nodes_total", total_scan_nodes);
+        number("directory_visits_total", total_directory_visits);
+        number("graph_calls_total", total_graph_calls);
+        number("local_graph_calls_total", args.arm == 'A' ? total_graph_calls : 0);
+        number("scalar_scan_group_calls_total", total_scan_groups);
+        number("scanned_live_objects_total", total_scanned_live);
+        number("graph_distance_calls", total_graph_distances);
+        number("scan_distance_calls", total_scan_distances);
+        number("merged_candidates_total", total_merged_candidates);
+        number("effective_ef_min", effective_ef_min == NONE ? 0 : effective_ef_min);
+        number("effective_ef_max", effective_ef_max);
+        number("qualification_directory_visits", total_qualification_directories);
+        number("qualification_posting_words", total_qualification_postings);
+        number("qualification_attribute_words", total_qualification_attributes);
+        number("eligibility_mask_mismatches", total_mask_mismatches);
+        text("eligibility_work_definition", "logical_bitmap_words_and_directory_visits_not_hardware_counters;A_local_counts_enumerate_eligible_set_bits");
+        text("directory_visits_definition", "legacy_scope_compilation_directory_entries_excludes_separately_reported_qualification_traversal");
+        text("execution_timing_definition", "e2e_includes_qualification_scope_compilation_all_candidate_generation_dedup_and_topk;canonical_GT_validation_excluded");
+        text("exact_policy_geometry", "original_graphs_retained_and_maintained;exact_bypasses_query_graph_search_only");
         number("distance_calls", distances); number("ann_hops", hops);
-        text("distance_calls_definition", "actual_query_graph_distance_calls_plus_A_direct_scan_calls;GT_and_build_excluded");
+        text("distance_calls_definition", "actual_query_graph_distance_calls_plus_direct_and_eligible_scan_calls;GT_and_build_excluded");
         text("ann_hops_definition", "expanded_graph_neighbor_lists_all_layers");
         text("visibility", "single_thread_serialized_synchronous_query_start_current_committed_state");
         number("failed_event", failed_event); text("error", error);
@@ -936,6 +1129,19 @@ public:
                 insertGraph(*global, id, build);
             }
         }
+        if (args.eligibility_policy != "off") {
+            const auto eligibility_start = Clock::now();
+            if (items.size() > size_t(std::numeric_limits<npi::Id>::max()))
+                fail("eligibility index item IDs exceed uint32 range");
+            {
+                std::vector<npi::Item> metadata;
+                metadata.reserve(items.size());
+                for (const auto& v : items) metadata.push_back(eligibilityItem(v));
+                eligibility_index = std::make_unique<eligibility::Index>(metadata, parent);
+            }
+            if (args.arm == 'A') local_eligible_counts.resize(nodes, 0);
+            eligibility_build_us = elapsed(eligibility_start);
+        }
         build_s = elapsed(start) / 1e6;
         build_insertions = build.insertions;
         initial_graph_stats = graphStats();
@@ -945,11 +1151,14 @@ public:
         if (!qout || !uout) fail("cannot open CSV outputs");
         qout << std::setprecision(12);
         uout << std::setprecision(12);
-        qout << query_columns << ",gt_distance_calls\n";
+        qout << query_columns << ",gt_distance_calls,eligibility_us,eligible_scan_us,eligibility_policy,execution_path,effective_ef"
+             << ",qualification_directory_visits,qualification_posting_words,qualification_attribute_words"
+             << ",directory_visits,graph_calls,scalar_scan_group_calls,scanned_live_objects"
+             << ",graph_distance_calls,scan_distance_calls,merged_candidates,effective_ef_min,effective_ef_max,eligibility_mask_mismatches,local_graph_calls\n";
         uout << "event,version,op,latency_us,affected_items,affected_nodes,metadata_writes,ann_insertions,ann_deletions,compaction_us,compaction_count,path_key_bytes_written";
         for (const char* name : maintenance_names)
             uout << ',' << name << "_us," << name << "_count," << name << "_ann_insertions";
-        uout << '\n';
+        uout << ",eligibility_update_us\n";
     }
     void run() {
         std::ifstream trace(args.trace);
