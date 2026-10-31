@@ -74,3 +74,8 @@ Exact控制只是同构建条件下绕过几何搜索；图/pool仍构建并维�
 - 下一步严格执行服务器提示词的114次静态与48次有限维护，不扩大N，不调整参数追正结果。
 
 原始本地证据：`work/eligibility-execution-local/`，不入库；小JSON持久化于本目录data。复现命令见 [experiments/eligibility-local-reproduction.md](experiments/eligibility-local-reproduction.md)。
+
+## 后续协议修订：主基线改为纯NodeANN
+
+以上保留3d75caa实现时的原始烟测记录。用户随后明确要求每个非空目录都用HNSW：当前驱动主基线为A-graph（scan0、policy off），不运行A-aware；旧scan512仅作历史参考。当前真实任务为102次静态、36次维护，不再执行上文114/48矩阵。新矩阵本地51次静态、18次维护烟测通过，主基线2022条query零扫描、零资格准备时间，图调用与fanout全部一致；详见[追加报告§9](report.md#9-用户明确基线定义纯nodeann)与[data/pure-nodeann-check.json](data/pure-nodeann-check.json)。以更新后的服务器提示词为准。
+
