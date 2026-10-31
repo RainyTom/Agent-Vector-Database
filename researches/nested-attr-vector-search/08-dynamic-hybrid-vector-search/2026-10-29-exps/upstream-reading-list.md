@@ -48,7 +48,7 @@ WIKI是已有完整原始子树，SIFT为12000活对象的已有层级；每数�
 
 **同日第2轮，先读这一归因修正**：[联合证据实测/图/阶段门](../2026-10-30-exps/joint-certificate-report.md)、[两族结构/前序/成本/反例](../2026-10-30-exps/joint-certificate-analysis.md)、[复现及失败](../2026-10-30-exps/experiments/joint-reproduction.md)。WIKI64维完整联合oracle仍无排除，说明不是简单加联合cell便能补回原信息；SIFT很多联合收益在不过滤界上已有。尚无新共享取得操作，不将VA/PQ/simplex+F改名立项。原始173568记录只有16条源query，不能读成新大规模ANN结果。
 
-**后续明确授权的当前任务：** 用户要求资格基数感知ef与完整本地实现，新增[资格感知执行方案](../../2026-10-31-exps/eligibility-execution-plan.md)、[服务器提示词](../../2026-10-31-exps/eligibility-server-prompt.md)、[本地烟测/错误修复](../../2026-10-31-exps/eligibility-local-report.md)。真实NodeANN原混合基线、同样增强后的基线、全节点建图诊断分开；旧H负结果不撤回。此次只验证执行修正及有限维护，不自动扩N或宣称论文创新通过。
+**后续明确授权的当前任务：** 用户要求资格基数感知ef与完整本地实现，新增[资格感知执行方案](../../2026-10-31-exps/eligibility-execution-plan.md)、[服务器提示词](../../2026-10-31-exps/eligibility-server-prompt.md)、[本地烟测/错误修复](../../2026-10-31-exps/eligibility-local-report.md)。按用户最新定义，主基线A-graph对全部非空direct目录使用HNSW，禁止扫描回退和资格规划；旧scan512仅历史参考，A-aware不运行。任务修订为102次静态/36次有限维护；旧H负结果不撤回，不自动扩N或宣称论文创新通过。
 
 
 

@@ -94,3 +94,13 @@ U编译占e2e约79.8%～88.3%，H约82.0%～89.3%；共同路径已支付绝大�
 
 未新增真实WIKI/SIFT性能结果；旧H在原固定执行下失败的结论不变。此轮研究目标是修复执行设计并量化基线来源，不预先将Trie/bitmap或小集合扫描宣称为独立论文创新。真实输入仅交服务器按新协议跑114次静态、48次有限维护，不扩大N。
 
+## 9. 用户明确基线定义：纯NodeANN
+
+用户要求NodeANN每个非空目录均使用图索引，不允许扫描策略或额外规划优化。已将主基线固定为A-graph（scan-threshold0、eligibility-policy off）；A-aware移出实验，旧scan512只作A-hybrid-reference历史参考。接受忠实的纯图定义，不以人为放慢基线为目标；M16/efConstruction200/ef15或20及原属性过滤不变。不覆盖§8的历史烟测数。
+
+驱动与服务器任务更新为两数据集102次静态、36次有限维护。候选主要比较纯NodeANN，并与U-aware隔离H贡献；不要求必须击败额外优化的NodeANN。若只胜纯图、不胜历史混合版本，需报告适用边界。
+
+本地实际运行同一80对象合成fixture：新矩阵51次静态、18次维护烟测均完成。其中纯NodeANN静态1080条query、4320次图调用；维护942条query、4209次图调用。两阶段扫描组数、扫描距离、资格准备时间、graph_calls/fanout不一致、计时GT距离、非法/重复均为0。无真实WIKI/SIFT新性能结论。证据：[pure-nodeann-check.json](data/pure-nodeann-check.json)。
+
+复现：使用§8的`work/eligibility-execution-local/original-static`输入，运行新驱动的`--smoke`静态至`work/eligibility-execution-local/pure-static`，`--stage maintenance --smoke`至`pure-maintenance`；源码/输入/二进制SHA及完整命令在各manifest。下一步以更新后的[服务器提示词](eligibility-server-prompt.md)为准，禁止复用旧输出目录或混淆两种NodeANN。
+

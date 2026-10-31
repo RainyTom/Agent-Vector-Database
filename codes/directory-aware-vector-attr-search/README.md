@@ -221,16 +221,16 @@ python scripts/run_closure_small_ef.py \
 
 `eligibility_index.h`以真实目录树、稀疏direct-owner word postings及属性bitplanes取得完整资格mask/E，计入查询成本；V/T/M/B/R/D/I同步维护。两程序新增 `--eligibility-policy off|cap|hybrid|exact`、`--eligible-scan-threshold 512`。默认off保留原算法；cap截断合法堆容量，hybrid在小E上直接精确扫描，exact提供同资格取得的扫描控制。图/pool仍构建维护，Exact不代表独立无图内存成绩。原rank编译/候选池/剪枝不改。
 
-**基线版本不要混用：** 上文早期`nodeann_research/repro`可以要求每个非空节点建图；本轮`dynamic_triad`的A默认scan-threshold512，小direct组先过滤再扫描，大组才有局部HNSW。新A-graph-only仅以threshold0诊断这一差异，不替换真实A或故意削弱主基线。新增逐query实际graph calls、扫描组、距离分账及局部ef范围；索引容器数与图内对象数分开。
+**当前主基线为纯NodeANN（用户后续指定）：** 驱动显式传入 `--scan-threshold 0 --eligibility-policy off`，每个非空direct目录建立局部HNSW，不做小目录扫描、资格前置或自适应规划。变体名A-graph；旧scan512为A-hybrid-reference，仅作历史参考。A-aware不纳入本轮。C++默认参数保留以便历史复现，不能用默认值代替驱动中的纯图合同。逐query自动核对扫描组/扫描距离为0、graph_calls=fanout。
 
 ```bash
 python scripts/run_eligibility.py \
   --previous-raw ../../work/closure/static-7654f1e-run1 \
-  --out ../../work/eligibility/static-run1 --cpu 2
+  --out ../../work/eligibility/pure-nodeann-static-run1 --cpu 2
 python scripts/run_eligibility.py \
   --previous-raw ../../work/closure/static-7654f1e-run1 \
-  --out ../../work/eligibility/maintenance-run1 --stage maintenance --cpu 2
+  --out ../../work/eligibility/pure-nodeann-maintenance-run1 --stage maintenance --cpu 2
 ```
 
-真实两数据集固定114次静态、48次有限维护，ef15/20；保留全部点，不自动升预算或扩N。源SHA、输入SHA、独立GT、完整e2e与维护成本入账。新版本新增诊断列的GT CSV可由baseline按固定GT前缀读取。历史`run_closure_small_ef.py`仍绑定7654f1e的原始blob；要复现旧版本请用相应独立checkout，不绕过其校验。
+真实两数据集固定102次静态、36次有限维护，ef15/20；保留全部点，不自动升预算或扩N。主比较针对纯NodeANN；混合参考差异如实披露，不设置额外胜出门槛。源SHA、输入SHA、独立GT、完整e2e与维护成本入账。历史`run_closure_small_ef.py`仍绑定7654f1e的原始blob；要复现旧版本请用相应独立checkout，不绕过其校验。
 
