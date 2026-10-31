@@ -159,3 +159,36 @@
 - 同日按问题范围修订：将单父文件目录树背景改为共享虚拟目录 DAG，补四种精确基线与逻辑对象去重语义；旧树定义不再适用，原 D1 动态维护方案仍为独立历史方向。
 - 同日再次修订：文件夹快捷方式仍未摆脱文件目录背景，当前 Problem Formulation 改为多维商品目录的跨平台商品连接；基线更新为五种，前两版文件目录定义只作历史记录。
 - 同日层级语义修正：普通 facet 的约束细化不足以构成品类层级；当前定义明确为“品类树 × 属性 facet”，并将五种基线统一到品类祖先可比、属性兼容和 L2 阈值三重条件。
+
+## 2026-10-29 动态层级检索交接的独立机制复核
+
+- 完整读交接与P0/P1/P2清单，新增[独立判断](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/independent-review.md)、[原文机制审计](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/literature-mechanisms-review.md)及可复现的162次summary离线审计；没有新ANN性能实验。
+- 修订ACORN、iRangeGraph、Curator、VADER、ELI、Filtered-DiskANN、TrieHI、PathSeer共8条既有记录的项目启发与日期化证据；保留旧快照及正式稿/预印本差异待办。总论文29条，关系27条不变。
+- 撤回“层级MOVE无人研究/首次可回收摘要/动态预算基本空白”等泛化结论；区分新颖机制、正确实现、强对照与维护策略实测。Filtered-DiskANN原始剪枝为共同标签交集，不沿用EMA相关工作中的并集误述。
+- Quake正式OSDI稿与EMA预印本相关章节进入方向机制证据和待入库日志，未伪造完整归档/全文通读状态；本轮未新增引用或继承关系，既有关系索引保持不变。
+
+
+## 2026-10-29 表示/过滤剪枝机制与BioVSS
+
+- 新增BioVSS/BioVSS++一条正式ICDE2025记录，aliases保留v1/v2改题及算法名；分析v2扩展稿，不将占位期刊当发表。建立multi-vector-search主题，完整按页文本、提取SHA与原文机制审读已保存。总库30篇，关系27条。
+- 纠正“FlyHash multi-vector”泛称：主要使用BioHash，核心目标是Hausdorff而非MaxSim；稀疏计数倒排/OR sketch是候选机制，不是硬属性逻辑。条件理论和作者表格矛盾保留。
+- [新机制审查](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)核对L2AP、Seismic、MUVERA、Curator、FINGER、FCVI和iFVS。未为未完整归档工作伪造总库条目或作者继承关系。
+- 用户停止默认维护主线；服务器改为先设计表示/条件几何证书，再做小型判别。已运行合成代数smoke，未运行真实ANN性能实验。
+
+
+## 2026-10-30 条件几何证书的信息门与经典直接前序
+
+- 新增BSI算术、Rinfret学位论文、wavelet条件查询、动态sequence、L2AP、Seismic共6条记录；新增data-indexing/sparse-vector-search主题，L2AP按自身threshold self-join问题归vector-join。共36条论文/学位记录、31条关系。
+- 完整作者、正式年份/预印本、已核DOI与版本分开。动态sequence读SODA2013对应arXiv v2；同题2014期刊书目保留待比对，不按标题强合并。BSI会议/Record双DOI只收一项。保存reader文本及文本SHA，原PDF SHA未取得不填造。
+- 4条新关系均researcher_synthesis，不捏造BioVSS/Seismic引用L2AP或BSI引用Curator。BioVSS新增日期化尺度/成员绑定审读，不覆盖旧报告。
+- [机制门](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/mechanism-assessment.md)：条件extrema/gap有BSI/wavelet直接解释，普通稀疏残差覆盖已有L2AP；不据此宣称新索引。
+- [实际小型信息诊断](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md)：WIKI64维无额外非空剪枝；SIFT有条件界增益但同基数打乱控制不更差，当前排序探测取得成本高；未实现在线索引、无新ANN性能胜出或动态维护结果。
+- VA-file原始扫描正文缺口仍未关闭，range-searching综述只作背景。旧文引用的tools/research_index.py在当前checkout不存在，本轮不伪称运行该工具。
+
+## 2026-10-30 第2轮联合证据与归因修正
+
+- 新增simplex2017、IMI journal2015、CNN2001三条完整reader全文和日期化来源/SHA；按自身问题新建metric-search/vector-search主题，总库39条、关系33条。IMI journal不强并CVPR2012；CNN2001不误认同题2017百科。
+- 补核simplex正式DOI10.1007/978-3-319-68474-1_7与完整作者/年份/96–109；分析明确arXiv v1。两条新边均researcher_synthesis，非作者引用。
+- 并行核读VA-file镜像正文、UCSB VA+原始PS，以及metric/Ptolemaic/Hilbert邻近机制；未完整归档的版本不伪称库内完整已读。
+- [联合诊断](../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/joint-certificate-report.md)修正“WIKI只缺联合见证”的推断：同对象完整64维投影min也无排除，原信息还被降维丢失；SIFT联合信息很大一部分在wholeB已存在。
+- 保留173568条逐case记录/两run及min-reduction计数修正；只有16条源query，不作ANN胜出或显著性主张。阶段门未通过，停止这两种经典结构的独立新索引立项，不否证其他表示/近似路线。

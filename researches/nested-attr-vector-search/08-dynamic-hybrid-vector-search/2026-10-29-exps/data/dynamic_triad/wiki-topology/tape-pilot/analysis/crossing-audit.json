@@ -1,0 +1,145 @@
+{
+  "checks": [
+    {
+      "cohort_root": 410,
+      "topology": "balanced",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -386631.669,
+              "A_lower_total": true,
+              "A_total_us": 14041.742,
+              "other_total_us": 400673.411
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -371557.997,
+              "A_lower_total": true,
+              "A_total_us": 14041.742,
+              "other_total_us": 385599.739
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 410,
+      "topology": "native",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -389886.48099999997,
+              "A_lower_total": true,
+              "A_total_us": 14434.873,
+              "other_total_us": 404321.354
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -405332.164,
+              "A_lower_total": true,
+              "A_total_us": 14434.873,
+              "other_total_us": 419767.037
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "balanced",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1465871.699,
+              "A_lower_total": false,
+              "A_total_us": 1879586.803,
+              "other_total_us": 413715.104
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1542517.877,
+              "A_lower_total": false,
+              "A_total_us": 1879586.803,
+              "other_total_us": 337068.926
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "native",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1539912.8569999998,
+              "A_lower_total": false,
+              "A_total_us": 1928998.588,
+              "other_total_us": 389085.731
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1572611.802,
+              "A_lower_total": false,
+              "A_total_us": 1928998.588,
+              "other_total_us": 356386.786
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    }
+  ],
+  "interpretation": "Observed quality-qualified endpoint ordering only; no fitted crossing or continuity claim."
+}

@@ -1,0 +1,30 @@
+{
+  "captured_at": "2026-10-29T20:05:20+08:00",
+  "compiler": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+  "driver_python": "Python 3.13.16",
+  "hardware": {
+    "Architecture": "x86_64",
+    "CPU(s)": "16",
+    "On-line CPU(s) list": "0-15",
+    "Model name": "AMD Ryzen 7 5800X 8-Core Processor",
+    "Thread(s) per core": "2",
+    "Core(s) per socket": "8",
+    "Socket(s)": "1",
+    "L3 cache": "32 MiB (1 instance)"
+  },
+  "source_sha256": {
+    "src/dynamic_triad.cpp": "0915b22df2389b573960fa1bd04d7c4fc235df5f3c2069d55a2f2d16f3110214",
+    "scripts/run_dynamic_triad.py": "1fb089a53ff0cf3ffdab0f3133dd607a5492cae8205da93daeed08382a228ec5",
+    "scripts/generate_wiki_topology_triad.py": "02692f2f157d5d4658dc84035a4b4670bdee55d9a07b2e23c0e74a5ec4b9ad56",
+    "tests/test_dynamic_triad.py": "552e8fc2863d3f8c1bb8e6de0fc8b15f0b09de9e1d966b931ce8d6cdf64d1ab8"
+  },
+  "source_base_checkpoint": "4dcf430",
+  "measured_binary_sha256": "e51a31368ceba046dbb6a29917d29e51718409a22b8562c9381c9525906a8a7c",
+  "hnswlib_commit": "ca426729609b3221563047ceb269cc1213e0d376",
+  "compile_command": "g++ -O3 -march=native -std=c++17 -Wall -Wextra -o build/dynamic_triad_gt_tape src/dynamic_triad.cpp -Isrc -Ideps/hnswlib -lpthread",
+  "compile_cwd": "codes/directory-aware-vector-attr-search",
+  "benchmark_jobs": 2,
+  "benchmark_threads_per_process": 1,
+  "cpu_affinity_pinned": false,
+  "oracle_and_benchmark_stages_overlap": false
+}

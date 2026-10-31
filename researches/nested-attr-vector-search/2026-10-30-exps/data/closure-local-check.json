@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "command": [
+    "python",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-p",
+    "test_closure.py",
+    "-v"
+  ],
+  "tests_passed": 3,
+  "wall_seconds": 3.378030830004718,
+  "source_and_binary_sha256": {
+    "src/closure_index.h": "fcfaaee36283a1d937f57ef5e165d62604487027eaac7fe9163c09d72f1c6600",
+    "src/closure_order.h": "f0816fa9ab11eb420d2a38fb9f0725268ba88b0f3c2051f7824e57f3254e9b57",
+    "src/closure_research.cpp": "c1df81e628c778b5b06b67290d2ab1d2df8808ce7c71c5e7549f72122df15fdb",
+    "src/dynamic_triad.cpp": "0915b22df2389b573960fa1bd04d7c4fc235df5f3c2069d55a2f2d16f3110214",
+    "src/raw_l2_space.h": "f159787e15095e6e08d6a3f08d20d5b677a18c09a1d6afe37bce94aa04cf6331",
+    "src/neighborhood_filter.h": "322ca985d33f965746aa89a9b3c588c4c9ffe37bd82a5f2345ae8fd6b0615d1b",
+    "scripts/run_closure.py": "1704718f55497efd08358391055178e58387545673cd7b17fd41656e5719bf9b",
+    "tests/test_closure.py": "661859fe85ae8962bf617b4d406e84e0a823b17427626f08b0f116afc0731ff7",
+    "build/closure_research": "d0b5b3357b1ef4f9e41e81a92777fe085e24fdf5dbcb3ad6431c05e04a998294",
+    "build/dynamic_triad": "3f4e444bdfaf8e1d6769264dd953cabf9d8d64fc83b312836707189f794724ad"
+  },
+  "fixture": {
+    "n": 80,
+    "dim": 4,
+    "query_vectors": 6,
+    "initial_live": 75,
+    "replay_queries": 180,
+    "updates": {
+      "V": 1,
+      "T": 1,
+      "M": 1,
+      "B": 1,
+      "R": 2,
+      "D": 1,
+      "I": 2
+    },
+    "ef": 128
+  },
+  "verified": [
+    "five-core-mode runtime self-check",
+    "real NodeANN A and five candidate arms consume same canonical GT tape",
+    "all six arms match exact ranked IDs on mixed replay",
+    "measured GT distance calls zero",
+    "recursive subtree restriction and witness restoration",
+    "static qidx-disjoint calibration/confirmation",
+    "smoke result cannot authorize production dynamic stage",
+    "actual dynamic and synthetic maintenance-envelope pipeline",
+    "maintenance probe triggers synchronous compaction and counted geometry",
+    "stale dead-ID GT tape rejected with complete=false"
+  ],
+  "known_initial_failure": "Overstrong self-check demanded pool fingerprint change on every insertion; legitimate revival can preserve contents. Removed this incidental assertion, kept independent exact-result and state checks. No algorithm changed for that failure.",
+  "source_provenance": {
+    "server_commit": "502753c",
+    "dynamic_triad_git_blob": "e3789114f2e1adbe6b316dc699020ae8449b5266",
+    "raw_l2_git_blob": "d08d747bec69343fd254ae13eaf1e515fffa909a",
+    "imported_filter_git_blob": "f5bdb1df095f833952d82c69fab3ad5859fb598d",
+    "hnswlib_revision": "ca426729609b3221563047ceb269cc1213e0d376"
+  },
+  "limitations": [
+    "Synthetic correctness inputs only; no new WIKI/SIFT ANN performance runs.",
+    "Temporary unittest fixtures are removed automatically; fixture generator is committed in tests/test_closure.py.",
+    "No concurrency guarantee or throughput benchmark.",
+    "No general finite-ef recall theorem; recursive hereditary property does not include direct-owner scopes."
+  ]
+}

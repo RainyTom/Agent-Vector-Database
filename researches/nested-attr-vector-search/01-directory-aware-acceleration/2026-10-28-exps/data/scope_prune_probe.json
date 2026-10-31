@@ -1,0 +1,96 @@
+{
+  "kind": "offline_scope_prune_probe_not_benchmark",
+  "inputs": {
+    "blocks": 256,
+    "clusters": 256,
+    "sample": 50000,
+    "iters": 6,
+    "seed": 20261028
+  },
+  "anchors": [
+    {
+      "anchor": 1,
+      "query_index": 397,
+      "scope_card": 925829,
+      "tau": 0.9400551319122314,
+      "k": 10,
+      "partitions": {
+        "contiguous": {
+          "blocks": 3617,
+          "sweep": [
+            {
+              "slack": 0.0,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.01,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.02,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.05,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.1,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            }
+          ]
+        },
+        "geometric": {
+          "blocks": 256,
+          "sweep": [
+            {
+              "slack": 0.0,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.01,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.02,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.05,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            },
+            {
+              "slack": 0.1,
+              "pruned_blocks_frac": 0.0,
+              "pruned_vectors_frac": 0.0,
+              "gt_among_pruned": 0
+            }
+          ]
+        }
+      },
+      "gt_selfcheck": {
+        "topk_matches_gt": true,
+        "overlap": 10,
+        "k": 10
+      }
+    }
+  ]
+}

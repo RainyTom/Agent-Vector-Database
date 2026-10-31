@@ -1,0 +1,240 @@
+{
+  "chosen": {
+    "A": {
+      "calibration_pass": true,
+      "ef": 64
+    },
+    "G": {
+      "calibration_pass": true,
+      "ef": 1024
+    },
+    "H": {
+      "calibration_pass": true,
+      "ef": 1024
+    },
+    "H0": {
+      "calibration_pass": true,
+      "ef": 1024
+    },
+    "R": {
+      "calibration_pass": true,
+      "ef": 256
+    },
+    "U": {
+      "calibration_pass": true,
+      "ef": 256
+    }
+  },
+  "grid": {
+    "A": [
+      {
+        "ef": 64,
+        "mean_us": 391.59093,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 256,
+        "mean_us": 564.82421,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 1024,
+        "mean_us": 674.8378600000001,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      }
+    ],
+    "G": [
+      {
+        "ef": 64,
+        "mean_us": 14949.921199999999,
+        "quality": {
+          "empty": 0,
+          "macro": 0.981,
+          "nonempty": 100,
+          "pair": 0.9778554778554779,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 256,
+        "mean_us": 22194.71462,
+        "quality": {
+          "empty": 0,
+          "macro": 0.9990000000000001,
+          "nonempty": 100,
+          "pair": 0.9988344988344988,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 1024,
+        "mean_us": 32614.866690000003,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      }
+    ],
+    "H": [
+      {
+        "ef": 64,
+        "mean_us": 16460.9546,
+        "quality": {
+          "empty": 0,
+          "macro": 0.981,
+          "nonempty": 100,
+          "pair": 0.9778554778554779,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 256,
+        "mean_us": 26486.51531,
+        "quality": {
+          "empty": 0,
+          "macro": 0.9990000000000001,
+          "nonempty": 100,
+          "pair": 0.9988344988344988,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 1024,
+        "mean_us": 44330.88119,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      }
+    ],
+    "H0": [
+      {
+        "ef": 64,
+        "mean_us": 27608.99063,
+        "quality": {
+          "empty": 0,
+          "macro": 0.978,
+          "nonempty": 100,
+          "pair": 0.9743589743589743,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 256,
+        "mean_us": 40512.243760000005,
+        "quality": {
+          "empty": 0,
+          "macro": 0.9990000000000001,
+          "nonempty": 100,
+          "pair": 0.9988344988344988,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 1024,
+        "mean_us": 60747.54610000001,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      }
+    ],
+    "R": [
+      {
+        "ef": 64,
+        "mean_us": 15384.36384,
+        "quality": {
+          "empty": 0,
+          "macro": 0.98,
+          "nonempty": 100,
+          "pair": 0.9766899766899767,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 256,
+        "mean_us": 23025.82196,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 1024,
+        "mean_us": 35886.08534,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      }
+    ],
+    "U": [
+      {
+        "ef": 64,
+        "mean_us": 14687.36833,
+        "quality": {
+          "empty": 0,
+          "macro": 0.9840000000000001,
+          "nonempty": 100,
+          "pair": 0.9813519813519813,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 256,
+        "mean_us": 20914.55405,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      },
+      {
+        "ef": 1024,
+        "mean_us": 31095.78576,
+        "quality": {
+          "empty": 0,
+          "macro": 1.0,
+          "nonempty": 100,
+          "pair": 1.0,
+          "unique_qidx": 32
+        }
+      }
+    ]
+  }
+}

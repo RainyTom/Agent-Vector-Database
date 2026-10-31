@@ -1,0 +1,47 @@
+{
+  "tool": "codes/directory-aware-vector-attr-search/src/hlg_tool.cpp",
+  "command": "hlg_tool build --data codes/directory-aware-vector-attr-search/data/wiki_full --out work/hlg/overlay_full --dim 1024",
+  "dataset": {
+    "data_dir": "codes/directory-aware-vector-attr-search/data/wiki_full",
+    "entries": 1941679,
+    "dim": 1024,
+    "tree_nodes": 468031,
+    "max_depth": 31,
+    "max_fanout": 408,
+    "nonempty_nodes": 468031,
+    "nodes_with_direct_bindings": 363467,
+    "binding": "single (wiki_bindings.txt: one node per entry)"
+  },
+  "build_measured": {
+    "edges": 1941678,
+    "edges_expected_n_minus_1": 1941678,
+    "nodes_with_connectors": 254383,
+    "max_added_degree": 66,
+    "mean_added_degree": 2.0,
+    "points_with_added_edges": 1941679,
+    "mean_added_degree_nonzero": 2.0,
+    "representative_recomputations": 831497,
+    "sum_k": 831497,
+    "sum_k2": 7294109,
+    "mst_seconds": 76.9,
+    "build_seconds": 90.8,
+    "wall_seconds": 91.5,
+    "threads": 12
+  },
+  "theorem_checks": {
+    "theorem_1_ii_edge_count_equals_n_minus_1": true,
+    "theorem_1_iii_max_added_degree": 66,
+    "theorem_1_iii_bound_formula": "deg_loc(x) + sum over a in Anc(h(x)) U {h(x)} of k_a",
+    "note": "|E_conn| = n-1 exactly, matching hlg-theory.md theorem 1(ii); the plan's original bound n - #nonempty_nodes = 1473212 is falsified"
+  },
+  "artifact": {
+    "overlay": "work/hlg/overlay_full/overlay.bin (uint32 n_edges + 2*uint32 per edge, base vector ids)",
+    "reps": "work/hlg/overlay_full/reps.bin (uint32 m + int32 per node, base vector id or -1)",
+    "not_committed": true
+  },
+  "index_build": {
+    "params": "IndexHNSWFlat(dim=1024, M=16), efConstruction=200, metric=L2 — identical to repro.cpp's PG-hnsw-M16 executor",
+    "note": "faiss hnsw_add_vertices permutes the insertion order per add() call (RandomGenerator rng2(789) per call) and links points in parallel under locks, so chunked adds produce different graph instances; a single add() over all 1941679 vectors is used, with OMP_NUM_THREADS=1.",
+    "chunk_invariance_test": "work/hlg: 20000x32 synthetic, chunk=20000 vs chunk=137 => DIFFERENT (entry_point 12586 vs 1751, 482252/660896 neighbor slots differ); levels and offsets identical. Confirms order permutation is per add() call."
+  }
+}

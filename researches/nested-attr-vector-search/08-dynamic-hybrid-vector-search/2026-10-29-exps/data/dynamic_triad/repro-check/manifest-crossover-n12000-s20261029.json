@@ -1,0 +1,538 @@
+{
+  "configs": [
+    {
+      "actual_q_u": 0.25,
+      "actual_unique_coverage": 0.2,
+      "actual_unique_items": 2400,
+      "affected_union_by_op": {
+        "B": 0,
+        "D": 600,
+        "I": 600,
+        "M": 600,
+        "R": 0,
+        "T": 600,
+        "V": 600
+      },
+      "coverage_definition": "unique initial live IDs affected by any update / initial live N",
+      "coverage_overshoot_items": 0,
+      "coverage_target_met": true,
+      "data_dir": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/repro-check/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "data_file_sha256": {
+        "attrs.txt": "c1d9f95a490093c17bd600b82a77533ff578252dac00631f330be94a90f4902a",
+        "base.f32": "e65d3621562a2b35a54004c06220d5464b108b33b1f364eaa7c549ccdb66b423",
+        "bindings.txt": "d516293e13351e996e40eeaeb4ed46207d51e55a7d366379c00a673f7e1d60fc",
+        "meta.txt": "ba228df3c30101d2abb62087370a7daed8bd3957ada859efd29699cc457cd264",
+        "test.f32": "452a96b1abd51e95fcaa7b0e6727baf27f86206fce11cdb5476e8abdabcb9892",
+        "tree.txt": "945f0bfa32962a2b0e425ecb06e489826bbfa330271ae00055f1d123efb0df9d"
+      },
+      "data_sha256": "0b602bd47030849242357806ae1590db284f679c9e3286db9461ab914fbb2096",
+      "dataset": "sift",
+      "depth": 3,
+      "dim": 128,
+      "final_depth": 3,
+      "final_live_count": 12000,
+      "full_scope_tag_combine_schedule": true,
+      "hierarchy_label": "SIFT-vector subset + controlled SYNTHETIC hierarchy",
+      "id": "sift-d3-uniform-mixed-r0p2-qu0p25",
+      "initial_coverage_by_op": {
+        "B": 0,
+        "D": 600,
+        "I": 0,
+        "M": 600,
+        "R": 0,
+        "T": 600,
+        "V": 600
+      },
+      "initial_depth": 3,
+      "initial_live_count": 12000,
+      "locality": "uniform",
+      "locality_shift_policy": "hot leaf ranks 0..3 then 4..7 at half target coverage; query phase uses trace progress",
+      "max_observed_depth": 3,
+      "minimum_live_count": 11999,
+      "mixed_all_types_exercised": true,
+      "n_events": 3750,
+      "n_live": 12000,
+      "n_nodes": 15,
+      "n_queries": 750,
+      "n_updates": 3000,
+      "n_vectors": 13000,
+      "operation_mixture": [
+        "single_scalar",
+        "tag_edit",
+        "item_move",
+        "delete_insert"
+      ],
+      "query_cap": 50000,
+      "query_cap_applied": false,
+      "query_event_floor": 64,
+      "query_floor_applied": false,
+      "query_schedule_counts": {
+        "combine_0": 380,
+        "combine_1": 370,
+        "scope_empty": 187,
+        "scope_narrow": 187,
+        "scope_root": 188,
+        "scope_wide": 188,
+        "tagmode_0": 152,
+        "tagmode_1": 152,
+        "tagmode_2": 150,
+        "tagmode_3": 148,
+        "tagmode_4": 148
+      },
+      "query_vector_count": 64,
+      "query_vectors_reused": true,
+      "requested_query_events": 750,
+      "rounded_ratio_query_events": 750,
+      "seed": 20261029,
+      "subtree_affected_union_items": 0,
+      "subtree_initial_affected_union_items": 0,
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "target_q_u_achieved": true,
+      "target_ratio_query_events": 750.0,
+      "target_unique_items": 2400,
+      "trace": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/repro-check/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p2-qu0p25.txt",
+      "trace_sha256": "3b417bc293356c4a79aa9bc7c77622dc8b8a5ceeb11581796827fa2f8b7b7666",
+      "unique_affected_all_ids": 3000,
+      "update_budget_exhausted": false,
+      "update_counts": {
+        "D": 600,
+        "I": 600,
+        "M": 600,
+        "T": 600,
+        "V": 600
+      },
+      "update_operation_budget": 24000,
+      "update_rate": 0.2,
+      "update_stream_sha256": "dd81104edba0bba774065d44556ced4b082235944dca5a943fc5e5dcfadfc5af",
+      "update_type": "mixed",
+      "visibility": "serialized synchronous commits; each Q observes all preceding updates"
+    }
+  ],
+  "design": "factorized screening plus decisive interactions; NOT full factorial",
+  "execution": "generation/orchestration Python only; all GT, ANN and timing C++; serialized current-state commits",
+  "factor_levels": {
+    "datasets": [
+      "sift",
+      "wiki"
+    ],
+    "depths": [
+      3,
+      7
+    ],
+    "localities": [
+      "uniform",
+      "zipf",
+      "shift"
+    ],
+    "target_q_u": [
+      0.25,
+      1.0,
+      4.0
+    ],
+    "update_rates": [
+      0.0,
+      0.1,
+      0.2,
+      0.5,
+      0.8
+    ],
+    "update_types": [
+      "single_scalar",
+      "tag_edit",
+      "item_move",
+      "batch_move",
+      "subtree_reparent",
+      "delete_insert",
+      "mixed"
+    ]
+  },
+  "factor_levels_note": "factor_levels is full factor universe; suite_factor_levels is actual planned suite coverage",
+  "format_version": 1,
+  "generated": true,
+  "generation_command": [
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/production/nested-attr-vector-search/work/venv/bin/python",
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/scripts/generate_dynamic_triad.py",
+    "--suite",
+    "crossover",
+    "--select",
+    "sift-d3-uniform-mixed-r0p2-qu0p25",
+    "--n-live",
+    "12000",
+    "--reserve",
+    "1000",
+    "--work-root",
+    "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/repro-check",
+    "--tracked-root",
+    "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/repro-check"
+  ],
+  "hierarchy_policy": "8 leaves; depth7 adds four unary levels per depth3 leaf; node1 empty direct scope",
+  "manifest_path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/repro-check/manifest-crossover-n12000-s20261029.json",
+  "max_queries": 50000,
+  "max_update_ops": 24000,
+  "min_queries": 64,
+  "mixed_policy": "equal round-robin scalar/tag/item_move/delete_insert units; B/R isolated; D/I two commits",
+  "n_live": 12000,
+  "output_dir": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/repro-check",
+  "planned_configs": [
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.0,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p1-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.1,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p1-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.1,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p1-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.1,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p2-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.2,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p2-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.2,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p2-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.2,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p5-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.5,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p5-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.5,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p5-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.5,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p8-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.8,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p8-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.8,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "sift",
+      "depth": 3,
+      "id": "sift-d3-uniform-mixed-r0p8-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.8,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.0,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p1-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.1,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p1-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.1,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p1-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.1,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p2-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.2,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p2-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.2,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p2-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.2,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p5-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.5,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p5-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.5,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p5-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.5,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p8-qu0p25",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 0.25,
+      "update_rate": 0.8,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p8-qu1",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 1.0,
+      "update_rate": 0.8,
+      "update_type": "mixed"
+    },
+    {
+      "dataset": "wiki",
+      "depth": 3,
+      "id": "wiki-d3-uniform-mixed-r0p8-qu4",
+      "locality": "uniform",
+      "sweeps": [
+        "primary_crossover"
+      ],
+      "target_q_u": 4.0,
+      "update_rate": 0.8,
+      "update_type": "mixed"
+    }
+  ],
+  "query_policy": "Q-only uses query_vectors; otherwise max(min_queries,round(updates*requested Q/U),1), explicit cap; evenly spaced",
+  "query_vectors": 64,
+  "rate_definition": "unique initially-live item IDs affected / initial live N; not event fraction",
+  "reserve": 1000,
+  "seed": 20261029,
+  "selection": {
+    "limit": null,
+    "patterns": [
+      "sift-d3-uniform-mixed-r0p2-qu0p25"
+    ],
+    "planned_count": 26,
+    "selected_count": 1
+  },
+  "smoke": false,
+  "suite": "crossover",
+  "suite_factor_levels": {
+    "datasets": [
+      "sift",
+      "wiki"
+    ],
+    "depths": [
+      3
+    ],
+    "localities": [
+      "uniform"
+    ],
+    "target_q_u": [
+      0.25,
+      1.0,
+      4.0
+    ],
+    "update_rates": [
+      0.0,
+      0.1,
+      0.2,
+      0.5,
+      0.8
+    ],
+    "update_types": [
+      "mixed"
+    ]
+  },
+  "update_stream_policy": "independent update/query RNGs; Q/U-invariant updates; uniform/zipf rates are prefixes; shift changes phase at half coverage",
+  "work_dir": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/repro-check",
+  "zero_update_policy": "Q-only configs deduplicated across requested ratios; actual Q/U=null"
+}

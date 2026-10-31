@@ -1,0 +1,2 @@
+protocol,validate,update_ops,queries,dup_per_1k,stale_per_1k,cand_per_query,val_ns_per_cand,lat_us_per_query,exposure_ns_per_op,exposure_total_ms
+add-del,1,5592,3000,0,0.333333,40,316.373,1571.83,14657,81.9619

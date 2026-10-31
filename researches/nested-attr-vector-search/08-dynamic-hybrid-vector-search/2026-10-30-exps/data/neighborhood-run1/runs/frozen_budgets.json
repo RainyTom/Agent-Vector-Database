@@ -1,0 +1,46 @@
+{
+  "calibration_protocol_errors": [],
+  "selected": {
+    "sift": {
+      "A": {
+        "calibration_mean_e2e_us": 391.04215,
+        "ef": 64,
+        "quality_failure": false,
+        "reason": null
+      },
+      "B": {
+        "calibration_mean_e2e_us": 41464.7121,
+        "ef": 64,
+        "quality_failure": false,
+        "reason": null
+      },
+      "C": {
+        "calibration_mean_e2e_us": 5270.22447,
+        "ef": 64,
+        "quality_failure": false,
+        "reason": null
+      }
+    },
+    "wiki": {
+      "A": {
+        "calibration_mean_e2e_us": 423.20193,
+        "ef": 64,
+        "quality_failure": false,
+        "reason": null
+      },
+      "B": {
+        "calibration_mean_e2e_us": 129901.27595,
+        "ef": 64,
+        "quality_failure": false,
+        "reason": null
+      },
+      "C": {
+        "calibration_mean_e2e_us": 13713.4654,
+        "ef": 64,
+        "quality_failure": false,
+        "reason": null
+      }
+    }
+  },
+  "selection_uses_confirmation": false
+}

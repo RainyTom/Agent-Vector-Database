@@ -1,0 +1,20 @@
+{
+  "dataset": "wiki",
+  "keep_m": 8,
+  "sample_s": 4,
+  "elapsed_s": 22.2,
+  "all_n": 227,
+  "all_ceiling_recall_mean": 0.6144640234948605,
+  "all_ceiling_recall_p10": 0.0,
+  "all_perfect_frac": 0.5374449339207048,
+  "all_savings_median": 0.0,
+  "all_cost_dist_median": 5.0,
+  "all_visited_nodes_median": 2.0,
+  "ge10k_n": 33,
+  "ge10k_ceiling_recall_mean": 0.048484848484848485,
+  "ge10k_ceiling_recall_p10": 0.0,
+  "ge10k_perfect_frac": 0.0,
+  "ge10k_savings_median": 0.9749714720426017,
+  "ge10k_cost_dist_median": 980.0,
+  "ge10k_visited_nodes_median": 151.0
+}

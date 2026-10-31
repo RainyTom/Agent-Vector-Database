@@ -1,0 +1,42 @@
+{
+  "kind": "analytic_payload_model_not_benchmark",
+  "inputs": {"vectors": 1941679, "dimensions": 1024, "nonempty_direct_nodes": 363467},
+  "payloads": [
+    {"representation": "FP32", "bytes_per_vector": 4096, "payload_bytes": 7953117184, "payload_compression_ratio": 1},
+    {"representation": "SQ8", "bytes_per_vector": 1024, "payload_bytes": 1988279296, "payload_compression_ratio": 4},
+    {"representation": "SQ4", "bytes_per_vector": 512, "payload_bytes": 994139648, "payload_compression_ratio": 8},
+    {"representation": "2bit_residual_codes_only", "bytes_per_vector": 256, "payload_bytes": 497069824, "payload_compression_ratio": 16},
+    {"representation": "PQ64x8_codes_only", "bytes_per_vector": 64, "payload_bytes": 124267456, "payload_compression_ratio": 64},
+    {"representation": "PQ128x8_codes_only", "bytes_per_vector": 128, "payload_bytes": 248534912, "payload_compression_ratio": 32}
+  ],
+  "additional_accounting": {
+    "uint32_vq_ids_bytes": 7766716,
+    "example_1024_float32_centroids_bytes": 4194304,
+    "example_2bit_global_reconstruction_weights_bytes": 16,
+    "example_2bit_codes_vq_ids_centroids_weights_bytes": 509030860,
+    "example_centroid_count_is_design_choice_not_a_measured_optimum": true,
+    "float32_centroid_per_nonempty_direct_node_bytes": 1488760832,
+    "float32_one_extra_norm_or_error_per_vector_bytes": 7766716,
+    "pq_8bit_shared_codebook_bytes": 1048576,
+    "pq_8bit_separate_codebook_per_nonempty_node_bytes": 381122772992,
+    "hnsw_M16_level0_capacity_32_uint32_slots_per_vector_bytes": 248534912
+  },
+  "hypothetical_rank8_laminar_calibration": {
+    "kind": "analytic_design_retained_for_memory_accounting_only",
+    "status": "hypothesis_refuted_for_ranking",
+    "refutation": "Per-scope additive bias cancels in within-scope ranking comparisons, so mean calibration cannot change DSQ top-k; see igp-quantization-assessment.md section 10.1. Bytes below are no longer a proposed design.",
+    "directory_nodes": 468031,
+    "rank": 8,
+    "dense_local_and_subtree_float64_sum_bytes": 59907968,
+    "dense_local_and_subtree_uint64_count_bytes": 7488496,
+    "float32_1024_by_8_basis_bytes": 32768,
+    "sums_and_counts_bytes_excluding_basis": 67396464
+  },
+  "source_anchors": [
+    "2026-10-28-exps/report.md:12-20",
+    "codes/directory-aware-vector-attr-search/src/repro.cpp:602-610,620-628,852-890",
+    "IGP commit 1899e9316e71b023518f9090fc64fe66dbd0c202: ResidualScalarQuantizationPack.hpp"
+  ],
+  "excluded_from_code_payload": ["VQ IDs", "centroids/codebooks", "norm/error metadata", "graph adjacency and levels", "directory metadata and ID maps", "allocator and index object overhead", "query scratch", "retained raw vectors and exact reranking", "training/encoding peak memory", "GPU transfer buffers"],
+  "interpretation": "Payload ratios are arithmetic, not measured index/RSS compression or speedups. Existing NodeANN stores one local-index vector copy total in the single-binding setting, not one copy per ancestor. The current process also retains the base FP32 array. The 32-neighbor graph value is level-0 allocated capacity, not actual edge count or total graph size."
+}

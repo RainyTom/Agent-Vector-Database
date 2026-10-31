@@ -1,0 +1,8 @@
+{
+  "status": "Geometry/probe counts valid; predicate timing incomplete",
+  "issue": "Run1 predicate_python_s timed scope-mask AND only; plain attribute comparisons had already been computed outside this timer.",
+  "not_affected": ["candidate cardinalities", "raw hnswlib distances", "box/gap bounds", "indexed membership/comparison counts", "false-prune checks"],
+  "action": "Move attribute evaluation inside the timer, separately count attribute comparisons and scope mask positions, rerun unchanged preregistered inputs as run2.",
+  "primary_timing_evidence": "conditional-geometry-run2",
+  "do_not_interpret": "Neither Python timing series establishes C++ ANN speedup."
+}

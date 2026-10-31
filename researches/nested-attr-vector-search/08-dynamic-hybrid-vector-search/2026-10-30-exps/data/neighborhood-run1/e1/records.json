@@ -1,0 +1,100 @@
+[
+  {
+    "artifacts": [
+      {
+        "bytes": 17131,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.B.csv",
+        "sha256": "54bdca55cf1c7cea3eb8128044783d5a3012964fd24a4ea91e23602d7d52df44"
+      },
+      {
+        "bytes": 17005,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.C.csv",
+        "sha256": "7a7099953dfa4d642b9ea9b03616f8e7308c0e01090488f3a4cec3b1aa4ba9eb"
+      },
+      {
+        "bytes": 0,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "bytes": 47,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.stdout.log",
+        "sha256": "6f455f1ac9b2daec6c40708047700f1c032571cc70a07bd94c128e2514062b9a"
+      },
+      {
+        "bytes": 215,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift.summary.json",
+        "sha256": "9cd6b38fc5cd42e5541f9e92de524b0556d93ddcc0ff687489d5afa8aff7803f"
+      }
+    ],
+    "command": [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/neighborhood_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+      "--queries",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/sift/all.qtrace.txt",
+      "--arm",
+      "C",
+      "--ef",
+      "64",
+      "--e1-centers",
+      "8",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/sift"
+    ],
+    "dataset": "sift",
+    "e1_centers": 8,
+    "note": "E1 diagnostics only; this is not an E2 quality/speed result",
+    "returncode": 0,
+    "trace_sha256": "17b0488c0afb8b3c0f84ff0b48fc1f262ea880192dbcce5ca756aca04c9ef114"
+  },
+  {
+    "artifacts": [
+      {
+        "bytes": 17672,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.B.csv",
+        "sha256": "e1c23ca16d7343494176b537c0281b7c2356d2477f3f1dac8f17d3a5eed57bf1"
+      },
+      {
+        "bytes": 17520,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.C.csv",
+        "sha256": "2042b42c50e7347f95cb460fd76a10da2146bec04783710bd34ccc40eacf9463"
+      },
+      {
+        "bytes": 0,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "bytes": 47,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.stdout.log",
+        "sha256": "6f455f1ac9b2daec6c40708047700f1c032571cc70a07bd94c128e2514062b9a"
+      },
+      {
+        "bytes": 215,
+        "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki.summary.json",
+        "sha256": "3caa24788e0abf0dc27120d1149f5ebca5359e30fcf9cebaf7ff8d56757e7ae7"
+      }
+    ],
+    "command": [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/neighborhood_research",
+      "--data",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/wiki-topology/wiki-topology-s20261029-q456-f7046c642b34/root-3626/native",
+      "--queries",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/wiki/all.qtrace.txt",
+      "--arm",
+      "C",
+      "--ef",
+      "64",
+      "--e1-centers",
+      "8",
+      "--out",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/data/neighborhood-run1/e1/wiki"
+    ],
+    "dataset": "wiki",
+    "e1_centers": 8,
+    "note": "E1 diagnostics only; this is not an E2 quality/speed result",
+    "returncode": 0,
+    "trace_sha256": "1f68988f077d526891ed296b23c41de38bf4a8573bfc4cedb5993d998811ea30"
+  }
+]

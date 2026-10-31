@@ -1,0 +1,75 @@
+{
+  "complete": true,
+  "kind": "synthetic_small_ef_pipeline_smoke_not_WIKI_SIFT_rerun",
+  "checks": {
+    "actual_programs": "original C++ NodeANN and closure runner, no rebuilt/changed core",
+    "runs": 24,
+    "arms": [
+      "A",
+      "H",
+      "R",
+      "U"
+    ],
+    "efs": [
+      15,
+      20
+    ],
+    "queries_per_run": 180,
+    "repeats": 3,
+    "all_point_quality_retained": true,
+    "selection_performed": false,
+    "dynamic_admitted": false,
+    "gt_distance_calls_sum": 0,
+    "source_pin_checks": 13,
+    "forced_traversal_property_violations": 0,
+    "smoke_manifest_cannot_be_used_as_real_input": true,
+    "changed_initial_snapshot_rejected": true
+  },
+  "commands": [
+    {
+      "command": [
+        "python",
+        "codes/directory-aware-vector-attr-search/scripts/run_closure.py",
+        "--dataset",
+        "toy=/home/stu/2026040404-yiming/Agent-Vector-Database/work/closure-small-ef-lw04j85h/data",
+        "--trace",
+        "toy=/home/stu/2026040404-yiming/Agent-Vector-Database/work/closure-small-ef-lw04j85h/mixed.trace",
+        "--max-queries",
+        "180",
+        "--efs",
+        "15",
+        "--repeats",
+        "1",
+        "--out",
+        "/home/stu/2026040404-yiming/Agent-Vector-Database/work/closure-small-ef-lw04j85h/previous-static",
+        "--smoke"
+      ],
+      "exit": 0,
+      "stdout": "{\"complete\": true, \"stage\": \"static\", \"output\": \"/home/stu/2026040404-yiming/Agent-Vector-Database/work/closure-small-ef-lw04j85h/previous-static\", \"dynamic_admitted\": {\"toy\": false}}\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "python",
+        "codes/directory-aware-vector-attr-search/scripts/run_closure_small_ef.py",
+        "--previous-raw",
+        "/home/stu/2026040404-yiming/Agent-Vector-Database/work/closure-small-ef-lw04j85h/previous-static",
+        "--out",
+        "/home/stu/2026040404-yiming/Agent-Vector-Database/work/closure-small-ef-lw04j85h/fixed-small",
+        "--smoke"
+      ],
+      "exit": 0,
+      "stdout": "{\"complete\": true, \"out\": \"/home/stu/2026040404-yiming/Agent-Vector-Database/work/closure-small-ef-lw04j85h/fixed-small\", \"runs\": 24, \"efs\": [15, 20], \"dynamic_admitted\": false}\n",
+      "stderr": ""
+    }
+  ],
+  "new_scripts_sha256": {
+    "codes/directory-aware-vector-attr-search/scripts/run_closure_small_ef.py": "c8fd32189525ba3ed3cc9cde67e6a8b9669e0c0334324895afbc813ebb4a26d9",
+    "codes/directory-aware-vector-attr-search/scripts/analyze_closure_termination.py": "343cd43012f759cf54d13c5ac4108eca2e3c58de1c7190a75088e89fc5fcd9a1"
+  },
+  "limitations": [
+    "No server data available locally; no new WIKI/SIFT performance result.",
+    "Smoke mode skips redundant builds; production mode rebuilds pinned sources before measuring.",
+    "Temporary synthetic vectors and raw outputs were removed; fixture function is tracked in tests/test_closure.py."
+  ]
+}

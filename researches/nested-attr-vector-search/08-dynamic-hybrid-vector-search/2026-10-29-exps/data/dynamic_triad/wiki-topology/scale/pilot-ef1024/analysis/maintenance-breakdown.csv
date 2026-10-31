@@ -1,0 +1,7 @@
+config_id,cohort_root,topology,arm,repeat,actual_q_u,quality_pass,n_updates,mean_update_us,max_update_us,initial_hnsw_nodes,final_hnsw_nodes,final_index_live,final_index_dead,metadata_writes,ann_insertions,ann_deletions,tombstone_compaction_us,tombstone_compaction_count,tombstone_compaction_ann_insertions,threshold_build_us,threshold_build_count,threshold_build_ann_insertions,threshold_drop_us,threshold_drop_count,threshold_drop_ann_insertions
+wiki-root828-balanced-item_move-r0p5-qu0p01,828,balanced,A,1,0.009999173622014709,True,24202,102.13693620361953,509366.605,11,5,4113,468,72606,17190,4998,2405929.257,17,17137,0,0,0,1242.107,6,0
+wiki-root828-balanced-item_move-r0p5-qu0p01,828,balanced,B,1,0.009999173622014709,True,24202,3.5781030080158662,191.51,1,1,48403,0,72606,0,0,0,0,0,0,0,0,0,0,0
+wiki-root828-balanced-item_move-r0p5-qu0p01,828,balanced,C,1,0.009999173622014709,True,24202,15.66769833071647,220.154,1,1,48403,0,255005,0,0,0,0,0,0,0,0,0,0,0
+wiki-root828-native-item_move-r0p5-qu0p01,828,native,A,1,0.009999173622014709,True,24202,111.42144516982069,639225.523,11,5,4113,468,72606,17190,4998,2618355.765,17,17137,0,0,0,1286.58,6,0
+wiki-root828-native-item_move-r0p5-qu0p01,828,native,B,1,0.009999173622014709,True,24202,3.6645901991570944,145.695,1,1,48403,0,72606,0,0,0,0,0,0,0,0,0,0,0
+wiki-root828-native-item_move-r0p5-qu0p01,828,native,C,1,0.009999173622014709,True,24202,17.22157751425502,237.126,1,1,48403,0,287111,0,0,0,0,0,0,0,0,0,0,0

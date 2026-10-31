@@ -1,0 +1,119 @@
+{
+  "kind": "postprocessing_of_existing_run11_csv_not_new_experiment",
+  "date": "2026-10-28",
+  "source": "data/autoresearch_best_repeat_{0,1,2}.csv (recursive rows only); median run = repeat_2",
+  "baseline": {
+    "candidate": "NODE-scope-run run11",
+    "mean_ms": 1.1275031806167402,
+    "macro_recall": 1.0,
+    "pair_recall": 1.0,
+    "p95_ms": 3.547671,
+    "runs_mean_ms": [
+      1.1136047929515418,
+      1.1360922290748898,
+      1.1275031806167402
+    ]
+  },
+  "by_scope_bucket": [
+    {
+      "bucket": "1-9",
+      "queries": 110,
+      "share_queries": 0.4846,
+      "share_time": 0.0012,
+      "mean_us": 2.7,
+      "median_us": 2.5
+    },
+    {
+      "bucket": "10-99",
+      "queries": 37,
+      "share_queries": 0.163,
+      "share_time": 0.0011,
+      "mean_us": 7.6,
+      "median_us": 6.1
+    },
+    {
+      "bucket": "100-999",
+      "queries": 9,
+      "share_queries": 0.0396,
+      "share_time": 0.0018,
+      "mean_us": 51.2,
+      "median_us": 30.8
+    },
+    {
+      "bucket": "1k-10k",
+      "queries": 38,
+      "share_queries": 0.1674,
+      "share_time": 0.0851,
+      "mean_us": 573.3,
+      "median_us": 497.4
+    },
+    {
+      "bucket": ">=10k",
+      "queries": 33,
+      "share_queries": 0.1454,
+      "share_time": 0.9108,
+      "mean_us": 7064.2,
+      "median_us": 2232.0,
+      "max_us": 111854.0
+    }
+  ],
+  "tail_concentration": {
+    "queries_for_50pct_time": 3,
+    "queries_for_90pct_time": 32,
+    "queries_for_99pct_time": 65,
+    "total_queries": 227,
+    "total_ms": 255.94,
+    "single_worst": {
+      "query_index": 397,
+      "scope_card": 925829,
+      "anchor_depth": 1,
+      "e2e_ms": 111.854,
+      "bytes_scanned_MB": 3792.2,
+      "effective_GB_per_s": 33.9
+    },
+    "mean_ms_if_worst_removed": 0.6376
+  },
+  "bandwidth_observation": {
+    "effective_GB_per_s_range": [
+      28.7,
+      33.9
+    ],
+    "implication": "The scope-scan kernel is bandwidth-bound; bytes per candidate is the primary lever, not FLOPs.",
+    "caveat": "Effective GB/s assumes every scope member is read exactly once as FP32 (scope_card*4096 bytes); it is an upper-bound estimate of bytes moved, not a hardware counter."
+  },
+  "bytes_per_candidate_options_for_qi397": [
+    {
+      "representation": "FP32",
+      "bytes_per_vector": 4096,
+      "total_MB": 3792.2
+    },
+    {
+      "representation": "SQ8",
+      "bytes_per_vector": 1024,
+      "total_MB": 948.0
+    },
+    {
+      "representation": "SQ4_or_PQ64x8",
+      "bytes_per_vector": 512,
+      "total_MB": 474.0
+    },
+    {
+      "representation": "PQ64x8",
+      "bytes_per_vector": 64,
+      "total_MB": 59.3
+    },
+    {
+      "representation": "1bit_binary",
+      "bytes_per_vector": 128,
+      "total_MB": 118.5
+    }
+  ],
+  "not_measured": [
+    "achieved ns per candidate for any compressed kernel",
+    "decode/compute cost at d=1024",
+    "quantization-error bound tightness",
+    "survivor rate after bound pruning",
+    "any new recall number"
+  ],
+  "elapsed_baselines_note": "run11 is the internal best candidate, not an external published baseline; external baselines remain NodeANN 6.839 ms single-run and 6.639 ms harness median at recall 0.999559."
+}

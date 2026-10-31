@@ -1,0 +1,7 @@
+config_id,arm,repeat,quality_pass,dataset,actual_unique_coverage,actual_q_u,n_queries,n_updates,workload_total_us,amortized_us_per_query,window_update_ops_s,update_only_ops_s,write_amplification_metadata_per_affected_item,write_amplification_ann_insertions_per_affected_item
+sift-d3-uniform-mixed-r0p2-qu0p25,A,1,True,sift,0.2,0.25,750,3000,451946.196,602.594928,6637.958293601834,50068.451082897984,2.8,0.22333333333333333
+sift-d3-uniform-mixed-r0p2-qu0p25,B,1,True,sift,0.2,0.25,750,3000,1232583.684,1643.444912,2433.9118219254315,33532.691518362844,2.8,0.2
+sift-d3-uniform-mixed-r0p2-qu0p25,C,1,True,sift,0.2,0.25,750,3000,1031271.015,1375.02802,2909.0316283154725,32682.22497450133,4.202333333333334,0.2
+wiki-d3-uniform-mixed-r0p2-qu0p25,A,1,True,wiki,0.2,0.25,750,3000,1632286.203,2176.381604,1837.9129802642829,10271.408760620114,2.8,0.22333333333333333
+wiki-d3-uniform-mixed-r0p2-qu0p25,B,1,True,wiki,0.2,0.25,750,3000,4904579.735,6539.439646666667,611.6732038407772,4638.340691133171,2.8,0.2
+wiki-d3-uniform-mixed-r0p2-qu0p25,C,1,True,wiki,0.2,0.25,750,3000,4409293.507,5879.058009333334,680.3811075940697,4890.569680601247,4.202333333333334,0.2

@@ -1,0 +1,26 @@
+{
+  "pure-static": {
+    "runs": 51,
+    "pure_nodeann_runs": 6,
+    "pure_queries": 1080,
+    "scan_groups": 0,
+    "scan_distances": 0,
+    "qualification_us": 0.0,
+    "graph_calls": 4320,
+    "graph_fanout_mismatches": 0,
+    "gt_distances": 0,
+    "invalid_or_duplicate": 0
+  },
+  "pure-maintenance": {
+    "runs": 18,
+    "pure_nodeann_runs": 6,
+    "pure_queries": 942,
+    "scan_groups": 0,
+    "scan_distances": 0,
+    "qualification_us": 0.0,
+    "graph_calls": 4209,
+    "graph_fanout_mismatches": 0,
+    "gt_distances": 0,
+    "invalid_or_duplicate": 0
+  }
+}

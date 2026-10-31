@@ -1,0 +1,58 @@
+{
+  "source_items": 1941679,
+  "source_nodes": 468031,
+  "source_max_depth": 31,
+  "cohort_selection": "nearest target12000 by complete subtree item count, separately zero vs positive direct nodes above512; no query latency selection",
+  "main_roots": [
+    410,
+    3626
+  ],
+  "scale_candidate_root": 828,
+  "cohorts": [
+    {
+      "source_root": 410,
+      "n_items": 11964,
+      "n_nodes": 2382,
+      "nonempty_direct_nodes": 2117,
+      "initial_hnsw_nodes_gt512": 0,
+      "largest_direct_node": 284,
+      "relative_max_depth": 14,
+      "source_root_depth": 8,
+      "direct_size_nonempty_percentiles": [
+        2.0,
+        12.0,
+        54.68000000000029
+      ]
+    },
+    {
+      "source_root": 3626,
+      "n_items": 11869,
+      "n_nodes": 151,
+      "nonempty_direct_nodes": 143,
+      "initial_hnsw_nodes_gt512": 2,
+      "largest_direct_node": 3843,
+      "relative_max_depth": 6,
+      "source_root_depth": 15,
+      "direct_size_nonempty_percentiles": [
+        13.0,
+        124.19999999999997,
+        939.3000000000111
+      ]
+    },
+    {
+      "source_root": 828,
+      "n_items": 48403,
+      "n_nodes": 4076,
+      "nonempty_direct_nodes": 3054,
+      "initial_hnsw_nodes_gt512": 11,
+      "largest_direct_node": 3028,
+      "relative_max_depth": 12,
+      "source_root_depth": 10,
+      "direct_size_nonempty_percentiles": [
+        2.0,
+        23.0,
+        256.9399999999996
+      ]
+    }
+  ]
+}

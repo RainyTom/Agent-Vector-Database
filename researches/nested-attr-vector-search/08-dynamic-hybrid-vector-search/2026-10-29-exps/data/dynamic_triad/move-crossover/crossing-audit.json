@@ -1,0 +1,65 @@
+{
+  "checks": [
+    {
+      "dataset": "sift",
+      "repeat": 1,
+      "observed_bracket": [
+        0.1,
+        1.0
+      ],
+      "A_loses_at_lower": true,
+      "A_wins_at_upper": true
+    },
+    {
+      "dataset": "sift",
+      "repeat": 2,
+      "observed_bracket": [
+        0.1,
+        1.0
+      ],
+      "A_loses_at_lower": true,
+      "A_wins_at_upper": true
+    },
+    {
+      "dataset": "sift",
+      "repeat": 3,
+      "observed_bracket": [
+        0.1,
+        1.0
+      ],
+      "A_loses_at_lower": true,
+      "A_wins_at_upper": true
+    },
+    {
+      "dataset": "wiki",
+      "repeat": 1,
+      "observed_bracket": [
+        0.1,
+        1.0
+      ],
+      "A_loses_at_lower": true,
+      "A_wins_at_upper": true
+    },
+    {
+      "dataset": "wiki",
+      "repeat": 2,
+      "observed_bracket": [
+        0.1,
+        1.0
+      ],
+      "A_loses_at_lower": true,
+      "A_wins_at_upper": true
+    },
+    {
+      "dataset": "wiki",
+      "repeat": 3,
+      "observed_bracket": [
+        0.1,
+        1.0
+      ],
+      "A_loses_at_lower": true,
+      "A_wins_at_upper": true
+    }
+  ],
+  "interpretation": "observed endpoint ordering flips; no interpolation or exact crossing claim"
+}

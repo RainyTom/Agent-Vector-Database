@@ -1,0 +1,106 @@
+{
+  "kind": "postprocessing_of_existing_results_not_new_experiment",
+  "date": "2026-10-28",
+  "source": "researches/nested-attr-vector-search/01-directory-aware-acceleration/2026-10-27-exps/data/wiki_full_all3_dsq_perquery.csv",
+  "completed_processes": {
+    "wiki_full_all3": {
+      "exit_code": 0,
+      "command_record": "../2026-10-27-exps/experiments/wiki_full_all3.command.json"
+    },
+    "wiki_full_node_flat": {
+      "exit_code": 0,
+      "command_record": "../2026-10-27-exps/experiments/wiki_full_node_flat.command.json"
+    },
+    "wiki_full_ivf_exact": {
+      "exit_code": 0,
+      "command_record": "../2026-10-27-exps/experiments/wiki_full_ivf_exact.command.json"
+    }
+  },
+  "recursive_rows_per_design": 227,
+  "global_representation_count": 3,
+  "global_recursive_rows_per_executor": 681,
+  "independent_global_runs_proven_by_this_file": 1,
+  "note": "The three designs are PE-Online, PE-Offline and TrieHI, not three independent trials. Bucket recall agrees with standard hit/gt_count, not legacy hit/10.",
+  "scope_bin_recall_audit": [
+    {
+      "executor": "PG-hnsw-M16",
+      "scope_bin": "1-9",
+      "rows": 330,
+      "unique_queries": 110,
+      "legacy_mean_hit_over_10": 0.009090909090909092,
+      "standard_macro_recall": 0.03464646464646465
+    },
+    {
+      "executor": "PG-hnsw-M16",
+      "scope_bin": "10-99",
+      "rows": 111,
+      "unique_queries": 37,
+      "legacy_mean_hit_over_10": 0.04054054054054054,
+      "standard_macro_recall": 0.04054054054054054
+    },
+    {
+      "executor": "PG-hnsw-M16",
+      "scope_bin": "100-999",
+      "rows": 27,
+      "unique_queries": 9,
+      "legacy_mean_hit_over_10": 0.03333333333333333,
+      "standard_macro_recall": 0.03333333333333333
+    },
+    {
+      "executor": "PG-hnsw-M16",
+      "scope_bin": "1k-10k",
+      "rows": 114,
+      "unique_queries": 38,
+      "legacy_mean_hit_over_10": 0.4631578947368421,
+      "standard_macro_recall": 0.4631578947368421
+    },
+    {
+      "executor": "PG-hnsw-M16",
+      "scope_bin": ">=10k",
+      "rows": 99,
+      "unique_queries": 33,
+      "legacy_mean_hit_over_10": 0.7575757575757576,
+      "standard_macro_recall": 0.7575757575757576
+    },
+    {
+      "executor": "IVF-nlist1024",
+      "scope_bin": "1-9",
+      "rows": 330,
+      "unique_queries": 110,
+      "legacy_mean_hit_over_10": 0.07181818181818182,
+      "standard_macro_recall": 0.3038888888888889
+    },
+    {
+      "executor": "IVF-nlist1024",
+      "scope_bin": "10-99",
+      "rows": 111,
+      "unique_queries": 37,
+      "legacy_mean_hit_over_10": 0.34864864864864864,
+      "standard_macro_recall": 0.34864864864864864
+    },
+    {
+      "executor": "IVF-nlist1024",
+      "scope_bin": "100-999",
+      "rows": 27,
+      "unique_queries": 9,
+      "legacy_mean_hit_over_10": 0.4222222222222222,
+      "standard_macro_recall": 0.4222222222222222
+    },
+    {
+      "executor": "IVF-nlist1024",
+      "scope_bin": "1k-10k",
+      "rows": 114,
+      "unique_queries": 38,
+      "legacy_mean_hit_over_10": 0.7368421052631579,
+      "standard_macro_recall": 0.7368421052631579
+    },
+    {
+      "executor": "IVF-nlist1024",
+      "scope_bin": ">=10k",
+      "rows": 99,
+      "unique_queries": 33,
+      "legacy_mean_hit_over_10": 0.8454545454545455,
+      "standard_macro_recall": 0.8454545454545455
+    }
+  ]
+}

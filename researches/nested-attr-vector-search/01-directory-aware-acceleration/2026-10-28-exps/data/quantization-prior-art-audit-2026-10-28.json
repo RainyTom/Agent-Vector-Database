@@ -1,0 +1,75 @@
+{
+  "verification_date": "2026-10-28",
+  "purpose": "Closest-prior screening for compressed directory-constrained single-vector top-k; not new performance experiments or a claim of complete novelty screening",
+  "records": [
+    {
+      "id": "arxiv:2607.22922v1",
+      "title": "iFVS: Towards Instance-Optimized Filtered Vector Search",
+      "authors": ["Abdullah Al-Mamun", "Yeasir Rayhan", "Walid G. Aref"],
+      "preprint_date": "2026-07-24",
+      "formal_venue": "未核实；HTML workshop template is incomplete",
+      "url": "https://arxiv.org/html/2607.22922v1",
+      "read_evidence": ["section 2: fixed PQ codes/base codebook, query+predicate-dependent codebook perturbation and dimension weights", "section 3: FAISS baselines use one CPU thread; iFVS training and inference use NVIDIA A30", "section 3.3.1 and Table 2: aggregate figure recall includes training and test; table separates them", "section 4: author future work includes unseen-query generalization and workload-shift self-adjustment"],
+      "implication": "Filter-conditioned quantized scoring is direct prior art; directory-conditioned codebooks alone are not established novelty",
+      "open_items": ["formal publication", "complete citation closure", "code and reproducibility", "whether a directory-topology MOVE/MERGE protocol exists in later versions"]
+    },
+    {
+      "id": "cvf:Kalantidis_2014_CVPR",
+      "title": "Locally Optimized Product Quantization for Approximate Nearest Neighbor Search",
+      "authors": ["Yannis Kalantidis", "Yannis Avrithis"],
+      "year": 2014,
+      "venue": "CVPR 2014",
+      "pages": "2321-2328",
+      "url": "https://www.cv-foundation.org/openaccess/content_cvpr_2014/papers/Kalantidis_Locally_Optimized_Product_2014_CVPR_paper.pdf",
+      "read_evidence": ["section 4.1: per-cell residual rotation/product quantizer and per-cell query lookup", "section 5.4: explicit local model/query overhead", "section 6: discussion of mixture fitting and set-compression trees"],
+      "implication": "Local residual/PQ optimization and per-partition quantizers are existing techniques, not new merely because a partition is named Node",
+      "open_items": ["full surrounding set-compression-tree citation chain", "reproduction on semantic directory nodes"]
+    },
+    {
+      "id": "arxiv:2411.12229v1",
+      "title": "SymphonyQG: Towards Symphonious Integration of Quantization and Graph for Approximate Nearest Neighbor Search",
+      "authors": ["Yutong Gou", "Jianyang Gao", "Yuexuan Xu", "Cheng Long"],
+      "preprint_year": 2024,
+      "formal_bibliography": "未在本轮复核正式版",
+      "url": "https://arxiv.org/html/2411.12229",
+      "read_evidence": ["section 2.2: RaBitQ and FastScan", "sections 3.1-3.2: graph/quantization co-design, implicit refinement, accelerated graph construction", "introduction: compact adjacency/code layout also retains raw vectors"],
+      "implication": "Quantized graph search, batched scoring and implicit exact refinement are not novel combinations by themselves",
+      "open_items": ["full formal-version comparison", "complete filter-aware applicability and raw-memory accounting"]
+    },
+    {
+      "id": "arxiv:2609.09854",
+      "title": "When Does Low-Bit Quantization Preserve the Decisions of Vector Search?",
+      "authors": ["Wenxuan Xiao", "Xu Cao"],
+      "preprint_date": "2026-09-09",
+      "formal_venue": "未核实",
+      "url": "https://arxiv.org/abs/2609.09854",
+      "read_evidence": ["abstract only: decision flips, exact-margin mass, residual tails and frozen graph-pruning replay"],
+      "implication": "MSE reduction alone is not adequate evidence of ranking or graph-pruning preservation",
+      "open_items": ["read full definitions/assumptions/proofs", "relevance to filtered margins and directory scopes"]
+    }
+  ],
+  "researcher_hypothesis_not_author_claim": "Frozen global codes with mergeable low-rank quantization-error summaries for laminar scope calibration and MOVE-stable encoding state; novelty and ranking benefit unverified",
+  "retracted_hypotheses": [
+    {
+      "hypothesis": "Per-scope mean/低秩均值校准 of reconstructed vectors improves DSQ top-k",
+      "status": "refuted_analytically",
+      "reason": "Within-scope ranking compares d_hat(q,y)-d_hat(q,x); any additive scope bias cancels and positive scale preserves order, so a mean correction is a ranking no-op. Independently consistent with arXiv:2609.09854 section 3.3, where the affine intercept survives only in alpha!=1 pruning as (1-alpha)b.",
+      "derivation_location": "2026-10-28-exps/igp-quantization-assessment.md section 10.1",
+      "not_new_theorem": true
+    }
+  ],
+  "decision_level_framework_absorbed": {
+    "id": "arxiv:2609.09854",
+    "read_level": "main text sections 1, 3.1-3.3, 5, 7, 8.2-8.3; appendices sampled",
+    "usable_results": ["flip probability bounded by boundary mass plus residual tail", "ranking difference-residual scale nu^2 = K_xx + K_yy - 2K_xy", "held-out block selective certificate (Theorem 15)", "standardized-margin bins predict flip rates"],
+    "not_covered_by_that_paper": ["filtered or directory-scope queries", "scope-aligned codec design", "metadata lifecycle invalidation"]
+  },
+  "certificate_prior_overlap": {
+    "VADER": {"id": "arxiv:2609.38053v2", "role": "filter-aware GBDT recall predictor with early termination at partition granularity", "limits": ["local report: no unconditional per-query recall certificate", "reported R_QUT 0.16-0.35"]},
+    "unread_candidates": ["conANN (PVLDB 2025)", "DARTH+ (HAL 2026)"],
+    "unread_note": "Known only from VADER reference list in this round; coverage not assessed",
+    "possible_residual_gap_unverified": "held-out certificates indexed by directory scope, with invalidation after MOVE/MERGE"
+  },
+  "all_records_are_topic_local_audits": true,
+  "new_global_full_paper_records_claimed": false
+}

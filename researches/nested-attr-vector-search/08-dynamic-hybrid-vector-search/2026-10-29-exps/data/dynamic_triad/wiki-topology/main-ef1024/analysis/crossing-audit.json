@@ -1,0 +1,917 @@
+{
+  "checks": [
+    {
+      "cohort_root": 410,
+      "topology": "balanced",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -395242.478,
+              "A_lower_total": true,
+              "A_total_us": 16707.923,
+              "other_total_us": 411950.401
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3764396.6670000004,
+              "A_lower_total": true,
+              "A_total_us": 169012.351,
+              "other_total_us": 3933409.018
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -49883945.242,
+              "A_lower_total": true,
+              "A_total_us": 2510091.178,
+              "other_total_us": 52394036.42
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -394838.453,
+              "A_lower_total": true,
+              "A_total_us": 16707.923,
+              "other_total_us": 411546.376
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3521270.87,
+              "A_lower_total": true,
+              "A_total_us": 169012.351,
+              "other_total_us": 3690283.221
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -43504496.350999996,
+              "A_lower_total": true,
+              "A_total_us": 2510091.178,
+              "other_total_us": 46014587.529
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 410,
+      "topology": "balanced",
+      "repeat": 2,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -413826.086,
+              "A_lower_total": true,
+              "A_total_us": 17025.94,
+              "other_total_us": 430852.026
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -4824781.316,
+              "A_lower_total": true,
+              "A_total_us": 156546.597,
+              "other_total_us": 4981327.913
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -49935289.474,
+              "A_lower_total": true,
+              "A_total_us": 2700840.195,
+              "other_total_us": 52636129.669
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -385616.794,
+              "A_lower_total": true,
+              "A_total_us": 17025.94,
+              "other_total_us": 402642.734
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -4892201.181,
+              "A_lower_total": true,
+              "A_total_us": 156546.597,
+              "other_total_us": 5048747.778
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -44511976.192999996,
+              "A_lower_total": true,
+              "A_total_us": 2700840.195,
+              "other_total_us": 47212816.388
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 410,
+      "topology": "balanced",
+      "repeat": 3,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -397871.305,
+              "A_lower_total": true,
+              "A_total_us": 16631.259,
+              "other_total_us": 414502.564
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -5470541.4229999995,
+              "A_lower_total": true,
+              "A_total_us": 249657.695,
+              "other_total_us": 5720199.118
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -36675579.635000005,
+              "A_lower_total": true,
+              "A_total_us": 1665859.083,
+              "other_total_us": 38341438.718
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -367876.528,
+              "A_lower_total": true,
+              "A_total_us": 16631.259,
+              "other_total_us": 384507.787
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -4890777.518999999,
+              "A_lower_total": true,
+              "A_total_us": 249657.695,
+              "other_total_us": 5140435.214
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -32211722.722,
+              "A_lower_total": true,
+              "A_total_us": 1665859.083,
+              "other_total_us": 33877581.805
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 410,
+      "topology": "native",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -383180.123,
+              "A_lower_total": true,
+              "A_total_us": 13951.566,
+              "other_total_us": 397131.689
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3624918.863,
+              "A_lower_total": true,
+              "A_total_us": 156705.935,
+              "other_total_us": 3781624.798
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -35795266.796000004,
+              "A_lower_total": true,
+              "A_total_us": 1729335.224,
+              "other_total_us": 37524602.02
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -407533.445,
+              "A_lower_total": true,
+              "A_total_us": 13951.566,
+              "other_total_us": 421485.011
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3418644.693,
+              "A_lower_total": true,
+              "A_total_us": 156705.935,
+              "other_total_us": 3575350.628
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -32065498.919,
+              "A_lower_total": true,
+              "A_total_us": 1729335.224,
+              "other_total_us": 33794834.143
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 410,
+      "topology": "native",
+      "repeat": 2,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -377471.637,
+              "A_lower_total": true,
+              "A_total_us": 19879.604,
+              "other_total_us": 397351.241
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3636776.8619999997,
+              "A_lower_total": true,
+              "A_total_us": 152478.43,
+              "other_total_us": 3789255.292
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -35636222.471,
+              "A_lower_total": true,
+              "A_total_us": 1764268.401,
+              "other_total_us": 37400490.872
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -368809.875,
+              "A_lower_total": true,
+              "A_total_us": 19879.604,
+              "other_total_us": 388689.479
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3428435.631,
+              "A_lower_total": true,
+              "A_total_us": 152478.43,
+              "other_total_us": 3580914.061
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -31835512.133,
+              "A_lower_total": true,
+              "A_total_us": 1764268.401,
+              "other_total_us": 33599780.534
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 410,
+      "topology": "native",
+      "repeat": 3,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -388588.834,
+              "A_lower_total": true,
+              "A_total_us": 15832.177,
+              "other_total_us": 404421.011
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3513764.716,
+              "A_lower_total": true,
+              "A_total_us": 168020.369,
+              "other_total_us": 3681785.085
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -35622754.084,
+              "A_lower_total": true,
+              "A_total_us": 1776907.783,
+              "other_total_us": 37399661.867
+            }
+          ],
+          "observed_order_flip_brackets": []
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.010030090270812437,
+              "quality_qualified": true,
+              "difference_us": -406008.74,
+              "A_lower_total": true,
+              "A_total_us": 15832.177,
+              "other_total_us": 421840.917
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.09996656636576395,
+              "quality_qualified": true,
+              "difference_us": -3333921.31,
+              "A_lower_total": true,
+              "A_total_us": 168020.369,
+              "other_total_us": 3501941.679
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -32146287.910000004,
+              "A_lower_total": true,
+              "A_total_us": 1776907.783,
+              "other_total_us": 33923195.693
+            }
+          ],
+          "observed_order_flip_brackets": []
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "balanced",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1593219.829,
+              "A_lower_total": false,
+              "A_total_us": 2189586.939,
+              "other_total_us": 596367.11
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -2375761.2929999996,
+              "A_lower_total": true,
+              "A_total_us": 2541419.063,
+              "other_total_us": 4917180.356
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -40008012.306,
+              "A_lower_total": true,
+              "A_total_us": 8249328.339,
+              "other_total_us": 48257340.645
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1613488.7879999997,
+              "A_lower_total": false,
+              "A_total_us": 2189586.939,
+              "other_total_us": 576098.151
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -1749121.7299999995,
+              "A_lower_total": true,
+              "A_total_us": 2541419.063,
+              "other_total_us": 4290540.793
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -35699434.947,
+              "A_lower_total": true,
+              "A_total_us": 8249328.339,
+              "other_total_us": 43948763.286
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "balanced",
+      "repeat": 2,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1625889.809,
+              "A_lower_total": false,
+              "A_total_us": 2184568.969,
+              "other_total_us": 558679.16
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -2536563.5570000005,
+              "A_lower_total": true,
+              "A_total_us": 2668967.741,
+              "other_total_us": 5205531.298
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -39656249.872,
+              "A_lower_total": true,
+              "A_total_us": 7164272.448,
+              "other_total_us": 46820522.32
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1697578.289,
+              "A_lower_total": false,
+              "A_total_us": 2184568.969,
+              "other_total_us": 486990.68
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -2352121.3189999997,
+              "A_lower_total": true,
+              "A_total_us": 2668967.741,
+              "other_total_us": 5021089.06
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -36520893.881000005,
+              "A_lower_total": true,
+              "A_total_us": 7164272.448,
+              "other_total_us": 43685166.329
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "balanced",
+      "repeat": 3,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1675081.634,
+              "A_lower_total": false,
+              "A_total_us": 2157781.293,
+              "other_total_us": 482699.659
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -2440977.4450000003,
+              "A_lower_total": true,
+              "A_total_us": 2737411.51,
+              "other_total_us": 5178388.955
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -44135946.258,
+              "A_lower_total": true,
+              "A_total_us": 7697339.389,
+              "other_total_us": 51833285.647
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1710914.817,
+              "A_lower_total": false,
+              "A_total_us": 2157781.293,
+              "other_total_us": 446866.476
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -2086991.2319999998,
+              "A_lower_total": true,
+              "A_total_us": 2737411.51,
+              "other_total_us": 4824402.742
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -40399706.406,
+              "A_lower_total": true,
+              "A_total_us": 7697339.389,
+              "other_total_us": 48097045.795
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "native",
+      "repeat": 1,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1548199.6469999999,
+              "A_lower_total": false,
+              "A_total_us": 1955000.568,
+              "other_total_us": 406800.921
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -1464995.7259999998,
+              "A_lower_total": true,
+              "A_total_us": 2329767.799,
+              "other_total_us": 3794763.525
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -45630673.026,
+              "A_lower_total": true,
+              "A_total_us": 6080957.868,
+              "other_total_us": 51711630.894
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1593498.5219999999,
+              "A_lower_total": false,
+              "A_total_us": 1955000.568,
+              "other_total_us": 361502.046
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -1219518.176,
+              "A_lower_total": true,
+              "A_total_us": 2329767.799,
+              "other_total_us": 3549285.975
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -47613384.618,
+              "A_lower_total": true,
+              "A_total_us": 6080957.868,
+              "other_total_us": 53694342.486
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "native",
+      "repeat": 2,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1573369.4649999999,
+              "A_lower_total": false,
+              "A_total_us": 1978079.977,
+              "other_total_us": 404710.512
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -1578099.8529999997,
+              "A_lower_total": true,
+              "A_total_us": 2382254.978,
+              "other_total_us": 3960354.831
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -44312483.499,
+              "A_lower_total": true,
+              "A_total_us": 8396146.063,
+              "other_total_us": 52708629.562
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1607846.684,
+              "A_lower_total": false,
+              "A_total_us": 1978079.977,
+              "other_total_us": 370233.293
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -1101925.0019999999,
+              "A_lower_total": true,
+              "A_total_us": 2382254.978,
+              "other_total_us": 3484179.98
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -43542947.811,
+              "A_lower_total": true,
+              "A_total_us": 8396146.063,
+              "other_total_us": 51939093.874
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "cohort_root": 3626,
+      "topology": "native",
+      "repeat": 3,
+      "A_vs": {
+        "B": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1527685.88,
+              "A_lower_total": false,
+              "A_total_us": 1927821.052,
+              "other_total_us": 400135.172
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -1519956.8030000003,
+              "A_lower_total": true,
+              "A_total_us": 2214262.735,
+              "other_total_us": 3734219.538
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -42242012.371999994,
+              "A_lower_total": true,
+              "A_total_us": 8459156.48,
+              "other_total_us": 50701168.852
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        },
+        "C": {
+          "observed_points": [
+            {
+              "target_q_u": 0.01,
+              "actual_q_u": 0.009941027801179444,
+              "quality_qualified": true,
+              "difference_us": 1570589.744,
+              "A_lower_total": false,
+              "A_total_us": 1927821.052,
+              "other_total_us": 357231.308
+            },
+            {
+              "target_q_u": 0.1,
+              "actual_q_u": 0.10008424599831509,
+              "quality_qualified": true,
+              "difference_us": -1307561.7460000003,
+              "A_lower_total": true,
+              "A_total_us": 2214262.735,
+              "other_total_us": 3521824.481
+            },
+            {
+              "target_q_u": 1.0,
+              "actual_q_u": 1.0,
+              "quality_qualified": true,
+              "difference_us": -40899051.658999994,
+              "A_lower_total": true,
+              "A_total_us": 8459156.48,
+              "other_total_us": 49358208.139
+            }
+          ],
+          "observed_order_flip_brackets": [
+            [
+              0.009941027801179444,
+              0.10008424599831509
+            ]
+          ]
+        }
+      }
+    }
+  ],
+  "interpretation": "Observed quality-qualified endpoint ordering only; no fitted crossing or continuity claim."
+}

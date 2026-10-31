@@ -2,7 +2,7 @@
 
 直接研究向量集合之间的连接执行、复杂性或基数估计。普通 ANN 与 filtered ANN 不归入此目录。
 
-当前收录 7 篇已保存全文的论文。每篇只在一个主主题存放；跨主题可检索，不复制材料。
+当前收录 8 篇已保存全文的论文。每篇只在一个主主题存放；跨主题可检索，不复制材料。
 
 [综述](../../researches/vector-join/survey.md)与[复现路线](../../researches/vector-join/roadmap.md)保留在研究目录。可迁移的过滤 ANN、前缀检索和一般相似连接分别存放于兄弟主题目录，通过[总索引](../papers.jsonl)与[跨主题关系](../relations.jsonl)关联。
 
@@ -15,11 +15,8 @@
 | [GPU Accelerated Similarity Self-Join for Multi-Dimensional Data](https://doi.org/10.1145/3329785.3329920) | 2019；DaMoN 2019, Article 6, 9 pages | [目录](1809.09930-gpu-similarity-self-join/)、[阅读报告](1809.09930-gpu-similarity-self-join/paper.report.md) |
 | [On the Complexity of Inner Product Similarity Join](https://doi.org/10.1145/2902251.2902285) | 2016；PODS 2016, pp. 151–164 | [目录](1510.02824-inner-product-similarity-join-complexity/)、[阅读报告](1510.02824-inner-product-similarity-join-complexity/paper.report.md) |
 | [Similarity Join Size Estimation using Locality Sensitive Hashing](https://doi.org/10.14778/1978665.1978666) | 2011；Proceedings of the VLDB Endowment 4(6), pp. 338–349 | [目录](1104.3212-lsh-join-size-estimation/)、[阅读报告](1104.3212-lsh-join-size-estimation/paper.report.md) |
+| [L2AP: Fast Cosine Similarity Search With Prefix L-2 Norm Bounds](https://doi.org/10.1109/ICDE.2014.6816700) | 2014；ICDE，784–795；核读作者稿相关章节 | [全文](2014-l2ap/paper.md)、[机制比较](../../researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/mechanism-assessment.md) |
 
-从项目根目录检索本主题：
-
-```bash
-python tools/research_index.py search '' --topic vector-join
-```
+可在总索引中按 `topic=vector-join` 检索；旧 `tools/research_index.py` 不在当前checkout，不再将其作为复现命令。
 
 索引字段、证据等级和维护方式见[论文库总入口](../README.md)。A/B/C 是相对 vector join 主线的相关性等级，不是物理目录分类。

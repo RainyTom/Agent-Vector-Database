@@ -1,0 +1,105 @@
+{
+  "kind": "postprocessing_of_run14_and_run11_csv_not_new_experiment",
+  "date": "2026-10-28",
+  "sources": {
+    "run14": "production/nested-attr-vector-search/work/autoresearch_trie/run-w_paktyr/repeat_{0,1,2}_dsq_perquery.csv",
+    "run11": "researches/.../2026-10-28-exps/data/autoresearch_best_repeat_2.csv"
+  },
+  "run14_repeat_means_ms": [
+    0.686332,
+    0.848442,
+    0.817029
+  ],
+  "run14_repeat_spread_ms": 0.16211,
+  "bucket_comparison": [
+    {
+      "bucket": "1-9",
+      "run11_mean_us": 2.7,
+      "run14_mean_us": 4.8,
+      "ratio": 1.78
+    },
+    {
+      "bucket": "10-99",
+      "run11_mean_us": 7.6,
+      "run14_mean_us": 17.2,
+      "ratio": 2.26
+    },
+    {
+      "bucket": "100-999",
+      "run11_mean_us": 51.2,
+      "run14_mean_us": 47.1,
+      "ratio": 0.92
+    },
+    {
+      "bucket": "1k-10k",
+      "run11_mean_us": 573.3,
+      "run14_mean_us": 380.6,
+      "ratio": 0.66
+    },
+    {
+      "bucket": ">=10k",
+      "run11_mean_us": 7064.2,
+      "run14_mean_us": 5133.8,
+      "ratio": 0.73
+    }
+  ],
+  "tail": {
+    "queries_for_50pct_time": 2,
+    "queries_for_90pct_time": 31,
+    "total_queries": 227,
+    "worst": {
+      "query_index": 397,
+      "scope_card": 925829,
+      "e2e_ms": 86.613,
+      "fp16_MB": 1896.1,
+      "effective_GB_per_s": 21.9
+    },
+    "worst_share_of_total_time": 0.467,
+    "mean_ms_if_worst_removed": 0.4374
+  },
+  "throughput_regression": {
+    "run11_fp32_effective_GB_per_s_range": [
+      28.7,
+      33.9
+    ],
+    "run14_fp16_effective_GB_per_s_range": [
+      21.5,
+      22.3
+    ],
+    "interpretation": "Halving bytes should have given ~0.5x on a purely bandwidth-bound kernel; observed 0.73x in the >=10k bucket, and effective GB/s fell ~30%. The F16C conversion plus the unchanged per-dimension FMA count, not bytes, is now the limiter.",
+    "caveat": "effective GB/s uses scope_card*bytes_per_candidate, an estimate of bytes touched, not a hardware counter"
+  },
+  "op_budget_estimate": {
+    "per_tile_of_8_vectors_per_dimension_simd_ops": 3,
+    "ideal_ns_per_vector_at_3_ops_per_cycle_3GHz": 43,
+    "observed_ns_per_vector_on_qi397": 93.5,
+    "implied_headroom": 2.2,
+    "ideal_qi397_ms": 40,
+    "ideal_mean_ms_if_tail_only_improved": 0.35,
+    "caveat": "3 ops/cycle assumes two FMA-capable ports and perfect scheduling; a real 8-accumulator unroll will land below this ideal"
+  },
+  "known_regressions": [
+    "small scopes 1.8-2.3x slower from per-call vector allocation and 18-element sort; absolute cost ~1.1 ms of 240 ms"
+  ],
+  "next_candidates_ranked": [
+    {
+      "rank": 1,
+      "idea": "reduce ops per candidate: 8 accumulators, hoist the cutoff test out of the inner 4-dim block, avoid per-call allocations",
+      "why": "compute is now the wall; no new data structure needed",
+      "risk": "low"
+    },
+    {
+      "rank": 2,
+      "idea": "product-quantized ADC (m=64) with per-vector error bound for exactness",
+      "why": "cuts both bytes (64 B) and ops (64 lookups) per candidate",
+      "risk": "high: codebook training cost, bound tightness unmeasured"
+    },
+    {
+      "rank": 3,
+      "idea": "per-lane early rejection instead of tile-wide rejection",
+      "why": "tile-wide reject needs all 8 lanes worse, which is rare in mixed tiles",
+      "risk": "medium: adds a mask op per accumulate"
+    }
+  ],
+  "not_claimed": "no new recall or memory claim; run14 variance is tail-driven, so the 0.82 ms figure should be read with the 0.69-0.85 ms repeat range"
+}

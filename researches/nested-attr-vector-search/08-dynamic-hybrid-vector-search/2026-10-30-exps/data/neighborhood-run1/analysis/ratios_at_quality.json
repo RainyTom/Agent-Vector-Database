@@ -1,0 +1,326 @@
+[
+  {
+    "C_mean_e2e_us": 7969.660036666667,
+    "C_time_over_baseline_time": 44.04950238520452,
+    "baseline_mean_e2e_us": 180.92508666666666,
+    "baseline_over_C_speedup": 0.022701732048076052,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "quality_comparable": true,
+    "reason_if_unavailable": null,
+    "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 7969.660036666667,
+    "C_time_over_baseline_time": 0.12302413381918545,
+    "baseline_mean_e2e_us": 64781.273310000004,
+    "baseline_over_C_speedup": 8.128486411208947,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "quality_comparable": true,
+    "reason_if_unavailable": null,
+    "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 7969.660036666667,
+    "C_time_over_baseline_time": 44.04950238520452,
+    "baseline_mean_e2e_us": 180.92508666666666,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "profile": "all",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 7969.660036666667,
+    "C_time_over_baseline_time": 0.12302413381918545,
+    "baseline_mean_e2e_us": 64781.273310000004,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "profile": "all",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 4233.464993333333,
+    "C_time_over_baseline_time": 11.703728839486967,
+    "baseline_mean_e2e_us": 361.71933333333334,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "profile": "wide",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 4233.464993333333,
+    "C_time_over_baseline_time": 0.12852186177243283,
+    "baseline_mean_e2e_us": 32939.64882666667,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "profile": "wide",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": null,
+    "C_time_over_baseline_time": null,
+    "baseline_mean_e2e_us": null,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "profile": "middle",
+    "quality_comparable": false,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": null,
+    "C_time_over_baseline_time": null,
+    "baseline_mean_e2e_us": null,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "profile": "middle",
+    "quality_comparable": false,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 11705.85508,
+    "C_time_over_baseline_time": null,
+    "baseline_mean_e2e_us": 0.13084,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "profile": "narrow",
+    "quality_comparable": false,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 11705.85508,
+    "C_time_over_baseline_time": null,
+    "baseline_mean_e2e_us": 96622.89779333334,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "profile": "narrow",
+    "quality_comparable": false,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 9941.428054263566,
+    "C_time_over_baseline_time": 38.2158696952911,
+    "baseline_mean_e2e_us": 260.1387364341085,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "profile": "strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 9941.428054263566,
+    "C_time_over_baseline_time": 0.12222232698907605,
+    "baseline_mean_e2e_us": 81338.88708527132,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "profile": "strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 8197.260181818183,
+    "C_time_over_baseline_time": 16.12581925796915,
+    "baseline_mean_e2e_us": 508.33139393939393,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "profile": "wide/strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 8197.260181818183,
+    "C_time_over_baseline_time": 0.12278644907582772,
+    "baseline_mean_e2e_us": 66760.30004545454,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "profile": "wide/strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 11768.65153968254,
+    "C_time_over_baseline_time": null,
+    "baseline_mean_e2e_us": 0.12738095238095237,
+    "comparison": "C/A",
+    "dataset": "sift",
+    "profile": "narrow/strong_and",
+    "quality_comparable": false,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 11768.65153968254,
+    "C_time_over_baseline_time": null,
+    "baseline_mean_e2e_us": 96611.69255555555,
+    "comparison": "C/B",
+    "dataset": "sift",
+    "profile": "narrow/strong_and",
+    "quality_comparable": false,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 14183.419916666668,
+    "C_time_over_baseline_time": 31.997230214838396,
+    "baseline_mean_e2e_us": 443.27024,
+    "baseline_over_C_speedup": 0.03125270510246415,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "quality_comparable": true,
+    "reason_if_unavailable": null,
+    "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 14183.419916666668,
+    "C_time_over_baseline_time": 0.10629628447925824,
+    "baseline_mean_e2e_us": 133432.88513,
+    "baseline_over_C_speedup": 9.407666551083746,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "quality_comparable": true,
+    "reason_if_unavailable": null,
+    "statistic": "mean of 3 serial confirmation repeat arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 14183.419916666668,
+    "C_time_over_baseline_time": 31.997230214838396,
+    "baseline_mean_e2e_us": 443.27024,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "profile": "all",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 14183.419916666668,
+    "C_time_over_baseline_time": 0.10629628447925824,
+    "baseline_mean_e2e_us": 133432.88513,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "profile": "all",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 7006.117616666666,
+    "C_time_over_baseline_time": 3.2639082523928966,
+    "baseline_mean_e2e_us": 2146.54245,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "profile": "wide",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 7006.117616666666,
+    "C_time_over_baseline_time": 0.1256801276666461,
+    "baseline_mean_e2e_us": 55745.62778333333,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "profile": "wide",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 9849.554055555556,
+    "C_time_over_baseline_time": 93.35809637751028,
+    "baseline_mean_e2e_us": 105.50294444444444,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "profile": "middle",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 9849.554055555556,
+    "C_time_over_baseline_time": 0.1296741554621917,
+    "baseline_mean_e2e_us": 75956.18433333334,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "profile": "middle",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 16474.625878378378,
+    "C_time_over_baseline_time": 1597.4717948068374,
+    "baseline_mean_e2e_us": 10.312936936936937,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "profile": "narrow",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 16474.625878378378,
+    "C_time_over_baseline_time": 0.10355556901008017,
+    "baseline_mean_e2e_us": 159089.7142072072,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "profile": "narrow",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 16307.976682539682,
+    "C_time_over_baseline_time": 37.228388826771265,
+    "baseline_mean_e2e_us": 438.0521746031746,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "profile": "strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 16307.976682539682,
+    "C_time_over_baseline_time": 0.10228295995788064,
+    "baseline_mean_e2e_us": 159439.81958730158,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "profile": "strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 13921.3865,
+    "C_time_over_baseline_time": 6.122716238332094,
+    "baseline_mean_e2e_us": 2273.7272083333332,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "profile": "wide/strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 13921.3865,
+    "C_time_over_baseline_time": 0.10643107780725383,
+    "baseline_mean_e2e_us": 130801.89345833333,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "profile": "wide/strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 16848.326414141415,
+    "C_time_over_baseline_time": 3122.794206301064,
+    "baseline_mean_e2e_us": 5.395272727272728,
+    "comparison": "C/A",
+    "dataset": "wiki",
+    "profile": "narrow/strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  },
+  {
+    "C_mean_e2e_us": 16848.326414141415,
+    "C_time_over_baseline_time": 0.10137014514827045,
+    "baseline_mean_e2e_us": 166206.00068686868,
+    "comparison": "C/B",
+    "dataset": "wiki",
+    "profile": "narrow/strong_and",
+    "quality_comparable": true,
+    "statistic": "mean of 3 serial confirmation repeat profile arithmetic mean e2e_us"
+  }
+]

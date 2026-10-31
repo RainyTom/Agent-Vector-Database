@@ -1,0 +1,10 @@
+{
+  "query_rows": 173568,
+  "unique_source_queries": 16,
+  "old_g1_query_matches": 9216,
+  "false_pruned_blocks": 0,
+  "main_excludes_scope_only": true,
+  "permuted_and_contiguous_not_double_pooled": true,
+  "pooled_rows": 452,
+  "grid_rows": 1808
+}

@@ -1,0 +1,9 @@
+{
+  "query_rows": 9216,
+  "certificate_rows": 192,
+  "indexed_cost_rows": 384,
+  "same_cardinality_pairs": true,
+  "bound_order_and_observed_FP32_safety": true,
+  "indexed_matches_enumerated_oracle": true,
+  "errors": []
+}

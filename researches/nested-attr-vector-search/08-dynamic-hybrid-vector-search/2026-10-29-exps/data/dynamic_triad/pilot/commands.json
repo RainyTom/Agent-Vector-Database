@@ -1,0 +1,228 @@
+{
+  "commands": [
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p2-qu0p25.txt",
+        "--arm",
+        "A",
+        "--ef",
+        "256",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "1024",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/sift-d3-uniform-mixed-r0p2-qu0p25/a61bd9cd67aa0d73/repeat-01/A"
+      ],
+      "arm": "A",
+      "config_id": "sift-d3-uniform-mixed-r0p2-qu0p25",
+      "identity_sha256": "f9853f9bf19b338eed7e989588d09905ab630b653d29c1a9d642000335ae18b1",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029 --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p2-qu0p25.txt --arm A --ef 256 --k 10 --scan-threshold 1024 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/sift-d3-uniform-mixed-r0p2-qu0p25/a61bd9cd67aa0d73/repeat-01/A",
+      "trace_sha256": "3b417bc293356c4a79aa9bc7c77622dc8b8a5ceeb11581796827fa2f8b7b7666"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p2-qu0p25.txt",
+        "--arm",
+        "B",
+        "--ef",
+        "256",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "1024",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/sift-d3-uniform-mixed-r0p2-qu0p25/a61bd9cd67aa0d73/repeat-01/B"
+      ],
+      "arm": "B",
+      "config_id": "sift-d3-uniform-mixed-r0p2-qu0p25",
+      "identity_sha256": "deebdef6164ee8096aed304b38f7996939d4d43e141c244dae209dc7db0279cb",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029 --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p2-qu0p25.txt --arm B --ef 256 --k 10 --scan-threshold 1024 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/sift-d3-uniform-mixed-r0p2-qu0p25/a61bd9cd67aa0d73/repeat-01/B",
+      "trace_sha256": "3b417bc293356c4a79aa9bc7c77622dc8b8a5ceeb11581796827fa2f8b7b7666"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p2-qu0p25.txt",
+        "--arm",
+        "C",
+        "--ef",
+        "256",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "1024",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/sift-d3-uniform-mixed-r0p2-qu0p25/a61bd9cd67aa0d73/repeat-01/C"
+      ],
+      "arm": "C",
+      "config_id": "sift-d3-uniform-mixed-r0p2-qu0p25",
+      "identity_sha256": "f744453d1cd0fc1c90b4455b92fc4e13c6cbffbfc2ea315b3100c98e98876a8d",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/sift-n12000-r1000-q64-d3-s20261029 --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/sift-d3-uniform-mixed-r0p2-qu0p25.txt --arm C --ef 256 --k 10 --scan-threshold 1024 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/sift-d3-uniform-mixed-r0p2-qu0p25/a61bd9cd67aa0d73/repeat-01/C",
+      "trace_sha256": "3b417bc293356c4a79aa9bc7c77622dc8b8a5ceeb11581796827fa2f8b7b7666"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/wiki-n12000-r1000-q64-d3-s20261029",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/wiki-d3-uniform-mixed-r0p2-qu0p25.txt",
+        "--arm",
+        "A",
+        "--ef",
+        "256",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/wiki-d3-uniform-mixed-r0p2-qu0p25/200f53078bfdf997/repeat-01/A"
+      ],
+      "arm": "A",
+      "config_id": "wiki-d3-uniform-mixed-r0p2-qu0p25",
+      "identity_sha256": "a812eba58b1e5871ed887f17053e6436c6481e019b50313db0d4a4da5559614e",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/wiki-n12000-r1000-q64-d3-s20261029 --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/wiki-d3-uniform-mixed-r0p2-qu0p25.txt --arm A --ef 256 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/wiki-d3-uniform-mixed-r0p2-qu0p25/200f53078bfdf997/repeat-01/A",
+      "trace_sha256": "3b417bc293356c4a79aa9bc7c77622dc8b8a5ceeb11581796827fa2f8b7b7666"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/wiki-n12000-r1000-q64-d3-s20261029",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/wiki-d3-uniform-mixed-r0p2-qu0p25.txt",
+        "--arm",
+        "B",
+        "--ef",
+        "256",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/wiki-d3-uniform-mixed-r0p2-qu0p25/200f53078bfdf997/repeat-01/B"
+      ],
+      "arm": "B",
+      "config_id": "wiki-d3-uniform-mixed-r0p2-qu0p25",
+      "identity_sha256": "364ae0f9c8bfd602fbcbd57dd466d020f40916ec2ad22fbf8074f0796dfcc2e9",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/wiki-n12000-r1000-q64-d3-s20261029 --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/wiki-d3-uniform-mixed-r0p2-qu0p25.txt --arm B --ef 256 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/wiki-d3-uniform-mixed-r0p2-qu0p25/200f53078bfdf997/repeat-01/B",
+      "trace_sha256": "3b417bc293356c4a79aa9bc7c77622dc8b8a5ceeb11581796827fa2f8b7b7666"
+    },
+    {
+      "argv": [
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+        "--data",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/wiki-n12000-r1000-q64-d3-s20261029",
+        "--trace",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/wiki-d3-uniform-mixed-r0p2-qu0p25.txt",
+        "--arm",
+        "C",
+        "--ef",
+        "256",
+        "--k",
+        "10",
+        "--scan-threshold",
+        "512",
+        "--compact-threshold",
+        "0.2",
+        "--out",
+        "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/wiki-d3-uniform-mixed-r0p2-qu0p25/200f53078bfdf997/repeat-01/C"
+      ],
+      "arm": "C",
+      "config_id": "wiki-d3-uniform-mixed-r0p2-qu0p25",
+      "identity_sha256": "055898ef88783676e595b220d41f8c790f2941bf0450117c9b16463e5025764a",
+      "repeat": 1,
+      "shell": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad --data /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/datasets/wiki-n12000-r1000-q64-d3-s20261029 --trace /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/crossover/traces/n12000-s20261029-1d584b6d2829/wiki-d3-uniform-mixed-r0p2-qu0p25.txt --arm C --ef 256 --k 10 --scan-threshold 512 --compact-threshold 0.2 --out /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs/wiki-d3-uniform-mixed-r0p2-qu0p25/200f53078bfdf997/repeat-01/C",
+      "trace_sha256": "3b417bc293356c4a79aa9bc7c77622dc8b8a5ceeb11581796827fa2f8b7b7666"
+    }
+  ],
+  "execution": {
+    "arms": [
+      "A",
+      "B",
+      "C"
+    ],
+    "binary": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad",
+    "binary_sha256": "1b1fa3d9529e3da9771be3809c20dec207fa4f7582906998c07090cecc6a3f73",
+    "driver_command": [
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/production/nested-attr-vector-search/work/venv/bin/python",
+      "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/scripts/run_dynamic_triad.py",
+      "--manifest",
+      "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/crossover/manifest-crossover-n12000-s20261029.json",
+      "--select",
+      "*mixed-r0p2-qu0p25",
+      "--repeats",
+      "1",
+      "--jobs",
+      "2",
+      "--tracked-root",
+      "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/pilot",
+      "--work-root",
+      "researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs"
+    ],
+    "jobs": 2,
+    "manifest": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/crossover/manifest-crossover-n12000-s20261029.json",
+    "manifest_sha256": "a5e6eba777c0f8b6be33be6ec9ef03845a48fd051da1411220eb6a1cc3bfecee",
+    "mode": "multi-process replay; NOT concurrent updates/queries within a process",
+    "quality_gate": {
+      "macro_recall": 0.999,
+      "pair_recall": 0.999
+    },
+    "repeats": 1,
+    "selection": {
+      "count": 2,
+      "limit": null,
+      "patterns": [
+        "*mixed-r0p2-qu0p25"
+      ]
+    },
+    "settings": {
+      "compact_threshold": 0.2,
+      "ef": 256,
+      "k": 10,
+      "scan_threshold": null,
+      "scan_threshold_by_dim": {
+        "1024": 512,
+        "128": 1024
+      },
+      "single_thread_environment": {
+        "MKL_NUM_THREADS": "1",
+        "NUMEXPR_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "OPENBLAS_NUM_THREADS": "1",
+        "VECLIB_MAXIMUM_THREADS": "1"
+      },
+      "visibility": "single-thread serialized synchronous commits, zero staleness"
+    },
+    "settings_sha256": "c09200e2bb76d953d52490726995583fe98fbe4ce0951505c927effe217bee9b",
+    "tracked_root": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/data/dynamic_triad/pilot",
+    "work_root": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/work/dynamic_triad/pilot/runs"
+  }
+}

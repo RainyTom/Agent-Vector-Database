@@ -219,16 +219,31 @@
 先查总论文/关系索引、containment逐篇笔记和本地全文；用户确认Lx=Q、Q⊆Lx。先检索vector similarity join + set containment，再检索filtered nearest neighbor label-set equality、Unified Navigating Graph equality containment、原题名和ELI equality appendix。重点阅读LSSG v1 HTML §2.1/3/6.3、UNG作者README与已有源码、ACORN v1 §3.1/5、ELI v2 §2.1 Remark，以及本地PathSeer p.2和RWalks §2.1原文。
 
 结论与原始链接见[报告](../containment-filtered-vector-search/2026-10-20-exps/report.md)。UNG原文全文仍缺，ELI所需equality附录/代码未核；UniFilter/Curator完整集合相等能力本轮未核，不凭第三方比较表收录为已证支持。PathSeer/RWalks原始PDF在线重取失败，使用已存原始全文和可读官方仓库。未声称穷尽最新文献，无新实验。
-## 2026-10-25 Directory-Aware 新问题背景与定义初筛
 
-先查 `papers/papers.jsonl`、`relations.jsonl`、本地 `2606.16903v1` 原文/报告及 nested-attr 的 D0–D5 审计、LES 记录；再查 vector similarity join、vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join 加 hierarchy/prefix/metadata 变体，随后查 filtered ANN 与目录相关组合。核对 [Directory-Aware v1 §II–V](https://arxiv.org/html/2606.16903v1)、[Fast AVJ v2 摘要](https://arxiv.org/abs/2603.16360)及 [VBASE 正式论文 §2,4](https://www.usenix.org/system/files/osdi23-zhang-qianxi_1.pdf)。网页结果中有字符串/集合/semantic join 同名项，未当几何向量 join 证据；检索未形成引用闭包，不能以“无直接命中”证明新颖。
+## 2026-10-25—28 Directory-Aware 研究记录索引
 
-产出[文件目录约束下跨集合阈值向量连接的 Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)：cross、L2、threshold、exact pairs，目录祖先可比过滤。Directory-Aware 的 DSQ 是单查询 top-k；现有 Fast AVJ/VBASE 是强前序。待查 filtered similarity join、hierarchical/dual-tree join、predicate-aware batch vector join 的直接正文与引用链，以及真实双库目录路径能否支持场景。没有新增已精读论文、关系或性能实验。
+本方向的问题背景、前序核查与检索边界已统一归档到 [Directory-Aware 检索日志](../nested-attr-vector-search/01-directory-aware-acceleration/search-log.md)。单查询 scope top-k 为 B 类可迁移检索，不冒称几何 vector join；详细记录不在本索引重复维护。
 
-同日修订：将背景从单父文件目录树改为可通过共享入口访问同一逻辑目录的**静态虚拟目录 DAG**。参考 [Google Drive 文件夹快捷方式官方说明](https://support.google.com/drive/answer/9700156?hl=en) 的“引用而非复制”现象；DAG 是本项目的抽象限制，未把该产品的实际目录系统或权限实现等同于模型。更新 [Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)，增加 B0 全量成对验证、B1 在线目录范围、B2 物化目录范围、B3 精确向量优先四种基线及 DAG 多路径去重公式。D1 已有支持计数/增量维护前序，本问题暂不研究维护；没有新论文记录或实验。
 
-同日再次修订：Google Drive 快捷方式仍属于文件目录背景，改为[多维商品目录 Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md)。[OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/)以商品目录说明品类、品牌、颜色、尺码等多维筛选；将筛选状态建模为部分属性函数与按包含关系组织的目录偏序是本项目的形式化选择，不宣称 OpenSearch 实现了本文连接。新问题为跨平台、部分属性兼容、L2 阈值、精确 pairs；基线 B0–B4。商品匹配、缺失属性下记录连接及 filtered vector join 的最近工作仍需补查，不能以背景不同证明算法新颖。没有新增论文记录或实验。
+## 2026-10-29 动态层级filtered ANN独立复核
 
-补充候选：产品实体匹配已有[莱比锡大学研究页](https://old.dbs.uni-leipzig.de/en/publication/title/tailoring_entity_resolution_for_matching_product_offers)讨论缺失/错误属性；[EM-Join 原始论文](https://www.scitepress.org/Papers/2025/134837/134837.pdf)涉及 embedding-based entity matching join。当前只核题名/摘要或入口，未核其完整定义、阈值语义和实验；列为后续精读候选，不把商品匹配场景本身宣称为新增研究问题。
+本轮先核直接vector similarity join/vector join/inner-product similarity join检索，再核混合ANN机制；结论属于B类可迁移检索，不是join算法结果。详见[08方向检索日志](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)及[独立审计](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/independent-review.md)。修订8条已有论文的项目证据，不新增未经完整归档的论文条目；无新ANN实验。
 
-同日层级语义修正：核 [OpenSearch 官方 faceted-search 教程](https://docs.opensearch.org/latest/tutorials/faceted-search/) §Hierarchical faceting 与普通 facet 过滤，前者明确 Category→Subcategory→Product type，后者为品牌/颜色/尺码等独立过滤字段。当前 [Problem Formulation](../nested-attr-vector-search/01-directory-aware-acceleration/problem-formulation.md) 明确定义品类树 × 属性部分函数；整体目录状态并非单父树。前版只有 facet 约束偏序，不能称为明确的品类层级。五种基线已同步新的品类可比条件；未运行实验。
+
+## 2026-10-29 稀疏表示与条件化过滤剪枝
+
+直接join检索回溯到L2AP的部分倒排覆盖与prefix L2界，它是避免重复提出“残差范数剪枝”的重要A类前序；本轮未完整归档其书目和全文，作为待办保留。新增BioVSS属于B类vector-set检索表示借鉴，非join；正式ICDE2025、扩展稿分析与总库记录分开。见[机制审查](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-29-exps/pruning-index-directions.md)。未把本轮合成证书smoke当作向量连接性能结果。
+
+
+## 2026-10-30 L2AP归档与条件证书边界
+
+- 上轮待办L2AP已核正式ICDE2014书目/DOI10.1109/ICDE.2014.6816700，并保存作者全文及prefix-L2/部分倒排/coverage机制证据。属于A类cosine阈值self-join前序，不是当前filtered top-k系统。
+- 同轮归档Seismic、BSI、wavelet、dynamic sequence与Rinfret论文；后四按data-indexing自身问题存放，只有明确条件极值/共享表示迁移价值，不改称向量join。BioVSS日期审读保存，不与L2AP的语义和保证混淆。
+- [当前真实WIKI/SIFT条件界诊断](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/report.md)只研究filtered-query信息与取得工作，不是join实验，也未形成新ANN胜出证据。WIKI的独立坐标失败不能推广为所有多维剪枝无效。
+- 当前总库36条/关系31条已做JSONL、主键、端点和六份新原文SHA审计；新边是researcher_synthesis，非伪造作者引用。VA-file全文和任意F联合证书查重仍待补。
+
+## 2026-10-30 联合证据第2轮
+
+- 先搜similarity join/subspaces/lower bounds与vector/high-dimensional similarity join/projection；候选Ma/Jia/Zhang2017 DOI10.1002/cpe.3952尚未正文核读，待补，不纳入已读方法结论。
+- 新归档CNN2001、IMI journal2015和simplex2017均不是join；按vector-search/metric-search存放，借鉴联合表示/覆盖/过滤几何界，不据此声称动态join支持。正式版和预印本/扩展版明确区分，总库39条/33边。
+- [联合信息实测](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/2026-10-30-exps/joint-certificate-report.md)澄清投影丢失与多见证松弛，不是vector join性能实验；两条新比较边是researcher_synthesis，非作者引用。VA-file/VA+完整PDF和更广前序闭包仍未完成。

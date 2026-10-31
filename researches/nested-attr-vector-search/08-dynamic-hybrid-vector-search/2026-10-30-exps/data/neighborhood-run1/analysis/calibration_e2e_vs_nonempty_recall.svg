@@ -1,0 +1,356 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="2730" viewBox="0 0 960 2730">
+<style>text{font-family:sans-serif;font-size:14px;fill:var(--fg)} .title{font-size:17px;font-weight:bold}</style>
+<text x="35" y="26" class="title">All calibration budgets: e2e versus nonempty recall</text>
+<text x="35" y="47">A: direct-node NodeANN/scan512; B: ordinary two-hop; C: page two-hop. × = failed quality/protocol.</text>
+<text x="105" y="71" font-weight="bold">sift: all</text>
+<line x1="105.00" x2="105.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="305.00" y2="305.00" stroke="var(--border)"/>
+<text x="105.00" y="325" text-anchor="middle">0.999</text>
+<text x="96" y="309.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="261.00" y2="261.00" stroke="var(--border)"/>
+<text x="268.00" y="325" text-anchor="middle">0.9994</text>
+<text x="96" y="265.00" text-anchor="end">18369</text>
+<line x1="431.00" x2="431.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="217.00" y2="217.00" stroke="var(--border)"/>
+<text x="431.00" y="325" text-anchor="middle">0.9998</text>
+<text x="96" y="221.00" text-anchor="end">36738</text>
+<line x1="594.00" x2="594.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="173.00" y2="173.00" stroke="var(--border)"/>
+<text x="594.00" y="325" text-anchor="middle">1.0002</text>
+<text x="96" y="177.00" text-anchor="end">55107</text>
+<line x1="757.00" x2="757.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="129.00" y2="129.00" stroke="var(--border)"/>
+<text x="757.00" y="325" text-anchor="middle">1.0006</text>
+<text x="96" y="133.00" text-anchor="end">73476</text>
+<line x1="920.00" x2="920.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="85.00" y2="85.00" stroke="var(--border)"/>
+<text x="920.00" y="325" text-anchor="middle">1.001</text>
+<text x="96" y="89.00" text-anchor="end">91845</text>
+<line x1="105" x2="920" y1="305" y2="305" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="85" y2="305" stroke="var(--fg)"/>
+<text x="512.5" y="349" text-anchor="middle">Nonempty macro recall (raw observed)</text>
+<text transform="translate(22 195.0) rotate(-90)" text-anchor="middle">Mean e2e latency (µs)</text>
+<polyline points="512.50,304.06 512.50,303.61 512.50,303.47" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="512.50,205.68 512.50,155.01 512.50,113.70" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="512.50,292.38 512.50,285.02 512.50,278.95" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="512.50" cy="304.06" r="5" fill="var(--c1)"><title>sift all A ef=64 recall=1.0 mean=391.04215 pass=True</title></circle>
+<text x="519.50" y="297.06" fill="var(--c1)">A/64</text>
+<circle cx="512.50" cy="205.68" r="5" fill="var(--c2)"><title>sift all B ef=64 recall=1.0 mean=41464.7121 pass=True</title></circle>
+<text x="519.50" y="198.68" fill="var(--c2)">B/64</text>
+<circle cx="512.50" cy="292.38" r="5" fill="var(--c3)"><title>sift all C ef=64 recall=1.0 mean=5270.22447 pass=True</title></circle>
+<text x="519.50" y="285.38" fill="var(--c3)">C/64</text>
+<circle cx="512.50" cy="155.01" r="5" fill="var(--c2)"><title>sift all B ef=256 recall=1.0 mean=62619.15049 pass=True</title></circle>
+<text x="519.50" y="148.01" fill="var(--c2)">B/256</text>
+<circle cx="512.50" cy="285.02" r="5" fill="var(--c3)"><title>sift all C ef=256 recall=1.0 mean=8341.29123 pass=True</title></circle>
+<text x="519.50" y="278.02" fill="var(--c3)">C/256</text>
+<circle cx="512.50" cy="303.61" r="5" fill="var(--c1)"><title>sift all A ef=256 recall=1.0 mean=581.05539 pass=True</title></circle>
+<text x="519.50" y="296.61" fill="var(--c1)">A/256</text>
+<circle cx="512.50" cy="278.95" r="5" fill="var(--c3)"><title>sift all C ef=1024 recall=1.0 mean=10874.53603 pass=True</title></circle>
+<text x="519.50" y="271.95" fill="var(--c3)">C/1024</text>
+<circle cx="512.50" cy="303.47" r="5" fill="var(--c1)"><title>sift all A ef=1024 recall=1.0 mean=638.8951 pass=True</title></circle>
+<text x="519.50" y="296.47" fill="var(--c1)">A/1024</text>
+<circle cx="512.50" cy="113.70" r="5" fill="var(--c2)"><title>sift all B ef=1024 recall=1.0 mean=79865.41891 pass=True</title></circle>
+<text x="519.50" y="106.70" fill="var(--c2)">B/1024</text>
+<text x="105" y="401" font-weight="bold">sift: wide</text>
+<line x1="105.00" x2="105.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="635.00" y2="635.00" stroke="var(--border)"/>
+<text x="105.00" y="655" text-anchor="middle">0.999</text>
+<text x="96" y="639.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="591.00" y2="591.00" stroke="var(--border)"/>
+<text x="268.00" y="655" text-anchor="middle">0.9994</text>
+<text x="96" y="595.00" text-anchor="end">14626</text>
+<line x1="431.00" x2="431.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="547.00" y2="547.00" stroke="var(--border)"/>
+<text x="431.00" y="655" text-anchor="middle">0.9998</text>
+<text x="96" y="551.00" text-anchor="end">29253</text>
+<line x1="594.00" x2="594.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="503.00" y2="503.00" stroke="var(--border)"/>
+<text x="594.00" y="655" text-anchor="middle">1.0002</text>
+<text x="96" y="507.00" text-anchor="end">43879</text>
+<line x1="757.00" x2="757.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="459.00" y2="459.00" stroke="var(--border)"/>
+<text x="757.00" y="655" text-anchor="middle">1.0006</text>
+<text x="96" y="463.00" text-anchor="end">58506</text>
+<line x1="920.00" x2="920.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="415.00" y2="415.00" stroke="var(--border)"/>
+<text x="920.00" y="655" text-anchor="middle">1.001</text>
+<text x="96" y="419.00" text-anchor="end">73132</text>
+<line x1="105" x2="920" y1="635" y2="635" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="415" y2="635" stroke="var(--fg)"/>
+<text x="512.5" y="679" text-anchor="middle">Nonempty macro recall (raw observed)</text>
+<text transform="translate(22 525.0) rotate(-90)" text-anchor="middle">Mean e2e latency (µs)</text>
+<polyline points="512.50,632.90 512.50,631.87 512.50,631.56" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="512.50,550.08 512.50,510.22 512.50,443.70" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="512.50,623.74 512.50,617.33 512.50,606.48" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="512.50" cy="632.90" r="5" fill="var(--c1)"><title>sift wide A ef=64 recall=1.0 mean=696.42882 pass=True</title></circle>
+<text x="519.50" y="625.90" fill="var(--c1)">A/64</text>
+<circle cx="512.50" cy="550.08" r="5" fill="var(--c2)"><title>sift wide B ef=64 recall=1.0 mean=28230.64938 pass=True</title></circle>
+<text x="519.50" y="543.08" fill="var(--c2)">B/64</text>
+<circle cx="512.50" cy="623.74" r="5" fill="var(--c3)"><title>sift wide C ef=64 recall=1.0 mean=3744.11334 pass=True</title></circle>
+<text x="519.50" y="616.74" fill="var(--c3)">C/64</text>
+<circle cx="512.50" cy="510.22" r="5" fill="var(--c2)"><title>sift wide B ef=256 recall=1.0 mean=41479.37076 pass=True</title></circle>
+<text x="519.50" y="503.22" fill="var(--c2)">B/256</text>
+<circle cx="512.50" cy="617.33" r="5" fill="var(--c3)"><title>sift wide C ef=256 recall=1.0 mean=5872.36446 pass=True</title></circle>
+<text x="519.50" y="610.33" fill="var(--c3)">C/256</text>
+<circle cx="512.50" cy="631.87" r="5" fill="var(--c1)"><title>sift wide A ef=256 recall=1.0 mean=1040.67356 pass=True</title></circle>
+<text x="519.50" y="624.87" fill="var(--c1)">A/256</text>
+<circle cx="512.50" cy="606.48" r="5" fill="var(--c3)"><title>sift wide C ef=1024 recall=1.0 mean=9480.28278 pass=True</title></circle>
+<text x="519.50" y="599.48" fill="var(--c3)">C/1024</text>
+<circle cx="512.50" cy="631.56" r="5" fill="var(--c1)"><title>sift wide A ef=1024 recall=1.0 mean=1142.42004 pass=True</title></circle>
+<text x="519.50" y="624.56" fill="var(--c1)">A/1024</text>
+<circle cx="512.50" cy="443.70" r="5" fill="var(--c2)"><title>sift wide B ef=1024 recall=1.0 mean=63593.12592 pass=True</title></circle>
+<text x="519.50" y="436.70" fill="var(--c2)">B/1024</text>
+<text x="105" y="745">sift: narrow: no recorded plottable observations (failures retained in tables)</text>
+<text x="105" y="1061" font-weight="bold">sift: strong_and</text>
+<line x1="105.00" x2="105.00" y1="1075" y2="1295" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1295.00" y2="1295.00" stroke="var(--border)"/>
+<text x="105.00" y="1315" text-anchor="middle">0.999</text>
+<text x="96" y="1299.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="1075" y2="1295" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1251.00" y2="1251.00" stroke="var(--border)"/>
+<text x="268.00" y="1315" text-anchor="middle">0.9994</text>
+<text x="96" y="1255.00" text-anchor="end">21821</text>
+<line x1="431.00" x2="431.00" y1="1075" y2="1295" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1207.00" y2="1207.00" stroke="var(--border)"/>
+<text x="431.00" y="1315" text-anchor="middle">0.9998</text>
+<text x="96" y="1211.00" text-anchor="end">43641</text>
+<line x1="594.00" x2="594.00" y1="1075" y2="1295" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1163.00" y2="1163.00" stroke="var(--border)"/>
+<text x="594.00" y="1315" text-anchor="middle">1.0002</text>
+<text x="96" y="1167.00" text-anchor="end">65462</text>
+<line x1="757.00" x2="757.00" y1="1075" y2="1295" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1119.00" y2="1119.00" stroke="var(--border)"/>
+<text x="757.00" y="1315" text-anchor="middle">1.0006</text>
+<text x="96" y="1123.00" text-anchor="end">87283</text>
+<line x1="920.00" x2="920.00" y1="1075" y2="1295" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1075.00" y2="1075.00" stroke="var(--border)"/>
+<text x="920.00" y="1315" text-anchor="middle">1.001</text>
+<text x="96" y="1079.00" text-anchor="end">1.091e+05</text>
+<line x1="105" x2="920" y1="1295" y2="1295" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="1075" y2="1295" stroke="var(--fg)"/>
+<text x="512.5" y="1339" text-anchor="middle">Nonempty macro recall (raw observed)</text>
+<text transform="translate(22 1185.0) rotate(-90)" text-anchor="middle">Mean e2e latency (µs)</text>
+<polyline points="512.50,1293.90 512.50,1293.88 512.50,1293.84" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="512.50,1137.60 512.50,1112.20 512.50,1103.70" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="512.50,1275.34 512.50,1271.58 512.50,1270.36" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="512.50" cy="1293.90" r="5" fill="var(--c1)"><title>sift strong_and A ef=64 recall=1.0 mean=546.5275813953489 pass=True</title></circle>
+<text x="519.50" y="1286.90" fill="var(--c1)">A/64</text>
+<circle cx="512.50" cy="1137.60" r="5" fill="var(--c2)"><title>sift strong_and B ef=64 recall=1.0 mean=78060.40795348838 pass=True</title></circle>
+<text x="519.50" y="1130.60" fill="var(--c2)">B/64</text>
+<circle cx="512.50" cy="1275.34" r="5" fill="var(--c3)"><title>sift strong_and C ef=64 recall=1.0 mean=9747.897906976745 pass=True</title></circle>
+<text x="519.50" y="1268.34" fill="var(--c3)">C/64</text>
+<circle cx="512.50" cy="1112.20" r="5" fill="var(--c2)"><title>sift strong_and B ef=256 recall=1.0 mean=90655.69055813954 pass=True</title></circle>
+<text x="519.50" y="1105.20" fill="var(--c2)">B/256</text>
+<circle cx="512.50" cy="1271.58" r="5" fill="var(--c3)"><title>sift strong_and C ef=256 recall=1.0 mean=11614.531720930232 pass=True</title></circle>
+<text x="519.50" y="1264.58" fill="var(--c3)">C/256</text>
+<circle cx="512.50" cy="1293.84" r="5" fill="var(--c1)"><title>sift strong_and A ef=256 recall=1.0 mean=572.8426511627907 pass=True</title></circle>
+<text x="519.50" y="1286.84" fill="var(--c1)">A/256</text>
+<circle cx="512.50" cy="1270.36" r="5" fill="var(--c3)"><title>sift strong_and C ef=1024 recall=1.0 mean=12221.181674418605 pass=True</title></circle>
+<text x="519.50" y="1263.36" fill="var(--c3)">C/1024</text>
+<circle cx="512.50" cy="1293.88" r="5" fill="var(--c1)"><title>sift strong_and A ef=1024 recall=1.0 mean=555.2203023255814 pass=True</title></circle>
+<text x="519.50" y="1286.88" fill="var(--c1)">A/1024</text>
+<circle cx="512.50" cy="1103.70" r="5" fill="var(--c2)"><title>sift strong_and B ef=1024 recall=1.0 mean=94872.32451162791 pass=True</title></circle>
+<text x="519.50" y="1096.70" fill="var(--c2)">B/1024</text>
+<text x="105" y="1391" font-weight="bold">wiki: all</text>
+<line x1="105.00" x2="105.00" y1="1405" y2="1625" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1625.00" y2="1625.00" stroke="var(--border)"/>
+<text x="105.00" y="1645" text-anchor="middle">0.999</text>
+<text x="96" y="1629.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="1405" y2="1625" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1581.00" y2="1581.00" stroke="var(--border)"/>
+<text x="268.00" y="1645" text-anchor="middle">0.9994</text>
+<text x="96" y="1585.00" text-anchor="end">35904</text>
+<line x1="431.00" x2="431.00" y1="1405" y2="1625" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1537.00" y2="1537.00" stroke="var(--border)"/>
+<text x="431.00" y="1645" text-anchor="middle">0.9998</text>
+<text x="96" y="1541.00" text-anchor="end">71807</text>
+<line x1="594.00" x2="594.00" y1="1405" y2="1625" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1493.00" y2="1493.00" stroke="var(--border)"/>
+<text x="594.00" y="1645" text-anchor="middle">1.0002</text>
+<text x="96" y="1497.00" text-anchor="end">1.0771e+05</text>
+<line x1="757.00" x2="757.00" y1="1405" y2="1625" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1449.00" y2="1449.00" stroke="var(--border)"/>
+<text x="757.00" y="1645" text-anchor="middle">1.0006</text>
+<text x="96" y="1453.00" text-anchor="end">1.4361e+05</text>
+<line x1="920.00" x2="920.00" y1="1405" y2="1625" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1405.00" y2="1405.00" stroke="var(--border)"/>
+<text x="920.00" y="1645" text-anchor="middle">1.001</text>
+<text x="96" y="1409.00" text-anchor="end">1.7952e+05</text>
+<line x1="105" x2="920" y1="1625" y2="1625" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="1405" y2="1625" stroke="var(--fg)"/>
+<text x="512.5" y="1669" text-anchor="middle">Nonempty macro recall (raw observed)</text>
+<text transform="translate(22 1515.0) rotate(-90)" text-anchor="middle">Mean e2e latency (µs)</text>
+<polyline points="512.50,1624.48 512.50,1624.40 512.50,1624.30" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="512.50,1465.81 512.50,1450.26 512.50,1433.70" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="512.50,1608.19 512.50,1606.57 512.50,1604.83" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="512.50" cy="1624.48" r="5" fill="var(--c1)"><title>wiki all A ef=64 recall=1.0 mean=423.20193 pass=True</title></circle>
+<text x="519.50" y="1617.48" fill="var(--c1)">A/64</text>
+<circle cx="512.50" cy="1465.81" r="5" fill="var(--c2)"><title>wiki all B ef=64 recall=1.0 mean=129901.27595 pass=True</title></circle>
+<text x="519.50" y="1458.81" fill="var(--c2)">B/64</text>
+<circle cx="512.50" cy="1608.19" r="5" fill="var(--c3)"><title>wiki all C ef=64 recall=1.0 mean=13713.4654 pass=True</title></circle>
+<text x="519.50" y="1601.19" fill="var(--c3)">C/64</text>
+<circle cx="512.50" cy="1450.26" r="5" fill="var(--c2)"><title>wiki all B ef=256 recall=1.0 mean=142585.12317 pass=True</title></circle>
+<text x="519.50" y="1443.26" fill="var(--c2)">B/256</text>
+<circle cx="512.50" cy="1606.57" r="5" fill="var(--c3)"><title>wiki all C ef=256 recall=1.0 mean=15040.81693 pass=True</title></circle>
+<text x="519.50" y="1599.57" fill="var(--c3)">C/256</text>
+<circle cx="512.50" cy="1624.40" r="5" fill="var(--c1)"><title>wiki all A ef=256 recall=1.0 mean=487.96674 pass=True</title></circle>
+<text x="519.50" y="1617.40" fill="var(--c1)">A/256</text>
+<circle cx="512.50" cy="1604.83" r="5" fill="var(--c3)"><title>wiki all C ef=1024 recall=1.0 mean=16457.55339 pass=True</title></circle>
+<text x="519.50" y="1597.83" fill="var(--c3)">C/1024</text>
+<circle cx="512.50" cy="1624.30" r="5" fill="var(--c1)"><title>wiki all A ef=1024 recall=1.0 mean=568.68526 pass=True</title></circle>
+<text x="519.50" y="1617.30" fill="var(--c1)">A/1024</text>
+<circle cx="512.50" cy="1433.70" r="5" fill="var(--c2)"><title>wiki all B ef=1024 recall=1.0 mean=156102.8804 pass=True</title></circle>
+<text x="519.50" y="1426.70" fill="var(--c2)">B/1024</text>
+<text x="105" y="1721" font-weight="bold">wiki: wide</text>
+<line x1="105.00" x2="105.00" y1="1735" y2="1955" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1955.00" y2="1955.00" stroke="var(--border)"/>
+<text x="105.00" y="1975" text-anchor="middle">0.999</text>
+<text x="96" y="1959.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="1735" y2="1955" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1911.00" y2="1911.00" stroke="var(--border)"/>
+<text x="268.00" y="1975" text-anchor="middle">0.9994</text>
+<text x="96" y="1915.00" text-anchor="end">26457</text>
+<line x1="431.00" x2="431.00" y1="1735" y2="1955" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1867.00" y2="1867.00" stroke="var(--border)"/>
+<text x="431.00" y="1975" text-anchor="middle">0.9998</text>
+<text x="96" y="1871.00" text-anchor="end">52914</text>
+<line x1="594.00" x2="594.00" y1="1735" y2="1955" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1823.00" y2="1823.00" stroke="var(--border)"/>
+<text x="594.00" y="1975" text-anchor="middle">1.0002</text>
+<text x="96" y="1827.00" text-anchor="end">79371</text>
+<line x1="757.00" x2="757.00" y1="1735" y2="1955" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1779.00" y2="1779.00" stroke="var(--border)"/>
+<text x="757.00" y="1975" text-anchor="middle">1.0006</text>
+<text x="96" y="1783.00" text-anchor="end">1.0583e+05</text>
+<line x1="920.00" x2="920.00" y1="1735" y2="1955" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="1735.00" y2="1735.00" stroke="var(--border)"/>
+<text x="920.00" y="1975" text-anchor="middle">1.001</text>
+<text x="96" y="1739.00" text-anchor="end">1.3228e+05</text>
+<line x1="105" x2="920" y1="1955" y2="1955" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="1735" y2="1955" stroke="var(--fg)"/>
+<text x="512.5" y="1999" text-anchor="middle">Nonempty macro recall (raw observed)</text>
+<text transform="translate(22 1845.0) rotate(-90)" text-anchor="middle">Mean e2e latency (µs)</text>
+<polyline points="512.50,1951.63 512.50,1951.12 512.50,1950.46" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="512.50,1884.72 512.50,1843.51 512.50,1763.70" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="512.50,1945.22 512.50,1939.94 512.50,1930.06" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="512.50" cy="1951.63" r="5" fill="var(--c1)"><title>wiki wide A ef=64 recall=1.0 mean=2026.0828 pass=True</title></circle>
+<text x="519.50" y="1944.63" fill="var(--c1)">A/64</text>
+<circle cx="512.50" cy="1884.72" r="5" fill="var(--c2)"><title>wiki wide B ef=64 recall=1.0 mean=42259.4796 pass=True</title></circle>
+<text x="519.50" y="1877.72" fill="var(--c2)">B/64</text>
+<circle cx="512.50" cy="1945.22" r="5" fill="var(--c3)"><title>wiki wide C ef=64 recall=1.0 mean=5880.82805 pass=True</title></circle>
+<text x="519.50" y="1938.22" fill="var(--c3)">C/64</text>
+<circle cx="512.50" cy="1843.51" r="5" fill="var(--c2)"><title>wiki wide B ef=256 recall=1.0 mean=67038.2306 pass=True</title></circle>
+<text x="519.50" y="1836.51" fill="var(--c2)">B/256</text>
+<circle cx="512.50" cy="1939.94" r="5" fill="var(--c3)"><title>wiki wide C ef=256 recall=1.0 mean=9055.97215 pass=True</title></circle>
+<text x="519.50" y="1932.94" fill="var(--c3)">C/256</text>
+<circle cx="512.50" cy="1951.12" r="5" fill="var(--c1)"><title>wiki wide A ef=256 recall=1.0 mean=2331.24005 pass=True</title></circle>
+<text x="519.50" y="1944.12" fill="var(--c1)">A/256</text>
+<circle cx="512.50" cy="1930.06" r="5" fill="var(--c3)"><title>wiki wide C ef=1024 recall=1.0 mean=14997.3708 pass=True</title></circle>
+<text x="519.50" y="1923.06" fill="var(--c3)">C/1024</text>
+<circle cx="512.50" cy="1950.46" r="5" fill="var(--c1)"><title>wiki wide A ef=1024 recall=1.0 mean=2728.77745 pass=True</title></circle>
+<text x="519.50" y="1943.46" fill="var(--c1)">A/1024</text>
+<circle cx="512.50" cy="1763.70" r="5" fill="var(--c2)"><title>wiki wide B ef=1024 recall=1.0 mean=115030.31945 pass=True</title></circle>
+<text x="519.50" y="1756.70" fill="var(--c2)">B/1024</text>
+<text x="105" y="2051" font-weight="bold">wiki: narrow</text>
+<line x1="105.00" x2="105.00" y1="2065" y2="2285" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2285.00" y2="2285.00" stroke="var(--border)"/>
+<text x="105.00" y="2305" text-anchor="middle">0.999</text>
+<text x="96" y="2289.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="2065" y2="2285" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2241.00" y2="2241.00" stroke="var(--border)"/>
+<text x="268.00" y="2305" text-anchor="middle">0.9994</text>
+<text x="96" y="2245.00" text-anchor="end">38266</text>
+<line x1="431.00" x2="431.00" y1="2065" y2="2285" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2197.00" y2="2197.00" stroke="var(--border)"/>
+<text x="431.00" y="2305" text-anchor="middle">0.9998</text>
+<text x="96" y="2201.00" text-anchor="end">76532</text>
+<line x1="594.00" x2="594.00" y1="2065" y2="2285" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2153.00" y2="2153.00" stroke="var(--border)"/>
+<text x="594.00" y="2305" text-anchor="middle">1.0002</text>
+<text x="96" y="2157.00" text-anchor="end">1.148e+05</text>
+<line x1="757.00" x2="757.00" y1="2065" y2="2285" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2109.00" y2="2109.00" stroke="var(--border)"/>
+<text x="757.00" y="2305" text-anchor="middle">1.0006</text>
+<text x="96" y="2113.00" text-anchor="end">1.5306e+05</text>
+<line x1="920.00" x2="920.00" y1="2065" y2="2285" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2065.00" y2="2065.00" stroke="var(--border)"/>
+<text x="920.00" y="2305" text-anchor="middle">1.001</text>
+<text x="96" y="2069.00" text-anchor="end">1.9133e+05</text>
+<line x1="105" x2="920" y1="2285" y2="2285" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="2065" y2="2285" stroke="var(--fg)"/>
+<text x="512.5" y="2329" text-anchor="middle">Nonempty macro recall (raw observed)</text>
+<text transform="translate(22 2175.0) rotate(-90)" text-anchor="middle">Mean e2e latency (µs)</text>
+<polyline points="512.50,2284.99 512.50,2284.99 512.50,2284.99" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="512.50,2102.73 512.50,2095.59 512.50,2093.70" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="512.50,2266.38 512.50,2265.86 512.50,2265.72" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="512.50" cy="2284.99" r="5" fill="var(--c1)"><title>wiki narrow A ef=64 recall=1.0 mean=9.644583333333333 pass=True</title></circle>
+<text x="519.50" y="2277.99" fill="var(--c1)">A/64</text>
+<circle cx="512.50" cy="2102.73" r="5" fill="var(--c2)"><title>wiki narrow B ef=64 recall=1.0 mean=158512.87758333332 pass=True</title></circle>
+<text x="519.50" y="2095.73" fill="var(--c2)">B/64</text>
+<circle cx="512.50" cy="2266.38" r="5" fill="var(--c3)"><title>wiki narrow C ef=64 recall=1.0 mean=16197.166111111112 pass=True</title></circle>
+<text x="519.50" y="2259.38" fill="var(--c3)">C/64</text>
+<circle cx="512.50" cy="2095.59" r="5" fill="var(--c2)"><title>wiki narrow B ef=256 recall=1.0 mean=164725.5225972222 pass=True</title></circle>
+<text x="519.50" y="2088.59" fill="var(--c2)">B/256</text>
+<circle cx="512.50" cy="2265.72" r="5" fill="var(--c3)"><title>wiki narrow C ef=256 recall=1.0 mean=16771.392125 pass=True</title></circle>
+<text x="519.50" y="2258.72" fill="var(--c3)">C/256</text>
+<circle cx="512.50" cy="2284.99" r="5" fill="var(--c1)"><title>wiki narrow A ef=256 recall=1.0 mean=10.351319444444444 pass=True</title></circle>
+<text x="519.50" y="2277.99" fill="var(--c1)">A/256</text>
+<circle cx="512.50" cy="2265.86" r="5" fill="var(--c3)"><title>wiki narrow C ef=1024 recall=1.0 mean=16641.473833333333 pass=True</title></circle>
+<text x="519.50" y="2258.86" fill="var(--c3)">C/1024</text>
+<circle cx="512.50" cy="2284.99" r="5" fill="var(--c1)"><title>wiki narrow A ef=1024 recall=1.0 mean=9.999722222222221 pass=True</title></circle>
+<text x="519.50" y="2277.99" fill="var(--c1)">A/1024</text>
+<circle cx="512.50" cy="2093.70" r="5" fill="var(--c2)"><title>wiki narrow B ef=1024 recall=1.0 mean=166373.64845833334 pass=True</title></circle>
+<text x="519.50" y="2086.70" fill="var(--c2)">B/1024</text>
+<text x="105" y="2381" font-weight="bold">wiki: strong_and</text>
+<line x1="105.00" x2="105.00" y1="2395" y2="2615" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2615.00" y2="2615.00" stroke="var(--border)"/>
+<text x="105.00" y="2635" text-anchor="middle">0.999</text>
+<text x="96" y="2619.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="2395" y2="2615" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2571.00" y2="2571.00" stroke="var(--border)"/>
+<text x="268.00" y="2635" text-anchor="middle">0.9994</text>
+<text x="96" y="2575.00" text-anchor="end">37868</text>
+<line x1="431.00" x2="431.00" y1="2395" y2="2615" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2527.00" y2="2527.00" stroke="var(--border)"/>
+<text x="431.00" y="2635" text-anchor="middle">0.9998</text>
+<text x="96" y="2531.00" text-anchor="end">75737</text>
+<line x1="594.00" x2="594.00" y1="2395" y2="2615" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2483.00" y2="2483.00" stroke="var(--border)"/>
+<text x="594.00" y="2635" text-anchor="middle">1.0002</text>
+<text x="96" y="2487.00" text-anchor="end">1.1361e+05</text>
+<line x1="757.00" x2="757.00" y1="2395" y2="2615" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2439.00" y2="2439.00" stroke="var(--border)"/>
+<text x="757.00" y="2635" text-anchor="middle">1.0006</text>
+<text x="96" y="2443.00" text-anchor="end">1.5147e+05</text>
+<line x1="920.00" x2="920.00" y1="2395" y2="2615" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="2395.00" y2="2395.00" stroke="var(--border)"/>
+<text x="920.00" y="2635" text-anchor="middle">1.001</text>
+<text x="96" y="2399.00" text-anchor="end">1.8934e+05</text>
+<line x1="105" x2="920" y1="2615" y2="2615" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="2395" y2="2615" stroke="var(--fg)"/>
+<text x="512.5" y="2659" text-anchor="middle">Nonempty macro recall (raw observed)</text>
+<text transform="translate(22 2505.0) rotate(-90)" text-anchor="middle">Mean e2e latency (µs)</text>
+<polyline points="512.50,2614.48 512.50,2614.47 512.50,2614.43" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="512.50,2441.17 512.50,2432.61 512.50,2423.70" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="512.50,2597.07 512.50,2596.63 512.50,2595.89" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="512.50" cy="2614.48" r="5" fill="var(--c1)"><title>wiki strong_and A ef=64 recall=1.0 mean=446.38670454545456 pass=True</title></circle>
+<text x="519.50" y="2607.48" fill="var(--c1)">A/64</text>
+<circle cx="512.50" cy="2441.17" r="5" fill="var(--c2)"><title>wiki strong_and B ef=64 recall=1.0 mean=149602.16231818183 pass=True</title></circle>
+<text x="519.50" y="2434.17" fill="var(--c2)">B/64</text>
+<circle cx="512.50" cy="2597.07" r="5" fill="var(--c3)"><title>wiki strong_and C ef=64 recall=1.0 mean=15431.466318181818 pass=True</title></circle>
+<text x="519.50" y="2590.07" fill="var(--c3)">C/64</text>
+<circle cx="512.50" cy="2432.61" r="5" fill="var(--c2)"><title>wiki strong_and B ef=256 recall=1.0 mean=156976.57565909091 pass=True</title></circle>
+<text x="519.50" y="2425.61" fill="var(--c2)">B/256</text>
+<circle cx="512.50" cy="2596.63" r="5" fill="var(--c3)"><title>wiki strong_and C ef=256 recall=1.0 mean=15811.330113636364 pass=True</title></circle>
+<text x="519.50" y="2589.63" fill="var(--c3)">C/256</text>
+<circle cx="512.50" cy="2614.47" r="5" fill="var(--c1)"><title>wiki strong_and A ef=256 recall=1.0 mean=458.2176818181818 pass=True</title></circle>
+<text x="519.50" y="2607.47" fill="var(--c1)">A/256</text>
+<circle cx="512.50" cy="2595.89" r="5" fill="var(--c3)"><title>wiki strong_and C ef=1024 recall=1.0 mean=16448.509022727274 pass=True</title></circle>
+<text x="519.50" y="2588.89" fill="var(--c3)">C/1024</text>
+<circle cx="512.50" cy="2614.43" r="5" fill="var(--c1)"><title>wiki strong_and A ef=1024 recall=1.0 mean=493.44438636363634 pass=True</title></circle>
+<text x="519.50" y="2607.43" fill="var(--c1)">A/1024</text>
+<circle cx="512.50" cy="2423.70" r="5" fill="var(--c2)"><title>wiki strong_and B ef=1024 recall=1.0 mean=164645.05852272728 pass=True</title></circle>
+<text x="519.50" y="2416.70" fill="var(--c2)">B/1024</text>
+</svg>

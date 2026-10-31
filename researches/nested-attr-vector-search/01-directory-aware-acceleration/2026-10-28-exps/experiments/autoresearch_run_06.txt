@@ -1,0 +1,14 @@
+ARTIFACTS /home/daihua/projs/2026040404-yiming/Agent-Vector-Database/production/nested-attr-vector-search/work/autoresearch_trie/run-xtxtc_oz
+REPEAT 0 {"build_s": 6.36147, "nonrecursive_e2e_ms": 0.0039055633187772927, "nonrecursive_macro_recall": 1.0, "nonrecursive_p95_ms": 0.009372199999999994, "nonrecursive_pair_recall": 1.0, "peak_rss_mib": 16031.84765625, "recursive_e2e_ms": 1.8413627709251101, "recursive_macro_recall": 1.0, "recursive_p95_ms": 5.349977999999999, "recursive_pair_recall": 1.0}
+REPEAT 1 {"build_s": 6.19698, "nonrecursive_e2e_ms": 0.0039048340611353713, "nonrecursive_macro_recall": 1.0, "nonrecursive_p95_ms": 0.009130999999999997, "nonrecursive_pair_recall": 1.0, "peak_rss_mib": 16032.0, "recursive_e2e_ms": 1.8642851101321587, "recursive_macro_recall": 1.0, "recursive_p95_ms": 5.469163, "recursive_pair_recall": 1.0}
+REPEAT 2 {"build_s": 6.07838, "nonrecursive_e2e_ms": 0.004009515283842795, "nonrecursive_macro_recall": 1.0, "nonrecursive_p95_ms": 0.010331599999999998, "nonrecursive_pair_recall": 1.0, "peak_rss_mib": 16031.8203125, "recursive_e2e_ms": 1.856978563876652, "recursive_macro_recall": 1.0, "recursive_p95_ms": 5.406228, "recursive_pair_recall": 1.0}
+METRIC recursive_e2e_ms=1.85697856388
+METRIC recursive_p95_ms=5.406228
+METRIC recursive_macro_recall=1
+METRIC recursive_pair_recall=1
+METRIC nonrecursive_e2e_ms=0.00390556331878
+METRIC nonrecursive_macro_recall=1
+METRIC build_s=6.19698
+METRIC peak_rss_mib=16032
+METRIC recursive_qps=538.509178002
+METRIC recursive_e2e_mad_ms=0.00730654625551

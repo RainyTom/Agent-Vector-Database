@@ -1,0 +1,33 @@
+{
+  "source_fixes": [],
+  "existing_scheduler_helpers_also_match_7654f1e": {
+    "codes/directory-aware-vector-attr-search/scripts/generate_dynamic_triad.py": "04e5fef8ad0a9fba0c8d0845f8d93cb5142b5f02",
+    "codes/directory-aware-vector-attr-search/scripts/run_dynamic_triad.py": "609a961e6941b88ac8fb34d3d97ddb23b6d06242"
+  },
+  "both_measured_binary_hashes_still_match": {
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/closure_research": "ac910b29ffb559cc5f1d81c60dbf30869bb1b9b3d7078556abdf9c7656eb61b5",
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/codes/directory-aware-vector-attr-search/build/dynamic_triad": "e51a31368ceba046dbb6a29917d29e51718409a22b8562c9381c9525906a8a7c"
+  },
+  "static_complete": true,
+  "measured_static_runs": 72,
+  "wall_seconds_observed": 633.26,
+  "runtime_error_sums": {
+    "invalid_count": 0,
+    "duplicate_count": 0,
+    "state_errors": 0,
+    "gt_distance_calls": 0
+  },
+  "all_recorded_raw_hashes_verified_by_packager": true,
+  "quality_failed_runs": 31,
+  "miss_rows_collapsed_across_identical_repeats": 85,
+  "sift_nonempty_mean_time_H_over_A": 119.4836174307207,
+  "sift_nonempty_H_compile_fraction": 0.9089358128725596,
+  "dynamic_executed": false,
+  "real_maintenance_probe_executed": false,
+  "real_update_costs": "not measured; not zero",
+  "figures": {
+    "first_version": "budget annotations and dense x ticks overlapped; preserved in figures/",
+    "official_version": "figures-v2/",
+    "ANN_measurements_rerun_for_visual_fix": false
+  }
+}

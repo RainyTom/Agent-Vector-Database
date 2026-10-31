@@ -1,0 +1,20 @@
+{
+  "kind": "synthetic mathematical sanity checks; no performance or novelty evidence",
+  "seed": 20261029,
+  "conditional_box_checks": 48,
+  "sparse_residual_enclosure_checks": 6144,
+  "conditioned_example": {
+    "global_box_lower_bound": 0.0,
+    "eligible_box_lower_bound": 100.0,
+    "true_eligible_distance_squared": 100
+  },
+  "marginal_presence_does_not_prove_conjunction": true,
+  "identity_wta_zero_overlap_can_miss_nearest": true,
+  "result_rejection_does_not_allow_navigation_rejection": true,
+  "limits": [
+    "Conditional boxes are computed by scanning eligible points here: oracle diagnostic, NOT an implemented fast index.",
+    "WTA example uses the identity projection; not a reproduction or refutation of BioVSS experiments.",
+    "Triangle inequality and conditional boxes are classical facts, not claimed new algorithms.",
+    "No real-data pruning rate, latency, update performance, or ANN recall was measured."
+  ]
+}

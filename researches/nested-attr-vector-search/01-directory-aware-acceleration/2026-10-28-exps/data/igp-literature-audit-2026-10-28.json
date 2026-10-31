@@ -1,0 +1,60 @@
+{
+  "record_type": "topic_local_literature_audit",
+  "verification_date": "2026-10-28",
+  "id": "doi:10.1145/3726302.3730004",
+  "title": "IGP: Efficient Multi-Vector Retrieval via Proximity Graph Index",
+  "authors": ["Zheng Bian", "Man Lung Yiu", "Bo Tang"],
+  "year": 2025,
+  "published_date": "2025-07-13",
+  "venue": "Proceedings of the 48th International ACM SIGIR Conference on Research and Development in Information Retrieval (SIGIR '25)",
+  "pages": "2524-2533",
+  "preprint_year": "未核实",
+  "version_status": "Formal bibliography verified against Crossref and author-hosted conference manuscript; author PDF revision identifier and arXiv version unverified",
+  "links": {
+    "paper": "https://doi.org/10.1145/3726302.3730004",
+    "author_pdf": "https://www4.comp.polyu.edu.hk/~csmlyiu/conf/SIGIR25_IGP.pdf",
+    "crossref": "https://api.crossref.org/works/10.1145/3726302.3730004",
+    "code": "https://github.com/DBGroup-SUSTech/multi-vector-retrieval/tree/1899e9316e71b023518f9090fc64fe66dbd0c202"
+  },
+  "classification": {
+    "original_problem": "Approximate multi-vector retrieval with ColBERT sum-of-MaxSim inner-product scoring",
+    "relative_to_vector_join": "B: 可迁移借鉴；不是几何vector join，也不直接支持目录DSQ",
+    "relative_to_current_directory_DSQ": "Adjacent retrieval task; transfer compression representation and offline preparation, not multi-vector candidate aggregation or scoring"
+  },
+  "method": {
+    "compression_source": "ColBERTv2, explicitly adopted in sections 3.2 and 4",
+    "representation": "Float32 coarse centroids + uint32 centroid ID per vector + bit-packed residual scalar quantization; shared quantile cutoffs and reconstruction weights across dimensions and centroids",
+    "bits_per_coordinate_supported_by_current_code": [1, 2, 4, 8],
+    "paper_recommended_bits_per_coordinate": 2,
+    "graph_vertices": "Float32 coarse centroids, not all document vectors or their quantization codes",
+    "refinement": "Reconstruct candidate vectors from lossy codes then compute sum-of-MaxSim; not exact reranking against original FP32 vectors",
+    "cpu_search_storage": "Compressed codes and metadata plus coarse float centroids and per-thread reconstructed-candidate workspaces; raw FP32 corpus remains an offline disk input, not a required loaded search-index argument",
+    "gpu_offline": "K-means and centroid assignment in common pipeline; separate CUDA residual-encoding implementation exists; cutoff/weight quantile training is CPU in examined code"
+  },
+  "guarantees": {
+    "directory_DSQ_recall": "未提供",
+    "all_vector_HNSW_build_speedup_from_quantization": "未提供；IGP graph is on centroids",
+    "full_paper_theory": "未完整核查；Theorem 1 ideal next-similar order does not establish a DSQ or quantized-HNSW recall bound"
+  },
+  "experiments": {
+    "local_execution": "未运行",
+    "paper_results_checked": "Section 5.3 Table 7 reports the cost breakdown for its multi-vector workload; no performance number transferred to current single-vector DSQ",
+    "new_gpu_encoding_equivalence_test": "未运行"
+  },
+  "evidence": [
+    {"source": "author_pdf", "locator": "section 3.1, PDF p.3", "supports": "multi-vector sum-of-MaxSim definition"},
+    {"source": "author_pdf", "locator": "section 3.2 p.3; section 4 p.4", "supports": "ColBERTv2 VQ/SQ provenance"},
+    {"source": "author_pdf", "locator": "section 4.1 Algorithm 1 p.5; section 4.2 p.6", "supports": "lossy reconstruction and centroid graph"},
+    {"source": "author_pdf", "locator": "section 5.1 Table 6 p.8", "supports": "2bit/coordinate recommendation"},
+    {"source": "code", "locator": "script/evaluation/technique/vq_sq_pack.py:16-106", "supports": "GPU K-means, centroid normalization and IP assignment"},
+    {"source": "code", "locator": "src/include/alg/refine/ResidualScalarQuantizationIGPPipeline.hpp:17-98,120-236,330-378", "supports": "shared quantile SQ, packing and non-renormalized reconstruction"},
+    {"source": "code", "locator": "src/impl/IGP.hpp:25-41,74-132,154-164,195-211,243-277", "supports": "loaded index state, graph-build timing boundary, working memory and scoring"}
+  ],
+  "version_and_reuse_limits": [
+    "README states the current CPU IGP entry uses a faster single-threaded implementation from the GIGP+ work, not a frozen 2025 release",
+    "Paper Table 6 graph M=64 differs from current source build_hnsw M=32; do not mix configurations",
+    "GitHub repository metadata license field is null; no top-level LICENSE was found in the pinned tree. Permission covering IGP-specific code was not verified; technical reuse is not authorization to copy source",
+    "Independent implementation based on published descriptions is preferred until source reuse terms are clarified"
+  ],
+  "indexing_status": "Topic-local candidate audit only; no new full-paper/global-index record is claimed. Complete-theory, complete-experiment and citation-chain reading remain open."
+}

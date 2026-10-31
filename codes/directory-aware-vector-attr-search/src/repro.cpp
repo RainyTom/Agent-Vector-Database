@@ -24,6 +24,7 @@
 #include <faiss/IndexIVFFlat.h>
 #include <faiss/impl/IDSelector.h>
 #include <faiss/index_io.h>
+#include "scope_run_index.h"
 
 #include <roaring/roaring.h>
 
@@ -607,6 +608,8 @@ int main(int argc, char** argv) {
         int node_ef = 64;                                           // HNSW per-node efSearch
         std::vector<std::vector<int>> node_ids;                     // local -> global
         std::vector<std::vector<float>> node_centroid;              // per-node mean
+        std::unique_ptr<ScopeRunIndex> scope_run;
+        int scope_mode = 0;
         int node_topn = 10;                                         // scan knob
         int node_limit = 0;                                         // 0 = all candidates
         double build_us;
@@ -661,7 +664,7 @@ int main(int argc, char** argv) {
                    "dir_p90_us,dir_p95_us,dir_p99_us,dir_p999_us,e2e_mean_ms\n";
         csv_perquery << "dataset,design,executor,query_type,anchor_depth,scope_card,dir_us,"
                         "enum_us,bitmap_us,e2e_ms,recall10,ndcg10,"
-                        "gt_count,hit_count,valid_return_count,query_index,search_us\n";
+                        "gt_count,hit_count,valid_return_count,query_index,search_us,result_ids\n";
     }
     if (want_dsm) {
         csv_dsm.open(csv + "_dsm.csv");
@@ -823,9 +826,30 @@ int main(int argc, char** argv) {
                 })) {
             Exec ex;
             int thr = std::atoi(arg_or("node-hnsw-threshold", "0").c_str());
+            auto& nsd = wiki[0];
+            const std::string node_algorithm = arg_or(
+                "node-algorithm", mode == "dsq_scan" || which_exec == "all3" || thr > 0
+                                      ? "hnsw" : "scope-run");
+            if (node_algorithm == "scope-run") {
+                if (mode == "dsq_scan")
+                    throw std::invalid_argument("scope-run uses exact scope search, not nodeTopN/limit scans");
+                auto t0 = Clock::now();
+                ex.scope_mode = std::atoi(arg_or("scope-mode", "5").c_str());
+                ex.scope_run = std::make_unique<ScopeRunIndex>(
+                    base.x, base.d, nsd.tree.children, nsd.bindings, ex.scope_mode >= 3,
+                    arg_or("scope-local-order", "geometry") == "geometry",
+                    ex.scope_mode == 5, base.x.data());
+                ex.name = "NODE-scope-run";
+                ex.build_us = us_since(t0);
+                ex.bytes = ex.scope_run->size_bytes();
+                std::cout << "executor " << ex.name << " build_s=" << ex.build_us / 1e6
+                          << " size_MB=" << ex.bytes / 1e6 << "\n";
+                execs.push_back(std::move(ex));
+            } else {
+            if (node_algorithm != "hnsw")
+                throw std::invalid_argument("unknown node-algorithm: " + node_algorithm);
             ex.name = thr > 0 ? "NODE-hnsw-thr" : "NODE-hnsw";
             ex.node_ef = std::atoi(arg_or("node-ef", "64").c_str());
-            auto& nsd = wiki[0];
             int nodes = nsd.tree.n;
             ex.node_ix.resize(nodes);
             ex.node_ids.resize(nodes);
@@ -873,6 +897,7 @@ int main(int argc, char** argv) {
                       << " build_s=" << ex.build_us / 1e6
                       << " size_MB=" << ex.bytes / 1e6 << "\n";
             execs.push_back(std::move(ex));
+            }
         }
 
         const int K = 10;
@@ -1023,7 +1048,15 @@ int main(int argc, char** argv) {
                         double d_us = 0, search_us = 0;
                         std::vector<faiss::idx_t> I(K, -1);
                         std::vector<float> D(K);
-                        if (is_node) {
+                        if (is_node && ex.scope_run) {
+                            auto t0 = Clock::now();
+                            auto range = ex.scope_run->range(q.anchor, q.rec == 1);
+                            d_us = us_since(t0);
+                            auto t1 = Clock::now();
+                            ex.scope_run->search(&test.x[(size_t)q.qidx * test.d],
+                                                 range, K, D.data(), I.data(), ex.scope_mode);
+                            search_us = us_since(t1);
+                        } else if (is_node) {
                             auto t0 = Clock::now();
                             auto cand = candidate_nodes(ex, nss[nsi].tree, q);
                             d_us = us_since(t0);
@@ -1048,12 +1081,15 @@ int main(int argc, char** argv) {
                                 cand.clear();
                                 for (auto& [d2, v] : cd) cand.push_back(v);
                             }
-                            std::priority_queue<std::pair<float, int>> heap;
+                            std::vector<float> Dn(ex.node_topn);
+                            std::vector<faiss::idx_t> In(ex.node_topn);
+                            std::vector<std::pair<float, int>> heap_storage;
+                            heap_storage.reserve(K);
+                            std::priority_queue<std::pair<float, int>> heap(
+                                std::less<std::pair<float, int>>(), std::move(heap_storage));
                             for (int v : cand) {
                                 if (!ex.node_ix[v]) continue;
                                 int nn = std::min(ex.node_topn, (int)ex.node_ids[v].size());
-                                std::vector<float> Dn(nn);
-                                std::vector<faiss::idx_t> In(nn);
                                 if (ex.node_is_hnsw[v]) {
                                     faiss::SearchParametersHNSW sp;
                                     sp.efSearch = std::max(ex.node_ef, nn);
@@ -1125,7 +1161,12 @@ int main(int argc, char** argv) {
                                      << "," << e2e_ms << "," << (double)hit / K << ","
                                      << ndcg << "," << gts[qi].size() << "," << hit
                                      << "," << quality.valid << "," << qi << ","
-                                     << search_us << "\n";
+                                     << search_us << ",";
+                        for (size_t j = 0; j < I.size(); ++j) {
+                            if (j) csv_perquery << " ";
+                            csv_perquery << I[j];
+                        }
+                        csv_perquery << "\n";
                         dir[r].add(d_us);
                         e2e[r].add(e2e_ms);
                         rec[r].add((double)hit / K);

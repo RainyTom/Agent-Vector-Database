@@ -1,0 +1,8 @@
+{
+  "runs": 108,
+  "topology_pair_checks": 54,
+  "quality_failed_runs": 0,
+  "errors": [],
+  "scope_caveat": "Only root-recursive and nonrecursive GT identical across topology; descendant predicates differ.",
+  "percentiles": "linear within repeat; plots mean and sample SD across repeats"
+}

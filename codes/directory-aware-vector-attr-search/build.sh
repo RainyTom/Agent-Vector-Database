@@ -9,3 +9,8 @@ g++ -O3 -march=native -std=c++17 -w -o build/repro src/repro.cpp \
   -L"$FAISS/build/faiss" -lfaiss \
   -L../../deps/croaring/build -l:libcroaring-singleheader-source-lib.a -lpthread
 echo "built build/repro"
+g++ -O3 -march=native -std=c++17 -w -o build/hlg_tool src/hlg_tool.cpp \
+  -I../../deps/croaring/include -I"$FAISS" \
+  -L"$FAISS/build/faiss" -lfaiss \
+  -L../../deps/croaring/build -l:libcroaring-singleheader-source-lib.a -lpthread
+echo "built build/hlg_tool"

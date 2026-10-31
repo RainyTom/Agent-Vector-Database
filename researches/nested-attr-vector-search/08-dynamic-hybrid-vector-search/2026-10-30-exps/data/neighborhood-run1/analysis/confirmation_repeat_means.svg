@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="750" viewBox="0 0 960 750">
+<style>text{font-family:sans-serif;font-size:14px;fill:var(--fg)} .title{font-size:17px;font-weight:bold}</style>
+<text x="35" y="26" class="title">Confirmation: actual repeat arithmetic means, not medians</text>
+<text x="35" y="47">A: direct-node NodeANN/scan512; B: ordinary two-hop; C: page two-hop. × = failed quality/protocol.</text>
+<text x="105" y="71" font-weight="bold">sift</text>
+<line x1="105.00" x2="105.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="305.00" y2="305.00" stroke="var(--border)"/>
+<text x="105.00" y="325" text-anchor="middle">0.84</text>
+<text x="96" y="309.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="261.00" y2="261.00" stroke="var(--border)"/>
+<text x="268.00" y="325" text-anchor="middle">1.304</text>
+<text x="96" y="265.00" text-anchor="end">14938</text>
+<line x1="431.00" x2="431.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="217.00" y2="217.00" stroke="var(--border)"/>
+<text x="431.00" y="325" text-anchor="middle">1.768</text>
+<text x="96" y="221.00" text-anchor="end">29876</text>
+<line x1="594.00" x2="594.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="173.00" y2="173.00" stroke="var(--border)"/>
+<text x="594.00" y="325" text-anchor="middle">2.232</text>
+<text x="96" y="177.00" text-anchor="end">44815</text>
+<line x1="757.00" x2="757.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="129.00" y2="129.00" stroke="var(--border)"/>
+<text x="757.00" y="325" text-anchor="middle">2.696</text>
+<text x="96" y="133.00" text-anchor="end">59753</text>
+<line x1="920.00" x2="920.00" y1="85" y2="305" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="85.00" y2="85.00" stroke="var(--border)"/>
+<text x="920.00" y="325" text-anchor="middle">3.16</text>
+<text x="96" y="89.00" text-anchor="end">74691</text>
+<line x1="105" x2="920" y1="305" y2="305" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="85" y2="305" stroke="var(--fg)"/>
+<text x="512.5" y="349" text-anchor="middle">Frozen confirmation repeat (rotating serial arm order)</text>
+<text transform="translate(22 195.0) rotate(-90)" text-anchor="middle">Arithmetic mean e2e latency (µs)</text>
+<polyline points="161.21,304.46 512.50,304.46 863.79,304.47" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="161.21,114.20 512.50,113.70 863.79,114.67" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="161.21,282.08 512.50,281.04 863.79,281.46" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="161.21" cy="304.46" r="5" fill="var(--c1)"><title>sift A ef=64 repeat=1 mean=182.41315 quality=True</title></circle>
+<text x="168.21" y="297.46" fill="var(--c1)">A</text>
+<circle cx="161.21" cy="114.20" r="5" fill="var(--c2)"><title>sift B ef=64 repeat=1 mean=64777.14259 quality=True</title></circle>
+<text x="168.21" y="107.20" fill="var(--c2)">B</text>
+<circle cx="161.21" cy="282.08" r="5" fill="var(--c3)"><title>sift C ef=64 repeat=1 mean=7781.98227 quality=True</title></circle>
+<text x="168.21" y="275.08" fill="var(--c3)">C</text>
+<circle cx="512.50" cy="113.70" r="5" fill="var(--c2)"><title>sift B ef=64 repeat=2 mean=64948.83724 quality=True</title></circle>
+<text x="519.50" y="106.70" fill="var(--c2)">B</text>
+<circle cx="512.50" cy="281.04" r="5" fill="var(--c3)"><title>sift C ef=64 repeat=2 mean=8134.99045 quality=True</title></circle>
+<text x="519.50" y="274.04" fill="var(--c3)">C</text>
+<circle cx="512.50" cy="304.46" r="5" fill="var(--c1)"><title>sift A ef=64 repeat=2 mean=181.71555 quality=True</title></circle>
+<text x="519.50" y="297.46" fill="var(--c1)">A</text>
+<circle cx="863.79" cy="281.46" r="5" fill="var(--c3)"><title>sift C ef=64 repeat=3 mean=7992.00739 quality=True</title></circle>
+<text x="870.79" y="274.46" fill="var(--c3)">C</text>
+<circle cx="863.79" cy="304.47" r="5" fill="var(--c1)"><title>sift A ef=64 repeat=3 mean=178.64656 quality=True</title></circle>
+<text x="870.79" y="297.47" fill="var(--c1)">A</text>
+<circle cx="863.79" cy="114.67" r="5" fill="var(--c2)"><title>sift B ef=64 repeat=3 mean=64617.8401 quality=True</title></circle>
+<text x="870.79" y="107.67" fill="var(--c2)">B</text>
+<text x="105" y="401" font-weight="bold">wiki</text>
+<line x1="105.00" x2="105.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="635.00" y2="635.00" stroke="var(--border)"/>
+<text x="105.00" y="655" text-anchor="middle">0.84</text>
+<text x="96" y="639.00" text-anchor="end">0</text>
+<line x1="268.00" x2="268.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="591.00" y2="591.00" stroke="var(--border)"/>
+<text x="268.00" y="655" text-anchor="middle">1.304</text>
+<text x="96" y="595.00" text-anchor="end">30821</text>
+<line x1="431.00" x2="431.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="547.00" y2="547.00" stroke="var(--border)"/>
+<text x="431.00" y="655" text-anchor="middle">1.768</text>
+<text x="96" y="551.00" text-anchor="end">61641</text>
+<line x1="594.00" x2="594.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="503.00" y2="503.00" stroke="var(--border)"/>
+<text x="594.00" y="655" text-anchor="middle">2.232</text>
+<text x="96" y="507.00" text-anchor="end">92462</text>
+<line x1="757.00" x2="757.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="459.00" y2="459.00" stroke="var(--border)"/>
+<text x="757.00" y="655" text-anchor="middle">2.696</text>
+<text x="96" y="463.00" text-anchor="end">1.2328e+05</text>
+<line x1="920.00" x2="920.00" y1="415" y2="635" stroke="var(--border)"/>
+<line x1="105" x2="920" y1="415.00" y2="415.00" stroke="var(--border)"/>
+<text x="920.00" y="655" text-anchor="middle">3.16</text>
+<text x="96" y="419.00" text-anchor="end">1.541e+05</text>
+<line x1="105" x2="920" y1="635" y2="635" stroke="var(--fg)"/>
+<line x1="105" x2="105" y1="415" y2="635" stroke="var(--fg)"/>
+<text x="512.5" y="679" text-anchor="middle">Frozen confirmation repeat (rotating serial arm order)</text>
+<text transform="translate(22 525.0) rotate(-90)" text-anchor="middle">Arithmetic mean e2e latency (µs)</text>
+<polyline points="161.21,634.37 512.50,634.35 863.79,634.38" fill="none" stroke="var(--c1)" stroke-opacity=".35"/>
+<polyline points="161.21,444.07 512.50,443.70 863.79,445.76" fill="none" stroke="var(--c2)" stroke-opacity=".35"/>
+<polyline points="161.21,614.68 512.50,614.58 863.79,615.00" fill="none" stroke="var(--c3)" stroke-opacity=".35"/>
+<circle cx="161.21" cy="634.37" r="5" fill="var(--c1)"><title>wiki A ef=64 repeat=1 mean=439.81065 quality=True</title></circle>
+<text x="168.21" y="627.37" fill="var(--c1)">A</text>
+<circle cx="161.21" cy="444.07" r="5" fill="var(--c2)"><title>wiki B ef=64 repeat=1 mean=133742.10679 quality=True</title></circle>
+<text x="168.21" y="437.07" fill="var(--c2)">B</text>
+<circle cx="161.21" cy="614.68" r="5" fill="var(--c3)"><title>wiki C ef=64 repeat=1 mean=14236.75654 quality=True</title></circle>
+<text x="168.21" y="607.68" fill="var(--c3)">C</text>
+<circle cx="512.50" cy="443.70" r="5" fill="var(--c2)"><title>wiki B ef=64 repeat=2 mean=134002.77046 quality=True</title></circle>
+<text x="519.50" y="436.70" fill="var(--c2)">B</text>
+<circle cx="512.50" cy="614.58" r="5" fill="var(--c3)"><title>wiki C ef=64 repeat=2 mean=14306.39313 quality=True</title></circle>
+<text x="519.50" y="607.58" fill="var(--c3)">C</text>
+<circle cx="512.50" cy="634.35" r="5" fill="var(--c1)"><title>wiki A ef=64 repeat=2 mean=457.54538 quality=True</title></circle>
+<text x="519.50" y="627.35" fill="var(--c1)">A</text>
+<circle cx="863.79" cy="615.00" r="5" fill="var(--c3)"><title>wiki C ef=64 repeat=3 mean=14007.11008 quality=True</title></circle>
+<text x="870.79" y="608.00" fill="var(--c3)">C</text>
+<circle cx="863.79" cy="634.38" r="5" fill="var(--c1)"><title>wiki A ef=64 repeat=3 mean=432.45468999999997 quality=True</title></circle>
+<text x="870.79" y="627.38" fill="var(--c1)">A</text>
+<circle cx="863.79" cy="445.76" r="5" fill="var(--c2)"><title>wiki B ef=64 repeat=3 mean=132553.77814 quality=True</title></circle>
+<text x="870.79" y="438.76" fill="var(--c2)">B</text>
+</svg>

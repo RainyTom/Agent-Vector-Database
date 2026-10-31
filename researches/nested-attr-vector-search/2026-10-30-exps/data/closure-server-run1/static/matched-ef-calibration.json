@@ -1,0 +1,650 @@
+[
+  {
+    "dataset": "sift",
+    "ef": 64,
+    "control": "U",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.981,
+      "pair": 0.9778554778554779
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.9840000000000001,
+      "pair": 0.9813519813519813
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 2052.61,
+    "control_mean_expanded": 2052.55,
+    "H_mean_e2e_us": 16460.9546,
+    "control_mean_e2e_us": 14687.36833,
+    "H_fewer_expanded_queries": 26,
+    "H_equal_expanded_queries": 57
+  },
+  {
+    "dataset": "sift",
+    "ef": 64,
+    "control": "G",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.981,
+      "pair": 0.9778554778554779
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.981,
+      "pair": 0.9778554778554779
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 2052.61,
+    "control_mean_expanded": 2052.25,
+    "H_mean_e2e_us": 16460.9546,
+    "control_mean_e2e_us": 14949.921199999999,
+    "H_fewer_expanded_queries": 4,
+    "H_equal_expanded_queries": 83
+  },
+  {
+    "dataset": "sift",
+    "ef": 64,
+    "control": "R",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.981,
+      "pair": 0.9778554778554779
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.98,
+      "pair": 0.9766899766899767
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 2052.61,
+    "control_mean_expanded": 2052.43,
+    "H_mean_e2e_us": 16460.9546,
+    "control_mean_e2e_us": 15384.36384,
+    "H_fewer_expanded_queries": 20,
+    "H_equal_expanded_queries": 61
+  },
+  {
+    "dataset": "sift",
+    "ef": 64,
+    "control": "H0",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.981,
+      "pair": 0.9778554778554779
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.978,
+      "pair": 0.9743589743589743
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 2052.61,
+    "control_mean_expanded": 2051.66,
+    "H_mean_e2e_us": 16460.9546,
+    "control_mean_e2e_us": 27608.99063,
+    "H_fewer_expanded_queries": 17,
+    "H_equal_expanded_queries": 40
+  },
+  {
+    "dataset": "sift",
+    "ef": 256,
+    "control": "U",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.9990000000000001,
+      "pair": 0.9988344988344988
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 3017.33,
+    "control_mean_expanded": 3016.74,
+    "H_mean_e2e_us": 26486.51531,
+    "control_mean_e2e_us": 20914.55405,
+    "H_fewer_expanded_queries": 21,
+    "H_equal_expanded_queries": 64
+  },
+  {
+    "dataset": "sift",
+    "ef": 256,
+    "control": "G",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.9990000000000001,
+      "pair": 0.9988344988344988
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.9990000000000001,
+      "pair": 0.9988344988344988
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 3017.33,
+    "control_mean_expanded": 3017.25,
+    "H_mean_e2e_us": 26486.51531,
+    "control_mean_e2e_us": 22194.71462,
+    "H_fewer_expanded_queries": 6,
+    "H_equal_expanded_queries": 85
+  },
+  {
+    "dataset": "sift",
+    "ef": 256,
+    "control": "R",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.9990000000000001,
+      "pair": 0.9988344988344988
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 3017.33,
+    "control_mean_expanded": 3017.21,
+    "H_mean_e2e_us": 26486.51531,
+    "control_mean_e2e_us": 23025.82196,
+    "H_fewer_expanded_queries": 15,
+    "H_equal_expanded_queries": 77
+  },
+  {
+    "dataset": "sift",
+    "ef": 256,
+    "control": "H0",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.9990000000000001,
+      "pair": 0.9988344988344988
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 0.9990000000000001,
+      "pair": 0.9988344988344988
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 3017.33,
+    "control_mean_expanded": 3016.81,
+    "H_mean_e2e_us": 26486.51531,
+    "control_mean_e2e_us": 40512.243760000005,
+    "H_fewer_expanded_queries": 13,
+    "H_equal_expanded_queries": 55
+  },
+  {
+    "dataset": "sift",
+    "ef": 1024,
+    "control": "U",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 4407.26,
+    "control_mean_expanded": 4407.24,
+    "H_mean_e2e_us": 44330.88119,
+    "control_mean_e2e_us": 31095.78576,
+    "H_fewer_expanded_queries": 12,
+    "H_equal_expanded_queries": 79
+  },
+  {
+    "dataset": "sift",
+    "ef": 1024,
+    "control": "G",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 4407.26,
+    "control_mean_expanded": 4407.07,
+    "H_mean_e2e_us": 44330.88119,
+    "control_mean_e2e_us": 32614.866690000003,
+    "H_fewer_expanded_queries": 5,
+    "H_equal_expanded_queries": 82
+  },
+  {
+    "dataset": "sift",
+    "ef": 1024,
+    "control": "R",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 4407.26,
+    "control_mean_expanded": 4407.26,
+    "H_mean_e2e_us": 44330.88119,
+    "control_mean_e2e_us": 35886.08534,
+    "H_fewer_expanded_queries": 11,
+    "H_equal_expanded_queries": 80
+  },
+  {
+    "dataset": "sift",
+    "ef": 1024,
+    "control": "H0",
+    "nonempty_queries": 100,
+    "H_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 100,
+      "empty": 0,
+      "unique_qidx": 32,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 4407.26,
+    "control_mean_expanded": 4407.31,
+    "H_mean_e2e_us": 44330.88119,
+    "control_mean_e2e_us": 60747.54610000001,
+    "H_fewer_expanded_queries": 8,
+    "H_equal_expanded_queries": 73
+  },
+  {
+    "dataset": "wiki",
+    "ef": 64,
+    "control": "U",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99125,
+      "pair": 0.987037037037037
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99375,
+      "pair": 0.9907407407407407
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 863.575,
+    "control_mean_expanded": 863.4,
+    "H_mean_e2e_us": 6881.275475,
+    "control_mean_e2e_us": 6282.350362499999,
+    "H_fewer_expanded_queries": 10,
+    "H_equal_expanded_queries": 62
+  },
+  {
+    "dataset": "wiki",
+    "ef": 64,
+    "control": "G",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99125,
+      "pair": 0.987037037037037
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99125,
+      "pair": 0.987037037037037
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 863.575,
+    "control_mean_expanded": 864.225,
+    "H_mean_e2e_us": 6881.275475,
+    "control_mean_e2e_us": 6668.059974999999,
+    "H_fewer_expanded_queries": 7,
+    "H_equal_expanded_queries": 71
+  },
+  {
+    "dataset": "wiki",
+    "ef": 64,
+    "control": "R",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99125,
+      "pair": 0.987037037037037
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.9925,
+      "pair": 0.9888888888888889
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 863.575,
+    "control_mean_expanded": 863.6375,
+    "H_mean_e2e_us": 6881.275475,
+    "control_mean_e2e_us": 6736.272350000001,
+    "H_fewer_expanded_queries": 11,
+    "H_equal_expanded_queries": 62
+  },
+  {
+    "dataset": "wiki",
+    "ef": 64,
+    "control": "H0",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99125,
+      "pair": 0.987037037037037
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.9800000000000001,
+      "pair": 0.9703703703703703
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 863.575,
+    "control_mean_expanded": 861.4625,
+    "H_mean_e2e_us": 6881.275475,
+    "control_mean_e2e_us": 9743.284975,
+    "H_fewer_expanded_queries": 5,
+    "H_equal_expanded_queries": 56
+  },
+  {
+    "dataset": "wiki",
+    "ef": 256,
+    "control": "U",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99875,
+      "pair": 0.9981481481481481
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 1322.55,
+    "control_mean_expanded": 1322.6125,
+    "H_mean_e2e_us": 11211.1141625,
+    "control_mean_e2e_us": 9625.1276,
+    "H_fewer_expanded_queries": 10,
+    "H_equal_expanded_queries": 65
+  },
+  {
+    "dataset": "wiki",
+    "ef": 256,
+    "control": "G",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99875,
+      "pair": 0.9981481481481481
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99875,
+      "pair": 0.9981481481481481
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 1322.55,
+    "control_mean_expanded": 1322.65,
+    "H_mean_e2e_us": 11211.1141625,
+    "control_mean_e2e_us": 10142.98835,
+    "H_fewer_expanded_queries": 4,
+    "H_equal_expanded_queries": 71
+  },
+  {
+    "dataset": "wiki",
+    "ef": 256,
+    "control": "R",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99875,
+      "pair": 0.9981481481481481
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 1322.55,
+    "control_mean_expanded": 1322.5,
+    "H_mean_e2e_us": 11211.1141625,
+    "control_mean_e2e_us": 10564.85655,
+    "H_fewer_expanded_queries": 10,
+    "H_equal_expanded_queries": 65
+  },
+  {
+    "dataset": "wiki",
+    "ef": 256,
+    "control": "H0",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99875,
+      "pair": 0.9981481481481481
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 0.99875,
+      "pair": 0.9981481481481481
+    },
+    "same_quality_pass": false,
+    "H_mean_expanded": 1322.55,
+    "control_mean_expanded": 1323.825,
+    "H_mean_e2e_us": 11211.1141625,
+    "control_mean_e2e_us": 15092.247899999998,
+    "H_fewer_expanded_queries": 12,
+    "H_equal_expanded_queries": 64
+  },
+  {
+    "dataset": "wiki",
+    "ef": 1024,
+    "control": "U",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 2176.5625,
+    "control_mean_expanded": 2176.7875,
+    "H_mean_e2e_us": 19571.978912500002,
+    "control_mean_e2e_us": 15170.4620625,
+    "H_fewer_expanded_queries": 8,
+    "H_equal_expanded_queries": 71
+  },
+  {
+    "dataset": "wiki",
+    "ef": 1024,
+    "control": "G",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 2176.5625,
+    "control_mean_expanded": 2176.475,
+    "H_mean_e2e_us": 19571.978912500002,
+    "control_mean_e2e_us": 16261.705937499999,
+    "H_fewer_expanded_queries": 1,
+    "H_equal_expanded_queries": 76
+  },
+  {
+    "dataset": "wiki",
+    "ef": 1024,
+    "control": "R",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 2176.5625,
+    "control_mean_expanded": 2176.8125,
+    "H_mean_e2e_us": 19571.978912500002,
+    "control_mean_e2e_us": 17866.598875,
+    "H_fewer_expanded_queries": 10,
+    "H_equal_expanded_queries": 70
+  },
+  {
+    "dataset": "wiki",
+    "ef": 1024,
+    "control": "H0",
+    "nonempty_queries": 80,
+    "H_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "control_quality": {
+      "nonempty": 80,
+      "empty": 0,
+      "unique_qidx": 80,
+      "macro": 1.0,
+      "pair": 1.0
+    },
+    "same_quality_pass": true,
+    "H_mean_expanded": 2176.5625,
+    "control_mean_expanded": 2176.925,
+    "H_mean_e2e_us": 19571.978912500002,
+    "control_mean_e2e_us": 24797.132749999997,
+    "H_fewer_expanded_queries": 4,
+    "H_equal_expanded_queries": 69
+  }
+]

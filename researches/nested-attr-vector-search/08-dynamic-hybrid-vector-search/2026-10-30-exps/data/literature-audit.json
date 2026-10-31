@@ -1,0 +1,23 @@
+{
+  "papers": 36,
+  "relations": 31,
+  "new_records": 6,
+  "new_researcher_synthesis_edges": 4,
+  "topics": {
+    "vector-join": 8,
+    "similarity-join": 1,
+    "filtered-ann": 12,
+    "prefix-vector-search": 1,
+    "trajectory-search": 8,
+    "multi-vector-search": 1,
+    "data-indexing": 4,
+    "sparse-vector-search": 1
+  },
+  "unique_ids": true,
+  "relation_endpoints_resolve": true,
+  "new_required_fields_and_topic_paths": true,
+  "new_text_sha256_matches": true,
+  "original_pdf_binaries_archived": false,
+  "legacy_missing_cli": "tools/research_index.py",
+  "method": "Paged JSONL parsing, endpoint checks, and sha256sum of new stored text; not semantic theorem validation"
+}

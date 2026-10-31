@@ -1,0 +1,9 @@
+{
+  "reference_gt_mode": "inline",
+  "measured_gt_mode": "precomputed",
+  "runs": 12,
+  "query_rows_checked": 714,
+  "update_rows_checked": 71502,
+  "errors": [],
+  "interpretation": "State, ranked IDs, ANN navigation and maintenance counts identical; timings intentionally not compared."
+}

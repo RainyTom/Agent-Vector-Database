@@ -1,0 +1,2122 @@
+[
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/build-closure.log",
+    "bytes": 4346,
+    "sha256": "049f09721ac666f24e7451d1f0adce04fec6e4e41f7abd4dac14a476b48b92c0"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/build-nodeann.log",
+    "bytes": 4241,
+    "sha256": "b2ebc5e7f1f7e55cb208186ef5041a7a6f299deeb2efde547674f43cae5eb493"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/comparisons.json",
+    "bytes": 580376,
+    "sha256": "912b05c81cd9798da8d496c1e2a084b2d276c5115d3303f319df7e8b3f726101"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/manifest.json",
+    "bytes": 119786,
+    "sha256": "fb0499afa1a201660bc8a48baead2374ec9f29a437d87fd3b6fca1937703d149"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/points.csv",
+    "bytes": 180568,
+    "sha256": "2d905c8006eec764d8af4f66597e1ae4cf2ce0efc3570e3676ae9c3f9d316de8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/runs.json",
+    "bytes": 3630348,
+    "sha256": "830029a405c1e8a5bef5bed3b17c327ca63b9e0759e6120d33122b356d701fd9"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/events.trace",
+    "bytes": 5364,
+    "sha256": "17b0488c0afb8b3c0f84ff0b48fc1f262ea880192dbcce5ca756aca04c9ef114"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/oracle.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/oracle.queries.csv",
+    "bytes": 28637,
+    "sha256": "24cf5c28cbfc682e220cda79d6d22e5a16cb97505b955e4279342f7bcb294c01"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/oracle.summary.json",
+    "bytes": 2527,
+    "sha256": "331136eced30e452dfcbac3257c9e4bcb7eaf56c53d2a362dcc5bf90fe302ebf"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/oracle.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep0.queries.csv",
+    "bytes": 40858,
+    "sha256": "3abfc246d2db26aa7281741d143ede239663e703b520b9aa6ebda9c538f3006c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep0.summary.json",
+    "bytes": 3756,
+    "sha256": "2294586673439c249d2b5e96b9cbcef0548e4538b9422af1c9d85112ff6c09e8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep1.queries.csv",
+    "bytes": 40851,
+    "sha256": "7f1008761ee368bfaff2f0e6399b3de681f511f7a362b4bd6f3ceb984fa1a682"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep1.summary.json",
+    "bytes": 3756,
+    "sha256": "b147b1e6c48035daab0d8eaf34943af8c1dbd330e15804ff19ad39e63dd3ce54"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep2.queries.csv",
+    "bytes": 40840,
+    "sha256": "fce55616e8f3ca53e4201d403e1ee16e16180b909cc3c6a207ceb0985df42e0a"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep2.summary.json",
+    "bytes": 3753,
+    "sha256": "019bb69346ef7afd626b15e885f93003ccb35301a0a6d35e104b3d9619567323"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef15-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep0.queries.csv",
+    "bytes": 40858,
+    "sha256": "ec2b1a817169efdb35af79eede3d43c53840981459fc03c4d7223b96162f328f"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep0.summary.json",
+    "bytes": 3739,
+    "sha256": "141bc5d813f0965687c7cb6ecebef6401770cefb67ab96338acb3d4ce7718fe3"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep1.queries.csv",
+    "bytes": 40852,
+    "sha256": "46195cf55aed3b6aff87e3841354bd8da6e4d0a6189dd38a3231b1ad45b43392"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep1.summary.json",
+    "bytes": 3738,
+    "sha256": "3206f9629fb6aa6b719c1da8be687ad55a59e14216fe75692058892aa62fd7fd"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep2.queries.csv",
+    "bytes": 40865,
+    "sha256": "cbc3c0aa0557b120beb8acb1f7bfcfc5f1e19b748a960fed0b0350b3bb50c573"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep2.summary.json",
+    "bytes": 3739,
+    "sha256": "da71181c7838f39cdaa4b9bb28ed426fca0e4ebacc31b83f28042a7e9071b752"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-graph-ef20-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep0.queries.csv",
+    "bytes": 41042,
+    "sha256": "4adadf9b050fbf72fc5bf50f84850b41823d911a6e2922dbe309bea014c264a8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep0.summary.json",
+    "bytes": 3760,
+    "sha256": "f97d3be42d059c89977ebfefa86bcd8948e5ef6c0b4d9c74a14a90d173181803"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep1.queries.csv",
+    "bytes": 41056,
+    "sha256": "78b1aa081b46f4ce3dff6d01a9fd9140010fd585212a817155203ad0d884ef4c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep1.summary.json",
+    "bytes": 3758,
+    "sha256": "9bb4951796ccd68eae0f3b7e8db407a9c5a1841606742f780bade8c553f6c428"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep2.queries.csv",
+    "bytes": 41047,
+    "sha256": "8b42b2bac13f172cdb392780360c06122c585343f9d4a02b778738dc2dac2349"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep2.summary.json",
+    "bytes": 3759,
+    "sha256": "a04ea9e731bd9efee81fdd8d40d59e2be5d4a2c9b47a234e4e6af8e66639aefb"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef15-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep0.queries.csv",
+    "bytes": 41068,
+    "sha256": "ff362f3ca67b7401bd1cc77d38c090cd843ff4a1950e589f5e0bea917ef4c702"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep0.summary.json",
+    "bytes": 3738,
+    "sha256": "d41ff603374403735d4bba049e2e3174748402b983a837d46684d98d39c7cae2"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep1.queries.csv",
+    "bytes": 41042,
+    "sha256": "e933982ec953876163816928994c1c319baa2f5c6be840c8c49572cdba945174"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep1.summary.json",
+    "bytes": 3741,
+    "sha256": "e8d1a0aec7a1e94d6f2e5c9e4d75cabc5ed1c913e3429728af1283d66df7d4ac"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep2.queries.csv",
+    "bytes": 41074,
+    "sha256": "c90968eea300324b701a7deeab574d93e68e924943f09c83abb05915f656e2c8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep2.summary.json",
+    "bytes": 3740,
+    "sha256": "36118404c697777ae61ab499a27b5160aeda12ea939508c16fce191d33b99a60"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/A-hybrid-reference-ef20-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep0.queries.csv",
+    "bytes": 57424,
+    "sha256": "b99cbb901b8f3c876ab146421432048856b9e6e95388dc89dc5115eedeec3792"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep0.summary.json",
+    "bytes": 2722,
+    "sha256": "b9762541cf8c9fc55db2b00fdf8507e7b0d6672b3128945b3a61bcd1664bb034"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep1.queries.csv",
+    "bytes": 57374,
+    "sha256": "be4bfcf93d344aceb78add3264a3ab949257e0507b95bd6ee1d0ad2eecd96304"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep1.summary.json",
+    "bytes": 2722,
+    "sha256": "0214145a114b9df435ac3bc87a2f5155fb04b07d4115f56e62c6f819165bb126"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep2.queries.csv",
+    "bytes": 57285,
+    "sha256": "9766f3fa3018245e449bec4a40dfad629032620850d0d5c6bb972fa549ccb81e"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep2.summary.json",
+    "bytes": 2729,
+    "sha256": "945ad4f51faff17f6f341cda3d23ceffdfe7abd4501c8d2f3c741e3396105449"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/Exact-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep0.queries.csv",
+    "bytes": 60014,
+    "sha256": "bbae39a2071cee64bc1767e6b26024af306042dd129b4f6706958e8ea7e0e984"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep0.summary.json",
+    "bytes": 2771,
+    "sha256": "230e0cac4e9d1cfbd90b67223afd223dcd6549066102a99520625db5219ca5b8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep1.queries.csv",
+    "bytes": 59550,
+    "sha256": "0def2db986fc4b4e2b1a38eb27bcefd183d8599e5eafcd1cd977dcad40a972ee"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep1.summary.json",
+    "bytes": 2762,
+    "sha256": "4586beb708115b76a5499dc8a0bcd6fff738d7837cd75b0eaceb422a06731b55"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep2.queries.csv",
+    "bytes": 59786,
+    "sha256": "2a7ac51d18b0cd85e20ada40477fc9f042c2096e734d573bd027d883bb1de7bd"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep2.summary.json",
+    "bytes": 2774,
+    "sha256": "54ef2609a893940abe7df63f50884844dab6aaabb82d9911e45211f65133ebea"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep0.queries.csv",
+    "bytes": 59505,
+    "sha256": "8db2717b25ecc268867898cc58a8b580cd6f681513ebfc0181ed477398af6a0a"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep0.summary.json",
+    "bytes": 2775,
+    "sha256": "e981a83beebd0b588dc359d86f78bc80d17b543e91918dd2e9880a9aecc1add6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep1.queries.csv",
+    "bytes": 59848,
+    "sha256": "06039872ebdd58aaf8d5f45f6a075ab48e1e814c64cabf2edaaf61f707960737"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep1.summary.json",
+    "bytes": 2782,
+    "sha256": "7726e126c23cd542d6535a757d466fe0a8c5e9ccf36ded4945f053b0b7d1add4"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep2.queries.csv",
+    "bytes": 59926,
+    "sha256": "79e4b20672adfc4bb784c80fda4eaff0585edfc4228b31a0b0bf3281914d3666"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep2.summary.json",
+    "bytes": 2782,
+    "sha256": "99ea6b46fd13314f338747a4a69077ce87314cb43850d884c4c4a48566839cc1"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-aware-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep0.queries.csv",
+    "bytes": 62562,
+    "sha256": "51c133fadfad4d1b09d4e4329e873f41a188a0f8cb64992e9f28de9606f898c6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep0.summary.json",
+    "bytes": 2781,
+    "sha256": "eb8ef107c69fb715b6119cfbb214c466cd52052adcb3bb38d5c2247f72c180d3"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep1.queries.csv",
+    "bytes": 62428,
+    "sha256": "8ddb5a38fd2c7d9b86545f89f44b01b8c122d0bb3c7c8a85ab8f6f9126034af5"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep1.summary.json",
+    "bytes": 2781,
+    "sha256": "8341e6245bfa29f70553b1a918dcc8ecb44ebf5a6002b666633414fbc6380df0"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep2.queries.csv",
+    "bytes": 62574,
+    "sha256": "8f25686c89fcf593ec1ba986ea5dff5273b66466e95b0f8b5d98405e1533426c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep2.summary.json",
+    "bytes": 2767,
+    "sha256": "73792f0af3e0b03be4a0db95cd2c2a2352e407183e144795e618e3bd94acf6af"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep0.queries.csv",
+    "bytes": 62823,
+    "sha256": "cb1462eebff32b446aaee0dbb36f48f2a772ad57eb2baaca4186a4bb7b39aaf6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep0.summary.json",
+    "bytes": 2772,
+    "sha256": "85bbf2c2535b9886e320cdd2d26f0896baf5c558bcfe1cb3c11738cf51922d61"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep1.queries.csv",
+    "bytes": 62131,
+    "sha256": "6b94cd8ae3db74456d6c43bee589600434e0aaa2210b575f9e5dd3fcd45bf962"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep1.summary.json",
+    "bytes": 2773,
+    "sha256": "bdd1064eb47ced4e4777efedfd1fe1835f2347aee26dabcef61593b4c6ad350d"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep2.queries.csv",
+    "bytes": 62842,
+    "sha256": "7e5f5dcf9f0cfecedaccf5172568b66c70f8b20c032e0d1351ef8d2513e4a2b4"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep2.summary.json",
+    "bytes": 2773,
+    "sha256": "bb05b51ce95e491828f5f2dd9dfc27be3185b091c81d5e877abf5211071f1165"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-cap-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep0.queries.csv",
+    "bytes": 59106,
+    "sha256": "0333720333dd863503694c20c9af9869d4a599441c94559572c547025d0e9661"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep0.summary.json",
+    "bytes": 2758,
+    "sha256": "ec64d2769659fff0cd0acec2454259fe94819125e2fa89fb4c792b274237e401"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep1.queries.csv",
+    "bytes": 59447,
+    "sha256": "05fd72738b7d930275774ade4bf2aeef71b2b709e6015a45c72410830aefb7ce"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep1.summary.json",
+    "bytes": 2759,
+    "sha256": "cce4546d4286de5d809bab21b9620e26e18e2d0363c20a5f654eb0b380995d92"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep2.queries.csv",
+    "bytes": 59570,
+    "sha256": "f580733004f22c0e04e7386f20cdb43f1af28812c6e7f6510bec3ca0ece83eae"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep2.summary.json",
+    "bytes": 2751,
+    "sha256": "b4c83836fb552f4979fe7e162b2db00873c4363117e022d5a16c7ab41ef3ca3f"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep0.queries.csv",
+    "bytes": 59371,
+    "sha256": "022c73d65aacb630a127454c7398e3d2f399d73456f2d6f10a1e49648fe3beaa"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep0.summary.json",
+    "bytes": 2743,
+    "sha256": "c97ee6ebc4703dc12633c86754e1fe96967abf36b670b6e7607fef8a0659829d"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep1.queries.csv",
+    "bytes": 59182,
+    "sha256": "7e0b06b30cecb8023e30c375ab921e4b902673fabe9d1b5dc60c1a8725f8eb17"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep1.summary.json",
+    "bytes": 2742,
+    "sha256": "78ad15ce46ef758c5980af2e86d70cae1cbe801d993775268dfbf0339600550c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep2.queries.csv",
+    "bytes": 59191,
+    "sha256": "2175dcd26784d8ef8f071a043d1288ad827dda6454ddae9bfc9e04520aae5776"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep2.summary.json",
+    "bytes": 2757,
+    "sha256": "9dc6d367fc048035fa4c6c51125d9febc694114c66be97049fbc2d1354bda186"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/H-off-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep0.queries.csv",
+    "bytes": 59417,
+    "sha256": "70aa19ae81a8becefca024d001f5173e854b66e277b60b72f588405cefaa7948"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep0.summary.json",
+    "bytes": 2748,
+    "sha256": "51aad7791bae5b3da88dccf9351aa29a02cfcb454d7c893f21b0229dca47ad03"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep1.queries.csv",
+    "bytes": 59157,
+    "sha256": "06b85e618e0612e42e1461b7ed51accef80907e0e72a829847e14e148ee56462"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep1.summary.json",
+    "bytes": 2775,
+    "sha256": "eb63bba87935596f918bfbbd430bcd4c0d8f0a671602e27dcd236ab5d30df339"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep2.queries.csv",
+    "bytes": 59247,
+    "sha256": "44800d6bdd5e87d5f952d7e777b170e5a002e249ba6c08015fe431eb777ad975"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep2.summary.json",
+    "bytes": 2764,
+    "sha256": "6e485917860ed9901a39b5741464125c1e6a66269d9508fcbb043c1cf67e13fd"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep0.queries.csv",
+    "bytes": 59093,
+    "sha256": "eae3f66548033a57fad9329233aa8fbbaad3116dc0cb40b1232375f8201d4620"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep0.summary.json",
+    "bytes": 2764,
+    "sha256": "c275d85993dde3e9cfc8e03060323cddbe4c85cd327661b466f36ea264b2100d"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep1.queries.csv",
+    "bytes": 58706,
+    "sha256": "fbf6741aa07559a9e7e8b58ce0ce0e213b9c539d6d1d6ce811e08aee97c3761a"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep1.summary.json",
+    "bytes": 2775,
+    "sha256": "bb6c4c23565597d4c4dc1dff3bc403e0884c58c747aebe7c66d16e82274aa799"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep2.queries.csv",
+    "bytes": 58851,
+    "sha256": "1d26d5f447e0074d113c71ac039c112076b629e052a4a7927f2c90877991a8b0"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep2.summary.json",
+    "bytes": 2776,
+    "sha256": "4e1fab1cdd0755fdc8c25ab71f00422089d01d1316b97e95c54af8a35f7269e1"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-aware-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep0.queries.csv",
+    "bytes": 61253,
+    "sha256": "a214631661ebad5423f71d6dba99475dbefe33f9a226bb2504b81b9d4c36b905"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep0.summary.json",
+    "bytes": 2781,
+    "sha256": "87cb44e6166fe77c848756364ed2029ec16ec6e1862255a0cdd2a13a8dea870c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep1.queries.csv",
+    "bytes": 61147,
+    "sha256": "881ec64001c872e276d1ba33ec872aaf1275390edc3ec20edf152adda35b8131"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep1.summary.json",
+    "bytes": 2767,
+    "sha256": "e6f66c5a4e2b22d381e4540f25d01ca02edabd65c2674d3c6f77f86b04ae9ec8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep2.queries.csv",
+    "bytes": 61153,
+    "sha256": "a3fa226fb70d53cbbbf3b91a21c144aa9b30d9991a8da0d1513d770a84a95b07"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep2.summary.json",
+    "bytes": 2770,
+    "sha256": "c7fbcd7a7cee76ee9bf3bb2364273932e7341eb73820e4aa1c83fbd01999cc13"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep0.queries.csv",
+    "bytes": 61238,
+    "sha256": "fa247ecdc1ee061b55df17cfc5ee09c512e2817531bc1de3d4def46b60e72d46"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep0.summary.json",
+    "bytes": 2765,
+    "sha256": "62d50040c5d4b2f2ec3796e4343b0740715244256dd0ccaad5cc38f26ddc508e"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep1.queries.csv",
+    "bytes": 61319,
+    "sha256": "21a3730b73c20bbb75046e60ade156c21848fe2de7d2be85458402660e10009b"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep1.summary.json",
+    "bytes": 2774,
+    "sha256": "b2e8b1e87ddc41ad28792d3f61f885eb878027fe516bdc5d62113358ce9be545"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep2.queries.csv",
+    "bytes": 61297,
+    "sha256": "3b1d8c6d1fe2a253a681bb53d6f4786b973f86cafd375a4ebb4b0265117f63d5"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep2.summary.json",
+    "bytes": 2781,
+    "sha256": "5201f302564c91819a70894c6f26b415a27929da7f5b382f0871d18fd279a43a"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-cap-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep0.queries.csv",
+    "bytes": 57679,
+    "sha256": "43f9c325a51e01b95c586dff2dd0f052721563d24a12dc3cfae0ee91b4767adc"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep0.summary.json",
+    "bytes": 2744,
+    "sha256": "8a808de3eb6b9e1ea7691e158300dd75d2632d0691af10fba04337feefe4d4fa"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep1.queries.csv",
+    "bytes": 58125,
+    "sha256": "b352b8919bea94950e475405658d65e233939c3b1a28e3fda372d4cd65e8ff8c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep1.summary.json",
+    "bytes": 2749,
+    "sha256": "c2124b435adc371b8fd56723f292bc06e8629b453a3e9b8cc84c66d19f118db4"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep2.queries.csv",
+    "bytes": 58009,
+    "sha256": "acf99ee5b02406e6ba086603723c7d2402b7559e88c23c2fa0cd476c14ee53f9"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep2.summary.json",
+    "bytes": 2752,
+    "sha256": "38fc24a3b34aca1241e24a2484c7207298bcaa05110c3a803162033a6c72500d"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep0.queries.csv",
+    "bytes": 57626,
+    "sha256": "2901a7b648b0ec325d990a095ef3fbc0d1de9fb9491fbff4b4fac64221e44376"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep0.summary.json",
+    "bytes": 2752,
+    "sha256": "3cc11f192957b7e68e042415cfb3497515934c59ab15a481e00db8b36238379c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep1.queries.csv",
+    "bytes": 57909,
+    "sha256": "6a386e85c8a36a72aee4888054abd3bca3e25f78c3420289e8fdc2d0f329c825"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep1.summary.json",
+    "bytes": 2750,
+    "sha256": "e04156d8976bc6d5dbf8edea6e0bff5fc42660cd3a7fea124ced1d325c8f733d"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep2.queries.csv",
+    "bytes": 57698,
+    "sha256": "8c72952077b68083e0940b987ad72233dc132a6a1372dc250918ed07849f1e35"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep2.summary.json",
+    "bytes": 2759,
+    "sha256": "5c595d0d4c5399b52823cb82631e1ed6da6665a1024b56474c039dea4670c4db"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/sift/static/runs/U-off-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/events.trace",
+    "bytes": 5652,
+    "sha256": "1f68988f077d526891ed296b23c41de38bf4a8573bfc4cedb5993d998811ea30"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/oracle.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/oracle.queries.csv",
+    "bytes": 25755,
+    "sha256": "633a549bf825568e25074fc213c7fe33f188f8eb1f817c24a4b9e3fe348b1ec8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/oracle.summary.json",
+    "bytes": 2536,
+    "sha256": "ad9611fe0d6c46d250172cb15af7f4ed2518aaf8464851de92034dec4bf6e002"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/oracle.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep0.queries.csv",
+    "bytes": 37991,
+    "sha256": "29db8615b43d0ff75995543b471e44b3a13ff295c69c5cb5c8f299f31a375d85"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep0.summary.json",
+    "bytes": 3764,
+    "sha256": "11c4f0fe82f65747e9c0aee54fe6a45a04a83ee07b47ebcdd68cf68089227ca6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep1.queries.csv",
+    "bytes": 38009,
+    "sha256": "bddf7e5b61052f6c4557645c584e43ebdfbed12fb9366b330e5057467bcd41bc"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep1.summary.json",
+    "bytes": 3762,
+    "sha256": "c6d0c889756aeb2b1ebdb9faa90e8618ecb65a408b5ef18208c8ad7e213b72ba"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep2.queries.csv",
+    "bytes": 38009,
+    "sha256": "03801552309d8bfd435d4dd22ee23319360d6841627f665ab45bdf1c57eaa792"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep2.summary.json",
+    "bytes": 3762,
+    "sha256": "2f345414b209736685238467fc2683a65249d025b66eee5db345b9217681fabc"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef15-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep0.queries.csv",
+    "bytes": 37999,
+    "sha256": "89b301534b5a1aa2d0a9f593b022beacef36101a4897fbfc05133fa0d83afa72"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep0.summary.json",
+    "bytes": 3765,
+    "sha256": "0b864243b4f8be077064af309187e498576e17fdb9ed791be322e40a3dc94f0f"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep1.queries.csv",
+    "bytes": 38039,
+    "sha256": "7dbfcbd1ce44b0bfc299b3bdb5143689322274889c0c9ac508929cd9773002e3"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep1.summary.json",
+    "bytes": 3766,
+    "sha256": "a7514506c9c6d15ba6af3f4f16aa9788b1e12e77692c09c873e227f532754d86"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep2.queries.csv",
+    "bytes": 38006,
+    "sha256": "b482085be8aecf13645096fab5c9118cd8db4c7e6b9f961ba712584fad86fca6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep2.summary.json",
+    "bytes": 3766,
+    "sha256": "e901097d79e173d8f946f808c495095ecb237b364318dcf67d162ed5e3b8b0ac"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-graph-ef20-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep0.queries.csv",
+    "bytes": 37437,
+    "sha256": "233eb2976770ef9907719797354538097554e6f2c239eca74539fe3be85d39c9"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep0.summary.json",
+    "bytes": 3760,
+    "sha256": "e804c9bfc032fcb502d5d0f8376a127c7671dad2957cdefce12e2f167a121635"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep1.queries.csv",
+    "bytes": 37435,
+    "sha256": "08a3872cd7ff8c403591665c52b2c6657b1e54748a088851096c4238968193bf"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep1.summary.json",
+    "bytes": 3758,
+    "sha256": "e4a8ed814b6e3f421806c85384e4ec66a7425015c7d5889a18ac049f95763720"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep2.queries.csv",
+    "bytes": 37445,
+    "sha256": "07252f44070eb6745dcb3a37d760c2f417d92c412c1baed49e412a569ea03df7"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep2.summary.json",
+    "bytes": 3760,
+    "sha256": "a7d64c8c0bebb0e3b5121c314878dc1323b6a80bac105c27582a2674d435ba53"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef15-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep0.queries.csv",
+    "bytes": 37476,
+    "sha256": "58e05186addba4607f4254166568af093b6894a9752b988c1aae1dc62776a98c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep0.summary.json",
+    "bytes": 3760,
+    "sha256": "c5881ebb0865e0775686fdb278f5b96543e43e20941a902d496ff215274f9fba"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep0.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep1.queries.csv",
+    "bytes": 37428,
+    "sha256": "9c18e5d523995eff34297993b751247493fb36e8e4220e8483918380c932f47c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep1.summary.json",
+    "bytes": 3759,
+    "sha256": "bbbaf2706edfb55d0f9760423f5653b5ef6b5c33504bfb07c4809376444a59a8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep1.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep2.queries.csv",
+    "bytes": 37458,
+    "sha256": "f632a7db1358a5858aa6008c1373188046dfcfba9b8106cf6d9b05dbd67c1c4e"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep2.summary.json",
+    "bytes": 3760,
+    "sha256": "98aaf67ecf7677c35ee89b990edeb68d84cb15da8c73332474d16201cf82530c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/A-hybrid-reference-ef20-rep2.updates.csv",
+    "bytes": 407,
+    "sha256": "69124ad57b42327dd8ff0d16bfd7365b068e813d4085ee57a7ba28d434af6287"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep0.queries.csv",
+    "bytes": 54174,
+    "sha256": "fa42107a833935574f10970b6750ddc8f8108cdcd8d9e118467d1cb0a83ed453"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep0.summary.json",
+    "bytes": 2729,
+    "sha256": "b424d553623b10c55366079874ccdf474dd560d54a57ab5180a611377c4db1bb"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep1.queries.csv",
+    "bytes": 54331,
+    "sha256": "3d07b9f46ed63cc1cf972a37681ff4cfd536b47cb8dd0eb0084156560a925d07"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep1.summary.json",
+    "bytes": 2710,
+    "sha256": "dd41096a35622a9f468c41d6ea6508a5d01bc611643f4520183e7f2157c722c1"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep2.queries.csv",
+    "bytes": 54221,
+    "sha256": "1594c6493fc33a33131b0f2232f4413ca9ce95afafa3c7239d0306d0ab65eaaa"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep2.summary.json",
+    "bytes": 2720,
+    "sha256": "9624995c0a44af10dd3df29571f887c04708bbc61076de3edaf4fd7cf765c7bb"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/Exact-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep0.queries.csv",
+    "bytes": 56002,
+    "sha256": "9c147303bd9f4917631bcbde7d34cb92cac0d9bbb40a681bd2e71dad543f3cfe"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep0.summary.json",
+    "bytes": 2773,
+    "sha256": "16aaa3f108a9d63ed569c85fbe50ad80a07ca44dd9641fed23ff5e49c73f6163"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep1.queries.csv",
+    "bytes": 55418,
+    "sha256": "aaf39f1c944c1dd15e7cad1e92a1d44f158f85484164f36c17121fdc598910ec"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep1.summary.json",
+    "bytes": 2733,
+    "sha256": "0a9cd599f5e1644c62e4bb9a464a3ce1a054f990b8b10b3a2e0ccc616769ba4e"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep2.queries.csv",
+    "bytes": 55447,
+    "sha256": "4e7bf76517c0ae1e701b70ec364c4d47fc4f867bd5748f1928fd812a81b372a7"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep2.summary.json",
+    "bytes": 2767,
+    "sha256": "5e5225d80298418e12ea03eac1aab29dedeb201118035004b3f6ba01938edb91"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep0.queries.csv",
+    "bytes": 55713,
+    "sha256": "80ee850f8e4f5a447745e8ac7c9d2c6f5312177f17b92e45275a66c9e503a3fa"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep0.summary.json",
+    "bytes": 2767,
+    "sha256": "8bdf2c047e40d8a32b2a4def6c3bd264bac2e28ffe473a3c9e9d599d8a7d8805"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep1.queries.csv",
+    "bytes": 55658,
+    "sha256": "85bb7beb44f19edb25e3d784450fc713838fefb35493e62b311e22216eb8bc82"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep1.summary.json",
+    "bytes": 2767,
+    "sha256": "d1170a7d1e6a5e811ccef375e635a39acf94bc43cb59010546178d6fbc928a36"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep2.queries.csv",
+    "bytes": 55650,
+    "sha256": "76abd90f78da1b648b79423142155dbab1b3eb788c69aab06a89c744b8fc247b"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep2.summary.json",
+    "bytes": 2778,
+    "sha256": "f51516f036a3dc6af9531b175e5a2491863dba8532d69b6b847642b829765f15"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-aware-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep0.queries.csv",
+    "bytes": 58452,
+    "sha256": "a2c93a0bb8a1ea9cb4d830c9e05984d9301b8040198a79ca5d9f2873f4dd664f"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep0.summary.json",
+    "bytes": 2780,
+    "sha256": "47d36a0c3caae662028b2baa894699813dcb44aba5a6216c0c8301bf56780a14"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep1.queries.csv",
+    "bytes": 58759,
+    "sha256": "863ce26139f0138fa6b6b73e12dd083eb3de97bf21ca0f5177b69707e6eac34a"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep1.summary.json",
+    "bytes": 2775,
+    "sha256": "1a594d2fbf532f6c87ca1c5eca2a36938ca4547287c28169ecdc71e0e440ec40"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep2.queries.csv",
+    "bytes": 59151,
+    "sha256": "49a8a5b64a7d9779aa8996266fc9b60497f99dd3cf876297f978f61dc47bf9f1"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep2.summary.json",
+    "bytes": 2760,
+    "sha256": "093c9ac188968067c45c1def5380e273e8c8532716295a531673c0807dfb16f6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep0.queries.csv",
+    "bytes": 58890,
+    "sha256": "88afbe5538f0f9d29a07094f29f565edfebde7cd3a2cbf515d9b1eb1397bc484"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep0.summary.json",
+    "bytes": 2770,
+    "sha256": "d8f5cd1ef27a3f05352bf2c20440d95bb110aaecb2709e951bb28f091121ecfe"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep1.queries.csv",
+    "bytes": 58958,
+    "sha256": "e3052ebd0c66360b2eae11d96445d1b5a057c8289f4f134bb97c77b66e32b0f0"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep1.summary.json",
+    "bytes": 2781,
+    "sha256": "9922698f51b6fdf404a6d7eed4dcd47f6ee37a66ed4c6c815dd889e574de4477"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep2.queries.csv",
+    "bytes": 59248,
+    "sha256": "5a860cafd840127ec3a35a2488380f7fa8b890be6e9d93c0a2b2fee9af2b9e2f"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep2.summary.json",
+    "bytes": 2774,
+    "sha256": "8dd3bf033324e8a6aef11d34f01a749f6ef178b7f6234946f17dfb6157d9f3d6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-cap-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep0.queries.csv",
+    "bytes": 55376,
+    "sha256": "4cef17640d6ad6335ecc41d37901f4b76ccd68b0342b4777539cd48b1779a134"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep0.summary.json",
+    "bytes": 2753,
+    "sha256": "74edf14602d390c2d14e2cf774daa7a95216ec0b04da68420d8d2849d759ca9c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep1.queries.csv",
+    "bytes": 55667,
+    "sha256": "c043ed5075387a0e7ff2c968ffb83e3eb425156c019eb3d6873c3adcd8f84dd2"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep1.summary.json",
+    "bytes": 2749,
+    "sha256": "b2ab5daa6a450e66122ff8a0fac227f473101aee2599c95d2e310917a391b2c5"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep2.queries.csv",
+    "bytes": 55737,
+    "sha256": "082aad0dfa283b8d88de90f6d4cd1ccfee5ef0f5d407a8688292d70af87f63bd"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep2.summary.json",
+    "bytes": 2743,
+    "sha256": "402fbd38f892fd843838b2d16a9ec1640dbb3c829c2a5fe76b639b98bd9e8602"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep0.queries.csv",
+    "bytes": 55332,
+    "sha256": "aa9585ce84e43c7fe35684dc04bb167a029ab4f56ab8323e7574acbb127da2b6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep0.summary.json",
+    "bytes": 2735,
+    "sha256": "ec5b64266c132cd27f1a619faf70d20d3a2cf1329661d596f0315a55cadc3399"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep1.queries.csv",
+    "bytes": 55586,
+    "sha256": "4224b6f6aa4fd19f872e3af2b67662d736b9fbd2d9a6ff0c5c80ce99d2017611"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep1.summary.json",
+    "bytes": 2751,
+    "sha256": "6debdf2b31cb6753ec25091955e64ff691a35dea64a514eae75df3b02c50b65c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep2.queries.csv",
+    "bytes": 55683,
+    "sha256": "04b677fb22882b5e97f7d5f58116fcf3b4376a1440021b7b9f6042bd300cdf12"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep2.summary.json",
+    "bytes": 2759,
+    "sha256": "9f2464a56cd66c51354c2e49deded62424b1c13dfb677a853fefd15ebf15a5af"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/H-off-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep0.queries.csv",
+    "bytes": 55298,
+    "sha256": "56e672e8abf4f1be3eb91832348136f524fac8466657f2cb1df60b0b0ae4bb2f"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep0.summary.json",
+    "bytes": 2755,
+    "sha256": "44464311da5065cba84e09af1adc29184f9aac49466727b9165b34765863c070"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep1.queries.csv",
+    "bytes": 55632,
+    "sha256": "7d25392c6273909efe6592c5af3c69adb8f2049f41549bd2c18fe9f5357914d6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep1.summary.json",
+    "bytes": 2777,
+    "sha256": "86796e77dc9e5f3980762f68373f64d99291caf0c04fd58b22d84b66921d0cdd"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep2.queries.csv",
+    "bytes": 55059,
+    "sha256": "c5e48905e300996473b8c90468ff1688d6510a952c390cff8ccf7f3e259172a5"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep2.summary.json",
+    "bytes": 2778,
+    "sha256": "ea99e27943530ee11f0f842dc0f2254f79c8bdcea124209046ad8150010c8073"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep0.queries.csv",
+    "bytes": 55232,
+    "sha256": "c824bbc8dd5c810dc3107c00d837d7e8b71eac317ff1cb9084c000bd0c23f023"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep0.summary.json",
+    "bytes": 2758,
+    "sha256": "fbf3af786d0dd987959791290e144b638cb563fcdbfa8a0d401b4171f88dc6dd"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep1.queries.csv",
+    "bytes": 55185,
+    "sha256": "3fec9743acb3116c2d1bcf4d7fda079a3232ed3bf8e152ad753406c3edf41ce1"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep1.summary.json",
+    "bytes": 2776,
+    "sha256": "af47c7190967e5615223458411e4e48dc26ced3e9b705d682f5402932a9db16c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep2.queries.csv",
+    "bytes": 55120,
+    "sha256": "8c0bbe1a411db48750eace8a388fec4669244cd732279416dea5d7691431965f"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep2.summary.json",
+    "bytes": 2759,
+    "sha256": "4595d73326bdca387f0878bb6a1b1e7d53a4433226a1ddd4bf37b9adb583fac4"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-aware-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep0.queries.csv",
+    "bytes": 57885,
+    "sha256": "73a74f39494f5d61923fad72e56cad5f6cc6d84828f4c78af827be565bbf4aff"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep0.summary.json",
+    "bytes": 2763,
+    "sha256": "e70e8ad5330904e8cf219cbd3be739c9a5061fd662c849fe767c3a08fd420a57"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep1.queries.csv",
+    "bytes": 57580,
+    "sha256": "142c1afc9f721229bf4c38033425017c2e4469ff1b985a997052944aa4b44666"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep1.summary.json",
+    "bytes": 2775,
+    "sha256": "98cbf7b1737829f1092da403b1872ae70d654595b5908c00d33f554e6b62e1b3"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep2.queries.csv",
+    "bytes": 58040,
+    "sha256": "6040f32a4b0e74fcba8652e9d4e4d2d45e5d4f61a4e188f8618814553e442425"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep2.summary.json",
+    "bytes": 2781,
+    "sha256": "55264d47e5db044efc7347524505578eaf80eeea299371601c4dce1e125fa63c"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep0.queries.csv",
+    "bytes": 57725,
+    "sha256": "fc8cafe9419431ff75999a1d88d4a6e42474d4e142c11b2796d5fc259897fead"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep0.summary.json",
+    "bytes": 2775,
+    "sha256": "f31629780eff792666217db2af9dac35bb9829e10104b594b148f97c24fcfb43"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep1.queries.csv",
+    "bytes": 57615,
+    "sha256": "088c989f64853994a77b6a6d013bfe9033deb428a44e15481e89e823e61f07f7"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep1.summary.json",
+    "bytes": 2775,
+    "sha256": "c146b401c6430ade01c29b0ea912ac17c5883dfbc62bdec918e80327a4ce4d7b"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep2.queries.csv",
+    "bytes": 58039,
+    "sha256": "ceeec4f74f6e01f5864c7f1179bc87337958a409304cbd73c66cf77a82ca3265"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep2.summary.json",
+    "bytes": 2775,
+    "sha256": "ae053a06fc5c46b8e85e7f560871cfeb2da9c30e4dcd8a2bf353f9780d985b8a"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-cap-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep0.queries.csv",
+    "bytes": 54337,
+    "sha256": "0d0b8491057484a0b4642d49479df0d053c585eaca3d212307aa4742cfdbfca8"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep0.summary.json",
+    "bytes": 2757,
+    "sha256": "eb73d7c7e073ac33752d988cee5bcdba4a298e50eae330342a12fd48b8e86c27"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep1.queries.csv",
+    "bytes": 54439,
+    "sha256": "a54ef0377bb4c6e2daf3bf6f88874006b5e036f5cf7de27e82460e86306ca944"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep1.summary.json",
+    "bytes": 2748,
+    "sha256": "6fc35dce1bff99c648d558a2455d1ed002cc5c40cedc16c92211ebc8738053a6"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep2.queries.csv",
+    "bytes": 54469,
+    "sha256": "7f26cc31b6ac660ef9921576257d87622717e8cbcb464516cf1ee9e66a14bfd7"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep2.summary.json",
+    "bytes": 2759,
+    "sha256": "10c7dd4caccdc3433edc32b17a49786ba4d90c331503182cf3c33b32368aecc1"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef15-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep0.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep0.queries.csv",
+    "bytes": 54343,
+    "sha256": "7d5d4f2510874d70ece337dfd089989c856d0fc5c747be159db119da3b1d0ff4"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep0.summary.json",
+    "bytes": 2753,
+    "sha256": "c1cf041d34d2a31960d59de34c4cf730f3755ac2c50743b4be7a7d3d0b792a1a"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep0.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep1.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep1.queries.csv",
+    "bytes": 54563,
+    "sha256": "d9e115468efe6fab0a92434b249b59a6ae7b380b22f8dfe73ae8790569f43237"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep1.summary.json",
+    "bytes": 2759,
+    "sha256": "112a38ea6325d96cbad670b085e9300fdc6d5dfc8261ff26e9ce699917d34c13"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep1.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep2.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep2.queries.csv",
+    "bytes": 54469,
+    "sha256": "d10d08e874f43ffc00bfaac13132ccc2e66a2d982326c7336a7d1ffaa856530b"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep2.summary.json",
+    "bytes": 2743,
+    "sha256": "e59017ac2e4414be89cfb1c1e07089911ffced61f821777fc2ccb2c987c792f9"
+  },
+  {
+    "path": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-static-run1/wiki/static/runs/U-off-ef20-rep2.updates.csv",
+    "bytes": 180,
+    "sha256": "4ee78b75ec06d68a88a36a13c30336eece742b9d846baa9048b8d1177b28f830"
+  }
+]

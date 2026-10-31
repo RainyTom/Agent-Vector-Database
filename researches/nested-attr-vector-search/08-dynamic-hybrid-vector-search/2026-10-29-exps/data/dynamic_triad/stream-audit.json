@@ -1,0 +1,63 @@
+{
+  "same_update_stream_across_ratios": [
+    {
+      "dataset": "sift",
+      "rate": 0.1,
+      "ratios_checked": 3,
+      "identical_updates": true
+    },
+    {
+      "dataset": "sift",
+      "rate": 0.2,
+      "ratios_checked": 3,
+      "identical_updates": true
+    },
+    {
+      "dataset": "sift",
+      "rate": 0.5,
+      "ratios_checked": 3,
+      "identical_updates": true
+    },
+    {
+      "dataset": "sift",
+      "rate": 0.8,
+      "ratios_checked": 3,
+      "identical_updates": true
+    },
+    {
+      "dataset": "wiki",
+      "rate": 0.1,
+      "ratios_checked": 3,
+      "identical_updates": true
+    },
+    {
+      "dataset": "wiki",
+      "rate": 0.2,
+      "ratios_checked": 3,
+      "identical_updates": true
+    },
+    {
+      "dataset": "wiki",
+      "rate": 0.5,
+      "ratios_checked": 3,
+      "identical_updates": true
+    },
+    {
+      "dataset": "wiki",
+      "rate": 0.8,
+      "ratios_checked": 3,
+      "identical_updates": true
+    }
+  ],
+  "uniform_rate_prefix_checks": 8,
+  "independent_regeneration": {
+    "config_id": "sift-d3-uniform-mixed-r0p2-qu0p25",
+    "matches": {
+      "trace_sha256": true,
+      "data_sha256": true,
+      "data_file_sha256": true,
+      "update_stream_sha256": true
+    }
+  },
+  "all_pass": true
+}

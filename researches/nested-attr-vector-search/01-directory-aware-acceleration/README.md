@@ -1,15 +1,52 @@
-# Directory Aware的按需块级范围编译与执行加速
+# Directory-Aware 目录约束向量检索：研究入口
+
+## 存放与执行约定
+
+- 当前研究的协议、基线调研、问题定义、方案、理论、检索日志和实验记录，**统一放在 `researches/nested-attr-vector-search/01-directory-aware-acceleration/` 内**；不再在 `nested-attr-vector-search/` 根目录或其他方向新增本方向正文。
+- 每日记录使用 `<YYYY-MM-DD>-exps/report.md`，汇总及原始小数据放同目录 `data/`，命令、构建记录和复现说明放 `experiments/`。图片放本方向 `assets/` 或对应实验目录；既有带日期复现目录不改名。
+- 源码仍放 `codes/directory-aware-vector-attr-search/`；大数据、索引和临时产物沿用忽略目录，不混入文档。上级 `index.md` 和跨主题知识索引只保留导航或关联。
+- 原始 `.log`、`.time.txt` 和 `.command.json` 保留运行时路径，不改写历史命令；可执行脚本、当前命令和文档链接使用迁移后的路径。
+- **后续实验由用户执行。** 助手先给实验目的、完整命令、资源约束、输出位置及判定标准，不自行启动建图、检索或维护实验。
+- **探索阶段离线准备优先用 GPU，正式搜索计时保持 CPU。** 训练、批量编码、输入准备和受支持的构图分别记录 GPU/传输/总离线成本；现有冻结 GT 不重算。GPU-built 新图与原 CPU HNSW 分开标识，不自动视为同一图实例。
+
+## 当前工作与证据
+
+| 内容 | 入口 | 状态边界 |
+|---|---|---|
+| TrieHI 论文 | [原文笔记](paper-notes-2606.16903.md) | 既有方法与复现偏离 |
+| 研究问题、两类基线与优化路线 | [2026-10-27 方案报告](2026-10-27-hierarchical-attr-vector-search-report.md) | 历史结果不与修正后的全量结果直接连线 |
+| 真实背景与问题定义 | [CCS 数据事实](2026-10-27-ccs-background-and-data.md)、[CCS 形式化定义](2026-10-27-ccs-problem-definition.md) | 区分 DAG 与单绑定树 |
+| 完整 WIKI 基线复现 | [启动日记录](2026-10-27-exps/report.md)、[复现协议](2026-10-27-exps/experiments/reproduction.md) | 原始输入、命令及日志保留 |
+| 当前实验与 HLG 历史进展 | [2026-10-28 报告](2026-10-28-exps/report.md) | G3 为旧 FAISS/自写距离后端结果；新公平性合同下仅作历史证据 |
+| HLG 定义、证明与局限 | [理论笔记](2026-10-28-exps/hlg-theory.md) | 连通性命题保留；结构、召回、构建和维护实验需在 hnswlib 后端重做 |
+| 基线状态、IGP 量化与离线 GPU | [调研与最小实验设计](2026-10-28-exps/igp-quantization-assessment.md) | IGP VQ + residual SQ 是唯一候选量化路线；FAISS 只允许离线 k-means |
+| **当前主计划与首轮回结果：NodeANN-first + hnswlib** | [2026-10-29 方案](2026-10-29-exps/nodeann-first-hnswlib-plan.md)、[当日报告](2026-10-29-exps/report.md) | B0/B1/B3 已重测（WIKI + SIFT1M 六变体，串行）；D1/D2/D4/D5 确认、D3/D6 否定；B0-WIKI 结构性不可行；下一步 hnswlib 共享图 G1/G2 |
+| 旧效率目标与扫描诊断 | [2026-10-28 记录](2026-10-28-exps/efficiency-target-baseline-gap.md) | run11/run14 与块剪枝是旧后端历史证据，不进入新性能前沿 |
+| 旧索引与搜索总体方案 | [2026-10-28 v1](2026-10-28-exps/index-search-scheme-plan.md) | **已被 2026-10-29 主计划取代**；只保留设计演化记录 |
+| 属性频繁更新下的层级过滤 ANN | [前序核实与窄缝](2026-10-28-exps/dynamic-attribute-updates.md) | **仅动机与补充**，非效率贡献；改名为 A 类，重命名判据 R1–R5 |
+| 检索与前序核查 | [本方向检索日志](search-log.md) | 保留未精读、未核实及新颖性边界 |
+
+## 既有复现与历史问题
+
+- [TrieHI 复现结果](2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-results.md)、[复现协议](2026-10-26-triehi-reproduction/2026-10-26-triehi-repro-protocol.md)、[Fig 7–12 补充记录](2026-10-26-triehi-reproduction/2026-10-26-figures-7to12-completion.md)
+- [选择率诊断](2026-10-26-selectivity-sweep/2026-10-26-selectivity-experiments.md)、[真实数据验证](2026-10-26-real-dataset-validation.md)
+- [问题背景](2026-10-25-problem-background/2026-10-25-problem-background.md)、[历史层级 top-k 定义与朴素基线](historical-hierarchical-topk-notes.md)
+- [商品目录向量连接 Problem Formulation](problem-formulation.md)：独立的 cross threshold join 问题，不等同于当前 DSQ 单查询 top-k。
+
+## 历史诊断（2026-10-26）
 
 > **2026-10-26 选择率诊断。** 在 SIFT100k + CCS 形状层级上测量了属性过滤选择率 $s$ 对精确扫描、FAISS BF-HNSW、post-filter 与目录解析成本的影响：交叉点约 $s\approx0.06$（1M 上左移到约 0.0194），HNSW 维持 r95 的 `ef` 在 100k 约按 $s^{-0.77}$、1M 约按 $s^{-0.67}$ 增长，TrieHI 解析约 1 µs、PE-Online 子树 OR 在高 $s$ 达 933 µs。见[当日报告](2026-10-26-selectivity-sweep/2026-10-26-selectivity-experiments.md)。这是测量诊断，不恢复本方向的独立新颖性主张。补充：cluster 相关谓词下，HNSW 在 $s\le0.3$ 即使 `ef=32768` 也只有 50–87% 召回，随机谓词的 0.06 交叉点不能外推到相关属性；PathSeer filter-aware 基线在 ef≤4096 也未达 r95。但同一可行集把查询移到簇中心后，HNSW 用 ef=32 在 s≥0.03 胜出（召回 98–99.5%），说明决定因素是相关性方向；属性分区 flat 布局与只 gather 可行点的分区布局也都只在 s=0.3 略胜精确扫描。新增选择率动机实验：在 1%–30% 网格上，FAISS BF-HNSW 固定 ef 的召回随 s 崩塌，维持 r95 的 ef 约按 s^-0.60 增长，交叉点约 s≈0.048（100k 扩展网格；7 桶为 0.065；1M 扩展网格约 0.022）；见 [动机实验](2026-10-26-selectivity-sweep/experiments/motivation-selectivity.md)。
 > **补充 IVF 对照（run #97/#100）。** 相同 10 桶随机谓词网格下，FAISS IVF + `IDSelectorBitmap`（nlist=1024）在 SIFT100k 的 5%–20% 胜出，≤1% 为精确枚举、≥25% 为 HNSW；SIFT1M 的 1%/5% IVF 胜出，0.5% 精确，其余由 HNSW/post 胜出。可达前沿几何均值分别 9,903 / 2,367 QPS，不同数据量不可直接比较；原 HNSW-only 独立运行分别 8,254 / 2,196。见[测量报告](2026-10-26-selectivity-sweep/2026-10-26-selectivity-experiments.md)；相关属性和真实标签尚未用 IVF 验证。
 
 > 层级品类与多维筛选共同约束的跨平台向量连接及精确基线见 [Problem Formulation](problem-formulation.md)。下文为原 D0 方案，其“停止独立立项”结论仍然适用。
 
+## 原 D0 方案（历史，未恢复独立立项）
+
 > **2026-10-19 alphaXiv查重决定：停止独立立项。** Curator §4.2已经明确提出按搜索子树执行过滤/临时构建及缓存，物理ID块与批量接口尚不足独立新贡献。 见[逐项审计](../alphaxiv-novelty-audit.md)。下文为查重前方案记录，保留用于前序对照，不是当前实施计划；未断言整份组合已被某一论文完全实现。
 
-状态：D0研究方案，2026-10-19。研究者综合提出，未实现、未测量；新颖性尚未充分排查。[总览与共同评测](../directions.md)。
+原 D0 方案状态（2026-10-19）：研究者综合提出，未实现、未测量；新颖性尚未充分排查。[历史总览与共同评测](../directions.md)。此状态不覆盖上方当前工作表。
 
-## 问题与动机
+### 问题与动机
 
 TrieHI已支持递归与非递归查询，不能再次把Trie解析作为创新。拟优化的具体成本是：范围表达式必须生成多少、在哪种粒度生成，以及ANN仅访问部分ID时能否避免准备未访问区域。原文§V-E的深目录PG遍历开销不全来自scope生成，本方向只优化可隔离的范围及过滤部分。[Directory-Aware §III–V](https://arxiv.org/pdf/2606.16903v1)。
 
@@ -24,7 +61,7 @@ $$
 
 **定义2（块与访问批次）。** 将稳定ID域分成大小b的块 $B_j$，不按DFS重编号。ANN提交候选ID批次 $A_t$，范围执行器准确返回 $A_t\cap S_v$。块可对齐Roaring container或取其子块。
 
-## 方案
+### 方案
 
 **机制一：编译范围计划，按访问块兑现。** 查询固定拓扑/bitmap revision，编译Inc及必要child-Inc负项。首次触及块j时，从三种等价策略中选择：
 
@@ -54,13 +91,13 @@ FilterBatch(plan, ids):
     按原次序返回资格位
 ~~~
 
-## 正确性与成本
+### 正确性与成本
 
 三种策略计算同一批次交集，相同候选顺序下应逐位等价；这不是ANN召回提升定理。重复ID、尾块、空目录、根目录均处理。更新首版用全局epoch失效；旧读者持有旧集合，不能混用新负项和旧缓存。MOVE沿用原系统，不声称只改指针或常数耗时。
 
 若访问t块，至多物化这些块。最坏仍访问全域；表达式测试可能比现成Roaring融合运算更慢。计划、块目录、缓存全部计入总字节。
 
-## 前序与候选创新
+### 前序与候选创新
 
 | 前序 | 已有机制 | 需验证的增量 |
 |---|---|---|
@@ -71,7 +108,7 @@ FilterBatch(plan, ids):
 
 候选贡献是ANN消费轨迹约束下的范围编译器，不是一般缓存。需补查selection vector、向量化表达式执行、sideways information passing和自适应物化是否已覆盖这一决策接口。
 
-## 最小实验与停止条件
+### 最小实验与停止条件
 
 MVP：readonly Inc/ANDNOT接口→块级缓存和阈值→hnswlib C++批量接口。一个参数化runner输出逐查询JSONL，本轮没有实现或结果。
 

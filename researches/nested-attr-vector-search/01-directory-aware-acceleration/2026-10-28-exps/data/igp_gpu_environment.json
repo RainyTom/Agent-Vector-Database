@@ -1,0 +1,33 @@
+{
+  "recorded_date": "2026-10-28",
+  "scope": "Environment inventory only; no GPU computation, index build, encoding or retrieval experiment executed",
+  "gpu_query_command": "nvidia-smi --query-gpu=name,memory.total,driver_version --format=csv,noheader",
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3090",
+    "memory_total_MiB": 24576,
+    "driver_version": "591.86"
+  },
+  "current_cpu_faiss_build": {
+    "evidence": "deps/PathSeer/faiss/build/CMakeCache.txt:304-308",
+    "FAISS_ENABLE_GPU": false,
+    "FAISS_ENABLE_PYTHON": false
+  },
+  "research_python": {
+    "executable": "production/nested-attr-vector-search/work/venv/bin/python",
+    "observed_python_executable_name": "python3.13",
+    "observed_relevant_distributions": {"numpy": "2.5.4"},
+    "absent_checked_distributions": ["torch", "faiss-cpu", "faiss-gpu", "faiss-gpu-cu12", "cuvs-cu12", "cupy-cuda12x"],
+    "note": "Distribution metadata inspection, not an import/runtime capability test; does not assert that no other GPU-capable environment exists"
+  },
+  "policy": {
+    "offline_gpu": ["centroid/codebook training", "batch centroid assignment", "residual encoding and packing", "new-dataset ground-truth preparation", "supported graph construction with provenance recorded"],
+    "online_search": "CPU; retain original squared-L2, exact scope membership, frozen query workload and independent GT",
+    "frozen_gt": "Do not regenerate the existing autoresearch_reference.json",
+    "execution_owner": "User; assistant provides experiment purpose, commands, prerequisites and acceptance criteria"
+  },
+  "limits": [
+    "GPU driver visibility is not proof that an offline GPU toolchain is ready",
+    "GPU build/search speed and peak memory have not been measured",
+    "CAGRA-to-CPU graph export is a different graph construction, not the archived CPU HNSW graph instance"
+  ]
+}
