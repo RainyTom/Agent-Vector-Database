@@ -1,0 +1,16 @@
+{
+  "problems": [],
+  "checks": {
+    "rows": 20400,
+    "exact_rows": 930,
+    "hybrid_exact_rows": 2592,
+    "empty_skipped": 4590,
+    "cap_exact_path_rows": 0,
+    "a_graph_rows": 2400,
+    "distance_split_rows": 0
+  },
+  "measured_runs": 102,
+  "manifest_complete": true,
+  "baseline_definition": "pure direct-owner HNSW; no scan fallback or eligibility planner",
+  "note": "Invariants re-derived from per-query CSVs; no algorithm change."
+}

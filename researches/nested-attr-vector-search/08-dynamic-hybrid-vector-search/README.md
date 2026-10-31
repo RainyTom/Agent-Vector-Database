@@ -4,7 +4,9 @@
 
 ## 当前方案状态（先读这个）
 
-**最新：ef15/20固定小预算重跑（用户纠偏后的正常查询预算）。** [完整报告](../2026-10-30-exps/closure-small-ef-report.md)、[复现/命令](../2026-10-30-exps/experiments/closure-small-ef-reproduction.md)、[48次原始结果与聚合](../2026-10-30-exps/data/closure-small-ef-run1/)。A/U/R/H×15/20×3，未改算法与参数网格：A的macro 0.995～1.000且0.28～0.41ms，H仅0.934～0.953且5.7～12.0ms（同预算慢14～41倍且质量更低）；H/R的expanded在各ef仍几乎相同；`eligible<ef`强制全scope占非空查询20%～52%、占总展开77%～85%；U同样慢，编译占e2e 80%～89%。H未形成有竞争力的质量—时间点。
+**最新（2026-10-31）：资格感知执行＋纯NodeANN审计。** [服务器报告](../2026-10-31-exps/eligibility-server-report.md)、[复现](../2026-10-31-exps/experiments/eligibility-server-reproduction.md)、[静态聚合](../2026-10-31-exps/data/eligibility-static-run1/)、[维护聚合](../2026-10-31-exps/data/eligibility-maintenance-run1/)。102次静态＋36次维护，语义零错误。`E<ef`全scope遍历经cap/hybrid修复（总expanded −98.5%/−98.8%），但H-aware在两个数据集Recall更低、且比U-aware更慢，**无同质量胜出**；A-hybrid-reference反而快于纯图基线。支持执行策略实测，不支持H论文主张。
+
+**前一轮：ef15/20固定小预算重跑（用户纠偏后的正常查询预算）。** [完整报告](../2026-10-30-exps/closure-small-ef-report.md)、[复现/命令](../2026-10-30-exps/experiments/closure-small-ef-reproduction.md)、[48次原始结果与聚合](../2026-10-30-exps/data/closure-small-ef-run1/)。A/U/R/H×15/20×3，未改算法与参数网格：A的macro 0.995～1.000且0.28～0.41ms，H仅0.934～0.953且5.7～12.0ms（同预算慢14～41倍且质量更低）；H/R的expanded在各ef仍几乎相同；`eligible<ef`强制全scope占非空查询20%～52%、占总展开77%～85%；U同样慢，编译占e2e 80%～89%。H未形成有竞争力的质量—时间点。
 
 **前一轮：7654f1e子树闭包可恢复邻接（大预算六臂）。** [完整六臂报告](../2026-10-30-exps/closure-server-report.md)、[冻结任务书](../2026-10-30-exps/closure-server-plan.md)、[复现/输入与SHA](../2026-10-30-exps/experiments/closure-server-reproduction.md)。原实现未改，static共72次：H有效邻接改变，但同ef实际expanded几乎不变；WIKI确认质量不足，SIFT样本内同质量效率失败且独立qidx覆盖不足。两个数据集均未放行dynamic/维护探针，未绕过阶段门。
 

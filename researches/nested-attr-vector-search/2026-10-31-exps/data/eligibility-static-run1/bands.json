@@ -1,0 +1,5182 @@
+[
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.17596,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 599.6881222222222,
+    "expanded_mean": null,
+    "distance_calls_mean": 6115.533333333334,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 394.2392851405623,
+    "expanded_mean": null,
+    "distance_calls_mean": 4208.457831325301,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9985074626865672,
+      0.9985074626865672,
+      0.9985074626865672
+    ],
+    "pair": [
+      0.9985074626865672,
+      0.9985074626865672,
+      0.9985074626865672
+    ],
+    "e2e_us_mean": 178.59228855721395,
+    "expanded_mean": null,
+    "distance_calls_mean": 3133.89552238806,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.1664266666666667,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 565.5960588235295,
+    "expanded_mean": null,
+    "distance_calls_mean": 5866.735294117647,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 408.6809036144578,
+    "expanded_mean": null,
+    "distance_calls_mean": 4356.518072289156,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 208.6587860696517,
+    "expanded_mean": null,
+    "distance_calls_mean": 3513.4925373134333,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.74164,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 41533.6624,
+    "expanded_mean": 5960.0,
+    "distance_calls_mean": 5960.0,
+    "compile_us_mean": 36935.61127777787,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9409638554216867,
+      0.9409638554216867,
+      0.9409638554216867
+    ],
+    "pair": [
+      0.9220985691573926,
+      0.9220985691573926,
+      0.9220985691573926
+    ],
+    "e2e_us_mean": 18373.35236947791,
+    "expanded_mean": 2627.7951807228915,
+    "distance_calls_mean": 3336.578313253012,
+    "compile_us_mean": 16291.123775100437,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9552238805970149,
+      0.9552238805970149,
+      0.9552238805970149
+    ],
+    "pair": [
+      0.9552238805970149,
+      0.9552238805970149,
+      0.9552238805970149
+    ],
+    "e2e_us_mean": 596.510711442786,
+    "expanded_mean": 73.88059701492537,
+    "distance_calls_mean": 926.6716417910447,
+    "compile_us_mean": 453.9685671641791,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.08094,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 40097.23974509804,
+    "expanded_mean": 5717.647058823529,
+    "distance_calls_mean": 5717.647058823529,
+    "compile_us_mean": 35689.51033333342,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9602409638554217,
+      0.9602409638554217,
+      0.9602409638554217
+    ],
+    "pair": [
+      0.9475357710651828,
+      0.9475357710651828,
+      0.9475357710651828
+    ],
+    "e2e_us_mean": 19240.058040160642,
+    "expanded_mean": 2742.385542168675,
+    "distance_calls_mean": 3465.3253012048194,
+    "compile_us_mean": 17082.780012048224,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9626865671641791,
+      0.9626865671641791,
+      0.9626865671641791
+    ],
+    "pair": [
+      0.9626865671641791,
+      0.9626865671641791,
+      0.9626865671641791
+    ],
+    "e2e_us_mean": 753.9410348258707,
+    "expanded_mean": 98.8955223880597,
+    "distance_calls_mean": 1086.7910447761194,
+    "compile_us_mean": 589.8202935323383,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.2518333333333336,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.37377333333333335,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 26751.652400000003,
+    "expanded_mean": 3815.1,
+    "distance_calls_mean": 5267.833333333333,
+    "compile_us_mean": 23563.132400000057,
+    "eligibility_us_mean": 119.2817888888889,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9409638554216867,
+      0.9409638554216867,
+      0.9409638554216867
+    ],
+    "pair": [
+      0.9220985691573926,
+      0.9220985691573926,
+      0.9220985691573926
+    ],
+    "e2e_us_mean": 13066.781341365464,
+    "expanded_mean": 1852.5301204819277,
+    "distance_calls_mean": 3086.397590361446,
+    "compile_us_mean": 11463.00650602412,
+    "eligibility_us_mean": 75.31513654618475,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9552238805970149,
+      0.9552238805970149,
+      0.9552238805970149
+    ],
+    "pair": [
+      0.9552238805970149,
+      0.9552238805970149,
+      0.9552238805970149
+    ],
+    "e2e_us_mean": 649.1030696517413,
+    "expanded_mean": 73.88059701492537,
+    "distance_calls_mean": 926.6716417910447,
+    "compile_us_mean": 445.058,
+    "eligibility_us_mean": 68.6401592039801,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.2599866666666666,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.38952666666666663,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 26899.213009803923,
+    "expanded_mean": 3805.0588235294113,
+    "distance_calls_mean": 5106.823529411765,
+    "compile_us_mean": 23721.751813725554,
+    "eligibility_us_mean": 119.7705294117647,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9602409638554217,
+      0.9602409638554217,
+      0.9602409638554217
+    ],
+    "pair": [
+      0.9475357710651828,
+      0.9475357710651828,
+      0.9475357710651828
+    ],
+    "e2e_us_mean": 13867.6770562249,
+    "expanded_mean": 1958.9156626506021,
+    "distance_calls_mean": 3215.10843373494,
+    "compile_us_mean": 12180.798228915692,
+    "eligibility_us_mean": 77.49624096385543,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9626865671641791,
+      0.9626865671641791,
+      0.9626865671641791
+    ],
+    "pair": [
+      0.9626865671641791,
+      0.9626865671641791,
+      0.9626865671641791
+    ],
+    "e2e_us_mean": 836.7517562189055,
+    "expanded_mean": 98.8955223880597,
+    "distance_calls_mean": 1086.7910447761194,
+    "compile_us_mean": 600.3670298507462,
+    "eligibility_us_mean": 68.26027860696517,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.1670733333333334,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.30217333333333335,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 40.98095555555556,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 3.5,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 39.28321111111111,
+    "eligible_scan_us_mean": 0.7958444444444445
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 46.876883534136546,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 131.55421686746988,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 35.484220883534135,
+    "eligible_scan_us_mean": 10.471807228915663
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9552238805970149,
+      0.9552238805970149,
+      0.9552238805970149
+    ],
+    "pair": [
+      0.9552238805970149,
+      0.9552238805970149,
+      0.9552238805970149
+    ],
+    "e2e_us_mean": 644.9209701492537,
+    "expanded_mean": 73.88059701492537,
+    "distance_calls_mean": 926.6716417910447,
+    "compile_us_mean": 469.86470149253734,
+    "eligibility_us_mean": 43.75158706467662,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.2770333333333332,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.31592666666666663,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 52.820137254901965,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 5.264705882352941,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 50.300254901960784,
+    "eligible_scan_us_mean": 1.2734313725490196
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 56.76099598393574,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 131.55421686746988,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 44.496269076305225,
+    "eligible_scan_us_mean": 11.150453815261045
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9626865671641791,
+      0.9626865671641791,
+      0.9626865671641791
+    ],
+    "pair": [
+      0.9626865671641791,
+      0.9626865671641791,
+      0.9626865671641791
+    ],
+    "e2e_us_mean": 872.9275024875623,
+    "expanded_mean": 98.8955223880597,
+    "distance_calls_mean": 1086.7910447761194,
+    "compile_us_mean": 637.7834179104478,
+    "eligibility_us_mean": 53.11998507462687,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.0785799999999999,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 43559.340033333334,
+    "expanded_mean": 5960.0,
+    "distance_calls_mean": 5960.0,
+    "compile_us_mean": 38960.15447777778,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9373493975903614,
+      0.9373493975903614,
+      0.9373493975903614
+    ],
+    "pair": [
+      0.9173290937996821,
+      0.9173290937996821,
+      0.9173290937996821
+    ],
+    "e2e_us_mean": 19436.166032128513,
+    "expanded_mean": 2627.7951807228915,
+    "distance_calls_mean": 3325.0963855421687,
+    "compile_us_mean": 17353.87017269077,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9388059701492537,
+      0.9388059701492537,
+      0.9388059701492537
+    ],
+    "pair": [
+      0.9388059701492537,
+      0.9388059701492537,
+      0.9388059701492537
+    ],
+    "e2e_us_mean": 863.4813084577114,
+    "expanded_mean": 74.25373134328358,
+    "distance_calls_mean": 742.820895522388,
+    "compile_us_mean": 741.9372835820895,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.1013333333333335,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 42229.945823529415,
+    "expanded_mean": 5717.647058823529,
+    "distance_calls_mean": 5717.647058823529,
+    "compile_us_mean": 37733.421725490225,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9566265060240965,
+      0.9566265060240965,
+      0.9566265060240965
+    ],
+    "pair": [
+      0.9427662957074722,
+      0.9427662957074722,
+      0.9427662957074722
+    ],
+    "e2e_us_mean": 20490.881445783132,
+    "expanded_mean": 2742.421686746988,
+    "distance_calls_mean": 3454.0361445783133,
+    "compile_us_mean": 18278.430891566277,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9492537313432836,
+      0.9492537313432836,
+      0.9492537313432836
+    ],
+    "pair": [
+      0.9492537313432836,
+      0.9492537313432836,
+      0.9492537313432836
+    ],
+    "e2e_us_mean": 1165.1766915422884,
+    "expanded_mean": 99.16417910447761,
+    "distance_calls_mean": 898.3432835820895,
+    "compile_us_mean": 1008.903303482587,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.3246266666666666,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.4033466666666667,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 28040.074666666667,
+    "expanded_mean": 3815.1,
+    "distance_calls_mean": 5267.8,
+    "compile_us_mean": 24844.7772666667,
+    "eligibility_us_mean": 126.33558888888889,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9373493975903614,
+      0.9373493975903614,
+      0.9373493975903614
+    ],
+    "pair": [
+      0.9173290937996821,
+      0.9173290937996821,
+      0.9173290937996821
+    ],
+    "e2e_us_mean": 13855.453658634537,
+    "expanded_mean": 1852.5301204819277,
+    "distance_calls_mean": 3074.9036144578313,
+    "compile_us_mean": 12259.590690763065,
+    "eligibility_us_mean": 74.6577751004016,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9388059701492537,
+      0.9388059701492537,
+      0.9388059701492537
+    ],
+    "pair": [
+      0.9388059701492537,
+      0.9388059701492537,
+      0.9388059701492537
+    ],
+    "e2e_us_mean": 922.6954129353234,
+    "expanded_mean": 74.25373134328358,
+    "distance_calls_mean": 742.820895522388,
+    "compile_us_mean": 742.3119054726368,
+    "eligibility_us_mean": 63.38376119402986,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.25492,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.36138000000000003,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 28266.694333333333,
+    "expanded_mean": 3805.0588235294113,
+    "distance_calls_mean": 5106.794117647059,
+    "compile_us_mean": 25067.936254901986,
+    "eligibility_us_mean": 117.5563431372549,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      0.9566265060240965,
+      0.9566265060240965,
+      0.9566265060240965
+    ],
+    "pair": [
+      0.9427662957074722,
+      0.9427662957074722,
+      0.9427662957074722
+    ],
+    "e2e_us_mean": 14759.645204819275,
+    "expanded_mean": 1958.9518072289156,
+    "distance_calls_mean": 3203.8072289156626,
+    "compile_us_mean": 13067.017457831336,
+    "eligibility_us_mean": 73.62360240963856,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9492537313432836,
+      0.9492537313432836,
+      0.9492537313432836
+    ],
+    "pair": [
+      0.9492537313432836,
+      0.9492537313432836,
+      0.9492537313432836
+    ],
+    "e2e_us_mean": 1211.1887512437813,
+    "expanded_mean": 99.16417910447761,
+    "distance_calls_mean": 898.3432835820895,
+    "compile_us_mean": 994.6987960199003,
+    "eligibility_us_mean": 65.24628358208956,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.1998066666666667,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.31509333333333334,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 41.69246666666667,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 3.5,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 40.0852,
+    "eligible_scan_us_mean": 0.7533111111111112
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 46.081269076305226,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 131.55421686746988,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 35.80648995983936,
+    "eligible_scan_us_mean": 9.359244979919678
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9388059701492537,
+      0.9388059701492537,
+      0.9388059701492537
+    ],
+    "pair": [
+      0.9388059701492537,
+      0.9388059701492537,
+      0.9388059701492537
+    ],
+    "e2e_us_mean": 915.5108756218906,
+    "expanded_mean": 74.25373134328358,
+    "distance_calls_mean": 742.820895522388,
+    "compile_us_mean": 759.4941791044776,
+    "eligibility_us_mean": 44.264368159203975,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.2525333333333333,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.3075733333333333,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 42.37664705882353,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 5.264705882352941,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 40.311460784313724,
+    "eligible_scan_us_mean": 1.0970196078431373
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 49.56020883534136,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 131.55421686746988,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 37.76205220883534,
+    "eligible_scan_us_mean": 10.837080321285141
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9492537313432836,
+      0.9492537313432836,
+      0.9492537313432836
+    ],
+    "pair": [
+      0.9492537313432836,
+      0.9492537313432836,
+      0.9492537313432836
+    ],
+    "e2e_us_mean": 1248.7107562189055,
+    "expanded_mean": 99.16417910447761,
+    "distance_calls_mean": 898.3432835820895,
+    "compile_us_mean": 1040.6012686567165,
+    "eligibility_us_mean": 49.083895522388055,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 1.2815266666666667,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.31310666666666664,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 45.94545098039216,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 5.264705882352941,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 43.53688235294118,
+    "eligible_scan_us_mean": 1.1044313725490196
+  },
+  {
+    "dataset": "sift",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 47.96678313253012,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 131.55421686746988,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 38.80844979919679,
+    "eligible_scan_us_mean": 7.685718875502007
+  },
+  {
+    "dataset": "sift",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 139.40148756218906,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 2415.8805970149256,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 49.52711940298508,
+    "eligible_scan_us_mean": 88.63838805970148
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.1853733333333333,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      30,
+      30,
+      30
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 520.3172666666666,
+    "expanded_mean": null,
+    "distance_calls_mean": 5024.166666666667,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 342.9025421686747,
+    "expanded_mean": null,
+    "distance_calls_mean": 3422.6746987951806,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      0.9985074626865672,
+      0.9985074626865672,
+      0.9985074626865672
+    ],
+    "pair": [
+      0.9985074626865672,
+      0.9985074626865672,
+      0.9985074626865672
+    ],
+    "e2e_us_mean": 188.29423383084577,
+    "expanded_mean": null,
+    "distance_calls_mean": 2652.9850746268658,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      50,
+      50,
+      50
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.16621333333333332,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      34,
+      34,
+      34
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 494.3558235294118,
+    "expanded_mean": null,
+    "distance_calls_mean": 4829.64705882353,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 353.13587550200805,
+    "expanded_mean": null,
+    "distance_calls_mean": 3566.843373493976,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      67,
+      67,
+      67
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 214.88890049751242,
+    "expanded_mean": null,
+    "distance_calls_mean": 2924.8656716417913,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 0.17596,
+    "distance_calls_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.0,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 0.0,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 297.91696,
+    "distance_calls_mean": 3728.4866666666667,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 7.666666666666667,
+    "graph_calls_mean": 7.1466666666666665,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 3728.4866666666667,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 55.513333333333335,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 450,
+    "macro": 0.9993333333333333,
+    "pair": 0.9992301770592764,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 0.1664266666666667,
+    "distance_calls_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.0,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 0.0,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 319.33769111111116,
+    "distance_calls_mean": 3979.9666666666667,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 7.666666666666667,
+    "graph_calls_mean": 7.1466666666666665,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 3979.9666666666667,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 55.513333333333335,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 450,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 1.7416399999999999,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 10433.029762222222,
+    "distance_calls_mean": 2260.153333333333,
+    "expanded_mean": 1487.0466666666666,
+    "compile_us_mean": 9217.19444888891,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 450,
+    "macro": 0.9473333333333334,
+    "pair": 0.939183987682833,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.08094,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 10982.925777777777,
+    "distance_calls_mean": 2402.9133333333334,
+    "expanded_mean": 1561.6266666666668,
+    "compile_us_mean": 9715.92467111113,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 450,
+    "macro": 0.9613333333333334,
+    "pair": 0.9553502694380293,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 1.2518333333333334,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.37377333333333335,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 7520.21838,
+    "distance_calls_mean": 2121.72,
+    "expanded_mean": 1058.0666666666666,
+    "compile_us_mean": 6541.6561733333465,
+    "eligibility_us_mean": 72.33364666666667,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 12.7,
+    "queries": 450,
+    "macro": 0.9473333333333334,
+    "pair": 0.939183987682833,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.2599866666666666,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.3895266666666667,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 8047.197088888889,
+    "distance_calls_mean": 2264.46,
+    "expanded_mean": 1128.1066666666666,
+    "compile_us_mean": 7008.205626666682,
+    "eligibility_us_mean": 73.37084444444444,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 16.66,
+    "queries": 450,
+    "macro": 0.9613333333333334,
+    "pair": 0.9553502694380293,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 1.1670733333333334,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.30217333333333335,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 314.00324222222224,
+    "distance_calls_mean": 486.70666666666665,
+    "expanded_mean": 33.0,
+    "compile_us_mean": 209.87290000000002,
+    "eligibility_us_mean": 39.17697777777778,
+    "eligible_scan_us_mean": 5.7944,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 12.7,
+    "queries": 450,
+    "macro": 0.98,
+    "pair": 0.976905311778291,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.2770333333333335,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.3159266666666667,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 421.3153688888889,
+    "distance_calls_mean": 558.2266666666667,
+    "expanded_mean": 44.17333333333333,
+    "compile_us_mean": 284.8765933333333,
+    "eligibility_us_mean": 48.34819555555555,
+    "eligible_scan_us_mean": 6.169917777777778,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 16.66,
+    "queries": 450,
+    "macro": 0.9833333333333333,
+    "pair": 0.9807544264819091,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 1.07858,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 11140.366855555556,
+    "distance_calls_mean": 2171.68,
+    "expanded_mean": 1487.2133333333334,
+    "compile_us_mean": 9933.873482222227,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 450,
+    "macro": 0.9380000000000001,
+    "pair": 0.9284064665127021,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.1013333333333333,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 11858.733322222222,
+    "distance_calls_mean": 2312.4933333333333,
+    "expanded_mean": 1561.7666666666667,
+    "compile_us_mean": 10564.708568888896,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 450,
+    "macro": 0.9533333333333334,
+    "pair": 0.9461123941493457,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 1.3246266666666666,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.4033466666666667,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 8078.821642222222,
+    "distance_calls_mean": 2033.24,
+    "expanded_mean": 1058.2333333333333,
+    "compile_us_mean": 7115.206166666675,
+    "eligibility_us_mean": 69.62204888888888,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 12.7,
+    "queries": 450,
+    "macro": 0.9380000000000001,
+    "pair": 0.9284064665127021,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.25492,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.36138,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 8708.001322222222,
+    "distance_calls_mean": 2174.0333333333333,
+    "expanded_mean": 1128.2466666666667,
+    "compile_us_mean": 7674.715122222227,
+    "eligibility_us_mean": 69.88173333333333,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 16.66,
+    "queries": 450,
+    "macro": 0.9533333333333334,
+    "pair": 0.9461123941493457,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 1.1998066666666667,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.31509333333333334,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 434.4264933333333,
+    "distance_calls_mean": 404.58666666666664,
+    "expanded_mean": 33.166666666666664,
+    "compile_us_mean": 339.2407333333333,
+    "eligibility_us_mean": 39.584342222222226,
+    "eligible_scan_us_mean": 5.178782222222222,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 12.7,
+    "queries": 450,
+    "macro": 0.9726666666666667,
+    "pair": 0.968437259430331,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.2525333333333333,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.30757333333333337,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 585.1807866666667,
+    "distance_calls_mean": 474.05333333333334,
+    "expanded_mean": 44.29333333333334,
+    "compile_us_mean": 464.80190000000005,
+    "eligibility_us_mean": 42.819142222222226,
+    "eligible_scan_us_mean": 5.996517777777778,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 16.66,
+    "queries": 450,
+    "macro": 0.9773333333333334,
+    "pair": 0.9738260200153964,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.2815266666666667,
+    "distance_calls_mean": 0.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.3131066666666667,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 88.80761777777778,
+    "distance_calls_mean": 1151.8866666666668,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 43.59612222222223,
+    "eligible_scan_us_mean": 43.84457777777778,
+    "qualification_directory_visits_mean": 7.666666666666667,
+    "qualification_posting_words_mean": 1280.54,
+    "qualification_attribute_words_mean": 28891.66,
+    "effective_ef_mean": 16.66,
+    "queries": 450,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 0.18537333333333333,
+    "distance_calls_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.0,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 0.0,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 273.84416444444446,
+    "distance_calls_mean": 3078.88,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 7.666666666666667,
+    "graph_calls_mean": 4.333333333333333,
+    "scalar_scan_group_calls_mean": 2.8133333333333335,
+    "scanned_live_objects_mean": 1125.3333333333333,
+    "graph_distance_calls_mean": 2874.42,
+    "scan_distance_calls_mean": 204.46,
+    "merged_candidates_mean": 55.513333333333335,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 450,
+    "macro": 0.9993333333333333,
+    "pair": 0.9992301770592764,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 0.16621333333333332,
+    "distance_calls_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.0,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 0.0,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 0.0,
+    "queries": 150,
+    "macro": null,
+    "pair": null,
+    "nonempty": null,
+    "unique_qidx": null
+  },
+  {
+    "dataset": "sift",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 291.38556,
+    "distance_calls_mean": 3280.0933333333332,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 7.666666666666667,
+    "graph_calls_mean": 4.333333333333333,
+    "scalar_scan_group_calls_mean": 2.8133333333333335,
+    "scanned_live_objects_mean": 1125.3333333333333,
+    "graph_distance_calls_mean": 3075.633333333333,
+    "scan_distance_calls_mean": 204.46,
+    "merged_candidates_mean": 55.513333333333335,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 450,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 450,
+    "unique_qidx": 48
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.16836666666666666,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 486.7880394736842,
+    "expanded_mean": null,
+    "distance_calls_mean": 1272.842105263158,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9962406015037594,
+      0.9962406015037594,
+      0.9962406015037594
+    ],
+    "pair": [
+      0.9938195302843016,
+      0.9938195302843016,
+      0.9938195302843016
+    ],
+    "e2e_us_mean": 552.2953558897243,
+    "expanded_mean": null,
+    "distance_calls_mean": 1502.2556390977443,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.9666666666666667,
+      0.9666666666666667,
+      0.9666666666666667
+    ],
+    "pair": [
+      0.9666666666666667,
+      0.9666666666666667,
+      0.9666666666666667
+    ],
+    "e2e_us_mean": 2609.8273703703703,
+    "expanded_mean": null,
+    "distance_calls_mean": 8300.925925925925,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.15956666666666666,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 499.64102409638554,
+    "expanded_mean": null,
+    "distance_calls_mean": 1332.301204819277,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9984962406015039,
+      0.9984962406015039,
+      0.9984962406015039
+    ],
+    "pair": [
+      0.9975278121137207,
+      0.9975278121137207,
+      0.9975278121137207
+    ],
+    "e2e_us_mean": 549.3877243107769,
+    "expanded_mean": null,
+    "distance_calls_mean": 1511.097744360902,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.9777777777777777,
+      0.9777777777777777,
+      0.9777777777777777
+    ],
+    "pair": [
+      0.9777777777777777,
+      0.9777777777777777,
+      0.9777777777777777
+    ],
+    "e2e_us_mean": 2633.5206419753085,
+    "expanded_mean": null,
+    "distance_calls_mean": 8789.074074074075,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.6730999999999999,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 8227.14474122807,
+    "expanded_mean": 1221.092105263158,
+    "distance_calls_mean": 1221.092105263158,
+    "compile_us_mean": 6963.943728070182,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9789473684210526,
+      0.9789473684210526,
+      0.9789473684210526
+    ],
+    "pair": [
+      0.965389369592089,
+      0.965389369592089,
+      0.965389369592089
+    ],
+    "e2e_us_mean": 6151.564696741854,
+    "expanded_mean": 889.9774436090225,
+    "distance_calls_mean": 1319.4586466165413,
+    "compile_us_mean": 5093.9721127819585,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.8037037037037037,
+      0.8037037037037037,
+      0.8037037037037037
+    ],
+    "pair": [
+      0.8037037037037037,
+      0.8037037037037037,
+      0.8037037037037037
+    ],
+    "e2e_us_mean": 1368.3938148148147,
+    "expanded_mean": 81.25925925925925,
+    "distance_calls_mean": 2381.037037037037,
+    "compile_us_mean": 516.7028395061728,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.6594833333333333,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 8551.005240963856,
+    "expanded_mean": 1277.8313253012047,
+    "distance_calls_mean": 1277.8313253012047,
+    "compile_us_mean": 7219.514718875507,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9879699248120302,
+      0.9879699248120302,
+      0.9879699248120302
+    ],
+    "pair": [
+      0.9802224969097652,
+      0.9802224969097652,
+      0.9802224969097652
+    ],
+    "e2e_us_mean": 6333.1962932330825,
+    "expanded_mean": 919.2706766917294,
+    "distance_calls_mean": 1352.5112781954888,
+    "compile_us_mean": 5225.673077694239,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.8370370370370371,
+      0.8370370370370371,
+      0.8370370370370371
+    ],
+    "pair": [
+      0.837037037037037,
+      0.837037037037037,
+      0.837037037037037
+    ],
+    "e2e_us_mean": 1777.8737407407407,
+    "expanded_mean": 106.62962962962963,
+    "distance_calls_mean": 2821.3703703703704,
+    "compile_us_mean": 681.6548641975309,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.8646166666666666,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.29588333333333333,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 6606.746701754386,
+    "expanded_mean": 971.263157894737,
+    "distance_calls_mean": 1210.8552631578948,
+    "compile_us_mean": 5482.8063289473685,
+    "eligibility_us_mean": 39.52078947368421,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9789473684210526,
+      0.9789473684210526,
+      0.9789473684210526
+    ],
+    "pair": [
+      0.965389369592089,
+      0.965389369592089,
+      0.965389369592089
+    ],
+    "e2e_us_mean": 5260.7999072681705,
+    "expanded_mean": 747.218045112782,
+    "distance_calls_mean": 1313.609022556391,
+    "compile_us_mean": 4255.846418546367,
+    "eligibility_us_mean": 40.56467418546366,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.8037037037037037,
+      0.8037037037037037,
+      0.8037037037037037
+    ],
+    "pair": [
+      0.8037037037037037,
+      0.8037037037037037,
+      0.8037037037037037
+    ],
+    "e2e_us_mean": 1573.149913580247,
+    "expanded_mean": 81.25925925925925,
+    "distance_calls_mean": 2381.037037037037,
+    "compile_us_mean": 526.8693580246913,
+    "eligibility_us_mean": 155.83592592592592,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.8882333333333333,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.31010000000000004,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 7128.444449799197,
+    "expanded_mean": 1046.9156626506024,
+    "distance_calls_mean": 1268.4578313253012,
+    "compile_us_mean": 5923.736927710845,
+    "eligibility_us_mean": 41.283662650602416,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9879699248120302,
+      0.9879699248120302,
+      0.9879699248120302
+    ],
+    "pair": [
+      0.9802224969097652,
+      0.9802224969097652,
+      0.9802224969097652
+    ],
+    "e2e_us_mean": 5442.460062656642,
+    "expanded_mean": 775.1654135338346,
+    "distance_calls_mean": 1346.6616541353383,
+    "compile_us_mean": 4404.3414561403515,
+    "eligibility_us_mean": 41.81906516290727,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.8370370370370371,
+      0.8370370370370371,
+      0.8370370370370371
+    ],
+    "pair": [
+      0.837037037037037,
+      0.837037037037037,
+      0.837037037037037
+    ],
+    "e2e_us_mean": 1919.361012345679,
+    "expanded_mean": 106.62962962962963,
+    "distance_calls_mean": 2821.3703703703704,
+    "compile_us_mean": 684.7561358024691,
+    "eligibility_us_mean": 158.0596913580247,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.8957499999999999,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.260125,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 19.37838596491228,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 3.3552631578947367,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 16.609701754385963,
+    "eligible_scan_us_mean": 1.7759736842105263
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 39.18032330827068,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 50.51879699248119,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 22.058999999999997,
+    "eligible_scan_us_mean": 16.08260902255639
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.8037037037037037,
+      0.8037037037037037,
+      0.8037037037037037
+    ],
+    "pair": [
+      0.8037037037037037,
+      0.8037037037037037,
+      0.8037037037037037
+    ],
+    "e2e_us_mean": 1511.677012345679,
+    "expanded_mean": 81.25925925925925,
+    "distance_calls_mean": 2381.037037037037,
+    "compile_us_mean": 569.7098765432098,
+    "eligibility_us_mean": 76.88616049382716,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.903075,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.268675,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 19.951955823293172,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 4.493975903614458,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 16.799911646586345,
+    "eligible_scan_us_mean": 2.1606465863453814
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 39.56224812030075,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 50.51879699248119,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 22.75970175438596,
+    "eligible_scan_us_mean": 15.77973934837093
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.8370370370370371,
+      0.8370370370370371,
+      0.8370370370370371
+    ],
+    "pair": [
+      0.837037037037037,
+      0.837037037037037,
+      0.837037037037037
+    ],
+    "e2e_us_mean": 1797.4136790123457,
+    "expanded_mean": 106.62962962962963,
+    "distance_calls_mean": 2821.3703703703704,
+    "compile_us_mean": 714.1945802469136,
+    "eligibility_us_mean": 75.62167901234568,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.65745,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 8577.362311403509,
+    "expanded_mean": 1221.092105263158,
+    "distance_calls_mean": 1221.092105263158,
+    "compile_us_mean": 7330.724381578969,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9774436090225563,
+      0.9774436090225563,
+      0.9774436090225563
+    ],
+    "pair": [
+      0.9629171817058096,
+      0.9629171817058096,
+      0.9629171817058096
+    ],
+    "e2e_us_mean": 6456.390997493734,
+    "expanded_mean": 889.9624060150376,
+    "distance_calls_mean": 1304.1954887218046,
+    "compile_us_mean": 5409.252180451139,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.7222222222222222,
+      0.7222222222222222,
+      0.7222222222222222
+    ],
+    "pair": [
+      0.7222222222222222,
+      0.7222222222222222,
+      0.7222222222222222
+    ],
+    "e2e_us_mean": 1491.383901234568,
+    "expanded_mean": 83.03703703703704,
+    "distance_calls_mean": 1777.888888888889,
+    "compile_us_mean": 802.8223580246913,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.6785,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 9047.871714859437,
+    "expanded_mean": 1277.8313253012047,
+    "distance_calls_mean": 1277.8313253012047,
+    "compile_us_mean": 7721.16606425704,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9842105263157895,
+      0.9842105263157895,
+      0.9842105263157895
+    ],
+    "pair": [
+      0.9740420271940667,
+      0.9740420271940667,
+      0.9740420271940667
+    ],
+    "e2e_us_mean": 6751.9128521303255,
+    "expanded_mean": 919.3458646616541,
+    "distance_calls_mean": 1338.984962406015,
+    "compile_us_mean": 5655.802115288228,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.7703703703703704,
+      0.7703703703703704,
+      0.7703703703703704
+    ],
+    "pair": [
+      0.7703703703703704,
+      0.7703703703703704,
+      0.7703703703703704
+    ],
+    "e2e_us_mean": 1879.4800000000002,
+    "expanded_mean": 108.51851851851852,
+    "distance_calls_mean": 2135.740740740741,
+    "compile_us_mean": 1044.8743827160495,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.8626916666666666,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.2921916666666667,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 7099.953201754386,
+    "expanded_mean": 971.263157894737,
+    "distance_calls_mean": 1210.75,
+    "compile_us_mean": 5956.211807017552,
+    "eligibility_us_mean": 40.58942105263158,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9774436090225563,
+      0.9774436090225563,
+      0.9774436090225563
+    ],
+    "pair": [
+      0.9629171817058096,
+      0.9629171817058096,
+      0.9629171817058096
+    ],
+    "e2e_us_mean": 5647.527814536341,
+    "expanded_mean": 747.2030075187971,
+    "distance_calls_mean": 1298.2857142857142,
+    "compile_us_mean": 4632.898781954892,
+    "eligibility_us_mean": 40.671957393483716,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.7222222222222222,
+      0.7222222222222222,
+      0.7222222222222222
+    ],
+    "pair": [
+      0.7222222222222222,
+      0.7222222222222222,
+      0.7222222222222222
+    ],
+    "e2e_us_mean": 1665.0940740740741,
+    "expanded_mean": 83.03703703703704,
+    "distance_calls_mean": 1777.888888888889,
+    "compile_us_mean": 814.4618765432098,
+    "eligibility_us_mean": 156.5887283950617,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.8704,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.29292500000000005,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 7625.621389558233,
+    "expanded_mean": 1046.9156626506024,
+    "distance_calls_mean": 1268.3614457831325,
+    "compile_us_mean": 6405.522706827327,
+    "eligibility_us_mean": 41.07503212851406,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9842105263157895,
+      0.9842105263157895,
+      0.9842105263157895
+    ],
+    "pair": [
+      0.9740420271940667,
+      0.9740420271940667,
+      0.9740420271940667
+    ],
+    "e2e_us_mean": 5865.271766917293,
+    "expanded_mean": 775.2406015037594,
+    "distance_calls_mean": 1333.0751879699249,
+    "compile_us_mean": 4818.208543859661,
+    "eligibility_us_mean": 40.40354135338345,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.7703703703703704,
+      0.7703703703703704,
+      0.7703703703703704
+    ],
+    "pair": [
+      0.7703703703703704,
+      0.7703703703703704,
+      0.7703703703703704
+    ],
+    "e2e_us_mean": 2025.0560123456792,
+    "expanded_mean": 108.51851851851852,
+    "distance_calls_mean": 2135.740740740741,
+    "compile_us_mean": 1034.2484074074075,
+    "eligibility_us_mean": 152.02553086419752,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.9217083333333335,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.2663666666666667,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 18.03981140350877,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 3.3552631578947367,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 15.167359649122806,
+    "eligible_scan_us_mean": 1.9043640350877193
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 38.90725814536341,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 50.51879699248119,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 21.083724310776944,
+    "eligible_scan_us_mean": 16.832473684210527
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.7222222222222222,
+      0.7222222222222222,
+      0.7222222222222222
+    ],
+    "pair": [
+      0.7222222222222222,
+      0.7222222222222222,
+      0.7222222222222222
+    ],
+    "e2e_us_mean": 1614.619,
+    "expanded_mean": 83.03703703703704,
+    "distance_calls_mean": 1777.888888888889,
+    "compile_us_mean": 868.1313580246915,
+    "eligibility_us_mean": 69.52507407407408,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.8794166666666667,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.2558833333333333,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 19.504939759036144,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 4.493975903614458,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 16.321803212851403,
+    "eligible_scan_us_mean": 2.2132329317269073
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 38.8481052631579,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 50.51879699248119,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 21.259208020050128,
+    "eligible_scan_us_mean": 16.604882205513785
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.7703703703703704,
+      0.7703703703703704,
+      0.7703703703703704
+    ],
+    "pair": [
+      0.7703703703703704,
+      0.7703703703703704,
+      0.7703703703703704
+    ],
+    "e2e_us_mean": 1955.6611728395062,
+    "expanded_mean": 108.51851851851852,
+    "distance_calls_mean": 2135.740740740741,
+    "compile_us_mean": 1082.6763333333333,
+    "eligibility_us_mean": 76.99246913580247,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.9399916666666667,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 0.25384999999999996,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 19.199791164658635,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 4.493975903614458,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 15.300204819277107,
+    "eligible_scan_us_mean": 2.2480401606425704
+  },
+  {
+    "dataset": "wiki",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 38.938461152882205,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 50.51879699248119,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 19.91325563909774,
+    "eligible_scan_us_mean": 17.079122807017544
+  },
+  {
+    "dataset": "wiki",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 1021.3920617283951,
+    "expanded_mean": 0.0,
+    "distance_calls_mean": 3272.1111111111113,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 76.42028395061728,
+    "eligible_scan_us_mean": 944.075950617284
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.15635,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "E_lt_ef",
+    "queries": [
+      76,
+      76,
+      76
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 193.2542236842105,
+    "expanded_mean": null,
+    "distance_calls_mean": 501.6842105263158,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9992481203007519,
+      0.9992481203007519,
+      0.9992481203007519
+    ],
+    "pair": [
+      0.9987639060568603,
+      0.9987639060568603,
+      0.9987639060568603
+    ],
+    "e2e_us_mean": 222.62845864661654,
+    "expanded_mean": null,
+    "distance_calls_mean": 596.9774436090225,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.9740740740740741,
+      0.9740740740740741,
+      0.9740740740740741
+    ],
+    "pair": [
+      0.9740740740740741,
+      0.9740740740740741,
+      0.9740740740740741
+    ],
+    "e2e_us_mean": 1329.7564444444445,
+    "expanded_mean": null,
+    "distance_calls_mean": 3725.1851851851848,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "empty",
+    "queries": [
+      40,
+      40,
+      40
+    ],
+    "macro": [
+      null,
+      null,
+      null
+    ],
+    "pair": [
+      null,
+      null,
+      null
+    ],
+    "e2e_us_mean": 0.161075,
+    "expanded_mean": null,
+    "distance_calls_mean": 0.0,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "E_lt_ef",
+    "queries": [
+      83,
+      83,
+      83
+    ],
+    "macro": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "pair": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "e2e_us_mean": 203.9494297188755,
+    "expanded_mean": null,
+    "distance_calls_mean": 523.7469879518072,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "E_le_512",
+    "queries": [
+      133,
+      133,
+      133
+    ],
+    "macro": [
+      0.9992481203007519,
+      0.9992481203007519,
+      0.9992481203007519
+    ],
+    "pair": [
+      0.9987639060568603,
+      0.9987639060568603,
+      0.9987639060568603
+    ],
+    "e2e_us_mean": 234.09738847117796,
+    "expanded_mean": null,
+    "distance_calls_mean": 602.8571428571429,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "E_gt_512",
+    "queries": [
+      27,
+      27,
+      27
+    ],
+    "macro": [
+      0.9814814814814815,
+      0.9814814814814815,
+      0.9814814814814815
+    ],
+    "pair": [
+      0.9814814814814815,
+      0.9814814814814815,
+      0.9814814814814815
+    ],
+    "e2e_us_mean": 1414.8148024691357,
+    "expanded_mean": null,
+    "distance_calls_mean": 4032.9259259259256,
+    "compile_us_mean": null,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 5.1819,
+    "distance_calls_mean": 14.6125,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.5,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 14.6125,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 1.4625,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 7.5,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 1195.9400333333333,
+    "distance_calls_mean": 3522.9666666666667,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 55.19166666666667,
+    "graph_calls_mean": 52.15,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 3522.9666666666667,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 159.94166666666666,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 360,
+    "macro": 0.9883333333333334,
+    "pair": 0.9854469854469855,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 4.9479041666666665,
+    "distance_calls_mean": 14.6375,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.5,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 14.6375,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 1.4625,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 10.0,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-graph",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 1198.2014583333334,
+    "distance_calls_mean": 3642.5833333333335,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 55.19166666666667,
+    "graph_calls_mean": 52.15,
+    "scalar_scan_group_calls_mean": 0.0,
+    "scanned_live_objects_mean": 0.0,
+    "graph_distance_calls_mean": 3642.5833333333335,
+    "scan_distance_calls_mean": 0.0,
+    "merged_candidates_mean": 159.94166666666666,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 360,
+    "macro": 0.9933333333333334,
+    "pair": 0.9916839916839917,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 82.69962916666667,
+    "distance_calls_mean": 13.7,
+    "expanded_mean": 13.1,
+    "compile_us_mean": 71.47770416666667,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 7070.9640944444445,
+    "distance_calls_mean": 1989.0,
+    "expanded_mean": 995.9416666666667,
+    "compile_us_mean": 5714.425427777781,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 360,
+    "macro": 0.9325,
+    "pair": 0.9158004158004158,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 84.20570833333333,
+    "distance_calls_mean": 13.7,
+    "expanded_mean": 13.2375,
+    "compile_us_mean": 72.69204166666667,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-off",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 7363.39683888889,
+    "distance_calls_mean": 2124.7083333333335,
+    "expanded_mean": 1034.025,
+    "compile_us_mean": 5896.698644444448,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 360,
+    "macro": 0.95,
+    "pair": 0.9376299376299376,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 73.3958375,
+    "distance_calls_mean": 12.8125,
+    "expanded_mean": 10.325,
+    "compile_us_mean": 59.7786625,
+    "eligibility_us_mean": 3.106395833333333,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.575,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 6136.0362749999995,
+    "distance_calls_mean": 1983.1083333333333,
+    "expanded_mean": 839.5666666666667,
+    "compile_us_mean": 4795.589611111112,
+    "eligibility_us_mean": 78.04996111111112,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 11.575,
+    "queries": 360,
+    "macro": 0.9325,
+    "pair": 0.9158004158004158,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 73.4845625,
+    "distance_calls_mean": 12.8125,
+    "expanded_mean": 10.4625,
+    "compile_us_mean": 59.782799999999995,
+    "eligibility_us_mean": 3.1094458333333335,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.6375,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-cap",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 6415.2225,
+    "distance_calls_mean": 2118.8166666666666,
+    "expanded_mean": 876.1583333333333,
+    "compile_us_mean": 4995.693377777779,
+    "eligibility_us_mean": 79.94329722222223,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 14.85,
+    "queries": 360,
+    "macro": 0.95,
+    "pair": 0.9376299376299376,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 3.745629166666667,
+    "distance_calls_mean": 1.825,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 1.9859666666666667,
+    "eligible_scan_us_mean": 0.9214208333333332,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.575,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 381.3536833333333,
+    "distance_calls_mean": 590.5083333333333,
+    "expanded_mean": 18.283333333333335,
+    "compile_us_mean": 128.18472222222223,
+    "eligibility_us_mean": 40.510841666666664,
+    "eligible_scan_us_mean": 17.21061111111111,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 11.575,
+    "queries": 360,
+    "macro": 0.9558333333333334,
+    "pair": 0.9449064449064449,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 3.6564458333333336,
+    "distance_calls_mean": 1.825,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 1.9141583333333334,
+    "eligible_scan_us_mean": 0.9129041666666667,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.6375,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "U-aware",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 446.12963055555554,
+    "distance_calls_mean": 689.5833333333334,
+    "expanded_mean": 23.991666666666667,
+    "compile_us_mean": 160.69378055555555,
+    "eligibility_us_mean": 41.053666666666665,
+    "eligible_scan_us_mean": 16.880608333333335,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 14.85,
+    "queries": 360,
+    "macro": 0.9633333333333334,
+    "pair": 0.9542619542619543,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 85.67034583333334,
+    "distance_calls_mean": 13.7,
+    "expanded_mean": 13.1,
+    "compile_us_mean": 74.42241666666668,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 7434.500319444443,
+    "distance_calls_mean": 1836.375,
+    "expanded_mean": 996.325,
+    "compile_us_mean": 6126.274586111123,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 360,
+    "macro": 0.9125,
+    "pair": 0.8908523908523909,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 86.92803333333333,
+    "distance_calls_mean": 13.7,
+    "expanded_mean": 13.2375,
+    "compile_us_mean": 75.56924166666666,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-off",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 7848.527222222222,
+    "distance_calls_mean": 1955.45,
+    "expanded_mean": 1034.5333333333333,
+    "compile_us_mean": 6453.231252777786,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 360,
+    "macro": 0.9308333333333334,
+    "pair": 0.9137214137214137,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 73.09751666666666,
+    "distance_calls_mean": 12.8,
+    "expanded_mean": 10.325,
+    "compile_us_mean": 59.634983333333324,
+    "eligibility_us_mean": 3.2284583333333337,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.575,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 6585.545380555555,
+    "distance_calls_mean": 1830.425,
+    "expanded_mean": 839.95,
+    "compile_us_mean": 5278.293416666673,
+    "eligibility_us_mean": 78.25564166666666,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 11.575,
+    "queries": 360,
+    "macro": 0.9125,
+    "pair": 0.8908523908523909,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 72.50988333333333,
+    "distance_calls_mean": 12.8,
+    "expanded_mean": 10.4625,
+    "compile_us_mean": 59.176362499999996,
+    "eligibility_us_mean": 3.2688875,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.6375,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-cap",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 6908.264022222222,
+    "distance_calls_mean": 1949.5,
+    "expanded_mean": 876.6666666666666,
+    "compile_us_mean": 5533.436119444457,
+    "eligibility_us_mean": 76.90471944444445,
+    "eligible_scan_us_mean": 0.0,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 14.85,
+    "queries": 360,
+    "macro": 0.9308333333333334,
+    "pair": 0.9137214137214137,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 3.805066666666667,
+    "distance_calls_mean": 1.825,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 1.948825,
+    "eligible_scan_us_mean": 1.0284166666666665,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.575,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 404.18201111111114,
+    "distance_calls_mean": 454.8,
+    "expanded_mean": 18.683333333333334,
+    "compile_us_mean": 195.3295555555556,
+    "eligibility_us_mean": 37.80050833333333,
+    "eligible_scan_us_mean": 17.970380555555554,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 11.575,
+    "queries": 360,
+    "macro": 0.9375,
+    "pair": 0.922037422037422,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 3.6580250000000003,
+    "distance_calls_mean": 1.825,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 1.8683249999999998,
+    "eligible_scan_us_mean": 0.9541708333333333,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.6375,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "H-aware",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 480.9348694444445,
+    "distance_calls_mean": 535.3166666666667,
+    "expanded_mean": 24.416666666666668,
+    "compile_us_mean": 243.602175,
+    "eligibility_us_mean": 39.725338888888885,
+    "eligible_scan_us_mean": 17.767630555555556,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 14.85,
+    "queries": 360,
+    "macro": 0.9483333333333333,
+    "pair": 0.9355509355509356,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 4.0048875,
+    "distance_calls_mean": 1.825,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 1.8820875,
+    "eligible_scan_us_mean": 0.8778208333333333,
+    "qualification_directory_visits_mean": 1.0,
+    "qualification_posting_words_mean": 8.325,
+    "qualification_attribute_words_mean": 1335.775,
+    "effective_ef_mean": 1.6375,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "Exact",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 270.6134138888889,
+    "distance_calls_mean": 791.0,
+    "expanded_mean": 0.0,
+    "compile_us_mean": 0.0,
+    "eligibility_us_mean": 38.09498055555555,
+    "eligible_scan_us_mean": 230.76123611111112,
+    "qualification_directory_visits_mean": 55.19166666666667,
+    "qualification_posting_words_mean": 1378.625,
+    "qualification_attribute_words_mean": 20268.291666666668,
+    "effective_ef_mean": 14.85,
+    "queries": 360,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "direct",
+    "e2e_us_mean": 1.3194124999999999,
+    "distance_calls_mean": 1.825,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.0,
+    "scalar_scan_group_calls_mean": 0.5,
+    "scanned_live_objects_mean": 13.7,
+    "graph_distance_calls_mean": 0.0,
+    "scan_distance_calls_mean": 1.825,
+    "merged_candidates_mean": 1.4625,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 7.5,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 15,
+    "band": "recursive",
+    "e2e_us_mean": 545.11425,
+    "distance_calls_mean": 1498.6,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 55.19166666666667,
+    "graph_calls_mean": 0.7,
+    "scalar_scan_group_calls_mean": 51.45,
+    "scanned_live_objects_mean": 2440.7,
+    "graph_distance_calls_mean": 1043.075,
+    "scan_distance_calls_mean": 455.525,
+    "merged_candidates_mean": 159.94166666666666,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 15.0,
+    "queries": 360,
+    "macro": 0.9933333333333334,
+    "pair": 0.9916839916839917,
+    "nonempty": 360,
+    "unique_qidx": 120
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "direct",
+    "e2e_us_mean": 1.284375,
+    "distance_calls_mean": 1.825,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 1.0,
+    "graph_calls_mean": 0.0,
+    "scalar_scan_group_calls_mean": 0.5,
+    "scanned_live_objects_mean": 13.7,
+    "graph_distance_calls_mean": 0.0,
+    "scan_distance_calls_mean": 1.825,
+    "merged_candidates_mean": 1.4625,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 10.0,
+    "queries": 240,
+    "macro": 1.0,
+    "pair": 1.0,
+    "nonempty": 120,
+    "unique_qidx": 40
+  },
+  {
+    "dataset": "wiki",
+    "variant": "A-hybrid-reference",
+    "ef": 20,
+    "band": "recursive",
+    "e2e_us_mean": 576.9887111111111,
+    "distance_calls_mean": 1574.3583333333333,
+    "eligibility_us_mean": 0.0,
+    "eligible_scan_us_mean": 0.0,
+    "directory_visits_mean": 55.19166666666667,
+    "graph_calls_mean": 0.7,
+    "scalar_scan_group_calls_mean": 51.45,
+    "scanned_live_objects_mean": 2440.7,
+    "graph_distance_calls_mean": 1118.8333333333333,
+    "scan_distance_calls_mean": 455.525,
+    "merged_candidates_mean": 159.94166666666666,
+    "qualification_directory_visits_mean": 0.0,
+    "qualification_posting_words_mean": 0.0,
+    "qualification_attribute_words_mean": 0.0,
+    "effective_ef_mean": 20.0,
+    "queries": 360,
+    "macro": 0.995,
+    "pair": 0.9937629937629938,
+    "nonempty": 360,
+    "unique_qidx": 120
+  }
+]

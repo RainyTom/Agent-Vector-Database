@@ -104,3 +104,15 @@ U编译占e2e约79.8%～88.3%，H约82.0%～89.3%；共同路径已支付绝大�
 
 复现：使用§8的`work/eligibility-execution-local/original-static`输入，运行新驱动的`--smoke`静态至`work/eligibility-execution-local/pure-static`，`--stage maintenance --smoke`至`pure-maintenance`；源码/输入/二进制SHA及完整命令在各manifest。下一步以更新后的[服务器提示词](eligibility-server-prompt.md)为准，禁止复用旧输出目录或混淆两种NodeANN。
 
+## 10. 服务器执行结果：E<ef已修，H无独立增益
+
+按更新后的协议在真实WIKI/SIFT跑完 **102次静态＋36次有限维护**（20,400＋6,768条query记录）。完整 [服务器报告](eligibility-server-report.md)、[复现](experiments/eligibility-server-reproduction.md)、[静态小聚合](data/eligibility-static-run1/)、[维护小聚合](data/eligibility-maintenance-run1/) 已保存。
+
+- **语义**：独立复核 `problems=0`；Exact 930行、hybrid精确 2,592行逐ID等于GT且距离数等于E；A-graph 2,400行零扫描且 `graph_calls==fanout`；非法/重复/状态/mask/计时GT距离全0。核心与调度未改，无需修实现。
+- **执行缺口**：`E<ef`在off臂占全部expanded 45%；cap在**同Recall**下总expanded −16.6%/−30.3%、时延 −13%/−27%；hybrid直接扫描把总expanded降到 −98.8%/−98.5%，该band降至0.05ms/条。
+- **同质量**：H-aware在两个数据集Recall都更低（WIKI .96125 vs .99500，SIFT .97733 vs 1.0），同预算时延0.40×/1.83×；**H相对U-aware也是负增量**（更慢且更低）。A-hybrid-reference反而质量匹配下快于A-graph（0.46×/0.92×）；Exact控制两数据集质量匹配且最快（0.205ms/0.089ms）。
+- **NodeANN来源**：WIKI纯图建143张局部图（11,869向量）、每query调31.5张图；历史混合只建2张图（5,154向量）、每query 0.42张图＋31.1个扫描组。116/143个目录活对象≤64，小目录建图远贵于16–64次标量距离。
+- **成本**：WIKI A-graph峰值RSS 485.5MB（每图2×预留）vs 混合85.0MB；资格位图0.96MB。维护包络中closure臂单次全量压实最大7.5s，WIKI总更新耗时是A-graph的4.2倍；实际观测压实A-graph 285/50次、closure各1次。
+
+结论：**支持执行策略实测（资格前置＋小集合精确扫描），不支持H机制论文主张**；旧H负结果不变，未运行Dynamic、未扩大N，`dynamic_admitted`仍false。
+

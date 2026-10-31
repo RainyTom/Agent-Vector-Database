@@ -1,0 +1,28 @@
+{
+  "raw": "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/work/eligibility/pure-nodeann-maintenance-run1",
+  "measured_runs": 36,
+  "traces": [
+    "envelope",
+    "mixed"
+  ],
+  "variants": [
+    "A-graph",
+    "H-aware",
+    "U-aware"
+  ],
+  "compactions_observed": {
+    "sift/mixed/A-graph": 0,
+    "sift/mixed/U-aware": 0,
+    "sift/mixed/H-aware": 0,
+    "sift/envelope/A-graph": 50,
+    "sift/envelope/U-aware": 1,
+    "sift/envelope/H-aware": 1,
+    "wiki/mixed/A-graph": 1,
+    "wiki/mixed/U-aware": 0,
+    "wiki/mixed/H-aware": 0,
+    "wiki/envelope/A-graph": 285,
+    "wiki/envelope/U-aware": 1,
+    "wiki/envelope/H-aware": 1
+  },
+  "note": "Computed from updates.csv only; compactions are observed counters, not plan claims."
+}

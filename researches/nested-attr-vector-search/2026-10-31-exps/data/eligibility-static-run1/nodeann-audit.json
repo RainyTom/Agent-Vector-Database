@@ -1,0 +1,2766 @@
+{
+  "sift": {
+    "A-graph": {
+      "runs": 3,
+      "ef": 20,
+      "containers": 14,
+      "initial_indexed_vectors": 12000,
+      "final_indexed_vectors": 12000,
+      "live_objects": null,
+      "total_vectors": 13000,
+      "index_bytes": 8930876,
+      "index_bytes_kind": "hnsw_indexFileSize_plus_explicit_metadata_and_eligibility_estimate_not_RSS",
+      "peak_rss_bytes": 59674624,
+      "build_s": 0.472276903,
+      "per_query": {
+        "queries": 600,
+        "e2e_us": {
+          "mean": 239.544875,
+          "p50": 111.921,
+          "p95": 1124.001,
+          "p99": 1434.594,
+          "maximum": 1763.622
+        },
+        "distance_calls": {
+          "mean": 2984.975,
+          "p50": 1230.0,
+          "p95": 12295.0,
+          "p99": 12357.0,
+          "maximum": 12375.0
+        },
+        "eligibility_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "eligible_scan_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "directory_visits": {
+          "mean": 6.0,
+          "p50": 1.0,
+          "p95": 15.0,
+          "p99": 15.0,
+          "maximum": 15.0
+        },
+        "graph_calls": {
+          "mean": 5.36,
+          "p50": 1.0,
+          "p95": 14.0,
+          "p99": 14.0,
+          "maximum": 14.0
+        },
+        "scalar_scan_group_calls": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "scanned_live_objects": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "graph_distance_calls": {
+          "mean": 2984.975,
+          "p50": 1230.0,
+          "p95": 12295.0,
+          "p99": 12357.0,
+          "maximum": 12375.0
+        },
+        "scan_distance_calls": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "merged_candidates": {
+          "mean": 41.635,
+          "p50": 10.0,
+          "p95": 140.0,
+          "p99": 140.0,
+          "maximum": 140.0
+        },
+        "qualification_directory_visits": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_posting_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_attribute_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "effective_ef": {
+          "mean": 15.0,
+          "p50": 20.0,
+          "p95": 20.0,
+          "p99": 20.0,
+          "maximum": 20.0
+        },
+        "quality": {
+          "nonempty": 450,
+          "unique_qidx": 48,
+          "macro": 1.0,
+          "pair": 1.0
+        }
+      },
+      "groups": {
+        "scope_0": {
+          "queries": 150,
+          "e2e_us": {
+            "mean": 0.1664266666666667,
+            "p50": 0.161,
+            "p95": 0.2,
+            "p99": 0.221,
+            "maximum": 0.24
+          },
+          "distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          }
+        },
+        "scope_512_plus": {
+          "queries": 300,
+          "e2e_us": {
+            "mean": 171.87104,
+            "p50": 111.921,
+            "p95": 552.598,
+            "p99": 729.911,
+            "maximum": 850.637
+          },
+          "distance_calls": {
+            "mean": 2179.62,
+            "p50": 1230.0,
+            "p95": 6123.0,
+            "p99": 6188.0,
+            "maximum": 6195.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 4.0,
+            "p50": 1.0,
+            "p95": 7.0,
+            "p99": 7.0,
+            "maximum": 7.0
+          },
+          "graph_calls": {
+            "mean": 3.72,
+            "p50": 1.0,
+            "p95": 7.0,
+            "p99": 7.0,
+            "maximum": 7.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 2179.62,
+            "p50": 1230.0,
+            "p95": 6123.0,
+            "p99": 6188.0,
+            "maximum": 6195.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 29.39,
+            "p50": 10.0,
+            "p95": 70.0,
+            "p99": 70.0,
+            "maximum": 70.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 300,
+            "unique_qidx": 32,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "direct": {
+          "queries": 150,
+          "e2e_us": {
+            "mean": 0.1664266666666667,
+            "p50": 0.161,
+            "p95": 0.2,
+            "p99": 0.221,
+            "maximum": 0.24
+          },
+          "distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          }
+        },
+        "recursive": {
+          "queries": 450,
+          "e2e_us": {
+            "mean": 319.33769111111116,
+            "p50": 163.498,
+            "p95": 1141.384,
+            "p99": 1456.465,
+            "maximum": 1763.622
+          },
+          "distance_calls": {
+            "mean": 3979.9666666666667,
+            "p50": 2780.0,
+            "p95": 12336.0,
+            "p99": 12358.0,
+            "maximum": 12375.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 7.666666666666667,
+            "p50": 7.0,
+            "p95": 15.0,
+            "p99": 15.0,
+            "maximum": 15.0
+          },
+          "graph_calls": {
+            "mean": 7.1466666666666665,
+            "p50": 6.0,
+            "p95": 14.0,
+            "p99": 14.0,
+            "maximum": 14.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 3979.9666666666667,
+            "p50": 2780.0,
+            "p95": 12336.0,
+            "p99": 12358.0,
+            "maximum": 12375.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 55.513333333333335,
+            "p50": 56.0,
+            "p95": 140.0,
+            "p99": 140.0,
+            "maximum": 140.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 450,
+            "unique_qidx": 48,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        }
+      }
+    },
+    "A-hybrid-reference": {
+      "runs": 3,
+      "ef": 20,
+      "containers": 8,
+      "initial_indexed_vectors": 9600,
+      "final_indexed_vectors": 9600,
+      "live_objects": null,
+      "total_vectors": 13000,
+      "index_bytes": 7342436,
+      "index_bytes_kind": "hnsw_indexFileSize_plus_explicit_metadata_and_eligibility_estimate_not_RSS",
+      "peak_rss_bytes": 42090496,
+      "build_s": 0.414245942,
+      "per_query": {
+        "queries": 600,
+        "e2e_us": {
+          "mean": 218.58072333333334,
+          "p50": 119.845,
+          "p95": 967.848,
+          "p99": 1204.171,
+          "maximum": 1395.942
+        },
+        "distance_calls": {
+          "mean": 2460.07,
+          "p50": 1232.0,
+          "p95": 9773.0,
+          "p99": 9837.0,
+          "maximum": 9858.0
+        },
+        "eligibility_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "eligible_scan_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "directory_visits": {
+          "mean": 6.0,
+          "p50": 1.0,
+          "p95": 15.0,
+          "p99": 15.0,
+          "maximum": 15.0
+        },
+        "graph_calls": {
+          "mean": 3.25,
+          "p50": 1.0,
+          "p95": 8.0,
+          "p99": 8.0,
+          "maximum": 8.0
+        },
+        "scalar_scan_group_calls": {
+          "mean": 2.11,
+          "p50": 0.0,
+          "p95": 6.0,
+          "p99": 6.0,
+          "maximum": 6.0
+        },
+        "scanned_live_objects": {
+          "mean": 844.0,
+          "p50": 0.0,
+          "p95": 2400.0,
+          "p99": 2400.0,
+          "maximum": 2400.0
+        },
+        "graph_distance_calls": {
+          "mean": 2306.725,
+          "p50": 1225.0,
+          "p95": 9773.0,
+          "p99": 9833.0,
+          "maximum": 9853.0
+        },
+        "scan_distance_calls": {
+          "mean": 153.345,
+          "p50": 0.0,
+          "p95": 787.0,
+          "p99": 1578.0,
+          "maximum": 1677.0
+        },
+        "merged_candidates": {
+          "mean": 41.635,
+          "p50": 10.0,
+          "p95": 140.0,
+          "p99": 140.0,
+          "maximum": 140.0
+        },
+        "qualification_directory_visits": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_posting_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_attribute_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "effective_ef": {
+          "mean": 15.0,
+          "p50": 20.0,
+          "p95": 20.0,
+          "p99": 20.0,
+          "maximum": 20.0
+        },
+        "quality": {
+          "nonempty": 450,
+          "unique_qidx": 48,
+          "macro": 1.0,
+          "pair": 1.0
+        }
+      },
+      "groups": {
+        "scope_0": {
+          "queries": 150,
+          "e2e_us": {
+            "mean": 0.16621333333333332,
+            "p50": 0.16,
+            "p95": 0.211,
+            "p99": 0.24,
+            "maximum": 0.24
+          },
+          "distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          }
+        },
+        "scope_512_plus": {
+          "queries": 300,
+          "e2e_us": {
+            "mean": 161.19933,
+            "p50": 119.845,
+            "p95": 497.063,
+            "p99": 583.316,
+            "maximum": 663.907
+          },
+          "distance_calls": {
+            "mean": 1871.93,
+            "p50": 1232.0,
+            "p95": 4911.0,
+            "p99": 4932.0,
+            "maximum": 4937.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 4.0,
+            "p50": 1.0,
+            "p95": 7.0,
+            "p99": 7.0,
+            "maximum": 7.0
+          },
+          "graph_calls": {
+            "mean": 2.5,
+            "p50": 1.0,
+            "p95": 4.0,
+            "p99": 4.0,
+            "maximum": 4.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 1.22,
+            "p50": 0.0,
+            "p95": 3.0,
+            "p99": 3.0,
+            "maximum": 3.0
+          },
+          "scanned_live_objects": {
+            "mean": 488.0,
+            "p50": 0.0,
+            "p95": 1200.0,
+            "p99": 1200.0,
+            "maximum": 1200.0
+          },
+          "graph_distance_calls": {
+            "mean": 1783.93,
+            "p50": 1225.0,
+            "p95": 4908.0,
+            "p99": 4924.0,
+            "maximum": 4936.0
+          },
+          "scan_distance_calls": {
+            "mean": 88.0,
+            "p50": 0.0,
+            "p95": 422.0,
+            "p99": 830.0,
+            "maximum": 836.0
+          },
+          "merged_candidates": {
+            "mean": 29.39,
+            "p50": 10.0,
+            "p95": 70.0,
+            "p99": 70.0,
+            "maximum": 70.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 300,
+            "unique_qidx": 32,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "direct": {
+          "queries": 150,
+          "e2e_us": {
+            "mean": 0.16621333333333332,
+            "p50": 0.16,
+            "p95": 0.211,
+            "p99": 0.24,
+            "maximum": 0.24
+          },
+          "distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          }
+        },
+        "recursive": {
+          "queries": 450,
+          "e2e_us": {
+            "mean": 291.38556,
+            "p50": 162.756,
+            "p95": 984.699,
+            "p99": 1264.784,
+            "maximum": 1395.942
+          },
+          "distance_calls": {
+            "mean": 3280.0933333333332,
+            "p50": 2341.0,
+            "p95": 9817.0,
+            "p99": 9854.0,
+            "maximum": 9858.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 7.666666666666667,
+            "p50": 7.0,
+            "p95": 15.0,
+            "p99": 15.0,
+            "maximum": 15.0
+          },
+          "graph_calls": {
+            "mean": 4.333333333333333,
+            "p50": 4.0,
+            "p95": 8.0,
+            "p99": 8.0,
+            "maximum": 8.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 2.8133333333333335,
+            "p50": 2.0,
+            "p95": 6.0,
+            "p99": 6.0,
+            "maximum": 6.0
+          },
+          "scanned_live_objects": {
+            "mean": 1125.3333333333333,
+            "p50": 800.0,
+            "p95": 2400.0,
+            "p99": 2400.0,
+            "maximum": 2400.0
+          },
+          "graph_distance_calls": {
+            "mean": 3075.633333333333,
+            "p50": 2133.0,
+            "p95": 9803.0,
+            "p99": 9853.0,
+            "maximum": 9853.0
+          },
+          "scan_distance_calls": {
+            "mean": 204.46,
+            "p50": 16.0,
+            "p95": 836.0,
+            "p99": 1610.0,
+            "maximum": 1677.0
+          },
+          "merged_candidates": {
+            "mean": 55.513333333333335,
+            "p50": 56.0,
+            "p95": 140.0,
+            "p99": 140.0,
+            "maximum": 140.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 450,
+            "unique_qidx": 48,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        }
+      }
+    }
+  },
+  "wiki": {
+    "A-graph": {
+      "runs": 3,
+      "ef": 20,
+      "containers": 143,
+      "initial_indexed_vectors": 11869,
+      "final_indexed_vectors": 11869,
+      "live_objects": null,
+      "total_vectors": 11869,
+      "index_bytes": 51366556,
+      "index_bytes_kind": "hnsw_indexFileSize_plus_explicit_metadata_and_eligibility_estimate_not_RSS",
+      "peak_rss_bytes": 485515264,
+      "build_s": 1.534915137,
+      "per_query": {
+        "queries": 600,
+        "e2e_us": {
+          "mean": 720.9000366666667,
+          "p50": 35.877,
+          "p95": 4444.85,
+          "p99": 4963.353,
+          "maximum": 5747.114
+        },
+        "distance_calls": {
+          "mean": 2191.405,
+          "p50": 119.0,
+          "p95": 12286.0,
+          "p99": 12373.0,
+          "maximum": 12388.0
+        },
+        "eligibility_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "eligible_scan_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "directory_visits": {
+          "mean": 33.515,
+          "p50": 1.0,
+          "p95": 151.0,
+          "p99": 151.0,
+          "maximum": 151.0
+        },
+        "graph_calls": {
+          "mean": 31.49,
+          "p50": 1.0,
+          "p95": 143.0,
+          "p99": 143.0,
+          "maximum": 143.0
+        },
+        "scalar_scan_group_calls": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "scanned_live_objects": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "graph_distance_calls": {
+          "mean": 2191.405,
+          "p50": 119.0,
+          "p95": 12286.0,
+          "p99": 12373.0,
+          "maximum": 12388.0
+        },
+        "scan_distance_calls": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "merged_candidates": {
+          "mean": 96.55,
+          "p50": 6.0,
+          "p95": 686.0,
+          "p99": 956.0,
+          "maximum": 977.0
+        },
+        "qualification_directory_visits": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_posting_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_attribute_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "effective_ef": {
+          "mean": 16.0,
+          "p50": 20.0,
+          "p95": 20.0,
+          "p99": 20.0,
+          "maximum": 20.0
+        },
+        "quality": {
+          "nonempty": 480,
+          "unique_qidx": 160,
+          "macro": 0.995,
+          "pair": 0.9925857275254866
+        }
+      },
+      "groups": {
+        "scope_0": {
+          "queries": 120,
+          "e2e_us": {
+            "mean": 0.15956666666666666,
+            "p50": 0.151,
+            "p95": 0.22,
+            "p99": 0.24,
+            "maximum": 0.281
+          },
+          "distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          }
+        },
+        "scope_1_63": {
+          "queries": 111,
+          "e2e_us": {
+            "mean": 5.284738738738739,
+            "p50": 3.056,
+            "p95": 16.491,
+            "p99": 17.533,
+            "maximum": 24.846
+          },
+          "distance_calls": {
+            "mean": 15.0,
+            "p50": 8.0,
+            "p95": 52.0,
+            "p99": 61.0,
+            "maximum": 61.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 15.0,
+            "p50": 8.0,
+            "p95": 52.0,
+            "p99": 61.0,
+            "maximum": 61.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 2.5945945945945947,
+            "p50": 2.0,
+            "p95": 6.0,
+            "p99": 10.0,
+            "maximum": 10.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 111,
+            "unique_qidx": 37,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "scope_64_511": {
+          "queries": 159,
+          "e2e_us": {
+            "mean": 52.13482389937107,
+            "p50": 36.779,
+            "p95": 132.87,
+            "p99": 141.667,
+            "maximum": 148.519
+          },
+          "distance_calls": {
+            "mean": 176.96226415094338,
+            "p50": 120.0,
+            "p95": 443.0,
+            "p99": 446.0,
+            "maximum": 446.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.471698113207547,
+            "p50": 1.0,
+            "p95": 3.0,
+            "p99": 3.0,
+            "maximum": 3.0
+          },
+          "graph_calls": {
+            "mean": 1.471698113207547,
+            "p50": 1.0,
+            "p95": 3.0,
+            "p99": 3.0,
+            "maximum": 3.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 176.96226415094338,
+            "p50": 120.0,
+            "p95": 443.0,
+            "p99": 446.0,
+            "maximum": 446.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 8.132075471698114,
+            "p50": 10.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 159,
+            "unique_qidx": 53,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "scope_512_plus": {
+          "queries": 210,
+          "e2e_us": {
+            "mean": 2017.356338095238,
+            "p50": 2325.809,
+            "p95": 4805.547,
+            "p99": 5195.138,
+            "maximum": 5747.114
+          },
+          "distance_calls": {
+            "mean": 6119.242857142857,
+            "p50": 7937.0,
+            "p95": 12367.0,
+            "p99": 12379.0,
+            "maximum": 12388.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 93.54285714285714,
+            "p50": 151.0,
+            "p95": 151.0,
+            "p99": 151.0,
+            "maximum": 151.0
+          },
+          "graph_calls": {
+            "mean": 88.32857142857142,
+            "p50": 143.0,
+            "p95": 143.0,
+            "p99": 143.0,
+            "maximum": 143.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 6119.242857142857,
+            "p50": 7937.0,
+            "p95": 12367.0,
+            "p99": 12379.0,
+            "maximum": 12388.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 268.3285714285714,
+            "p50": 77.0,
+            "p95": 952.0,
+            "p99": 965.0,
+            "maximum": 977.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 210,
+            "unique_qidx": 70,
+            "macro": 0.9885714285714285,
+            "pair": 0.9869494290375204
+          }
+        },
+        "direct": {
+          "queries": 240,
+          "e2e_us": {
+            "mean": 4.9479041666666665,
+            "p50": 0.281,
+            "p95": 17.243,
+            "p99": 46.156,
+            "maximum": 141.667
+          },
+          "distance_calls": {
+            "mean": 14.6375,
+            "p50": 0.0,
+            "p95": 55.0,
+            "p99": 138.0,
+            "maximum": 382.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.5,
+            "p50": 0.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 14.6375,
+            "p50": 0.0,
+            "p95": 55.0,
+            "p99": 138.0,
+            "maximum": 382.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 1.4625,
+            "p50": 0.0,
+            "p95": 6.0,
+            "p99": 10.0,
+            "maximum": 10.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 10.0,
+            "p50": 0.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 120,
+            "unique_qidx": 40,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "recursive": {
+          "queries": 360,
+          "e2e_us": {
+            "mean": 1198.2014583333334,
+            "p50": 173.035,
+            "p95": 4644.925,
+            "p99": 4989.221,
+            "maximum": 5747.114
+          },
+          "distance_calls": {
+            "mean": 3642.5833333333335,
+            "p50": 585.0,
+            "p95": 12356.0,
+            "p99": 12379.0,
+            "maximum": 12388.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 55.19166666666667,
+            "p50": 4.0,
+            "p95": 151.0,
+            "p99": 151.0,
+            "maximum": 151.0
+          },
+          "graph_calls": {
+            "mean": 52.15,
+            "p50": 3.0,
+            "p95": 143.0,
+            "p99": 143.0,
+            "maximum": 143.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 3642.5833333333335,
+            "p50": 585.0,
+            "p95": 12356.0,
+            "p99": 12379.0,
+            "maximum": 12388.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 159.94166666666666,
+            "p50": 14.0,
+            "p95": 747.0,
+            "p99": 965.0,
+            "maximum": 977.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 360,
+            "unique_qidx": 120,
+            "macro": 0.9933333333333334,
+            "pair": 0.9916839916839917
+          }
+        }
+      }
+    },
+    "A-hybrid-reference": {
+      "runs": 3,
+      "ef": 20,
+      "containers": 2,
+      "initial_indexed_vectors": 5154,
+      "final_indexed_vectors": 5154,
+      "live_objects": null,
+      "total_vectors": 11869,
+      "index_bytes": 22849120,
+      "index_bytes_kind": "hnsw_indexFileSize_plus_explicit_metadata_and_eligibility_estimate_not_RSS",
+      "peak_rss_bytes": 84963328,
+      "build_s": 1.154206564,
+      "per_query": {
+        "queries": 600,
+        "e2e_us": {
+          "mean": 346.70697666666666,
+          "p50": 8.275,
+          "p95": 1984.285,
+          "p99": 2480.368,
+          "maximum": 2988.254
+        },
+        "distance_calls": {
+          "mean": 945.345,
+          "p50": 6.0,
+          "p95": 5239.0,
+          "p99": 5809.0,
+          "maximum": 5846.0
+        },
+        "eligibility_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "eligible_scan_us": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "directory_visits": {
+          "mean": 33.515,
+          "p50": 1.0,
+          "p95": 151.0,
+          "p99": 151.0,
+          "maximum": 151.0
+        },
+        "graph_calls": {
+          "mean": 0.42,
+          "p50": 0.0,
+          "p95": 2.0,
+          "p99": 2.0,
+          "maximum": 2.0
+        },
+        "scalar_scan_group_calls": {
+          "mean": 31.07,
+          "p50": 1.0,
+          "p95": 141.0,
+          "p99": 141.0,
+          "maximum": 141.0
+        },
+        "scanned_live_objects": {
+          "mean": 1469.9,
+          "p50": 101.0,
+          "p95": 6715.0,
+          "p99": 6715.0,
+          "maximum": 6715.0
+        },
+        "graph_distance_calls": {
+          "mean": 671.3,
+          "p50": 0.0,
+          "p95": 5186.0,
+          "p99": 5231.0,
+          "maximum": 5255.0
+        },
+        "scan_distance_calls": {
+          "mean": 274.045,
+          "p50": 4.0,
+          "p95": 1941.0,
+          "p99": 4608.0,
+          "maximum": 4792.0
+        },
+        "merged_candidates": {
+          "mean": 96.55,
+          "p50": 6.0,
+          "p95": 686.0,
+          "p99": 956.0,
+          "maximum": 977.0
+        },
+        "qualification_directory_visits": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_posting_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "qualification_attribute_words": {
+          "mean": 0.0,
+          "p50": 0.0,
+          "p95": 0.0,
+          "p99": 0.0,
+          "maximum": 0.0
+        },
+        "effective_ef": {
+          "mean": 16.0,
+          "p50": 20.0,
+          "p95": 20.0,
+          "p99": 20.0,
+          "maximum": 20.0
+        },
+        "quality": {
+          "nonempty": 480,
+          "unique_qidx": 160,
+          "macro": 0.99625,
+          "pair": 0.9944392956441149
+        }
+      },
+      "groups": {
+        "scope_0": {
+          "queries": 120,
+          "e2e_us": {
+            "mean": 0.161075,
+            "p50": 0.16,
+            "p95": 0.21,
+            "p99": 0.211,
+            "maximum": 0.22
+          },
+          "distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scanned_live_objects": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "merged_candidates": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          }
+        },
+        "scope_1_63": {
+          "queries": 111,
+          "e2e_us": {
+            "mean": 1.7847027027027027,
+            "p50": 1.433,
+            "p95": 4.258,
+            "p99": 5.02,
+            "maximum": 5.4
+          },
+          "distance_calls": {
+            "mean": 2.6216216216216215,
+            "p50": 2.0,
+            "p95": 6.0,
+            "p99": 11.0,
+            "maximum": 11.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "scanned_live_objects": {
+            "mean": 13.945945945945946,
+            "p50": 8.0,
+            "p95": 49.0,
+            "p99": 58.0,
+            "maximum": 58.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 2.6216216216216215,
+            "p50": 2.0,
+            "p95": 6.0,
+            "p99": 11.0,
+            "maximum": 11.0
+          },
+          "merged_candidates": {
+            "mean": 2.5945945945945947,
+            "p50": 2.0,
+            "p95": 6.0,
+            "p99": 10.0,
+            "maximum": 10.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 111,
+            "unique_qidx": 37,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "scope_64_511": {
+          "queries": 159,
+          "e2e_us": {
+            "mean": 14.347276729559749,
+            "p50": 10.19,
+            "p95": 33.753,
+            "p99": 102.743,
+            "maximum": 154.17
+          },
+          "distance_calls": {
+            "mean": 27.60377358490566,
+            "p50": 18.0,
+            "p95": 77.0,
+            "p99": 306.0,
+            "maximum": 306.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.471698113207547,
+            "p50": 1.0,
+            "p95": 3.0,
+            "p99": 3.0,
+            "maximum": 3.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 1.471698113207547,
+            "p50": 1.0,
+            "p95": 3.0,
+            "p99": 3.0,
+            "maximum": 3.0
+          },
+          "scanned_live_objects": {
+            "mean": 170.54716981132074,
+            "p50": 114.0,
+            "p95": 426.0,
+            "p99": 426.0,
+            "maximum": 426.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 27.60377358490566,
+            "p50": 18.0,
+            "p95": 77.0,
+            "p99": 306.0,
+            "maximum": 306.0
+          },
+          "merged_candidates": {
+            "mean": 8.132075471698114,
+            "p50": 10.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 159,
+            "unique_qidx": 53,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "scope_512_plus": {
+          "queries": 210,
+          "e2e_us": {
+            "mean": 978.6930380952381,
+            "p50": 1183.423,
+            "p95": 2208.859,
+            "p99": 2566.679,
+            "maximum": 2988.254
+          },
+          "distance_calls": {
+            "mean": 2678.7,
+            "p50": 3608.0,
+            "p95": 5712.0,
+            "p99": 5823.0,
+            "maximum": 5846.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 93.54285714285714,
+            "p50": 151.0,
+            "p95": 151.0,
+            "p99": 151.0,
+            "maximum": 151.0
+          },
+          "graph_calls": {
+            "mean": 1.2,
+            "p50": 2.0,
+            "p95": 2.0,
+            "p99": 2.0,
+            "maximum": 2.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 87.12857142857143,
+            "p50": 141.0,
+            "p95": 141.0,
+            "p99": 141.0,
+            "maximum": 141.0
+          },
+          "scanned_live_objects": {
+            "mean": 4063.214285714286,
+            "p50": 6715.0,
+            "p95": 6715.0,
+            "p99": 6715.0,
+            "maximum": 6715.0
+          },
+          "graph_distance_calls": {
+            "mean": 1918.0,
+            "p50": 1465.0,
+            "p95": 5225.0,
+            "p99": 5250.0,
+            "maximum": 5255.0
+          },
+          "scan_distance_calls": {
+            "mean": 760.7,
+            "p50": 161.0,
+            "p95": 4381.0,
+            "p99": 4635.0,
+            "maximum": 4792.0
+          },
+          "merged_candidates": {
+            "mean": 268.3285714285714,
+            "p50": 77.0,
+            "p95": 952.0,
+            "p99": 965.0,
+            "maximum": 977.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 210,
+            "unique_qidx": 70,
+            "macro": 0.9914285714285713,
+            "pair": 0.9902120717781403
+          }
+        },
+        "direct": {
+          "queries": 240,
+          "e2e_us": {
+            "mean": 1.284375,
+            "p50": 0.22,
+            "p95": 4.258,
+            "p99": 14.106,
+            "maximum": 15.168
+          },
+          "distance_calls": {
+            "mean": 1.825,
+            "p50": 0.0,
+            "p95": 6.0,
+            "p99": 13.0,
+            "maximum": 35.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 1.0,
+            "p50": 1.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "graph_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 0.5,
+            "p50": 0.0,
+            "p95": 1.0,
+            "p99": 1.0,
+            "maximum": 1.0
+          },
+          "scanned_live_objects": {
+            "mean": 13.7,
+            "p50": 0.0,
+            "p95": 49.0,
+            "p99": 126.0,
+            "maximum": 368.0
+          },
+          "graph_distance_calls": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "scan_distance_calls": {
+            "mean": 1.825,
+            "p50": 0.0,
+            "p95": 6.0,
+            "p99": 13.0,
+            "maximum": 35.0
+          },
+          "merged_candidates": {
+            "mean": 1.4625,
+            "p50": 0.0,
+            "p95": 6.0,
+            "p99": 10.0,
+            "maximum": 10.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 10.0,
+            "p50": 0.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 120,
+            "unique_qidx": 40,
+            "macro": 1.0,
+            "pair": 1.0
+          }
+        },
+        "recursive": {
+          "queries": 360,
+          "e2e_us": {
+            "mean": 576.9887111111111,
+            "p50": 44.073,
+            "p95": 2076.12,
+            "p99": 2561.381,
+            "maximum": 2988.254
+          },
+          "distance_calls": {
+            "mean": 1574.3583333333333,
+            "p50": 80.0,
+            "p95": 5259.0,
+            "p99": 5823.0,
+            "maximum": 5846.0
+          },
+          "eligibility_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "eligible_scan_us": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "directory_visits": {
+            "mean": 55.19166666666667,
+            "p50": 4.0,
+            "p95": 151.0,
+            "p99": 151.0,
+            "maximum": 151.0
+          },
+          "graph_calls": {
+            "mean": 0.7,
+            "p50": 0.0,
+            "p95": 2.0,
+            "p99": 2.0,
+            "maximum": 2.0
+          },
+          "scalar_scan_group_calls": {
+            "mean": 51.45,
+            "p50": 3.0,
+            "p95": 141.0,
+            "p99": 141.0,
+            "maximum": 141.0
+          },
+          "scanned_live_objects": {
+            "mean": 2440.7,
+            "p50": 551.0,
+            "p95": 6715.0,
+            "p99": 6715.0,
+            "maximum": 6715.0
+          },
+          "graph_distance_calls": {
+            "mean": 1118.8333333333333,
+            "p50": 0.0,
+            "p95": 5215.0,
+            "p99": 5250.0,
+            "maximum": 5255.0
+          },
+          "scan_distance_calls": {
+            "mean": 455.525,
+            "p50": 32.0,
+            "p95": 2316.0,
+            "p99": 4635.0,
+            "maximum": 4792.0
+          },
+          "merged_candidates": {
+            "mean": 159.94166666666666,
+            "p50": 14.0,
+            "p95": 747.0,
+            "p99": 965.0,
+            "maximum": 977.0
+          },
+          "qualification_directory_visits": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_posting_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "qualification_attribute_words": {
+            "mean": 0.0,
+            "p50": 0.0,
+            "p95": 0.0,
+            "p99": 0.0,
+            "maximum": 0.0
+          },
+          "effective_ef": {
+            "mean": 20.0,
+            "p50": 20.0,
+            "p95": 20.0,
+            "p99": 20.0,
+            "maximum": 20.0
+          },
+          "quality": {
+            "nonempty": 360,
+            "unique_qidx": 120,
+            "macro": 0.995,
+            "pair": 0.9937629937629938
+          }
+        }
+      }
+    }
+  }
+}
