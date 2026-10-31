@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Eligibility-aware replay and NodeANN audit; serial C++ timing, no Python ANN.
 
-Static: eight main variants at ef15/20, one exact control, two graph-only
-NodeANN diagnostics, three rotations. Maintenance: original mixed prefix plus
+Static: seven main variants at ef15/20, one exact control, two historical
+hybrid-reference points, three rotations. NodeANN's main arm is pure HNSW.
+Maintenance: original mixed prefix plus
 an explicit compaction envelope; not permission for large-scale experiments.
 All points are retained, including low-recall and slow ones.
 """
@@ -21,7 +22,7 @@ from run_closure import (ROOT, SINGLE_THREAD_ENV, distribution, file_hashes,
 from run_closure_small_ef import group_rows, pair_rows, trace_groups
 
 REPO = ROOT.parents[1]
-MAIN = [('A-off', 'A', 'off'), ('A-aware', 'A', 'hybrid'),
+MAIN = [('A-graph', 'A', 'off'),
         ('U-off', 'U', 'off'), ('U-cap', 'U', 'cap'), ('U-aware', 'U', 'hybrid'),
         ('H-off', 'H', 'off'), ('H-cap', 'H', 'cap'), ('H-aware', 'H', 'hybrid')]
 EFS = (15, 20)
@@ -86,7 +87,9 @@ def run(args):
     out.mkdir(parents=True, exist_ok=False)
     manifest = dict(complete=False, kind='eligibility_execution_and_baseline_audit',
                     stage=args.stage, smoke_only=args.smoke, k=10, efs=list(EFS),
-                    repeats=REPEATS, eligible_scan_threshold=512, node_scan_threshold=512,
+                    repeats=REPEATS, eligible_scan_threshold=512, node_scan_threshold=0,
+                    baseline_definition='pure direct-owner HNSW; no scan fallback or eligibility planner',
+                    historical_reference_scan_threshold=512,
                     efConstruction=200, M=16, pool_size=64, selection_performed=False,
                     large_scale_admitted=False, commands=[], input={},
                     previous_manifest_sha256=sha256_file(previous / 'manifest.json'),
@@ -172,12 +175,14 @@ def run(args):
                 manifest['input'][name][trace_name] = dict(trace=str(trace), sha256=sha256_file(trace),
                     gt_sha256=sha256_file(tape), description=description)
                 if args.stage == 'static':
-                    grid = [(label, arm, policy, ef, 512) for ef in EFS for label, arm, policy in MAIN]
+                    grid = [(label, arm, policy, ef, 0 if arm == 'A' else 512)
+                            for ef in EFS for label, arm, policy in MAIN]
                     grid += [('Exact', 'U', 'exact', 20, 512)]
-                    grid += [('A-graph-only', 'A', 'off', ef, 0) for ef in EFS]
+                    grid += [('A-hybrid-reference', 'A', 'off', ef, 512) for ef in EFS]
                 else:
-                    grid = [(label, arm, policy, 20, 512) for label, arm, policy in MAIN
-                            if label in ('A-off', 'A-aware', 'U-aware', 'H-aware')]
+                    grid = [(label, arm, policy, 20, 0 if arm == 'A' else 512)
+                            for label, arm, policy in MAIN
+                            if label in ('A-graph', 'U-aware', 'H-aware')]
                 cache = {}
                 for repeat in range(REPEATS):
                     ordered = grid[repeat:] + grid[:repeat]
@@ -191,6 +196,14 @@ def run(args):
                         command(cmd, prefix)
                         qr, ur, summary = verify_run(prefix, tape, events)
                         validate_policy(qr, policy, ef, 512)
+                        if label == 'A-graph':
+                            for row in qr:
+                                if row['eligibility_policy'] != 'off' or any(int(row[key]) for key in
+                                        ('scalar_scan_group_calls', 'scanned_live_objects', 'scan_distance_calls')):
+                                    raise ValueError('pure NodeANN used a scan/planner path')
+                                if int(row['graph_calls']) != int(row['fanout']) or (
+                                        int(row['scope_card']) > 0 and int(row['graph_calls']) == 0):
+                                    raise ValueError('pure NodeANN did not search every nonempty direct group')
                         groups = group_rows(qr, events, phases, live)
                         for band, pred in [('empty', lambda e: e == 0),
                                            ('E_lt_ef', lambda e: 0 < e < ef),
@@ -207,10 +220,10 @@ def run(args):
                 if args.stage == 'static':
                     for repeat in range(REPEATS):
                         for ef in EFS:
-                            for left, right in [('H-aware', 'A-off'), ('H-aware', 'A-aware'),
+                            for left, right in [('H-aware', 'A-graph'), ('U-aware', 'A-graph'),
                                                 ('H-aware', 'U-aware'), ('H-cap', 'H-off'),
-                                                ('H-aware', 'H-cap'), ('A-aware', 'A-off'),
-                                                ('A-graph-only', 'A-off')]:
+                                                ('H-aware', 'H-cap'), ('H-aware', 'A-hybrid-reference'),
+                                                ('A-hybrid-reference', 'A-graph')]:
                                 lr, rr = cache[(repeat, ef, left)], cache[(repeat, ef, right)]
                                 pair_rows(lr, rr)
                                 lm, rm = measured([r for r in lr if int(r['gt_count'])]), measured([r for r in rr if int(r['gt_count'])])
