@@ -1,6 +1,7 @@
-// Dynamic A/B/C replay. The frozen static/autoresearch runners are independent.
+// Dynamic A/B/C/P replay. The frozen static/autoresearch runners are independent.
 #include "raw_l2_space.h"
 #include "eligibility_index.h"
+#include "packed_index.h"
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -55,6 +56,9 @@ struct Args {
     char arm = 0;
     size_t ef = 256, scan = 512, k = 10, eligible_scan_threshold = 512;
     std::string eligibility_policy = "off";
+    std::string pack_layout = "dfs";
+    size_t pack_size = 1024;
+    bool pack_final_repack = false;
     double compact = .2;
 };
 Args arguments(int argc, char** argv) {
@@ -67,12 +71,22 @@ Args arguments(int argc, char** argv) {
         else if (key == "--out") a.out = value;
         else if (key == "--gt-in") a.gt_in = value;
         else if (key == "--arm") {
-            if (value.size() != 1) fail("arm must be A, B or C");
+            if (value.size() != 1) fail("arm must be A, B, C or P");
             a.arm = value[0];
         } else if (key == "--ef") a.ef = std::stoull(value);
         else if (key == "--scan-threshold") a.scan = std::stoull(value);
         else if (key == "--eligibility-policy") a.eligibility_policy = value;
         else if (key == "--eligible-scan-threshold") a.eligible_scan_threshold = std::stoull(value);
+        else if (key == "--pack-layout") a.pack_layout = value;
+        else if (key == "--pack-size") {
+            if (value.empty() || value[0] == '-') fail("pack-size must be positive");
+            size_t used = 0;
+            a.pack_size = std::stoull(value, &used);
+            if (used != value.size() || !a.pack_size) fail("pack-size must be positive");
+        } else if (key == "--pack-final-repack") {
+            if (value != "0" && value != "1") fail("pack-final-repack must be 0 or 1");
+            a.pack_final_repack = value == "1";
+        }
         else if (key == "--compact-threshold") a.compact = std::stod(value);
         else if (key == "--k") a.k = std::stoull(value);
         else fail("unknown option " + key);
@@ -80,12 +94,17 @@ Args arguments(int argc, char** argv) {
     if (a.eligibility_policy != "off" && a.eligibility_policy != "cap" &&
         a.eligibility_policy != "hybrid" && a.eligibility_policy != "exact")
         fail("eligibility-policy must be off, cap, hybrid or exact");
+    if (a.pack_layout != "dfs" && a.pack_layout != "shuffle" && a.pack_layout != "node")
+        fail("pack-layout must be dfs, shuffle or node");
+    if (a.arm == 'P' && a.eligibility_policy == "off") fail("P requires eligibility-policy cap, hybrid or exact");
+    if (a.arm != 'P' && a.pack_final_repack) fail("pack-final-repack requires arm P");
     if (a.data.empty() || a.trace.empty() || a.out.empty() ||
-        (a.arm != 'A' && a.arm != 'B' && a.arm != 'C') || !a.ef || !a.k ||
+        (a.arm != 'A' && a.arm != 'B' && a.arm != 'C' && a.arm != 'P') || !a.ef || !a.k ||
         !std::isfinite(a.compact) || a.compact <= 0 || a.compact > 1)
-        fail("usage: dynamic_triad --data DIR --trace FILE --arm A|B|C --out PREFIX "
+        fail("usage: dynamic_triad --data DIR --trace FILE --arm A|B|C|P --out PREFIX "
              "[--ef 256 --scan-threshold 512 --compact-threshold .2 --k 10 --gt-in PREFIX.queries.csv "
-             "--eligibility-policy off|cap|hybrid|exact --eligible-scan-threshold 512]");
+             "--eligibility-policy off|cap|hybrid|exact --eligible-scan-threshold 512 "
+             "--pack-layout dfs|shuffle|node --pack-size 1024 --pack-final-repack 0|1]");
     return a;
 }
 std::vector<float> floats(const std::string& path) {
@@ -215,6 +234,7 @@ struct Update {
     double compact_us = 0;
     Maintenance maintenance[3];
     double eligibility_us = 0;
+    packed::UpdateWork packed_work;
 };
 struct Local { std::unique_ptr<Graph> graph; };
 
@@ -231,6 +251,7 @@ class Runner {
     std::unique_ptr<CountedL2> space;
     std::unique_ptr<Graph> global;
     std::unique_ptr<eligibility::Index> eligibility_index;
+    std::unique_ptr<packed::Index> packed_index;
     std::vector<size_t> local_eligible_counts;
     size_t dim = 0, root = NONE, version = 0, query_index = 0, update_count = 0;
     uint64_t invalid = 0, duplicates = 0, violations = 0, distances = 0, hops = 0;
@@ -245,6 +266,11 @@ class Runner {
     uint64_t total_mask_mismatches = 0;
     size_t effective_ef_min = NONE, effective_ef_max = 0;
     double eligibility_build_us = 0, eligibility_update_us_total = 0;
+    uint64_t build_distances = 0, update_distances = 0, initial_pack_fingerprint = 0;
+    uint64_t packed_qualified_ids = 0;
+    double final_repack_us = 0;
+    packed::UpdateWork final_repack_work;
+    bool final_repack_complete = false;
     double eligibility_us_total = 0, eligible_scan_us_total = 0;
     double build_s = 0, query_total = 0, update_total = 0, gt_total = 0, recall_sum = 0;
     Update totals;
@@ -261,6 +287,8 @@ class Runner {
                 q.category, q.lo, q.hi, q.tagmode, q.tags, q.combine};
     }
     void syncEligibility(Id id, Update& u) {
+        if (packed_index)
+            packed_index->update(static_cast<npi::Id>(id), eligibilityItem(items[id]), u.packed_work);
         if (!eligibility_index) return;
         const auto start = Clock::now();
         eligibility_index->update(static_cast<npi::Id>(id), eligibilityItem(items[id]));
@@ -336,6 +364,11 @@ class Runner {
         };
         if (global) add(*global);
         for (const auto& l : local) if (l.graph) add(*l.graph);
+        if (packed_index) {
+            result.hnsw_nodes = packed_index->graph_count();
+            result.live = packed_index->live_count();
+            result.dead = packed_index->dead_count();
+        }
         return result;
     }
     void reconcile(size_t n, Update& u) {
@@ -363,6 +396,7 @@ class Runner {
         }
     }
     void eraseMembership(Id id, size_t n, Update& u) {
+        if (args.arm == 'P') return; // Logical membership belongs to shared eligibility.
         if (args.arm == 'A') {
             if (direct[n].erase(id) != 1) fail("missing A direct membership");
             ++u.writes;
@@ -379,6 +413,7 @@ class Runner {
         }
     }
     void addMembership(Id id, size_t n, Update& u) {
+        if (args.arm == 'P') return;
         if (args.arm == 'A') {
             if (!direct[n].insert(id).second) fail("duplicate A direct membership");
             ++u.writes;
@@ -552,7 +587,8 @@ class Runner {
             effective_ef = std::min(eligible->count, std::max(args.ef, std::min(args.k, eligible->count)));
             exact_scan = args.eligibility_policy == "exact" ||
                 (args.eligibility_policy == "hybrid" &&
-                 eligible->count <= std::max({args.k, args.ef, args.eligible_scan_threshold}));
+                 eligible->count <= std::max({args.k, args.ef,
+                     args.arm == 'P' ? size_t(512) : args.eligible_scan_threshold}));
             if (args.arm == 'A' && !exact_scan) {
                 // Bucket only qualified set bits using the index's stored owner;
                 // never scan canonical objects to discover eligibility.
@@ -574,6 +610,8 @@ class Runner {
         const Posting* allowed = &candidates;
         if (bypass) {
             // Exact/empty execution needs no local fanout or catalog compilation.
+        } else if (args.arm == 'P') {
+            scope = eligible->scope_count;
         } else if (args.arm == 'A') {
             auto nodes = q.recursive ? subtree(q.anchor) : std::vector<size_t>{q.anchor};
             directory_visits = nodes.size();
@@ -607,13 +645,14 @@ class Runner {
                     for (Id id : catalog.at(paths[child])) candidates.erase(id);
             }
         }
-        if (args.arm != 'A' && !bypass) scope = allowed->size();
+        if ((args.arm == 'B' || args.arm == 'C') && !bypass) scope = allowed->size();
         if (!eligible) effective_ef = scope ? std::max(args.ef, std::min(args.k, scope)) : 0;
         double dir_us = elapsed(e2e_start);
         auto search_start = Clock::now();
         uint64_t dc0 = space->calls, scan_calls = 0, query_hops = 0;
         size_t local_indexes = 0, graph_calls = 0, scan_groups = 0, scanned_live = 0;
         size_t local_ef_min = NONE, local_ef_max = 0;
+        packed::Work packed_query;
         auto record_ef = [&](size_t ef) {
             local_ef_min = std::min(local_ef_min, ef);
             local_ef_max = std::max(local_ef_max, ef);
@@ -662,6 +701,15 @@ class Runner {
                 }
                 result.insert(result.end(), found.begin(), found.end());
             }
+        } else if (!bypass && args.arm == 'P') {
+            const auto found = packed_index->search(qvec, args.k, args.ef, *eligible, packed_query);
+            result.assign(found.begin(), found.end());
+            graph_calls = local_indexes = packed_query.graph_calls;
+            query_hops = packed_query.hops;
+            if (graph_calls) {
+                local_ef_min = packed_query.effective_ef_min;
+                local_ef_max = packed_query.effective_ef_max;
+            }
         } else if (!bypass && scope) {
             ++graph_calls;
             const size_t k = std::min(args.k, eligible ? eligible->count : scope);
@@ -670,7 +718,8 @@ class Runner {
             Filter filter(*this, q, allowed, NONE, eligible);
             result = searchGraph(*global, qvec, k, filter, query_hops, ef);
         }
-        const size_t merged_candidates = result.size();
+        const size_t merged_candidates = args.arm == 'P' && !bypass ?
+            packed_query.merged_candidates : result.size();
         // Validate before merge so deduplication never hides a broken local arm.
         std::unordered_set<Id> seen;
         size_t bad = 0, duplicate = 0;
@@ -686,7 +735,7 @@ class Runner {
         }
         top(result, args.k);
         double search_us = elapsed(search_start), e2e_us = elapsed(e2e_start);
-        const uint64_t graph_distances = space->calls - dc0;
+        const uint64_t graph_distances = args.arm == 'P' ? packed_query.distance_calls : space->calls - dc0;
         uint64_t dc = graph_distances + scan_calls;
         // Independent current-state oracle, never consulting paths/postings.
         auto gt_start = Clock::now();
@@ -733,7 +782,7 @@ class Runner {
         if (args.arm == 'A') {
             for (Id id : oracle_scope_ids)
                 if (!direct[items[id].node].count(id)) ++state_errors;
-        } else if (!bypass && *allowed != oracle_scope_ids) {
+        } else if (args.arm != 'P' && !bypass && *allowed != oracle_scope_ids) {
             // Full set equality, not merely matching cardinalities. Oracle work
             // remains outside dir/search/e2e timing.
             ++state_errors;
@@ -758,13 +807,16 @@ class Runner {
              << ',' << directory_visits << ',' << graph_calls << ',' << scan_groups << ',' << scanned_live
              << ',' << graph_distances << ',' << scan_calls << ',' << merged_candidates
              << ',' << (local_ef_min == NONE ? 0 : local_ef_min) << ',' << local_ef_max
-             << ',' << mask_mismatches << ',' << (args.arm == 'A' ? graph_calls : 0) << '\n';
+             << ',' << mask_mismatches << ',' << ((args.arm == 'A' || args.arm == 'P') ? graph_calls : 0)
+             << ',' << (packed_index ? packed_index->block_count() : 0)
+             << ',' << packed_query.qualified_ids << ',' << args.pack_layout << ',' << args.pack_size << '\n';
         qout.flush();
         ++query_index;
         query_times.push_back(e2e_us);
         query_total += e2e_us; gt_total += gt_us; recall_sum += recall;
         total_gt += gt.size(); total_hits += hit; zero_gt += gt.empty();
         gt_distance_calls += query_gt_calls;
+        packed_qualified_ids += packed_query.qualified_ids;
         invalid += bad; duplicates += duplicate; violations += state_errors;
         distances += dc; hops += query_hops;
         total_fanout += fanout; total_scan_nodes += scan_nodes;
@@ -795,6 +847,11 @@ class Runner {
             const auto& membership = catalog.at(paths[src]);
             moved_items.assign(membership.begin(), membership.end());
             u.items = moved_items.size();
+        } else if (args.arm == 'P') {
+            const auto qualification_start = Clock::now();
+            const npi::Query scope_query{0, 1, static_cast<npi::Id>(src), -1, -1, -1, 0, 0, 0};
+            u.items = eligibility_index->prepare(scope_query).scope_count;
+            u.eligibility_us += elapsed(qualification_start);
         } else {
             for (size_t n : moved_nodes)
                 u.items += args.arm == 'A' ? direct[n].size() : catalog.at(paths[n]).size();
@@ -808,8 +865,8 @@ class Runner {
         parent[src] = static_cast<int>(dst);
         u.writes += 3;
         std::vector<size_t> new_anc = args.arm == 'C' ? ancestors(dst) : std::vector<size_t>{};
-        // A only relinks: no path maintenance, inclusive postings or DFS labels.
-        if (args.arm != 'A') {
+        // A/P only relink: no path maintenance or inclusive catalogs.
+        if (args.arm == 'B' || args.arm == 'C') {
             std::vector<std::pair<size_t, std::map<std::string, Posting>::node_type>> extracted;
             extracted.reserve(moved_nodes.size());
             for (size_t n : moved_nodes) extracted.emplace_back(n, catalog.extract(paths[n]));
@@ -839,6 +896,7 @@ class Runner {
             }
         }
         u.nodes = touched.size();
+        if (packed_index) packed_index->reparent(static_cast<npi::Id>(src), static_cast<npi::Id>(dst));
         if (eligibility_index) {
             const auto start = Clock::now();
             eligibility_index->reparent(static_cast<npi::Id>(src), static_cast<npi::Id>(dst));
@@ -866,6 +924,7 @@ class Runner {
             query(number, q); return;
         }
         auto start = Clock::now();
+        const uint64_t update_dc0 = space->calls;
         Update u;
         if (op == 'V') {
             Id id; int64_t cat, num; fields(in, id, cat, num); item(id, true);
@@ -896,6 +955,17 @@ class Runner {
                 const auto& membership = catalog.at(paths[src]);
                 affected.assign(membership.begin(), membership.end());
                 for (Id id : affected) touched.insert(items[id].node);
+            } else if (args.arm == 'P') {
+                const auto qualification_start = Clock::now();
+                const npi::Query scope_query{0, 1, static_cast<npi::Id>(src), -1, -1, -1, 0, 0, 0};
+                const auto& scope_mask = eligibility_index->prepare(scope_query);
+                for (size_t word = 0; word < scope_mask.eligible.size(); ++word)
+                    for (uint64_t bits = scope_mask.eligible[word]; bits; bits &= bits - 1) {
+                        const Id id = word * 64 + __builtin_ctzll(bits);
+                        affected.push_back(id);
+                        touched.insert(items[id].node);
+                    }
+                u.eligibility_us += elapsed(qualification_start);
             } else {
                 for (size_t n : subtree(src)) {
                     const auto& membership = args.arm == 'A' ? direct[n] : catalog.at(paths[n]);
@@ -922,6 +992,11 @@ class Runner {
             u.items = u.nodes = 1;
             syncEligibility(id, u);
         } else fail("unknown event op " + std::string(1, op));
+        const uint64_t event_distances = packed_index ? u.packed_work.distance_calls : space->calls - update_dc0;
+        u.insertions += u.packed_work.graph_insertions;
+        u.deletions += u.packed_work.graph_deletions;
+        u.compactions += u.packed_work.compactions;
+        u.compact_us += u.packed_work.rebuild_us;
         double latency = elapsed(start);
         ++version; ++update_count;
         uout << number << ',' << version << ',' << op << ',' << latency << ',' << u.items << ',' << u.nodes << ','
@@ -929,10 +1004,16 @@ class Runner {
              << ',' << u.path_bytes;
         for (const auto& category : u.maintenance)
             uout << ',' << category.us << ',' << category.count << ',' << category.insertions;
-        uout << ',' << u.eligibility_us << '\n';
+        uout << ',' << u.eligibility_us << ',' << event_distances << ',' << u.packed_work.splits
+             << ',' << u.packed_work.rebuild_us
+             << ',' << (packed_index ? packed_index->block_count() : 0)
+             << ',' << args.pack_layout << ',' << args.pack_size << '\n';
         uout.flush();
         update_times.push_back(latency); update_total += latency;
         eligibility_update_us_total += u.eligibility_us;
+        update_distances += event_distances;
+        totals.packed_work.splits += u.packed_work.splits;
+        totals.packed_work.rebuild_us += u.packed_work.rebuild_us;
         totals.writes += u.writes; totals.insertions += u.insertions; totals.deletions += u.deletions;
         totals.compactions += u.compactions; totals.compact_us += u.compact_us; totals.path_bytes += u.path_bytes;
         for (size_t i = 0; i < 3; ++i) {
@@ -948,9 +1029,57 @@ class Runner {
         size_t lo = static_cast<size_t>(pos), hi = std::min(lo + 1, v.size() - 1);
         return v[lo] + (v[hi] - v[lo]) * (pos - lo);
     }
+    uint64_t canonicalFingerprint() const {
+        uint64_t hash = 14695981039346656037ULL;
+        auto mix = [&](uint64_t value) {
+            for (unsigned byte = 0; byte < 8; ++byte) {
+                hash ^= (value >> (byte * 8)) & 255;
+                hash *= 1099511628211ULL;
+            }
+        };
+        mix(items.size()); mix(parent.size());
+        for (int p : parent) mix(static_cast<uint64_t>(p));
+        for (const auto& v : items) {
+            mix(v.node); mix(static_cast<uint64_t>(v.category)); mix(static_cast<uint64_t>(v.numeric));
+            mix(v.tags); mix(v.alive);
+        }
+        return hash;
+    }
+    void auditPacked() {
+        if (!packed_index) return;
+        std::vector<npi::Item> canonical;
+        canonical.reserve(items.size());
+        size_t live = 0;
+        for (const auto& v : items) {
+            canonical.push_back(eligibilityItem(v));
+            live += v.alive;
+        }
+        if (global || !local.empty() || !catalog.empty() || !direct.empty() ||
+            !packed_index->matches(canonical, parent) || live != packed_index->live_count() ||
+            !packed_index->valid()) {
+            ++violations;
+            fail("packed index disagrees with independent canonical state or structural invariants");
+        }
+    }
+    void finalMaintenance() {
+        if (!packed_index) return;
+        auditPacked(); // Independent checks and fingerprints are never charged as maintenance.
+        if (!args.pack_final_repack) return;
+        const auto start = Clock::now();
+        try {
+            packed_index->repack(final_repack_work);
+        } catch (...) {
+            final_repack_us = elapsed(start);
+            throw;
+        }
+        final_repack_us = elapsed(start);
+        auditPacked();
+        final_repack_complete = true;
+    }
     void summary(bool complete, const std::string& error = "", size_t failed_event = 0) {
         uint64_t graph_bytes = global ? global->indexFileSize() : 0;
         for (const auto& l : local) if (l.graph) graph_bytes += l.graph->indexFileSize();
+        if (packed_index) graph_bytes = packed_index->graph_bytes();
         // Explicit logical/container estimate, not RSS or a claim about allocator
         // capacity. Raw input/query vectors are excluded; graph vectors are in
         // indexFileSize. 3 pointers + color/padding estimates an ordered-set node.
@@ -983,7 +1112,7 @@ class Runner {
         text("arm", std::string(1, args.arm)); number("ef", args.ef); number("k", args.k);
         number("scan_threshold", args.scan); number("compact_threshold", args.compact);
         text("eligibility_policy", args.eligibility_policy);
-        number("eligible_scan_threshold", args.eligible_scan_threshold);
+        number("eligible_scan_threshold", args.arm == 'P' ? size_t(512) : args.eligible_scan_threshold);
         number("eligibility_build_us", eligibility_build_us);
         const size_t eligibility_bytes = eligibility_index ? eligibility_index->bytes() : 0;
         number("eligibility_index_bytes", eligibility_bytes);
@@ -994,17 +1123,24 @@ class Runner {
         number("n_vectors", items.size()); number("n_nodes", parent.size()); number("dim", dim);
         number("n_queries", query_index); number("n_updates", update_count); number("build_s", build_s);
         metadata += local_eligible_counts.capacity() * sizeof(size_t);
-        number("index_bytes", graph_bytes + metadata + eligibility_bytes);
+        const size_t packed_bytes = packed_index ? packed_index->bytes() : 0;
+        const size_t packed_metadata = packed_index ? packed_index->metadata_bytes() : 0;
+        number("packed_index_bytes", packed_bytes);
+        number("packed_metadata_bytes", packed_metadata);
+        number("index_bytes", (packed_index ? packed_bytes : graph_bytes) + metadata + eligibility_bytes);
         number("hnsw_serialized_bytes", graph_bytes);
-        number("metadata_bytes_estimate", metadata);
-        text("index_bytes_kind", "hnsw_indexFileSize_plus_explicit_metadata_and_eligibility_estimate_not_RSS");
-        text("metadata_estimate_model", "canonical_Item_and_tree_container_sizes+path_characters+ordered_posting_entries(size_t+4_pointers)+local_eligibility_counts;eligibility_index_reported_separately;raw_input_vectors_excluded");
+        number("metadata_bytes_estimate", metadata + packed_metadata);
+        text("index_bytes_kind", packed_index ?
+             "packed_capacity_estimate_plus_canonical_metadata_and_eligibility_not_RSS" :
+             "hnsw_indexFileSize_plus_explicit_metadata_and_eligibility_estimate_not_RSS");
+        text("metadata_estimate_model", "canonical_Item_and_tree_container_sizes+path_characters+ordered_posting_entries(size_t+4_pointers)+local_eligibility_counts+packed_metadata;eligibility_index_reported_separately;raw_input_vectors_excluded");
+        text("hnsw_serialized_bytes_note", "indexFileSize_excludes_fixed_per_graph_label_operation_locks_and_other_resident_capacity_overheads;not_RSS");
         number("peak_rss_bytes", uint64_t(usage.ru_maxrss) * 1024);
         number("query_p50_us", percentile(query_times, .5)); number("query_p95_us", percentile(query_times, .95));
         number("query_p99_us", percentile(query_times, .99)); number("update_p50_us", percentile(update_times, .5));
         number("update_p95_us", percentile(update_times, .95)); number("update_p99_us", percentile(update_times, .99));
         number("query_total_us", query_total); number("update_total_us", update_total);
-        number("total_workload_us", query_total + update_total); number("gt_total_us", gt_total);
+        number("total_workload_us", query_total + update_total + final_repack_us); number("gt_total_us", gt_total);
         text("gt_mode", args.gt_in.empty() ? "inline" : "precomputed");
         number("gt_distance_calls", gt_distance_calls);
         number("compaction_total_us", totals.compact_us); number("compaction_count", totals.compactions);
@@ -1021,14 +1157,41 @@ class Runner {
         number("final_hnsw_node_count", final_graph_stats.hnsw_nodes);
         number("final_index_live_count", final_graph_stats.live);
         number("final_index_dead_count", final_graph_stats.dead);
-        number("initial_local_hnsw_index_count", args.arm == 'A' ? initial_graph_stats.hnsw_nodes : 0);
-        number("final_local_hnsw_index_count", args.arm == 'A' ? final_graph_stats.hnsw_nodes : 0);
+        number("initial_local_hnsw_index_count", (args.arm == 'A' || args.arm == 'P') ? initial_graph_stats.hnsw_nodes : 0);
+        number("final_local_hnsw_index_count", (args.arm == 'A' || args.arm == 'P') ? final_graph_stats.hnsw_nodes : 0);
         number("initial_indexed_vectors", initial_graph_stats.live + initial_graph_stats.dead);
         number("final_indexed_vectors", final_graph_stats.live + final_graph_stats.dead);
         number("metadata_writes", totals.writes); number("path_key_bytes_written", totals.path_bytes);
         number("ann_insertions", totals.insertions); number("ann_deletions", totals.deletions);
         number("build_ann_insertions", build_insertions);
-        number("all_ann_insertions", build_insertions + totals.insertions);
+        number("all_ann_insertions", build_insertions + totals.insertions + final_repack_work.graph_insertions);
+        number("build_distance_calls", build_distances);
+        number("update_distance_calls", update_distances);
+        number("all_graph_distance_calls", build_distances + update_distances +
+               total_graph_distances + final_repack_work.distance_calls);
+        text("pack_layout", args.pack_layout); number("pack_size", args.pack_size);
+        number("pack_final_repack", args.pack_final_repack ? 1 : 0);
+        number("final_repack_complete", final_repack_complete ? 1 : 0);
+        number("final_repack_us", final_repack_us);
+        number("final_repack_distance_calls", final_repack_work.distance_calls);
+        number("final_repack_ann_insertions", final_repack_work.graph_insertions);
+        number("final_repack_ann_deletions", final_repack_work.graph_deletions);
+        number("final_repack_compactions", final_repack_work.compactions);
+        number("final_repack_splits", final_repack_work.splits);
+        number("packed_splits", totals.packed_work.splits);
+        number("packed_rebuild_us", totals.packed_work.rebuild_us);
+        number("packed_qualified_ids", packed_qualified_ids);
+        number("physical_block_count", packed_index ? packed_index->block_count() : 0);
+        number("active_packed_graph_count", packed_index ? packed_index->graph_count() : 0);
+        number("max_block_target", packed_index ? packed_index->max_block_target() : 0);
+        number("max_block_capacity", packed_index ? packed_index->max_block_capacity() : 0);
+        text("pack_layout_definition", args.pack_layout == "node" ?
+             "candidate_ablation_one_direct_owner_group_per_initial_graph;frozen_physical_grouping_after_logical_moves;not_pure_NodeANN;target_max_1_initial_live;capacity_max_16_2target" :
+             "whole_direct_owner_groups_ID_sorted;DFS_or_seeded_group_shuffle;greedy_coalescing_to_B;large_groups_dedicated;target_max_B_initial_live;capacity_2target");
+        number("initial_packed_fingerprint", initial_pack_fingerprint);
+        number("final_packed_fingerprint", packed_index ? packed_index->fingerprint() : 0);
+        number("canonical_fingerprint", canonicalFingerprint());
+        text("maintenance_accounting", "event_rebuilds_inside_update_latency;final_repack_separate_and_in_total_workload_us;no_synthetic_events;audits_outside_timers");
         number("macro_recall", query_index ? recall_sum / query_index : 1);
         number("pair_recall", total_gt ? double(total_hits) / total_gt : 1);
         number("gt_count", total_gt); number("hit_count", total_hits); number("zero_gt_queries", zero_gt);
@@ -1036,7 +1199,7 @@ class Runner {
         number("fanout_total", total_fanout); number("scan_nodes_total", total_scan_nodes);
         number("directory_visits_total", total_directory_visits);
         number("graph_calls_total", total_graph_calls);
-        number("local_graph_calls_total", args.arm == 'A' ? total_graph_calls : 0);
+        number("local_graph_calls_total", (args.arm == 'A' || args.arm == 'P') ? total_graph_calls : 0);
         number("scalar_scan_group_calls_total", total_scan_groups);
         number("scanned_live_objects_total", total_scanned_live);
         number("graph_distance_calls", total_graph_distances);
@@ -1048,7 +1211,7 @@ class Runner {
         number("qualification_posting_words", total_qualification_postings);
         number("qualification_attribute_words", total_qualification_attributes);
         number("eligibility_mask_mismatches", total_mask_mismatches);
-        text("eligibility_work_definition", "logical_bitmap_words_and_directory_visits_not_hardware_counters;A_local_counts_enumerate_eligible_set_bits");
+        text("eligibility_work_definition", "logical_bitmap_words_and_directory_visits_not_hardware_counters;A_local_counts_and_P_physical_counts_enumerate_eligible_set_bits");
         text("directory_visits_definition", "legacy_scope_compilation_directory_entries_excludes_separately_reported_qualification_traversal");
         text("execution_timing_definition", "e2e_includes_qualification_scope_compilation_all_candidate_generation_dedup_and_topk;canonical_GT_validation_excluded");
         text("exact_policy_geometry", "original_graphs_retained_and_maintained;exact_bypasses_query_graph_search_only");
@@ -1109,6 +1272,8 @@ public:
             v.alive = alive;
         }
         if (attr >> surplus) fail("extra attrs rows");
+        if (args.eligibility_policy != "off" && items.size() > size_t(std::numeric_limits<npi::Id>::max()))
+            fail("eligibility index item IDs exceed uint32 range");
         auto start = Clock::now();
         space = std::make_unique<CountedL2>(dim);
         Update build;
@@ -1119,6 +1284,12 @@ public:
                 local[i].graph = graph(std::max(size_t(16), direct[i].size() * 2));
                 for (Id id : direct[i]) insertGraph(*local[i].graph, id, build);
             }
+        } else if (args.arm == 'P') {
+            std::vector<npi::Item> metadata;
+            metadata.reserve(items.size());
+            for (const auto& v : items) metadata.push_back(eligibilityItem(v));
+            packed_index = std::make_unique<packed::Index>(base, dim, metadata, parent, args.pack_size, args.pack_layout);
+            build.insertions = packed_index->live_count();
         } else {
             paths.resize(nodes);
             for (size_t i = 0; i < nodes; ++i) { paths[i] = pathFor(i); catalog.emplace(paths[i], Posting{}); }
@@ -1131,8 +1302,6 @@ public:
         }
         if (args.eligibility_policy != "off") {
             const auto eligibility_start = Clock::now();
-            if (items.size() > size_t(std::numeric_limits<npi::Id>::max()))
-                fail("eligibility index item IDs exceed uint32 range");
             {
                 std::vector<npi::Item> metadata;
                 metadata.reserve(items.size());
@@ -1144,6 +1313,9 @@ public:
         }
         build_s = elapsed(start) / 1e6;
         build_insertions = build.insertions;
+        build_distances = packed_index ? packed_index->build_distance_calls() : space->calls;
+        initial_pack_fingerprint = packed_index ? packed_index->fingerprint() : 0;
+        auditPacked();
         initial_graph_stats = graphStats();
         auto directory = std::filesystem::path(args.out).parent_path();
         if (!directory.empty()) std::filesystem::create_directories(directory);
@@ -1154,11 +1326,12 @@ public:
         qout << query_columns << ",gt_distance_calls,eligibility_us,eligible_scan_us,eligibility_policy,execution_path,effective_ef"
              << ",qualification_directory_visits,qualification_posting_words,qualification_attribute_words"
              << ",directory_visits,graph_calls,scalar_scan_group_calls,scanned_live_objects"
-             << ",graph_distance_calls,scan_distance_calls,merged_candidates,effective_ef_min,effective_ef_max,eligibility_mask_mismatches,local_graph_calls\n";
+             << ",graph_distance_calls,scan_distance_calls,merged_candidates,effective_ef_min,effective_ef_max,eligibility_mask_mismatches,local_graph_calls"
+             << ",physical_block_count,packed_qualified_ids,pack_layout,pack_size\n";
         uout << "event,version,op,latency_us,affected_items,affected_nodes,metadata_writes,ann_insertions,ann_deletions,compaction_us,compaction_count,path_key_bytes_written";
         for (const char* name : maintenance_names)
             uout << ',' << name << "_us," << name << "_count," << name << "_ann_insertions";
-        uout << ",eligibility_update_us\n";
+        uout << ",eligibility_update_us,graph_distance_calls,packed_splits,packed_rebuild_us,physical_block_count,pack_layout,pack_size\n";
     }
     void run() {
         std::ifstream trace(args.trace);
@@ -1176,6 +1349,7 @@ public:
             while (std::getline(trace, line))
                 if (line.find_first_not_of(" \t\r") != std::string::npos) fail("extra trace event after declared count");
             if (!args.gt_in.empty()) gt_tape.finish(args.gt_in);
+            finalMaintenance();
             summary(true);
         } catch (const std::exception& e) {
             std::string context = "event " + std::to_string(current) + ": " + e.what();
