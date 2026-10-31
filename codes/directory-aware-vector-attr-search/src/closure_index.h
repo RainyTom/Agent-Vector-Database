@@ -2,6 +2,7 @@
 
 #include "closure_order.h"
 #include "raw_l2_space.h"
+#include "eligibility_index.h"
 #include <array>
 #include <chrono>
 #include <cstring>
@@ -18,13 +19,18 @@ struct Work {
     uint64_t scope_rejected = 0, pruned = 0, retained = 0, witness_tests = 0;
     uint64_t hierarchy_steps = 0, backbone_ids = 0, qualification_tests = 0;
     double compile_us = 0;
+    double eligibility_us = 0, eligible_scan_us = 0;
+    size_t effective_ef = 0;
+    const char* execution_path = "legacy";
+    uint64_t qualification_directory_visits = 0, qualification_posting_words = 0, qualification_attribute_words = 0;
 };
 struct UpdateWork {
     uint64_t geometry_calls = 0, pools_rebuilt = 0, graph_insertions = 0, graph_deletions = 0;
     uint64_t compactions = 0, metadata_writes = 0, affected_items = 0;
     double rebuild_us = 0;
+    double eligibility_update_us = 0;
 };
-struct BuildStats { double total_s = 0, graph_s = 0, pools_s = 0; uint64_t geometry_calls = 0; };
+struct BuildStats { double total_s = 0, graph_s = 0, pools_s = 0, eligibility_build_us = 0; uint64_t geometry_calls = 0; };
 
 // Single-threaded dynamic experiment index. Dataset vectors must remain immutable
 // and the Dataset must outlive this object. Parent/items are updated in place;
@@ -54,10 +60,19 @@ class Index {
     };
 
 public:
-    explicit Index(npi::Dataset& data, size_t pool_size = 64)
+    explicit Index(npi::Dataset& data, size_t pool_size = 64,
+                   std::string policy = "off", size_t scan_threshold = 512)
         : started_(Clock::now()), data_(data), space_(checked_dimension(data)),
-          order_(data), pool_size_(pool_size), pools_(data.n), seen_(data.n, 0) {
+          order_(data), pool_size_(pool_size), pools_(data.n), seen_(data.n, 0),
+          eligibility_policy_(std::move(policy)), scan_threshold_(scan_threshold) {
         if (!pool_size || pool_size > 64) fail("pool_size must be in [1,64]");
+        if (eligibility_policy_ != "off" && eligibility_policy_ != "cap" &&
+            eligibility_policy_ != "hybrid" && eligibility_policy_ != "exact") fail("invalid eligibility policy");
+        if (eligibility_policy_ != "off") {
+            const auto start = Clock::now();
+            eligibility_ = std::make_unique<eligibility::Index>(data.items, data.parent);
+            stats_.eligibility_build_us = microseconds(start);
+        }
         const auto graph_start = Clock::now();
         rebuild_graph();
         stats_.graph_s = seconds(graph_start);
@@ -76,7 +91,44 @@ public:
     std::vector<Neighbor> search(const npi::Query& query, Mode mode, size_t ef, size_t k,
                                  Work& work, bool attribute_witness = true) {
         npi::filter_detail::validate(query, data_);
-        if (!k || ef < k) fail("search requires ef >= k >= 1");
+        if (!k || (!eligibility_ && ef < k)) fail("search requires k >= 1 (off requires ef >= k)");
+        work.effective_ef = ef;
+        if (eligibility_) {
+            const auto start = Clock::now();
+            prepared_ = &eligibility_->prepare(query);
+            work.eligibility_us = microseconds(start);
+            work.qualification_directory_visits = prepared_->directory_visits;
+            work.qualification_posting_words = prepared_->posting_words;
+            work.qualification_attribute_words = prepared_->attribute_words;
+            const size_t requested_ef = ef;
+            k = std::min(k, prepared_->count);
+            ef = std::min(prepared_->count, std::max(k, ef));
+            work.effective_ef = ef;
+            if (!prepared_->count) { work.execution_path = "empty"; return {}; }
+            if (eligibility_policy_ == "exact" || (eligibility_policy_ == "hybrid" &&
+                prepared_->count <= std::max({k, requested_ef, scan_threshold_}))) {
+                work.execution_path = "exact";
+                const auto scan_start = Clock::now();
+                std::priority_queue<Neighbor> best;
+                const float* qvec = data_.tests.data() + query.qidx * data_.dim;
+                for (size_t word = 0; word < prepared_->eligible.size(); ++word) {
+                    uint64_t bits = prepared_->eligible[word];
+                    while (bits) {
+                        const Id id = static_cast<Id>(word * 64 + __builtin_ctzll(bits));
+                        bits &= bits - 1;
+                        ++work.distance_calls;
+                        const Neighbor key{space_.raw.dist(qvec, vector(id)), id};
+                        if (best.size() < k) best.push(key);
+                        else if (key < best.top()) { best.pop(); best.push(key); }
+                    }
+                }
+                std::vector<Neighbor> answer(best.size());
+                for (size_t i = answer.size(); i-- > 0;) { answer[i] = best.top(); best.pop(); }
+                work.eligible_scan_us = microseconds(scan_start);
+                return answer;
+            }
+            work.execution_path = "graph";
+        }
         const auto bounds = order_.bounds(query.anchor, query.recursive != 0);
         if (!bounds.live_count) return {};
         if (++epoch_ == 0) { std::fill(seen_.begin(), seen_.end(), 0); epoch_ = 1; }
@@ -148,12 +200,14 @@ public:
         item.category = category; item.numeric = numeric;
         work.metadata_writes += writes;
         work.affected_items += writes != 0;
+        update_eligibility(id, work);
     }
     void apply_tags(Id id, uint64_t tags, UpdateWork& work) {
         require_item(id, true);
         if (data_.items[id].tags != tags) {
             data_.items[id].tags = tags; ++work.metadata_writes; ++work.affected_items;
         }
+        update_eligibility(id, work);
     }
     void apply_move(Id id, Id destination, UpdateWork& work) {
         require_item(id, true); require_dir(destination);
@@ -162,6 +216,7 @@ public:
             data_.items[id].owner = destination;
             ++work.metadata_writes; ++work.affected_items;
         }
+        update_eligibility(id, work);
     }
     void apply_batch(Id source, Id destination, UpdateWork& work) {
         require_dir(source); require_dir(destination);
@@ -181,6 +236,11 @@ public:
         const size_t affected = order_.bounds(source, true).live_count;
         order_.reparent(source, destination);
         data_.parent[source] = static_cast<int>(destination);
+        if (eligibility_) {
+            const auto start = Clock::now();
+            eligibility_->reparent(source, destination); prepared_ = nullptr;
+            work.eligibility_update_us += microseconds(start);
+        }
         ++work.metadata_writes;
         work.affected_items += affected;
     }
@@ -191,6 +251,7 @@ public:
         order_.remove_object(id);
         data_.items[id].alive = false;
         ++work.metadata_writes; ++work.affected_items;
+        update_eligibility(id, work);
         const size_t stored = graph_->cur_element_count.load();
         if (stored && graph_->num_deleted_.load() >= (stored + 2) / 3) compact(work);
     }
@@ -204,6 +265,7 @@ public:
         else graph_->unmarkDelete(id);
         ++work.graph_insertions;
         data_.items[id] = npi::Item{owner, category, numeric, tags, true};
+        update_eligibility(id, work);
         order_.insert_object(id, owner);
         work.metadata_writes += 5; ++work.affected_items;
         rebuild_pool(id); ++work.pools_rebuilt;
@@ -266,9 +328,11 @@ public:
         for (size_t i = 0; i < graph_->cur_element_count.load(); ++i)
             if (graph_->element_levels_[i] > 0)
                 bytes += graph_->size_links_per_element_ * graph_->element_levels_[i] + 1;
-        return bytes;
+        return bytes + eligibility_bytes();
     }
     const BuildStats& build_stats() const { return stats_; }
+    size_t eligibility_bytes() const { return eligibility_ ? eligibility_->bytes() : 0; }
+    const eligibility::Result* prepared_eligibility() const { return prepared_; }
 
 private:
     Clock::time_point started_;
@@ -281,6 +345,17 @@ private:
     uint32_t epoch_ = 0;
     std::unique_ptr<Graph> graph_;
     BuildStats stats_;
+    std::string eligibility_policy_;
+    size_t scan_threshold_;
+    std::unique_ptr<eligibility::Index> eligibility_;
+    const eligibility::Result* prepared_ = nullptr;
+
+    void update_eligibility(Id id, UpdateWork& work) {
+        if (!eligibility_) return;
+        const auto start = Clock::now();
+        eligibility_->update(id, data_.items[id]); prepared_ = nullptr;
+        work.eligibility_update_us += microseconds(start);
+    }
 
     [[noreturn]] static void fail(const char* message) { throw std::runtime_error(std::string("closure: ") + message); }
     static size_t checked_dimension(const npi::Dataset& data) {
