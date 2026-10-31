@@ -1,0 +1,108 @@
+{
+  "kind": "synthetic_only_no_real_SIFT_or_WIKI_performance_claim",
+  "tests": {
+    "packed": 5,
+    "eligibility": 2,
+    "dynamic_triad": 3
+  },
+  "runs": [
+    {
+      "stage": "final-diagnostic-static",
+      "runs": 57,
+      "queries": 10260,
+      "updates": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 0,
+      "state_errors": 0,
+      "manifest_sha256": "aed80cbd50123ca399222f85a4e932aac2f5480f623b4aba3c59ad235208b38f"
+    },
+    {
+      "stage": "final-diagnostic-maintenance",
+      "runs": 30,
+      "queries": 4590,
+      "updates": 690,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 24,
+      "state_errors": 0,
+      "manifest_sha256": "57af9cd55dcb003e018da1c7ff804d3bc6da94d3342ff8a7c22067a3b630a6d2"
+    },
+    {
+      "stage": "final-scale-static",
+      "runs": 33,
+      "queries": 8448,
+      "updates": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 0,
+      "state_errors": 0,
+      "manifest_sha256": "17d47d1c9f87a5274d029632e8e653464e00bb70430800ffe3e5bb8184e7b561"
+    },
+    {
+      "stage": "final-scale-maintenance",
+      "runs": 30,
+      "queries": 6360,
+      "updates": 30420,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 24,
+      "state_errors": 0,
+      "manifest_sha256": "cf20c19ac957c2ff654b8a577acca2eb0a771b2cb9c18a48d5e18755da098f34"
+    }
+  ],
+  "baseline_invariance": [
+    {
+      "ef": 15,
+      "queries": 180,
+      "mismatches": 0,
+      "fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "graph_calls",
+        "fanout",
+        "scan_distance_calls",
+        "scalar_scan_group_calls"
+      ]
+    },
+    {
+      "ef": 20,
+      "queries": 180,
+      "mismatches": 0,
+      "fields": [
+        "result_ids",
+        "gt_ids",
+        "distance_calls",
+        "graph_calls",
+        "fanout",
+        "scan_distance_calls",
+        "scalar_scan_group_calls"
+      ]
+    }
+  ],
+  "generator": {
+    "synthetic_n": 4096,
+    "dim": 128,
+    "queries": 256,
+    "query_offset": 32,
+    "raw_bits_preserved": true,
+    "owner_count_control_equal": true
+  },
+  "sources": {
+    "codes/directory-aware-vector-attr-search/src/packed_index.h": "765ea5facdf5f8adfa764c118b90b5fcf9ed7a75a1129109710300b259b9b431",
+    "codes/directory-aware-vector-attr-search/src/dynamic_triad.cpp": "d2b527b1514c224403bfabef9baae2459a6bd18287ac50c673707f9e1ac53b19",
+    "codes/directory-aware-vector-attr-search/scripts/run_packed.py": "89ebcf3cb2cf4940dc38d441cd55d941d18cecd5561fcf637e24ce325c530a19",
+    "codes/directory-aware-vector-attr-search/scripts/prepare_packed_sift.py": "aa18b6b0921e327fc06f6f25ba8bcca91b01f2524cf735b6b0a4aea9b2cdd8c1",
+    "codes/directory-aware-vector-attr-search/tests/test_packed.py": "5be27e40f96de86ef61d5f31e8e1c71d52517fb996c7c4958575c3348dfe3d8a"
+  },
+  "limitation": "Complete finite lifecycle and actual ANN replay smoke, not real dataset performance or concurrency validation."
+}

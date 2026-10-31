@@ -236,3 +236,13 @@ python scripts/run_eligibility.py \
 
 真实两数据集固定102次静态、36次有限维护，ef15/20；保留全部点，不自动升预算或扩N。主比较针对纯NodeANN；混合参考差异如实披露，不设置额外胜出门槛。源SHA、输入SHA、独立GT、完整e2e与维护成本入账。历史`run_closure_small_ef.py`仍绑定7654f1e的原始blob；要复现旧版本请用相应独立checkout，不绕过其校验。
 
+## 整目录层级分块共享图（2026-10-31，新任务）
+
+完整实现提交`cdc28f3`。`src/packed_index.h`将DFS相邻的**完整direct-owner组**合并为物理HNSW；大组独立，不改图边/停止规则，不使用proxy筛块。`dynamic_triad --arm P --eligibility-policy cap --pack-layout dfs --pack-size 4096`执行精确资格后搜索所有含合格对象的块。shuffle/node为组织消融；hybrid单列小E扫描。主纯A保持scan0/off。
+
+V/T/M/B/R维护当前资格、位置冻结；D同步压实、I支持首插/复活/有界split；`--pack-final-repack 1`完整恢复布局，停顿/距离/插入入账。单线程、固定base向量ID空间，不含任意新向量或并发协议。
+
+新增`prepare_packed_sift.py`从原fvecs无损转换，明确合成层级与属性，保留random/coordinate目录计数控制。`run_packed.py`提供diagnostic/scale与static/maintenance固定网格、独立GT、全部点/SHA、串行轮换和repack成本。命令及推进门见[完整服务器提示词](../../researches/nested-attr-vector-search/2026-10-31-exps/packed-server-prompt.md)；[完整方案](../../researches/nested-attr-vector-search/2026-10-31-exps/packed-index-plan.md)明确前序与不利控制。
+
+本地5项packed+5项既有CLI回归通过，150次合成回放完成；真实WIKI/SIFT/SIFT1M新性能未测。旧H继续停止；不因复用Trie/bitmap否定候选，也不因换名packing宣称新颖性通过。
+

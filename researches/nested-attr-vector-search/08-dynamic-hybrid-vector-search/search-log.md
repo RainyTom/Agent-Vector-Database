@@ -126,3 +126,11 @@
 - 已实现真实C++核心、全事件维护、独立GT与六臂脚本；3项实际CLI回归通过。纠正“每次I指纹必变”的测试误要求，以及direct范围不适用recursive限制性质。真实WIKI/SIFT运行0。
 - 当前执行入口切换为[完整服务器合同](../2026-10-30-exps/closure-server-plan.md)，E1/E2先测是否减少实际展开并赢真实NodeANN，再按门槛测动态与强制压实成本；不重启二跳、WQR或仅维护调参。
 
+## 2026-10-31 整目录分块共享图的前序边界
+
+- 先检查总论文/关系索引、本地TFANNS Packing正文与历史owner/place任务书，再补查`vector similarity join partition hierarchical index`和`filtered nearest neighbor partition directory packing`。直接join命中DiskJoin，未移植其SSD join结论；本任务仍是B类单查询filtered ANN，不是vector join。
+- TFANNS本地paper.md705–725明确块内degree资源共享与global mask。新候选不改degree，而是完整目录组共享普通物理HNSW；generic packing/shared-resource仍非新思想。
+- 核读[Window Filters原文](https://jshun.csail.mit.edu/filteredANN.pdf)§4.2–4.3、§5.2和§6相关实现段：多层有序子集ANN、覆盖查询、SuperPostfiltering、blowup/空间权衡已有。未完整核实验与书目信息，不新增伪精读论文条目；列入后续完整归档待办。
+- iRangeGraph/Curator沿用已归档前序，不声称重新精读；旧2026-10-29任务已有owner/place/routes解耦，不作为本轮首创。TrieHI预印本问题定义也不因未正式发表而忽略。
+- [完整方案](../2026-10-31-exps/packed-index-plan.md)只把整owner组DFS物理装箱及其有限维护作为可检验机制；新颖性风险高、非穷尽检索。150次真实程序合成回放证明有限语义/生命周期，不证明真实数据优势或论文门槛。
+

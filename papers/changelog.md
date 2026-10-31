@@ -206,3 +206,9 @@
 - 新增《Unleashing Graph Partitioning for Large-Scale Nearest Neighbor Search》，正式PVLDB2025，完整四作者顺序、DOI、原文提取与文本SHA；核§1–3.2、§4.3–4.5，不冒称核完hRt证明或复现作者实现。总库43工作/30关系；无新的作者引用边，避免把项目类比当原文关系。
 - Curator总记录补强§4.2局部/延迟求值说明；该能力本库更早已有，不能在后续草案中遗漏后再声称自身独有。相关机制综述增加勘误。
 - [WQR](../researches/nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md)冻结资格到proxy支持域的投影、搜索与动态维护；交付完整服务器实施合同。实际运行120960次mask比较、135次额外cut/link及指定hnswlib有限路由探针；不作真实数据性能或领域首次主张。
+## 2026-10-31 整目录分块前序复核
+
+- 不新增论文/关系条目，不覆盖旧版本。复核已有TFANNS Packing §V的degree共享，不将本项目物理图合并与其混称同机制或各自首次。
+- 新读Window Filters ICML2024 §4.2–4.3/§5.2及相关实现段，确认有序子集ANN/覆盖/blowup是直接前序；完整书目、全文与实验归档仍待补，不伪填已精读记录。
+- [方案](../researches/nested-attr-vector-search/2026-10-31-exps/packed-index-plan.md)保留经典装箱/聚簇布局、TrieHI、iRangeGraph/Curator和旧owner/place的重合边界；当前不宣称创新审查通过。
+

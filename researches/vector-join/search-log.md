@@ -254,3 +254,7 @@
 ## 2026-10-30 资格投影与代理图具体方案
 
 直接join/signature范围检索后，核多代表分区ANN、Curator/SIEVE的局部资格与路由接口。新增PVLDB2025图分区/多代表路由B类工作，不当作vector join。交付[WQR冻结方案](../nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md)：完整对象资格到proxy支持域的存在性投影，非新几何join问题。本轮有限语义和真实hnswlib路径已运行，真实数据性能未测；其他新检索近邻工作仍待核。
+## 2026-10-31 层级整目录分块ANN
+
+先核直接vector similarity join的hierarchical partition词族，再转filtered ANN目录/分区检索；命中DiskJoin不等于本任务成为join。复核本地TFANNS §V、阅读Window Filters ICML2024相关正文，后者完整归档待办；不新增未经完整核实的论文记录。详见[08日志](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)及[完整方案](../nested-attr-vector-search/2026-10-31-exps/packed-index-plan.md)。新候选为B类单查询混合ANN组织机制，真实SIFT规模实验未执行。
+

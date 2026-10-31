@@ -116,3 +116,13 @@ U编译占e2e约79.8%～88.3%，H约82.0%～89.3%；共同路径已支付绝大�
 
 已有真实输入上的有限维护证据：H/U的便宜M与昂贵I/全量压实必须一起计费。未测的是长期动态、并发、稳态债务与大N，不再笼统写“维护未测”。Exact是有效可执行的查询控制，但尚无独立无图结构build/RSS测量。下一步仅保存勘误与研究状态；无新的服务器性能任务。
 
+## 11. 后续完整交付：整目录层级分块共享图
+
+用户进一步要求完整方案和本地实现，服务器只执行实验。新任务与旧H切开：[完整方案](packed-index-plan.md)、[服务器提示词](packed-server-prompt.md)、[本地报告](packed-local-report.md)、[复现](experiments/packed-local-reproduction.md)。源码cdc28f3已实现整owner组DFS装箱、node/shuffle消融、精确资格分块、多图搜索、完整插删和repack；不改HNSW边或纯A基线。
+
+最终实际运行10项CLI行为回归、150次预计算GT合成回放，共29658条query/31110条update；非法、重复、state/mask及计时GT错误0，完整repack48次。另360条纯NodeANN查询与改动前结果/计数无差异。含真实C++程序和转换器，不是Python模拟ANN，但所有本地输入均合成，不能称真实SIFT性能。小证据[data/packed-local-check.json](data/packed-local-check.json)。
+
+问题从“少边/便宜编译”改为“小目录共用物理图以减少图启动，目录DFS限制scope外污染”。层级局部性定理只对初始/repack快照成立；元数据移动导致分散、恢复全repack必须计费。真实100k粗细目录×随机/坐标相关四控制及有限维护待服务器执行，1M仅按固定门槛放行。效率是主目标，内存辅助；不人为放慢纯NodeANN。
+
+TFANNS §V的degree Packing、ICML2024 Window Filters §4.2–4.3/§5.2的有序子集ANN/blowup，以及项目旧owner/place方案都是明确重合风险。没有新增未经完整核读的论文记录；不能把这些经典组织思想重新命名即视为论文贡献。
+
