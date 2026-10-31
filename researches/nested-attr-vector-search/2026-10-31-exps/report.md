@@ -126,3 +126,13 @@ U编译占e2e约79.8%～88.3%，H约82.0%～89.3%；共同路径已支付绝大�
 
 TFANNS §V的degree Packing、ICML2024 Window Filters §4.2–4.3/§5.2的有序子集ANN/blowup，以及项目旧owner/place方案都是明确重合风险。没有新增未经完整核读的论文记录；不能把这些经典组织思想重新命名即视为论文贡献。
 
+## 12. 用户收窄目标：查询效率优先与索引复用
+
+用户明确暂停把所有维护操作实测作为前置，先在既有资源上超过基线查询效率。新[协议](packed-query-first-plan.md)、[服务器任务](packed-query-first-server-prompt.md)、[本地报告](packed-query-first-local-report.md)替换§11的全矩阵/维护/1M放行要求；算法定义保留，不删除历史负结果。
+
+源码d4add37新增static-batch和精简驱动。只测纯A、P-cap、P-aware，ef20/k10/B4096，每臂3遍；A一次建图、P两策略共用一次建图，共2build/9pass。已有static数据/trace/GT按SHA复用，可从GT就绪但大矩阵未完成的目录接管；不能恢复旧进程未保存的图，也不复用历史计时冒充新结果。
+
+本地实际12项CLI回归通过，4种入口共36pass/7848条query，非法/重复/state/mask/计时GT错误0，更新及repack均0；1620条与旧同配置查询配对结果和关键工作量无差异。均为合成输入，不新增真实SIFT性能结论。小证据[data/packed-query-first-local.json](data/packed-query-first-local.json)。
+
+维护理论逐项说明：V/T不动几何图、M只改direct posting、B至少Ω(m)、R当前O(D)rank、I/D局部图与显式重建成本；不把未知代价填0或声称所有操作已证明高效。当前只需交共同质量层上的三臂查询时间；内存、维护胜出、20%加速和1M均不再是本轮前置条件。尚未远程停止任何进程，服务器AI须按新提示词停止旧调度。
+

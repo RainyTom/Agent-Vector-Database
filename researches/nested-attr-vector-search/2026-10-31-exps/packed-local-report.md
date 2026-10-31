@@ -1,5 +1,7 @@
 # 整目录分块共享图：本地交付报告
 
+> 本文是完整实现阶段的历史报告。用户随后改为查询效率优先，原矩阵/维护不再继续调度；最新[任务](packed-query-first-server-prompt.md)仅2build/9pass，新增[验证报告](packed-query-first-local-report.md)不覆盖本文150次记录。
+
 ## 目标与实际交付
 
 用户要求完整方案和本地实现，而非继续给服务器“待实现”的候选。已实现[完整方案](packed-index-plan.md)：整目录DFS合并、shuffle/node消融、精确资格、多块过滤HNSW、全事件同步、局部压实/split和显式完整repack。真实WIKI/SIFT/SIFT1M性能仍交服务器执行，不预先声称优于NodeANN。

@@ -1,0 +1,103 @@
+{
+  "kind": "synthetic_query_only_resident_smoke_not_real_performance",
+  "code_commit": "d4add37",
+  "tests": {
+    "static_batch": 2,
+    "packed": 5,
+    "eligibility": 2,
+    "dynamic_triad": 3
+  },
+  "runs": [
+    {
+      "case": "query-first-reuse",
+      "passes": 9,
+      "index_builds": 2,
+      "queries": 2304,
+      "updates": 0,
+      "gt_reused": true,
+      "state_errors": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 0,
+      "manifest_sha256": "31422450867265ad7e381d92b0d15d9e9319a422081794b84cf0ef4585750825"
+    },
+    {
+      "case": "query-first-explicit",
+      "passes": 9,
+      "index_builds": 2,
+      "queries": 1620,
+      "updates": 0,
+      "gt_reused": false,
+      "state_errors": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 0,
+      "manifest_sha256": "934ca2824c5a821ffac9e8cffe69493a1e6ac41fc73c9226cf13aa644dede6ee"
+    },
+    {
+      "case": "query-first-chained",
+      "passes": 9,
+      "index_builds": 2,
+      "queries": 2304,
+      "updates": 0,
+      "gt_reused": true,
+      "state_errors": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 0,
+      "manifest_sha256": "15877eb94a99615f4ac254d1990c1063c0bf5299cb390c1a0b02d982bf7c1602"
+    },
+    {
+      "case": "query-first-partial",
+      "passes": 9,
+      "index_builds": 2,
+      "queries": 1620,
+      "updates": 0,
+      "gt_reused": true,
+      "state_errors": 0,
+      "invalid": 0,
+      "duplicate": 0,
+      "mask_errors": 0,
+      "gt_timed_distances": 0,
+      "repacks": 0,
+      "manifest_sha256": "58c7be0d6de382fcd3968f9b015fe29422508eb44d19f171fc9e1e7480f02249"
+    }
+  ],
+  "behavior_equivalence": [
+    {
+      "variant": "A-graph",
+      "passes": 3,
+      "queries_per_pass": 180,
+      "mismatches": 0
+    },
+    {
+      "variant": "P-dfs",
+      "passes": 3,
+      "queries_per_pass": 180,
+      "mismatches": 0
+    },
+    {
+      "variant": "P-dfs-aware",
+      "passes": 3,
+      "queries_per_pass": 180,
+      "mismatches": 0
+    }
+  ],
+  "sources": {
+    "codes/directory-aware-vector-attr-search/src/dynamic_triad.cpp": "3a984f070b40a642cb02ddc3c2ff7cb6f2e26ea1628e128df1858224ef9497a0",
+    "codes/directory-aware-vector-attr-search/src/packed_index.h": "765ea5facdf5f8adfa764c118b90b5fcf9ed7a75a1129109710300b259b9b431",
+    "codes/directory-aware-vector-attr-search/scripts/run_packed_query.py": "efdfd0fb8d2bfabef3b1161b7016226a81ec64abfd382c3e5ee021c26c4eb6a0",
+    "codes/directory-aware-vector-attr-search/tests/test_static_batch.py": "5df49c5c2e3fe610299db9cb9e21a694288a66248e968dc9a37e1185831ff753"
+  },
+  "limitations": [
+    "All local input vectors are synthetic, no real SIFT/WIKI new performance result.",
+    "Static resident repeats do not restore unsaved indexes from previous terminated processes.",
+    "No dynamic/maintenance/scale experiment executed in this query-first phase."
+  ]
+}

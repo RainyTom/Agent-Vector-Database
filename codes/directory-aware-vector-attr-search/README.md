@@ -246,3 +246,11 @@ V/T/M/B/R维护当前资格、位置冻结；D同步压实、I支持首插/复�
 
 本地5项packed+5项既有CLI回归通过，150次合成回放完成；真实WIKI/SIFT/SIFT1M新性能未测。旧H继续停止；不因复用Trie/bitmap否定候选，也不因换名packing宣称新颖性通过。
 
+## 当前执行：查询效率优先与驻留索引复用
+
+用户后续收窄目标，旧packed完整矩阵和maintenance暂不执行；见[最新服务器提示词](../../researches/nested-attr-vector-search/2026-10-31-exps/packed-query-first-server-prompt.md)。源码`d4add37`新增 `dynamic_triad --static-batch FILE` 和 `scripts/run_packed_query.py`，固定纯A/P-cap/P-aware各3遍，ef20；仅2次索引构建。P两策略共用同图，不缓存查询答案。
+
+`--from-static DIR --name NAME`验证输入/trace/GT SHA并复用已就绪真值，允许原矩阵尚未完成；或直接传既有dataset/trace生成一次GT。不能恢复旧进程未保存的图。session内三遍是驻留重复，非独立建图或cold-start；summary有pass/复用/一次build计费字段。
+
+本地12项CLI回归及36pass实际合成回放通过，维护本轮不运行、仅分析复杂度。查询主目标在共同Recall层超过纯A，内存辅助，不再要求先跑完整更新与repack包络。完整算法仍见原plan，旧H不恢复。
+
