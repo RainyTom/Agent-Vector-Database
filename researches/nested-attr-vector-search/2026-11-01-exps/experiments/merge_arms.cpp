@@ -100,10 +100,10 @@ static Workload load_workload(const std::string& dir) {
 static std::vector<Id> representatives(std::vector<Id> candidates, const Vectors& base, RawL2Space& l2) {
     std::sort(candidates.begin(), candidates.end());
     candidates.erase(std::unique(candidates.begin(), candidates.end()), candidates.end());
-    if (candidates.size() <= 4) return candidates;
+    if (candidates.size() <= 8) return candidates;
     std::vector<Id> selected{candidates.front()};
     std::vector<float> nearest(candidates.size(), std::numeric_limits<float>::infinity());
-    while (selected.size() < 4) {
+    while (selected.size() < 8) {
         size_t best = 0;
         for (size_t i = 0; i < candidates.size(); ++i) {
             nearest[i] = std::min(nearest[i], l2.dist(base.at(candidates[i]), base.at(selected.back())));
