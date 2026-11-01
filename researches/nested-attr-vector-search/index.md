@@ -49,6 +49,8 @@
 
 - **[方案 v7：DAG 划分 + 合并策略矩阵（2×2）+ 三类过滤结构](2026-11-01-exps/dag-merge-matrix-v7.md)**：插入顺序（随机/拓扑序）× 合并规则（重插/保边）四臂，统一 M/efC/k/ef；Trie 解析、位图判资格、Bloom 做邻接级否定；基线为随机序全局 HNSW + 过滤。
 
+- **[方案 v8：概念纯净聚类 + 质心图 + 残差 SQ（IGP 式）](2026-11-01-exps/dag-igp-quantized-scheme-v8.md)**：按概念内部 k-means 得概念纯净质心，item 存 `(质心ID, 2bit/维残差码)`，图建在质心上（`K=n/B`）；质心级剪枝精确，代价是量化与每质心 top-k 两个新增近似来源。
+
 ## 相邻主题
 
 - [前缀包含过滤](../containment-filtered-vector-search/index.md)
