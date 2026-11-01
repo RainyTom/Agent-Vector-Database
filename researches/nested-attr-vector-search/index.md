@@ -4,7 +4,7 @@
 
 ## 当前工作
 
-- **[DAG 层级属性约束下的内存向量检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：按直接标签倒排、DAG 闭包、可选继承成员倒排、局部 HNSW，逐项说明存什么、怎么建立、为何建立及如何使用；另列辅助映射/计数，再用统一样例与三幅 SVG 展示组合查询和更新。
+- **[DAG 层级属性约束下的内存向量检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：明确当前局部图是 NodeANN 的合并组变体，逐项介绍标签倒排、DAG 闭包、可选继承倒排与 HNSW；含同一 DAG 样例的 NodeANN 结构对照，不作为独立新索引方案。
 
 - [DAG query20 实测与文献依据](2026-11-01-exps/report.md)：同批 20 查询、每臂驻留三遍的完整计时/双 Recall、分区 fanout 与构建成本；附 TrieHI、Curator、ACORN、iRangeGraph、SciHTC 的证据。
 
