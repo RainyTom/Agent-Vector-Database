@@ -1,0 +1,150 @@
+{
+  "objects": 168937,
+  "nonempty_queries": 23,
+  "groups": [
+    {
+      "eligible_range": [
+        1,
+        31
+      ],
+      "queries": 7,
+      "merged_mean_us": 1.9348571428571428,
+      "global_filtered_mean_us": 69866.906,
+      "nodeann_mean_us": 2.735,
+      "mean_local_graphs": 1,
+      "mean_largest_local": 16
+    },
+    {
+      "eligible_range": [
+        32,
+        127
+      ],
+      "queries": 3,
+      "merged_mean_us": 5.266666666666667,
+      "global_filtered_mean_us": 37986.254,
+      "nodeann_mean_us": 4.722666666666667,
+      "mean_local_graphs": 1.6666666666666667,
+      "mean_largest_local": 63
+    },
+    {
+      "eligible_range": [
+        128,
+        511
+      ],
+      "queries": 5,
+      "merged_mean_us": 38.5832,
+      "global_filtered_mean_us": 10692.2038,
+      "nodeann_mean_us": 6.7968,
+      "mean_local_graphs": 1.6,
+      "mean_largest_local": 267
+    },
+    {
+      "eligible_range": [
+        512,
+        168937
+      ],
+      "queries": 8,
+      "merged_mean_us": 210.44425,
+      "global_filtered_mean_us": 1393.709375,
+      "nodeann_mean_us": 161.31925,
+      "mean_local_graphs": 26.375,
+      "mean_largest_local": 1156.875
+    }
+  ],
+  "small_result_queries": 7,
+  "small_result_fraction_of_global_time": 0.7325354308355083,
+  "merged_full_scope_distance_queries": 15,
+  "median_local_graphs": 1,
+  "median_eligible": 178,
+  "merged_exact_point_us": 678.3895217391305,
+  "per_arm": {
+    "merged": {
+      "mean_us": 82.86147826086956,
+      "median_us": 13.746,
+      "recall": 0.9565217391304348
+    },
+    "global_filtered": {
+      "mean_us": 29027.730347826087,
+      "median_us": 14176.252,
+      "recall": 1.0
+    },
+    "nodeann": {
+      "mean_us": 59.037,
+      "median_us": 5.871,
+      "recall": 1.0
+    }
+  },
+  "largest_merged_minus_node_gaps": [
+    {
+      "query": 18,
+      "eligible": 4813,
+      "selectivity": 0.028489910439986502,
+      "local_graphs": 19,
+      "largest_local": 895,
+      "local_graphs_at_most_32": 4,
+      "merged_distance_calls": 2254,
+      "merged_recall": 0.9,
+      "merged_us": 249.985,
+      "global_filtered_us": 580.093,
+      "nodeann_us": 99.059
+    },
+    {
+      "query": 7,
+      "eligible": 789,
+      "selectivity": 0.004670380082515967,
+      "local_graphs": 1,
+      "largest_local": 789,
+      "local_graphs_at_most_32": 0,
+      "merged_distance_calls": 772,
+      "merged_recall": 1.0,
+      "merged_us": 145.377,
+      "global_filtered_us": 3678.566,
+      "nodeann_us": 6.422
+    },
+    {
+      "query": 0,
+      "eligible": 3153,
+      "selectivity": 0.018663762230890807,
+      "local_graphs": 17,
+      "largest_local": 842,
+      "local_graphs_at_most_32": 7,
+      "merged_distance_calls": 1790,
+      "merged_recall": 1.0,
+      "merged_us": 202.425,
+      "global_filtered_us": 983.11,
+      "nodeann_us": 65.354
+    },
+    {
+      "query": 17,
+      "eligible": 2013,
+      "selectivity": 0.011915684545126289,
+      "local_graphs": 7,
+      "largest_local": 1337,
+      "local_graphs_at_most_32": 1,
+      "merged_distance_calls": 1156,
+      "merged_recall": 1.0,
+      "merged_us": 171.046,
+      "global_filtered_us": 1255.287,
+      "nodeann_us": 40.457
+    },
+    {
+      "query": 11,
+      "eligible": 1947,
+      "selectivity": 0.01152500636331887,
+      "local_graphs": 14,
+      "largest_local": 430,
+      "local_graphs_at_most_32": 5,
+      "merged_distance_calls": 1344,
+      "merged_recall": 1.0,
+      "merged_us": 169.362,
+      "global_filtered_us": 1069.183,
+      "nodeann_us": 41.539
+    }
+  ],
+  "limitations": [
+    "Saved-data analysis only; no new SIFT timings.",
+    "Baseline distance/expansion/adjacency counts were not recorded.",
+    "ef value is not a distance-call or expansion budget.",
+    "Small synthetic native-filter probe is not SIFT performance data."
+  ]
+}

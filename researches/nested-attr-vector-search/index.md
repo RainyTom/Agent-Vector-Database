@@ -4,6 +4,8 @@
 
 ## 当前工作
 
+- **[基线差距诊断：过滤终止边界与执行器不对齐](2026-11-02-exps/report.md)**：原生全局过滤图在合格数不足 ef 时搜索耗尽；新图是扁平 NSW，NodeANN 保留原生 HNSW 高层，当前差距不能只归因于 DAG 合并规则。已分析旧逐查询数据并运行独立终止探针，未重跑 SIFT 计时。
+
 - **[当前方案：直属 NSW 图沿 DAG 保边合并与跨层跳转](2026-11-01-exps/dag-local-nsw-merge-scheme.md)**：[12 次固定 SIFT 实验](2026-11-01-exps/report.md#19-静态合并与跳转的12次固定工作负载实验)。保留局部边、几何门户连接、分散 item 桥与反向接入限额；不量化、共享后代一份、单队列。平均质量门槛下有所改善，但仍慢于 NodeANN 参考且尾部质量不足。入口 `bash autoresearch.sh`，原始 CSV/log 已持久化。
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
