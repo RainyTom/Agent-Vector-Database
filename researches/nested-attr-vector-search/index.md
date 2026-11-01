@@ -4,6 +4,8 @@
 
 ## 当前工作
 
+- **[论文式方案说明与SVG结构图](2026-11-01-exps/partitioned-hnsw-method.md)**：问题定义、真实存储结构、构建/查询/更新算法、条件正确性、成本模型与可调整位置；按当前已实现版本撰写，不新增方法缩写。
+
 - **[当前结构与命名勘误：目录倒排＋属性过滤＋分区HNSW](2026-11-01-exps/report.md)**：核对TrieHI、Curator、ACORN、iRangeGraph及官方系统术语；区分索引、分区配置和查询策略，取消“新层级ANN/新剪枝”的暗示。
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)

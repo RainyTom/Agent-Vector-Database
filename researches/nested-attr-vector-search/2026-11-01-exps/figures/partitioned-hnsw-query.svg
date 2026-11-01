@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 460" role="img" aria-labelledby="title desc">
+<title id="title">目录约束过滤查询的执行流程</title><desc id="desc">先在线展开目录并合并直接成员，读取属性记录得到精确合格集合E，再按集合大小选择空结果、精确扫描或按物理位置投票搜索所有非空合格分区HNSW，最后归并top k。普通HNSW仍可计算不合格对象距离。</desc>
+<defs><marker id="qa" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="20" y="58" width="255" height="74" rx="8"/><rect x="330" y="58" width="255" height="74" rx="8"/><rect x="640" y="58" width="255" height="74" rx="8"/>
+<path d="M278 95H320M588 95H630M768 135V165H460V184" marker-end="url(#qa)"/>
+<rect x="315" y="187" width="290" height="52" rx="8"/>
+<path d="M315 214H143V276M460 242V276M605 214H768V276" marker-end="url(#qa)"/>
+<rect x="20" y="279" width="245" height="73" rx="8"/><rect x="330" y="279" width="260" height="73" rx="8"/><rect x="640" y="279" width="255" height="73" rx="8"/>
+<path d="M460 355V379M768 355V392H603" marker-end="url(#qa)"/>
+<rect x="315" y="382" width="285" height="45" rx="8"/>
+</g>
+<g fill="currentColor" font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" font-size="15" text-anchor="middle">
+<text x="20" y="28" text-anchor="start" font-size="20" font-weight="bold">一次查询：先求精确候选集，再选择向量检索路径</text>
+<text x="147" y="86" font-weight="bold">目录范围解析</text><text x="147" y="113">展开子树；合并直接成员</text>
+<text x="457" y="86" font-weight="bold">对象属性逐条判断</text><text x="457" y="113">category / numeric / tags</text>
+<text x="767" y="86" font-weight="bold">候选位图 E 与计数 e</text><text x="767" y="113">候选集精确，获取成本计入查询</text>
+<text x="460" y="219" font-weight="bold">按 e 选择执行路径</text>
+<text x="222" y="204">e = 0</text><text x="516" y="264">0 &lt; e ≤ τ</text><text x="696" y="204">e &gt; τ</text>
+<text x="142" y="309" font-weight="bold">返回空结果</text><text x="142" y="336">不调用图、不计算向量距离</text>
+<text x="460" y="309" font-weight="bold">精确扫描 E 中的向量</text><text x="460" y="336">仅维护大小 k 的结果堆</text>
+<text x="767" y="307" font-weight="bold">按 loc 统计各分区合格数</text><text x="767" y="334">搜索所有非空合格分区的 HNSW</text>
+<text x="457" y="410" font-weight="bold">统一按 (距离, ID) 归并 top-k</text>
+<text x="20" y="450" text-anchor="start">τ=512（k=10、ef=20）。图搜索的过滤器限制结果资格，不保证避免不合格节点的距离计算。</text>
+</g></svg>

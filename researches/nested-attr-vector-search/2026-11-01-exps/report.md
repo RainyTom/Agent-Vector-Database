@@ -144,3 +144,11 @@ python3 researches/nested-attr-vector-search/2026-11-01-exps/experiments/review_
 - 定向核读上述章节，不声称覆盖全部partitioned/filtered ANN前序；Window Filters等已有待归档项未在本轮宣称完成。
 - 未新增paper/relations记录，已有论文版本和ID不变；官方系统短引进入本日证据，不作为论文条目。
 - 下一轮先用标准组件描述候选，再判断是否确有新的存储不变量、可访问邻接、覆盖或剪枝能力；不要从方法缩写倒推机制。已停止的WQR/NPI/closure不因改名重新启动。
+
+## 同日续轮：论文式方案正文与SVG
+
+- 用户要求可审阅的论文式方案并配SVG。交付[正文](partitioned-hnsw-method.md)与[存储结构图](figures/partitioned-hnsw-storage.svg)、[查询流程图](figures/partitioned-hnsw-query.svg)。明确固定ID/不可变向量、单线程事件语义、动态split可拆目录组、候选精确不等于ANN精确。
+- 当前事件含义按实现核正：V/T为属性修改，M为单对象owner移动，B为批量移动，R为目录重挂；不沿用早前对M的错误简称。复杂度显式保留全局位图word数、scope对象数、posting条目数和分区数，不把计数取得或非空分区分发当作免费。
+- 本轮新增ANN运行0，C++改动0。完成两幅SVG的XML/自包含检查、中文字体CairoSVG渲染与视觉检查，以及7对象模型512组“局部精确top-k可归并为全局精确top-k”有限核对；该核对不证明HNSW Recall。检查记录：[data/method-exposition-check.json](data/method-exposition-check.json)。
+- 浏览器预览启动失败，未伪称浏览器截图成功；改用独立渲染。透明SVG在初始read预览中黑底不可见，白底仅用于检查，不写入图文件；图本身保持透明、currentColor着色，无外链或脚本。
+- 正文的性能表引用已存query-first-dense2数据，不是本轮新跑数字；可调整位置只作审阅问题，不当作已实现新机制。
