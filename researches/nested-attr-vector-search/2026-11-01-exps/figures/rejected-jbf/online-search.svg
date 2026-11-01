@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="700" viewBox="0 0 980 700">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="var(--muted)"/></marker></defs>
+<g font-family="Noto Sans SC, sans-serif" fill="currentColor">
+<text x="24" y="34" font-size="23" font-weight="700" text-anchor="start" fill="currentColor">ONLINE · 搜索流程</text>
+<rect x="20" y="51" width="940" height="54" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="38" y="85" font-size="17" font-weight="400" text-anchor="start" fill="currentColor">查询：scope A AND scope B  +  category=AI  +  year≥2025  +  向量 top-k</text>
+<path d="M490 106 L490 128" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="170" y="133" width="640" height="65" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<text x="490" y="160" font-size="17" font-weight="700" text-anchor="middle" fill="currentColor">① 合法 owner：T = Desc(A) ∩ Desc(B) = {C}</text>
+<text x="490" y="184" font-size="14" font-weight="400" text-anchor="middle" fill="var(--muted)">先求共同后代；不是两个 scope 分别有人就算联合命中</text>
+<path d="M490 199 L490 221" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="170" y="226" width="640" height="47" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="490" y="256" font-size="16" font-weight="400" text-anchor="middle" fill="currentColor">② 进入 AI 分支，联合检查 year 与节点的 DAG 双边界</text>
+<path d="M490 274 L490 291 L130 291 L130 309" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M490 274 L490 291 L370 291 L370 309" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M490 274 L490 291 L610 291 L610 309" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M490 274 L490 291 L850 291 L850 309" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="20" y="314" width="220" height="153" rx="10" fill="none" stroke="var(--error)" stroke-width="1.5"/>
+<text x="130" y="344" font-size="16" font-weight="700" text-anchor="middle" fill="currentColor">2024：属性不满足</text>
+<text x="130" y="380" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">2024 &lt; 2025</text>
+<text x="130" y="414" font-size="14" font-weight="400" text-anchor="middle" fill="var(--error)">整分支跳过</text>
+<text x="130" y="447" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">不读取对象 posting</text>
+<rect x="260" y="314" width="220" height="153" rx="10" fill="none" stroke="var(--warning)" stroke-width="1.5"/>
+<text x="370" y="344" font-size="16" font-weight="700" text-anchor="middle" fill="currentColor">2025：层级混合</text>
+<text x="370" y="380" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">L={C} 命中 T</text>
+<text x="370" y="414" font-size="14" font-weight="400" text-anchor="middle" fill="var(--warning)">U={A} 不全属于 T</text>
+<text x="370" y="447" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">查看倒排，仅接受 C → x2</text>
+<rect x="500" y="314" width="220" height="153" rx="10" fill="none" stroke="var(--success)" stroke-width="1.5"/>
+<text x="610" y="344" font-size="16" font-weight="700" text-anchor="middle" fill="currentColor">2026：层级全合法</text>
+<text x="610" y="380" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">U={C} ⊆ T</text>
+<text x="610" y="414" font-size="14" font-weight="400" text-anchor="middle" fill="var(--success)">整节点接受</text>
+<text x="610" y="447" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">直接累加 count=1</text>
+<rect x="740" y="314" width="220" height="153" rx="10" fill="none" stroke="var(--error)" stroke-width="1.5"/>
+<text x="850" y="344" font-size="16" font-weight="700" text-anchor="middle" fill="currentColor">2027：层级全非法</text>
+<text x="850" y="380" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">L={A,B} 与 T 无交集</text>
+<text x="850" y="414" font-size="14" font-weight="400" text-anchor="middle" fill="var(--error)">整节点排除</text>
+<text x="850" y="447" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">不读取对象 posting</text>
+<path d="M370 468 L370 493 L490 493 L490 513" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M610 468 L610 493 L490 493" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+<rect x="170" y="518" width="640" height="65" rx="10" fill="none" stroke="var(--success)" stroke-width="1.5"/>
+<text x="490" y="544" font-size="17" font-weight="700" text-anchor="middle" fill="currentColor">③ 资格描述 = 2025 的 C posting + 2026 整节点</text>
+<text x="490" y="570" font-size="15" font-weight="400" text-anchor="middle" fill="currentColor">本例合法对象 {x2, x3}；精确 E = 1 + 1 = 2</text>
+<path d="M490 584 L490 608" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="170" y="613" width="640" height="65" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="490" y="640" font-size="16" font-weight="700" text-anchor="middle" fill="currentColor">④ 原有 HNSW / NodeANN：在合法资格约束下完成 top-k</text>
+<text x="490" y="665" font-size="13" font-weight="400" text-anchor="middle" fill="var(--muted)">按需提供 bitmap / contains(id)；过滤成本计入查询，ANN 仍有近似误差</text>
+</g></svg>

@@ -212,3 +212,8 @@
 - 新读Window Filters ICML2024 §4.2–4.3/§5.2及相关实现段，确认有序子集ANN/覆盖/blowup是直接前序；完整书目、全文与实验归档仍待补，不伪填已精读记录。
 - [方案](../researches/nested-attr-vector-search/2026-10-31-exps/packed-index-plan.md)保留经典装箱/聚簇布局、TrieHI、iRangeGraph/Curator和旧owner/place的重合边界；当前不宣称创新审查通过。
 
+
+## 2026-11-01 交接全文文件归档
+
+- 按用户提交所有交接文件的要求，将既有BioVSS arXiv:2412.03301v2 PDF纳入版本库（8591803字节，SHA与2026-10-29快照一致）。新增metadata-2026-11-01.json，总索引更新local_pdf与归档证据；旧日期快照不覆盖。
+- 本次不新增论文/关系，不重新声称全文精读或复现；正式ICDE稿与扩展稿差异待核状态不变。

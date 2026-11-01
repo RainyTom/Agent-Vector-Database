@@ -1,0 +1,28 @@
+{
+  "status": "historical_illustrations_not_current_execution_plan",
+  "illustrated_model": "Earlier R-A/B-C DAG and x0..x5 property example; NOT the latest 12-item DAG",
+  "origin": "work/dag-jbf-figures; SVG preserved, PNG re-rendered at 2x",
+  "font": "Noto Sans SC",
+  "files": [
+    {
+      "path": "researches/nested-attr-vector-search/2026-11-01-exps/figures/rejected-jbf/offline-index.svg",
+      "bytes": 7864,
+      "sha256": "81352d387b2d2829c6949e70e73135ef135abdb347b54c3a323ad889104d6cc3"
+    },
+    {
+      "path": "researches/nested-attr-vector-search/2026-11-01-exps/figures/rejected-jbf/offline-index.png",
+      "bytes": 215522,
+      "sha256": "1cd679e8090dd03994179a6a9e703a19178cffa8d6e458df8478ced2bc71f7d8"
+    },
+    {
+      "path": "researches/nested-attr-vector-search/2026-11-01-exps/figures/rejected-jbf/online-search.svg",
+      "bytes": 5801,
+      "sha256": "09aba48a7212fc3213fdc479d4aff4cc23188d60536cee2258d1cc29c152e7e7"
+    },
+    {
+      "path": "researches/nested-attr-vector-search/2026-11-01-exps/figures/rejected-jbf/online-search.png",
+      "bytes": 269672,
+      "sha256": "d7ae7b4cc4de6d736e79ce43432776da7369bcb12756f3c53ea2e8a8ee072147"
+    }
+  ]
+}

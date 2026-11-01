@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="570" viewBox="0 0 980 570">
+<defs><marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 Z" fill="var(--muted)"/></marker></defs>
+<g font-family="Noto Sans SC, sans-serif" fill="currentColor">
+<text x="24" y="34" font-size="23" font-weight="700" text-anchor="start" fill="currentColor">OFFLINE · 索引结构</text>
+<text x="24" y="61" font-size="15" font-weight="400" text-anchor="start" fill="var(--muted)">不移动向量，不修改 ANN；新增逻辑过滤索引</text>
+<rect x="20" y="84" width="230" height="354" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="35" y="113" font-size="17" font-weight="700" text-anchor="start" fill="currentColor">① DAG 可达性索引</text>
+<path d="M135 166 L80 200" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M135 166 L190 200" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M80 238 L135 275" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M190 238 L135 275" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<circle cx="135" cy="147" r="21" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+<text x="135" y="153" font-size="17" font-weight="700" text-anchor="middle" fill="currentColor">R</text>
+<circle cx="73" cy="219" r="21" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+<text x="73" y="225" font-size="17" font-weight="700" text-anchor="middle" fill="currentColor">A</text>
+<circle cx="197" cy="219" r="21" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+<text x="197" y="225" font-size="17" font-weight="700" text-anchor="middle" fill="currentColor">B</text>
+<circle cx="135" cy="296" r="21" fill="none" stroke="var(--accent)" stroke-width="1.8"/>
+<text x="135" y="302" font-size="17" font-weight="700" text-anchor="middle" fill="currentColor">C</text>
+<text x="37" y="360" font-size="15" font-weight="400" text-anchor="start" fill="currentColor">Desc(A) = {A, C}</text>
+<text x="37" y="390" font-size="15" font-weight="400" text-anchor="start" fill="currentColor">Desc(B) = {B, C}</text>
+<text x="37" y="420" font-size="14" font-weight="400" text-anchor="start" fill="var(--muted)">完整保留多父关系</text>
+<rect x="270" y="84" width="690" height="354" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="288" y="113" font-size="17" font-weight="700" text-anchor="start" fill="currentColor">② 带 DAG 双边界的联合属性 Trie</text>
+<rect x="555" y="131" width="120" height="34" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="615" y="154" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">全部对象</text>
+<path d="M615 165 L615 181 L525 181 L525 196" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<path d="M615 181 L825 181 L825 196" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<rect x="450" y="200" width="150" height="36" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="525" y="224" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">category = AI</text>
+<rect x="750" y="200" width="150" height="36" rx="10" fill="none" stroke="var(--border)" stroke-width="1.5"/>
+<text x="825" y="224" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">category = DB</text>
+<text x="825" y="254" font-size="12" font-weight="400" text-anchor="middle" fill="var(--muted)">其他分支…</text>
+<path d="M525 236 L525 257 L357 257 L357 276" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+<path d="M525 257 L522 257 L522 276" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+<path d="M525 257 L687 257 L687 276" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+<path d="M687 257 L852 257 L852 276" fill="none" stroke="var(--muted)" stroke-width="1.5"/>
+<rect x="285" y="277" width="145" height="113" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<text x="357" y="301" font-size="14" font-weight="700" text-anchor="middle" fill="currentColor">year = 2024</text>
+<text x="357" y="327" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">U = {C}</text>
+<text x="357" y="351" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">L = {C}</text>
+<text x="357" y="377" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">count = 1</text>
+<path d="M357 391 L357 405" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="357" y="425" font-size="12" font-weight="400" text-anchor="middle" fill="currentColor">C → [x0]</text>
+<rect x="450" y="277" width="145" height="113" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<text x="522" y="301" font-size="14" font-weight="700" text-anchor="middle" fill="currentColor">year = 2025</text>
+<text x="522" y="327" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">U = {A}</text>
+<text x="522" y="351" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">L = {C}</text>
+<text x="522" y="377" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">count = 2</text>
+<path d="M522 391 L522 405" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="522" y="425" font-size="12" font-weight="400" text-anchor="middle" fill="currentColor">A → [x1]  C → [x2]</text>
+<rect x="615" y="277" width="145" height="113" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<text x="687" y="301" font-size="14" font-weight="700" text-anchor="middle" fill="currentColor">year = 2026</text>
+<text x="687" y="327" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">U = {C}</text>
+<text x="687" y="351" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">L = {C}</text>
+<text x="687" y="377" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">count = 1</text>
+<path d="M687 391 L687 405" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="687" y="425" font-size="12" font-weight="400" text-anchor="middle" fill="currentColor">C → [x3]</text>
+<rect x="780" y="277" width="145" height="113" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<text x="852" y="301" font-size="14" font-weight="700" text-anchor="middle" fill="currentColor">year = 2027</text>
+<text x="852" y="327" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">U = {A,B}</text>
+<text x="852" y="351" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">L = {A,B}</text>
+<text x="852" y="377" font-size="14" font-weight="400" text-anchor="middle" fill="currentColor">count = 2</text>
+<path d="M852 391 L852 405" fill="none" stroke="var(--muted)" stroke-width="1.5" marker-end="url(#arrow)"/>
+<text x="852" y="425" font-size="12" font-weight="400" text-anchor="middle" fill="currentColor">A → [x4]  B → [x5]</text>
+<rect x="20" y="456" width="940" height="90" rx="10" fill="none" stroke="var(--accent)" stroke-width="1.5"/>
+<text x="38" y="484" font-size="16" font-weight="700" text-anchor="start" fill="currentColor">③ 叶端 owner 倒排：精确落到对象 ID</text>
+<text x="38" y="512" font-size="15" font-weight="400" text-anchor="start" fill="currentColor">U = 子集 owner 的最上层边界；L = 最下层边界；count = 活对象数</text>
+<text x="38" y="535" font-size="14" font-weight="400" text-anchor="start" fill="var(--muted)">内部节点同样保存边界：能整批接受或排除，就不再访问后代对象。</text>
+</g></svg>

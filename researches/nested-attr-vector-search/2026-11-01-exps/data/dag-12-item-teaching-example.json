@@ -1,0 +1,39 @@
+{
+  "kind": "metadata_only_teaching_example_not_experimental_dataset",
+  "status": "current_user_agreed_semantics",
+  "concept_ids": {"R": 0, "A": 1, "B": 2, "C": 3, "E": 4, "F": 5},
+  "edges": [["R", "A"], ["R", "B"], ["A", "C"], ["A", "F"], ["B", "E"], ["B", "F"]],
+  "items": [
+    {"id": 0, "name": "r1", "owner": "R"},
+    {"id": 1, "name": "r2", "owner": "R"},
+    {"id": 2, "name": "a1", "owner": "A"},
+    {"id": 3, "name": "a2", "owner": "A"},
+    {"id": 4, "name": "b1", "owner": "B"},
+    {"id": 5, "name": "b2", "owner": "B"},
+    {"id": 6, "name": "c1", "owner": "C"},
+    {"id": 7, "name": "c2", "owner": "C"},
+    {"id": 8, "name": "e1", "owner": "E"},
+    {"id": 9, "name": "e2", "owner": "E"},
+    {"id": 10, "name": "f1", "owner": "F"},
+    {"id": 11, "name": "f2", "owner": "F"}
+  ],
+  "desc_including_self": {
+    "R": ["R", "A", "B", "C", "E", "F"],
+    "A": ["A", "C", "F"],
+    "B": ["B", "E", "F"],
+    "C": ["C"], "E": ["E"], "F": ["F"]
+  },
+  "expected_recursive_item_names": {
+    "R": ["r1", "r2", "a1", "a2", "b1", "b2", "c1", "c2", "e1", "e2", "f1", "f2"],
+    "A": ["a1", "a2", "c1", "c2", "f1", "f2"],
+    "B": ["b1", "b2", "e1", "e2", "f1", "f2"],
+    "A_AND_B": ["f1", "f2"]
+  },
+  "constraints": [
+    "Each item has one direct owner; owners may be root, internal or leaf concepts.",
+    "F is one shared concept, not two path copies. Items f1/f2 are each stored and counted once.",
+    "Classification paths have concept-inheritance semantics, not path-provenance semantics.",
+    "Every real item requires its own original vector and may have independent attributes. This file supplies neither real vectors nor attribute snapshots.",
+    "Previous hypothetical PQ codes, ordinals and distances illustrate a rejected proposal; they are not real observations and are not required by the next graph design."
+  ]
+}
