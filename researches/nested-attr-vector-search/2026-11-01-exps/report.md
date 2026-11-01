@@ -186,3 +186,19 @@ ANN 运行 0，C++ 改动 0。方案中的多父闭包、标签集、精确基�
 
 数据：[dag-scope-probe-168k.json](data/dag-scope-probe-168k.json)、[dag-scope-probe-1m.json](data/dag-scope-probe-1m.json)、[dag-scope-probe-168k-heavy.json](data/dag-scope-probe-168k-heavy.json)。工作负载由 `scripts/prepare_dag_scope_workload.py` 生成；探针 2 项回归通过（`tests/test_dag_scope_probe.py`）。
 
+## 端到端探针：范围解析不构成查询瓶颈
+
+同一范围解析接到一张全局过滤 HNSW（ef20、k10、τ512），168,937 对象、1,234 查询、策略顺序逐查询轮换：
+
+| 策略 | 范围解析 µs | 搜索 µs | 端到端 µs | macro Recall |
+|---|---:|---:|---:|---:|
+| 在线展开 | 0.84 | 426.1 | 426.9 | .999838 |
+| 全部物化 | 1.61 | 431.9 | 433.5 | .999838 |
+| 按规则选点 | 0.53 | 435.6 | 436.2 | .999838 |
+
+三策略合格集合相同，Recall 一致；搜索时间轮换后收敛（426–436 µs），未轮换时的 521 对 383 µs 差异是执行顺序伪影，已由轮换消除。
+
+结论：**范围解析只占端到端 0.1–0.4%，选点物化在此规模没有查询收益**；其价值在维护（更新快约 3,000×）与空间（小 21×）。先前"资格占 82%"的场景是百万对象上的平坦属性过滤，与 DAG 范围解析不是同一成本项。
+
+数据：[dag-scope-ann-rotated.json](data/dag-scope-ann-rotated.json)、[dag-scope-ann-sequential.json](data/dag-scope-ann-sequential.json)。向量为 SIFT 行按 SciHTC 标签分配，标签与向量无语义对应；单张全局图，未分区；2 项探针回归通过。
+

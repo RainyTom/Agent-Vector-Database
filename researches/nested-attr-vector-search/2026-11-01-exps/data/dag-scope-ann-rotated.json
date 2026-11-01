@@ -1,0 +1,45 @@
+{
+  "kind": "dag_scope_ann_probe",
+  "objects": 168937,
+  "concepts": 1929,
+  "queries": 1234,
+  "ef": 20,
+  "k": 10,
+  "tau": 512,
+  "build_s": 44.1852,
+  "strategies": {
+    "online": {
+      "scope_us": 0.835733,
+      "search_us": 426.079,
+      "e2e_us": 426.915,
+      "e2e_p95_us": 3247.61,
+      "macro_recall": 0.999838,
+      "exact_queries": 844,
+      "graph_queries": 234
+    },
+    "mat_all": {
+      "scope_us": 1.61375,
+      "search_us": 431.928,
+      "e2e_us": 433.542,
+      "e2e_p95_us": 3411.98,
+      "macro_recall": 0.999838,
+      "exact_queries": 844,
+      "graph_queries": 234
+    },
+    "mat_select": {
+      "scope_us": 0.525166,
+      "search_us": 435.638,
+      "e2e_us": 436.163,
+      "e2e_p95_us": 3311.07,
+      "macro_recall": 0.999838,
+      "exact_queries": 844,
+      "graph_queries": 234
+    }
+  },
+  "limits": [
+    "one global HNSW with an eligibility filter; no partitioning",
+    "vectors are SIFT rows bound to SciHTC labels, so labels carry no vector semantics",
+    "residency warm; no cold-start or independent rebuilds"
+  ],
+  "workload": "168937 real labels; SIFT vectors assigned without semantics"
+}
