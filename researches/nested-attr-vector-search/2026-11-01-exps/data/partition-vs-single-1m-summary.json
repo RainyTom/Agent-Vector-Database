@@ -1,0 +1,268 @@
+{
+  "kind": "matched_recall_summary",
+  "source": "researches/nested-attr-vector-search/2026-11-01-exps/data/partition-vs-single-1m.json",
+  "objects": 1000000,
+  "k": 100,
+  "partitions": 10,
+  "single": [
+    {
+      "label": "single",
+      "ef": 50,
+      "recall": 0.9175,
+      "mean_us": 228.776028,
+      "p95_us": 325.191,
+      "distance_calls": 1819.094,
+      "candidates": 100
+    },
+    {
+      "label": "single",
+      "ef": 100,
+      "recall": 0.9175,
+      "mean_us": 229.868955,
+      "p95_us": 327.987,
+      "distance_calls": 1819.094,
+      "candidates": 100
+    },
+    {
+      "label": "single",
+      "ef": 200,
+      "recall": 0.97447,
+      "mean_us": 381.459853,
+      "p95_us": 541.176,
+      "distance_calls": 3177.775,
+      "candidates": 100
+    },
+    {
+      "label": "single",
+      "ef": 400,
+      "recall": 0.99444,
+      "mean_us": 708.019398,
+      "p95_us": 994.068,
+      "distance_calls": 5558.493,
+      "candidates": 100
+    },
+    {
+      "label": "single",
+      "ef": 800,
+      "recall": 0.99915,
+      "mean_us": 1308.096762,
+      "p95_us": 1877.759,
+      "distance_calls": 9630.197,
+      "candidates": 100
+    }
+  ],
+  "partition_serial": {
+    "k10": [
+      {
+        "label": "k10",
+        "ef": 50,
+        "recall": 0.86858,
+        "mean_us": 968.169137,
+        "p95_us": 1245.531,
+        "distance_calls": 8982.78,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 100,
+        "recall": 0.87893,
+        "mean_us": 1629.744752,
+        "p95_us": 2070.461,
+        "distance_calls": 14940.645,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 200,
+        "recall": 0.88118,
+        "mean_us": 2881.569107,
+        "p95_us": 3758.363,
+        "distance_calls": 24887.271,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 400,
+        "recall": 0.88144,
+        "mean_us": 5405.284615,
+        "p95_us": 7123.458,
+        "distance_calls": 40972.669,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 800,
+        "recall": 0.88149,
+        "mean_us": 9357.386451,
+        "p95_us": 11639.531,
+        "distance_calls": 66195.941,
+        "candidates": 100
+      }
+    ],
+    "k50": [
+      {
+        "label": "k50",
+        "ef": 50,
+        "recall": 0.97656,
+        "mean_us": 978.73308,
+        "p95_us": 1231.975,
+        "distance_calls": 8982.78,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 100,
+        "recall": 0.99505,
+        "mean_us": 1693.284572,
+        "p95_us": 2353.283,
+        "distance_calls": 14940.645,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 200,
+        "recall": 0.99933,
+        "mean_us": 2899.47398,
+        "p95_us": 3755.859,
+        "distance_calls": 24887.271,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 400,
+        "recall": 0.99981,
+        "mean_us": 5410.444134,
+        "p95_us": 7067.954,
+        "distance_calls": 40972.669,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 800,
+        "recall": 0.99989,
+        "mean_us": 9453.009964,
+        "p95_us": 11890.148,
+        "distance_calls": 66195.941,
+        "candidates": 100
+      }
+    ]
+  },
+  "partition_parallel": {
+    "k10": [
+      {
+        "label": "k10",
+        "ef": 50,
+        "recall": 0.86858,
+        "mean_us": 277.097784,
+        "p95_us": 353.464,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 100,
+        "recall": 0.87893,
+        "mean_us": 467.367265,
+        "p95_us": 603.283,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 200,
+        "recall": 0.88118,
+        "mean_us": 783.724891,
+        "p95_us": 1005.971,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 400,
+        "recall": 0.88144,
+        "mean_us": 1318.725115,
+        "p95_us": 1707.929,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k10",
+        "ef": 800,
+        "recall": 0.88149,
+        "mean_us": 2212.788742,
+        "p95_us": 2823.206,
+        "distance_calls": 0,
+        "candidates": 100
+      }
+    ],
+    "k50": [
+      {
+        "label": "k50",
+        "ef": 50,
+        "recall": 0.97656,
+        "mean_us": 286.964062,
+        "p95_us": 368.813,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 100,
+        "recall": 0.99505,
+        "mean_us": 468.740256,
+        "p95_us": 598.935,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 200,
+        "recall": 0.99933,
+        "mean_us": 793.850955,
+        "p95_us": 1022.481,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 400,
+        "recall": 0.99981,
+        "mean_us": 1324.349651,
+        "p95_us": 1702.359,
+        "distance_calls": 0,
+        "candidates": 100
+      },
+      {
+        "label": "k50",
+        "ef": 800,
+        "recall": 0.99989,
+        "mean_us": 2224.195954,
+        "p95_us": 2837.03,
+        "distance_calls": 0,
+        "candidates": 100
+      }
+    ]
+  },
+  "comparisons": [
+    {
+      "per_partition_k": "k10",
+      "dominated": true,
+      "partition_recall_ceiling": 0.88149,
+      "single_recall_at_cheapest": 0.9175,
+      "single_mean_us_at_cheapest": 228.776028,
+      "note": "partition arm never reaches the single graph recall range; single is both faster and more accurate at its cheapest ef"
+    },
+    {
+      "per_partition_k": "k50",
+      "matched_recall": 0.99915,
+      "partition_recall_ceiling": 0.99989,
+      "single_mean_us_at_matched_recall": 1308.096762,
+      "partition_serial_mean_us_at_matched_recall": 2848.746388074748,
+      "partition_parallel_mean_us_at_matched_recall": 780.1780751355091,
+      "serial_slowdown_vs_single": 2.1777795579274954,
+      "parallel_latency_ratio_vs_single": 0.5964222967287715,
+      "parallel_core_seconds_vs_single": 5.964222967287714,
+      "candidates_examined_per_query": 500
+    }
+  ]
+}

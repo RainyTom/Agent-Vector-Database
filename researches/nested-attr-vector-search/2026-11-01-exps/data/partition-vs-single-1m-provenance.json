@@ -1,0 +1,51 @@
+{
+  "kind": "single_graph_vs_even_partitions_1m_provenance",
+  "dataset": "ann-benchmarks SIFT1M (1,000,000 x 128, float32)",
+  "ground_truth": "exact top-100 from datasets/sift-128-euclidean.hdf5 'neighbors', first 1000 queries",
+  "compiler": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+  "compile_flags": [
+    "-std=c++17",
+    "-O3",
+    "-march=native",
+    "-pthread"
+  ],
+  "hnswlib_revision": "ca426729609b3221563047ceb269cc1213e0d376",
+  "graph_params": {
+    "M": 16,
+    "efConstruction": 200,
+    "build_threads": 1
+  },
+  "partitioning": "seeded random even split (seed 20261101), 10 x 100000; no clustering, no replication",
+  "runs": {
+    "single_build_s": 364.9161913,
+    "partition_build_s": 196.0646384,
+    "build_share_of_total": 0.839
+  },
+  "throughput_comparison_at_recall": {
+    "recall": 0.97656,
+    "single_qps_16threads": 9425.5,
+    "partition_k50_qps_16threads": 4183.4,
+    "ratio": 2.25,
+    "note": "both arms use the same shared 16-thread pool"
+  },
+  "hazard_found": "hnswlib clamps efSearch to max(ef, k); with global k=100 the ef50 and ef100 single-graph settings are identical (1819.094 distance calls each), so 'search top-100 with ef=50' is not a real configuration",
+  "sha256": {
+    "researches/nested-attr-vector-search/2026-11-01-exps/data/sift1m-gt-top100-1000q.ivecs": "e859e27317b1c23528d6e276cf7f6d0fd4324b170fccb8de7ab663f1aacccb93",
+    "researches/nested-attr-vector-search/2026-11-01-exps/experiments/partition_vs_single.cpp": "ffe9bf091f6c20d5f7163fa2bd0480d986264b90caeb1d614ed47a806cbfcaae",
+    "researches/nested-attr-vector-search/2026-11-01-exps/data/partition-vs-single-1m.json": "57062cc1864b6a44b8dea79e043e148d79cd2f64fdbbfff7c7fa05c13ec3e50d",
+    "work/packed/sift-fvecs-run1/sift_base.fvecs": "21f66e2975057b5728ba56de1c825bac4f4d89d596609ae985741c6242631816",
+    "work/packed/sift-fvecs-run1/sift_query.fvecs": "f7fc9be140accdfd64116c2fa2365ecdb69b8f084970c6b0532db5ff79ac8fdc"
+  },
+  "environment": {
+    "cpu": "16 logical cores, WSL2",
+    "ram_gb": 98,
+    "query_threads": "1 (latency arms), 10 (partition_parallel), 16 (throughput arms)"
+  },
+  "limits": [
+    "1M scale only, per user request; not a 100M measurement",
+    "single-threaded builds; build time is excluded from query latency",
+    "latency arms run one query at a time; partition_parallel deliberately spends 10 cores per query",
+    "random even split cannot be pruned for a global top-k query, so it is the least favourable split for partitioning",
+    "recall is macro over 1000 queries against exact top-100; no filtered recalls"
+  ]
+}

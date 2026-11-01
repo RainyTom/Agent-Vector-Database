@@ -1,0 +1,42 @@
+{
+  "kind": "true_top100_distribution_over_10_even_random_partitions",
+  "source_gt": "/tmp/sift_gt_1000.ivecs",
+  "gt_sha256": "e859e27317b1c23528d6e276cf7f6d0fd4324b170fccb8de7ab663f1aacccb93",
+  "dataset": "ann-benchmarks SIFT1M exact top-100, 1000 queries",
+  "seed": 20261101,
+  "partition_sizes": [
+    100000,
+    100000,
+    100000,
+    100000,
+    100000,
+    100000,
+    100000,
+    100000,
+    100000,
+    100000
+  ],
+  "max_true_neighbours_in_one_partition": {
+    "mean": 15.14,
+    "p50": 15,
+    "p95": 18,
+    "max": 22
+  },
+  "mean_distinct_partitions_holding_true_top100": 10.0,
+  "recall_ceiling_if_per_partition_k": {
+    "5": 0.4966,
+    "10": 0.8818,
+    "20": 0.9999,
+    "50": 1.0,
+    "100": 1.0
+  },
+  "interpretation": [
+    "Even random split spreads every query's true top-100 across all 10 partitions",
+    "per-partition top-50 therefore loses nothing in recall ceiling, but also permits no partition pruning",
+    "per-partition top-10 would cap recall near 0.88, so the requested top-50 is not wasteful in this configuration"
+  ],
+  "limits": [
+    "random split only; a clustered split would concentrate neighbours and lower the top-50 ceiling while still not enabling safe pruning",
+    "ceiling ignores ANN error inside each partition"
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "kind": "single_graph_vs_even_partitions",
+  "objects": 1000000, "dim": 128, "queries": 1000, "k": 100, "partitions": 10, "per_partition_k_values": [10,50], "seed": 20261101, "single_build_s": 364.9161913, "partition_build_s": 196.0646384, "thread_pool":16,
+  "build_scope": "single-threaded builds, M=16, efConstruction=200; one global graph plus one 10-graph set; query timing excludes builds",
+  "partition_sizes": [100000,100000,100000,100000,100000,100000,100000,100000,100000,100000],
+  "single": {
+    "ef50": {"queries":1000,"mean_us":228.776028,"p50_us":228.069,"p95_us":325.191,"recall_at_100":0.9175,"hits":91750,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":1819.094},
+    "ef100": {"queries":1000,"mean_us":229.868955,"p50_us":225.594,"p95_us":327.987,"recall_at_100":0.9175,"hits":91750,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":1819.094},
+    "ef200": {"queries":1000,"mean_us":381.459853,"p50_us":385.114,"p95_us":541.176,"recall_at_100":0.97447,"hits":97447,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":3177.775},
+    "ef400": {"queries":1000,"mean_us":708.019398,"p50_us":711.517,"p95_us":994.068,"recall_at_100":0.99444,"hits":99444,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":5558.493},
+    "ef800": {"queries":1000,"mean_us":1308.096762,"p50_us":1315.282,"p95_us":1877.759,"recall_at_100":0.99915,"hits":99915,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":9630.197}
+  },
+  "partition_serial": {
+    "k10": {
+      "ef50": {"queries":1000,"mean_us":968.169137,"p50_us":973.82,"p95_us":1245.531,"recall_at_100":0.86858,"hits":86858,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":8982.78},
+      "ef100": {"queries":1000,"mean_us":1629.744752,"p50_us":1654.198,"p95_us":2070.461,"recall_at_100":0.87893,"hits":87893,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":14940.645},
+      "ef200": {"queries":1000,"mean_us":2881.569107,"p50_us":2924.626,"p95_us":3758.363,"recall_at_100":0.88118,"hits":88118,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":24887.271},
+      "ef400": {"queries":1000,"mean_us":5405.284615,"p50_us":5478.186,"p95_us":7123.458,"recall_at_100":0.88144,"hits":88144,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":40972.669},
+      "ef800": {"queries":1000,"mean_us":9357.386451,"p50_us":9573.862,"p95_us":11639.531,"recall_at_100":0.88149,"hits":88149,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":66195.941}},
+    "k50": {
+      "ef50": {"queries":1000,"mean_us":978.73308,"p50_us":991.093,"p95_us":1231.975,"recall_at_100":0.97656,"hits":97656,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":8982.78},
+      "ef100": {"queries":1000,"mean_us":1693.284572,"p50_us":1694.956,"p95_us":2353.283,"recall_at_100":0.99505,"hits":99505,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":14940.645},
+      "ef200": {"queries":1000,"mean_us":2899.47398,"p50_us":2947.489,"p95_us":3755.859,"recall_at_100":0.99933,"hits":99933,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":24887.271},
+      "ef400": {"queries":1000,"mean_us":5410.444134,"p50_us":5480.709,"p95_us":7067.954,"recall_at_100":0.99981,"hits":99981,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":40972.669},
+      "ef800": {"queries":1000,"mean_us":9453.009964,"p50_us":9645.905,"p95_us":11890.148,"recall_at_100":0.99989,"hits":99989,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":66195.941}}
+  },
+  "partition_parallel": {
+    "k10": {
+      "ef50": {"queries":1000,"mean_us":277.097784,"p50_us":282.912,"p95_us":353.464,"recall_at_100":0.86858,"hits":86858,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef100": {"queries":1000,"mean_us":467.367265,"p50_us":474.893,"p95_us":603.283,"recall_at_100":0.87893,"hits":87893,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef200": {"queries":1000,"mean_us":783.724891,"p50_us":807.197,"p95_us":1005.971,"recall_at_100":0.88118,"hits":88118,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef400": {"queries":1000,"mean_us":1318.725115,"p50_us":1361.999,"p95_us":1707.929,"recall_at_100":0.88144,"hits":88144,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef800": {"queries":1000,"mean_us":2212.788742,"p50_us":2264.686,"p95_us":2823.206,"recall_at_100":0.88149,"hits":88149,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0}},
+    "k50": {
+      "ef50": {"queries":1000,"mean_us":286.964062,"p50_us":291.848,"p95_us":368.813,"recall_at_100":0.97656,"hits":97656,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef100": {"queries":1000,"mean_us":468.740256,"p50_us":481.114,"p95_us":598.935,"recall_at_100":0.99505,"hits":99505,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef200": {"queries":1000,"mean_us":793.850955,"p50_us":815.272,"p95_us":1022.481,"recall_at_100":0.99933,"hits":99933,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef400": {"queries":1000,"mean_us":1324.349651,"p50_us":1364.053,"p95_us":1702.359,"recall_at_100":0.99981,"hits":99981,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0},
+      "ef800": {"queries":1000,"mean_us":2224.195954,"p50_us":2272.361,"p95_us":2837.03,"recall_at_100":0.99989,"hits":99989,"denominator":100000,"candidates_merged":100,"distance_calls_per_query":0}}
+  },
+  "throughput_16threads": {"single": {
+    "ef50": {"qps":18358.50376,"recall_at_100":0.9175},
+    "ef100": {"qps":18858.34947,"recall_at_100":0.9175},
+    "ef200": {"qps":9846.58935,"recall_at_100":0.97447},
+    "ef400": {"qps":5823.189948,"recall_at_100":0.99444},
+    "ef800": {"qps":3256.508499,"recall_at_100":0.99915}}, "partition": {
+    "k10": {
+      "ef50": {"qps":4168.641787,"recall_at_100":0.86858},
+      "ef100": {"qps":2502.549554,"recall_at_100":0.87893},
+      "ef200": {"qps":1482.99328,"recall_at_100":0.88118},
+      "ef400": {"qps":886.0161717,"recall_at_100":0.88144},
+      "ef800": {"qps":536.3570164,"recall_at_100":0.88149}},
+    "k50": {
+      "ef50": {"qps":4183.433257,"recall_at_100":0.97656},
+      "ef100": {"qps":2501.233646,"recall_at_100":0.99505},
+      "ef200": {"qps":1482.315043,"recall_at_100":0.99933},
+      "ef400": {"qps":884.7647816,"recall_at_100":0.99981},
+      "ef800": {"qps":528.5388998,"recall_at_100":0.99989}}}},
+  "notes": ["recall@100 against ann-benchmarks SIFT1M exact top-100", "distance calls measured in an untimed second pass", "partitions are random and even, so no partition can be pruned for a global top-k query; every partition holds true neighbours", "per-partition k is a separate parameter from global k; with k=100 and 10 partitions, per-partition 50 merges up to 500 candidates", "partition_parallel uses one thread per partition and therefore 10 cores; throughput arms use a shared 16-core pool"]
+}

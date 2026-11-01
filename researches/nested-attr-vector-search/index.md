@@ -8,6 +8,8 @@
 
 - [TrieHI 基线与本方案定位](2026-11-01-exps/triehi-baseline-and-dag-positioning.md)：原文只比较三种目录表示（固定 PG/IVF）、未比较多属性过滤索引的原文依据与未说明之处、WIKI-Dir 将 DAG 压成 canonical tree，以及把 NodeANN 降为执行器后的对照骨架与新颖性缺口。
 
+- [单图 top-100 vs 10 图各 top-50（1M 实测）](2026-11-01-exps/partition-vs-single-1m.md)：同召回下串行单图快 2.18×；10 核并行只降低单条延迟（核·秒 5.96×），16 核吞吐仍低 2.25×；每图 top-50 相对 top-10 几乎免费，但分区无法剪枝。
+
 - [DAG query20 实测与文献依据](2026-11-01-exps/report.md)：同批 20 查询、每臂驻留三遍的完整计时/双 Recall、分区 fanout 与构建成本；附 TrieHI、Curator、ACORN、iRangeGraph、SciHTC 的证据。
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
