@@ -1,0 +1,237 @@
+{
+  "kind": "static-dag-merge-fixed-workload-iterations",
+  "baseline_commit": "922b1876ed78",
+  "retained_algorithm_commit": "a6620cd950ab",
+  "retained_source_sha256": "85ed1f4618ae2d42cfd926dbc9ec1cafa137607f28c273b940b6aca4ef07bd46",
+  "runs": [
+    {
+      "run_id": 15,
+      "description": "formal baseline: four farthest-point portals, MST joins, subtree jumps",
+      "metrics": {
+        "merged_query_us": 572.171695652,
+        "merged_recall": 1.0,
+        "global_filtered_us": 27749.7346087,
+        "nodeann_us": 50.8126956522,
+        "merged_build_s": 6.928484014,
+        "global_build_s": 40.109820373,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 1638.0,
+        "jump_directed_edges": 8862.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 168937,
+      "status": "keep"
+    },
+    {
+      "run_id": 16,
+      "description": "ablation: remove subtree jumps, unchanged MST and entries",
+      "metrics": {
+        "merged_query_us": 625.872391304,
+        "merged_recall": 1.0,
+        "global_filtered_us": 29406.6864348,
+        "nodeann_us": 58.8412173913,
+        "merged_build_s": 6.996035018,
+        "global_build_s": 40.237633714,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 1638.0,
+        "jump_directed_edges": 0.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 168937,
+      "status": "discard"
+    },
+    {
+      "run_id": 17,
+      "description": "MST plus every portal nearest to each other input group; unchanged jumps and entries",
+      "metrics": {
+        "merged_query_us": 200.420608696,
+        "merged_recall": 0.969565217391,
+        "global_filtered_us": 29511.6217391,
+        "nodeann_us": 55.7029130435,
+        "merged_build_s": 7.009862341,
+        "global_build_s": 39.202083138,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 26630.0,
+        "jump_directed_edges": 7764.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 2048,
+      "status": "keep"
+    },
+    {
+      "run_id": 18,
+      "description": "extra build-time native local HNSW top2 bridge refinement",
+      "metrics": {
+        "merged_query_us": 218.794826087,
+        "merged_recall": 0.995652173913,
+        "global_filtered_us": 29124.4090435,
+        "nodeann_us": 51.3684782609,
+        "merged_build_s": 7.053555872,
+        "global_build_s": 39.499533733,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 97340.0,
+        "jump_directed_edges": 7754.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 2048,
+      "status": "discard"
+    },
+    {
+      "run_id": 19,
+      "description": "increase portal budget4->8 with nearest-portal joins and existing jumps",
+      "metrics": {
+        "merged_query_us": 181.180391304,
+        "merged_recall": 0.969565217391,
+        "global_filtered_us": 29331.002087,
+        "nodeann_us": 58.6520434783,
+        "merged_build_s": 7.068471359,
+        "global_build_s": 39.211265101,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 57240.0,
+        "jump_directed_edges": 38438.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 2048,
+      "status": "keep"
+    },
+    {
+      "run_id": 20,
+      "description": "sixteen portals instead of eight; nearest-portal joins and jumps unchanged",
+      "metrics": {
+        "merged_query_us": 192.635782609,
+        "merged_recall": 0.969565217391,
+        "global_filtered_us": 28295.7764783,
+        "nodeann_us": 57.4693478261,
+        "merged_build_s": 7.134770275,
+        "global_build_s": 39.643874863,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 115334.0,
+        "jump_directed_edges": 166800.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 2048,
+      "status": "discard"
+    },
+    {
+      "run_id": 21,
+      "description": "mean-nearest initial real portal followed by farthest-point selection, q8",
+      "metrics": {
+        "merged_query_us": 208.621217391,
+        "merged_recall": 0.965217391304,
+        "global_filtered_us": 29311.7782174,
+        "nodeann_us": 52.0930869565,
+        "merged_build_s": 6.999456041,
+        "global_build_s": 39.399509375,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 58050.0,
+        "jump_directed_edges": 39730.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 2048,
+      "status": "discard"
+    },
+    {
+      "run_id": 22,
+      "description": "distributed bridge sources: every direct item links to nearest foreign portal per input group",
+      "metrics": {
+        "merged_query_us": 99.2892608696,
+        "merged_recall": 0.960869565217,
+        "global_filtered_us": 29765.741087,
+        "nodeann_us": 55.5290869565,
+        "merged_build_s": 7.415873056,
+        "global_build_s": 39.196092469,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 3084238.0,
+        "jump_directed_edges": 37368.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 512,
+      "status": "keep"
+    },
+    {
+      "run_id": 23,
+      "description": "distributed forward bridges with nearest16 reverse arrivals per portal",
+      "metrics": {
+        "merged_query_us": 91.4127826087,
+        "merged_recall": 0.95652173913,
+        "global_filtered_us": 29097.1374783,
+        "nodeann_us": 54.2422608696,
+        "merged_build_s": 7.425229702,
+        "global_build_s": 38.950008097,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 1652935.0,
+        "jump_directed_edges": 37901.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 512,
+      "status": "keep"
+    },
+    {
+      "run_id": 24,
+      "description": "distributed bridges with four portals and reverse16 cap",
+      "metrics": {
+        "merged_query_us": 211.497826087,
+        "merged_recall": 0.995652173913,
+        "global_filtered_us": 29343.279913,
+        "nodeann_us": 52.676173913,
+        "merged_build_s": 7.257350154,
+        "global_build_s": 38.455044929,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 1584818.0,
+        "jump_directed_edges": 7625.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 2048,
+      "status": "discard"
+    },
+    {
+      "run_id": 25,
+      "description": "cap distinct distributed forward bridges4 and reverse arrivals16",
+      "metrics": {
+        "merged_query_us": 100.983391304,
+        "merged_recall": 0.95652173913,
+        "global_filtered_us": 29740.7624348,
+        "nodeann_us": 65.9646956522,
+        "merged_build_s": 7.471785812,
+        "global_build_s": 39.925781514,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 723970.0,
+        "jump_directed_edges": 38418.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 512,
+      "status": "discard"
+    },
+    {
+      "run_id": 26,
+      "description": "unchanged repeat of retained q8 distributed forward + reverse16 configuration",
+      "metrics": {
+        "merged_query_us": 82.8614782609,
+        "merged_recall": 0.95652173913,
+        "global_filtered_us": 29027.7303478,
+        "nodeann_us": 59.037,
+        "merged_build_s": 7.420653961,
+        "global_build_s": 39.290942623,
+        "local_directed_edges": 2374436.0,
+        "connector_directed_edges": 1652935.0,
+        "jump_directed_edges": 37901.0,
+        "exhaustive_errors": 0.0
+      },
+      "selected_ef": 512,
+      "status": "keep"
+    }
+  ],
+  "workload_queries": 24,
+  "nonempty_queries": 23,
+  "quality_gate": "query-average ties-aware Recall@10>=0.95",
+  "final_worst_query_recall": 0.5,
+  "final_nonperfect_queries": 3,
+  "synthetic_regression": "PASS empty parents/shared descendants/empty scopes/scope isolation/deduplication/preserved edges",
+  "limitations": [
+    "fixed small optimization workload, no held-out validation",
+    "random owner assignment, OR scopes only",
+    "not matched memory or exactly matched recall",
+    "shortest paths not measured",
+    "same final source timing repeat is not a new algorithm improvement"
+  ]
+}
