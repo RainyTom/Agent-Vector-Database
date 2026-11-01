@@ -1,0 +1,25 @@
+{
+  "kind": "didactic_example_input_not_performance_data",
+  "concepts": {"R": 0, "A": 1, "B": 2, "C": 3, "D": 4, "E": 5, "F": 6},
+  "edges_parent_child": [["R", "A"], ["R", "B"], ["R", "F"], ["A", "C"], ["A", "D"], ["B", "C"], ["B", "E"]],
+  "objects": [
+    {"id": 0, "name": "o0", "direct": "A", "vector": [0, 0]},
+    {"id": 1, "name": "o1", "direct": "C", "vector": [1, 0]},
+    {"id": 2, "name": "o2", "direct": "D", "vector": [2, 0]},
+    {"id": 3, "name": "o3", "direct": "C", "vector": [0, 2]},
+    {"id": 4, "name": "o4", "direct": "B", "vector": [3, 0]},
+    {"id": 5, "name": "o5", "direct": "E", "vector": [0, 3]},
+    {"id": 6, "name": "o6", "direct": "F", "vector": [4, 4]},
+    {"id": 7, "name": "o7", "direct": "R", "vector": [5, 5]}
+  ],
+  "partition_depth": 1,
+  "partition_names": ["b_R", "b_A", "b_B", "b_F"],
+  "materialized_concepts_for_illustration": ["B"],
+  "materialization_note": "B is explicitly materialized to illustrate a stored bitmap; this is not a claim the proxy rule selects it for N=8.",
+  "query": {"vector": [1, 1], "concepts": ["B"], "k": 2, "tau": 2, "ef": 20, "other_predicates": "true"},
+  "small_query": {"vector": [1, 1], "concepts": ["D"], "k": 2, "tau": 2, "ef": 20},
+  "union_query_concepts": ["A", "B"],
+  "update": {"object_id": 6, "from": "F", "to": "B", "keep_physical_partition": true},
+  "bitmap_display_order": "o0,o1,o2,o3,o4,o5,o6,o7 left-to-right; not a numeric binary literal",
+  "limits": ["8-object 2D illustration, not performance evidence", "Single direct labels match the current probe scope", "Only result membership and distances are prescribed; HNSW edges must come from an actual build"]
+}

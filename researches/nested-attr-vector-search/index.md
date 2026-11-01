@@ -4,7 +4,7 @@
 
 ## 当前工作
 
-- **[DAG 层级属性约束下的分区向量检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：多父闭包与直接标签、成员倒排及可选 scope 物化、固定物理分区与每分区 HNSW；含完整查询、覆盖性质、标签更新集合差分与实现范围。
+- **[DAG 层级属性约束下的分区向量检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：以七概念、八对象贯穿实际存储结构、HNSW 节点记录、跨分区查询、小集合扫描与固定位置的标签更新；三幅 SVG 与正文步骤对应，附实际 C++ 核对。
 
 - [DAG query20 实测与文献依据](2026-11-01-exps/report.md)：同批 20 查询、每臂驻留三遍的完整计时/双 Recall、分区 fanout 与构建成本；附 TrieHI、Curator、ACORN、iRangeGraph、SciHTC 的证据。
 

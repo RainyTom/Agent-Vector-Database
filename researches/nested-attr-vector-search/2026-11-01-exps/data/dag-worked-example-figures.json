@@ -1,0 +1,46 @@
+{
+  "purpose": "SVG text compatibility: no runtime font or text shaping dependency",
+  "font_license": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/LICENSE",
+  "fonts": [
+    {
+      "path": "work/svg-fonts/NotoSansCJKsc-Regular.otf",
+      "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf"
+    },
+    {
+      "path": "work/svg-fonts/NotoSansCJKsc-Bold.otf",
+      "sha256": "b5f0d1a190a7f9b43c310a8850630af12553df32c4c050543f9059732d9b4c0a",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf"
+    }
+  ],
+  "figures": [
+    {
+      "source": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-index-layout.svg",
+      "source_sha256": "a48f3a34e0577a3fa62e9bed0b923031ddca11214ea628daa41a8ee114555b34",
+      "output": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-index-layout-outlined.svg",
+      "output_sha256": "7879fc48e7086b304a64d7369c46f5595a92d41a952cdc8dc7a89c798f67813a",
+      "label_groups": 89,
+      "glyph_paths": 886,
+      "remaining_text_elements": 0
+    },
+    {
+      "source": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-query-walkthrough.svg",
+      "source_sha256": "a015453f7ee1992c70e1c63fbe351b1a1df735101ac0c0c16b18df8969a3c9d3",
+      "output": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-query-walkthrough-outlined.svg",
+      "output_sha256": "38ec38e14be43259c2bc1af35c6dfcaddc18e9a9a82e75b1bc5ddf23fce5e67c",
+      "label_groups": 21,
+      "glyph_paths": 608,
+      "remaining_text_elements": 0
+    },
+    {
+      "source": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-label-update.svg",
+      "source_sha256": "b30c94d48fe487335c4463d060d46e9c06b63b74aa1f7df9700534c10148224d",
+      "output": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-label-update-outlined.svg",
+      "output_sha256": "5314035aa95e0e3d3ffe624d18431e7a0d873353e6d7773188864dfc7c90d95b",
+      "label_groups": 22,
+      "glyph_paths": 604,
+      "remaining_text_elements": 0
+    }
+  ],
+  "tradeoff": "Outline labels are not selectable text. Original SVG and Markdown remain editable/searchable."
+}

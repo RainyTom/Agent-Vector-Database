@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="730" viewBox="0 0 960 730" fill="none">
+<defs><marker id="query-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="currentColor"/></marker></defs>
+<g stroke="currentColor" stroke-width="1.5"><rect x="16" y="60" width="928" height="122" rx="10"/><rect x="16" y="204" width="928" height="106" rx="10"/><rect x="16" y="332" width="452" height="142" rx="10"/><rect x="492" y="332" width="452" height="142" rx="10"/><rect x="16" y="496" width="928" height="74" rx="10"/><rect x="16" y="594" width="928" height="116" rx="10"/><path d="M480 182V204M480 310V320H242V332M480 320H718V332M242 474V496M718 474V496" marker-end="url(#query-arrow)"/></g>
+<g fill="currentColor" font-family="sans-serif" font-size="17">
+<text x="24" y="32" font-size="23">图2　同一 B 查询：范围 → 分区 → 局部结果 → 合并</text>
+<text x="34" y="88">① 输入 U={B}，q=(1,1)，k=2，τ=2；其他谓词为 true</text>
+<text x="34" y="118">Desc(B)={B,C,E}；P(B)={o4}，P(C)={o1,o3}，P(E)={o5}</text>
+<text x="34" y="148">在线 OR，或读取示例缓存 M(B)=01011100 → E={o1,o3,o4,o5}</text>
+<text x="34" y="172" font-size="14">位序从左到右为 o0…o7；B 为显式示例物化项，不代表预算规则会选择 B。</text>
+<text x="34" y="232">② |E|=4 &gt; τ：选择分区图搜索；按稳定对象 ID 查 part_of</text>
+<text x="34" y="262">(b_R0,b_A1,b_B2,b_F3) 的 eligible 数 = (0,2,2,0)</text>
+<text x="34" y="290">③ 派发 b_A1、b_B2；跳过 b_R0、b_F3（不调用它们的图搜索）</text>
+<text x="34" y="360">④ b_A1：物理记录 o0,o1,o2,o3</text>
+<text x="34" y="390">过滤后可返回 o1、o3；局部 top-2：</text>
+<text x="34" y="420">(d²=1,o1)，(d²=2,o3)</text>
+<text x="34" y="450">o0、o2 在图内，但不得进入结果。</text>
+<text x="510" y="360">④ b_B2：物理记录 o4,o5</text>
+<text x="510" y="390">过滤后可返回 o4、o5；局部 top-2：</text>
+<text x="510" y="420">(d²=5,o4)，(d²=5,o5)</text>
+<text x="510" y="450">局部 k=min(2,eligible)=2。</text>
+<text x="34" y="526">⑤ 合并局部输出，按 (平方 L2 距离, 对象 ID) 排序，截取前 k 项</text>
+<text x="34" y="554">最终：[o1,o3]。以上展示返回候选，不是 HNSW 内部节点扩展轨迹。</text>
+<text x="34" y="622">小范围旁支：U={D} → Desc(D)={D} → E={o2}，|E|=1 ≤ τ</text>
+<text x="34" y="652">直接精确扫描：d²(q,o2)=(2−1)²+(0−1)²=2 → 返回 [o2]</text>
+<text x="34" y="682">即使 k=2，也只返回 1 个合法对象；不以范围外对象补齐。</text>
+</g></svg>

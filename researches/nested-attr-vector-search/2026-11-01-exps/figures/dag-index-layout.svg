@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="1220" viewBox="0 0 980 1220" fill="none">
+  <defs>
+    <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M1 1 L7 4 L1 7" stroke="currentColor" stroke-width="1.4" fill="none"/>
+    </marker>
+  </defs>
+  <g stroke="currentColor" stroke-width="1.3">
+    <rect x="20" y="74" width="324" height="338" rx="8"/>
+    <rect x="360" y="74" width="246" height="338" rx="8"/>
+    <rect x="622" y="74" width="338" height="128" rx="8" stroke-dasharray="5 4"/>
+    <rect x="622" y="228" width="338" height="184" rx="8"/>
+    <path d="M791 202 V225" marker-end="url(#arrow)"/>
+    <path d="M344 250 H357" marker-end="url(#arrow)"/>
+    <path d="M606 138 H619" marker-end="url(#arrow)"/>
+    <path d="M606 320 H619" marker-end="url(#arrow)"/>
+    <path d="M175 149 L98 199 M181 151 L223 198 M187 146 L298 201 M89 239 L62 286 M106 238 L151 286 M218 237 L168 287 M234 239 L260 286" marker-end="url(#arrow)"/>
+    <circle cx="178" cy="130" r="22"/>
+    <circle cx="96" cy="220" r="22"/>
+    <circle cx="226" cy="220" r="22"/>
+    <circle cx="309" cy="220" r="22"/>
+    <circle cx="55" cy="308" r="22"/>
+    <circle cx="159" cy="308" r="22"/>
+    <circle cx="268" cy="308" r="22"/>
+    <rect x="640" y="292" width="302" height="58" rx="3"/>
+    <path d="M640 320 H942 M677.75 292 V350 M715.5 292 V350 M753.25 292 V350 M791 292 V350 M828.75 292 V350 M866.5 292 V350 M904.25 292 V350"/>
+    <rect x="20" y="458" width="940" height="742" rx="8"/>
+    <rect x="38" y="516" width="256" height="286" rx="5"/>
+    <rect x="348" y="516" width="594" height="286" rx="5"/>
+    <path d="M294 660 H345" marker-end="url(#arrow)"/>
+    <path d="M362 557 H928 M362 612 H928 M362 667 H928 M362 722 H928 M469 534 V778 M695 534 V778"/>
+    <path d="M645 802 V839" marker-end="url(#arrow)"/>
+    <rect x="38" y="842" width="330" height="250" rx="5"/>
+    <rect x="386" y="842" width="556" height="250" rx="5"/>
+    <circle cx="110" cy="940" r="23"/><circle cx="280" cy="940" r="23"/>
+    <circle cx="110" cy="1034" r="23"/><circle cx="280" cy="1034" r="23"/>
+    <path d="M133 940H257M133 1034H257M110 963V1011M280 963V1011M130 952L260 1022M260 952L130 1022"/>
+  </g>
+  <g fill="currentColor" font-family="Noto Sans CJK SC, Noto Sans SC, sans-serif" font-size="16">
+    <text x="20" y="30" font-size="23" font-weight="700">图1  DAG 分区索引：逻辑归属与物理寻址</text>
+    <text x="20" y="56">统一示例：8 个对象，二维向量；实线框为持久状态，虚线框为派生解释。</text>
+    <text x="36" y="101" font-weight="700">① 属性 DAG（概念 ID）</text>
+    <text x="178" y="136" text-anchor="middle">R0</text>
+    <text x="96" y="226" text-anchor="middle">A1</text>
+    <text x="226" y="226" text-anchor="middle">B2</text>
+    <text x="309" y="226" text-anchor="middle">F6</text>
+    <text x="55" y="314" text-anchor="middle">D4</text>
+    <text x="159" y="314" text-anchor="middle">C3</text>
+    <text x="268" y="314" text-anchor="middle">E5</text>
+    <text x="40" y="367">箭头：父 → 子</text>
+    <text x="40" y="392">C 同时属于 A、B 的后代。</text>
+    <text x="376" y="101" font-weight="700">② 直接倒排 P(v)</text>
+    <text x="382" y="143">P(R) = [7]</text>
+    <text x="382" y="175">P(A) = [0]</text>
+    <text x="382" y="207">P(B) = [4]</text>
+    <text x="382" y="239">P(C) = [1, 3]</text>
+    <text x="382" y="271">P(D) = [2]</text>
+    <text x="382" y="303">P(E) = [5]</text>
+    <text x="382" y="335">P(F) = [6]</text>
+    <text x="376" y="370">列表元素为外部对象 ID；</text>
+    <text x="376" y="394">仅记录直接标签。</text>
+    <text x="638" y="101" font-weight="700">派生闭包（非另一份倒排）</text>
+    <text x="640" y="135">Desc(B) = {B, C, E}</text>
+    <text x="640" y="163">P(B) ∪ P(C) ∪ P(E) = {1, 3, 4, 5}</text>
+    <text x="640" y="188">C(B) = 4（后代闭包对象数）</text>
+    <text x="638" y="255" font-weight="700">③ 显式存储的物化位图 M(B)</text>
+    <text x="640" y="280" font-size="14">列按对象排列，不是数值二进制表示</text>
+    <text x="659" y="312" text-anchor="middle">o0</text>
+    <text x="697" y="312" text-anchor="middle">o1</text>
+    <text x="734" y="312" text-anchor="middle">o2</text>
+    <text x="772" y="312" text-anchor="middle">o3</text>
+    <text x="810" y="312" text-anchor="middle">o4</text>
+    <text x="848" y="312" text-anchor="middle">o5</text>
+    <text x="886" y="312" text-anchor="middle">o6</text>
+    <text x="923" y="312" text-anchor="middle">o7</text>
+    <text x="659" y="341" text-anchor="middle">0</text>
+    <text x="697" y="341" text-anchor="middle">1</text>
+    <text x="734" y="341" text-anchor="middle">0</text>
+    <text x="772" y="341" text-anchor="middle">1</text>
+    <text x="810" y="341" text-anchor="middle">1</text>
+    <text x="848" y="341" text-anchor="middle">1</text>
+    <text x="886" y="341" text-anchor="middle">0</text>
+    <text x="923" y="341" text-anchor="middle">0</text>
+    <text x="638" y="375">为讲解显式选择 B 物化；</text>
+    <text x="638" y="398">不表示启发式会在 N=8 时选中 B。</text>
+    <text x="20" y="440">逻辑闭包可重叠；下方对象的物理归属唯一，不能从某概念的直接倒排推断查询分区。</text>
+    <text x="38" y="488" font-size="19" font-weight="700">④ 物理存储：h=1，分区编号与概念 ID 是两种编号</text>
+    <text x="54" y="542" font-weight="700">唯一对象 → 分区映射</text>
+    <text x="70" y="575">o0 → b_A1</text>
+    <text x="70" y="604">o1 → b_A1</text>
+    <text x="70" y="633">o2 → b_A1</text>
+    <text x="70" y="662">o3 → b_A1</text>
+    <text x="70" y="691">o4 → b_B2</text>
+    <text x="70" y="720">o5 → b_B2</text>
+    <text x="70" y="749">o6 → b_F3</text>
+    <text x="70" y="778">o7 → b_R0</text>
+    <text x="363" y="542" font-weight="700">分区表</text>
+    <text x="486" y="542" font-weight="700">外部对象 ID</text>
+    <text x="710" y="542" font-weight="700">独立物理索引</text>
+    <text x="372" y="591">b_R0</text>
+    <text x="486" y="591">[7]</text>
+    <text x="710" y="591">HNSW（1 个节点）</text>
+    <text x="372" y="646">b_A1</text>
+    <text x="486" y="646">[0, 1, 2, 3]</text>
+    <text x="710" y="646">HNSW（4 个节点）</text>
+    <text x="372" y="701">b_B2</text>
+    <text x="486" y="701">[4, 5]</text>
+    <text x="710" y="701">HNSW（2 个节点）</text>
+    <text x="372" y="756">b_F3</text>
+    <text x="486" y="756">[6]</text>
+    <text x="710" y="756">HNSW（1 个节点）</text>
+    <text x="38" y="829">b_Xn：初始概念键 X、分区号 n；每个分区表项指向独立 HNSW。</text>
+    <text x="54" y="871" font-weight="700">⑤ 展开 b_A：实际 L0 邻接</text>
+    <text x="54" y="900" font-size="14">节点为 local ID / 对象；入口为 0/o0</text>
+    <text x="110" y="945" text-anchor="middle" font-size="14">0/o0</text>
+    <text x="280" y="945" text-anchor="middle" font-size="14">1/o1</text>
+    <text x="110" y="1039" text-anchor="middle" font-size="14">2/o2</text>
+    <text x="280" y="1039" text-anchor="middle" font-size="14">3/o3</text>
+    <text x="54" y="1080" font-size="14">连线为实测双向边；布局不是向量坐标。</text>
+    <text x="402" y="871" font-weight="700">节点记录示例：b_A 的 local 1</text>
+    <text x="402" y="907">外部 label = 1（全局对象 o1）</text>
+    <text x="402" y="941">向量 payload = (1,0)，由图记录持有副本</text>
+    <text x="402" y="975">节点 level = 0；neighbors[0] = [0,2,3]</text>
+    <text x="402" y="1009">邻居是本图局部 ID，取节点的 label 再识别对象</text>
+    <text x="402" y="1043">本例 max_level=0；更大图可有更高随机导航层</text>
+    <text x="402" y="1077" font-size="14">邻接、入口和向量来自实际构建输出，不假设图内访问顺序。</text>
+    <text x="38" y="1129">属性 DAG 层级决定语义后代；HNSW 随机层级只服务近邻导航，两者独立。</text>
+    <text x="38" y="1167">仅有实际非空分区才有图：C、D、E 没有独立分区图，其对象存于 b_A 或 b_B。</text>
+  </g>
+</svg>
