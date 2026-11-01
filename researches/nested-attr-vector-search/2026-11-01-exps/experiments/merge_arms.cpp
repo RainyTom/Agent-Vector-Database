@@ -226,14 +226,15 @@ struct Scratch {
     uint32_t epoch = 0;
     explicit Scratch(size_t n) : seen(n) {}
 };
-static std::vector<Id> search(const Merged& m, const Workload& w, const Vectors& base,
-    RawL2Space& l2, const float* query, const std::vector<char>& allowed,
-    const std::vector<Id>& roots, size_t ef, Scratch& scratch, size_t& calls) {
+template<class DistanceSpace, class Qualification>
+static std::vector<Id> search_impl(const Merged& m, const Vectors& base,
+    DistanceSpace& l2, const float* query, const std::vector<Id>& roots,
+    size_t ef, Scratch& scratch, size_t& calls, Qualification qualifies) {
     ++scratch.epoch;
     std::priority_queue<Pair, std::vector<Pair>, std::greater<Pair>> frontier;
     std::priority_queue<Pair> best;
     auto offer = [&](Id u) {
-        if (!allowed[w.owner[u]] || scratch.seen[u] == scratch.epoch) return;
+        if (!qualifies(u) || scratch.seen[u] == scratch.epoch) return;
         scratch.seen[u] = scratch.epoch;
         Pair p{l2.dist(query, base.at(u)), u}; ++calls;
         if (best.size() < ef || p < best.top()) {
@@ -251,6 +252,12 @@ static std::vector<Id> search(const Merged& m, const Workload& w, const Vectors&
     std::vector<Id> result;
     while (!best.empty()) { result.push_back(best.top().second); best.pop(); }
     return result;
+}
+static std::vector<Id> search(const Merged& m, const Workload& w, const Vectors& base,
+    RawL2Space& l2, const float* query, const std::vector<char>& allowed,
+    const std::vector<Id>& roots, size_t ef, Scratch& scratch, size_t& calls) {
+    return search_impl(m, base, l2, query, roots, ef, scratch, calls,
+        [&](Id u) { return bool(allowed[w.owner[u]]); });
 }
 struct Filter : hnswlib::BaseFilterFunctor {
     const Workload& w;

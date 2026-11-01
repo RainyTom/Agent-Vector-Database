@@ -1,0 +1,128 @@
+{
+  "metadata": {
+    "timer_pair_ns": 19.69855,
+    "verified_query_arm_rows": 72,
+    "empty_queries": 1,
+    "normal_warmups": 1,
+    "normal_repeats": 3,
+    "count_repeats": 1,
+    "profile_repeats": 3,
+    "time_semantics": "raw component brackets are from perturbed profiling pass; estimates subtract empty timer-pair calibration and may be negative; components must not be added to or subtracted from normal query latency"
+  },
+  "arms": [
+    {
+      "arm": "merged",
+      "ef": 512,
+      "queries": 23,
+      "recall": 0.9565217391304348,
+      "means": {
+        "normal_us": 120.96878260869565,
+        "count_pass_us": 140.23504347826088,
+        "profile_pass_us": 386.3215652173913,
+        "scope_us": 1.2423478260869565,
+        "distance_calls": 722.7826086956521,
+        "distance_qualified": 722.7826086956521,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 722.7826086956521,
+        "item_checks": 5725.913043478261,
+        "item_rejects": 1217.608695652174,
+        "owner_checks": 0.0,
+        "owner_rejects": 0.0,
+        "distance_raw_us": 57.94626086956522,
+        "item_raw_us": 123.15039130434782,
+        "owner_raw_us": 0.0,
+        "distance_est_us": 43.70849151304348,
+        "item_est_us": 10.35820692173913,
+        "owner_est_us": 0.0
+      },
+      "profile_to_normal": 3.1935641318888597,
+      "count_to_normal": 1.1592663863691748,
+      "rejected_distance_fraction": 0.0,
+      "profile_remaining_us": 203.9825652173913,
+      "negative_component_estimate_rows": {
+        "distance_est_us": 0,
+        "item_est_us": 1,
+        "owner_est_us": 0
+      }
+    },
+    {
+      "arm": "global_filtered",
+      "ef": 32,
+      "queries": 23,
+      "recall": 1.0,
+      "means": {
+        "normal_us": 28846.182347826085,
+        "count_pass_us": 36966.997,
+        "profile_pass_us": 46433.73330434783,
+        "scope_us": 2.840086956521739,
+        "distance_calls": 81041.52173913043,
+        "distance_qualified": 104.3913043478261,
+        "distance_rejected": 80937.13043478261,
+        "unique_distance_items": 80979.26086956522,
+        "item_checks": 70757.04347826086,
+        "item_rejects": 70718.60869565218,
+        "owner_checks": 0.0,
+        "owner_rejects": 0.0,
+        "distance_raw_us": 6537.898869565218,
+        "item_raw_us": 1443.060304347826,
+        "owner_raw_us": 0.0,
+        "distance_est_us": 4941.498401515218,
+        "item_est_us": 49.24914553913044,
+        "owner_est_us": 0.0
+      },
+      "profile_to_normal": 1.6097011640726586,
+      "count_to_normal": 1.281521296449335,
+      "rejected_distance_fraction": 0.9987118787738974,
+      "profile_remaining_us": 38449.934043478264,
+      "negative_component_estimate_rows": {
+        "distance_est_us": 0,
+        "item_est_us": 0,
+        "owner_est_us": 0
+      }
+    },
+    {
+      "arm": "nodeann",
+      "ef": 32,
+      "queries": 23,
+      "recall": 1.0,
+      "means": {
+        "normal_us": 56.884086956521735,
+        "count_pass_us": 117.73534782608695,
+        "profile_pass_us": 211.9102608695652,
+        "scope_us": 1.1347391304347827,
+        "distance_calls": 958.6521739130435,
+        "distance_qualified": 958.6521739130435,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 867.5652173913044,
+        "item_checks": 0.0,
+        "item_rejects": 0.0,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "distance_raw_us": 36.839608695652174,
+        "item_raw_us": 0.0,
+        "owner_raw_us": 38.69830434782609,
+        "distance_est_us": 17.95555091521739,
+        "item_est_us": 0.0,
+        "owner_est_us": 0.699801397826087
+      },
+      "profile_to_normal": 3.7252995030321006,
+      "count_to_normal": 2.069741365736884,
+      "rejected_distance_fraction": 0.0,
+      "profile_remaining_us": 135.23760869565217,
+      "negative_component_estimate_rows": {
+        "distance_est_us": 0,
+        "item_est_us": 0,
+        "owner_est_us": 1
+      }
+    }
+  ],
+  "interpretation": [
+    "Counts include actual raw-kernel invocations across all HNSW levels, including repeated items.",
+    "Only nonempty queries are aggregated, matching the existing benchmark recall convention.",
+    "Item and owner checks are algorithmic checks only; diagnostic distance-attribution lookups are excluded.",
+    "Normal time has no per-operation timers and native distance pointers are unwrapped.",
+    "Raw component timings belong to a separate perturbed pass, not normal latency.",
+    "Estimated times subtract empty clock-bracket calibration; negative values remain visible and mean unresolved.",
+    "Do not subtract components from normal time or interpret corrected estimates as exact unperturbed costs."
+  ]
+}
