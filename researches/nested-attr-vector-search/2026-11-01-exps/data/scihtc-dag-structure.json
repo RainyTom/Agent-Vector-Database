@@ -1,0 +1,241 @@
+{
+  "kind": "ccs_scihtc_dag_structure_measurement",
+  "inputs": {
+    "ontology": "/tmp/SciHTC/HierarchyTree/CCS 2012.html",
+    "labels": [
+      "/tmp/scihtc_labels/IDs_and_categories/train_ids_all_categories.csv",
+      "/tmp/scihtc_labels/IDs_and_categories/dev_ids_all_categories.csv",
+      "/tmp/scihtc_labels/IDs_and_categories/test_ids_all_categories.csv"
+    ]
+  },
+  "new_ann_runs": 0,
+  "graphs": {
+    "concepts": 1929,
+    "edges": 2040,
+    "li_instances": 2113,
+    "multi_parent_concepts": 103,
+    "multi_parent_share": 0.0534,
+    "roots": 1
+  },
+  "labels": {
+    "rows_read": 186160,
+    "usable": 168937,
+    "broken_tilde_rows": 17223,
+    "unresolved_paths": 0,
+    "papers_touching_multi_parent_concept": 12913,
+    "papers_terminal_is_multi_parent": 12446,
+    "mean_ancestors_per_paper": 4.213,
+    "max_ancestors_per_paper": 11
+  },
+  "closure": {
+    "ancestors": {
+      "n": 1929,
+      "mean": 5.035,
+      "p50": 5,
+      "p95": 7,
+      "max": 16
+    },
+    "descendants": {
+      "n": 1929,
+      "mean": 5.035,
+      "p50": 1,
+      "p95": 13,
+      "max": 1929
+    }
+  },
+  "scope": {
+    "size": {
+      "n": 1929,
+      "mean": 368.954,
+      "p50": 0,
+      "p95": 1072,
+      "max": 168937
+    },
+    "expansion": {
+      "n": 1929,
+      "mean": 373.989,
+      "p50": 1,
+      "p95": 1092,
+      "max": 170866
+    },
+    "descendants": {
+      "n": 1929,
+      "mean": 5.035,
+      "p50": 1,
+      "p95": 13,
+      "max": 1929
+    }
+  },
+  "asymmetry": {
+    "update_concepts": {
+      "n": 1929,
+      "mean": 5.035,
+      "p50": 5,
+      "p95": 7,
+      "max": 16
+    },
+    "query_objects_per_scope": {
+      "n": 1929,
+      "mean": 368.954,
+      "p50": 0,
+      "p95": 1072,
+      "max": 168937
+    },
+    "max_scope_over_max_ancestors": 10558.6
+  },
+  "materialization_rule": {
+    "bitmap_words": 2640,
+    "concepts_selected": 39,
+    "share_selected": 0.0202,
+    "bitmap_bytes_total": 823602
+  },
+  "multi_parent_branch_overlap": {
+    "n": 101,
+    "overlap_ratio": {
+      "n": 101,
+      "mean": 0.109,
+      "p50": 0.0126,
+      "p95": 0.528,
+      "max": 0.9011
+    },
+    "top": [
+      {
+        "concept": "10003271",
+        "name": "Personalization",
+        "parents": 2,
+        "parent_names": [
+          "Web searching and information discovery",
+          "Users and interactive retrieval"
+        ],
+        "scope": 82,
+        "parent_scope_intersection": 82,
+        "parent_scope_union": 91,
+        "overlap_ratio": 0.9011
+      },
+      {
+        "concept": "10003570",
+        "name": "Computer supported cooperative work",
+        "parents": 2,
+        "parent_names": [
+          "Collaborative and social computing theory, concepts and paradigms",
+          "Computing and business"
+        ],
+        "scope": 953,
+        "parent_scope_intersection": 953,
+        "parent_scope_union": 1202,
+        "overlap_ratio": 0.7928
+      },
+      {
+        "concept": "10010204",
+        "name": "Robotic planning",
+        "parents": 2,
+        "parent_names": [
+          "Planning and scheduling",
+          "Control methods"
+        ],
+        "scope": 493,
+        "parent_scope_intersection": 493,
+        "parent_scope_union": 702,
+        "overlap_ratio": 0.7023
+      },
+      {
+        "concept": "10010752",
+        "name": "Error detection and error correction",
+        "parents": 2,
+        "parent_names": [
+          "Network reliability",
+          "Fault tolerance"
+        ],
+        "scope": 14,
+        "parent_scope_intersection": 14,
+        "parent_scope_union": 22,
+        "overlap_ratio": 0.6364
+      },
+      {
+        "concept": "10003697",
+        "name": "Cluster analysis",
+        "parents": 2,
+        "parent_names": [
+          "Statistical paradigms",
+          "Unsupervised learning"
+        ],
+        "scope": 343,
+        "parent_scope_intersection": 343,
+        "parent_scope_union": 574,
+        "overlap_ratio": 0.5976
+      },
+      {
+        "concept": "10003808",
+        "name": "Scheduling algorithms",
+        "parents": 2,
+        "parent_names": [
+          "Approximation algorithms analysis",
+          "Online learning algorithms"
+        ],
+        "scope": 113,
+        "parent_scope_intersection": 113,
+        "parent_scope_union": 214,
+        "overlap_ratio": 0.528
+      },
+      {
+        "concept": "10010440",
+        "name": "Computer-aided design",
+        "parents": 2,
+        "parent_names": [
+          "Engineering",
+          "Architecture (buildings)"
+        ],
+        "scope": 356,
+        "parent_scope_intersection": 356,
+        "parent_scope_union": 691,
+        "overlap_ratio": 0.5152
+      },
+      {
+        "concept": "10003352",
+        "name": "Information extraction",
+        "parents": 2,
+        "parent_names": [
+          "Retrieval tasks and goals",
+          "Natural language processing"
+        ],
+        "scope": 1061,
+        "parent_scope_intersection": 1061,
+        "parent_scope_union": 2552,
+        "overlap_ratio": 0.4158
+      },
+      {
+        "concept": "10003465",
+        "name": "Software reverse engineering",
+        "parents": 3,
+        "parent_names": [
+          "Software and application security",
+          "Intellectual property",
+          "Software post-development issues"
+        ],
+        "scope": 300,
+        "parent_scope_intersection": 300,
+        "parent_scope_union": 736,
+        "overlap_ratio": 0.4076
+      },
+      {
+        "concept": "10003733",
+        "name": "Lambda calculus",
+        "parents": 2,
+        "parent_names": [
+          "Calculus",
+          "Computability"
+        ],
+        "scope": 32,
+        "parent_scope_intersection": 32,
+        "parent_scope_union": 85,
+        "overlap_ratio": 0.3765
+      }
+    ]
+  },
+  "limits": [
+    "Structural measurement only: no vectors, no ANN, no query latency.",
+    "Each paper is assigned its path terminal as the single direct label; multi-label objects are not modelled.",
+    "Expansion counts direct-posting entries before deduplication; scope counts distinct papers.",
+    "Rows containing \"~\" are excluded rather than repaired, so the usable total is below the full corpus."
+  ]
+}

@@ -1,0 +1,835 @@
+concept,name,parents,descendants,direct,scope,expansion,posting_entries,objects_per_descendant,materialize
+CCS,CCS,0,1929,0,168937,170866,168937,87.578,1
+10003120,Human-centered computing,1,119,8761,32051,32170,32051,269.336,1
+10002951,Information systems,1,317,999,29642,29959,29642,93.508,1
+10010147,Computing methodologies,1,268,185,25231,25499,25231,94.146,1
+10011007,Software and its engineering,1,214,1087,24403,24617,24403,114.033,1
+10003121,Human computer interaction (HCI),1,37,9823,18225,18262,18225,492.568,1
+10010405,Applied computing,1,156,399,12397,12553,12397,79.468,1
+10010178,Artificial intelligence,1,83,570,11193,11276,11193,134.855,1
+10003227,Information systems applications,1,44,3883,11004,11048,11004,250.091,1
+10003317,Information retrieval,1,72,3722,10918,10990,10918,151.639,1
+10003456,Social and professional topics,1,136,414,10818,10954,10818,79.544,1
+10003033,Networks,1,117,963,10447,10564,10447,89.291,1
+10011006,Software notations and tools,1,76,297,10046,10122,10046,132.184,1
+10010583,Hardware,1,224,292,9113,9337,9113,40.683,1
+10003752,Theory of computation,1,218,291,8461,8679,8461,38.812,1
+10003457,Professional topics,1,66,85,8289,8355,8289,125.591,1
+10011074,Software creation and management,1,51,266,6985,7036,6985,136.961,1
+10010940,Software organization and properties,1,87,19,6332,6419,6332,72.782,1
+10010520,Computer systems organization,1,62,322,5722,5784,5722,92.29,1
+10011008,General programming languages,1,29,233,5544,5573,5544,191.172,1
+10010371,Computer graphics,1,34,407,5508,5542,5508,162.0,1
+10002978,Security and privacy,1,77,811,4838,4915,4838,62.831,1
+10002950,Mathematics of computing,1,144,55,4502,4646,4502,31.264,1
+10003124,Interaction paradigms,1,9,912,4406,4415,4406,489.556,1
+10003527,Computing education,1,18,401,4388,4406,4388,243.778,1
+10010971,Software system structures,1,30,0,3697,3727,3697,123.233,1
+10003809,Design and analysis of algorithms,1,71,1523,3470,3541,3470,48.873,1
+10003531,Computing education programs,1,9,0,3470,3479,3470,385.556,1
+10003130,Collaborative and social computing,1,26,1811,3432,3458,3432,132.0,1
+10010257,Machine learning,1,87,1605,3288,3375,3288,37.793,1
+10010224,Computer vision,1,34,435,3236,3270,3236,95.176,1
+10003106,Network types,1,21,146,3227,3248,3227,153.667,1
+10002952,Data management systems,1,88,429,3130,3218,3130,35.568,1
+10002944,General and reference,1,20,234,3153,3173,3153,157.65,1
+10011009,Language types,1,13,364,3070,3083,3070,236.154,1
+10003351,Data mining,1,7,2609,3001,3008,3001,428.714,1
+10010489,Education,1,9,895,2746,2755,2746,305.111,1
+10010341,Modeling and simulation,1,31,528,2694,2725,2694,86.903,1
+10010521,Architectures,1,34,403,2680,2714,2680,78.824,1
+10010219,Distributed artificial intelligence,1,5,686,2628,2633,2628,525.6,0
+10003533,Computer science education,1,2,2569,2569,2571,2569,1284.5,0
+10011099,Software verification and validation,1,14,153,2483,2497,2483,177.357,0
+10011120,Distributed systems organizing principles,1,5,1222,2435,2440,2435,487.0,0
+10003039,Network protocols,1,19,1376,2394,2413,2394,126.0,0
+10003260,World Wide Web,1,64,70,2342,2406,2342,36.594,0
+10003113,Mobile networks,1,1,2380,2380,2381,2380,2380.0,0
+10011123,Cross-computing tools and techniques,1,12,9,2315,2327,2315,192.917,0
+10003490,Management of computing and information systems,1,22,175,2246,2268,2246,102.091,0
+10011024,Language features,1,15,931,2241,2256,2241,149.4,0
+10003125,Interaction devices,1,8,1108,2172,2180,2172,271.5,0
+10010588,"Communication hardware, interfaces and storage",1,21,576,2059,2080,2059,98.048,0
+10010179,Natural language processing,1,9,572,2041,2050,2041,226.778,0
+10010476,Computers in other domains,1,15,183,2032,2047,2032,135.467,0
+10010600,Integrated circuits,1,29,430,1947,1976,1947,67.138,0
+10010387,Graphics systems and interfaces,1,7,283,1953,1960,1953,279.0,0
+10010444,Life and medical sciences,1,23,584,1779,1802,1779,77.348,0
+10003462,Computing / technology policy,1,55,600,1728,1783,1728,31.418,0
+10011041,Compilers,1,11,1218,1769,1780,1769,160.818,0
+10011102,Software defect analysis,1,2,0,1768,1770,1768,884.0,0
+10011103,Software testing and debugging,1,1,1768,1768,1769,1768,1768.0,0
+10010553,Embedded and cyber-physical systems,1,14,1258,1702,1716,1702,121.571,0
+10003282,Web applications,1,22,568,1679,1701,1679,76.318,0
+10011075,Designing software,1,6,455,1668,1674,1668,278.0,0
+10003318,Document representation,1,9,1579,1647,1656,1647,183.0,0
+10003251,Multimedia information systems,1,5,1337,1636,1641,1636,327.2,0
+10010682,Electronic design automation,1,33,8,1607,1640,1607,48.697,0
+10010455,"Law, social and behavioral sciences",1,7,597,1612,1619,1612,230.286,0
+10003347,Retrieval tasks and goals,1,11,36,1572,1583,1572,142.909,0
+10003152,Information storage systems,1,55,837,1440,1495,1440,26.182,0
+10010941,Contextual software domains,1,35,0,1443,1478,1443,41.229,0
+10010469,Arts and humanities,1,8,363,1466,1474,1466,183.25,0
+10003034,Network architectures,1,5,1453,1453,1458,1453,290.6,0
+10003338,Retrieval models and ranking,1,10,1373,1373,1383,1373,137.3,0
+10010949,Operating systems,1,23,317,1357,1380,1357,59.0,0
+10003190,Database management system engines,1,26,480,1352,1378,1352,52.0,0
+10003325,Information retrieval query processing,1,6,1335,1335,1341,1335,222.5,0
+10003123,Interaction design,1,13,126,1326,1339,1326,102.0,0
+10003714,Mathematical analysis,1,52,7,1286,1338,1286,24.731,0
+10010220,Multi-agent systems,1,1,1336,1336,1337,1336,1336.0,0
+10010342,Model development and analysis,1,4,381,1287,1291,1287,321.75,0
+10010432,Physical sciences and engineering,1,15,162,1275,1290,1275,85.0,0
+10010124,Semantics and reasoning,1,23,233,1261,1284,1261,54.826,0
+10003006,Systems security,1,14,30,1256,1270,1256,89.714,0
+10010866,Virtual reality,2,1,1259,1259,1260,1259,1259.0,0
+10011081,Software development process management,1,10,763,1250,1260,1250,125.0,0
+10003648,Probability and statistics,1,55,228,1190,1245,1190,21.636,0
+10003122,HCI design and evaluation methods,1,8,1232,1232,1240,1232,154.0,0
+10010061,"Randomness, geometry and discrete structures",1,10,879,1202,1212,1202,120.2,0
+10003007,Operating systems security,1,4,1202,1202,1206,1202,300.5,0
+10003567,Computing and business,1,8,135,1165,1173,1165,145.625,0
+10010865,Graphical user interfaces,1,1,1168,1168,1169,1168,1168.0,0
+10010860,Interaction design process and methods,1,8,0,1133,1141,1133,141.625,0
+10010717,Hardware validation,1,19,608,1107,1126,1107,58.263,0
+10011680,Organizing principles for web applications,1,1,1121,1121,1122,1121,1121.0,0
+10003099,Network services,1,8,319,1110,1118,1110,138.75,0
+10010382,Image manipulation,1,6,750,1105,1111,1105,184.167,0
+10003083,Network properties,1,33,0,1072,1105,1072,32.485,0
+10010972,Software architectures,1,13,1057,1079,1092,1079,83.0,0
+10003352,Information extraction,2,1,1061,1061,1062,1061,1061.0,0
+10011066,Development frameworks and environments,1,5,423,1054,1059,1054,210.8,0
+10010497,Document management and text processing,1,22,183,1026,1048,1026,46.636,0
+10010697,Physical design (EDA),1,8,567,1014,1022,1014,126.75,0
+10010352,Animation,1,6,874,1001,1007,1001,166.833,0
+10003131,"Collaborative and social computing theory, concepts and paradigms",1,11,37,990,1001,990,90.0,0
+10010205,Search methodologies,1,8,132,990,998,990,123.75,0
+10010245,Computer vision problems,1,11,194,965,976,965,87.727,0
+10010225,Computer vision tasks,1,9,416,947,956,947,105.222,0
+10003570,Computer supported cooperative work,2,1,953,953,954,953,953.0,0
+10003624,Discrete mathematics,1,24,108,894,918,894,37.25,0
+10003790,Logic,1,18,491,881,899,881,48.944,0
+10003392,Digital libraries and archives,3,1,880,880,881,880,880.0,0
+10010169,Parallel computing methodologies,1,8,50,869,877,869,108.625,0
+10003491,Project and people management,1,7,438,845,852,845,120.714,0
+10011674,Performance,1,1,842,842,843,842,842.0,0
+10011187,Personal computers and PC applications,1,5,466,835,840,835,167.0,0
+10010206,Heuristic function construction,1,1,838,838,839,838,838.0,0
+10010859,User centered design,1,1,838,838,839,838,838.0,0
+10010293,Machine learning approaches,1,38,64,795,833,795,20.921,0
+10011079,Software implementation planning,1,2,0,823,825,823,411.5,0
+10011080,Software design techniques,1,1,823,823,824,823,823.0,0
+10010992,Software functional properties,1,13,94,804,817,804,61.846,0
+10010175,Parallel programming languages,2,1,789,789,790,789,789.0,0
+10010528,Parallel architectures,1,9,267,780,789,780,86.667,0
+10003536,Information science education,1,1,782,782,783,782,782.0,0
+10010607,Semiconductor memory,1,5,307,775,780,775,155.0,0
+10003716,Mathematical optimization,2,23,658,737,760,737,32.043,0
+10003286,Internet communications tools,1,6,492,744,750,744,124.0,0
+10010633,Very large scale integration design,1,31,371,716,747,716,23.097,0
+10010537,Distributed architectures,1,6,644,736,742,736,122.667,0
+10011124,Metrics,1,1,729,729,730,729,729.0,0
+10010343,Modeling methodologies,1,1,721,721,722,721,721.0,0
+10011092,Software development techniques,1,9,294,711,720,711,79.0,0
+10003712,Information theory,1,2,717,717,719,717,358.5,0
+10010542,Other architectures,1,12,106,693,705,693,57.75,0
+10010598,Tactile and hand-based interfaces,1,3,0,697,700,697,232.333,0
+10010148,Symbolic and algebraic manipulation,1,22,77,676,698,676,30.727,0
+10010070,Theory and algorithms for application domains,1,54,10,629,683,629,11.648,0
+10003633,Graph theory,1,15,243,664,679,664,44.267,0
+10011254,Algorithm design techniques,1,6,0,668,674,668,111.333,0
+10003503,Software management,1,3,163,670,673,670,223.333,0
+10011258,Dynamic programming,1,1,660,660,661,660,660.0,0
+10010439,Engineering,1,2,299,655,657,655,327.5,0
+10010226,Image and video acquisition,1,8,302,648,656,648,81.0,0
+10010998,Formal methods,1,5,196,645,650,645,129.0,0
+10003014,Network security,2,6,641,641,647,641,106.833,0
+10010406,Enterprise computing,1,31,399,601,632,601,19.387,0
+10011050,Context specific languages,1,16,51,616,632,616,38.5,0
+10002991,Security services,1,10,19,616,626,616,61.6,0
+10010575,Dependable and fault-tolerant systems and networks,1,8,309,618,626,618,77.25,0
+10011777,Concurrent computing methodologies,1,3,20,617,620,617,205.667,0
+10011122,Document types,1,7,183,604,611,604,86.286,0
+10010213,Control methods,1,5,41,603,608,603,120.6,0
+10010199,Planning and scheduling,1,7,99,592,599,592,84.571,0
+10010258,Learning paradigms,1,26,43,573,599,573,22.038,0
+10011014,Concurrent programming languages,2,1,597,597,598,597,597.0,0
+10003359,Evaluation of retrieval results,1,6,331,588,594,588,98.0,0
+10003688,Statistical paradigms,1,12,12,574,586,574,47.833,0
+10010786,Emerging technologies,1,31,522,541,572,541,17.452,0
+10010396,Shape modeling,1,7,263,560,567,560,80.0,0
+10003045,Network layer protocols,1,3,0,562,565,562,187.333,0
+10003046,Routing protocols,1,1,562,562,563,562,562.0,0
+10003236,Spatial-temporal systems,1,6,557,557,563,557,92.833,0
+10011111,Software post-development issues,1,8,82,551,559,551,68.875,0
+10003233,Collaborative and social computing systems and tools,2,9,373,546,555,546,60.667,0
+10010149,Symbolic and algebraic algorithms,1,14,192,534,548,534,38.143,0
+10003192,Database query processing,1,5,535,535,540,535,107.0,0
+10010138,Program reasoning,1,9,38,528,537,528,58.667,0
+10010187,Knowledge representation and reasoning,1,13,292,524,537,524,40.308,0
+10003254,Hypertext / hypermedia,1,1,533,533,534,533,533.0,0
+10003365,Search engine architectures and scalability,1,9,0,522,531,522,58.0,0
+10010615,Logic circuits,1,7,298,519,526,519,74.143,0
+10002979,Cryptography,1,11,212,514,525,514,46.727,0
+10003119,Wireless access networks,1,3,522,522,525,522,174.0,0
+10011069,Integrated and visual development environments,1,1,513,513,514,513,513.0,0
+10010721,Functional verification,1,9,178,499,508,499,55.444,0
+10010216,Philosophical/theoretical foundations of artificial intelligence,1,3,35,502,505,502,167.333,0
+10010204,Robotic planning,2,2,493,493,495,493,246.5,0
+10011082,Software development methods,1,8,371,487,495,487,60.875,0
+10010737,Hardware test,1,13,423,477,490,477,36.692,0
+10010221,Intelligent agents,1,1,476,476,477,476,476.0,0
+10010217,Cognitive science,1,1,467,467,468,467,467.0,0
+10011012,Functional languages,1,1,454,454,455,454,454.0,0
+10010460,Economics,1,1,453,453,454,453,453.0,0
+10010510,Document preparation,1,10,68,439,449,439,43.9,0
+10011752,Haptic devices,2,1,436,436,437,436,436.0,0
+10003505,Software maintenance,1,1,432,432,433,432,432.0,0
+10003247,Signal processing systems,1,4,423,423,427,423,105.75,0
+10011011,Object oriented languages,1,1,426,426,427,426,426.0,0
+10002992,Authentication,1,4,416,416,420,416,104.0,0
+10010950,Memory management,1,7,152,413,420,413,59.0,0
+10003574,Computer crime,1,7,407,407,414,407,58.143,0
+10003530,Model curricula,1,1,412,412,413,412,412.0,0
+10010608,Dynamic memory,1,1,409,409,410,409,409.0,0
+10003105,Network monitoring,1,1,407,407,408,407,407.0,0
+10003463,Intellectual property,1,13,64,392,405,392,30.154,0
+10010570,Real-time systems,1,5,400,400,405,400,80.0,0
+10010131,Program semantics,1,7,339,394,401,394,56.286,0
+10010475,Sound and music computing,1,1,400,400,401,400,400.0,0
+10010927,User characteristics,1,14,20,387,401,387,27.643,0
+10003022,Software and application security,1,6,35,393,399,393,65.5,0
+10010111,Database theory,1,13,0,385,398,385,29.615,0
+10010492,Collaborative learning,1,1,397,397,398,397,397.0,0
+10003715,Numerical analysis,1,14,122,383,397,383,27.357,0
+10010472,Architecture (buildings),1,2,36,392,394,392,196.0,0
+10003444,Clustering,1,1,392,392,393,392,392.0,0
+10002953,Database design and models,1,15,225,376,391,376,25.067,0
+10011076,Requirements analysis,1,1,390,390,391,390,390.0,0
+10010684,High-level and register-transfer level synthesis,1,5,327,384,389,384,76.8,0
+10010957,Process management,1,10,78,376,386,376,37.6,0
+10003104,Network management,1,1,384,384,385,384,384.0,0
+10010349,Simulation types and techniques,1,19,96,365,384,365,19.211,0
+10003241,Decision support systems,1,5,140,377,382,377,75.4,0
+10002997,Intrusion/anomaly detection and malware mitigation,1,7,373,373,380,373,53.286,0
+10011003,Extra-functional properties,1,8,0,369,377,369,46.125,0
+10003550,Electronic commerce,2,9,226,367,376,367,40.778,0
+10010750,Robustness,1,20,206,355,375,355,17.75,0
+10003753,Models of computation,1,19,92,355,374,355,18.684,0
+10010087,Computational biology,1,11,363,363,374,363,33.0,0
+10010999,Software verification,1,1,373,373,374,373,373.0,0
+10010490,Computer-assisted instruction,1,1,369,369,370,369,369.0,0
+10003616,People with disabilities,1,1,367,367,368,367,367.0,0
+10003580,Computing profession,1,8,0,358,366,358,44.75,0
+10010868,Web-based interaction,1,1,364,364,365,364,364.0,0
+10010372,Rendering,1,6,233,353,359,353,58.833,0
+10010440,Computer-aided design,2,1,356,356,357,356,356.0,0
+10002971,Data structures,1,11,71,345,356,345,31.364,0
+10010260,Unsupervised learning,1,8,0,343,351,343,42.875,0
+10003697,Cluster analysis,2,1,343,343,344,343,343.0,0
+10010481,Operations research,1,11,28,330,341,330,30.0,0
+10003090,Network structure,1,14,316,325,339,325,23.214,0
+10010447,Health care information systems,1,1,338,338,339,338,338.0,0
+10003161,Record storage systems,1,25,138,310,335,310,12.4,0
+10010640,Application-specific VLSI designs,1,4,133,330,334,330,82.5,0
+10010063,Computational geometry,1,1,323,323,324,323,323.0,0
+10011692,Formal software verification,1,1,316,316,317,316,316.0,0
+10010919,Distributed computing methodologies,1,5,11,310,315,310,62.0,0
+10010449,Health informatics,1,1,313,313,314,313,313.0,0
+10010504,Document capture,1,6,33,306,312,306,51.0,0
+10003465,Software reverse engineering,3,1,300,300,301,300,300.0,0
+10010177,Distributed programming languages,2,1,299,299,300,299,299.0,0
+10011072,Software libraries and repositories,1,1,297,297,298,297,297.0,0
+10003126,"HCI theory, concepts and models",1,1,296,296,297,296,296.0,0
+10011694,Interface design prototyping,1,1,295,295,296,295,295.0,0
+10010459,Psychology,1,1,289,289,290,289,289.0,0
+10011673,Design,1,1,289,289,290,289,289.0,0
+10003195,Parallel and distributed DBMSs,1,4,280,280,284,280,70.0,0
+10011028,Data types and structures,1,1,283,283,284,283,283.0,0
+10010227,Scene understanding,1,1,278,278,279,278,278.0,0
+10003349,Document filtering,1,1,277,277,278,277,277.0,0
+10003705,Mathematical software,1,4,266,272,276,272,68.0,0
+10010701,Placement,1,1,275,275,276,275,275.0,0
+10010142,Program verification,1,1,270,270,271,270,270.0,0
+10011047,Source code generation,1,1,270,270,271,270,270.0,0
+10011190,Computer games,1,1,267,267,268,267,267.0,0
+10010186,Language resources,1,1,266,266,267,266,266.0,0
+10011666,Touch screens,2,1,261,261,262,261,261.0,0
+10010554,Robotics,1,6,0,255,261,255,42.5,0
+10003361,Relevance assessment,1,1,257,257,258,257,257.0,0
+10003766,Formal languages and automata theory,1,11,180,239,250,239,21.727,0
+10003197,Query languages,1,9,201,240,249,240,26.667,0
+10010917,Graph algorithms,1,1,247,247,248,247,247.0,0
+10003477,Privacy policies,1,1,246,246,247,246,246.0,0
+10003304,Web services,1,6,240,240,246,240,40.0,0
+10010240,Computer vision representations,1,5,151,241,246,241,48.2,0
+10010461,Sociology,1,1,239,239,240,239,239.0,0
+10003777,Computational complexity and cryptography,1,13,31,226,239,226,17.385,0
+10002945,Surveys and overviews,1,1,237,237,238,237,237.0,0
+10010031,Data structures design and analysis,1,6,19,230,236,230,38.333,0
+10003660,Classification and regression trees,1,1,234,234,235,234,234.0,0
+10010531,"Multiple instruction, multiple data",1,1,234,234,235,234,234.0,0
+10011096,Reusability,1,2,128,224,226,224,112.0,0
+10010725,Simulation and emulation,1,1,223,223,224,223,223.0,0
+10010230,Video summarization,1,1,222,222,223,222,222.0,0
+10010602,Interconnect,1,5,186,218,223,218,43.6,0
+10003636,Approximation algorithms analysis,1,8,41,214,222,214,26.75,0
+10010346,Simulation theory,1,3,67,217,220,217,72.333,0
+10010071,Machine learning theory,1,25,0,193,218,193,7.72,0
+10011105,Process validation,1,6,122,211,217,211,35.167,0
+10010294,Neural networks,2,1,215,215,216,215,215.0,0
+10003219,Information integration,1,10,29,203,213,203,20.3,0
+10010150,Algebraic algorithms,1,1,209,209,210,209,209.0,0
+10010688,Scheduling,1,1,207,207,208,207,207.0,0
+10011017,Domain specific languages,1,1,207,207,208,207,207.0,0
+10010384,Texturing,1,1,206,206,207,206,206.0,0
+10010282,Learning settings,1,8,198,198,206,198,24.75,0
+10010239,3D imaging,1,1,204,204,205,204,204.0,0
+10003051,Application layer protocols,1,2,202,202,204,202,101.0,0
+10003368,Distributed retrieval,1,1,202,202,203,202,202.0,0
+10011735,Theory of database privacy and security,1,1,201,201,202,201,201.0,0
+10010366,Simulation support systems,1,4,89,194,198,194,48.5,0
+10010515,Multi / mixed media creation,1,1,197,197,198,197,197.0,0
+10011039,Formal language definitions,1,3,167,194,197,194,64.667,0
+10003145,Visualization,1,18,25,178,196,178,9.889,0
+10002981,Public key (asymmetric) techniques,1,3,166,191,194,191,63.667,0
+10003451,Data layout,1,4,0,182,186,182,45.5,0
+10010344,Model verification and validation,1,1,185,185,186,185,185.0,0
+10011060,System description languages,1,8,45,178,186,178,22.25,0
+10003058,Network components,1,14,66,171,185,171,12.214,0
+10003291,Web conferencing,1,1,184,184,185,184,184.0,0
+10003517,Storage architectures,1,7,0,176,183,176,25.143,0
+10002993,Access control,1,1,181,181,182,181,181.0,0
+10010251,Object recognition,1,1,180,180,181,180,180.0,0
+10003258,Massively multiplayer online games,1,1,178,178,179,178,178.0,0
+10010399,Parametric curve and surface models,1,1,178,178,179,178,178.0,0
+10010248,Video segmentation,1,1,177,177,178,177,177.0,0
+10010391,Graphics input devices,2,1,176,176,177,176,176.0,0
+10011036,Patterns,1,1,176,176,177,176,176.0,0
+10010577,Reliability,2,1,173,173,174,173,173.0,0
+10003128,Interaction techniques,1,5,10,168,173,168,33.6,0
+10003356,Clustering and classification,1,1,169,169,170,169,169.0,0
+10003369,Peer-to-peer retrieval,1,1,166,166,167,166,166.0,0
+10003492,Project management techniques,1,1,166,166,167,166,166.0,0
+10011031,Modules / packages,1,1,164,164,165,164,164.0,0
+10010482,Industry and manufacturing,1,3,19,161,164,161,53.667,0
+10010246,Interest point and salient region detections,1,1,161,161,162,161,161.0,0
+10003507,System management,1,4,0,157,161,157,39.25,0
+10010643,Application specific processors,1,1,160,160,161,160,160.0,0
+10003512,File systems management,2,1,158,158,159,158,158.0,0
+10010470,Fine arts,1,1,158,158,159,158,158.0,0
+10010869,Auditory feedback,1,1,158,158,159,158,158.0,0
+10003366,Search engine indexing,1,1,154,154,155,154,154.0,0
+10011034,Concurrent programming structures,1,1,153,153,154,153,153.0,0
+10003147,Visualization application domains,1,5,0,146,151,146,29.2,0
+10010347,Systems theory,1,1,150,150,151,150,150.0,0
+10010383,Image processing,1,1,149,149,150,149,149.0,0
+10010870,Natural language interfaces,1,1,148,148,149,148,148.0,0
+10010916,Measurement,1,1,147,147,148,147,147.0,0
+10010259,Supervised learning,1,7,0,137,144,137,19.571,0
+10011714,Special purpose systems,1,1,143,143,144,143,143.0,0
+10003162,Record storage alternatives,1,5,64,138,143,138,27.6,0
+10010486,Command and control,1,1,142,142,143,142,142.0,0
+10010389,Graphics processors,1,1,139,139,140,139,139.0,0
+10010562,Embedded systems,1,4,84,135,139,135,33.75,0
+10010263,Supervised learning by classification,1,1,137,137,138,137,137.0,0
+10010597,Sound-based input / output,2,1,134,134,135,134,134.0,0
+10010700,Partitioning and floorplanning,1,1,134,134,135,134,134.0,0
+10002947,General conference proceedings,1,1,132,132,133,132,132.0,0
+10003300,Web interfaces,1,4,0,128,132,128,32.0,0
+10003400,Middleware for databases,1,11,0,121,132,121,11.0,0
+10003498,Implementation management,1,4,19,127,131,127,31.75,0
+10010223,Cooperation and coordination,1,1,130,130,131,130,130.0,0
+10003625,Combinatorics,1,8,44,122,130,122,15.25,0
+10003741,Continuous mathematics,1,10,0,120,130,120,12.0,0
+10010321,Machine learning algorithms,1,13,0,117,130,117,9.0,0
+10010395,Image compression,1,1,129,129,130,129,129.0,0
+10010471,Performing arts,1,1,129,129,130,129,129.0,0
+10003302,Browsers,1,1,128,128,129,128,128.0,0
+10003778,Complexity classes,1,1,127,127,128,127,127.0,0
+10010507,Graphics recognition and interpretation,1,1,127,127,128,127,127.0,0
+10010495,E-learning,1,1,126,126,127,126,126.0,0
+10010935,Genetics,1,5,122,122,127,122,24.4,0
+10010557,Robotic autonomy,1,1,124,124,125,124,124.0,0
+10003587,Assistive technologies,1,1,123,123,124,123,123.0,0
+10011029,Classes and objects,1,1,123,123,124,123,123.0,0
+10011038,Frameworks,1,1,123,123,124,123,123.0,0
+10003029,Human and societal aspects of security and privacy,1,5,117,117,122,117,23.4,0
+10003253,Multimedia databases,1,1,121,121,122,121,121.0,0
+10010530,Interconnection architectures,1,1,121,121,122,121,121.0,0
+10011192,Verification by model checking,1,1,121,121,122,121,121.0,0
+10003243,Expert systems,1,1,120,120,121,120,120.0,0
+10010546,Heterogeneous (hybrid) systems,1,1,120,120,121,120,120.0,0
+10011048,Runtime environments,1,1,120,120,121,120,120.0,0
+10011690,Specification languages,1,1,120,120,121,120,120.0,0
+10003532,Information systems education,1,1,119,119,120,119,119.0,0
+10011705,Packet-switching networks,1,1,119,119,120,119,119.0,0
+10003518,Storage network architectures,1,4,115,115,119,115,28.75,0
+10003719,Computations on matrices,1,1,118,118,119,118,118.0,0
+10010047,Online algorithms,1,6,0,113,119,113,18.833,0
+10003041,Protocol correctness,1,3,0,115,118,115,38.333,0
+10010336,Feature selection,1,1,117,117,118,117,117.0,0
+10010762,Hardware reliability,1,7,48,111,118,111,15.857,0
+10003520,Storage management,1,7,88,110,117,110,15.714,0
+10010878,Rapid application development,1,1,116,116,117,116,116.0,0
+10003042,Protocol testing and verification,1,1,115,115,116,115,115.0,0
+10010316,Markov decision processes,2,1,115,115,116,115,115.0,0
+10011058,Visual languages,1,1,115,115,116,115,115.0,0
+10003514,Information system economics,1,1,114,114,115,114,114.0,0
+10010048,Online learning algorithms,1,2,0,113,115,113,56.5,0
+10003808,Scheduling algorithms,2,1,113,113,114,113,113.0,0
+10002975,Data compression,2,1,112,112,113,112,112.0,0
+10003129,Interactive systems and tools,1,4,29,109,113,109,27.25,0
+10010117,Interoperability,1,1,112,112,113,112,112.0,0
+10010558,External interfaces for robotics,1,1,112,112,113,112,112.0,0
+10003202,Abstract data types,1,1,111,111,112,111,111.0,0
+10010125,Program constructs,1,6,18,106,112,106,17.667,0
+10003242,Data warehouses,2,1,109,109,110,109,109.0,0
+10003670,Probabilistic reasoning algorithms,1,16,0,94,110,94,5.875,0
+10010238,Motion capture,2,1,109,109,110,109,109.0,0
+10010616,Arithmetic and datapath circuits,1,1,109,109,110,109,109.0,0
+10003510,Quality assurance,1,1,108,108,109,108,108.0,0
+10010412,Business process management,1,6,103,103,109,103,17.167,0
+10011023,Specialized application languages,1,1,108,108,109,108,108.0,0
+10003059,Intermediate nodes,1,3,0,105,108,105,35.0,0
+10003060,Routers,1,1,105,105,106,105,105.0,0
+10003228,Enterprise information systems,2,6,48,99,105,99,16.5,0
+10010370,Simulation evaluation,1,1,103,103,104,103,103.0,0
+10010690,Logic synthesis,1,6,0,98,104,98,16.333,0
+10003493,Project staffing,1,1,102,102,103,102,102.0,0
+10003261,Web searching and information discovery,1,11,9,91,102,91,8.273,0
+10003309,Web data description languages,1,7,0,95,102,95,13.571,0
+10010500,Document management,1,4,54,98,102,98,24.5,0
+10010887,Geographic visualization,1,1,100,100,101,100,100.0,0
+10011067,Object oriented frameworks,1,1,100,100,101,100,100.0,0
+10003502,Pricing and resource allocation,1,1,99,99,100,99,99.0,0
+10010692,Circuit optimization,1,1,98,98,99,98,98.0,0
+10010913,Documentation,1,1,98,98,99,98,98.0,0
+10003084,Network range,1,6,0,92,98,92,15.333,0
+10003450,Data access methods,1,6,92,92,98,92,15.333,0
+10003700,Stochastic processes,1,2,62,96,98,96,48.0,0
+10010401,Volumetric models,1,1,97,97,98,97,97.0,0
+10010512,Markup languages,3,3,95,95,98,95,31.667,0
+10011071,Software configuration management and version control systems,1,1,97,97,98,97,97.0,0
+10002955,Relational database model,1,1,96,96,97,96,96.0,0
+10010113,Database query languages (principles),1,1,96,96,97,96,96.0,0
+10010578,Availability,1,1,96,96,97,96,96.0,0
+10010965,Communications management,1,4,40,93,97,93,23.25,0
+10011097,Software product lines,1,1,96,96,97,96,96.0,0
+10011691,Error handling and recovery,1,1,96,96,97,96,96.0,0
+10011004,Software reliability,1,1,94,94,95,94,94.0,0
+10011119,Abstraction,2,1,93,93,94,93,93.0,0
+10011134,Collaboration in software development,1,3,0,91,94,91,30.333,0
+10003371,Specialized information retrieval,1,15,0,77,92,77,5.133,0
+10003742,Topology,1,4,0,88,92,88,22.0,0
+10011135,Programming teams,1,1,91,91,92,91,91.0,0
+10011766,Asynchronous editors,1,1,91,91,92,91,91.0,0
+10011675,Validation,1,1,89,89,90,89,89.0,0
+10003745,Geometric topology,1,1,88,88,89,88,88.0,0
+10003754,Computability,1,4,47,85,89,85,21.25,0
+10010247,Image segmentation,1,1,88,88,89,88,88.0,0
+10011005,Software fault tolerance,1,2,59,87,89,87,43.5,0
+10011711,Database query processing and optimization (theory),1,1,88,88,89,88,88.0,0
+10003134,Collaborative and social computing design and evaluation methods,1,3,85,85,88,85,28.333,0
+10003543,Codes of ethics,1,1,87,87,88,87,87.0,0
+10010253,Tracking,1,1,87,87,88,87,87.0,0
+10010433,Aerospace,1,2,86,86,88,86,43.0,0
+10003331,Users and interactive retrieval,1,5,0,82,87,82,16.4,0
+10010437,Earth and atmospheric sciences,1,2,85,85,87,85,42.5,0
+10011191,Microcomputers,1,1,86,86,87,86,86.0,0
+10010297,Logical and relational learning,1,3,0,82,85,82,27.333,0
+10011738,Accessibility,1,6,79,79,85,79,13.167,0
+10003671,Probabilistic algorithms,1,1,83,83,84,83,83.0,0
+10010443,Electronics,1,2,82,82,84,82,41.0,0
+10003271,Personalization,2,1,82,82,83,82,82.0,0
+10003761,Concurrency,1,4,43,79,83,79,19.75,0
+10010188,Semantic networks,1,1,82,82,83,82,82.0,0
+10010298,Inductive logic learning,1,1,82,82,83,82,82.0,0
+10010590,Buses and high-speed links,1,1,82,82,83,82,82.0,0
+10011765,Synchronous editors,1,1,82,82,83,82,82.0,0
+10003386,Multimedia and multimodal retrieval,1,5,0,77,82,77,15.4,0
+10010477,Publishing,1,1,81,81,82,81,81.0,0
+10010956,Secondary storage,1,1,81,81,82,81,81.0,0
+10010885,User interface management systems,1,1,80,80,81,80,80.0,0
+10003583,Computing occupations,1,1,77,77,78,77,77.0,0
+10011682,"Abstraction, modeling and modularity",1,1,77,77,78,77,77.0,0
+10003791,Model checking,2,1,76,76,77,76,76.0,0
+10011002,Software performance,1,1,76,76,77,76,76.0,0
+10003506,Software selection and adaptation,1,1,75,75,76,75,75.0,0
+10010505,Document analysis,1,1,74,74,75,74,74.0,0
+10010254,Reconstruction,1,1,73,73,74,73,73.0,0
+10010522,Serial architectures,1,6,9,68,74,68,11.333,0
+10003635,Graph algorithms analysis,1,5,0,68,73,68,13.6,0
+10003689,Queueing theory,1,1,72,72,73,72,72.0,0
+10010618,Combinational circuits,1,1,72,72,73,72,72.0,0
+10011138,Continuous optimization,1,9,0,64,73,64,7.111,0
+10010543,Reconfigurable computing,1,1,71,71,72,71,71.0,0
+10010993,Correctness,1,7,39,65,72,65,9.286,0
+10002976,Data encryption,1,1,70,70,71,70,70.0,0
+10003086,Local area networks,1,1,70,70,71,70,70.0,0
+10003588,Government technology policy,1,3,48,68,71,68,22.667,0
+10010538,Client-server architectures,2,1,69,69,70,69,69.0,0
+10003212,Database administration,1,5,56,64,69,64,12.8,0
+10003287,Email,1,1,68,68,69,68,68.0,0
+10003644,Network flows,2,1,68,68,69,68,68.0,0
+10010980,Software system models,1,7,0,62,69,62,8.857,0
+10003048,Transport protocols,1,1,67,67,68,67,67.0,0
+10003138,Ubiquitous and mobile computing,1,18,50,50,68,50,2.778,0
+10003558,Consumer products,1,1,67,67,68,67,67.0,0
+10010374,Ray tracing,1,1,67,67,68,67,67.0,0
+10003040,Network protocol design,1,1,66,66,67,66,66.0,0
+10003497,Computer and information systems training,1,1,66,66,67,66,66.0,0
+10010367,Simulation environments,1,1,66,66,67,66,66.0,0
+10010442,Mathematics and statistics,1,1,66,66,67,66,66.0,0
+10003215,"Extraction, transformation and loading",1,1,65,65,66,65,65.0,0
+10011310,Simulation by animation,1,1,64,64,65,64,64.0,0
+10002985,Mathematical foundations of cryptography,1,1,63,63,64,63,63.0,0
+10003529,Accreditation,1,1,63,63,64,63,63.0,0
+10003677,Markov-chain Monte Carlo methods,1,5,50,59,64,59,11.8,0
+10010767,Signal integrity and noise analysis,1,1,63,63,64,63,63.0,0
+10003519,Distributed storage,1,1,61,61,62,61,61.0,0
+10003521,History of computing,1,6,31,55,61,55,9.167,0
+10003811,Routing and network design problems,1,1,60,60,61,60,60.0,0
+10010441,Physics,1,1,60,60,61,60,60.0,0
+10011758,"Interaction design theory, concepts and paradigms",1,1,60,60,61,60,60.0,0
+10003495,Systems analysis and design,1,1,59,59,60,59,59.0,0
+10003792,Proof theory,1,1,59,59,60,59,59.0,0
+10010130,Type structures,1,1,59,59,60,59,59.0,0
+10003720,Computations on polynomials,1,2,57,57,59,57,28.5,0
+10003018,Database and storage security,1,5,53,53,58,53,10.6,0
+10010033,Sorting and searching,1,1,57,57,58,57,57.0,0
+10010183,Speech recognition,1,1,57,57,58,57,57.0,0
+10010508,Optical character recognition,1,1,57,57,58,57,57.0,0
+10010591,Displays and imagers,2,1,57,57,58,57,57.0,0
+10003727,Differential equations,1,5,0,52,57,52,10.4,0
+10003759,Interactive computation,1,1,56,56,57,56,56.0,0
+10010354,Discrete-event simulation,1,1,56,56,57,56,56.0,0
+10010484,Decision analysis,1,2,55,55,57,55,27.5,0
+10003389,Speech / audio search,1,1,55,55,56,55,55.0,0
+10010261,Reinforcement learning,2,6,0,50,56,50,8.333,0
+10010696,Modeling and parameter extraction,1,1,55,55,56,55,55.0,0
+10011027,Control structures,1,1,55,55,56,55,55.0,0
+10011093,Object oriented development,1,1,55,55,56,55,55.0,0
+10003557,Secure online transactions,1,1,54,54,55,54,54.0,0
+10003793,Modal and temporal logics,1,1,54,54,55,54,54.0,0
+10010099,Algorithmic game theory and mechanism design,1,14,41,41,55,41,2.929,0
+10010559,Sensors and actuators,2,1,54,54,55,54,54.0,0
+10003628,Combinatorial algorithms,2,1,53,53,54,53,53.0,0
+10010159,Theorem proving algorithms,1,1,53,53,54,53,53.0,0
+10010362,Massively parallel and high-performance simulations,1,1,53,53,54,53,53.0,0
+10010942,Software infrastructure,1,7,0,47,54,47,6.714,0
+10010954,Garbage collection,1,1,53,53,54,53,53.0,0
+10003001,Security in hardware,1,9,44,44,53,44,4.889,0
+10003649,Probabilistic representations,1,12,0,41,53,41,3.417,0
+10010609,Static memory,1,1,52,52,53,52,52.0,0
+10010534,"Single instruction, multiple data",1,1,51,51,52,51,51.0,0
+10010272,Sequential decision making,1,1,50,50,51,50,50.0,0
+10010356,Distributed simulation,1,1,50,50,51,50,50.0,0
+10011025,Polymorphism,1,1,50,50,51,50,50.0,0
+10003403,Object-relational mapping facilities,1,1,49,49,50,49,49.0,0
+10010314,Rule learning,1,1,49,49,50,49,49.0,0
+10002983,Cryptanalysis and other attacks,1,1,48,48,49,48,48.0,0
+10010689,Hardware description languages and compilation,1,1,48,48,49,48,48.0,0
+10010496,Computer-managed instruction,1,1,47,47,48,47,47.0,0
+10010685,Datapath optimization,1,1,47,47,48,47,47.0,0
+10010943,Interpreters,2,1,47,47,48,47,47.0,0
+10011015,Constraint and logic languages,1,1,47,47,48,47,47.0,0
+10010446,Consumer health,1,1,46,46,47,46,46.0,0
+10003193,Database transaction processing,1,4,37,42,46,42,10.5,0
+10003402,Application servers,1,1,45,45,46,45,45.0,0
+10010143,Program analysis,1,1,45,45,46,45,45.0,0
+10011106,Walkthroughs,1,1,45,45,46,45,45.0,0
+10003023,Software security engineering,1,1,44,44,45,44,44.0,0
+10010196,Logic programming and answer set programming,1,1,44,44,45,44,44.0,0
+10010564,Embedded software,2,1,44,44,45,44,44.0,0
+10011110,Traceability,1,1,44,44,45,44,44.0,0
+10003272,Online advertising,1,5,39,39,44,39,7.8,0
+10010393,Perception,1,1,43,43,44,43,43.0,0
+10010924,Public Internet,1,1,43,43,44,43,43.0,0
+10003539,Computing literacy,1,1,42,42,43,42,42.0,0
+10003693,Time series analysis,1,1,42,42,43,42,42.0,0
+10003698,Statistical graphics,1,1,42,42,43,42,42.0,0
+10010032,Pattern matching,1,1,42,42,43,42,42.0,0
+10010214,Computational control theory,1,1,42,42,43,42,42.0,0
+10010819,Physical data models,1,1,41,41,42,41,41.0,0
+10010920,Hypertext / hypermedia creation,1,1,41,41,42,41,41.0,0
+10010953,Allocation / deallocation strategies,1,1,41,41,42,41,41.0,0
+10010822,Relational database query languages,1,2,39,39,41,39,19.5,0
+10003079,Network performance evaluation,1,6,34,34,40,34,5.667,0
+10010368,Simulation languages,1,1,39,39,40,39,39.0,0
+10010436,Chemistry,1,1,39,39,40,39,39.0,0
+10011148,Dictionaries,1,1,39,39,40,39,39.0,0
+10010514,Format and notation,1,1,38,38,39,38,38.0,0
+10010529,Very long instruction word,1,1,38,38,39,38,38.0,0
+10010704,Wire routing,1,1,38,38,39,38,38.0,0
+10003568,Employment issues,2,1,37,37,38,37,37.0,0
+10003736,Functional analysis,1,2,0,36,38,36,18.0,0
+10010532,Cellular architectures,1,1,37,37,38,37,37.0,0
+10010982,State systems,1,1,37,37,38,37,37.0,0
+10003737,Approximation,1,1,36,36,37,36,36.0,0
+10003762,Parallel computing models,1,1,36,36,37,36,36.0,0
+10010162,Computer algebra systems,1,2,29,35,37,35,17.5,0
+10010936,Computing in government,1,3,34,34,37,34,11.333,0
+10010968,Message passing,1,1,36,36,37,36,36.0,0
+10011695,Software version control,1,1,36,36,37,36,36.0,0
+10003569,Automation,1,1,35,35,36,35,35.0,0
+10003732,Calculus,2,4,0,32,36,32,8.0,0
+10003771,Grammars and context-free languages,1,1,35,35,36,35,35.0,0
+10010170,Parallel algorithms,2,6,30,30,36,30,5.0,0
+10010501,Text editing,1,1,35,35,36,35,35.0,0
+10010662,Power and energy,1,24,12,12,36,12,0.5,0
+10010876,Software prototyping,2,1,35,35,36,35,35.0,0
+10011113,Software evolution,1,1,35,35,36,35,35.0,0
+10003701,Markov processes,1,1,34,34,35,34,34.0,0
+10003703,Distribution functions,1,1,34,34,35,34,34.0,0
+10003739,Nonlinear equations,1,1,34,34,35,34,34.0,0
+10003795,Constraint and logic programming,1,1,34,34,35,34,34.0,0
+10010164,Representation of mathematical objects,1,5,30,30,35,30,6.0,0
+10010194,Cognitive robotics,1,1,34,34,35,34,34.0,0
+10010376,Reflectance modeling,1,1,34,34,35,34,34.0,0
+10010458,Law,1,1,34,34,35,34,34.0,0
+10010526,Pipeline computing,1,1,34,34,35,34,34.0,0
+10010621,Sequential circuits,1,1,34,34,35,34,34.0,0
+10003068,Network algorithms,1,11,23,23,34,23,2.091,0
+10010181,"Discourse, dialogue and pragmatics",1,1,33,33,34,33,33.0,0
+10003458,Computing industry,1,4,29,29,33,29,7.25,0
+10003508,Centralization / decentralization,1,1,32,32,33,32,32.0,0
+10003733,Lambda calculus,2,1,32,32,33,32,32.0,0
+10010134,Operational semantics,1,1,32,32,33,32,32.0,0
+10010242,Shape representations,1,1,32,32,33,32,32.0,0
+10010494,Distance learning,1,1,32,32,33,32,32.0,0
+10010579,Maintainability and maintenance,1,1,32,32,33,32,32.0,0
+10010748,Test-pattern generation and fault simulation,1,1,32,32,33,32,32.0,0
+10003163,Directory structures,1,5,0,27,32,27,5.4,0
+10003699,Exploratory data analysis,1,1,31,31,32,31,31.0,0
+10003780,Communication complexity,1,1,31,31,32,31,31.0,0
+10010233,Vision for robotics,1,1,31,31,32,31,31.0,0
+10010394,Graphics file formats,1,1,31,31,32,31,31.0,0
+10003651,Markov networks,1,1,30,30,31,30,30.0,0
+10010046,Stochastic control and optimization,1,1,30,30,31,30,30.0,0
+10010140,Program specifications,1,1,30,30,31,30,30.0,0
+10010180,Machine translation,1,1,30,30,31,30,30.0,0
+10010309,Factorization methods,1,6,0,25,31,25,4.167,0
+10010951,Virtual memory,1,1,30,30,31,30,30.0,0
+10010955,Distributed memory,1,1,30,30,31,30,30.0,0
+10003414,Linked lists,1,1,29,29,30,29,29.0,0
+10003442,Enterprise applications,1,1,29,29,30,29,29.0,0
+10011045,Dynamic compilers,1,1,29,29,30,29,29.0,0
+10011149,Thesauri,1,1,29,29,30,29,29.0,0
+10003728,Ordinary differential equations,1,1,28,28,29,28,28.0,0
+10010751,Fault tolerance,1,7,0,22,29,22,3.143,0
+10011016,Data flow languages,1,1,28,28,29,28,28.0,0
+10011101,Checkpoint / restart,1,1,28,28,29,28,28.0,0
+10003407,Distributed transaction monitors,1,1,27,27,28,27,27.0,0
+10003415,B-trees,1,1,27,27,28,27,27.0,0
+10003552,E-commerce infrastructure,2,1,27,27,28,27,27.0,0
+10003640,Paths and connectivity problems,1,1,27,27,28,27,27.0,0
+10003691,Regression analysis,1,2,26,26,28,26,13.0,0
+10003718,Computations in finite fields,1,1,27,27,28,27,27.0,0
+10010158,Linear algebra algorithms,1,1,27,27,28,27,27.0,0
+10010215,Motion path planning,1,1,27,27,28,27,27.0,0
+10010959,Multiprocessing / multiprogramming / multitasking,1,1,27,27,28,27,27.0,0
+10011019,Extensible languages,1,1,27,27,28,27,27.0,0
+10011040,Syntax,1,1,27,27,28,27,27.0,0
+10003544,Commerce policy,1,7,0,20,27,20,2.857,0
+10003554,Electronic funds transfer,1,1,26,26,27,26,26.0,0
+10003634,Trees,1,1,26,26,27,26,26.0,0
+10003767,Formalisms,1,3,0,24,27,24,8.0,0
+10010139,Invariants,1,1,26,26,27,26,26.0,0
+10010622,Abstract machines,1,1,26,26,27,26,26.0,0
+10010952,Main memory,1,1,26,26,27,26,26.0,0
+10011683,Access protection,1,1,26,26,27,26,26.0,0
+10003246,Process control systems,1,1,25,25,26,25,25.0,0
+10003632,Enumeration,1,1,25,25,26,25,25.0,0
+10003687,Random number generation,1,1,25,25,26,25,25.0,0
+10010191,Vagueness and fuzzy logic,1,1,25,25,26,25,25.0,0
+10010313,Canonical correlation analysis,1,1,25,25,26,25,25.0,0
+10010435,Astronomy,1,1,25,25,26,25,25.0,0
+10010523,Reduced instruction set computing,1,1,25,25,26,25,25.0,0
+10010744,Design for testability,1,4,9,22,26,22,5.5,0
+10010981,Petri nets,1,1,25,25,26,25,25.0,0
+10011745,Public key encryption,1,1,25,25,26,25,25.0,0
+10002986,Formal methods and theory of security,1,5,15,20,25,20,4.0,0
+10003412,Hashed file organization,1,1,24,24,25,24,24.0,0
+10003704,Multivariate statistics,1,1,24,24,25,24,24.0,0
+10003729,Partial differential equations,1,1,24,24,25,24,24.0,0
+10010364,Scientific visualization,2,1,24,24,25,24,24.0,0
+10010473,Language translation,1,1,24,24,25,24,24.0,0
+10010535,Systolic arrays,1,1,24,24,25,24,24.0,0
+10010642,Application specific instruction set processors,1,1,24,24,25,24,24.0,0
+10011035,"Procedures, functions and subroutines",1,1,24,24,25,24,24.0,0
+10011608,Information flow control,1,1,24,24,25,24,24.0,0
+10010041,Linear programming,1,1,23,23,24,23,23.0,0
+10010541,Grid computing,2,1,23,23,24,23,23.0,0
+10011022,Very high level languages,1,1,23,23,24,23,23.0,0
+10011032,Constraints,1,1,23,23,24,23,23.0,0
+10003088,Wide area networks,1,1,22,22,23,22,22.0,0
+10003180,Hierarchical storage management,1,1,22,22,23,22,22.0,0
+10003232,Enterprise resource planning,1,1,22,22,23,22,22.0,0
+10003390,Music retrieval,1,1,22,22,23,22,22.0,0
+10010182,Natural language generation,1,1,22,22,23,22,22.0,0
+10010241,Image representations,1,1,22,22,23,22,22.0,0
+10010365,Visual analytics,2,1,22,22,23,22,22.0,0
+10010392,Mixed / augmented reality,2,1,22,22,23,22,22.0,0
+10010400,Point-based models,1,1,22,22,23,22,22.0,0
+10010545,Data flow architectures,2,1,22,22,23,22,22.0,0
+10010914,Assertion checking,1,1,22,22,23,22,22.0,0
+10010960,Monitors,1,1,22,22,23,22,22.0,0
+10011059,Interface definition languages,1,1,22,22,23,22,22.0,0
+10011688,Parsers,1,1,22,22,23,22,22.0,0
+10003413,Indexed file organization,1,1,21,21,22,21,21.0,0
+10003459,"Computing standards, RFCs and guidelines",1,1,21,21,22,21,21.0,0
+10003464,Copyrights,1,1,21,21,22,21,21.0,0
+10010234,Camera calibration,1,1,21,21,22,21,21.0,0
+10010603,Input / output circuits,1,1,21,21,22,21,21.0,0
+10010820,Data model extensions,1,8,14,14,22,14,1.75,0
+10011676,Verification,1,1,21,21,22,21,21.0,0
+10003348,Question answering,1,1,20,20,21,20,20.0,0
+10003584,Computing organizations,1,1,20,20,21,20,20.0,0
+10003589,Governmental regulations,2,1,20,20,21,20,20.0,0
+10010190,Probabilistic reasoning,1,1,20,20,21,20,20.0,0
+10010210,Game tree search,1,1,20,20,21,20,20.0,0
+10010244,Hierarchical representations,1,1,20,20,21,20,20.0,0
+10010918,Approximation algorithms,1,1,20,20,21,20,20.0,0
+10010555,Robotic components,1,1,19,19,20,19,19.0,0
+10010592,External storage,1,1,19,19,20,19,19.0,0
+10010656,VLSI packaging,1,5,0,15,20,15,3.0,0
+10010758,Design for manufacturability,1,4,0,16,20,16,4.0,0
+10011046,Translator writing systems and compiler generators,1,1,19,19,20,19,19.0,0
+10011748,Empirical studies in HCI,1,1,19,19,20,19,19.0,0
+10003722,Interpolation,1,1,18,18,19,18,18.0,0
+10003779,"Problems, reductions and completeness",1,1,18,18,19,18,18.0,0
+10010133,Denotational semantics,1,1,18,18,19,18,18.0,0
+10010380,Motion processing,1,1,18,18,19,18,18.0,0
+10011053,Window managers,1,1,18,18,19,18,18.0,0
+10011070,Application specific development environments,1,1,18,18,19,18,18.0,0
+10011141,Mixed discrete-continuous optimization,1,4,0,15,19,15,3.75,0
+10011643,Network topology types,1,10,0,9,19,9,0.9,0
+10003111,Wired access networks,1,1,17,17,18,17,17.0,0
+10003509,Technology audits,1,1,17,17,18,17,17.0,0
+10003602,Medical information policy,1,8,10,10,18,10,1.25,0
+10003641,Graph enumeration,1,1,17,17,18,17,17.0,0
+10003757,Probabilistic computation,1,1,17,17,18,17,17.0,0
+10003769,Rewrite systems,1,1,17,17,18,17,17.0,0
+10010799,Circuit substrates,1,6,0,12,18,12,2.0,0
+10010967,Input / output,1,1,17,17,18,17,17.0,0
+10011042,Incremental compilers,1,1,17,17,18,17,17.0,0
+10011669,Wireless devices,1,1,17,17,18,17,17.0,0
+10003637,Hypergraphs,1,1,16,16,17,16,16.0,0
+10003702,Nonparametric statistics,1,1,16,16,17,16,16.0,0
+10010243,Appearance and texture representations,1,1,16,16,17,16,16.0,0
+10010760,Yield and cost modeling,1,1,16,16,17,16,16.0,0
+10011021,Multiparadigm languages,1,1,16,16,17,16,16.0,0
+10011043,Retargetable compilers,1,1,16,16,17,16,16.0,0
+10011130,Evaluation,1,1,16,16,17,16,16.0,0
+10003095,Network reliability,1,2,0,14,16,14,7.0,0
+10003201,Triggers and rules,1,1,15,15,16,15,15.0,0
+10003551,Digital cash,1,1,15,15,16,15,15.0,0
+10010045,Integer programming,1,1,15,15,16,15,15.0,0
+10010079,Online learning theory,1,1,15,15,16,15,15.0,0
+10010434,Archaeology,1,1,15,15,16,15,15.0,0
+10010506,Document scanning,1,1,15,15,16,15,15.0,0
+10010658,Input / output styles,1,1,15,15,16,15,15.0,0
+10011678,Process synchronization,1,1,15,15,16,15,15.0,0
+10002946,Reference works,1,1,14,14,15,14,14.0,0
+10003028,Domain-specific security and privacy architectures,1,1,14,14,15,14,14.0,0
+10003496,Systems development,1,1,14,14,15,14,14.0,0
+10003585,"Testing, certification and licensing",1,1,14,14,15,14,14.0,0
+10003657,Nonparametric representations,1,4,0,11,15,11,2.75,0
+10010128,Object oriented constructs,1,1,14,14,15,14,14.0,0
+10010752,Error detection and error correction,2,1,14,14,15,14,14.0,0
+10010958,Multithreading,1,1,14,14,15,14,14.0,0
+10010969,Virtual worlds software,1,3,7,12,15,12,4.0,0
+10003146,Visualization techniques,1,7,7,7,14,7,1.0,0
+10003721,Number-theoretic computations,1,1,13,13,14,13,13.0,0
+10003785,Proof complexity,1,1,13,13,14,13,13.0,0
+10010078,Inductive inference,1,1,13,13,14,13,13.0,0
+10010095,Systems biology,1,1,13,13,14,13,13.0,0
+10010144,Assertions,1,1,13,13,14,13,13.0,0
+10010478,Military,1,2,12,12,14,12,6.0,0
+10010641,Application specific integrated circuits,1,1,13,13,14,13,13.0,0
+10011018,Design languages,1,1,13,13,14,13,13.0,0
+10011026,Inheritance,1,1,13,13,14,13,13.0,0
+10003166,Storage replication,1,6,0,7,13,7,1.167,0
+10003724,Numerical differentiation,1,1,12,12,13,12,12.0,0
+10010235,Epipolar geometry,1,1,12,12,13,12,12.0,0
+10010802,Cellular neural networks,1,1,12,12,13,12,12.0,0
+10011033,Recursion,1,1,12,12,13,12,12.0,0
+10003553,Electronic data interchange,1,1,11,11,12,11,11.0,0
+10003659,Spline models,1,1,11,11,12,11,11.0,0
+10003806,Programming logic,1,1,11,11,12,11,11.0,0
+10010043,Convex optimization,1,1,11,11,12,11,11.0,0
+10010189,"Nonmonotonic, default reasoning and belief revision",1,1,11,11,12,11,11.0,0
+10010377,Visibility,1,1,11,11,12,11,11.0,0
+10010605,Photonic and optical interconnect,1,1,11,11,12,11,11.0,0
+10010787,Analysis and design of emerging devices and systems,1,5,0,7,12,7,1.4,0
+10011049,Preprocessors,1,1,11,11,12,11,11.0,0
+10011647,Ring networks,1,3,0,9,12,9,3.0,0
+10003165,Record layout alternatives,1,4,7,7,11,7,1.75,0
+10003480,Censorship,1,6,5,5,11,5,0.833,0
+10003523,History of hardware,1,1,10,10,11,10,10.0,0
+10003682,Sequential Monte Carlo methods,1,1,10,10,11,10,10.0,0
+10010193,Temporal reasoning,1,1,10,10,11,10,10.0,0
+10010488,Marketing,1,1,10,10,11,10,10.0,0
+10010686,Hardware-software codesign,1,1,10,10,11,10,10.0,0
+10002949,General literature,1,1,9,9,10,9,9.0,0
+10003350,Recommender systems,1,1,9,9,10,9,9.0,0
+10003500,Computing equipment management,1,1,9,9,10,9,9.0,0
+10003680,Simulated annealing,1,1,9,9,10,9,9.0,0
+10003717,Computation of transforms,1,1,9,9,10,9,9.0,0
+10010126,Control primitives,1,1,9,9,10,9,9.0,0
+10010483,Computer-aided manufacturing,1,1,9,9,10,9,9.0,0
+10010502,Version control,1,1,9,9,10,9,9.0,0
+10010548,Self-organizing autonomic computing,1,1,9,9,10,9,9.0,0
+10011188,Word processors,1,1,9,9,10,9,9.0,0
+10011649,Fiber distributed data interface (FDDI),1,1,9,9,10,9,9.0,0
+10002948,Biographies,1,1,8,8,9,8,8.0,0
+10003224,Data dictionaries,1,1,8,8,9,8,8.0,0
+10003244,Data analytics,1,1,8,8,9,8,8.0,0
+10003522,Historical people,1,1,8,8,9,8,8.0,0
+10003556,Online banking,1,1,8,8,9,8,8.0,0
+10003799,Finite Model Theory,1,1,8,8,9,8,8.0,0
+10010141,Pre- and post-conditions,1,1,8,8,9,8,8.0,0
+10010373,Rasterization,1,1,8,8,9,8,8.0,0
+10010536,Multicore architectures,1,1,8,8,9,8,8.0,0
+10010755,Redundancy,2,1,8,8,9,8,8.0,0
+10011255,Backtracking,1,1,8,8,9,8,8.0,0
+10011760,Systems and tools for interaction design,1,2,7,7,9,7,3.5,0
+10003470,Licensing,1,1,7,7,8,7,7.0,0
+10003516,Storage recovery strategies,1,1,7,7,8,7,7.0,0
+10003726,Arbitrary-precision arithmetic,1,1,7,7,8,7,7.0,0
+10003768,Algebraic language theory,1,1,7,7,8,7,7.0,0
+10010479,Cartography,1,1,7,7,8,7,7.0,0
+10010544,Analog computers,1,1,7,7,8,7,7.0,0
+10010563,Embedded hardware,1,1,7,7,8,7,7.0,0
+10010610,Non-volatile memory,1,1,7,7,8,7,7.0,0
+10010612,Digital switches,1,3,0,5,8,5,1.667,0
+10010741,Built-in self-test,1,1,7,7,8,7,7.0,0
+10010789,Emerging languages and compilers,1,1,7,7,8,7,7.0,0
+10010963,Concurrency control,1,1,7,7,8,7,7.0,0
+10011094,Flowcharts,1,1,7,7,8,7,7.0,0
+10011189,Spreadsheets,1,1,7,7,8,7,7.0,0
+10003044,Link-layer protocols,1,1,6,6,7,6,6.0,0
+10003524,History of software,1,1,6,6,7,6,6.0,0
+10003694,Survival analysis,1,1,6,6,7,6,6.0,0
+10003708,Statistical software,1,1,6,6,7,6,6.0,0
+10003755,Turing machines,1,1,6,6,7,6,6.0,0
+10003786,Interactive proof systems,1,1,6,6,7,6,6.0,0
+10010127,Functional constructs,1,1,6,6,7,6,6.0,0
+10010163,Special-purpose algebraic systems,1,1,6,6,7,6,6.0,0
+10010195,Ontology engineering,1,1,6,6,7,6,6.0,0
+10010318,Stochastic games,1,1,6,6,7,6,6.0,0
+10010619,Design modules and hierarchy,1,1,6,6,7,6,6.0,0
+10010742,Online test and diagnostics,1,1,6,6,7,6,6.0,0
+10010962,Mutual exclusion,1,1,6,6,7,6,6.0,0
+10002990,Logic and verification,2,1,5,5,6,5,5.0,0
+10003429,Database recovery,1,1,5,5,6,5,5.0,0
+10003573,Reengineering,1,1,5,5,6,5,5.0,0
+10003738,Integral equations,1,1,5,5,6,5,5.0,0
+10003794,Automated reasoning,1,1,5,5,6,5,5.0,0
+10010132,Algebraic semantics,1,1,5,5,6,5,5.0,0
+10010145,Parsing,1,1,5,5,6,5,5.0,0
+10010249,Shape inference,1,1,5,5,6,5,5.0,0
+10010315,Instance-based learning,1,1,5,5,6,5,5.0,0
+10010614,Logic families,1,1,5,5,6,5,5.0,0
+10010970,Interactive games,1,1,5,5,6,5,5.0,0

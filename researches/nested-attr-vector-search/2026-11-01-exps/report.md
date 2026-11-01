@@ -156,3 +156,16 @@ ANN 运行 0，C++ 改动 0。方案中的多父闭包、标签集、精确基�
 ## 显示兼容性
 
 两幅示意图均提供 `*-outlined.svg` 显示版并作为 Markdown 图片引用：标签转换为自包含字形路径，不依赖客户端字体或 `<text>` 渲染，颜色仍随主题前景（`currentColor`），背景透明；文字版 SVG 保留为可编辑源图。字形来自 Noto Sans CJK SC Regular/Bold（SIL OFL 1.1），字体与输出 SHA 见 [data/dag-attribute-figure.json](data/dag-attribute-figure.json)，字体二进制不入库。重新导出命令见 `experiments/outline_svg_labels.py`。
+
+## 真实 DAG 结构测量（CCS 2012 + SciHTC）
+
+在真实多父本体系上测量 §3 方案所需的输入量，不涉及向量：概念 1,929、边 2,040、列表实例 2,113；159 个概念 ID 重复出现，其中 103 个（5.3%）有至少两个不同父。标注 186,160 行，可用 168,937 行，17,223 行含 `~` 被剔除，路径解析失败 0。
+
+每篇论文的祖先集合均值 4.21、最大 11；每个概念的祖先集合均值 5.04、最大 16；scope 均值 369、p95 1,072、最大 168,937。最大 scope 与最大祖先数相差 10,559 倍，构成"向上更新便宜、向下查询昂贵"的结构基础。
+
+多父造成非层状交叠：12,913 篇论文（可用行 7.6%）的继承集合含至少一个多父概念，12,446 篇的终点概念本身是多父。101 个多父概念的父 scope 交并比 p50 0.013、p95 0.53、最大 0.90（Personalization 82/91；CSCW 953/1,202）。
+
+按物化规则 E(u)>n/64 在 n=168,937 上选中 39 个概念（2.0%），位图合计 824 KB，作为 H2 的预算基线。
+
+数据：[scihtc-dag-structure.json](data/scihtc-dag-structure.json)、[scihtc-dag-concepts.csv](data/scihtc-dag-concepts.csv)；脚本 `experiments/scihtc_dag_structure.py`。有向量、无质量结论：SciHTC 缺向量，本轮未跑 ANN、未改 C++。
+
