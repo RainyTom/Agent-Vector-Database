@@ -154,6 +154,7 @@ static Merged build(const Vectors& base, const Workload& w, RawL2Space& l2) {
     auto connect = [&](Id u, Id v) {
         if (u != v) { m.edges[u].push_back(v); m.edges[v].push_back(u); }
     };
+    std::vector<std::priority_queue<Pair>> reverse_bridges(base.n);
     for (auto it = w.topo.rbegin(); it != w.topo.rend(); ++it) {
         Id c = *it;
         std::vector<std::vector<Id>> groups;
@@ -197,9 +198,21 @@ static Merged build(const Vectors& base, const Workload& w, RawL2Space& l2) {
                 Pair nearest{std::numeric_limits<float>::infinity(), 0};
                 for (Id v : group) if (w.owner[v] != source)
                     nearest = std::min(nearest, Pair{l2.dist(base.at(u), base.at(v)), v});
-                if (std::isfinite(nearest.first)) connect(u, nearest.second);
+                if (std::isfinite(nearest.first)) {
+                    m.edges[u].push_back(nearest.second);
+                    auto& reverse = reverse_bridges[nearest.second];
+                    reverse.emplace(nearest.first, u);
+                    if (reverse.size() > 16) reverse.pop();
+                }
             }
         m.portals[c] = representatives(std::move(pool), base, l2);
+    }
+    for (Id v = 0; v < base.n; ++v) {
+        auto& reverse = reverse_bridges[v];
+        while (!reverse.empty()) {
+            m.edges[v].push_back(reverse.top().second);
+            reverse.pop();
+        }
     }
     size_t connected = normalize();
     m.connector_edges = connected - m.local_edges;
