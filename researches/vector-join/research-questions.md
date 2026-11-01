@@ -127,3 +127,14 @@ H2：把 ANN witness 的 false-empty、过滤器 false-negative 与候选搜索�
 ### 2026-10-19 alphaXiv查重后的停止与暂停决定
 
 [逐项审计](../nested-attr-vector-search/alphaxiv-novelty-audit.md)替代上一节六方案实施建议：D0/D1/D3/D5停止作为独立创新推进；D2/D4暂停，原MVP不实施。结论来自具体核心机制与前序对照，不声称每份完整组合均已有一篇同构实现。D2仅可继续查“层状族是否带来超越通用范围图的实质空间/维护界”；D4需证明目录分支场景产生区别于常规MVCC二级索引的新协议或成本问题，未达到前不立项。当前没有确认新颖的原六方向方案，也没有新实验结果。
+
+## 2026-11-01 RQ-PiPNN：首次与复用的逐点 top-k 总成本
+
+**来源：本项目综合推导；不是作者明确 future work；新颖性尚未充分排查。** [PiPNN解读](../../papers/vector-ann/2602.21247-pipnn/paper.report.md)区分了导航图构建、全点kNN图、阈值join。作者§6另列量化GEMM、GPU/TPU、无最终prune和数百亿点分布式构建；其后续Turbocharging正文未取得，不重复宣称这些方向为空白。
+
+- 问题：静态逐点top-k self检索或cross检索中，若索引首次构建计费，在相同实际峰值RSS与最终召回下，PiPNN相对HNSW/ParlayANN Vamana的优势随重复执行次数如何变化？该问题不涉及global top-k pairs；self必须显式排除自身，cross无此排除。
+- 现有依据/不足：PiPNN§5.2已研究一次全点k=10、edge recall≥95%的构图，不能把这个实验本身当新意；本项目只拟核对内存约束、不同查询集及复用摊销。Table6表明PiPNN在小整数数据上峰值RSS可能更高，固定最终degree不是公平内存对齐。
+- 可检验假设：若查询成本相近且build更低，PiPNN的首次总成本更低，但复用次数增加后build节省占比下降；在紧内存下，分桶/临时开销可能直接使其失去优势。先测可行性，不预设加速。
+- 最小实验（尚未运行）：取SIFT/SPACEV的100K–1M子集，固定原L2与数据类型、k∈{10,100}，self与独立cross查询分开；精确ground truth使用分块全扫描。相同机器/线程，对比作者PiPNN、hnswlib及ParlayANN Vamana 1/2 passes，PiPNN 1/2 replicas及是否最终prune分开；先确认全部参数在相同RSS上限可行，再匹配recall目标0.90/0.95。测至少3次，报告build、query、输出物化、峰值RSS、索引字节和总时间；重复执行次数J∈{1,2,5,10}，计费`T_build + J*(T_query + T_materialize)`，复用同一索引不重复收build。
+- 召回与pair规则：单查询平均recall与有向global pair recall分别报告；固定k且每点恰有k个真邻居时可重合，不默认推广到阈值结果。self输出去self、按源点计有向边；如转无向边则另报规范ID去重及物化成本。零结果查询在阈值迁移时单列，不混入top-k均值。
+- 风险/反例/停止条件：query/物化主导会淹没build收益；低RSS配置可能不可行；ANN Recall@k好不保证阈值覆盖。若普通基线调参后已无差异，则只保留复现实证而不立新机制。**HashPrune不能安全删threshold合格pairs**，这条路径不作为精确join方案推进；任何近似阈值改造都需另定义候选覆盖、全局pair recall与输出密度。

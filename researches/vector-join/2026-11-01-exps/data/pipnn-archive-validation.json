@@ -1,0 +1,31 @@
+{
+  "date": "2026-11-01",
+  "status": "passed",
+  "paper_count": 44,
+  "relation_count": 32,
+  "vector_ann_count": 5,
+  "all_ids_unique": true,
+  "all_relation_endpoints_exist": true,
+  "all_topic_directories_exist": true,
+  "pipnn_evidence_paths_exist": true,
+  "pdf_pages": 18,
+  "pdf_sha256": "75e9048e910590a6a998ee8b43a1bd498779aecaf90352f6a93da022dbe5a0d9",
+  "text_sha256": "719f2bc1f1457b8e25422224108c8a95e737ce135ef4ae897cd7c28be657d248",
+  "crossref_title_authors_doi_pages_match": true,
+  "retrieval": {
+    "PiPNN": "doi:10.1145/3770855.3817891",
+    "doi:10.1145/3770855.3817891": "doi:10.1145/3770855.3817891",
+    "arxiv:2602.21247": "doi:10.1145/3770855.3817891"
+  },
+  "new_document_relative_links_checked": 14,
+  "semantic_probe_orders": {
+    "distinct_distance": 120,
+    "equal_distance": 2
+  },
+  "not_verified": [
+    "official code runtime",
+    "ANN performance",
+    "join performance",
+    "version-of-record full text"
+  ]
+}

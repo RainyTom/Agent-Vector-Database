@@ -1,0 +1,131 @@
+{
+  "status": "paper_reported_not_reproduced",
+  "version": "arXiv:2602.21247v3",
+  "checked_on": "2026-11-01",
+  "datasets_table1": [
+    {
+      "name": "BigANN",
+      "n": 1000000000,
+      "d": 128,
+      "type": "uint8",
+      "metric": "L2"
+    },
+    {
+      "name": "DEEP",
+      "n": 1000000000,
+      "d": 96,
+      "type": "float32",
+      "metric": "L2"
+    },
+    {
+      "name": "MS-SPACEV",
+      "n": 1000000000,
+      "d": 100,
+      "type": "int8",
+      "metric": "L2"
+    },
+    {
+      "name": "MS-Turing",
+      "n": 1000000000,
+      "d": 100,
+      "type": "float32",
+      "metric": "L2"
+    },
+    {
+      "name": "Wikipedia-Cohere",
+      "n": 35000000,
+      "d": 768,
+      "type": "float32",
+      "metric": "MIPS"
+    },
+    {
+      "name": "OpenAI-ArXiv",
+      "n": 2000000,
+      "d": 1536,
+      "type": "float32",
+      "metric": "L2"
+    }
+  ],
+  "build_speedup_section1": {
+    "versus_vamana": {
+      "max": 11.6,
+      "mean": 6.32
+    },
+    "versus_hnsw": {
+      "max": 12.9,
+      "mean": 10.4
+    },
+    "scope": "index build; compare query quality; not downstream join speedup"
+  },
+  "downstream_section5_2": {
+    "task": "index build plus querying all points for kNN graph",
+    "k": 10,
+    "minimum_edge_recall": 0.95,
+    "versus_hnswlib": [
+      2.2,
+      6.9
+    ],
+    "versus_parlayann_vamana": [
+      1.4,
+      1.7
+    ],
+    "pdf_pages": [
+      8,
+      9
+    ]
+  },
+  "inconsistency": {
+    "abstract_downstream_max_speedup": 1.9,
+    "section5_2_hnsw_max": 6.9,
+    "status": "Both preserved; no inferred reconciliation"
+  },
+  "ablations": {
+    "fanout_partition_speedup_mean": 1.47,
+    "multilevel_fanout_partition_speedup_mean": 3.35,
+    "leaf_knn_optimization_speedup_mean": 27.03,
+    "leaf_all_to_all_prune_optimization_speedup_mean": 12.71,
+    "final_prune_qps_gain_mean_at_recall_0_9_percent": 10.18,
+    "final_prune_qps_gain_mean_at_recall_0_95_percent": 9.45,
+    "final_prune_build_fraction_mean_percent": 9.82,
+    "hash_bits_default": 12,
+    "local_knn_k_default": 2
+  },
+  "peak_rss_table6": {
+    "unit": "GiB",
+    "threads": 128,
+    "measurement": "GNU time maximum resident set size",
+    "pdf_page": 18,
+    "rows": [
+      {
+        "dataset": "BigANN-100M",
+        "pipnn": 214.45,
+        "hnsw": 105.44,
+        "vamana": 51.62
+      },
+      {
+        "dataset": "MS-SPACEV-100M",
+        "pipnn": 211.62,
+        "hnsw": 102.55,
+        "vamana": 51.98
+      },
+      {
+        "dataset": "OpenAI-2M",
+        "pipnn": 18.01,
+        "hnsw": 28.66,
+        "vamana": 17.17
+      },
+      {
+        "dataset": "Wikipedia-35M",
+        "pipnn": 177.32,
+        "hnsw": 228.88,
+        "vamana": 115.12
+      }
+    ]
+  },
+  "hardware": {
+    "billion_and_downstream": "Google Cloud c4-highmem-288; 288 vCPU; 2.2TB DRAM",
+    "other_main": "4x Intel Xeon Platinum 8160; paper says 192 CPUs; 1.5TB DRAM",
+    "table4_caveat": "Vamana prefetch disabled for hardware-counter experiment only"
+  },
+  "source": "https://arxiv.org/html/2602.21247v3"
+}

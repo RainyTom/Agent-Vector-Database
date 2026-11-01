@@ -10,13 +10,13 @@
 | similarity-join | 1 | [一般相似连接](similarity-join/README.md)：多字段 equality/Hamming 等相邻问题 |
 | trajectory-search | 8 | [轨迹检索](trajectory-search/README.md)：完整轨迹/子轨迹 top-k、时空距离与混合范围查询 |
 | multi-vector-search | 2 | [多向量/向量集合检索](multi-vector-search/README.md)：BioVSS表示与MSG组合空间图 |
-| vector-ann | 4 | [向量ANN机制](vector-ann/README.md)：Hubness、CDMG、Flash、多代表分区路由 |
+| vector-ann | 5 | [向量ANN机制](vector-ann/README.md)：Hubness、CDMG、Flash、多代表分区路由、PiPNN构图 |
 | memory-systems | 1 | [记忆管理系统](memory-systems/README.md)：VikingMem |
 | hybrid-retrieval | 1 | [多路相关性检索](hybrid-retrieval/README.md)：Balancing the Blend；不是scalar-filtered ANN |
 | data-indexing | 4 | [属性索引与范围过滤](data-indexing/README.md)：Memento、Grafite、FlexFlood、Qd-tree |
 | incremental-views | 2 | [增量与因式分解视图](incremental-views/README.md)：F-IVM、DBSP |
 
-总计 **43 篇论文、30 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **44 篇论文、32 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -47,8 +47,10 @@ papers/
 
 同日具体设计续轮新增PVLDB2025《Unleashing Graph Partitioning for Large-Scale Nearest Neighbor Search》，核其多代表HNSW路由骨架；重申Curator已有lazy/local谓词求值，不将该思想单独当新意。交付[WQR冻结设计](../researches/nested-attr-vector-search/2026-10-30-exps/wqr-index-spec.md)及真实hnswlib有限机制探针，无WIKI/SIFT端到端性能主张。
 
+2026-11-01新增PiPNN（KDD2026，DOI:10.1145/3770855.3817891），保存arXiv v3原始PDF、18页分页全文、正式Crossref快照及[解读](vector-ann/2602.21247-pipnn/paper.report.md)。B类ANN构建，不当作阈值vector join；补核v3峰值RSS、大k实验和摘要/正文下游加速数字差异。仅运行有限HashPrune规则构造，未复现作者ANN或十亿性能。
 
-UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述43篇工作。获取受限与理论未提供是两种不同状态。
+
+UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述44篇工作。获取受限与理论未提供是两种不同状态。
 
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
 

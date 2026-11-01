@@ -258,3 +258,13 @@
 
 先核直接vector similarity join的hierarchical partition词族，再转filtered ANN目录/分区检索；命中DiskJoin不等于本任务成为join。复核本地TFANNS §V、阅读Window Filters ICML2024相关正文，后者完整归档待办；不新增未经完整核实的论文记录。详见[08日志](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)及[完整方案](../nested-attr-vector-search/2026-10-31-exps/packed-index-plan.md)。新候选为B类单查询混合ANN组织机制，真实SIFT规模实验未执行。
 
+
+## 2026-11-01 PiPNN：指定论文核验与迁移边界
+
+先查 `papers.jsonl`、`relations.jsonl` 和既有笔记：PiPNN/PiANN/HashPrune均未命中。按用户题名查PiPNN原始来源；迁移核对使用 `("vector similarity join" OR "vector join" OR "similarity self-join" OR "high-dimensional similarity join" OR "inner-product similarity join") (partition OR "PiPNN")`，命中已有DiskJoin、PHiDJ、IPS复杂性及早期MapReduce连接候选，不据摘要扩充它们的方法保证。随后核作者主页、ANN构图来源与官方代码。仅为指定论文的定向搜索，不是直接join或ANN的穷尽综述。
+
+原始来源：[arXiv历史](https://arxiv.org/abs/2602.21247)、[v3全文](https://arxiv.org/html/2602.21247v3)、[Crossref](https://api.crossref.org/works/10.1145/3770855.3817891)、[作者主页](https://www.cs.umd.edu/~laxman/)、[代码](https://github.com/ParAlg/PiPNN)。正式ACM landing/PDF 403；正文证据固定v3（2026-07-10），不是v1或未取得的正式稿。作者主页交叉核题名、完整六作者、KDD2026和代码；不以微信解读作为理论/性能唯一证据。
+
+核读§2–6、A.1–A.10，PDF18页含附录；本地全文和[解读](../../papers/vector-ann/2602.21247-pipnn/paper.report.md)已存。主问题为B类图ANN构建；下游为逐点top-k kNN图，不是threshold join或全局top-k pairs。v3补充内存说明整数100M集PiPNN峰值RSS明显高于Vamana/HNSW，不将bounded reservoir解释为总内存更少。保存论文数字和有限HashPrune规则构造结果到[当日记录](2026-11-01-exps/report.md)，不宣称ANN性能复现。
+
+新增1篇、2关系（其中1条研究者综合）；总44篇/32关系。待补：正式稿-v3差异、摘要1.9×与正文6.9×的解释、官方bf16/并列距离/并发与self-match规则、同RSS首次/复用的top-k端到端实验。作者主页列出Turbocharging PiPNN for Proximity and k-NN Graph Building（VecDB@VLDB2026）；[OpenReview forum](https://openreview.net/forum?id=8GzbSQMrLA)与PDF均返回浏览器验证，本轮不读造算法/结果、不与主论文合并。PHiDJ/MapReduce及其他近邻候选的引用闭包未补齐，新颖性尚未充分排查。

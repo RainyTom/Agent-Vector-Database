@@ -1,0 +1,65 @@
+{
+  "scope": "Independent finite illustration of arXiv v3 Algorithm 3, NOT official code or ANN performance benchmark",
+  "unique_distance_case": {
+    "candidates": [
+      [
+        "a",
+        0,
+        5
+      ],
+      [
+        "b",
+        0,
+        1
+      ],
+      [
+        "c",
+        1,
+        2
+      ],
+      [
+        "d",
+        2,
+        3
+      ],
+      [
+        "e",
+        3,
+        4
+      ]
+    ],
+    "capacity": 2,
+    "orders": 120,
+    "distinct_outputs": [
+      [
+        "b",
+        "c"
+      ]
+    ]
+  },
+  "equal_distance_case": {
+    "candidates": [
+      [
+        "a",
+        0,
+        1
+      ],
+      [
+        "b",
+        0,
+        1
+      ]
+    ],
+    "capacity": 1,
+    "orders": 2,
+    "distinct_outputs": [
+      [
+        "a"
+      ],
+      [
+        "b"
+      ]
+    ]
+  },
+  "conclusion": "Fixed hashes and strict unequal distances yield the expected bucket-minimum top-capacity result in this finite case. Equal-distance point identities are order-dependent under literal strict <; deterministic tie-breaking is needed for a unique ID list."
+}

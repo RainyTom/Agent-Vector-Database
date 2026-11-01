@@ -1,0 +1,587 @@
+{
+  "status": "ok",
+  "message-type": "work",
+  "message-version": "1.0.0",
+  "message": {
+    "indexed": {
+      "date-parts": [
+        [
+          2026,
+          10,
+          15
+        ]
+      ],
+      "date-time": "2026-10-15T13:28:13Z",
+      "timestamp": 1792070893091,
+      "version": "4.4.0"
+    },
+    "publisher-location": "New York, NY, USA",
+    "reference-count": 45,
+    "publisher": "ACM",
+    "license": [
+      {
+        "start": {
+          "date-parts": [
+            [
+              2026,
+              8,
+              8
+            ]
+          ],
+          "date-time": "2026-08-08T00:00:00Z",
+          "timestamp": 1786147200000
+        },
+        "content-version": "vor",
+        "delay-in-days": 0,
+        "URL": "https://creativecommons.org/licenses/by/4.0/legalcode"
+      }
+    ],
+    "funder": [
+      {
+        "name": "National Science Foundation",
+        "award": [
+          "CCF-2403235"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "CCF-2403235"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "National Science Foundation",
+        "award": [
+          "CNS2317194"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "CNS2317194"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "National Science Foundation",
+        "award": [
+          "DGE 2236417"
+        ],
+        "award-info": [
+          {
+            "award-number": [
+              "DGE 2236417"
+            ]
+          }
+        ]
+      }
+    ],
+    "content-domain": {
+      "domain": [
+        "dl.acm.org"
+      ],
+      "crossmark-restriction": true
+    },
+    "short-container-title": [],
+    "published-print": {
+      "date-parts": [
+        [
+          2026,
+          8,
+          9
+        ]
+      ]
+    },
+    "DOI": "10.1145/3770855.3817891",
+    "type": "proceedings-article",
+    "created": {
+      "date-parts": [
+        [
+          2026,
+          8,
+          6
+        ]
+      ],
+      "date-time": "2026-08-06T17:15:43Z",
+      "timestamp": 1786036543000
+    },
+    "page": "4092-4102",
+    "update-policy": "https://doi.org/10.1145/crossmark-policy",
+    "source": "Crossref",
+    "is-referenced-by-count": 4,
+    "title": [
+      "PiPNN: Ultra-Scalable Graph-Based Nearest Neighbor Indexing"
+    ],
+    "prefix": "10.1145",
+    "author": [
+      {
+        "ORCID": "https://orcid.org/0000-0001-7658-4864",
+        "authenticated-orcid": false,
+        "given": "Tobias",
+        "family": "Rubel",
+        "sequence": "first",
+        "affiliation": [
+          {
+            "name": "University of Maryland, College Park, College Park, USA"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0009-0004-1770-4829",
+        "authenticated-orcid": false,
+        "given": "Richard",
+        "family": "Wen",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "University of Maryland, College Park, College Park, USA"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0003-0685-064X",
+        "authenticated-orcid": false,
+        "given": "Laxman",
+        "family": "Dhulipala",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "University of Maryland, College Park, College Park, USA"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0003-1895-5828",
+        "authenticated-orcid": false,
+        "given": "Lars",
+        "family": "Gottesbüren",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Google, Zürich, Switzerland"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0003-0332-6332",
+        "authenticated-orcid": false,
+        "given": "Rajesh",
+        "family": "Jayaram",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Google, New York, USA"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      },
+      {
+        "ORCID": "https://orcid.org/0000-0001-9347-0041",
+        "authenticated-orcid": false,
+        "given": "Jakub",
+        "family": "Łącki",
+        "sequence": "additional",
+        "affiliation": [
+          {
+            "name": "Google, New York, USA"
+          }
+        ],
+        "role": [
+          {
+            "vocabulary": "crossref",
+            "role": "author"
+          }
+        ]
+      }
+    ],
+    "member": "320",
+    "published-online": {
+      "date-parts": [
+        [
+          2026,
+          8,
+          8
+        ]
+      ]
+    },
+    "reference": [
+      {
+        "key": "e_1_3_2_1_1_1",
+        "volume-title": "2023 IEEE 64th Annual Symposium on Foundations of Computer Science (FOCS). IEEE, 98-112",
+        "author": "Andoni Alexandr",
+        "year": "2023",
+        "unstructured": "Alexandr Andoni and Hengjie Zhang. 2023. Sub-quadratic (1+ε)-approximate Euclidean Spanners, with Applications. In 2023 IEEE 64th Annual Symposium on Foundations of Computer Science (FOCS). IEEE, 98-112."
+      },
+      {
+        "key": "e_1_3_2_1_2_1",
+        "first-page": "271",
+        "volume-title": "SODA",
+        "volume": "93",
+        "author": "Arya Sunil",
+        "year": "1993",
+        "unstructured": "Sunil Arya and David M Mount. 1993. Approximate nearest neighbor queries in fixed dimensions.. In SODA, Vol. 93. Citeseer, 271-280."
+      },
+      {
+        "key": "e_1_3_2_1_3_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1016/j.is.2019.02.006"
+      },
+      {
+        "key": "e_1_3_2_1_4_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1137/1.9781611978322.5"
+      },
+      {
+        "key": "e_1_3_2_1_5_1",
+        "volume-title": "Proceedings of the IEEE conference on computer vision and pattern recognition. 2055-2063",
+        "author": "Babenko Artem",
+        "year": "2016",
+        "unstructured": "Artem Babenko and Victor Lempitsky. 2016. Efficient indexing of billion-scale datasets of deep descriptors. In Proceedings of the IEEE conference on computer vision and pattern recognition. 2055-2063."
+      },
+      {
+        "key": "e_1_3_2_1_6_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/380752.380754"
+      },
+      {
+        "key": "e_1_3_2_1_7_1",
+        "volume-title": "Raimondas Kiveris, Silvio Lattanzi, and Vahab Mirrokni.",
+        "author": "Bateni MohammadHossein",
+        "year": "2017",
+        "unstructured": "MohammadHossein Bateni, Soheil Behnezhad, Mahsa Derakhshan, Mohammad- Taghi Hajiaghayi, Raimondas Kiveris, Silvio Lattanzi, and Vahab Mirrokni. 2017. Affinity clustering: Hierarchical clustering at scale. Advances in Neural Information Processing Systems 30 (2017)."
+      },
+      {
+        "key": "e_1_3_2_1_8_1",
+        "volume-title": "Approximating High-Dimensional Earth Mover's Distance as Fast as Closest Pair. arXiv preprint arXiv:2508.06774",
+        "author": "Beretta Lorenzo",
+        "year": "2025",
+        "unstructured": "Lorenzo Beretta, Vincent Cohen-Addad, Rajesh Jayaram, and Erik Waingarten. 2025. Approximating High-Dimensional Earth Mover's Distance as Fast as Closest Pair. arXiv preprint arXiv:2508.06774 (2025)."
+      },
+      {
+        "key": "e_1_3_2_1_9_1",
+        "first-page": "97",
+        "article-title": "Cover trees for nearest neighbor (ACM International Conference Proceeding Series, Vol. 148)",
+        "author": "Beygelzimer Alina",
+        "year": "2006",
+        "unstructured": "Alina Beygelzimer, Sham M. Kakade, and John Langford. 2006. Cover trees for nearest neighbor (ACM International Conference Proceeding Series, Vol. 148). ACM, 97-104.",
+        "journal-title": "ACM"
+      },
+      {
+        "key": "e_1_3_2_1_10_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.52202/068431-1560"
+      },
+      {
+        "key": "e_1_3_2_1_11_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/509907.509965"
+      },
+      {
+        "key": "e_1_3_2_1_12_1",
+        "volume-title": "International conference on machine learning. PMLR, 2676-2686",
+        "author": "Dhulipala Laxman",
+        "year": "2021",
+        "unstructured": "Laxman Dhulipala, David Eisenstat, Jakub Łącki, Vahab Mirrokni, and Jessica Shi. 2021. Hierarchical agglomerative graph clustering in nearly-linear time. In International conference on machine learning. PMLR, 2676-2686."
+      },
+      {
+        "key": "e_1_3_2_1_13_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3617341"
+      },
+      {
+        "key": "e_1_3_2_1_14_1",
+        "first-page": "4139",
+        "article-title": "High dimensional similarity search with satellite system graph: Efficiency, scalability, and unindexed query compatibility",
+        "volume": "44",
+        "author": "Fu Cong",
+        "year": "2021",
+        "unstructured": "Cong Fu, Changxu Wang, and Deng Cai. 2021. High dimensional similarity search with satellite system graph: Efficiency, scalability, and unindexed query compatibility. IEEE Transactions on Pattern Analysis and Machine Intelligence 44, 8 (2021), 4139-4150.",
+        "journal-title": "IEEE Transactions on Pattern Analysis and Machine Intelligence"
+      },
+      {
+        "key": "e_1_3_2_1_15_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3303753.3303754"
+      },
+      {
+        "key": "e_1_3_2_1_16_1",
+        "volume-title": "Retrieval-augmented generation for large language models: A survey. arXiv preprint arXiv:2312.10997 2, 1",
+        "author": "Gao Yunfan",
+        "year": "2023",
+        "unstructured": "Yunfan Gao, Yun Xiong, Xinyu Gao, Kangxiang Jia, Jinliu Pan, Yuxi Bi, Yixin Dai, Jiawei Sun, Haofen Wang, and Haofen Wang. 2023. Retrieval-augmented generation for large language models: A survey. arXiv preprint arXiv:2312.10997 2, 1 (2023)."
+      },
+      {
+        "key": "e_1_3_2_1_17_1",
+        "volume-title": "Highway: Performance-portable SIMD. https://github.com/google/highway",
+        "year": "2026",
+        "unstructured": "Google. 2026. Highway: Performance-portable SIMD. https://github.com/google/highway"
+      },
+      {
+        "key": "e_1_3_2_1_18_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3709730"
+      },
+      {
+        "key": "e_1_3_2_1_19_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3705328.3748120"
+      },
+      {
+        "key": "e_1_3_2_1_20_1",
+        "unstructured": "Gaël Guennebaud Benoît Jacob et al. 2010. Eigen v3. http://eigen.tuxfamily.org."
+      },
+      {
+        "key": "e_1_3_2_1_21_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/276698.276876"
+      },
+      {
+        "key": "e_1_3_2_1_22_1",
+        "volume-title": "Ravishankar Krishnawamy, and Rohan Kadekodi.",
+        "author": "Subramanya Suhas Jayaram",
+        "year": "2019",
+        "unstructured": "Suhas Jayaram Subramanya, Fnu Devvrit, Harsha Vardhan Simhadri, Ravishankar Krishnawamy, and Rohan Kadekodi. 2019. Diskann: Fast accurate billion-point nearest neighbor search on a single node. Advances in neural information processing Systems 32 (2019)."
+      },
+      {
+        "key": "e_1_3_2_1_23_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1109/TPAMI.2010.57"
+      },
+      {
+        "key": "e_1_3_2_1_24_1",
+        "volume-title": "Magdalen Dobson Manohar, and Harsha Vardhan Simhadri",
+        "author": "Krishnaswamy Ravishankar",
+        "year": "2024",
+        "unstructured": "Ravishankar Krishnaswamy, Magdalen Dobson Manohar, and Harsha Vardhan Simhadri. 2024. The DiskANN library: Graph-Based Indices for Fast, Fresh and Filtered Vector Search. IEEE Data Eng. Bull. (2024)."
+      },
+      {
+        "key": "e_1_3_2_1_25_1",
+        "first-page": "9459",
+        "article-title": "Retrieval-augmented generation for knowledge-intensive nlp tasks",
+        "volume": "33",
+        "author": "Lewis Patrick",
+        "year": "2020",
+        "unstructured": "Patrick Lewis, Ethan Perez, Aleksandra Piktus, Fabio Petroni, Vladimir Karpukhin, Naman Goyal, Heinrich Küttler, Mike Lewis, Wen-tau Yih, Tim Rocktäschel, et al. 2020. Retrieval-augmented generation for knowledge-intensive nlp tasks. Advances in Neural Information Processing Systems 33 (2020), 9459-9474.",
+        "journal-title": "Advances in Neural Information Processing Systems"
+      },
+      {
+        "key": "e_1_3_2_1_26_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3421424.3421431"
+      },
+      {
+        "key": "e_1_3_2_1_27_1",
+        "volume-title": "Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs",
+        "author": "Malkov Yu A",
+        "year": "2018",
+        "unstructured": "Yu A Malkov and Dmitry A Yashunin. 2018. Efficient and robust approximate nearest neighbor search using hierarchical navigable small world graphs. IEEE transactions on pattern analysis and machine intelligence 42, 4 (2018), 824-836."
+      },
+      {
+        "key": "e_1_3_2_1_28_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3627535.3638475"
+      },
+      {
+        "key": "e_1_3_2_1_29_1",
+        "doi-asserted-by": "crossref",
+        "unstructured": "Bhaskar Mitra Nick Craswell et al. 2018. An introduction to neural information retrieval. Foundations and Trends® in Information Retrieval 13 1 (2018) 1-126.",
+        "DOI": "10.1561/1500000061"
+      },
+      {
+        "key": "e_1_3_2_1_30_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1016/j.patcog.2019.106970"
+      },
+      {
+        "key": "e_1_3_2_1_31_1",
+        "volume-title": "Jerry Tworek, Qiming Yuan, Nikolas Tezak, Jong Wook Kim, Chris Hallacy, et al.",
+        "author": "Neelakantan Arvind",
+        "year": "2022",
+        "unstructured": "Arvind Neelakantan, Tao Xu, Raul Puri, Alec Radford, Jesse Michael Han, Jerry Tworek, Qiming Yuan, Nikolas Tezak, Jong Wook Kim, Chris Hallacy, et al. 2022. Text and code embeddings by contrastive pre-training. arXiv preprint arXiv:2201.10005 (2022)."
+      },
+      {
+        "key": "e_1_3_2_1_32_1",
+        "unstructured": "Nils Reimers. 2022. Cohere/wikipedia-22-12-en-embeddings. https://huggingface. co/datasets/Cohere/wikipedia-22-12-en-embeddings."
+      },
+      {
+        "key": "e_1_3_2_1_33_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1186/s40537-022-00592-5"
+      },
+      {
+        "key": "e_1_3_2_1_34_1",
+        "doi-asserted-by": "crossref",
+        "unstructured": "Tobias Rubel RichardWen Laxman Dhulipala Lars Gottesbüren Rajesh Jayaram and Jakub Łącki. 2026. PiPNN: Ultra-Scalable Graph-Based Nearest Neighbor Indexing. arXiv:2602.21247 [cs.DB] https://arxiv.org/abs/2602.21247",
+        "DOI": "10.1145/3770855.3817891"
+      },
+      {
+        "key": "e_1_3_2_1_35_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3476249.3476282"
+      },
+      {
+        "key": "e_1_3_2_1_36_1",
+        "volume-title": "Dmitry Baranchuk, Edo Liberty, Frank Liu, Ben Landrum, et al.",
+        "author": "Simhadri Harsha Vardhan",
+        "year": "2024",
+        "unstructured": "Harsha Vardhan Simhadri, Martin Aumüller, Amir Ingber, Matthijs Douze, George Williams, Magdalen Dobson Manohar, Dmitry Baranchuk, Edo Liberty, Frank Liu, Ben Landrum, et al. 2024. Results of the Big ANN: NeurIPS'23 competition. arXiv preprint arXiv:2409.17424 (2024)."
+      },
+      {
+        "key": "e_1_3_2_1_37_1",
+        "first-page": "177",
+        "article-title": "Results of the NeurIPS'21 challenge on billion-scale approximate nearest neighbor search. In NeurIPS 2021 Competitions and Demonstrations Track",
+        "author": "Simhadri Harsha Vardhan",
+        "year": "2022",
+        "unstructured": "Harsha Vardhan Simhadri, George Williams, Martin Aumüller, Matthijs Douze, Artem Babenko, Dmitry Baranchuk, Qi Chen, Lucas Hosseini, Ravishankar Krishnaswamny, Gopal Srinivasa, et al. 2022. Results of the NeurIPS'21 challenge on billion-scale approximate nearest neighbor search. In NeurIPS 2021 Competitions and Demonstrations Track. PMLR, 177-189.",
+        "journal-title": "PMLR"
+      },
+      {
+        "key": "e_1_3_2_1_38_1",
+        "volume-title": "Scalable k- Means Clustering for Large k via Seeded Approximate Nearest-Neighbor Search. arXiv preprint arXiv:2502.06163",
+        "author": "Spalding-Jamieson Jack",
+        "year": "2025",
+        "unstructured": "Jack Spalding-Jamieson, EliotWong Robson, and DaWei Zheng. 2025. Scalable k- Means Clustering for Large k via Seeded Approximate Nearest-Neighbor Search. arXiv preprint arXiv:2502.06163 (2025)."
+      },
+      {
+        "key": "e_1_3_2_1_39_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1145/3725325"
+      },
+      {
+        "key": "e_1_3_2_1_40_1",
+        "volume-title": "Approximate Nearest Neighbor Negative Contrastive Learning for Dense Text Retrieval. In International Conference on Learning Representations, ICLR.",
+        "author": "Xiong Lee",
+        "year": "2021",
+        "unstructured": "Lee Xiong, Chenyan Xiong, Ye Li, Kwok-Fung Tang, Jialin Liu, Paul N. Bennett, Junaid Ahmed, and Arnold Overwijk. 2021. Approximate Nearest Neighbor Negative Contrastive Learning for Dense Text Retrieval. In International Conference on Learning Representations, ICLR."
+      },
+      {
+        "key": "e_1_3_2_1_41_1",
+        "volume-title": "Xiyue Gao, Qianru Wang, Yanguo Peng, and Jiangtao Cui.",
+        "author": "Yang Shuo",
+        "year": "2024",
+        "unstructured": "Shuo Yang, Jiadong Xie, Yingfan Liu, Jeffrey Xu Yu, Xiyue Gao, Qianru Wang, Yanguo Peng, and Jiangtao Cui. 2024. Revisiting the index construction of proximity graph-based approximate nearest neighbor search. arXiv preprint arXiv:2410.01231 (2024)."
+      },
+      {
+        "key": "e_1_3_2_1_42_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.1137/1.9781611978520.24"
+      },
+      {
+        "key": "e_1_3_2_1_43_1",
+        "volume-title": "2025 Proceedings of the Conference on Applied and Computational Discrete Algorithms (ACDA). SIAM, 1-17",
+        "author": "Yu Shangdi",
+        "year": "2025",
+        "unstructured": "Shangdi Yu, Joshua Engels, Yihao Huang, and Julian Shun. 2025. Pecann: Parallel efficient clustering with graph-based approximate nearest neighbor search. In 2025 Proceedings of the Conference on Applied and Computational Discrete Algorithms (ACDA). SIAM, 1-17."
+      },
+      {
+        "key": "e_1_3_2_1_44_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3598581.3598594"
+      },
+      {
+        "key": "e_1_3_2_1_45_1",
+        "doi-asserted-by": "publisher",
+        "DOI": "10.14778/3594512.3594527"
+      }
+    ],
+    "event": {
+      "name": "KDD '26: The 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining",
+      "location": "Jeju Island Republic of Korea",
+      "sponsor": [
+        "SIGMOD ACM Special Interest Group on Management of Data",
+        "SIGKDD ACM Special Interest Group on Knowledge Discovery in Data"
+      ]
+    },
+    "container-title": [
+      "Proceedings of the 32nd ACM SIGKDD Conference on Knowledge Discovery and Data Mining V.2"
+    ],
+    "original-title": [],
+    "deposited": {
+      "date-parts": [
+        [
+          2026,
+          8,
+          7
+        ]
+      ],
+      "date-time": "2026-08-07T01:20:24Z",
+      "timestamp": 1786065624000
+    },
+    "score": 1,
+    "resource": {
+      "primary": {
+        "URL": "https://dl.acm.org/doi/10.1145/3770855.3817891"
+      }
+    },
+    "subtitle": [],
+    "short-title": [],
+    "issued": {
+      "date-parts": [
+        [
+          2026,
+          8,
+          8
+        ]
+      ]
+    },
+    "references-count": 45,
+    "alternative-id": [
+      "10.1145/3770855.3817891",
+      "10.1145/3770855"
+    ],
+    "URL": "https://doi.org/10.1145/3770855.3817891",
+    "relation": {},
+    "subject": [],
+    "published": {
+      "date-parts": [
+        [
+          2026,
+          8,
+          8
+        ]
+      ]
+    },
+    "assertion": [
+      {
+        "value": "2026-08-08",
+        "order": 3,
+        "name": "published",
+        "label": "Published",
+        "group": {
+          "name": "publication_history",
+          "label": "Publication History"
+        }
+      }
+    ]
+  }
+}

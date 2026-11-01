@@ -1,0 +1,66 @@
+{
+  "retrieved_on": "2026-11-01",
+  "title": "PiPNN: Ultra-Scalable Graph-Based Nearest Neighbor Indexing",
+  "doi": "10.1145/3770855.3817891",
+  "analyzed_version": "arXiv:2602.21247v3 (2026-07-10), 18 PDF pages including appendix",
+  "arxiv_history": [
+    {
+      "version": "v1",
+      "date": "2026-02-17"
+    },
+    {
+      "version": "v2",
+      "date": "2026-05-24"
+    },
+    {
+      "version": "v3",
+      "date": "2026-07-10"
+    }
+  ],
+  "formal_publication": {
+    "venue": "KDD 2026 V.2",
+    "pages": "4092-4102",
+    "online": "2026-08-08",
+    "print": "2026-08-09",
+    "source": "https://api.crossref.org/works/10.1145/3770855.3817891",
+    "snapshot": "crossref-2026-11-01.json"
+  },
+  "fulltext": {
+    "url": "https://arxiv.org/pdf/2602.21247v3",
+    "file": "paper.pdf",
+    "bytes": 3421153,
+    "sha256": "75e9048e910590a6a998ee8b43a1bd498779aecaf90352f6a93da022dbe5a0d9",
+    "license": "CC BY 4.0"
+  },
+  "extracted_text": {
+    "file": "paper.md",
+    "sha256": "719f2bc1f1457b8e25422224108c8a95e737ce135ef4ae897cd7c28be657d248",
+    "tool": "PyMuPDF 2.0",
+    "sort": false,
+    "warning": "PDF extraction may distort mathematical notation, reading order, and plot labels; consult PDF or versioned arXiv HTML"
+  },
+  "code": {
+    "url": "https://github.com/ParAlg/PiPNN",
+    "commit": "443a328dc71a3b7be753d52ca2b3c9a4ba77f3fd",
+    "commit_date": "2026-08-09",
+    "provenance": "https://www.cs.umd.edu/~laxman/",
+    "status": "Repository and README verified; author implementation not compiled or run"
+  },
+  "access_limitations": [
+    "ACM landing page and PDF returned HTTP 403; version-of-record body not compared with v3",
+    "OpenReview forum/PDF for Turbocharging follow-up returned browser verification page"
+  ],
+  "reading_scope": [
+    "sections 2–6",
+    "appendix A.1–A.10",
+    "Theorem 3.1 and Lemmas A.1/A.2",
+    "Tables 1–6 and figure captions; not independently digitized all QPS curves"
+  ],
+  "local_semantic_probe": "../../../researches/vector-join/2026-11-01-exps/data/pipnn-hashprune-semantics.json",
+  "not_performed": [
+    "ANN performance reproduction",
+    "billion-scale experiment",
+    "join benchmark",
+    "official code tie-breaking audit"
+  ]
+}

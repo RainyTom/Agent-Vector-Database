@@ -8,5 +8,6 @@
 | Hubness | formal PACMMOD2026,27 pages,secondary PDF mirror | [全文](10.1145-3802120-hubness/paper.md)、[来源及审读入口](10.1145-3802120-hubness/metadata-2026-10-29.json) |
 | Flash | arXiv2502.18113v1,2025-02-25; formal2025 metadata separately verified | [全文](2502.18113-flash/paper.md)、[来源及审读入口](2502.18113-flash/metadata-2026-10-29.json) |
 | Unleashing Graph Partitioning / kRt / hRt | 正式PVLDB18(6),1649–1662,2025；核§1–3.2、§4.3–4.5，hRt完整证明待核 | [全文](2025-graph-partition-routing/paper.md)、[审读](2025-graph-partition-routing/paper.report.md) |
+| PiPNN | 正式KDD2026书目；分析arXiv2602.21247v3，18页含附录；未比对ACM正式正文 | [全文](2602.21247-pipnn/paper.md)、[深度解读](2602.21247-pipnn/paper.report.md)、[来源](2602.21247-pipnn/metadata-2026-11-01.json) |
 
 统一书目、完整作者和局限见[总索引](../papers.jsonl)。未运行作者代码。

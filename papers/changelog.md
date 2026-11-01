@@ -217,3 +217,12 @@
 
 - 不新增/合并论文，不变更书目版本和关系计数。复核既有Directory-Aware/TrieHI、Curator、ACORN、iRangeGraph、Filtered-DiskANN、qd-tree正文相关章节；[当日核对报告](../researches/nested-attr-vector-search/2026-11-01-exps/report.md)提供原始链接、本地定位及结构差异。
 - 明确“目录倒排＋逐对象过滤”“平坦分区HNSW”“小候选集扫描回退”与真正的标签自适应层级、范围邻接组合、谓词子图搜索的区别。官方Weaviate/Qdrant文档仅作术语证据；不当作论文新增条目，不借其性能数字证明项目胜出。
+
+## 2026-11-01 PiPNN 图 ANN 构建
+
+- 新增 PiPNN（doi:10.1145/3770855.3817891；arXiv:2602.21247），按自身问题归 `vector-ann`、B 类可迁移借鉴；用户“PiANN”按所给原始标题核为 PiPNN，不收作正式别名。完整作者顺序、KDD2026 V.2/4092–4102、online/print 日期分别核实。
+- 保存 arXiv v3（2026-07-10）18页原始PDF/分页提取、日期化SHA与Crossref快照；新增 `papers/vector-ann/2602.21247-pipnn/paper.report.md`。正式ACM全文403，未声称v3与正式版逐项相同。
+- 核HashPrune/残差方向哈希、RBC多层fanout、双向局部kNN、GEMM、最终prune和A.7/A.8假设；补v3 A.10的峰值内存/100@100/SymphonyQG条件。强调有界reservoir不等于低峰值RSS、局部27.03×不等于整体build加速、ANN图不保留全部threshold pairs。
+- 保留摘要下游1.9×与正文相对HNSW 2.2–6.9×/Vamana 1.4–1.7×的不一致；v3 Table1的OpenAI为2M，不沿用v1表中的1M。
+- 新增2关系：PiPNN→GP-ANN的Sorting-LSH明确引用、PiPNN→DiskJoin的研究者局部性/输出语义对照；后者不伪装作者引用。统一索引44篇、32关系，vector-ann 5篇。
+- 实际运行120种互异距离顺序/2种等距顺序的独立有限规则构造，标明非官方代码、非一般定理验证；记录严格比较在等距ID上的边界。未编译/运行作者ANN、未做十亿或join性能实验。作者主页的Turbocharging PiPNN后续仅列候选，OpenReview正文被验证页阻挡。
