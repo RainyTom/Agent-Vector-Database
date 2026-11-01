@@ -1,0 +1,10 @@
+{
+"kind":"eight_object_grouping_work_not_full_nodeann_benchmark",
+"fixture":"dag-worked-example.json",
+"query":{"concept":"B","vector":[1,1],"k":2,"ef":20,"tau":0},
+"nodeann_style_direct_groups":{"groups":7,"queried_graphs":3,"distance_evaluations":7,"ineligible_distance_evaluations":0,"unique_distance_targets":4,"distance_target_ids":[1,3,4,5],"returned_ids":[1,3],"group_of_object":[1,3,4,3,2,5,6,0]},
+"merged_groups":{"groups":4,"queried_graphs":2,"distance_evaluations":7,"ineligible_distance_evaluations":2,"unique_distance_targets":6,"distance_target_ids":[0,1,2,3,4,5],"returned_ids":[1,3],"group_of_object":[1,1,1,1,2,2,3,0]},
+"distance_count_scope":"query HNSW distance function invocations, including wrapper/entry and base-layer calls; repeats counted; builds and oracle excluded",
+"controls":"same production run_query/search_graph/merge, DAG scope, raw FP32 squared-L2, M16, efConstruction200, insertion order; no materialization or scan",
+"limits":["Fixed8-object2D fixture only","Both arms share the DAG preselection wrapper to isolate grouping; the legacy pure NodeANN CLI is not run","No wall-time or end-to-end performance comparison","No dynamic update cost measured; no general recall equality claimed"]
+}

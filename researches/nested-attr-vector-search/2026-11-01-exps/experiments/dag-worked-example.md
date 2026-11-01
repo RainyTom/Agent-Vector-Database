@@ -40,7 +40,7 @@ B 查询的实际局部候选：b_A 为 (距离1,o1)、(距离2,o3)；b_B 为 (�
 
 驱动保存全局对照图和四张分区图的入口、层数、节点 payload、external label、局部 ID 和每层局部邻居列表。图 1 的 b_A 示意边取自该次实际构建：max_level=0，入口 local0/o0，四节点在 L0 两两相连；local1/o1 的 payload=(1,0)，邻居局部 ID 为 [0,2,3]。绘图位置只是排版，不表示原向量坐标，也不表示实际查询访问顺序。
 
-实际记录的向量值、局部/外部 ID 映射以及邻边均已核对；标签变化前后图快照相同。这些检查仅说明普通 HNSW 节点内容与图结构不变性，不提供访存效率证据。没有采集完整节点扩展/距离计算计数，不能据本例推断算法加速。
+实际记录的向量值、局部/外部 ID 映射以及邻边均已核对；标签变化前后图快照相同。这些检查只说明节点内容与图结构不变性，不提供访存效率证据。前述六分支没有操作计数；后面的独立分组对照统计一次 B 查询的距离调用，不能把该单例外推为一般加速。
 
 驱动按指定的 o6:F→B 事件直接应用标签、posting 和 M(B) 位变化，再执行查询；它不是新的生产维护 API。图中的 C(B)、C(F)、C(R) 由参考范围计算，用于解释应维护的基数，并未把派生计数伪称生产 ANN 已有的持久计数。当前生产查询核心通过 `scope.count()` 得到候选数。此样例不替代一般多标签、插删或并发维护验证。
 
@@ -61,3 +61,24 @@ B 查询的实际局部候选：b_A 为 (距离1,o1)、(距离2,o3)；b_B 为 (�
 ```
 
 三图标签均转换为字形路径、0 个 `<text>`，背景透明、前景 currentColor；数量与 SHA 以[图形记录](../data/dag-worked-example-figures.json)为准。已逐图用 CairoSVG 白底栅格化检查文字和连线；未在原生 Stencil Tern 窗口核验。图示不表达向量地址排布或局部性的优化。
+
+## 八对象的分组工作量对照
+
+该对照只隔离“按直接概念分组”与“合并组”的差别。两臂都用生产 `run_query`/`search_graph`、相同 DAG 范围解析、M16/efConstruction200、插入次序与距离核；k2、ef20、τ0，不物化、不扫描。它没有执行旧的纯 NodeANN CLI，不包含 NodeANN 可以省去对象级范围解析的端到端差别，也不测更新时间。
+
+实际执行：
+
+```bash
+g++ -std=c++17 -O2 -pthread \
+  -Icodes/directory-aware-vector-attr-search/src \
+  -Icodes/directory-aware-vector-attr-search/deps/hnswlib \
+  researches/nested-attr-vector-search/2026-11-01-exps/experiments/nodeann_grouping_work.cpp \
+  -o /tmp/nodeann_grouping_work
+
+/tmp/nodeann_grouping_work \
+  --out researches/nested-attr-vector-search/2026-11-01-exps/data/nodeann-grouping-work.json
+```
+
+计数器只在查询期间启用，包装共享 RawL2Space 的 HNSW 距离回调；实际距离仍调用原始库函数。用已构建图节点的 payload 地址识别全局对象 ID，以统计不同距离目标和不合格距离调用，不改变邻接、扩展或停止规则。构建与参考答案不计入，入口/包装器和底层搜索的重复调用按实际次数保留；不拿仪器化耗时作性能比较。
+
+实际结果：直接组调用三张图、合并组两张；距离调用均为七次，不同距离目标分别四个、六个；不合格对象距离调用分别零次、两次。两臂返回 o1、o3。数据见 [JSON](../data/nodeann-grouping-work.json)，源码/输入/依赖信息见[来源记录](../data/nodeann-grouping-work-provenance.json)。这只是八对象单查询的实际计数，不证明一般数据下任一方案更优；“不同距离目标数”也不是“扩展节点数”。

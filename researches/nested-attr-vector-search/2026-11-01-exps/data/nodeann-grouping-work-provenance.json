@@ -1,0 +1,31 @@
+{
+  "kind": "controlled_nodeann_style_grouping_work_provenance",
+  "compiler": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+  "compile_flags": [
+    "-std=c++17",
+    "-O2",
+    "-pthread"
+  ],
+  "hnswlib_revision": "ca426729609b3221563047ceb269cc1213e0d376",
+  "sha256": {
+    "researches/nested-attr-vector-search/2026-11-01-exps/experiments/nodeann_grouping_work.cpp": "b19f8628e93eb6baadc8fea02735833a5b38a0f11b2446607ce9cbe307738d82",
+    "researches/nested-attr-vector-search/2026-11-01-exps/data/dag-worked-example.json": "38d51bece7553fcc88b7766d62ed3be7e3c1199b5358e519cbc877709212a10a",
+    "researches/nested-attr-vector-search/2026-11-01-exps/data/nodeann-grouping-work.json": "0ac384ec9b24f6f8cad6ffd282dd5030f0d51acf23ad6d2e63d7f92ee3742a7c",
+    "codes/directory-aware-vector-attr-search/src/dag_scope_ann.cpp": "ad5d407ef8b530ddae6c1114fa21b96f528e72e4ea34de854c76019ec3b7512d",
+    "codes/directory-aware-vector-attr-search/src/dag_scope_common.h": "433213f0a8a12ef92538bc7d2574cc4724a2353e2e036e527b3a23eef978cfae",
+    "codes/directory-aware-vector-attr-search/src/raw_l2_space.h": "f159787e15095e6e08d6a3f08d20d5b677a18c09a1d6afe37bce94aa04cf6331"
+  },
+  "controls": "same production run_query/search_graph/merge, DAG scope, raw FP32 squared-L2, M16, efConstruction200, insertion order; no materialization or scan",
+  "measurement": "query HNSW distance function invocations, including wrapper/entry and base-layer calls; repeats counted; builds and oracle excluded",
+  "validation": [
+    "actual C++ query outputs checked against fixed independent expected top2",
+    "fixture labels and group maps match the source example",
+    "all callbacks identify actual built node payloads and delegate unchanged RawL2Space"
+  ],
+  "limits": [
+    "Fixed8-object2D fixture only",
+    "Both arms share the DAG preselection wrapper to isolate grouping; the legacy pure NodeANN CLI is not run",
+    "No wall-time or end-to-end performance comparison",
+    "No dynamic update cost measured; no general recall equality claimed"
+  ]
+}
