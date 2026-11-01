@@ -1,0 +1,25 @@
+RESULT arm=0 ef=32 recall=0.791304 latency_us=6.0873
+RESULT arm=0 ef=128 recall=0.830435 latency_us=18.4319
+RESULT arm=0 ef=512 recall=0.921739 latency_us=75.7983
+RESULT arm=0 ef=2048 recall=0.969565 latency_us=192.636
+RESULT arm=0 ef=168937 recall=1 latency_us=606.76
+RESULT arm=1 ef=32 recall=1 latency_us=28295.8
+RESULT arm=1 ef=128 recall=1 latency_us=39101.3
+RESULT arm=1 ef=512 recall=1 latency_us=50036.8
+RESULT arm=1 ef=2048 recall=1 latency_us=60255
+RESULT arm=1 ef=168937 recall=1 latency_us=67785.1
+RESULT arm=2 ef=32 recall=1 latency_us=57.4693
+RESULT arm=2 ef=128 recall=1 latency_us=112.679
+RESULT arm=2 ef=512 recall=1 latency_us=199.163
+RESULT arm=2 ef=2048 recall=1 latency_us=241.906
+RESULT arm=2 ef=168937 recall=1 latency_us=253.264
+METRIC merged_query_us=192.635782609
+METRIC merged_recall=0.969565217391
+METRIC global_filtered_us=28295.7764783
+METRIC nodeann_us=57.4693478261
+METRIC merged_build_s=7.134770275
+METRIC global_build_s=39.643874863
+METRIC local_directed_edges=2374436
+METRIC connector_directed_edges=115334
+METRIC jump_directed_edges=166800
+METRIC exhaustive_errors=0
