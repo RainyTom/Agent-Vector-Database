@@ -4,7 +4,7 @@
 
 ## 当前工作
 
-- **[层级属性约束下的向量近邻检索](2026-11-01-exps/partitioned-hnsw-method.md)**：概念层级、直接标签集、祖先继承、跨分支交叠、查询及更新语义，附SVG示意图和实现范围。
+- **[DAG 层级属性约束下的向量近邻检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：多父概念闭包、直接标签集与祖先继承、跨分支 scope 交叠；索引方案为按祖先方向维护精确基数、按展开代价选择性物化派生位图，含成本模型、可检验假设与实现范围。
 
 - [相关索引结构与文献比较](2026-11-01-exps/report.md)：TrieHI、Curator、ACORN、iRangeGraph及过滤向量检索系统的结构与证据。
 

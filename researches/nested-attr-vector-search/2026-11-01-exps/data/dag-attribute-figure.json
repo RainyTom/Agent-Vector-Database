@@ -15,12 +15,12 @@
   ],
   "figures": [
     {
-      "source": "researches/nested-attr-vector-search/2026-11-01-exps/figures/hierarchical-attributes.svg",
-      "source_sha256": "c29043ff8ff493e881ab9bb5b3797d3391f99afd52b214bfe12ee67369516069",
-      "output": "researches/nested-attr-vector-search/2026-11-01-exps/figures/hierarchical-attributes-outlined.svg",
-      "output_sha256": "fc711b5e04e07f66dfbb484d7b2a066cb3c3f0989b38e76f756ebfbf2484ad23",
-      "label_groups": 19,
-      "glyph_paths": 204,
+      "source": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-attribute-scope.svg",
+      "source_sha256": "c6435bf0b631d0f475367290b36bd891146d5a15f1b8562e0540ad1f74cea107",
+      "output": "researches/nested-attr-vector-search/2026-11-01-exps/figures/dag-attribute-scope-outlined.svg",
+      "output_sha256": "5b6f4051a084af7d1069f381628e20f9f6411349d863be77de062731332ccc95",
+      "label_groups": 23,
+      "glyph_paths": 578,
       "remaining_text_elements": 0
     }
   ],

@@ -1,0 +1,178 @@
+{
+  "kind": "finite_dag_attribute_scope_check",
+  "children": {
+    "CM": [
+      "ML"
+    ],
+    "IS": [
+      "IR"
+    ],
+    "ML": [
+      "RMR"
+    ],
+    "IR": [
+      "RMR"
+    ],
+    "RMR": []
+  },
+  "parents": {
+    "CM": [],
+    "IS": [],
+    "ML": [
+      "CM"
+    ],
+    "IR": [
+      "IS"
+    ],
+    "RMR": [
+      "IR",
+      "ML"
+    ]
+  },
+  "descendants": {
+    "CM": [
+      "CM",
+      "ML",
+      "RMR"
+    ],
+    "IS": [
+      "IR",
+      "IS",
+      "RMR"
+    ],
+    "ML": [
+      "ML",
+      "RMR"
+    ],
+    "IR": [
+      "IR",
+      "RMR"
+    ],
+    "RMR": [
+      "RMR"
+    ]
+  },
+  "ancestors": {
+    "CM": [
+      "CM"
+    ],
+    "IS": [
+      "IS"
+    ],
+    "ML": [
+      "CM",
+      "ML"
+    ],
+    "IR": [
+      "IR",
+      "IS"
+    ],
+    "RMR": [
+      "CM",
+      "IR",
+      "IS",
+      "ML",
+      "RMR"
+    ]
+  },
+  "direct_labels": {
+    "p1": [
+      "RMR"
+    ],
+    "p2": [
+      "ML"
+    ],
+    "p3": [
+      "IR"
+    ]
+  },
+  "inherited_labels": {
+    "p1": [
+      "CM",
+      "IR",
+      "IS",
+      "ML",
+      "RMR"
+    ],
+    "p2": [
+      "CM",
+      "ML"
+    ],
+    "p3": [
+      "IR",
+      "IS"
+    ]
+  },
+  "scope_members": {
+    "CM": [
+      "p1",
+      "p2"
+    ],
+    "IS": [
+      "p1",
+      "p3"
+    ],
+    "ML": [
+      "p1",
+      "p2"
+    ],
+    "IR": [
+      "p1",
+      "p3"
+    ],
+    "RMR": [
+      "p1"
+    ]
+  },
+  "direct_members": {
+    "CM": [],
+    "IS": [],
+    "ML": [
+      "p2"
+    ],
+    "IR": [
+      "p3"
+    ],
+    "RMR": [
+      "p1"
+    ]
+  },
+  "pairwise_scope_overlap": {
+    "CM|IS": [
+      "p1"
+    ],
+    "CM|ML": [
+      "p1",
+      "p2"
+    ],
+    "CM|IR": [
+      "p1"
+    ],
+    "CM|RMR": [
+      "p1"
+    ],
+    "IS|ML": [
+      "p1"
+    ],
+    "IS|IR": [
+      "p1",
+      "p3"
+    ],
+    "IS|RMR": [
+      "p1"
+    ],
+    "ML|IR": [
+      "p1"
+    ],
+    "ML|RMR": [
+      "p1"
+    ],
+    "IR|RMR": [
+      "p1"
+    ]
+  },
+  "containment_pairs_verified": 6,
+  "new_ann_runs": 0,
+  "cpp_changes": false,
+  "limit": "Five-concept model for closure and overlap semantics only; not an ANN result, and not evidence that the C++ prototype supports DAG or multi-label objects."
+}

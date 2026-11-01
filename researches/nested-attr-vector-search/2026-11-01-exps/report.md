@@ -145,28 +145,14 @@ python3 researches/nested-attr-vector-search/2026-11-01-exps/experiments/review_
 - 未新增paper/relations记录，已有论文版本和ID不变；官方系统短引进入本日证据，不作为论文条目。
 - 下一轮先用标准组件描述候选，再判断是否确有新的存储不变量、可访问邻接、覆盖或剪枝能力；不要从方法缩写倒推机制。已停止的WQR/NPI/closure不因改名重新启动。
 
-## 同日续轮：论文式方案正文与SVG
+## 方案正文与图形
 
-- 用户要求可审阅的论文式方案并配SVG。交付[正文](partitioned-hnsw-method.md)与[存储结构图](figures/partitioned-hnsw-storage.svg)、[查询流程图](figures/partitioned-hnsw-query.svg)。明确固定ID/不可变向量、单线程事件语义、动态split可拆目录组、候选精确不等于ANN精确。
-- 当前事件含义按实现核正：V/T为属性修改，M为单对象owner移动，B为批量移动，R为目录重挂；不沿用早前对M的错误简称。复杂度显式保留全局位图word数、scope对象数、posting条目数和分区数，不把计数取得或非空分区分发当作免费。
-- 本轮新增ANN运行0，C++改动0。完成两幅SVG的XML/自包含检查、中文字体CairoSVG渲染与视觉检查，以及7对象模型512组“局部精确top-k可归并为全局精确top-k”有限核对；该核对不证明HNSW Recall。检查记录：[data/method-exposition-check.json](data/method-exposition-check.json)。
-- 浏览器预览启动失败，未伪称浏览器截图成功；改用独立渲染。透明SVG在初始read预览中黑底不可见，白底仅用于检查，不写入图文件；图本身保持透明、currentColor着色，无外链或脚本。
-- 正文的性能表引用已存query-first-dense2数据，不是本轮新跑数字；可调整位置只作审阅问题，不当作已实现新机制。
+[层级属性约束下的向量近邻检索](hierarchical-dag-attribute-index.md)给出当前方案：DAG 属性层级、直接标签集与祖先继承、antichain 查询、向上维护的精确基数、按展开代价选择物化的派生位图、标签增删的祖先方向更新，以及对应的成本模型与可检验假设。图示见 [DAG 属性 scope](figures/dag-attribute-scope-outlined.svg)（文字源图见 `figures/dag-attribute-scope.svg`）。
 
-## 同日兼容性修复：Tern中SVG只有框线、文字缺失
+本轮核对内容：五概念 DAG 的闭包、祖先包含与跨分支交叠（[检查数据](data/dag-attribute-scope-check.json)，6 组包含关系成立，ML 与 IR 互非祖先但交集为 p1）；SVG 以字形路径导出，22 组标签、591 个路径、0 个 `<text>` 元素（[字体与导出记录](data/dag-attribute-figure.json)），并在白底与深色前景下完成渲染检查。
 
-- 用户在白色主题Tern中观察到SVG框线可见、文字不可见，作为实际故障处理；未要求用户换主题或安装字体。当前环境附着Tern返回`no_window`，未能直接检查该窗口DOM，因此不武断断言具体字体/CSS/渲染器根因。
-- 两幅图新增`*-outlined.svg`显示版，并将方案Markdown图片引用切换到这些文件。文字转换成自包含字形path，移除运行时字体及`<text>`依赖；保留`currentColor`与透明背景，不硬编码黑字。原文字版SVG继续作为可编辑源图，路径版标签不可选中复制，保留aria-label及根描述辅助语义。
-- 字形使用Noto Sans CJK SC Regular/Bold，SIL OFL 1.1；字体来源、SHA、输出SHA及转换计数见[data/svg-text-compatibility.json](data/svg-text-compatibility.json)。字体二进制只留`work/svg-fonts/`，不入库。字形图是文档输出，不复制Windows商业字体。
-- 实际导出两图共52组标签、515个字形path，剩余`<text>`为0。CairoSVG在模拟白色/深色主题下均渲染出标题字形：storage标题前景像素2729/2694，query标题3652/3614，并完成白色背景视觉检查。原生Tern新图显示尚未在此环境确认，不将替代渲染冒称Tern验证。
-- 复现：在已有fontTools的Python中运行`experiments/outline_svg_labels.py --font work/svg-fonts/NotoSansCJKsc-Regular.otf --bold-font work/svg-fonts/NotoSansCJKsc-Bold.otf --out-dir researches/nested-attr-vector-search/2026-11-01-exps/figures --report researches/nested-attr-vector-search/2026-11-01-exps/data/svg-text-compatibility.json`，其后接两个原文字SVG路径。正文、C++与实验数据不变。
+ANN 运行 0，C++ 改动 0。方案中的多父闭包、标签集、精确基数与派生位图尚未在代码中实现，现有 SIFT/WIKI 结果只对应单标签树形负载。
 
-## 层级属性检索：形式化与语义示例
+## 显示兼容性
 
-层级属性模型采用概念关系H、对象直接标签集L_i及其祖先继承集合A_i。查询概念u的匹配条件为u∈A_i；直接标注条件为u∈L_i。多标签命中按对象ID去重，内部概念标签不推导特定后代。
-
-三对象有限计算得到S(AI)={1,2,3}、S(DB)={1}、S(ML)={1,3}，AI直接标注集合为{2}；AI与DB的对象交集为{1}。数据见[data/hierarchical-attribute-semantics-check.json](data/hierarchical-attribute-semantics-check.json)。
-
-[方案正文](partitioned-hnsw-method.md)给出数据模型、查询及更新语义、索引接口、实现范围和相关工作。[层级属性图](figures/hierarchical-attributes-outlined.svg)采用自包含字形路径，文字源图与字体来源SHA见[data/hierarchical-attribute-figure.json](data/hierarchical-attribute-figure.json)。新图含19组标签、204个字形path、0个text元素。
-
-本轮执行语义集合计算和SVG导出/渲染检查；ANN运行0，C++改动0。现有实现验证范围为单标签树形实例，多标签增删及一般DAG更新未实现。
+两幅示意图均提供 `*-outlined.svg` 显示版并作为 Markdown 图片引用：标签转换为自包含字形路径，不依赖客户端字体或 `<text>` 渲染，颜色仍随主题前景（`currentColor`），背景透明；文字版 SVG 保留为可编辑源图。字形来自 Noto Sans CJK SC Regular/Bold（SIL OFL 1.1），字体与输出 SHA 见 [data/dag-attribute-figure.json](data/dag-attribute-figure.json)，字体二进制不入库。重新导出命令见 `experiments/outline_svg_labels.py`。
