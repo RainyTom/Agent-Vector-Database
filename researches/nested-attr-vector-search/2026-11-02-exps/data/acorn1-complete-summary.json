@@ -1,0 +1,393 @@
+{
+  "objects": 168937,
+  "queries": 24,
+  "quality_gate": 0.95,
+  "verified_profile_rows": 120,
+  "verified_replay_rows": 120,
+  "verified_sweep_rows": 120,
+  "unchanged_historical_rows": 96,
+  "unchanged_historical_replay_rows": 96,
+  "historical_comparison": "Exact returned/hit, predicate, and distance counts; latency is not compared for equality.",
+  "provenance": {
+    "strategy": "ACORN-1 search strategy, paper section 5.3: all one-hop plus all two-hop neighbors, including through qualified intermediates, followed by predicate filtering and M truncation.",
+    "index": "Unchanged diversified hnswlib HNSW graph; not the author unpruned ACORN-1 construction and no ACORN-gamma construction.",
+    "hnswlib_commit": "ca426729609b3221563047ceb269cc1213e0d376",
+    "distance": "RawL2Space exact FP32 L2; no FAISS runtime and no quantization."
+  },
+  "deviations": {
+    "entry_selection": "Existing qualified-owner static representatives are a local hnswlib adaptation.",
+    "construction": "Paper ACORN-1 omits RNG diversification; this transfer retains native hnswlib diversification and M/2M storage.",
+    "enumeration": "Native direct-list order followed by all second-hop lists; stable local dedup excludes zero-hop self, paper-M cap at every level.",
+    "author_snapshot": "Author c259f11cdbec880671658eaa0d8747e2cc9de79d interleaves traversal, uses nominal2M bottom cap and different bounded-queue/visited mechanics; not copied as a runtime.",
+    "fallback": "Paper s_min brute prefilter fallback is explicitly disabled by the graph-primary/no-silent-fallback contract.",
+    "reproduction_scope": "Search-strategy integration only; not the author FAISS implementation or full index/system reproduction.",
+    "interpretation": "Report observed quality limits rather than silently falling back to a scan."
+  },
+  "semantics": "Global HNSW ACORN-1 expanded neighborhoods with qualification before every exact FP32 L2. Qualified owner representatives adapt entry selection locally to hnswlib; not a full author-system reproduction. One bottom-layer frontier; no hidden scan fallback.",
+  "legacy_reference": "global_result_filter is the native result-only callback; global_prefilter is the strict disconnected-graph control.",
+  "adjacency_measurement": {
+    "supported_arms": [
+      "global_acorn1"
+    ],
+    "adjacency_entries": "Every examined adjacency-list entry, including upper/base layers and one/two hops.",
+    "bridge_expansions": "Each intermediate list expanded for second-hop lookup; qualified and rejected intermediates are included.",
+    "qualified_candidates": "Unique qualified candidates emitted per expanded-neighborhood lookup after local dedup/filter and before M truncation.",
+    "unsupported_arms": "Other arms have unmeasured adjacency work, NOT zero adjacency work."
+  },
+  "predicate_attribution": "Probe metadata lookups only attribute distances and are excluded from algorithmic predicate counts.",
+  "arms": [
+    {
+      "arm": "merged",
+      "ef": 512,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.9565217391304348,
+      "quality_gate_met": true,
+      "quality_status": "PASS",
+      "gate_passing_normal_us": 89.78552173913043,
+      "mean_returned": 9.73913043478261,
+      "missing_results_queries": 0,
+      "means": {
+        "normal_us": 89.78552173913043,
+        "count_pass_us": 264.428,
+        "profile_pass_us": 456.80795652173913,
+        "scope_us": 1.399,
+        "distance_calls": 722.7826086956521,
+        "distance_qualified": 722.7826086956521,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 722.7826086956521,
+        "item_checks": 5725.913043478261,
+        "item_rejects": 1217.608695652174,
+        "owner_checks": 0.0,
+        "owner_rejects": 0.0,
+        "distance_est_us": 98.72599012173913,
+        "item_est_us": 9.810501356521739,
+        "owner_est_us": 0.0
+      },
+      "replay_us": {
+        "l2_replay_us": 20.465272956771305,
+        "item_replay_us": 3.9352603699900435,
+        "owner_replay_us": 0.0
+      },
+      "adjacency_counters": {
+        "status": "unsupported/unmeasured",
+        "means": null
+      }
+    },
+    {
+      "arm": "global_result_filter",
+      "ef": 32,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 1.0,
+      "quality_gate_met": true,
+      "quality_status": "PASS",
+      "gate_passing_normal_us": 29404.76365217391,
+      "mean_returned": 9.73913043478261,
+      "missing_results_queries": 0,
+      "means": {
+        "normal_us": 29404.76365217391,
+        "count_pass_us": 37719.297913043476,
+        "profile_pass_us": 46812.988086956524,
+        "scope_us": 3.7613478260869564,
+        "distance_calls": 81041.52173913043,
+        "distance_qualified": 104.3913043478261,
+        "distance_rejected": 80937.13043478261,
+        "unique_distance_items": 80979.26086956522,
+        "item_checks": 70757.04347826086,
+        "item_rejects": 70718.60869565218,
+        "owner_checks": 0.0,
+        "owner_rejects": 0.0,
+        "distance_est_us": 5176.457514173913,
+        "item_est_us": 41.477539408695655,
+        "owner_est_us": 0.0
+      },
+      "replay_us": {
+        "l2_replay_us": 6548.996780572957,
+        "item_replay_us": 61.6337172385607,
+        "owner_replay_us": 0.0
+      },
+      "adjacency_counters": {
+        "status": "unsupported/unmeasured",
+        "means": null
+      }
+    },
+    {
+      "arm": "nodeann",
+      "ef": 32,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 1.0,
+      "quality_gate_met": true,
+      "quality_status": "PASS",
+      "gate_passing_normal_us": 88.90613043478261,
+      "mean_returned": 9.73913043478261,
+      "missing_results_queries": 0,
+      "means": {
+        "normal_us": 88.90613043478261,
+        "count_pass_us": 178.05226086956523,
+        "profile_pass_us": 327.458,
+        "scope_us": 1.914,
+        "distance_calls": 958.6521739130435,
+        "distance_qualified": 958.6521739130435,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 867.5652173913044,
+        "item_checks": 0.0,
+        "item_rejects": 0.0,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "distance_est_us": 56.53178620869565,
+        "item_est_us": 0.0,
+        "owner_est_us": 3.0479927130434783
+      },
+      "replay_us": {
+        "l2_replay_us": 14.111304901641304,
+        "item_replay_us": 0.0,
+        "owner_replay_us": 1.2287608695652172
+      },
+      "adjacency_counters": {
+        "status": "unsupported/unmeasured",
+        "means": null
+      }
+    },
+    {
+      "arm": "global_prefilter",
+      "ef": 32,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.08169427191166322,
+      "quality_gate_met": false,
+      "quality_status": "FAIL",
+      "gate_passing_normal_us": null,
+      "mean_returned": 3.608695652173913,
+      "missing_results_queries": 18,
+      "means": {
+        "normal_us": 11.696391304347825,
+        "count_pass_us": 37.28182608695652,
+        "profile_pass_us": 123.12708695652174,
+        "scope_us": 1.147391304347826,
+        "distance_calls": 50.52173913043478,
+        "distance_qualified": 50.52173913043478,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 30.217391304347824,
+        "item_checks": 411.82608695652175,
+        "item_rejects": 361.30434782608694,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "distance_est_us": 1.2019089739130435,
+        "item_est_us": 1.9806277565217392,
+        "owner_est_us": 0.8742970608695652
+      },
+      "replay_us": {
+        "l2_replay_us": 0.6087155265995652,
+        "item_replay_us": 0.28344585281113044,
+        "owner_replay_us": 1.3837838874682609
+      },
+      "adjacency_counters": {
+        "status": "unsupported/unmeasured",
+        "means": null
+      }
+    },
+    {
+      "arm": "global_acorn1",
+      "ef": 32,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.2903899240855763,
+      "quality_gate_met": false,
+      "quality_status": "FAIL",
+      "gate_passing_normal_us": null,
+      "mean_returned": 4.956521739130435,
+      "missing_results_queries": 14,
+      "means": {
+        "normal_us": 175.66878260869566,
+        "count_pass_us": 444.6843913043478,
+        "profile_pass_us": 1224.550043478261,
+        "scope_us": 1.760695652173913,
+        "distance_calls": 413.5217391304348,
+        "distance_qualified": 413.5217391304348,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 139.6086956521739,
+        "item_checks": 12154.173913043478,
+        "item_rejects": 11447.347826086956,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "distance_est_us": 11.739145617391303,
+        "item_est_us": 105.68893700869565,
+        "owner_est_us": 3.0599492347826085
+      },
+      "replay_us": {
+        "l2_replay_us": 6.074436291106956,
+        "item_replay_us": 8.35804037285826,
+        "owner_replay_us": 1.2418797953969565
+      },
+      "adjacency_counters": {
+        "status": "measured",
+        "means": {
+          "adjacency_entries": 14472.608695652174,
+          "bridge_expansions": 811.4782608695652,
+          "qualified_candidates": 696.7826086956521
+        }
+      }
+    }
+  ],
+  "acorn1_sweep": [
+    {
+      "ef": 32,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.2903899240855763,
+      "quality_gate_met": false,
+      "quality_status": "FAIL",
+      "gate_passing_normal_us": null,
+      "mean_returned": 4.956521739130435,
+      "missing_results_queries": 14,
+      "means": {
+        "normal_us": 160.6943043478261,
+        "distance_calls": 413.5217391304348,
+        "distance_qualified": 413.5217391304348,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 139.6086956521739,
+        "item_checks": 12154.173913043478,
+        "item_rejects": 11447.347826086956,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "adjacency_entries": 14472.608695652174,
+        "bridge_expansions": 811.4782608695652,
+        "qualified_candidates": 696.7826086956521
+      }
+    },
+    {
+      "ef": 128,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.3425638371290545,
+      "quality_gate_met": false,
+      "quality_status": "FAIL",
+      "gate_passing_normal_us": null,
+      "mean_returned": 4.956521739130435,
+      "missing_results_queries": 14,
+      "means": {
+        "normal_us": 313.56356521739133,
+        "distance_calls": 526.0869565217391,
+        "distance_qualified": 526.0869565217391,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 248.56521739130434,
+        "item_checks": 25850.217391304348,
+        "item_rejects": 24695.043478260868,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "adjacency_entries": 30421.652173913044,
+        "bridge_expansions": 1493.6521739130435,
+        "qualified_candidates": 1145.1304347826087
+      }
+    },
+    {
+      "ef": 512,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.3599551414768806,
+      "quality_gate_met": false,
+      "quality_status": "FAIL",
+      "gate_passing_normal_us": null,
+      "mean_returned": 4.956521739130435,
+      "missing_results_queries": 14,
+      "means": {
+        "normal_us": 1085.4780869565218,
+        "distance_calls": 786.6086956521739,
+        "distance_qualified": 786.6086956521739,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 499.95652173913044,
+        "item_checks": 77247.82608695653,
+        "item_rejects": 74258.82608695653,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "adjacency_entries": 90197.82608695653,
+        "bridge_expansions": 4089.217391304348,
+        "qualified_candidates": 2978.9565217391305
+      }
+    },
+    {
+      "ef": 2048,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.3599551414768806,
+      "quality_gate_met": false,
+      "quality_status": "FAIL",
+      "gate_passing_normal_us": null,
+      "mean_returned": 4.956521739130435,
+      "missing_results_queries": 14,
+      "means": {
+        "normal_us": 3671.726043478261,
+        "distance_calls": 1250.4347826086957,
+        "distance_qualified": 1250.4347826086957,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 948.7391304347826,
+        "item_checks": 236377.13043478262,
+        "item_rejects": 226556.08695652173,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "adjacency_entries": 276679.2173913043,
+        "bridge_expansions": 12290.08695652174,
+        "qualified_candidates": 9811.0
+      }
+    },
+    {
+      "ef": 168937,
+      "queries": 24,
+      "nonempty_queries": 23,
+      "recall": 0.3599551414768806,
+      "quality_gate_met": false,
+      "quality_status": "FAIL",
+      "gate_passing_normal_us": null,
+      "mean_returned": 4.956521739130435,
+      "missing_results_queries": 14,
+      "means": {
+        "normal_us": 11347.186434782609,
+        "distance_calls": 2218.3478260869565,
+        "distance_qualified": 2218.3478260869565,
+        "distance_rejected": 0.0,
+        "unique_distance_items": 1883.1739130434783,
+        "item_checks": 728868.2608695652,
+        "item_rejects": 674741.6521739131,
+        "owner_checks": 1929.0,
+        "owner_rejects": 1909.5217391304348,
+        "adjacency_entries": 858660.304347826,
+        "bridge_expansions": 38194.217391304344,
+        "qualified_candidates": 54116.565217391304
+      }
+    }
+  ],
+  "acorn1_any_quality_gate_met": false,
+  "limits": [
+    "Fixed 24-query optimization workload with randomized owner binding and OR scopes; no generalization claim.",
+    "Empty queries remain consistency-checked and are excluded from recall and mean latency, matching existing analysis.",
+    "A failed quality gate is explicit; its raw latency is descriptive only, never a same-quality win.",
+    "Component profiling perturbs search; timer-adjusted estimates and trace replay kernels are not additive query costs.",
+    "Adjacency counters are ACORN-only; unsupported arms cannot be assigned zero adjacency cost.",
+    "No FAISS runtime or quantization; pinned hnswlib and RawL2Space exact FP32 L2 are retained."
+  ],
+  "canonical": {
+    "entrypoint": "bash autoresearch.sh",
+    "rows_crosschecked": 575,
+    "metrics": {
+      "merged_query_us": 81.8345217391,
+      "merged_recall": 0.95652173913,
+      "global_acorn1_quality_gate": 0.0,
+      "global_acorn1_recall_max": 0.359955141477,
+      "global_prefilter_quality_gate": 0.0,
+      "global_prefilter_recall_max": 0.107781228433,
+      "global_result_filter_us": 28670.9587391,
+      "nodeann_us": 60.9135217391,
+      "merged_build_s": 7.215434544,
+      "global_build_s": 39.857855758,
+      "local_directed_edges": 2374436.0,
+      "connector_directed_edges": 1652935.0,
+      "jump_directed_edges": 37901.0,
+      "reference_exhaustive_errors": 0.0,
+      "global_prefilter_exhaustive_miss_queries": 22.0,
+      "global_acorn1_exhaustive_miss_queries": 19.0
+    }
+  },
+  "implementation_sha256": "de0927c896275238238f08f835ddee3f428810e1dc00073de1d00ff51ccbc03b"
+}

@@ -24,7 +24,7 @@ int main() try {
     cost::Runner runner(base, query, w, raw, m, global);
     auto original_function = global.fstdistfunc_;
     auto original_parameter = global.dist_func_param_;
-    for (int arm = 0; arm < 4; ++arm) {
+    for (int arm = 0; arm < 5; ++arm) {
         auto normal = runner.run(arm, 0, 32, 1, cost::Mode::Off);
         auto counted = runner.run(arm, 0, 32, 1, cost::Mode::Count);
         auto stats = runner.probe.stats;
@@ -49,8 +49,8 @@ int main() try {
         }
         if (arm == 2) require(stats.item_checks == 0 && stats.owner_checks == 3,
                               "NodeANN owner checks confused with per-item checks");
-        if (arm == 3) require(stats.owner_checks == 3 && stats.rejected_distances == 0,
-                              "global prefilter did not qualify entries and neighbors");
+        if (arm >= 3) require(stats.owner_checks == 3 && stats.rejected_distances == 0,
+                              "global filtered search did not qualify entries and neighbors");
         if (arm == 0) require(stats.item_rejects > 0, "merged rejected neighbors not counted");
         require(global.fstdistfunc_ == original_function && global.dist_func_param_ == original_parameter,
                 "native distance hook was not restored");

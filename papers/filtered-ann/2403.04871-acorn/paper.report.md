@@ -29,3 +29,10 @@ Predicate subgraph traversal；ACORN-gamma 扩展构图与压缩；ACORN-1 多�
 以子树 bitmap/callback 适配为强基线；不要把 HNSW 层级当作类别树。
 
 正文定位：predicate subgraph traversal, ACORN-gamma/ACORN-1, evaluation；PDF 页 1–2, 4, 6–8, 13。见 [PDF](paper.pdf)、[完整文本提取](paper.md)、[alphaXiv 页证据](alphaxiv-evidence-2026-10-18.xml) 和 [创新性比较](../../../researches/nested-attr-vector-search/novelty-analysis.md)。
+
+## 2026-11-02 搜索策略实现核查
+
+核对 v1 §5.1/Algorithm2、§5.2–5.3 与作者固定 commit `c259f11cdbec880671658eaa0d8747e2cc9de79d`，详见[日期化审计](implementation-audit-2026-11-02.md)。ACORN-1 扩展所有一/二跳邻居，再按谓词过滤和 M 截断；合格中间点也需要展开。“without pruning”不等于普通HNSW只关闭ACORN压缩，RNG剪枝也不同。
+
+本地交付是固定 hnswlib 上的搜索策略移植：保留现有RNG图、采用合格owner入口、稳定局部去重与论文M截断，满足不合格item零查询距离；不是作者FAISS完整系统或ACORN-gamma构图复现。合成回归已验证有/无资格中间点扩展、上下层、去重、截断与二跳边界；SIFT观测和证据统一收录于[当日报告](../../../researches/nested-attr-vector-search/2026-11-02-exps/report.md)。不以移植的性能替代原论文结论，作者运行时和正式稿差异仍待核。
+

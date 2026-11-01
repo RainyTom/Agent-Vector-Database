@@ -227,6 +227,7 @@ struct Scratch {
     explicit Scratch(size_t n) : seen(n) {}
 };
 #include "../../2026-11-02-exps/experiments/global_prefilter_hnsw.h"
+#include "../../2026-11-02-exps/experiments/global_acorn1_hnsw.h"
 template<class DistanceSpace, class Qualification>
 static std::vector<Id> search_impl(const Merged& m, const Vectors& base,
     DistanceSpace& l2, const float* query, const std::vector<Id>& roots,
@@ -315,14 +316,16 @@ int main(int argc, char** argv) try {
     std::vector<Id> timed_roots;
     timed_roots.reserve(w.members.size());
     Scratch scratch(base.n);
+    AcornScratch acorn_scratch(base.n);
     std::ofstream csv(argv[4]); require(bool(csv), "cannot write results");
     csv << "arm,ef,query,eligible,truth,hits,latency_us,distance_calls\n" << std::setprecision(12);
     double primary = 0, primary_recall = 0, reference = std::numeric_limits<double>::infinity();
-    double legacy_reference = 0, node_reference = 0, prefilter_max_recall = 0;
-    size_t exhaustive_errors = 0, prefilter_exhaustive_misses = 0;
+    double legacy_reference = 0, node_reference = 0, acorn_max_recall = 0, prefilter_max_recall = 0;
+    double prefilter_reference = std::numeric_limits<double>::infinity();
+    size_t exhaustive_errors = 0, prefilter_exhaustive_misses = 0, acorn_exhaustive_misses = 0;
     const std::vector<size_t> efs{32, 128, 512, 2048, base.n};
-    const char* names[]{"merged", "global_prefilter", "nodeann", "global_result_filter"};
-    for (int arm = 0; arm < 4; ++arm) {
+    const char* names[]{"merged", "global_acorn1", "nodeann", "global_result_filter", "global_prefilter"};
+    for (int arm = 0; arm < 5; ++arm) {
         double chosen = std::numeric_limits<double>::infinity(), max_recall = 0;
         for (size_t ef : efs) {
             double total_us = 0, recall_sum = 0;
@@ -351,6 +354,11 @@ int main(int argc, char** argv) try {
                         result = search(merged, w, base, l2, queries.at(i), timed_allowed, timed_roots,
                                         std::min(ef, q.count), scratch, calls);
                     } else if (arm == 1) {
+                        NoopAcornObserver observer;
+                        result = search_global_acorn1(global, global_entries, queries.at(i), 10, ef, acorn_scratch,
+                            [&](Id u) { return bool(timed_allowed[w.owner[u]]); },
+                            [&](Id c) { return bool(timed_allowed[c]); }, observer);
+                    } else if (arm == 4) {
                         result = search_global_prefilter(global, global_entries, queries.at(i), 10, ef, scratch,
                             [&](Id u) { return bool(timed_allowed[w.owner[u]]); },
                             [&](Id c) { return bool(timed_allowed[c]); });
@@ -382,7 +390,8 @@ int main(int argc, char** argv) try {
                         l2.dist(queries.at(i), base.at(q.truth.front()))) ++hits;
                 }
                 if (ef == base.n && hits != q.truth.size()) {
-                    if (arm == 1) ++prefilter_exhaustive_misses;
+                    if (arm == 1) ++acorn_exhaustive_misses;
+                    else if (arm == 4) ++prefilter_exhaustive_misses;
                     else ++exhaustive_errors;
                 }
                 recall_sum += double(hits) / q.truth.size(); total_us += timings[1];
@@ -402,18 +411,21 @@ int main(int argc, char** argv) try {
                 if (arm == 0) primary_recall = recall;
             }
         }
-        if (arm != 1) require(std::isfinite(chosen), "recall gate not reached");
+        if (arm != 1 && arm != 4) require(std::isfinite(chosen), "recall gate not reached");
         if (arm == 0) primary = chosen;
-        else if (arm == 1) { reference = chosen; prefilter_max_recall = max_recall; }
+        else if (arm == 1) { reference = chosen; acorn_max_recall = max_recall; }
         else if (arm == 2) node_reference = chosen;
-        else legacy_reference = chosen;
+        else if (arm == 3) legacy_reference = chosen;
+        else { prefilter_reference = chosen; prefilter_max_recall = max_recall; }
     }
     require(exhaustive_errors == 0, "exhaustive search differs from exact GT");
     require(bool(csv), "result write failed");
     std::cout << std::setprecision(12)
         << "METRIC merged_query_us=" << primary << '\n'
         << "METRIC merged_recall=" << primary_recall << '\n'
-        << "METRIC global_prefilter_quality_gate=" << int(std::isfinite(reference)) << '\n'
+        << "METRIC global_acorn1_quality_gate=" << int(std::isfinite(reference)) << '\n'
+        << "METRIC global_acorn1_recall_max=" << acorn_max_recall << '\n'
+        << "METRIC global_prefilter_quality_gate=" << int(std::isfinite(prefilter_reference)) << '\n'
         << "METRIC global_prefilter_recall_max=" << prefilter_max_recall << '\n'
         << "METRIC global_result_filter_us=" << legacy_reference << '\n'
         << "METRIC nodeann_us=" << node_reference << '\n'
@@ -423,8 +435,10 @@ int main(int argc, char** argv) try {
         << "METRIC connector_directed_edges=" << merged.connector_edges << '\n'
         << "METRIC jump_directed_edges=" << merged.jump_edges << '\n'
         << "METRIC reference_exhaustive_errors=" << exhaustive_errors << '\n'
-        << "METRIC global_prefilter_exhaustive_miss_queries=" << prefilter_exhaustive_misses << '\n';
-    if (std::isfinite(reference)) std::cout << "METRIC global_prefilter_us=" << reference << '\n';
+        << "METRIC global_prefilter_exhaustive_miss_queries=" << prefilter_exhaustive_misses << '\n'
+        << "METRIC global_acorn1_exhaustive_miss_queries=" << acorn_exhaustive_misses << '\n';
+    if (std::isfinite(reference)) std::cout << "METRIC global_acorn1_us=" << reference << '\n';
+    if (std::isfinite(prefilter_reference)) std::cout << "METRIC global_prefilter_us=" << prefilter_reference << '\n';
     return 0;
 } catch (const std::exception& e) {
     std::cerr << "merge_arms: " << e.what() << '\n';

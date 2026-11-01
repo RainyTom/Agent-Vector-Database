@@ -169,6 +169,8 @@ SIFT owner 为保留计数的随机绑定，并非真实语义标签。DAG 接�
 
 ## 7. 全局 HNSW 统一采用前置资格检查
 
+本节记录严格跳过不合格节点的控制臂。当前默认全局策略已接入 ACORN-1 邻接扩展移植，见 §8；`global_prefilter` 继续作为无桥接的消融对照，历史数字不覆盖。
+
 ### 7.1 当前基线语义
 
 主比较为合并图、**global_prefilter** 和 NodeANN，三者均不计算属性不合格 item 的查询距离。原生 callback 的后置结果过滤另名为 **global_result_filter**，只保留为旧参考，不能用它的 81,041 次距离调用代表新的前置过滤基线。
@@ -234,3 +236,72 @@ METRIC global_prefilter_exhaustive_miss_queries=22
 - `global_prefilter_test.cpp`、四臂 `query_cost_profile_test.cpp`、原 `merge_arms_test.cpp` 均已实际编译运行通过。覆盖不合格原始入口、强制高层、底层过滤、空/全合格 scope、断开的合格分量、距离/结果/trace 一致及 native hook 恢复。
 - 不修改固定 hnswlib 或 RawL2Space；图主导航、DAG 多父及共享后代一份不变。新全局基线是原图上的显式资格前置搜索，不冒充原生 callback 提供同样语义。
 - 随机 owner 绑定、OR 查询、小型优化查询集、未统一内存预算等局限保留。若需要零不合格距离且恢复导航，应另外定义合格桥接或多跳展开策略；本轮未擅自加入，也不把低召回结果宣传成收益。
+
+## 8. ACORN-1 搜索策略：全一/二跳邻域扩展
+
+### 8.1 实现范围与原始依据
+
+交付的是 [ACORN原文](https://arxiv.org/pdf/2403.04871v1) §5.1/Algorithm2、§5.3 的**搜索策略在 hnswlib 上的移植**：允许读取不合格中间点的邻接，但不计算其查询距离。不是完整作者FAISS运行时、ACORN-1不剪枝索引或ACORN-gamma复现。
+
+已核本地全文与[作者固定commit](https://github.com/guestrin-lab/ACORN/commit/c259f11cdbec880671658eaa0d8747e2cc9de79d)，完整差异见[日期化审计](../../../papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)。原文要求全一跳和全二跳后过滤/截断M；作者当前快照使用交错枚举、底层名义2M、不同visited/队列细节，且入口可被无条件评分。本地选择原文口径并遵守不合格零距离约束，不混称逐行作者复现。
+
+当前保留原hnswlib图的RNG多样化剪枝，而原文ACORN-1构图不保留该剪枝。**这是重要构图差异**，不能拿本地移植的结果评价论文完整ACORN的性能。既有合格owner静态代表入口也是本地适配。
+
+### 8.2 搜索与计数规则
+
+高层和底层每次查邻域均执行：
+
+1. 按原生邻接顺序收集一跳邻居，再按每个一跳节点的原生列表收集其二跳邻居。
+2. 展开**所有**一跳中间点，包括合格和不合格者；不只越过被拒绝的中间点。
+3. 对本次邻域稳定去重、排除零跳自身；该去重独立于搜索visited。
+4. 谓词过滤后保留前M个，本轮M=16，底层也用论文M，不先按查询距离排序。
+5. 只有入选且搜索尚未访问的合格节点才计算FP32距离；底层只有一个frontier/结果搜索，沿用满ef后的距离界停止。
+
+任意深度的无距离BFS、精确扫描回退和GT驱动入口均未加入。论文s_min扫描调度显式关闭，以隔离图搜索机制，不把ACORN-1的gamma=1机械解释成所有查询精扫。
+
+新增三类成本计数，均含上下层：
+
+- `adjacency_entries`：实际检查的一/二跳邻接条目，重复边/环也计成本。
+- `bridge_expansions`：被展开二跳列表的一跳中间点次数，**包含合格中间点**。
+- `qualified_candidates`：每次扩展邻域局部去重及过滤后、M截断前的合格候选数；不同lookup间可重复，不是全查询不同item数。
+
+当前仅ACORN臂记录这三项。其他臂写空值/未测，不能当作零邻接开销。原有各臂距离次数、item/owner判断、在线探针及内核重放均保留。
+
+### 8.3 固定SIFT实测
+
+输入、M/efConstruction、owner打乱、24个query/scope配对与0.95质量门槛不变，23条非空查询参与均值。120条五臂profile记录、120条trace/replay记录及120条ACORN预算扫描均已运行。旧四臂的返回数、hits、距离与谓词计数逐条不变；所有新ACORN预算均为**零不合格查询距离**。
+
+| ef | ACORN-1搜索移植 Recall@10 | 严格跳过控制 Recall@10 | ACORN实际距离/查询 | ACORN邻接条目/查询 |
+|---:|---:|---:|---:|---:|
+| 32 | 0.29039 | 0.08169 | 413.52 | 14,472.61 |
+| 128 | 0.34256 | 0.08604 | 526.09 | 30,421.65 |
+| 512 | 0.35996 | 0.10343 | 786.61 | 90,197.83 |
+| 2,048 | 0.35996 | 0.10778 | 1,250.43 | 276,679.22 |
+| 168,937 | 0.35996 | 0.10778 | 2,218.35 | 858,660.30 |
+
+固定ef32的分项测量遍次中，ACORN正常查询均值为175.67µs，item判断12,154.17次、owner入口判断1,929次、二跳列表展开811.48次、局部合格候选696.78次。实际不同距离item为139.61个，距离调用数包含高层/入口重复，不能用不同item数冒充调用次数。
+
+这些成本解释了“不算不合格距离”不等于便宜：邻接读取、去重、资格判断和队列控制仍需执行。item/owner/L2重放分别约8.36/1.24/6.07µs；它们没有原图交错执行的上下文，仍不能与在线总时间相加或相减，原始有扰动估计完整保留。
+
+召回相对严格跳过有所恢复，但**所有已测预算均未达到0.95**。14/23条非空查询不足目标条数，平均返回4.96个真实item；最大预算仍有19/23条未完全命中GT。失败门槛的延迟仅是观测，不作为同质量加速成绩，不据此宣称合并图胜过完整ACORN。
+
+### 8.4 默认入口与验证
+
+`bash autoresearch.sh` 的当前主比较为 `merged/global_acorn1/nodeann`；`global_prefilter`保留为严格跳过消融，`global_result_filter`保留为原生后置参考。默认入口实际运行并输出575条非空query/arm/ef记录，与新profile/sweep的eligible/truth/hits逐条对齐。
+
+默认入口显式输出 `global_acorn1_quality_gate=0`、`global_acorn1_recall_max=0.359955141477`、`global_acorn1_exhaustive_miss_queries=19`；不输出通过门槛的`global_acorn1_us`。严格控制的门槛和漏答继续单列。`reference_exhaustive_errors=0`只表示合并图/NodeANN/旧后置参考的最大预算GT校验通过，不掩盖另两臂的漏答。
+
+四组回归均实际编译运行通过：
+
+- `global_acorn1_test.cpp`：上下层越过不合格中间点、合格但更远中间点也展开、去重/环/M截断、零不合格距离及不越过二跳界。
+- 五臂 `query_cost_profile_test.cpp`：正常/计数/计时/trace结果与计数一致，区分距离调用与不同item，恢复native hook。
+- `global_prefilter_test.cpp`：严格控制仍不暗中借不合格桥导航。
+- `merge_arms_test.cpp`：原空父/共享DAG/范围隔离/去重/保边不变量。
+
+### 8.5 证据与局限
+
+- [完整汇总及默认入口交叉核验](data/acorn1-complete-summary.json)、[profile CSV](data/acorn1-profile.csv)、[trace/replay CSV](data/acorn1-replay.csv)、[预算扫描](data/acorn1-profile.csv.acorn1-sweep.csv)。
+- [默认入口CSV](data/acorn1-canonical.csv)、[完整输出](data/acorn1-canonical-output.txt)、[输入SHA256](data/acorn1-input-sha256.txt)、[计时元数据](data/acorn1-meta.json)。旧实验文件不覆盖，大向量/索引/二进制不提交。
+- [搜索头文件](experiments/global_acorn1_hnsw.h)、[协议与已执行命令](experiments/acorn1-protocol.txt)、[运行入口](experiments/run_acorn1.sh)、[分析程序](experiments/analyze_acorn1.py)。
+- 本次是搜索机制移植，不是作者不剪枝索引或gamma构图；入口、邻域顺序/去重、队列与扫描调度差异均明确记录。不能由这组观测断言ACORN在SIFT上无效。
+- 小型优化查询集、人工随机owner绑定、仅OR谓词、未统一内存预算等限制不变。未测所有臂的邻接成本或真实过滤图分量数；不对未测因素分配时间百分比，也不声明新颖性。

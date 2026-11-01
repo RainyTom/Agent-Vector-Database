@@ -1,4 +1,6 @@
-Current global baseline: strict qualification-first HNSW
+Strict qualification-first CONTROL experiment, source commit f7df24f.
+This records the historical four-arm experiment, not the current default global strategy.
+Current canonical search adds ACORN-1 transfer; see acorn1-protocol.txt. The strict search remains an ablation.
 - Keep the original random-order global HNSW index, all native levels/edges, fixed M16/efC200, pinned RawL2Space and input fingerprints.
 - Reject unqualified items BEFORE every query-vector distance: initial entries, upper greedy neighbors, level0 candidates. Rejected items are not expanded or queued. No late callback used for this baseline.
 - Entry metadata: one static highest-native-level real item per owner (ties smallest external ID). Qualified owners select entries without vector scans; each descends qualified upper edges, then enters ONE shared level0 frontier/result heap. Not independent owner top-k merge.

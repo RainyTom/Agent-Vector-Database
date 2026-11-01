@@ -1,0 +1,37 @@
+Implemented scope
+- ACORN-1 SEARCH STRATEGY from arXiv2403.04871v1 Algorithm2/section5.3, on unchanged pinned diversified hnswlib index.
+- Not full author index reproduction: original ACORN-1 removes RNG diversification; current index retains it. Not ACORN-gamma construction or author FAISS runtime.
+- Fixed SIFT/CCS inputs, seeds, owner binding, graph M16/efC200,24 query/scope pairs, quality gate. RawL2Space only, no quantization.
+
+Lookup/search contract
+- At upper and bottom layers: collect native-order direct neighbors, then all direct intermediates' same-layer neighbors, including qualified intermediates.
+- Stable local dedup excludes zero-hop self, independent of search visited; predicate filter, then retain first M(16), also at level0. No query-distance sort before cap.
+- Preserve existing highest-layer qualified-owner entry adaptation; one bottom frontier/result heap; every distance is qualified.
+- Stop when closest pending distance>worst result and ef heap full. No arbitrary-hop bridge expansion or hidden scan fallback.
+- Paper s_min scan dispatch explicitly not enabled. Poor quality must be reported rather than silently repaired.
+- Author fixed sourcec259f11cdbec880671658eaa0d8747e2cc9de79d uses different interleaving/visited/queue/bottom2M details; evidence in papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md.
+
+Exact extra counters (only ACORN arm measured)
+- adjacency_entries: all one/two-hop list entries inspected, upper and base. Repeats/cycles still count as work.
+- bridge_expansions: each intermediate adjacency list expanded, whether the intermediate qualifies or not.
+- qualified_candidates: locally unique qualified candidates before M truncation; repeated across lookups may count again.
+- Other arms' adjacency counters are blank/unmeasured, never claimed as0.
+- All old distance/item/owner counter and timing semantics retained. Timing probes/replay not an additive unperturbed cost decomposition.
+
+Executed fixed-workload runs (exit0)
+bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_acorn1.sh
+bash autoresearch.sh
+python3 researches/nested-attr-vector-search/2026-11-02-exps/experiments/analyze_acorn1.py --canonical
+- 120 profile rows,120 trace/replay rows,120 ACORN ef-sweep rows; original4-arm96-row counters/results unchanged.
+- Canonical5 arms,575 nonempty query-arm-ef rows; ACORN quality fail explicit, no passing latency metric if below.95.
+- Input SHA256 recorded as acorn1-input-sha256.txt; outputsacorn1-* do not overwrite prior observations.
+
+Executed regression commands (exit0)
+g++ -std=c++17 -O3 -march=native -pthread -Icodes/directory-aware-vector-attr-search/src -Icodes/directory-aware-vector-attr-search/deps/hnswlib researches/nested-attr-vector-search/2026-11-02-exps/experiments/global_acorn1_test.cpp -o /tmp/global-acorn1-test
+/tmp/global-acorn1-test
+g++ -std=c++17 -O3 -march=native -pthread -Icodes/directory-aware-vector-attr-search/src -Icodes/directory-aware-vector-attr-search/deps/hnswlib researches/nested-attr-vector-search/2026-11-02-exps/experiments/query_cost_profile_test.cpp -o /tmp/query-cost-profile-test
+/tmp/query-cost-profile-test
+g++ -std=c++17 -O3 -march=native -pthread -Icodes/directory-aware-vector-attr-search/src -Icodes/directory-aware-vector-attr-search/deps/hnswlib researches/nested-attr-vector-search/2026-11-02-exps/experiments/global_prefilter_test.cpp -o /tmp/global-prefilter-test
+/tmp/global-prefilter-test
+g++ -std=c++17 -O3 -march=native -pthread -Icodes/directory-aware-vector-attr-search/src -Icodes/directory-aware-vector-attr-search/deps/hnswlib researches/nested-attr-vector-search/2026-11-01-exps/experiments/merge_arms_test.cpp -o /tmp/dag-merge-invariants
+/tmp/dag-merge-invariants

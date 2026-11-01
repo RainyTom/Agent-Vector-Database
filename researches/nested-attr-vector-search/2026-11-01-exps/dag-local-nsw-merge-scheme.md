@@ -63,11 +63,11 @@ D 是下闭集。若每个子树构建连通，则每个 min(D) 的锥内连通�
 - owner：原计数保持不变，以 mt19937 seed=20261101 打乱 owner 数组，消除按概念顺序与 SIFT 行顺序对齐的伪相关。是人工绑定控制组，不是真实语义标注。
 - scope：从既有 1,234 行查询中均匀选取 24 行，覆盖单概念及 antichain OR；同一行绑定固定 SIFT query。
 - GT：扫描合格 item，使用共同 FP32 L2。Recall@10 采用距离边界 ties-aware 定义：任意距离不大于第 min(10,|S|) 名的返回 item 均可命中；分母 min(10,|S|)。空结果查询从 recall 与延迟均值中排除。
-- 搜索预算：ef={32,128,512,2048,168937}。合并图、NodeANN 与旧后置过滤参考在最大预算校验 GT；严格前置过滤 HNSW 不假设过滤后的图连通，其最大预算漏答另列，不混入前述一致性指标。
-- 主比较三臂：本方案；随机插入序全局 HNSW 上的严格前置资格检查（入口/高层/底层均不计算不合格 item 距离、不经它导航）；每 owner 原生局部 HNSW 的 NodeANN 参考。全局前置过滤保留原图层级，以每个合格 owner 的静态最高层代表作为入口，底层共用单队列。另保留 `global_result_filter` 原生 callback 作为旧参考，不将其称为前置过滤基线。
-- 计时：各 ef/查询预热 1 次，运行 3 次取中位数，再对非空查询取均值；包含 scope 解析、入口计算、搜索、结果提取，不含 GT、构建、CSV 输出。索引与向量均驻内存，各臂共用 scope 解析实现。
-- 主指标 `merged_query_us`：新方案中 query-average Recall@10≥0.95 的最快 ef 点。前置全局基线只在过门槛时输出 `global_prefilter_us`；否则显式输出 `global_prefilter_quality_gate=0` 和 `global_prefilter_recall_max`，不把低召回延迟当作同质量成绩。旧参考延迟另名为 `global_result_filter_us`。
-- 次指标包括 NodeANN 延迟、构建秒数、各类有向邻接数、`reference_exhaustive_errors` 和 `global_prefilter_exhaustive_miss_queries`。完整语义、成本与召回见[前置资格实验](../2026-11-02-exps/report.md#7-全局-hnsw-统一采用前置资格检查)；历史后置过滤数据保持原样，不用新定义重解释旧数字。
+- 搜索预算：ef={32,128,512,2048,168937}。合并图、NodeANN与旧后置参考在最大预算校验GT；ACORN-1搜索移植及严格前置控制的最大预算漏答分别记录，不假设其谓词子图必然连通。
+- 主比较为本方案、`global_acorn1`搜索策略移植、owner-local NodeANN。ACORN臂在原hnswlib各层收集全一/二跳邻居，局部去重、谓词过滤后截断M，不计算不合格item距离；保留原RNG图及合格owner入口，故不是作者完整ACORN索引复现。`global_prefilter`严格跳过控制和`global_result_filter`原生后置参考继续单列。
+- 计时：各ef/查询预热1次、运行3次取中位数，再对非空查询取均值；包含scope、入口、搜索和结果提取，排除GT、构建、CSV输出。主搜索均为单底层队列；NodeANN仅作为独立检索归并参考。
+- 主指标`merged_query_us`仍为合并图在平均Recall≥0.95下的最快已测点。全局策略仅在过门槛时输出`global_acorn1_us`；未过时输出`global_acorn1_quality_gate=0`与`global_acorn1_recall_max`，不把低召回延迟当作同质量成绩。严格控制与旧后置参考的指标不混名。
+- 次指标保留NodeANN延迟、构建、邻接数及`reference_exhaustive_errors`，另列`global_acorn1_exhaustive_miss_queries`和严格控制漏答。ACORN还测邻接检查/二跳展开/合格候选，其他臂未测的邻接工作不填0。原文、后端差异及完整实测见[ACORN报告](../2026-11-02-exps/report.md#8-acorn-1-搜索策略全一二跳邻域扩展)；历史观察不改名覆盖。
 
 ## 7. 证据边界与下一项机制检查
 

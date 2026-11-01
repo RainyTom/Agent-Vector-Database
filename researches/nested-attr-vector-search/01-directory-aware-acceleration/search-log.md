@@ -92,3 +92,7 @@
 核读[VA-Trie原始网页摘要](https://crad.ict.ac.cn/en/article/id/1470)：元数据为Dong Daoguo、Liu Zhenzhong、Xue Xiangyang；2005，Journal of Computer Research and Development 42(12):2213–2218。摘要明确quantization压缩向量，再由Trie组织近似表示。因此该组合不能单独声称新颖。全文未读，算法界、实验与限制未核实。
 
 搜索还返回PQBF及filtered ANN benchmark，未读全文，不据此填写机制。待补查：filtered IVF/PQ与VA索引，DAG/偏序资格在几何前缀上的非空证据、wavelet/range emptiness、约束NN。当前不能声称未有相关工作。
+
+## 2026-11-02 ACORN-1搜索策略定向核查
+
+用户要求实现ACORN策略。先查既有论文索引、关系及本地ACORN全文，再核原文v1§5.1–5.3和作者固定commit；不是新一轮全面新颖性检索。确认扩展含所有合格/不合格中间点，过滤后M截断；作者索引不保留普通RNG剪枝，不能把本地现有hnswlib图上的搜索移植称为完整复现。原始入口、作者底层2M与队列细节及s_min回退均单列差异，见[审计](../../../papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)。实现与观测在[当日报告](../2026-11-02-exps/report.md)，保留图主导航、零不合格距离及单队列约束；正式稿/预印本差异仍待核。

@@ -2,6 +2,7 @@
 #define main merge_benchmark_main
 #include "../../2026-11-01-exps/experiments/merge_arms.cpp"
 #undef main
+#include "global_acorn1_hnsw.h"
 #include <atomic>
 #include <array>
 
@@ -12,12 +13,15 @@ static double elapsed_ns(Clock::time_point start) {
 struct Stats {
     size_t distances = 0, qualified_distances = 0, rejected_distances = 0, unique_distances = 0;
     size_t item_checks = 0, item_rejects = 0, owner_checks = 0, owner_rejects = 0;
+    size_t adjacency_entries = 0, bridge_expansions = 0, qualified_candidates = 0;
     double distance_ns = 0, item_ns = 0, owner_ns = 0, scope_us = 0;
     bool same_counts(const Stats& other) const {
         return distances == other.distances && qualified_distances == other.qualified_distances &&
             rejected_distances == other.rejected_distances && unique_distances == other.unique_distances &&
             item_checks == other.item_checks && item_rejects == other.item_rejects &&
-            owner_checks == other.owner_checks && owner_rejects == other.owner_rejects;
+            owner_checks == other.owner_checks && owner_rejects == other.owner_rejects &&
+            adjacency_entries == other.adjacency_entries && bridge_expansions == other.bridge_expansions &&
+            qualified_candidates == other.qualified_candidates;
     }
 };
 enum class Mode { Off, Count, Time, Trace };
@@ -41,6 +45,9 @@ struct Probe {
         mode = m; allowed = &mask; stats = {}; ++epoch;
         if (m == Mode::Trace) { distance_trace.clear(); item_trace.clear(); owner_trace.clear(); }
     }
+    void on_adjacency(size_t count) { stats.adjacency_entries += count; }
+    void on_bridge() { ++stats.bridge_expansions; }
+    void on_candidate() { ++stats.qualified_candidates; }
     float evaluate(const void* query, const void* vector, Id item) {
         // Attribution lookup is diagnostic bookkeeping, NOT an algorithmic predicate call.
         ++stats.distances;
@@ -152,11 +159,12 @@ struct Runner {
     QualifiedOwnerEntries qualified_entries;
     Probe probe;
     Scratch scratch;
+    AcornScratch acorn_scratch;
     std::vector<char> allowed, ancestor;
     std::vector<Id> roots;
     Runner(const Vectors& b, const Vectors& q, const Workload& workload, RawL2Space& l2,
            Merged& m, Graph& g) : base(b), queries(q), w(workload), raw(l2), merged(m), global(g),
-           qualified_entries(g, workload), probe(l2, b, workload), scratch(b.n),
+           qualified_entries(g, workload), probe(l2, b, workload), scratch(b.n), acorn_scratch(b.n),
            allowed(w.members.size()), ancestor(w.members.size()) {
         roots.reserve(w.members.size());
     }
@@ -176,6 +184,18 @@ struct Runner {
         if (mode == Mode::Off) resolve(query);
         else { auto begin = Clock::now(); resolve(query); probe.stats.scope_us = us(begin); }
         if (!count) return {};
+        if (arm == 4) {
+            if (mode == Mode::Off) {
+                NoopAcornObserver observer;
+                return search_global_acorn1(global, qualified_entries, queries.at(query), 10, ef, acorn_scratch,
+                    [&](Id u) { return bool(allowed[w.owner[u]]); },
+                    [&](Id c) { return bool(allowed[c]); }, observer);
+            }
+            NativeScope hook(global, probe);
+            return search_global_acorn1(global, qualified_entries, queries.at(query), 10, ef, acorn_scratch,
+                [&](Id u) { return probe.item_allowed(u); },
+                [&](Id c) { return probe.owner_allowed(c); }, probe);
+        }
         if (arm == 3) {
             if (mode == Mode::Off)
                 return search_global_prefilter(global, qualified_entries, queries.at(query), 10, ef, scratch,
@@ -233,8 +253,10 @@ static void same_result(std::vector<Id> a, std::vector<Id> b) {
 
 #ifndef QUERY_COST_PROFILE_TEST
 int main(int argc, char** argv) try {
-    require(argc == 6 || (argc == 7 && std::string(argv[6]) == "--qualification-first"),
-            "usage: query_cost_profile BASE QUERY DAG_DIR OUT.csv OUT.json [--qualification-first]");
+    require(argc == 6 || (argc == 7 && (std::string(argv[6]) == "--qualification-first" ||
+            std::string(argv[6]) == "--acorn1")),
+            "usage: query_cost_profile BASE QUERY DAG_DIR OUT.csv OUT.json [--qualification-first|--acorn1]");
+    const bool acorn = argc == 7 && std::string(argv[6]) == "--acorn1";
     Workload w = load_workload(argv[3]);
     Vectors base = load_vectors(argv[1], w.owner.size()), queries = load_vectors(argv[2], 24);
     require(base.dim == 128 && queries.dim == base.dim, "SIFT128 required");
@@ -249,7 +271,9 @@ int main(int argc, char** argv) try {
     std::ofstream csv(argv[4]); require(bool(csv), "cannot write CSV");
     csv << "arm,ef,query,eligible,truth,hits,returned,normal_us,count_pass_us,profile_pass_us,scope_us,"
            "distance_calls,distance_qualified,distance_rejected,unique_distance_items,item_checks,item_rejects,"
-           "owner_checks,owner_rejects,distance_raw_us,item_raw_us,owner_raw_us,distance_est_us,item_est_us,owner_est_us\n";
+           "owner_checks,owner_rejects,distance_raw_us,item_raw_us,owner_raw_us,distance_est_us,item_est_us,owner_est_us";
+    if (acorn) csv << ",adjacency_entries,bridge_expansions,qualified_candidates";
+    csv << '\n';
     csv << std::setprecision(12);
     size_t checked = 0, empty_queries = 0;
     std::vector<size_t> efs{512, 32, 32};
@@ -258,6 +282,7 @@ int main(int argc, char** argv) try {
         names[1] = "global_result_filter";
         names.push_back("global_prefilter"); efs.push_back(32);
     }
+    if (acorn) { names.push_back("global_acorn1"); efs.push_back(32); }
     struct Prepared { size_t eligible = 0, truth_size = 0; float kth_distance = 0; };
     struct Observation {
         std::vector<Id> result;
@@ -320,8 +345,8 @@ int main(int argc, char** argv) try {
             require(runner.allowed[w.owner[u]], "result violates attributes");
             if (l2.dist(queries.at(query), base.at(u)) <= p.kth_distance) ++hits;
         }
-        if (arm == 3) require(observation.result.size() <= std::min(size_t(10), p.eligible),
-                              "prefilter returned too many results");
+        if (arm == 3 || arm == 4) require(observation.result.size() <= std::min(size_t(10), p.eligible),
+                              "filtered graph returned too many results");
         else require(observation.result.size() == std::min(size_t(10), p.eligible), "unexpected result count");
         csv << names[arm] << ',' << efs[arm] << ',' << query << ',' << p.eligible << ',' << p.truth_size << ',' << hits
             << ',' << observation.result.size() << ',' << observation.normal_us << ',' << observation.count_us
@@ -331,14 +356,22 @@ int main(int argc, char** argv) try {
             << ',' << s.distance_ns / 1000 << ',' << s.item_ns / 1000 << ',' << s.owner_ns / 1000
             << ',' << (s.distance_ns - s.distances * timer_ns) / 1000
             << ',' << (s.item_ns - s.item_checks * timer_ns) / 1000
-            << ',' << (s.owner_ns - s.owner_checks * timer_ns) / 1000 << '\n';
+            << ',' << (s.owner_ns - s.owner_checks * timer_ns) / 1000;
+        if (acorn) {
+            if (arm == 4) csv << ',' << s.adjacency_entries << ',' << s.bridge_expansions << ',' << s.qualified_candidates;
+            else csv << ",,,";
+        }
+        csv << '\n';
         ++checked;
     }
     require(bool(csv), "CSV write failed");
     if (argc == 7) {
-        std::ofstream sweep(std::string(argv[4]) + ".sweep.csv");
-        require(bool(sweep), "cannot write qualification-first sweep");
-        sweep << "ef,query,eligible,truth,returned,hits,normal_us,distance_calls,distance_rejected,item_checks,owner_checks\n";
+        std::ofstream sweep(std::string(argv[4]) + (acorn ? ".acorn1-sweep.csv" : ".sweep.csv"));
+        require(bool(sweep), "cannot write filtered graph sweep");
+        sweep << "ef,query,eligible,truth,returned,hits,normal_us,distance_calls,distance_rejected,item_checks,owner_checks";
+        if (acorn) sweep << ",distance_qualified,unique_distance_items,item_rejects,owner_rejects,"
+                            "adjacency_entries,bridge_expansions,qualified_candidates";
+        sweep << '\n';
         sweep << std::setprecision(12);
         for (size_t ef : {size_t(32), size_t(128), size_t(512), size_t(2048), base.n})
             for (size_t query = 0; query < 24; ++query) {
@@ -347,14 +380,16 @@ int main(int argc, char** argv) try {
                 std::vector<double> times;
                 for (int repeat = 0; repeat < 4; ++repeat) {
                     auto begin = Clock::now();
-                    result = runner.run(3, query, ef, p.eligible, cost::Mode::Off);
+                    result = runner.run(acorn ? 4 : 3, query, ef, p.eligible, cost::Mode::Off);
                     if (repeat) times.push_back(us(begin));
                 }
                 std::sort(times.begin(), times.end());
-                auto counted = runner.run(3, query, ef, p.eligible, cost::Mode::Count);
+                auto counted = runner.run(acorn ? 4 : 3, query, ef, p.eligible, cost::Mode::Count);
                 cost::same_result(result, counted);
                 const auto& s = runner.probe.stats;
                 require(s.rejected_distances == 0, "sweep computed unqualified distance");
+                require(s.distances == s.qualified_distances + s.rejected_distances, "sweep attribution mismatch");
+                require(result.size() <= std::min(size_t(10), p.eligible), "sweep returned too many results");
                 size_t hits = 0;
                 for (Id u : result) {
                     require(runner.allowed[w.owner[u]], "sweep returned disqualified item");
@@ -362,9 +397,13 @@ int main(int argc, char** argv) try {
                 }
                 sweep << ef << ',' << query << ',' << p.eligible << ',' << p.truth_size << ',' << result.size()
                     << ',' << hits << ',' << times[1] << ',' << s.distances << ',' << s.rejected_distances
-                    << ',' << s.item_checks << ',' << s.owner_checks << '\n';
+                    << ',' << s.item_checks << ',' << s.owner_checks;
+                if (acorn) sweep << ',' << s.qualified_distances << ',' << s.unique_distances
+                    << ',' << s.item_rejects << ',' << s.owner_rejects << ',' << s.adjacency_entries
+                    << ',' << s.bridge_expansions << ',' << s.qualified_candidates;
+                sweep << '\n';
             }
-        require(bool(sweep), "qualification-first sweep write failed");
+        require(bool(sweep), "filtered graph sweep write failed");
     }
     std::ofstream metadata(argv[5]); require(bool(metadata), "cannot write metadata");
     metadata << std::setprecision(12) << "{\n  \"timer_pair_ns\": " << timer_ns

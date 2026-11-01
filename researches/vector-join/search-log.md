@@ -258,3 +258,8 @@
 
 先核直接vector similarity join的hierarchical partition词族，再转filtered ANN目录/分区检索；命中DiskJoin不等于本任务成为join。复核本地TFANNS §V、阅读Window Filters ICML2024相关正文，后者完整归档待办；不新增未经完整核实的论文记录。详见[08日志](../nested-attr-vector-search/08-dynamic-hybrid-vector-search/search-log.md)及[完整方案](../nested-attr-vector-search/2026-10-31-exps/packed-index-plan.md)。新候选为B类单查询混合ANN组织机制，真实SIFT规模实验未执行。
 
+
+## 2026-11-02 ACORN实现的定向原始证据核查
+
+本轮是既有B类filtered ANN工作的实现任务，不是新的vector join文献覆盖检索。先核papers/relations与ACORN本地全文，再定向阅读v1§5.1–5.3及作者固定commit `c259f11cdbec880671658eaa0d8747e2cc9de79d`，没有新增论文或追完引用链。核实全一/二跳扩展、RNG构图差异及入口/截断/回退边界；交付范围是hnswlib上的搜索策略移植，作者FAISS完整实现未运行。证据见[日期化审计](../../papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)；实现与实测见[当日报告](../nested-attr-vector-search/2026-11-02-exps/report.md)。不把普通filtered top-k称为join，不作新颖性声明。
+
