@@ -169,3 +169,20 @@ ANN 运行 0，C++ 改动 0。方案中的多父闭包、标签集、精确基�
 
 数据：[scihtc-dag-structure.json](data/scihtc-dag-structure.json)、[scihtc-dag-concepts.csv](data/scihtc-dag-concepts.csv)；脚本 `experiments/scihtc_dag_structure.py`。有向量、无质量结论：SciHTC 缺向量，本轮未跑 ANN、未改 C++。
 
+## 索引层探针：选点物化与祖先传播
+
+按 §3.3 规则实现范围解析三策略（[dag_scope_probe.cpp](../../../codes/directory-aware-vector-attr-search/src/dag_scope_probe.cpp)），在真实 CCS/SciHTC 标签上测量 1,234 条查询与 5 万次重标注。
+
+| 对象数 | 在线展开 | 全部物化 | 选点物化 | 重建基线 |
+|---|---:|---:|---:|---:|
+| 168,937 查询均值 µs | 0.651 | 1.348 | **0.297** | — |
+| 168,937 更新均值 µs | — | 0.318 | **0.080** | 110.4 |
+| 1,013,622 查询均值 µs | 3.028 | 7.461 | **1.394** | — |
+| 1,013,622 更新均值 µs | — | 0.773 | **0.212** | 646.6 |
+
+空间：全部物化 17.6 MB / 105.7 MB，选点物化 0.82 MB / 4.94 MB。三策略在全部查询上返回逐位相同的成员位图；比较器在不等时直接失败。1,013,622 对象是 168,937 条真实标注复制 6 份，仅用于放大位图。
+
+全部物化被否定：窄范围也复制整张位图，查询与更新都更贵，空间还大 21 倍。选点物化比在线展开快 2.2×，比重建快约 3,000×（维护），这是 metadata 层结论，不含向量与 ANN。
+
+数据：[dag-scope-probe-168k.json](data/dag-scope-probe-168k.json)、[dag-scope-probe-1m.json](data/dag-scope-probe-1m.json)、[dag-scope-probe-168k-heavy.json](data/dag-scope-probe-168k-heavy.json)。工作负载由 `scripts/prepare_dag_scope_workload.py` 生成；探针 2 项回归通过（`tests/test_dag_scope_probe.py`）。
+

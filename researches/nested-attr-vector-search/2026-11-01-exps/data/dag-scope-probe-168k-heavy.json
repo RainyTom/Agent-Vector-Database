@@ -1,0 +1,60 @@
+{
+  "kind": "dag_scope_resolution_probe",
+  "new_ann_runs": 0,
+  "objects": 168937,
+  "concepts": 1929,
+  "queries": 1234,
+  "relabel_events": 19992,
+  "budget_bytes": 67108864,
+  "materialised_bytes": {
+    "all": 17614080,
+    "select": 823680
+  },
+  "materialised_concepts": {
+    "all": 834,
+    "select": 39
+  },
+  "scope_size": {
+    "mean": 815.853,
+    "max": 168937
+  },
+  "query_us": {
+    "online": {
+      "mean": 0.479246,
+      "p50": 0.101,
+      "p95": 1.242
+    },
+    "mat_all": {
+      "mean": 1.46821,
+      "p50": 1.332,
+      "p95": 3.276
+    },
+    "mat_select": {
+      "mean": 0.24421,
+      "p50": 0.1,
+      "p95": 1.012
+    }
+  },
+  "update_us": {
+    "mat_all": {
+      "mean": 0.466294,
+      "p95": 0.972
+    },
+    "mat_select": {
+      "mean": 0.107252,
+      "p95": 0.251
+    },
+    "rebuild_select": {
+      "mean": 106.869,
+      "p95": 156.905
+    }
+  },
+  "equivalence": "every strategy matched the reference bitmap on all queries",
+  "limits": [
+    "metadata only; no vectors or ANN calls",
+    "single direct terminal label per object",
+    "object ids are shuffled so postings are not contiguous",
+    "relabel destinations are random concepts, not a workload model"
+  ],
+  "workload": "168k-heavy"
+}
