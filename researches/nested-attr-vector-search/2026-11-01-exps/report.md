@@ -152,3 +152,11 @@ python3 researches/nested-attr-vector-search/2026-11-01-exps/experiments/review_
 - 本轮新增ANN运行0，C++改动0。完成两幅SVG的XML/自包含检查、中文字体CairoSVG渲染与视觉检查，以及7对象模型512组“局部精确top-k可归并为全局精确top-k”有限核对；该核对不证明HNSW Recall。检查记录：[data/method-exposition-check.json](data/method-exposition-check.json)。
 - 浏览器预览启动失败，未伪称浏览器截图成功；改用独立渲染。透明SVG在初始read预览中黑底不可见，白底仅用于检查，不写入图文件；图本身保持透明、currentColor着色，无外链或脚本。
 - 正文的性能表引用已存query-first-dense2数据，不是本轮新跑数字；可调整位置只作审阅问题，不当作已实现新机制。
+
+## 同日兼容性修复：Tern中SVG只有框线、文字缺失
+
+- 用户在白色主题Tern中观察到SVG框线可见、文字不可见，作为实际故障处理；未要求用户换主题或安装字体。当前环境附着Tern返回`no_window`，未能直接检查该窗口DOM，因此不武断断言具体字体/CSS/渲染器根因。
+- 两幅图新增`*-outlined.svg`显示版，并将方案Markdown图片引用切换到这些文件。文字转换成自包含字形path，移除运行时字体及`<text>`依赖；保留`currentColor`与透明背景，不硬编码黑字。原文字版SVG继续作为可编辑源图，路径版标签不可选中复制，保留aria-label及根描述辅助语义。
+- 字形使用Noto Sans CJK SC Regular/Bold，SIL OFL 1.1；字体来源、SHA、输出SHA及转换计数见[data/svg-text-compatibility.json](data/svg-text-compatibility.json)。字体二进制只留`work/svg-fonts/`，不入库。字形图是文档输出，不复制Windows商业字体。
+- 实际导出两图共52组标签、515个字形path，剩余`<text>`为0。CairoSVG在模拟白色/深色主题下均渲染出标题字形：storage标题前景像素2729/2694，query标题3652/3614，并完成白色背景视觉检查。原生Tern新图显示尚未在此环境确认，不将替代渲染冒称Tern验证。
+- 复现：在已有fontTools的Python中运行`experiments/outline_svg_labels.py --font work/svg-fonts/NotoSansCJKsc-Regular.otf --bold-font work/svg-fonts/NotoSansCJKsc-Bold.otf --out-dir researches/nested-attr-vector-search/2026-11-01-exps/figures --report researches/nested-attr-vector-search/2026-11-01-exps/data/svg-text-compatibility.json`，其后接两个原文字SVG路径。正文、C++与实验数据不变。

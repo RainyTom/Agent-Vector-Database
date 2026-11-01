@@ -1,0 +1,38 @@
+{
+  "purpose": "SVG text compatibility: no runtime font or text shaping dependency",
+  "font_license": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/LICENSE",
+  "fonts": [
+    {
+      "path": "work/svg-fonts/NotoSansCJKsc-Regular.otf",
+      "sha256": "2c76254f6fc379fddfce0a7e84fb5385bb135d3e399294f6eeb6680d0365b74b",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf"
+    },
+    {
+      "path": "work/svg-fonts/NotoSansCJKsc-Bold.otf",
+      "sha256": "b5f0d1a190a7f9b43c310a8850630af12553df32c4c050543f9059732d9b4c0a",
+      "source": "https://raw.githubusercontent.com/notofonts/noto-cjk/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Bold.otf"
+    }
+  ],
+  "figures": [
+    {
+      "source": "researches/nested-attr-vector-search/2026-11-01-exps/figures/partitioned-hnsw-storage.svg",
+      "source_sha256": "db43cb4976ed897173a6b0a43dad004647270077f9dee2d5996e1b53cb30ff96",
+      "output": "researches/nested-attr-vector-search/2026-11-01-exps/figures/partitioned-hnsw-storage-outlined.svg",
+      "output_sha256": "4645aceccace46406a46f68aa83539df9ba5750d460db404936c62259bae313c",
+      "label_groups": 33,
+      "glyph_paths": 277,
+      "remaining_text_elements": 0
+    },
+    {
+      "source": "researches/nested-attr-vector-search/2026-11-01-exps/figures/partitioned-hnsw-query.svg",
+      "source_sha256": "9eca983279379c3e3a08855206e47cb4a524eef9de49c8d04c91894dbce2a265",
+      "output": "researches/nested-attr-vector-search/2026-11-01-exps/figures/partitioned-hnsw-query-outlined.svg",
+      "output_sha256": "2ceef729876889d8293b21f3eaab6a8a285723f8261043381033d9ef5b4b0714",
+      "label_groups": 19,
+      "glyph_paths": 238,
+      "remaining_text_elements": 0
+    }
+  ],
+  "root_cause_status": "User reports missing text in light-theme Tern. Local Tern attachment unavailable; precise client cause not established.",
+  "tradeoff": "Outline labels are not selectable text. Original SVG and Markdown remain editable/searchable."
+}

@@ -34,9 +34,11 @@ E_q=\{i\in S_q\mid\phi(a_i)\}.
 
 ## 3. 索引存储结构
 
-![元数据与物理图分离](figures/partitioned-hnsw-storage.svg)
+![元数据与物理图分离](figures/partitioned-hnsw-storage-outlined.svg)
 
 图中B=4仅用于示意；正式实验为B=4096。图内边只示意一层HNSW，完整实现仍为多层HNSW。
+
+显示版SVG已将文字转换为字形路径，不依赖Tern中的字体或`<text>`渲染；仍随主题前景色显示。可编辑文字源图保存在[storage.svg](figures/partitioned-hnsw-storage.svg)和[query.svg](figures/partitioned-hnsw-query.svg)，修改后通过`experiments/outline_svg_labels.py`重新生成显示版。路径版文字不可选中复制。
 
 ### 3.1 目录成员倒排表
 
@@ -78,7 +80,7 @@ DFS只使相邻目录组有机会共置。**分区并不保证恰好对应一棵
 
 ## 5. 查询处理
 
-![查询流程](figures/partitioned-hnsw-query.svg)
+![查询流程](figures/partitioned-hnsw-query-outlined.svg)
 
 ### 5.1 精确候选集合
 
