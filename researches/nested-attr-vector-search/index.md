@@ -1,12 +1,12 @@
 # 层级属性向量检索：导航
 
-静态目录感知加速位于 **[01-directory-aware-acceleration](01-directory-aware-acceleration/README.md)**，动态混合检索位于 **[08-dynamic-hybrid-vector-search](08-dynamic-hybrid-vector-search/README.md)**。本文件只做导航，不承载方案正文、实验记录或结果表。
+本方向研究层级属性约束下的向量近邻检索。当前定义与方案正文见下方入口；各实验目录保存对应工作负载、实现与测量结果。本文件只做导航。
 
 ## 当前工作
 
-- **[论文式方案说明与SVG结构图](2026-11-01-exps/partitioned-hnsw-method.md)**：问题定义、真实存储结构、构建/查询/更新算法、条件正确性、成本模型与可调整位置；按当前已实现版本撰写，不新增方法缩写。
+- **[层级属性约束下的向量近邻检索](2026-11-01-exps/partitioned-hnsw-method.md)**：概念层级、直接标签集、祖先继承、跨分支交叠、查询及更新语义，附SVG示意图和实现范围。
 
-- **[当前结构与命名勘误：目录倒排＋属性过滤＋分区HNSW](2026-11-01-exps/report.md)**：核对TrieHI、Curator、ACORN、iRangeGraph及官方系统术语；区分索引、分区配置和查询策略，取消“新层级ANN/新剪枝”的暗示。
+- [相关索引结构与文献比较](2026-11-01-exps/report.md)：TrieHI、Curator、ACORN、iRangeGraph及过滤向量检索系统的结构与证据。
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
 - **[08 动态混合向量搜索（动态三臂维护成本对照）](08-dynamic-hybrid-vector-search/README.md)**：[当前证据边界](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)、[原树/两遍GT协议](08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)、[当日报告与图](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)。旧inline计时仅诊断；不预设高更新率优胜，不以旧并发探针证明一致性。

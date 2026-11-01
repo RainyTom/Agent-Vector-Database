@@ -126,7 +126,6 @@ def main():
                    'source': FONT_BASE + 'OTF/SimplifiedChinese/' + path.name}
                   for path in (args.font, args.bold_font)],
         'figures': results,
-        'root_cause_status': 'User reports missing text in light-theme Tern. Local Tern attachment unavailable; precise client cause not established.',
         'tradeoff': 'Outline labels are not selectable text. Original SVG and Markdown remain editable/searchable.',
     }
     args.report.parent.mkdir(parents=True, exist_ok=True)

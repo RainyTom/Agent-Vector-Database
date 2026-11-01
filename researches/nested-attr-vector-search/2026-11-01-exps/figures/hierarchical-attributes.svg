@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 405" role="img" aria-labelledby="title desc">
+<title id="title">层级属性的继承、直接标注与对象集合交叠</title>
+<desc id="desc">AI与DB是两个属性概念分支。ML属于AI，Indexing属于DB。对象1同时标注ML和Indexing，对象2只标注AI，对象3标注ML。AI匹配对象1、2、3，DB匹配对象1，ML匹配对象1、3。跨分支对象集合有交叠，粗粒度标注不蕴含特定后代。</desc>
+<defs><marker id="a" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="currentColor"/></marker></defs>
+<g fill="none" stroke="currentColor" stroke-width="1.4">
+<rect x="15" y="52" width="250" height="295" rx="9"/><rect x="300" y="52" width="280" height="295" rx="9"/><rect x="615" y="52" width="290" height="295" rx="9"/>
+<rect x="107" y="95" width="66" height="32" rx="5"/><rect x="47" y="176" width="64" height="32" rx="5"/><rect x="167" y="176" width="64" height="32" rx="5"/><rect x="47" y="257" width="64" height="32" rx="5"/><rect x="156" y="257" width="86" height="32" rx="5"/>
+<path d="M140 127L79 176M140 127L199 176M79 208V257M199 208V257"/>
+<path d="M270 210H291M585 210H606" marker-end="url(#a)"/>
+<rect x="320" y="102" width="240" height="54" rx="5"/><rect x="320" y="180" width="240" height="54" rx="5"/><rect x="320" y="258" width="240" height="54" rx="5"/>
+</g>
+<g fill="currentColor" font-family="Noto Sans CJK SC, sans-serif" font-size="15">
+<text x="15" y="29" font-size="20" font-weight="bold">层级属性：概念有包含关系，对象成员可以跨分支交叠</text>
+<text x="35" y="80" font-weight="bold">属性概念层级</text><text x="320" y="80" font-weight="bold">对象的直接标签集</text><text x="635" y="80" font-weight="bold">继承匹配后的对象集合</text>
+<text x="140" y="117" text-anchor="middle">root</text><text x="79" y="198" text-anchor="middle">AI</text><text x="199" y="198" text-anchor="middle">DB</text><text x="79" y="279" text-anchor="middle">ML</text><text x="199" y="279" text-anchor="middle">Indexing</text>
+<text x="35" y="327">向下细化概念，向上继承属性</text>
+<text x="335" y="134">对象 1：{ML, Indexing}</text><text x="335" y="212">对象 2：{AI}</text><text x="335" y="290">对象 3：{ML}</text>
+<text x="635" y="128">S(AI) = {1, 2, 3}</text><text x="635" y="174">S(DB) = {1}</text><text x="635" y="220">S(ML) = {1, 3}</text>
+<text x="635" y="271" font-weight="bold">S(AI) ∩ S(DB) = {1}</text><text x="635" y="315">对象 2 不满足 ML</text>
+<text x="15" y="382">返回结果按对象 ID 去重；多标签命中不复制对象，也不推断未标注的后代类别。</text>
+</g></svg>

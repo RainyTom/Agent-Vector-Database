@@ -160,3 +160,13 @@ python3 researches/nested-attr-vector-search/2026-11-01-exps/experiments/review_
 - 字形使用Noto Sans CJK SC Regular/Bold，SIL OFL 1.1；字体来源、SHA、输出SHA及转换计数见[data/svg-text-compatibility.json](data/svg-text-compatibility.json)。字体二进制只留`work/svg-fonts/`，不入库。字形图是文档输出，不复制Windows商业字体。
 - 实际导出两图共52组标签、515个字形path，剩余`<text>`为0。CairoSVG在模拟白色/深色主题下均渲染出标题字形：storage标题前景像素2729/2694，query标题3652/3614，并完成白色背景视觉检查。原生Tern新图显示尚未在此环境确认，不将替代渲染冒称Tern验证。
 - 复现：在已有fontTools的Python中运行`experiments/outline_svg_labels.py --font work/svg-fonts/NotoSansCJKsc-Regular.otf --bold-font work/svg-fonts/NotoSansCJKsc-Bold.otf --out-dir researches/nested-attr-vector-search/2026-11-01-exps/figures --report researches/nested-attr-vector-search/2026-11-01-exps/data/svg-text-compatibility.json`，其后接两个原文字SVG路径。正文、C++与实验数据不变。
+
+## 层级属性检索：形式化与语义示例
+
+层级属性模型采用概念关系H、对象直接标签集L_i及其祖先继承集合A_i。查询概念u的匹配条件为u∈A_i；直接标注条件为u∈L_i。多标签命中按对象ID去重，内部概念标签不推导特定后代。
+
+三对象有限计算得到S(AI)={1,2,3}、S(DB)={1}、S(ML)={1,3}，AI直接标注集合为{2}；AI与DB的对象交集为{1}。数据见[data/hierarchical-attribute-semantics-check.json](data/hierarchical-attribute-semantics-check.json)。
+
+[方案正文](partitioned-hnsw-method.md)给出数据模型、查询及更新语义、索引接口、实现范围和相关工作。[层级属性图](figures/hierarchical-attributes-outlined.svg)采用自包含字形路径，文字源图与字体来源SHA见[data/hierarchical-attribute-figure.json](data/hierarchical-attribute-figure.json)。新图含19组标签、204个字形path、0个text元素。
+
+本轮执行语义集合计算和SVG导出/渲染检查；ANN运行0，C++改动0。现有实现验证范围为单标签树形实例，多标签增删及一般DAG更新未实现。
