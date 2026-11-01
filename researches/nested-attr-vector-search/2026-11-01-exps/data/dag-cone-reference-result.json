@@ -1,0 +1,852 @@
+{
+  "kind": "dcg_reference_control_flow_check_not_experiment",
+  "vector_note": "schematic 2D coordinates, not real vectors",
+  "invariants": {
+    "I1_concept_internal_connected": true,
+    "I2_bridge_per_concept_edge": true,
+    "I3_edges_only_downward": true
+  },
+  "edges": {
+    "r1": [
+      [
+        "r2",
+        "S"
+      ],
+      [
+        "b1",
+        "D"
+      ]
+    ],
+    "r2": [
+      [
+        "r1",
+        "S"
+      ],
+      [
+        "a1",
+        "D"
+      ]
+    ],
+    "a1": [
+      [
+        "a2",
+        "S"
+      ],
+      [
+        "f1",
+        "D"
+      ]
+    ],
+    "a2": [
+      [
+        "a1",
+        "S"
+      ],
+      [
+        "c1",
+        "D"
+      ]
+    ],
+    "b1": [
+      [
+        "b2",
+        "S"
+      ],
+      [
+        "f1",
+        "D"
+      ]
+    ],
+    "b2": [
+      [
+        "b1",
+        "S"
+      ],
+      [
+        "e1",
+        "D"
+      ]
+    ],
+    "c1": [
+      [
+        "c2",
+        "S"
+      ]
+    ],
+    "c2": [
+      [
+        "c1",
+        "S"
+      ]
+    ],
+    "e1": [
+      [
+        "e2",
+        "S"
+      ]
+    ],
+    "e2": [
+      [
+        "e1",
+        "S"
+      ]
+    ],
+    "f1": [
+      [
+        "f2",
+        "S"
+      ]
+    ],
+    "f2": [
+      [
+        "f1",
+        "S"
+      ]
+    ]
+  },
+  "queries": {
+    "recursive_A": {
+      "groups": [
+        [
+          "A"
+        ]
+      ],
+      "down": [
+        "A",
+        "C",
+        "F"
+      ],
+      "entry": [
+        "A",
+        "C",
+        "F",
+        "R"
+      ],
+      "minimal_in_down": [
+        "A"
+      ],
+      "eligible_items": [
+        "a1",
+        "a2",
+        "c1",
+        "c2",
+        "f1",
+        "f2"
+      ],
+      "pruned_concepts": [
+        "B",
+        "E"
+      ],
+      "pruned_items": [
+        "b1",
+        "b2",
+        "e1",
+        "e2"
+      ],
+      "L2_every_eligible_reachable_within_entry": true,
+      "L2_missing": [],
+      "exact_search": {
+        "results": [
+          [
+            "a2",
+            0.17
+          ],
+          [
+            "a1",
+            0.25
+          ],
+          [
+            "f2",
+            1.17
+          ]
+        ],
+        "down": [
+          "A",
+          "C",
+          "F"
+        ],
+        "entry": [
+          "A",
+          "C",
+          "F",
+          "R"
+        ],
+        "minimal": [
+          "A"
+        ],
+        "seeds": [
+          "r1",
+          "r2"
+        ],
+        "visited": [
+          "r2",
+          "a1",
+          "a2",
+          "c1",
+          "f1",
+          "f2"
+        ],
+        "expansions": 6
+      },
+      "brute_force": [
+        [
+          "a2",
+          0.17
+        ],
+        [
+          "a1",
+          0.25
+        ],
+        [
+          "f2",
+          1.17
+        ]
+      ],
+      "exact_matches_brute_force": true,
+      "exhaustive_entry_search": [
+        [
+          "a2",
+          0.17
+        ],
+        [
+          "a1",
+          0.25
+        ],
+        [
+          "f2",
+          1.17
+        ]
+      ],
+      "exhaustive_expansions": 8,
+      "exhaustive_matches_brute_force": true,
+      "budget1_results": [],
+      "budget1_visited": [
+        "r2"
+      ]
+    },
+    "recursive_B": {
+      "groups": [
+        [
+          "B"
+        ]
+      ],
+      "down": [
+        "B",
+        "E",
+        "F"
+      ],
+      "entry": [
+        "B",
+        "E",
+        "F",
+        "R"
+      ],
+      "minimal_in_down": [
+        "B"
+      ],
+      "eligible_items": [
+        "b1",
+        "b2",
+        "e1",
+        "e2",
+        "f1",
+        "f2"
+      ],
+      "pruned_concepts": [
+        "A",
+        "C"
+      ],
+      "pruned_items": [
+        "a1",
+        "a2",
+        "c1",
+        "c2"
+      ],
+      "L2_every_eligible_reachable_within_entry": true,
+      "L2_missing": [],
+      "exact_search": {
+        "results": [
+          [
+            "b2",
+            0.17
+          ],
+          [
+            "b1",
+            0.25
+          ],
+          [
+            "e1",
+            1.25
+          ]
+        ],
+        "down": [
+          "B",
+          "E",
+          "F"
+        ],
+        "entry": [
+          "B",
+          "E",
+          "F",
+          "R"
+        ],
+        "minimal": [
+          "B"
+        ],
+        "seeds": [
+          "r1",
+          "r2"
+        ],
+        "visited": [
+          "r1",
+          "b1",
+          "b2",
+          "e1",
+          "f1"
+        ],
+        "expansions": 5
+      },
+      "brute_force": [
+        [
+          "b2",
+          0.17
+        ],
+        [
+          "b1",
+          0.25
+        ],
+        [
+          "e1",
+          1.25
+        ]
+      ],
+      "exact_matches_brute_force": true,
+      "exhaustive_entry_search": [
+        [
+          "b2",
+          0.17
+        ],
+        [
+          "b1",
+          0.25
+        ],
+        [
+          "e1",
+          1.25
+        ]
+      ],
+      "exhaustive_expansions": 8,
+      "exhaustive_matches_brute_force": true,
+      "budget1_results": [],
+      "budget1_visited": [
+        "r1"
+      ]
+    },
+    "A_or_B": {
+      "groups": [
+        [
+          "A",
+          "B"
+        ]
+      ],
+      "down": [
+        "A",
+        "B",
+        "C",
+        "E",
+        "F"
+      ],
+      "entry": [
+        "A",
+        "B",
+        "C",
+        "E",
+        "F",
+        "R"
+      ],
+      "minimal_in_down": [
+        "A",
+        "B"
+      ],
+      "eligible_items": [
+        "a1",
+        "a2",
+        "b1",
+        "b2",
+        "c1",
+        "c2",
+        "e1",
+        "e2",
+        "f1",
+        "f2"
+      ],
+      "pruned_concepts": [],
+      "pruned_items": [],
+      "L2_every_eligible_reachable_within_entry": true,
+      "L2_missing": [],
+      "exact_search": {
+        "results": [
+          [
+            "f1",
+            0.25
+          ],
+          [
+            "f2",
+            0.37
+          ],
+          [
+            "a1",
+            1.25
+          ]
+        ],
+        "down": [
+          "A",
+          "B",
+          "C",
+          "E",
+          "F"
+        ],
+        "entry": [
+          "A",
+          "B",
+          "C",
+          "E",
+          "F",
+          "R"
+        ],
+        "minimal": [
+          "A",
+          "B"
+        ],
+        "seeds": [
+          "r1",
+          "r2"
+        ],
+        "visited": [
+          "r2",
+          "r1",
+          "a1",
+          "f1",
+          "f2",
+          "b1"
+        ],
+        "expansions": 6
+      },
+      "brute_force": [
+        [
+          "f1",
+          0.25
+        ],
+        [
+          "f2",
+          0.37
+        ],
+        [
+          "a1",
+          1.25
+        ]
+      ],
+      "exact_matches_brute_force": true,
+      "exhaustive_entry_search": [
+        [
+          "f1",
+          0.25
+        ],
+        [
+          "f2",
+          0.37
+        ],
+        [
+          "a1",
+          1.25
+        ]
+      ],
+      "exhaustive_expansions": 12,
+      "exhaustive_matches_brute_force": true,
+      "budget1_results": [],
+      "budget1_visited": [
+        "r2"
+      ]
+    },
+    "A_and_B": {
+      "groups": [
+        [
+          "A"
+        ],
+        [
+          "B"
+        ]
+      ],
+      "down": [
+        "F"
+      ],
+      "entry": [
+        "A",
+        "B",
+        "F",
+        "R"
+      ],
+      "minimal_in_down": [
+        "F"
+      ],
+      "eligible_items": [
+        "f1",
+        "f2"
+      ],
+      "pruned_concepts": [
+        "C",
+        "E"
+      ],
+      "pruned_items": [
+        "c1",
+        "c2",
+        "e1",
+        "e2"
+      ],
+      "L2_every_eligible_reachable_within_entry": true,
+      "L2_missing": [],
+      "exact_search": {
+        "results": [
+          [
+            "f1",
+            0.0
+          ],
+          [
+            "f2",
+            0.02
+          ]
+        ],
+        "down": [
+          "F"
+        ],
+        "entry": [
+          "A",
+          "B",
+          "F",
+          "R"
+        ],
+        "minimal": [
+          "F"
+        ],
+        "seeds": [
+          "r1",
+          "r2"
+        ],
+        "visited": [
+          "r2",
+          "r1",
+          "a1",
+          "f1",
+          "f2",
+          "b1",
+          "a2",
+          "b2"
+        ],
+        "expansions": 8
+      },
+      "brute_force": [
+        [
+          "f1",
+          0.0
+        ],
+        [
+          "f2",
+          0.02
+        ]
+      ],
+      "exact_matches_brute_force": true,
+      "exhaustive_entry_search": [
+        [
+          "f1",
+          0.0
+        ],
+        [
+          "f2",
+          0.02
+        ]
+      ],
+      "exhaustive_expansions": 8,
+      "exhaustive_matches_brute_force": true,
+      "budget1_results": [],
+      "budget1_visited": [
+        "r2"
+      ]
+    },
+    "scattered_C_or_E": {
+      "groups": [
+        [
+          "C",
+          "E"
+        ]
+      ],
+      "down": [
+        "C",
+        "E"
+      ],
+      "entry": [
+        "A",
+        "B",
+        "C",
+        "E",
+        "R"
+      ],
+      "minimal_in_down": [
+        "C",
+        "E"
+      ],
+      "eligible_items": [
+        "c1",
+        "c2",
+        "e1",
+        "e2"
+      ],
+      "pruned_concepts": [
+        "F"
+      ],
+      "pruned_items": [
+        "f1",
+        "f2"
+      ],
+      "L2_every_eligible_reachable_within_entry": true,
+      "L2_missing": [],
+      "exact_search": {
+        "results": [
+          [
+            "c1",
+            4.0
+          ],
+          [
+            "e1",
+            4.0
+          ],
+          [
+            "c2",
+            4.42
+          ]
+        ],
+        "down": [
+          "C",
+          "E"
+        ],
+        "entry": [
+          "A",
+          "B",
+          "C",
+          "E",
+          "R"
+        ],
+        "minimal": [
+          "C",
+          "E"
+        ],
+        "seeds": [
+          "r1",
+          "r2"
+        ],
+        "visited": [
+          "r1",
+          "r2",
+          "a1",
+          "b1",
+          "a2",
+          "b2",
+          "c1",
+          "e1",
+          "c2",
+          "e2"
+        ],
+        "expansions": 10
+      },
+      "brute_force": [
+        [
+          "c1",
+          4.0
+        ],
+        [
+          "e1",
+          4.0
+        ],
+        [
+          "c2",
+          4.42
+        ]
+      ],
+      "exact_matches_brute_force": true,
+      "exhaustive_entry_search": [
+        [
+          "c1",
+          4.0
+        ],
+        [
+          "e1",
+          4.0
+        ],
+        [
+          "c2",
+          4.42
+        ]
+      ],
+      "exhaustive_expansions": 10,
+      "exhaustive_matches_brute_force": true,
+      "budget1_results": [],
+      "budget1_visited": [
+        "r1"
+      ]
+    },
+    "root_R": {
+      "groups": [
+        [
+          "R"
+        ]
+      ],
+      "down": [
+        "A",
+        "B",
+        "C",
+        "E",
+        "F",
+        "R"
+      ],
+      "entry": [
+        "A",
+        "B",
+        "C",
+        "E",
+        "F",
+        "R"
+      ],
+      "minimal_in_down": [
+        "R"
+      ],
+      "eligible_items": [
+        "a1",
+        "a2",
+        "b1",
+        "b2",
+        "c1",
+        "c2",
+        "e1",
+        "e2",
+        "f1",
+        "f2",
+        "r1",
+        "r2"
+      ],
+      "pruned_concepts": [],
+      "pruned_items": [],
+      "L2_every_eligible_reachable_within_entry": true,
+      "L2_missing": [],
+      "exact_search": {
+        "results": [
+          [
+            "a2",
+            0.82
+          ],
+          [
+            "f2",
+            0.82
+          ],
+          [
+            "a1",
+            1.0
+          ],
+          [
+            "f1",
+            1.0
+          ],
+          [
+            "r2",
+            1.62
+          ]
+        ],
+        "down": [
+          "A",
+          "B",
+          "C",
+          "E",
+          "F",
+          "R"
+        ],
+        "entry": [
+          "A",
+          "B",
+          "C",
+          "E",
+          "F",
+          "R"
+        ],
+        "minimal": [
+          "R"
+        ],
+        "seeds": [
+          "r1",
+          "r2"
+        ],
+        "visited": [
+          "r2",
+          "a1",
+          "a2",
+          "f1",
+          "f2"
+        ],
+        "expansions": 5
+      },
+      "brute_force": [
+        [
+          "a2",
+          0.82
+        ],
+        [
+          "f2",
+          0.82
+        ],
+        [
+          "a1",
+          1.0
+        ],
+        [
+          "f1",
+          1.0
+        ],
+        [
+          "r2",
+          1.62
+        ]
+      ],
+      "exact_matches_brute_force": true,
+      "exhaustive_entry_search": [
+        [
+          "a2",
+          0.82
+        ],
+        [
+          "f2",
+          0.82
+        ],
+        [
+          "a1",
+          1.0
+        ],
+        [
+          "f1",
+          1.0
+        ],
+        [
+          "r2",
+          1.62
+        ]
+      ],
+      "exhaustive_expansions": 12,
+      "exhaustive_matches_brute_force": true,
+      "budget1_results": [
+        [
+          "r2",
+          1.62
+        ]
+      ],
+      "budget1_visited": [
+        "r2"
+      ]
+    }
+  }
+}
