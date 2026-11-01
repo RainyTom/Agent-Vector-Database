@@ -37,6 +37,8 @@
 
 - **[可导航性理论：跳出 NodeANN 的判据](2026-11-01-exps/dag-navigability-theory.md)**：图索引只有集合级与边级两个杠杆；`Mδ ≳ ln|S|` 说明全局图+过滤在低选择率下结构性失效；下闭边查询无损（保留率 `M` 对 `Mρ`）；`ρ` 是数据属性并附零模型测量；由此导出按 poset 距离分配度数的索引族。
 
+- **[方案 v2：ACE（按局部 ρ 分配的双类边预算）](2026-11-01-exps/dag-ace-scheme-v2.md)**：每节点 `g_u` 条几何边 + `d_u` 条下行边，闭式分配 `g_u=(M-R_u)/(1-ρ_u)`；查询沿用 D/E 剪枝与单队列，加 Ant(D) 卡住回退。
+
 ## 相邻主题
 
 - [前缀包含过滤](../containment-filtered-vector-search/index.md)
