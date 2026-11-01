@@ -43,6 +43,8 @@
 
 - **[方案 v4：ESG（入口选择型全局图）](2026-11-01-exps/dag-esg-scheme-v4.md)**：不改边、只改入口——一张标准 HNSW + 每概念 `k_e` 个代表入口，按质心/PQ 粗排取 `t` 组作为种子；位图/Bloom 筛入口组，图仍是唯一导航核心，无每概念 top-k 与归并。
 
+- **[方案 v5：DAWG 骨架 + 可测区间压缩](2026-11-01-exps/dag-dawg-scheme-v5.md)**：trie 的服务必然、形状不必然——`A→D,B→D,C→D` 即反例；枚举全部 6 概念 DAG 有 16.3% 无法区间化，真实 CCS 有 310 个 ≥3 父概念；因此骨架取 DAG（DAWG），区间层只作可测压缩。
+
 ## 相邻主题
 
 - [前缀包含过滤](../containment-filtered-vector-search/index.md)
