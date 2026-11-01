@@ -1,0 +1,56 @@
+{
+  "kind": "dag_scope_ann_probe",
+  "partition_mode": "top",
+  "partitions": 14,
+  "objects": 168937,
+  "concepts": 1929,
+  "queries": 1234,
+  "ef": 20,
+  "k": 10,
+  "tau": 512,
+  "build_s": 44.7807,
+  "strategies": {
+    "online": {
+      "scope_us": 0.951645,
+      "search_us": 444.439,
+      "e2e_us": 445.39,
+      "e2e_p95_us": 3309.12,
+      "macro_recall": 0.999838,
+      "exact_queries": 844,
+      "graph_queries": 234
+    },
+    "mat_all": {
+      "scope_us": 1.68578,
+      "search_us": 451.191,
+      "e2e_us": 452.877,
+      "e2e_p95_us": 3568.19,
+      "macro_recall": 0.999838,
+      "exact_queries": 844,
+      "graph_queries": 234
+    },
+    "mat_select": {
+      "scope_us": 0.560602,
+      "search_us": 451.243,
+      "e2e_us": 451.803,
+      "e2e_p95_us": 3362.14,
+      "macro_recall": 0.999838,
+      "exact_queries": 844,
+      "graph_queries": 234
+    },
+    "partition_top": {
+      "scope_us": 0.74825,
+      "search_us": 181.374,
+      "e2e_us": 182.122,
+      "e2e_p95_us": 1056.66,
+      "macro_recall": 0.998947,
+      "exact_queries": 844,
+      "graph_queries": 234
+    }
+  },
+  "limits": [
+    "partitioned by top-level category, one HNSW per partition; objects stored once",
+    "vectors are SIFT rows bound to SciHTC labels, so labels carry no vector semantics",
+    "residency warm; no cold-start or independent rebuilds"
+  ],
+  "workload": "168937 real SciHTC labels; SIFT vectors assigned without semantics"
+}

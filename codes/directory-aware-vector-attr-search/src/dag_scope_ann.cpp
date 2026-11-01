@@ -108,6 +108,7 @@ int main(int argc, char** argv) {
     std::string query_path;
     size_t ef = 20, k = 10, tau = 512, max_queries = 1234;
     size_t budget_bytes = 64ull << 20;
+    std::string partition_mode = "none";
 
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
@@ -121,6 +122,7 @@ int main(int argc, char** argv) {
         else if (arg == "--tau") tau = std::stoull(next());
         else if (arg == "--max-queries") max_queries = std::stoull(next());
         else if (arg == "--budget-mb") budget_bytes = std::stoull(next()) << 20;
+        else if (arg == "--partition") partition_mode = next();
         else fail("unknown argument " + arg);
     }
     if (vector_path.empty() || query_path.empty()) fail("--vectors and --queries are required");
@@ -144,6 +146,51 @@ int main(int argc, char** argv) {
         index.addPoint(base.data.data() + size_t(object) * dim, object);
     const double build_s = micros(build_start) / 1e6;
     index.setEf(ef);
+
+    // Optional partition-by-top-level-category variant. Each object lands in one
+    // partition, chosen by the first top-level concept on its owner's ancestor
+    // path, so multi-parent objects are still stored exactly once.
+    std::vector<Id> part_of(n, 0), part_of_concept(graph.active(), 0);
+    size_t partitions = 0;
+    std::vector<std::unique_ptr<hnswlib::HierarchicalNSW<float>>> part_graphs;
+    if (partition_mode == "top") {
+        Id root = 0;
+        for (Id c = 0; c < graph.active(); ++c)
+            if (graph.parents[c].empty()) root = c;
+        std::vector<Id> top_of(graph.active(), 0);
+        const Id kNone = std::numeric_limits<Id>::max();
+        for (Id c = 0; c < graph.active(); ++c) {
+            // The partition of a concept is its smallest ancestor that is a direct
+            // child of the root; a concept never becomes its own partition merely
+            // because its id is small.
+            Id best = kNone;
+            for (Id anc : graph.ancestors[c])
+                if (std::find(graph.parents[anc].begin(), graph.parents[anc].end(), root) !=
+                    graph.parents[anc].end())
+                    best = std::min(best, anc);
+            top_of[c] = (best == kNone) ? root : best;
+        }
+        // Resolve to a dense partition index; multi-parent concepts use the first
+        // parent path (documented), membership is still filtered by the full scope.
+        std::vector<Id> dense(graph.active(), 0);
+        std::vector<char> seen(graph.active(), 0);
+        for (Id c = 0; c < graph.active(); ++c) {
+            Id top = top_of[c];
+            if (!seen[top]) { seen[top] = 1; dense[top] = static_cast<Id>(partitions++); }
+            part_of_concept[c] = dense[top];
+        }
+        for (Id object = 0; object < n; ++object) part_of[object] = part_of_concept[work.terminal[object]];
+        std::vector<size_t> part_sizes(partitions, 0);
+        for (Id object = 0; object < n; ++object) ++part_sizes[part_of[object]];
+        part_graphs.resize(partitions);
+        for (size_t b = 0; b < partitions; ++b)
+            part_graphs[b] = std::make_unique<hnswlib::HierarchicalNSW<float>>(
+                &space, std::max<size_t>(1, part_sizes[b]), 16, 200);
+        for (Id object = 0; object < n; ++object)
+            part_graphs[part_of[object]]->addPoint(base.data.data() + size_t(object) * dim, object);
+        for (auto& graph_ptr : part_graphs) graph_ptr->setEf(ef);
+        std::cout << "partitions " << partitions << "\n";
+    }
 
     // Materialisation plans.
     std::vector<uint64_t> expansion(graph.active(), 0);
@@ -176,10 +223,12 @@ int main(int argc, char** argv) {
         }
     }
 
-    const char* names[3] = {"online", "mat_all", "mat_select"};
-    std::vector<Bitmap>* plans[3] = {nullptr, &mat_all, &mat_select};
-    std::vector<double> scope_us[3], search_us[3], e2e_us[3], recall[3];
-    size_t exact_paths[3] = {0, 0, 0}, graph_paths[3] = {0, 0, 0};
+    const bool partitioned = partition_mode == "top";
+    const size_t strategy_count = partitioned ? 4 : 3;
+    const char* names[4] = {"online", "mat_all", "mat_select", "partition_top"};
+    std::vector<Bitmap>* plans[4] = {nullptr, &mat_all, &mat_select, nullptr};
+    std::vector<double> scope_us[4], search_us[4], e2e_us[4], recall[4];
+    size_t exact_paths[4] = {0, 0, 0, 0}, graph_paths[4] = {0, 0, 0, 0};
     std::vector<double> wall_ns[3];
 
     for (size_t q = 0; q < nq; ++q) {
@@ -250,6 +299,61 @@ int main(int argc, char** argv) {
             e2e_us[s].push_back(scope_time + search_time);
             recall[s].push_back(kq ? double(hits) / double(kq) : 1.0);
         }
+        if (partitioned) {
+            const int s = 3;
+            Bitmap scope;
+            scope.words.assign(words, 0);
+            const auto scope_start = Clock::now();
+            for (Id c : query)
+                for (Id d : graph.descendants[c])
+                    for (Id object : work.postings[d]) scope.set(object);
+            const double scope_time = micros(scope_start);
+            const size_t eligible = scope.count();
+            std::vector<size_t> per_partition(partitions, 0);
+            for (size_t w = 0; w < words; ++w)
+                for (uint64_t bits = scope.words[w]; bits; bits &= bits - 1) {
+                    const Id object = static_cast<Id>(w * 64 + static_cast<unsigned>(__builtin_ctzll(bits)));
+                    ++per_partition[part_of[object]];
+                }
+            std::vector<std::pair<float, Id>> result;
+            const auto search_start = Clock::now();
+            if (eligible && eligible <= tau) {
+                for (size_t w = 0; w < words; ++w)
+                    for (uint64_t bits = scope.words[w]; bits; bits &= bits - 1) {
+                        const Id object = static_cast<Id>(w * 64 + static_cast<unsigned>(__builtin_ctzll(bits)));
+                        result.emplace_back(space.dist(qvec, base.data.data() + size_t(object) * dim), object);
+                    }
+                std::sort(result.begin(), result.end());
+                if (result.size() > k) result.resize(k);
+                ++exact_paths[s];
+            } else if (eligible) {
+                ScopeFilter filter(scope);
+                std::vector<std::pair<float, Id>> merged;
+                for (size_t b = 0; b < partitions; ++b) {
+                    if (!per_partition[b]) continue;
+                    const size_t local_k = std::min(k, per_partition[b]);
+                    const size_t local_ef = std::min(per_partition[b], std::max(ef, local_k));
+                    auto found = search_graph(*part_graphs[b], qvec, local_k, local_ef, filter);
+                    merged.insert(merged.end(), found.begin(), found.end());
+                }
+                std::sort(merged.begin(), merged.end());
+                merged.erase(std::unique(merged.begin(), merged.end(),
+                                         [](const auto& a, const auto& b) { return a.second == b.second; }),
+                             merged.end());
+                if (merged.size() > k) merged.resize(k);
+                result = std::move(merged);
+                ++graph_paths[s];
+            }
+            const double search_time = micros(search_start);
+            size_t hits = 0;
+            for (const auto& entry : result)
+                for (size_t t = 0; t < truth.size(); ++t)
+                    if (truth[t].second == entry.second) { ++hits; break; }
+            scope_us[s].push_back(scope_time);
+            search_us[s].push_back(search_time);
+            e2e_us[s].push_back(scope_time + search_time);
+            recall[s].push_back(kq ? double(hits) / double(kq) : 1.0);
+        }
         (void)wall_ns;
     }
 
@@ -262,12 +366,13 @@ int main(int argc, char** argv) {
     std::ostringstream report;
     report << "{\n";
     report << "  \"kind\": \"dag_scope_ann_probe\",\n";
+    report << "  \"partition_mode\": \"" << partition_mode << "\", \"partitions\": " << partitions << ",\n";
     report << "  \"objects\": " << n << ", \"concepts\": " << graph.active()
            << ", \"queries\": " << nq << ", \"ef\": " << ef << ", \"k\": " << k
            << ", \"tau\": " << tau << ",\n";
     report << "  \"build_s\": " << build_s << ",\n";
     report << "  \"strategies\": {";
-    for (int s = 0; s < 3; ++s) {
+    for (size_t s = 0; s < strategy_count; ++s) {
         report << (s ? "," : "") << "\n    \"" << names[s] << "\": {\"scope_us\": "
                << mean(scope_us[s]) << ", \"search_us\": " << mean(search_us[s])
                << ", \"e2e_us\": " << mean(e2e_us[s])
@@ -277,7 +382,7 @@ int main(int argc, char** argv) {
                << ", \"graph_queries\": " << graph_paths[s] << "}";
     }
     report << "\n  },\n";
-    report << "  \"limits\": [\"one global HNSW with an eligibility filter; no partitioning\", "
+    report << "  \"limits\": [\"" << (partitioned ? "partitioned by top-level category, one HNSW per partition; objects stored once" : "one global HNSW with an eligibility filter; no partitioning") << "\", "
               "\"vectors are SIFT rows bound to SciHTC labels, so labels carry no vector semantics\", "
               "\"residency warm; no cold-start or independent rebuilds\"]\n";
     report << "}\n";

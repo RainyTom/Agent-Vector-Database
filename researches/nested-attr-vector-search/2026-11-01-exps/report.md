@@ -202,3 +202,19 @@ ANN 运行 0，C++ 改动 0。方案中的多父闭包、标签集、精确基�
 
 数据：[dag-scope-ann-rotated.json](data/dag-scope-ann-rotated.json)、[dag-scope-ann-sequential.json](data/dag-scope-ann-sequential.json)。向量为 SIFT 行按 SciHTC 标签分配，标签与向量无语义对应；单张全局图，未分区；2 项探针回归通过。
 
+## 按一级概念分区：同质量下快 1.31×
+
+同一 DAG 工作负载上增加"按一级概念分区"（14 个分区，对象各存一份，只搜索含合格对象的分区）：
+
+| ef | 全局过滤 µs / Recall | 分区 µs / Recall |
+|---:|---|---|
+| 10 | 238.2 / .998703 | 118.7 / .995624 |
+| 20 | 445.4 / .999838 | 182.1 / .998947 |
+| 40 | 799.7 / 1.000000 | 279.7 / .999676 |
+
+分区 ef20（.998947）与全局 ef10（.998703）相比，Recall 更高而端到端少 23.6%（182.1 对 238.2 µs）。分区 ef40 对全局 ef20 差 0.00016 Recall、快 1.59×。ef20 的 p95 从 3,309 µs 降到 1,057 µs。
+
+这是按类目建索引的常规做法，只在本工作负载和"单张全局图"对照下有收益；与早期 P-node 的结果不可互相引用，因为基线里另有预选与扫描回退。
+
+数据：[dag-scope-partition-ef10.json](data/dag-scope-partition-ef10.json)、[ef20](data/dag-scope-partition-ef20.json)、[ef40](data/dag-scope-partition-ef40.json)。分区归属定义为"该概念最小的、且是根的直接子节点的祖先"；根自身单独成区，空区不参与搜索。
+
