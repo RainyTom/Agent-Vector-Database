@@ -1,0 +1,19 @@
+{
+  "kind": "dag_scope_resolution_probe",
+  "new_ann_runs": 0,
+  "objects": 168937,
+  "concepts": 1929,
+  "queries": 1234,
+  "relabel_events": 32,
+  "budget_bytes": 67108864,
+  "materialised_bytes": {"all": 17614080, "select": 823680},
+  "materialised_concepts": {"all": 834, "select": 39},
+  "scope_size": {"mean": 815.853, "max": 168937},
+  "query_us": {"online": {"mean": 0.456128, "p50": 0.08, "p95": 1.242}, "mat_all": {"mean": 1.386, "p50": 1.312, "p95": 2.785}, "mat_select": {"mean": 0.247599, "p50": 0.09, "p95": 1.172}},
+  "bitmap_counter_update_kernel_us": {"mat_all": {"mean": 0.460313, "p95": 0.801}, "mat_select": {"mean": 0.290719, "p95": 0.52}},
+  "update_measurement": {"unit": "microseconds per relabel", "includes": "ancestor-set difference, cardinality counters and materialised bitmap edits", "excludes": "base posting maintenance, label assignment, replay generation, verification and vector-index maintenance"},
+  "label_model": "one direct terminal label per object; destinations may be internal concepts",
+  "update_source": "seeded_random",
+  "verification": {"checkpoints": 5, "batch_size": 8, "scope_membership_checks": 28935, "cardinality_checks": 28935, "posting_state_checks": 15, "mismatches": 0, "initial_and_final_states": true, "reference": "replayed labels and raw child-edge traversal, independent of maintained postings and cached closures"},
+  "limits": ["metadata only; no vectors or ANN calls", "one direct terminal label per object, not multilabel membership", "object ids are shuffled so postings are not contiguous", "random destinations are concepts, not a workload model; replay uses explicit destinations", "kernel timings are not end-to-end update latency"]
+}

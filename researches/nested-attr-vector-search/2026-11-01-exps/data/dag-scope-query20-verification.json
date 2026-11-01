@@ -1,0 +1,81 @@
+{
+  "kind": "dag_scope_query20_verification",
+  "population_queries": 1234,
+  "distinct_sample_queries": 20,
+  "repeats_per_strategy": 3,
+  "sampling_seed": 20261101,
+  "selected_scope_rows": [
+    1114,
+    129,
+    854,
+    197,
+    740,
+    54,
+    1189,
+    1210,
+    1196,
+    1077,
+    12,
+    643,
+    759,
+    175,
+    24,
+    257,
+    161,
+    334,
+    542,
+    246
+  ],
+  "independent_dag_acyclic_check": {
+    "nodes_processed": 1929,
+    "concepts": 1929
+  },
+  "csv_aggregate_checks": {
+    "rows_per_cut": 240,
+    "latency_hits_denominator_and_nonempty_macro_match_json": true
+  },
+  "partition_sizes": {
+    "1": {
+      "nonempty": 13,
+      "objects_per_nonempty_mean": 12995.153846153846,
+      "min": 3153,
+      "median": 9565,
+      "p95": 29642,
+      "max": 31505
+    },
+    "3": {
+      "nonempty": 364,
+      "objects_per_nonempty_mean": 464.1126373626374,
+      "min": 5,
+      "median": 177.0,
+      "p95": 1636,
+      "max": 9823
+    }
+  },
+  "input_sha256": {
+    "work/dag-scope/workload-run1/edges.tsv": "a2d919b35122fcd91c52c71b4dbb186d71eba84ac3185f67fff17f08f13e7cdc",
+    "work/dag-scope/workload-run1/objects.txt": "9ab116887f0d96d2b536ff92637a593cbb2148b964479b86fffe663064ef691c",
+    "work/dag-scope/workload-run1/queries.tsv": "80dcbc27fc0b1f774fb9889fe138510dad5115c156e900be982f8369b6b8f976",
+    "work/packed/sift-fvecs-run1/sift_base.fvecs": "21f66e2975057b5728ba56de1c825bac4f4d89d596609ae985741c6242631816",
+    "work/packed/sift-fvecs-run1/sift_query.fvecs": "f7fc9be140accdfd64116c2fa2365ecdb69b8f084970c6b0532db5ff79ac8fdc"
+  },
+  "source_sha256": {
+    "codes/directory-aware-vector-attr-search/src/dag_scope_ann.cpp": "ad5d407ef8b530ddae6c1114fa21b96f528e72e4ea34de854c76019ec3b7512d",
+    "codes/directory-aware-vector-attr-search/src/dag_scope_probe.cpp": "5977ff717dd8f252538ca4993e9eddb148fc00106dd077c07082c82eb7217267",
+    "codes/directory-aware-vector-attr-search/src/dag_scope_common.h": "433213f0a8a12ef92538bc7d2574cc4724a2353e2e036e527b3a23eef978cfae"
+  },
+  "environment": {
+    "cpu_model": "AMD Ryzen 7 5800X 8-Core Processor",
+    "platform": "Linux-6.18.54.1-microsoft-standard-WSL2-x86_64-with-glibc2.43",
+    "query_threads": 1,
+    "cpu_affinity": "not pinned",
+    "independent_rebuilds": false
+  },
+  "limits": [
+    "20 distinct queries, only 3 graph-path queries; repetitions reuse fixed geometry",
+    "SIFT vectors arbitrarily paired with SciHTC direct labels",
+    "Full-query e2e excludes GT, validation, and serialization; both global and partition graphs resident in comparison process",
+    "Partition fanout counts eligible partitions even on exact paths; probe includes this diagnostic routing work in e2e",
+    "No pure NodeANN baseline in this diagnostic; no claim of superiority over user main baseline"
+  ]
+}

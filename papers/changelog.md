@@ -226,3 +226,8 @@
 - 保留摘要下游1.9×与正文相对HNSW 2.2–6.9×/Vamana 1.4–1.7×的不一致；v3 Table1的OpenAI为2M，不沿用v1表中的1M。
 - 新增2关系：PiPNN→GP-ANN的Sorting-LSH明确引用、PiPNN→DiskJoin的研究者局部性/输出语义对照；后者不伪装作者引用。统一索引44篇、32关系，vector-ann 5篇。
 - 实际运行120种互异距离顺序/2种等距顺序的独立有限规则构造，标明非官方代码、非一般定理验证；记录严格比较在等距ID上的边界。未编译/运行作者ANN、未做十亿或join性能实验。作者主页的Turbocharging PiPNN后续仅列候选，OpenReview正文被验证页阻挡。
+
+## 2026-11-01 SciHTC 数据定义
+
+- 新增 SciHTC（EMNLP 2022，DOI 10.18653/v1/2022.emnlp-main.610），按主问题归档 hierarchical-classification，C 类应用/数据背景，不增加未核实引用边。
+- 核读正式 PDF §2–5、§7–8：公开标签取最高相关度路径；全部作者分支为 future work。项目在 CCS 稳定概念 ID 上构造的多父继承负载与原文分类协议分开描述。文本访问条件及版本口径见本地阅读记录。

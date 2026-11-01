@@ -1,38 +1,39 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 470" role="img" aria-labelledby="title desc">
-<title id="title">DAG属性层级的继承匹配与跨分支交叠</title>
-<desc id="desc">概念图含Computing methodologies、Information systems、Machine learning、Information retrieval四个节点，Retrieval models and ranking同时是Machine learning与Information retrieval的子节点。论文p1只标注Retrieval models and ranking，其继承集合包含全部五个概念；p2直接标注Machine learning，p3直接标注Information retrieval。因此S(ML)={p1,p2}，S(IR)={p1,p3}，两者相交于p1，即使ML与IR互非祖先。</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 510" role="img" aria-labelledby="title desc">
+<title id="title">DAG 层级属性：继承、交叠与多标签删除</title>
+<desc id="desc">示意 DAG 的边为 R 到 A、R 到 B、A 到 C、B 到 C、A 到 D。C 有两个父概念。p1 直接标注 C，p2 标注 A，p3 标注 B，p4 同时标注 A 和 C。S(A) 与 S(B) 交于 p1、p4；删除 p4 的 C 标签后，p4 仍属于 S(A)。</desc>
 <defs><marker id="da" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0L8 4L0 8" fill="currentColor"/></marker></defs>
 <g fill="none" stroke="currentColor" stroke-width="1.4">
-<rect x="15" y="55" width="400" height="395" rx="9"/>
-<rect x="435" y="55" width="470" height="395" rx="9"/>
-<rect x="30" y="110" width="190" height="34" rx="5"/>
-<rect x="240" y="110" width="170" height="34" rx="5"/>
-<rect x="30" y="196" width="190" height="34" rx="5"/>
-<rect x="240" y="196" width="170" height="34" rx="5"/>
-<rect x="95" y="288" width="290" height="38" rx="5"/>
-<path d="M125 144V196M325 144V196M125 230L190 288M325 230L290 288"/>
-<path d="M125 326V348H300V326" marker-end="url(#da)"/>
+<rect x="15" y="58" width="410" height="430" rx="9"/>
+<rect x="445" y="58" width="500" height="430" rx="9"/>
+<rect x="170" y="104" width="100" height="38" rx="5"/>
+<rect x="65" y="195" width="110" height="38" rx="5"/>
+<rect x="275" y="195" width="110" height="38" rx="5"/>
+<rect x="30" y="298" width="100" height="38" rx="5"/>
+<rect x="205" y="298" width="110" height="38" rx="5"/>
+<path d="M200 142L133 195M240 142L315 195M110 233L85 298M135 233L242 298M315 233L277 298" marker-end="url(#da)"/>
 </g>
 <g fill="currentColor" font-family="Noto Sans CJK SC, sans-serif" font-size="15">
-<text x="15" y="31" font-size="20" font-weight="bold">层级属性为 DAG：多父概念使不同分支的对象集合相交</text>
-<text x="35" y="82" font-weight="bold">概念图（多父节点）</text><text x="455" y="82" font-weight="bold">对象标注与继承匹配</text>
-<text x="125" y="132" text-anchor="middle">Computing methodologies</text>
-<text x="325" y="132" text-anchor="middle">Information systems</text>
-<text x="125" y="218" text-anchor="middle">Machine learning</text>
-<text x="325" y="218" text-anchor="middle">Information retrieval</text>
-<text x="240" y="313" text-anchor="middle">Retrieval models and ranking</text>
-<text x="35" y="360">该概念同时有两个父，构成多父结构</text>
-<text x="35" y="392">祖先闭包按可达性计算，</text><text x="35" y="418">同一对象可属于互非祖先的两个 scope</text>
-<text x="455" y="118" font-size="14">p1 直接标注 {Retrieval models and ranking}</text>
-<text x="455" y="142" font-size="14">　 继承 {RMR, Machine learning, Information retrieval, …}</text>
-<text x="455" y="176" font-size="14">p2 直接标注 {Machine learning}</text>
-<text x="455" y="200" font-size="14">　 继承 {Machine learning, Computing methodologies}</text>
-<text x="455" y="234" font-size="14">p3 直接标注 {Information retrieval}</text>
-<text x="455" y="258" font-size="14">　 继承 {Information retrieval, Information systems}</text>
-<text x="455" y="292" font-size="14">S(Machine learning) = {p1, p2}</text>
-<text x="455" y="316" font-size="14">S(Information retrieval) = {p1, p3}</text>
-<text x="455" y="346" font-size="14" font-weight="bold">S(ML) ∩ S(IR) = {p1} ≠ ∅（ML 与 IR 互非祖先）</text>
-<text x="455" y="374" font-size="14">直接标注集合 D(ML) = {p2}，与 S(ML) 不同</text>
-<text x="455" y="402" font-size="14">S(RMR) ⊆ S(ML) ⊆ S(Computing methodologies)</text>
-<text x="455" y="426" font-size="14">祖先包含成立；同级分支不是划分，查询按对象 ID 去重</text>
+<text x="15" y="32" font-size="20" font-weight="bold">DAG 层级属性：继承集合可交叠，对象只返回一次</text>
+<text x="35" y="86" font-weight="bold">示意概念图：边表示一般 → 细化</text>
+<text x="220" y="129" text-anchor="middle">根 R</text>
+<text x="120" y="220" text-anchor="middle">概念 A</text>
+<text x="330" y="220" text-anchor="middle">概念 B</text>
+<text x="80" y="323" text-anchor="middle">概念 D</text>
+<text x="260" y="323" text-anchor="middle">多父概念 C</text>
+<text x="35" y="378">A 与 B 互非祖先，但共享后代 C</text>
+<text x="35" y="408">直接标注 A，不推出满足 C 或 D</text>
+<text x="35" y="438">继承按可达闭包计算，路径先去重</text>
+<text x="35" y="468">物理分区归属唯一，逻辑 scope 可交叠</text>
+<text x="465" y="86" font-weight="bold">直接标签 → 继承标签</text>
+<text x="465" y="125">p1：{C} → {C, A, B, R}</text>
+<text x="465" y="156">p2：{A} → {A, R}</text>
+<text x="465" y="187">p3：{B} → {B, R}</text>
+<text x="465" y="218">p4：{A, C} → {C, A, B, R}</text>
+<text x="465" y="266">S(A) = {p1, p2, p4}</text>
+<text x="465" y="297">S(B) = {p1, p3, p4}</text>
+<text x="465" y="328" font-weight="bold">S(A) ∩ S(B) = {p1, p4}</text>
+<text x="465" y="359">查询 {A, B} 的并集只有 4 个对象</text>
+<text x="465" y="405" font-weight="bold">多标签更新按成员关系变化维护</text>
+<text x="465" y="436">删除 p4 的 C 标签：{A, C} → {A}</text>
+<text x="465" y="467">保留 A、R 的匹配；仅删除 B、C 的匹配</text>
 </g></svg>

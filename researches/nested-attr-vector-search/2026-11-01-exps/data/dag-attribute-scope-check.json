@@ -1,178 +1,115 @@
 {
-  "kind": "finite_dag_attribute_scope_check",
+  "kind": "schematic_dag_attribute_scope_check",
   "children": {
-    "CM": [
-      "ML"
+    "R": [
+      "A",
+      "B"
     ],
-    "IS": [
-      "IR"
+    "A": [
+      "C",
+      "D"
     ],
-    "ML": [
-      "RMR"
+    "B": [
+      "C"
     ],
-    "IR": [
-      "RMR"
-    ],
-    "RMR": []
+    "C": [],
+    "D": []
   },
-  "parents": {
-    "CM": [],
-    "IS": [],
-    "ML": [
-      "CM"
+  "ancestors": {
+    "R": [
+      "R"
     ],
-    "IR": [
-      "IS"
+    "A": [
+      "A",
+      "R"
     ],
-    "RMR": [
-      "IR",
-      "ML"
+    "B": [
+      "B",
+      "R"
+    ],
+    "C": [
+      "A",
+      "B",
+      "C",
+      "R"
+    ],
+    "D": [
+      "A",
+      "D",
+      "R"
     ]
   },
   "descendants": {
-    "CM": [
-      "CM",
-      "ML",
-      "RMR"
+    "R": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "R"
     ],
-    "IS": [
-      "IR",
-      "IS",
-      "RMR"
+    "A": [
+      "A",
+      "C",
+      "D"
     ],
-    "ML": [
-      "ML",
-      "RMR"
+    "B": [
+      "B",
+      "C"
     ],
-    "IR": [
-      "IR",
-      "RMR"
+    "C": [
+      "C"
     ],
-    "RMR": [
-      "RMR"
-    ]
-  },
-  "ancestors": {
-    "CM": [
-      "CM"
-    ],
-    "IS": [
-      "IS"
-    ],
-    "ML": [
-      "CM",
-      "ML"
-    ],
-    "IR": [
-      "IR",
-      "IS"
-    ],
-    "RMR": [
-      "CM",
-      "IR",
-      "IS",
-      "ML",
-      "RMR"
+    "D": [
+      "D"
     ]
   },
   "direct_labels": {
     "p1": [
-      "RMR"
+      "C"
     ],
     "p2": [
-      "ML"
+      "A"
     ],
     "p3": [
-      "IR"
-    ]
-  },
-  "inherited_labels": {
-    "p1": [
-      "CM",
-      "IR",
-      "IS",
-      "ML",
-      "RMR"
+      "B"
     ],
-    "p2": [
-      "CM",
-      "ML"
-    ],
-    "p3": [
-      "IR",
-      "IS"
+    "p4": [
+      "A",
+      "C"
     ]
   },
   "scope_members": {
-    "CM": [
+    "R": [
       "p1",
-      "p2"
+      "p2",
+      "p3",
+      "p4"
     ],
-    "IS": [
+    "A": [
       "p1",
-      "p3"
+      "p2",
+      "p4"
     ],
-    "ML": [
+    "B": [
       "p1",
-      "p2"
+      "p3",
+      "p4"
     ],
-    "IR": [
+    "C": [
       "p1",
-      "p3"
+      "p4"
     ],
-    "RMR": [
-      "p1"
+    "D": []
+  },
+  "p4_delete_C": {
+    "removed_memberships": [
+      "B",
+      "C"
+    ],
+    "retained_memberships": [
+      "A",
+      "R"
     ]
   },
-  "direct_members": {
-    "CM": [],
-    "IS": [],
-    "ML": [
-      "p2"
-    ],
-    "IR": [
-      "p3"
-    ],
-    "RMR": [
-      "p1"
-    ]
-  },
-  "pairwise_scope_overlap": {
-    "CM|IS": [
-      "p1"
-    ],
-    "CM|ML": [
-      "p1",
-      "p2"
-    ],
-    "CM|IR": [
-      "p1"
-    ],
-    "CM|RMR": [
-      "p1"
-    ],
-    "IS|ML": [
-      "p1"
-    ],
-    "IS|IR": [
-      "p1",
-      "p3"
-    ],
-    "IS|RMR": [
-      "p1"
-    ],
-    "ML|IR": [
-      "p1"
-    ],
-    "ML|RMR": [
-      "p1"
-    ],
-    "IR|RMR": [
-      "p1"
-    ]
-  },
-  "containment_pairs_verified": 6,
-  "new_ann_runs": 0,
-  "cpp_changes": false,
-  "limit": "Five-concept model for closure and overlap semantics only; not an ANN result, and not evidence that the C++ prototype supports DAG or multi-label objects."
+  "limit": "Schematic finite membership model, not an empirical CCS edge example or multilabel C++ implementation."
 }

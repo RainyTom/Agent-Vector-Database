@@ -15,8 +15,9 @@
 | hybrid-retrieval | 1 | [多路相关性检索](hybrid-retrieval/README.md)：Balancing the Blend；不是scalar-filtered ANN |
 | data-indexing | 4 | [属性索引与范围过滤](data-indexing/README.md)：Memento、Grafite、FlexFlood、Qd-tree |
 | incremental-views | 2 | [增量与因式分解视图](incremental-views/README.md)：F-IVM、DBSP |
+| hierarchical-classification | 1 | [层级分类与数据](hierarchical-classification/README.md)：SciHTC；C 类应用/数据背景 |
 
-总计 **44 篇论文、32 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **45 篇论文、32 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -34,6 +35,7 @@ papers/
 ├── hybrid-retrieval/<id>-<slug>/
 ├── data-indexing/<id>-<slug>/
 ├── incremental-views/<id>-<slug>/
+├── hierarchical-classification/<id>-<slug>/
 └── trajectory-search/<id>-<slug>/
 ```
 

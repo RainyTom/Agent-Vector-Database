@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-01",
+  "title": "Hierarchical Multi-Label Classification of Scientific Documents",
+  "authors": [
+    "Mobashir Sadat",
+    "Cornelia Caragea"
+  ],
+  "doi": "doi:10.18653/v1/2022.emnlp-main.610",
+  "analyzed_version": "ACL formal PDF",
+  "source_url": "https://aclanthology.org/2022.emnlp-main.610.pdf",
+  "local_pdf": "papers/hierarchical-classification/2022-scihtc/paper.pdf",
+  "sha256": "bf3577ecf7278205f9160cb6603728ceadaae72f651df217c5faea72eea46368",
+  "bytes": 311107,
+  "reading_sections": [
+    "§1–5",
+    "§7–8"
+  ],
+  "preprint": {
+    "id": "2211.02810v1",
+    "submitted": "2022-11-05",
+    "differences_from_formal": "not checked item by item"
+  },
+  "author_data_access": "https://github.com/msadat3/SciHTC#dataset-access",
+  "project_scope": "C: hierarchical-classification dataset background, not ANN or vector join",
+  "open_items": [
+    "full branch labels and natural text access",
+    "formal/preprint detailed differences"
+  ]
+}

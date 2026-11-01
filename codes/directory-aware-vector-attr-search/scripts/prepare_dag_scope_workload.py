@@ -2,9 +2,9 @@
 """Emit a compact DAG scope workload from CCS 2012 and SciHTC labels.
 
 Output (one object per labelled paper, single direct terminal label):
-  edges.tsv      child<TAB>parent       (includes virtual root node 0)
-  objects.txt    one terminal concept id per line, in object-id order
-  queries.tsv    one query per line: "<count> <concept> ..." (single or antichain)
+  edges.tsv      child<TAB>parent       (includes a synthetic CCS root)
+  objects.txt    one terminal concept id per line, before the C++ ID shuffle
+  queries.tsv    one query per line: "<count> <concept> ..." (scope union)
   meta.json      sizes and provenance hashes
 """
 import argparse
@@ -81,7 +81,7 @@ def main():
             scope[anc] += count
     size_of = {concept_ids[c]: scope[c] for c in names}
 
-    # Queries: every concept with non-empty scope, plus random sibling antichains.
+    # Queries: nonempty singleton scopes plus sibling samples (not necessarily antichains in a DAG).
     queries = [[concept_ids[c]] for c in sorted(scope, key=lambda c: concept_ids[c]) if scope[c]]
     rng = random.Random(args.seed)
     siblings = [sorted(children[c]) for c in names if len(children[c]) > 1]
@@ -101,9 +101,10 @@ def main():
         'edges': sum(len(v) for v in parents.values()),
         'multi_parent_concepts': sum(1 for c in names if len(parents.get(c, ())) > 1),
         'queries': len(queries),
-        'antichain_queries': len(queries) - sum(1 for q in queries if len(q) == 1),
-        'scope_size': {'min': min(size_of.values()), 'max': max(size_of.values()),
-                       'mean': round(sum(size_of.values()) / len(size_of), 2)},
+        'multi_concept_queries': sum(1 for q in queries if len(q) > 1),
+        'scope_size': {'min': min(size_of.values()) * args.replicate,
+                       'max': max(size_of.values()) * args.replicate,
+                       'mean': round(sum(size_of.values()) * args.replicate / len(size_of), 2)},
         'inputs': {'ontology': str(args.ontology), 'ontology_sha256': sha(args.ontology),
                    'labels': [str(p) for p in args.labels],
                    'labels_sha256': [sha(p) for p in args.labels]},

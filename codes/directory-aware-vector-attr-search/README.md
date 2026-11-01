@@ -256,3 +256,14 @@ V/T/M/B/R维护当前资格、位置冻结；D同步压实、I支持首插/复�
 
 本地12项CLI回归及36pass实际合成回放通过，维护本轮不运行、仅分析复杂度。查询主目标在共同Recall层超过纯A，内存辅助，不再要求先跑完整更新与repack包络。完整算法仍见原plan，旧H不恢复。
 
+
+## DAG 层级属性研究探针
+
+独立入口 `build_dag_scope.sh` 构建 `dag_scope_ann`、`dag_scope_probe`，检查同一 hnswlib pin；不改变既有纯 NodeANN 主实验协议。[方案、SVG 与范围](../../researches/nested-attr-vector-search/2026-11-01-exps/hierarchical-dag-attribute-index.md)、[实测与复现命令](../../researches/nested-attr-vector-search/2026-11-01-exps/experiments/dag-query20-reproduction.md)。
+
+- 数据为 `edges.tsv`（child,parent）、`objects.txt`（单直接标签）、`queries.tsv`（概念 scope 并集）。多父闭包按集合去重；兄弟组合不保证 antichain。
+- `dag_scope_ann --partition top --partition-depth H` 按最短概念深度与稳定 ID 分组；每对象一个物理分区，每非空分区一张普通 HNSW。深度不足 H 的概念保留自己的分区键。
+- `--sample-queries 20 --seed 20261101 --repeats 3` 在完整 scope 总体无放回抽样，scope 行对应同号 query 向量行；一个进程中的三遍复用驻留图。四臂轮换，GT/核验与 CSV 输出在计时外。
+- `ann_queries.csv` 保存完整外层 e2e、范围/定位/搜索子区间、资格数量、分区数、返回 ID、GT、命中数和分母。`ann.json` 保存每遍结果、构建时间及非空 macro/pair Recall；空查询单列。
+- `dag_scope_probe --replay FILE --verify-batch N --dump-scopes` 重放显式单标签事件，独立核验 posting、scope 和基数。`bitmap_counter_update_kernel_us` 排除 posting 维护等成本，不是完整更新延迟。当前不支持一般多直接标签、并发或恢复。
+

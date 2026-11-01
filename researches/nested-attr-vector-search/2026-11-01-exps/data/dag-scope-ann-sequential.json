@@ -1,5 +1,8 @@
 {
   "kind": "dag_scope_ann_probe",
+  "measurement_status": "partial_interval_diagnostic",
+  "timing": "e2e_us is scope/search subinterval sum, excludes allocation and popcount; fixed strategy order; not full query latency",
+  "recall_definition": "macro_recall includes empty scopes as one; pair recall unavailable",
   "objects": 168937,
   "concepts": 1929,
   "queries": 1234,

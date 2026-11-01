@@ -1,5 +1,8 @@
 {
   "kind": "dag_scope_ann_probe",
+  "measurement_status": "partial_interval_diagnostic",
+  "timing": "e2e_us excludes allocation, popcount and eligible-to-partition counting; partition arm always last; not full query latency",
+  "recall_definition": "macro_recall includes empty scopes as one; pair recall unavailable",
   "partition_mode": "top",
   "partitions": 14,
   "objects": 168937,

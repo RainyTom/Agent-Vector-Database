@@ -1,5 +1,7 @@
 {
   "kind": "dag_scope_resolution_probe",
+  "measurement_status": "diagnostic_only",
+  "validity": "query_us measures only posting/bitmap union; update_us has no valid post-update equivalence check and is not evidence of update performance",
   "new_ann_runs": 0,
   "objects": 168937,
   "concepts": 1929,

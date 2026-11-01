@@ -73,13 +73,10 @@ def main():
         for anc in ancestors[concept]:
             scope[anc] += count
 
-    # Pre-dedup expansion cost: sum of direct postings over the descendant set.
-    # Online expansion touches one posting entry per descendant concept plus one
-    # bitmap entry per directly labelled object. Under single-terminal labels the
-    # object term equals |S(u)|, so repeated objects are not the variable cost.
-    expansion = {c: len(descendants[c]) + sum(terminals.get(d, 0) for d in descendants[c])
-                 for c in names}
-    posting_words = {c: sum(terminals.get(d, 0) for d in descendants[c]) for c in names}
+    # Work proxy for the C++ vector<Id> postings: one descendant-list visit
+    # plus one object-ID visit. This is not a sparse-bitmap word count or time.
+    posting_entries = {c: sum(terminals.get(d, 0) for d in descendants[c]) for c in names}
+    expansion = {c: len(descendants[c]) + posting_entries[c] for c in names}
 
     # Two parent branches of a multi-parent concept are not disjoint: every
     # paper under the shared child belongs to both parent scopes.
@@ -114,7 +111,7 @@ def main():
 
     bitmap_words = max(1, (n + 63) // 64)
     wide = [c for c in names if expansion[c] > bitmap_words]
-    budget_bytes = sum((n + 7) // 8 for _ in wide)
+    budget_bytes = len(wide) * bitmap_words * 8
 
     concept_rows = []
     for c in names:
@@ -124,7 +121,7 @@ def main():
             'concept': c, 'name': names.get(c, ''),
             'parents': len(parents.get(c, ())), 'descendants': len(descendants[c]),
             'direct': terminals.get(c, 0), 'scope': scope.get(c, 0),
-            'expansion': expansion[c], 'posting_entries': posting_words[c],
+            'expansion': expansion[c], 'posting_entries': posting_entries[c],
             'objects_per_descendant': round(scope[c] / max(1, len(descendants[c])), 3),
             'materialize': int(expansion[c] > bitmap_words),
         })
@@ -173,6 +170,8 @@ def main():
             'concepts_selected': len(wide),
             'share_selected': round(len(wide) / len(names), 4),
             'bitmap_bytes_total': budget_bytes,
+            'selection_proxy': 'descendant concept visits + object-ID posting visits > dense bitmap words',
+            'optimality': 'heuristic only; units are not calibrated CPU costs',
         },
         'multi_parent_branch_overlap': {
             'n': len(branch_overlap),
@@ -182,7 +181,7 @@ def main():
         'limits': [
             'Structural measurement only: no vectors, no ANN, no query latency.',
             'Each paper is assigned its path terminal as the single direct label; multi-label objects are not modelled.',
-            'Expansion counts direct-posting entries before deduplication; scope counts distinct papers.',
+            'Expansion counts descendant concepts plus object-ID posting entries, not bitmap words or latency.',
             'Rows containing "~" are excluded rather than repaired, so the usable total is below the full corpus.',
         ],
     }

@@ -268,3 +268,9 @@
 核读§2–6、A.1–A.10，PDF18页含附录；本地全文和[解读](../../papers/vector-ann/2602.21247-pipnn/paper.report.md)已存。主问题为B类图ANN构建；下游为逐点top-k kNN图，不是threshold join或全局top-k pairs。v3补充内存说明整数100M集PiPNN峰值RSS明显高于Vamana/HNSW，不将bounded reservoir解释为总内存更少。保存论文数字和有限HashPrune规则构造结果到[当日记录](2026-11-01-exps/report.md)，不宣称ANN性能复现。
 
 新增1篇、2关系（其中1条研究者综合）；总44篇/32关系。待补：正式稿-v3差异、摘要1.9×与正文6.9×的解释、官方bf16/并列距离/并发与self-match规则、同RSS首次/复用的top-k端到端实验。作者主页列出Turbocharging PiPNN for Proximity and k-NN Graph Building（VecDB@VLDB2026）；[OpenReview forum](https://openreview.net/forum?id=8GzbSQMrLA)与PDF均返回浏览器验证，本轮不读造算法/结果、不与主论文合并。PHiDJ/MapReduce及其他近邻候选的引用闭包未补齐，新颖性尚未充分排查。
+
+## 2026-11-01 SciHTC 标签定义与 DAG 查询探针
+
+本轮是既有层级属性工作的实验核验及指定数据论文核读，没有新增直接 vector join 关键词检索，不声称扩大 join 文献覆盖。先查统一论文/关系索引，再核 [ACL 正式页](https://aclanthology.org/2022.emnlp-main.610/)、[正式 PDF §2–5、§7–8](https://aclanthology.org/2022.emnlp-main.610.pdf)、[arXiv v1 日期](https://arxiv.org/abs/2211.02810)、[作者数据访问说明](https://github.com/msadat3/SciHTC#dataset-access)。
+
+新增 SciHTC 为 C 类层级分类/数据背景，不当作 ANN 或 vector join；不增加推测关系。原文只保留最高相关度分支，全部分支为 future work；项目基于 CCS 稳定概念 ID 重构多父闭包。当前本地无自然文本向量。已执行 20 条随机查询驻留三遍与 32 次单标签状态 smoke，数据和限制见[报告](../nested-attr-vector-search/2026-11-01-exps/report.md)；不是纯 NodeANN 对照，也不是分类模型复现。待补自然向量—标签相关性、一般多标签维护及查询覆盖；新颖性仍未充分排查。

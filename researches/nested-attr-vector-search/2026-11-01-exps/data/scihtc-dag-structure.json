@@ -87,7 +87,9 @@
     "bitmap_words": 2640,
     "concepts_selected": 39,
     "share_selected": 0.0202,
-    "bitmap_bytes_total": 823602
+    "bitmap_bytes_total": 823680,
+    "selection_proxy": "descendant concept visits + object-ID posting visits > dense bitmap words",
+    "optimality": "heuristic only; units are not calibrated CPU costs"
   },
   "multi_parent_branch_overlap": {
     "n": 101,
@@ -235,7 +237,7 @@
   "limits": [
     "Structural measurement only: no vectors, no ANN, no query latency.",
     "Each paper is assigned its path terminal as the single direct label; multi-label objects are not modelled.",
-    "Expansion counts direct-posting entries before deduplication; scope counts distinct papers.",
+    "Expansion counts descendant concepts plus object-ID posting entries, not bitmap words or latency.",
     "Rows containing \"~\" are excluded rather than repaired, so the usable total is below the full corpus."
   ]
 }

@@ -64,7 +64,7 @@ struct Workload {
     size_t objects = 0;
     std::vector<Id> terminal;                 // object -> direct concept label
     std::vector<std::vector<Id>> postings;    // concept -> object ids (ascending)
-    std::vector<std::vector<Id>> queries;     // each query is an antichain of concepts
+    std::vector<std::vector<Id>> queries;     // union of concept scopes; redundant concepts allowed
 };
 
 inline Workload load(const std::string& dir, uint64_t seed) {

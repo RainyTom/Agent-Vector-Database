@@ -4,9 +4,9 @@
 
 ## 当前工作
 
-- **[DAG 层级属性约束下的向量近邻检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：多父概念闭包、直接标签集与祖先继承、跨分支 scope 交叠；索引方案为按祖先方向维护精确基数、按展开代价选择性物化派生位图，含成本模型、可检验假设与实现范围。
+- **[DAG 层级属性约束下的分区向量检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：多父闭包与直接标签、成员倒排及可选 scope 物化、固定物理分区与每分区 HNSW；含完整查询、覆盖性质、标签更新集合差分与实现范围。
 
-- [相关索引结构与文献比较](2026-11-01-exps/report.md)：TrieHI、Curator、ACORN、iRangeGraph及过滤向量检索系统的结构与证据。
+- [DAG query20 实测与文献依据](2026-11-01-exps/report.md)：同批 20 查询、每臂驻留三遍的完整计时/双 Recall、分区 fanout 与构建成本；附 TrieHI、Curator、ACORN、iRangeGraph、SciHTC 的证据。
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
 - **[08 动态混合向量搜索（动态三臂维护成本对照）](08-dynamic-hybrid-vector-search/README.md)**：[当前证据边界](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)、[原树/两遍GT协议](08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)、[当日报告与图](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)。旧inline计时仅诊断；不预设高更新率优胜，不以旧并发探针证明一致性。

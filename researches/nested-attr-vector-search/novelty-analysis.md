@@ -116,7 +116,7 @@ Curator v3 明确支持一般复杂谓词的临时索引；LSSG 对 Curator 的�
 | [RaG-Tree](https://www.alphaxiv.org/abs/2608.01255)，2026-08-02 预印本 | 原始摘要：R-tree 与 partition-aware HNSW、代价驱动搜索和更新；正式 venue 未核实 | 数值范围与图共享前沿候选；未精读，暂不填理论和实验结论 |
 | [E2E](https://www.alphaxiv.org/abs/2602.06721)，2026 检索候选 | alphaXiv 返回题名 Efficient Filtered AKNN Search via Adaptive Termination | 与自适应终止相关；作者、版本、方法保证与 VADER 差别待核 |
 | [Attribute Filtering in ANNS: An In-depth Experimental Study](https://www.alphaxiv.org/abs/2508.16263) | alphaXiv 检索候选，未精读 | 用于基线覆盖与评测设计；不能用综述替代算法原始证据 |
-| [SciHTC](https://arxiv.org/abs/2211.02810) | 既有摘要证据：论文层级多标签分类 | C 类应用/数据背景，原问题是分类，非 ANN；需核标签编码、taxonomy 版本与许可 |
+| [SciHTC](https://aclanthology.org/2022.emnlp-main.610/) | 正式 PDF §2–3：取最高相关度标签分支；全部分支为 future work；[核读记录](../../papers/hierarchical-classification/2022-scihtc/paper.report.md) | C 类应用/数据背景。项目在 CCS 稳定概念 ID 上重构 DAG 继承；原文不提供 ANN 基准。自然文本需申请，公开路径不等于全部直接标签集 |
 | TrieHNSW | 搜索缓存显示 label-set Trie 与 HNSW，支持集合谓词；实际 GitHub/API 返回 404，alphaXiv 题名无匹配 | 仅为不稳定检索线索，不作为已确认论文或可复现 baseline，不据此填作者或 venue |
 
 ## 候选创新与可证伪实验
