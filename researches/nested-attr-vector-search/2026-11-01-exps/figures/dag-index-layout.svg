@@ -36,8 +36,8 @@
     <path d="M133 940H257M133 1034H257M110 963V1011M280 963V1011M130 952L260 1022M260 952L130 1022"/>
   </g>
   <g fill="currentColor" font-family="Noto Sans CJK SC, Noto Sans SC, sans-serif" font-size="16">
-    <text x="20" y="30" font-size="23" font-weight="700">图1  DAG 分区索引：逻辑归属与物理寻址</text>
-    <text x="20" y="56">统一示例：8 个对象，二维向量；实线框为持久状态，虚线框为派生解释。</text>
+    <text x="20" y="30" font-size="23" font-weight="700">图1  全驻内存索引：成员集合与局部 HNSW</text>
+    <text x="20" y="56">8 对象、二维向量；图示表达索引关系，不约束向量存储次序。</text>
     <text x="36" y="101" font-weight="700">① 属性 DAG（概念 ID）</text>
     <text x="178" y="136" text-anchor="middle">R0</text>
     <text x="96" y="226" text-anchor="middle">A1</text>
@@ -82,9 +82,9 @@
     <text x="923" y="341" text-anchor="middle">0</text>
     <text x="638" y="375">为讲解显式选择 B 物化；</text>
     <text x="638" y="398">不表示启发式会在 N=8 时选中 B。</text>
-    <text x="20" y="440">逻辑闭包可重叠；下方对象的物理归属唯一，不能从某概念的直接倒排推断查询分区。</text>
-    <text x="38" y="488" font-size="19" font-weight="700">④ 物理存储：h=1，分区编号与概念 ID 是两种编号</text>
-    <text x="54" y="542" font-weight="700">唯一对象 → 分区映射</text>
+    <text x="20" y="440">逻辑 scope 可交叠；每个对象只加入一张局部图，由合格 ID 确定需要搜索的图。</text>
+    <text x="38" y="488" font-size="19" font-weight="700">④ 局部图组织：h=1，组号与概念 ID 是两种编号</text>
+    <text x="54" y="542" font-weight="700">对象 → 所属图映射</text>
     <text x="70" y="575">o0 → b_A1</text>
     <text x="70" y="604">o1 → b_A1</text>
     <text x="70" y="633">o2 → b_A1</text>
@@ -93,9 +93,9 @@
     <text x="70" y="720">o5 → b_B2</text>
     <text x="70" y="749">o6 → b_F3</text>
     <text x="70" y="778">o7 → b_R0</text>
-    <text x="363" y="542" font-weight="700">分区表</text>
+    <text x="363" y="542" font-weight="700">局部图表</text>
     <text x="486" y="542" font-weight="700">外部对象 ID</text>
-    <text x="710" y="542" font-weight="700">独立物理索引</text>
+    <text x="710" y="542" font-weight="700">图实例</text>
     <text x="372" y="591">b_R0</text>
     <text x="486" y="591">[7]</text>
     <text x="710" y="591">HNSW（1 个节点）</text>
@@ -108,7 +108,7 @@
     <text x="372" y="756">b_F3</text>
     <text x="486" y="756">[6]</text>
     <text x="710" y="756">HNSW（1 个节点）</text>
-    <text x="38" y="829">b_Xn：初始概念键 X、分区号 n；每个分区表项指向独立 HNSW。</text>
+    <text x="38" y="829">b_Xn：分组键 X、图编号 n；同组成员加入同一 HNSW，不要求内存连续。</text>
     <text x="54" y="871" font-weight="700">⑤ 展开 b_A：实际 L0 邻接</text>
     <text x="54" y="900" font-size="14">节点为 local ID / 对象；入口为 0/o0</text>
     <text x="110" y="945" text-anchor="middle" font-size="14">0/o0</text>
@@ -118,11 +118,11 @@
     <text x="54" y="1080" font-size="14">连线为实测双向边；布局不是向量坐标。</text>
     <text x="402" y="871" font-weight="700">节点记录示例：b_A 的 local 1</text>
     <text x="402" y="907">外部 label = 1（全局对象 o1）</text>
-    <text x="402" y="941">向量 payload = (1,0)，由图记录持有副本</text>
+    <text x="402" y="941">向量 x_i = (1,0)，使用统一 FP32 距离核</text>
     <text x="402" y="975">节点 level = 0；neighbors[0] = [0,2,3]</text>
     <text x="402" y="1009">邻居是本图局部 ID，取节点的 label 再识别对象</text>
     <text x="402" y="1043">本例 max_level=0；更大图可有更高随机导航层</text>
-    <text x="402" y="1077" font-size="14">邻接、入口和向量来自实际构建输出，不假设图内访问顺序。</text>
+    <text x="402" y="1077" font-size="14">示例取自实际图；字段用于说明搜索，不作为访存布局优化。</text>
     <text x="38" y="1129">属性 DAG 层级决定语义后代；HNSW 随机层级只服务近邻导航，两者独立。</text>
     <text x="38" y="1167">仅有实际非空分区才有图：C、D、E 没有独立分区图，其对象存于 b_A 或 b_B。</text>
   </g>

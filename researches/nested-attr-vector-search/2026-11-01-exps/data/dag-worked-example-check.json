@@ -12,15 +12,21 @@
   "graph_record_payload_and_local_neighbor_ids_checked": true,
   "before_after_geometry_snapshots_equal": true,
   "figure1_b_A_edges_match_actual_level0_graph": true,
-  "input_sha256": "76c32bc0841ab37b34e771afa665908117a9723a3dddaff37837ddca11a7acce",
+  "input_sha256": "38d51bece7553fcc88b7766d62ed3be7e3c1199b5358e519cbc877709212a10a",
   "driver_sha256": "b40c684d9f8615d7a928ecd8341a8dfdbbb1b59be059e8a11f21310a3679f34e",
   "result_sha256": "be608314590313be8bac6e3c4e4ca5c93d4c2abe07f470f255550a274ad37233",
   "query_core_sha256": "ad5d407ef8b530ddae6c1114fa21b96f528e72e4ea34de854c76019ec3b7512d",
   "outlined_label_groups": 132,
-  "outlined_glyph_paths": 2098,
+  "outlined_glyph_paths": 2067,
   "limits": [
     "Fixed8-object2D worked example, no timing/performance or general ANN guarantee",
     "Driver applies the specified label/posting/materialized-bit edit; cardinalities derived for explanation, not a new production maintenance implementation",
     "Native Stencil Tern window not exercised; white-background raster previews inspected"
-  ]
+  ],
+  "research_scope": {
+    "all_resident_memory": true,
+    "no_memory_layout_contribution": true,
+    "full_operation_counters": "not measured; no speedup mechanism attribution",
+    "executable_result_evidence": "unchanged prior actual-core run; fixture memberships and distances independently rechecked"
+  }
 }

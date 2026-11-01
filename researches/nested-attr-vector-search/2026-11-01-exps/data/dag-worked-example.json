@@ -19,7 +19,8 @@
   "query": {"vector": [1, 1], "concepts": ["B"], "k": 2, "tau": 2, "ef": 20, "other_predicates": "true"},
   "small_query": {"vector": [1, 1], "concepts": ["D"], "k": 2, "tau": 2, "ef": 20},
   "union_query_concepts": ["A", "B"],
-  "update": {"object_id": 6, "from": "F", "to": "B", "keep_physical_partition": true},
+  "update": {"object_id": 6, "from": "F", "to": "B", "keep_graph_membership": true},
   "bitmap_display_order": "o0,o1,o2,o3,o4,o5,o6,o7 left-to-right; not a numeric binary literal",
+  "research_scope": {"all_resident_memory": true, "memory_layout_optimization": false, "interpretation": "graph membership, scope derivation and query dispatch; no contiguous-placement requirement", "operation_counts_for_mechanism_attribution": "not measured"},
   "limits": ["8-object 2D illustration, not performance evidence", "Single direct labels match the current probe scope", "Only result membership and distances are prescribed; HNSW edges must come from an actual build"]
 }
