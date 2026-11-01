@@ -189,6 +189,16 @@ static Merged build(const Vectors& base, const Workload& w, RawL2Space& l2) {
                         nearest = std::min(nearest, Pair{l2.dist(base.at(u), base.at(v)), v});
                     connect(u, nearest.second);
                 }
+        // Distributed bridge sources: direct items, not only their few portals.
+        std::vector<Id> sources{c};
+        sources.insert(sources.end(), w.children[c].begin(), w.children[c].end());
+        for (Id source : sources) for (Id u : w.members[source])
+            for (const auto& group : groups) {
+                Pair nearest{std::numeric_limits<float>::infinity(), 0};
+                for (Id v : group) if (w.owner[v] != source)
+                    nearest = std::min(nearest, Pair{l2.dist(base.at(u), base.at(v)), v});
+                if (std::isfinite(nearest.first)) connect(u, nearest.second);
+            }
         m.portals[c] = representatives(std::move(pool), base, l2);
     }
     size_t connected = normalize();
