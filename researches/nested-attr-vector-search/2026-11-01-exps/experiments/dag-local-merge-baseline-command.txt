@@ -1,0 +1,17 @@
+# Run from the repository root. Offline assets must already exist.
+# Canonical fixed SIFT workload (executed, exit 0):
+bash autoresearch.sh
+
+# Synthetic boundary/invariant regression (executed, exit 0):
+g++ -std=c++17 -O3 -march=native -pthread \
+  -Icodes/directory-aware-vector-attr-search/src \
+  -Icodes/directory-aware-vector-attr-search/deps/hnswlib \
+  researches/nested-attr-vector-search/2026-11-01-exps/experiments/merge_arms_test.cpp \
+  -o /tmp/dag-merge-invariants
+/tmp/dag-merge-invariants
+
+# Canonical output: work/autoresearch-dag-merge/{results.csv,run.log,input-sha256.txt}
+# The shell entrypoint checks the pinned hnswlib revision, hashes five offline
+# fixtures, compiles the C++ benchmark, then executes all three arms.
+# Timings exclude compilation and construction; build seconds are separate metrics.
+# No network fetch, dataset regeneration, clock-dependent seed, or subprocess Python.

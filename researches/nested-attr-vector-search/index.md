@@ -4,6 +4,8 @@
 
 ## 当前工作
 
+- **[当前实验方案：直属 NSW 图沿 DAG 保边合并与跨层跳转](2026-11-01-exps/dag-local-nsw-merge-scheme.md)**：不量化；局部 HNSW、子图门户几何连接、继承代表跳转；共享后代一份、空父可合并、单队列搜索。固定 SIFT×CCS 离线入口 `bash autoresearch.sh`，与原生全局过滤 HNSW、owner-local NodeANN 参考同质量门槛对比。
+
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
 - **[08 动态混合向量搜索（动态三臂维护成本对照）](08-dynamic-hybrid-vector-search/README.md)**：[当前证据边界](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)、[原树/两遍GT协议](08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)、[当日报告与图](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)。旧inline计时仅诊断；不预设高更新率优胜，不以旧并发探针证明一致性。
 - [当前状态：闭包候选收尾，停止当前原型扩展](2026-10-31-exps/report.md)；[原方案与历史任务书](2026-10-30-exps/closure-server-plan.md)、[小预算原始执行任务](2026-10-30-exps/closure-small-ef-server-prompt.md)。已接收2f8c4e0，不再自动重跑或启动Dynamic。
