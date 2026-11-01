@@ -6,6 +6,8 @@
 
 - **[DAG 层级属性约束下的内存向量检索](2026-11-01-exps/hierarchical-dag-attribute-index.md)**：明确当前局部图是 NodeANN 的合并组变体，逐项介绍标签倒排、DAG 闭包、可选继承倒排与 HNSW；含同一 DAG 样例的 NodeANN 结构对照，不作为独立新索引方案。
 
+- [TrieHI 基线与本方案定位](2026-11-01-exps/triehi-baseline-and-dag-positioning.md)：原文只比较三种目录表示（固定 PG/IVF）、未比较多属性过滤索引的原文依据与未说明之处、WIKI-Dir 将 DAG 压成 canonical tree，以及把 NodeANN 降为执行器后的对照骨架与新颖性缺口。
+
 - [DAG query20 实测与文献依据](2026-11-01-exps/report.md)：同批 20 查询、每臂驻留三遍的完整计时/双 Recall、分区 fanout 与构建成本；附 TrieHI、Curator、ACORN、iRangeGraph、SciHTC 的证据。
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)

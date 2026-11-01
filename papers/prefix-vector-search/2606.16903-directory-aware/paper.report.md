@@ -20,6 +20,10 @@ Inc(v)=Local(v)∪子节点Inc并集是精确 scope 不变量，非 ANN 召回�
 
 补核§V-A：固定Viking PG/IVF用于隔离目录表示开销，不代表完整覆盖先进filtered ANN后端；§VI/参考文献列ACORN、Filtered-DiskANN、UNG，不能说作者不知道。原文未逐一说明不实验这些方案的理由，也未证明TrieHI不能或无需与它们组合。结论限已测目录方案/后端，不外推为端到端领先所有过滤检索方法。
 
+**DAG 被压成树：** WIKI-Dir 原文自述 "Since Wikipedia categories form a directed acyclic graph, we construct a canonical tree by selecting one category path per entry and discarding invalid links"（`paper.md:990–993`）；ARXIV-Dir 为 subject 与 temporal 两个独立命名空间（`paper.md:1004–1008`）。该文的问题模型与真值均为树一致，**多父 scope 交叠不在其表示与评测范围内**，其结论不能直接迁移到保留多父语义的 DAG 负载。
+
+**基线构成：** §V-A 只比较 PE-ONLINE、PE-OFFLINE、TRIEHI 三种目录表示，三者接同一 PG/IVF 执行器，用于区分目录开销与 ANN 行为（`paper.md:1038–1048`），并单列 directory-only 延迟（`paper.md:1049–1053`）。§VI 引用了 ACORN、SIEVE、Filtered-DiskANN 与属性过滤实验研究，但**未说明为何不与其做实验对照**，也未证明它们不能与目录层组合。逐句核对见[定位分析](../../../researches/nested-attr-vector-search/2026-11-01-exps/triehi-baseline-and-dag-positioning.md)。
+
 ## 项目启发与证据
 
 “前缀过滤+Trie+动态目录维护”已有直接前序。F1–F8需收缩到实际ANN或表示增量；F9候选为前缀合法深度参与候选/入口/边导航，相同scope和总内存下与既有过滤ANN比较，新颖性未充分排查。
