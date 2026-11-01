@@ -4,6 +4,8 @@
 
 ## 当前工作
 
+- **[DAG组合顺序、邻居调整、高速路径与bitmap资格判断](2026-11-02-exps/dag-composition-report.md)**：固定SIFT×CCS、统一ef口径、11臂配对测量。组合顺序在距离优先准入下不可观测（FCFS更差）；出度剪枝16–24+21KB visited位图是唯一稳定收益（配对−10%）；jump高速边无收益；比NodeANN慢只发生在大scope（≥50合格item慢6–10倍且召回降至.55），小scope反而更快。char资格表0.5ns/check，位图单owner谓词更慢、多标签谓词快8.3×。
+
 - **[当前全局策略：ACORN-1一/二跳搜索移植](2026-11-02-exps/report.md#8-acorn-1-搜索策略全一二跳邻域扩展)**：高层/底层扩展所有一跳中间点，过滤后M截断；不合格零距离、单底层队列，默认 `bash autoresearch.sh` 已接入。保留hnswlib RNG图与本地入口，非作者完整ACORN索引复现；已测邻接成本，当前未达到召回门槛。
 
 - **[严格前置过滤控制：无桥接HNSW](2026-11-02-exps/report.md#7-全局-hnsw-统一采用前置资格检查)**：入口/高层/底层均先判断并完全跳过不合格节点，保留为`global_prefilter`消融；当前主全局搜索见ACORN策略。旧后置过滤仍只作`global_result_filter`单列参考，低召回延迟不作同质量成绩。

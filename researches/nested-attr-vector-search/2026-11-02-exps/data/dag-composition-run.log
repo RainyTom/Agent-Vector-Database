@@ -1,0 +1,178 @@
+RESULT variant=baseline ef=32 recall=0.83913 latency_us=5.415 distances=164 expansions=28 rejected_edges=205 duplicate_edges=312
+RESULT variant=baseline ef=128 recall=0.913043 latency_us=21.3985 distances=374 expansions=92 rejected_edges=484 duplicate_edges=1189
+RESULT variant=baseline ef=512 recall=0.956522 latency_us=93.1353 distances=722 expansions=260 rejected_edges=1217 duplicate_edges=3785
+RESULT variant=baseline ef=2048 recall=0.995652 latency_us=220.457 distances=1262 expansions=687 rejected_edges=2496 duplicate_edges=11374
+RESULT variant=baseline ef=168937 recall=1 latency_us=691.192 distances=2000 expansions=2000 rejected_edges=4424 duplicate_edges=36369
+SUMMARY variant=baseline gate_us=93.1353043478 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=7.507299451 degree_mean=24.0638344472 local_edges=2374436 connector_edges=1652935 jump_edges=37901
+RESULT variant=portal4 ef=32 recall=0.826086956522 latency_us=5.47204347826 distances=157 expansions=29 rejected_edges=178 duplicate_edges=316
+RESULT variant=portal4 ef=128 recall=0.895652173913 latency_us=23.6719130435 distances=355 expansions=93 rejected_edges=432 duplicate_edges=1205
+RESULT variant=portal4 ef=512 recall=0.94347826087 latency_us=93.5142173913 distances=690 expansions=260 rejected_edges=1140 duplicate_edges=3787
+RESULT variant=portal4 ef=2048 recall=0.995652173913 latency_us=228.426478261 distances=1251 expansions=687 rejected_edges=2394 duplicate_edges=11134
+RESULT variant=portal4 ef=168937 recall=1 latency_us=666.731652174 distances=2000 expansions=2000 rejected_edges=4268 duplicate_edges=35307
+SUMMARY variant=portal4 gate_us=228.426478261 gate_recall=0.995652173913 recall_max=1 max_ef_miss_queries=0 build_s=7.381682233 degree_mean=23.4814102298 local_edges=2374436 connector_edges=1584818 jump_edges=7625
+RESULT variant=portal16 ef=32 recall=0.852173913043 latency_us=9.17552173913 distances=179 expansions=28 rejected_edges=247 duplicate_edges=348
+RESULT variant=portal16 ef=128 recall=0.908695652174 latency_us=30.2570869565 distances=375 expansions=89 rejected_edges=549 duplicate_edges=1234
+RESULT variant=portal16 ef=512 recall=0.965217391304 latency_us=110.665782609 distances=752 expansions=261 rejected_edges=1352 duplicate_edges=3970
+RESULT variant=portal16 ef=2048 recall=0.995652173913 latency_us=243.127304348 distances=1288 expansions=687 rejected_edges=2712 duplicate_edges=12006
+RESULT variant=portal16 ef=168937 recall=1 latency_us=704.607347826 distances=2000 expansions=2000 rejected_edges=4798 duplicate_edges=39028
+SUMMARY variant=portal16 gate_us=110.665782609 gate_recall=0.965217391304 recall_max=1 max_ef_miss_queries=0 build_s=6.992851798 degree_mean=25.389452873 local_edges=2374436 connector_edges=1749331 jump_edges=165451
+RESULT variant=portal32 ef=32 recall=0.860869565217 latency_us=7.15086956522 distances=204 expansions=27 rejected_edges=298 duplicate_edges=414
+RESULT variant=portal32 ef=128 recall=0.913043478261 latency_us=33.3918695652 distances=398 expansions=88 rejected_edges=701 duplicate_edges=1464
+RESULT variant=portal32 ef=512 recall=0.965217391304 latency_us=107.477652174 distances=794 expansions=261 rejected_edges=1680 duplicate_edges=4583
+RESULT variant=portal32 ef=2048 recall=0.995652173913 latency_us=232.042043478 distances=1335 expansions=687 rejected_edges=3219 duplicate_edges=14051
+RESULT variant=portal32 ef=168937 recall=1 latency_us=700.634565217 distances=2000 expansions=2000 rejected_edges=5695 duplicate_edges=46918
+SUMMARY variant=portal32 gate_us=107.477652174 gate_recall=0.965217391304 recall_max=1 max_ef_miss_queries=0 build_s=7.441986641 degree_mean=29.1278701528 local_edges=2374436 connector_edges=1890312 jump_edges=656027
+RESULT variant=connector2 ef=32 recall=0.847826086957 latency_us=6.15365217391 distances=170 expansions=28 rejected_edges=233 duplicate_edges=321
+RESULT variant=connector2 ef=128 recall=0.913043478261 latency_us=33.7326521739 distances=375 expansions=92 rejected_edges=521 duplicate_edges=1198
+RESULT variant=connector2 ef=512 recall=0.95652173913 latency_us=93.0786086957 distances=723 expansions=260 rejected_edges=1272 duplicate_edges=3809
+RESULT variant=connector2 ef=2048 recall=0.995652173913 latency_us=216.695347826 distances=1263 expansions=687 rejected_edges=2576 duplicate_edges=11470
+RESULT variant=connector2 ef=168937 recall=1 latency_us=676.813695652 distances=2000 expansions=2000 rejected_edges=4557 duplicate_edges=36817
+SUMMARY variant=connector2 gate_us=93.0786086957 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=6.688653411 degree_mean=24.3314549211 local_edges=2374436 connector_edges=1700232 jump_edges=35815
+RESULT variant=connector3 ef=32 recall=0.847826086957 latency_us=6.33456521739 distances=171 expansions=28 rejected_edges=256 duplicate_edges=323
+RESULT variant=connector3 ef=128 recall=0.913043478261 latency_us=27.4210434783 distances=376 expansions=92 rejected_edges=554 duplicate_edges=1204
+RESULT variant=connector3 ef=512 recall=0.95652173913 latency_us=100.565391304 distances=724 expansions=260 rejected_edges=1320 duplicate_edges=3825
+RESULT variant=connector3 ef=2048 recall=0.995652173913 latency_us=213.992391304 distances=1263 expansions=687 rejected_edges=2649 duplicate_edges=11551
+RESULT variant=connector3 ef=168937 recall=1 latency_us=697.513478261 distances=2000 expansions=2000 rejected_edges=4678 duplicate_edges=37218
+SUMMARY variant=connector3 gate_us=100.565391304 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=6.814966775 degree_mean=24.5748947833 local_edges=2374436 connector_edges=1743489 jump_edges=33684
+RESULT variant=no_reverse ef=32 recall=0.791304347826 latency_us=4.88008695652 distances=144 expansions=29 rejected_edges=166 duplicate_edges=328
+RESULT variant=no_reverse ef=128 recall=0.826086956522 latency_us=20.8366956522 distances=276 expansions=91 rejected_edges=423 duplicate_edges=1153
+RESULT variant=no_reverse ef=512 recall=0.9 latency_us=81.9715652174 distances=570 expansions=260 rejected_edges=1153 duplicate_edges=3773
+RESULT variant=no_reverse ef=2048 recall=0.969565217391 latency_us=209.394652174 distances=1121 expansions=697 rejected_edges=2430 duplicate_edges=11534
+RESULT variant=no_reverse ef=168937 recall=1 latency_us=665.047652174 distances=2000 expansions=2000 rejected_edges=4249 duplicate_edges=35435
+SUMMARY variant=no_reverse gate_us=209.394652174 gate_recall=0.969565217391 recall_max=1 max_ef_miss_queries=0 build_s=6.659142778 degree_mean=23.577298046 local_edges=2374436 connector_edges=1570739 jump_edges=37903
+RESULT variant=reverse64 ef=32 recall=0.860869565217 latency_us=6.61430434783 distances=176 expansions=28 rejected_edges=309 duplicate_edges=316
+RESULT variant=reverse64 ef=128 recall=0.904347826087 latency_us=23.8813913043 distances=362 expansions=89 rejected_edges=647 duplicate_edges=1174
+RESULT variant=reverse64 ef=512 recall=0.960869565217 latency_us=95.9471304348 distances=741 expansions=261 rejected_edges=1443 duplicate_edges=3918
+RESULT variant=reverse64 ef=2048 recall=0.995652173913 latency_us=219.192347826 distances=1273 expansions=687 rejected_edges=2805 duplicate_edges=11848
+RESULT variant=reverse64 ef=168937 recall=1 latency_us=670.418956522 distances=2000 expansions=2000 rejected_edges=4877 duplicate_edges=38480
+SUMMARY variant=reverse64 gate_us=95.9471304348 gate_recall=0.960869565217 recall_max=1 max_ef_miss_queries=0 build_s=6.687733724 degree_mean=25.1685480386 local_edges=2374436 connector_edges=1839606 jump_edges=37857
+RESULT variant=no_distributed ef=32 recall=0.791304347826 latency_us=4.60426086957 distances=143 expansions=29 rejected_edges=42 duplicate_edges=275
+RESULT variant=no_distributed ef=128 recall=0.826086956522 latency_us=13.544826087 distances=275 expansions=91 rejected_edges=58 duplicate_edges=956
+RESULT variant=no_distributed ef=512 recall=0.895652173913 latency_us=58.3506521739 distances=558 expansions=259 rejected_edges=87 duplicate_edges=3049
+RESULT variant=no_distributed ef=2048 recall=0.969565217391 latency_us=179.839043478 distances=1122 expansions=697 rejected_edges=122 duplicate_edges=8492
+RESULT variant=no_distributed ef=168937 recall=1 latency_us=628.176913043 distances=2000 expansions=2000 rejected_edges=190 duplicate_edges=25014
+SUMMARY variant=no_distributed gate_us=179.839043478 gate_recall=0.969565217391 recall_max=1 max_ef_miss_queries=0 build_s=6.32407389 degree_mean=14.6215097936 local_edges=2374436 connector_edges=57240 jump_edges=38438
+RESULT variant=prune16 ef=32 recall=0.839130434783 latency_us=5.37065217391 distances=124 expansions=28 rejected_edges=120 duplicate_edges=181
+RESULT variant=prune16 ef=128 recall=0.891304347826 latency_us=25.3124782609 distances=268 expansions=87 rejected_edges=266 duplicate_edges=760
+RESULT variant=prune16 ef=512 recall=0.95652173913 latency_us=98.5406956522 distances=625 expansions=271 rejected_edges=637 duplicate_edges=2798
+RESULT variant=prune16 ef=2048 recall=0.995652173913 latency_us=214.011478261 distances=1129 expansions=687 rejected_edges=1185 duplicate_edges=8015
+RESULT variant=prune16 ef=168937 recall=1 latency_us=842.057391304 distances=2000 expansions=2000 rejected_edges=2058 duplicate_edges=25624
+SUMMARY variant=prune16 gate_us=98.5406956522 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=7.153892045 degree_mean=15.0518536496 local_edges=2542815 connector_edges=0 jump_edges=0
+RESULT variant=prune24 ef=32 recall=0.839130434783 latency_us=4.40191304348 distances=143 expansions=28 rejected_edges=163 duplicate_edges=249
+RESULT variant=prune24 ef=128 recall=0.908695652174 latency_us=20.8061304348 distances=319 expansions=90 rejected_edges=389 duplicate_edges=1003
+RESULT variant=prune24 ef=512 recall=0.969565217391 latency_us=86.8962173913 distances=688 expansions=270 rejected_edges=981 duplicate_edges=3493
+RESULT variant=prune24 ef=2048 recall=0.995652173913 latency_us=254.703478261 distances=1193 expansions=687 rejected_edges=1984 duplicate_edges=10075
+RESULT variant=prune24 ef=168937 recall=1 latency_us=693.695826087 distances=2000 expansions=2000 rejected_edges=3514 duplicate_edges=32251
+SUMMARY variant=prune24 gate_us=86.8962173913 gate_recall=0.969565217391 recall_max=1 max_ef_miss_queries=0 build_s=7.02484758 degree_mean=19.924019013 local_edges=3365904 connector_edges=0 jump_edges=0
+RESULT variant=prune32 ef=32 recall=0.839130434783 latency_us=4.89391304348 distances=153 expansions=28 rejected_edges=185 duplicate_edges=282
+RESULT variant=prune32 ef=128 recall=0.908695652174 latency_us=21.2348695652 distances=336 expansions=90 rejected_edges=445 duplicate_edges=1102
+RESULT variant=prune32 ef=512 recall=0.969565217391 latency_us=111.311652174 distances=718 expansions=270 rejected_edges=1127 duplicate_edges=3785
+RESULT variant=prune32 ef=2048 recall=0.995652173913 latency_us=214.370826087 distances=1230 expansions=687 rejected_edges=2343 duplicate_edges=10916
+RESULT variant=prune32 ef=168937 recall=1 latency_us=692.657043478 distances=2000 expansions=2000 rejected_edges=4155 duplicate_edges=34897
+SUMMARY variant=prune32 gate_us=111.311652174 gate_recall=0.969565217391 recall_max=1 max_ef_miss_queries=0 build_s=6.84924603 degree_mean=22.4746739909 local_edges=3796804 connector_edges=0 jump_edges=0
+RESULT variant=jump0 ef=32 recall=0.839130434783 latency_us=5.61439130435 distances=161 expansions=28 rejected_edges=203 duplicate_edges=301
+RESULT variant=jump0 ef=128 recall=0.913043478261 latency_us=24.8719565217 distances=369 expansions=92 rejected_edges=480 duplicate_edges=1166
+RESULT variant=jump0 ef=512 recall=0.95652173913 latency_us=95.4126956522 distances=716 expansions=260 rejected_edges=1206 duplicate_edges=3741
+RESULT variant=jump0 ef=2048 recall=0.995652173913 latency_us=213.064608696 distances=1255 expansions=687 rejected_edges=2482 duplicate_edges=11249
+RESULT variant=jump0 ef=168937 recall=1 latency_us=676.997956522 distances=2000 expansions=2000 rejected_edges=4399 duplicate_edges=35871
+SUMMARY variant=jump0 gate_us=95.4126956522 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=6.564523969 degree_mean=23.8394845416 local_edges=2374436 connector_edges=1652935 jump_edges=0
+RESULT variant=jump2 ef=32 recall=0.847826086957 latency_us=8.89969565217 distances=176 expansions=28 rejected_edges=241 duplicate_edges=323
+RESULT variant=jump2 ef=128 recall=0.913043478261 latency_us=24.8290869565 distances=380 expansions=92 rejected_edges=533 duplicate_edges=1204
+RESULT variant=jump2 ef=512 recall=0.95652173913 latency_us=102.132130435 distances=727 expansions=260 rejected_edges=1294 duplicate_edges=3826
+RESULT variant=jump2 ef=2048 recall=0.995652173913 latency_us=219.942304348 distances=1267 expansions=687 rejected_edges=2603 duplicate_edges=11533
+RESULT variant=jump2 ef=168937 recall=1 latency_us=725.186478261 distances=2000 expansions=2000 rejected_edges=4601 duplicate_edges=37080
+SUMMARY variant=jump2 gate_us=102.132130435 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=6.552510393 degree_mean=24.4593546707 local_edges=2374436 connector_edges=1652935 jump_edges=104719
+RESULT variant=jump3 ef=32 recall=0.847826086957 latency_us=5.97830434783 distances=176 expansions=28 rejected_edges=272 duplicate_edges=323
+RESULT variant=jump3 ef=128 recall=0.913043478261 latency_us=23.1253478261 distances=380 expansions=92 rejected_edges=582 duplicate_edges=1204
+RESULT variant=jump3 ef=512 recall=0.95652173913 latency_us=81.3160434783 distances=727 expansions=260 rejected_edges=1373 duplicate_edges=3826
+RESULT variant=jump3 ef=2048 recall=0.995652173913 latency_us=222.365173913 distances=1267 expansions=687 rejected_edges=2768 duplicate_edges=11533
+RESULT variant=jump3 ef=168937 recall=1 latency_us=688.757391304 distances=2000 expansions=2000 rejected_edges=5125 duplicate_edges=37080
+SUMMARY variant=jump3 gate_us=81.3160434783 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=6.591965486 degree_mean=24.9204851513 local_edges=2374436 connector_edges=1652935 jump_edges=182621
+RESULT variant=order_size_asc ef=32 recall=0.839130434783 latency_us=5.79530434783 distances=164 expansions=28 rejected_edges=205 duplicate_edges=312
+RESULT variant=order_size_asc ef=128 recall=0.913043478261 latency_us=25.9859130435 distances=374 expansions=92 rejected_edges=484 duplicate_edges=1189
+RESULT variant=order_size_asc ef=512 recall=0.95652173913 latency_us=91.2618695652 distances=722 expansions=260 rejected_edges=1217 duplicate_edges=3785
+RESULT variant=order_size_asc ef=2048 recall=0.995652173913 latency_us=214.695043478 distances=1262 expansions=687 rejected_edges=2496 duplicate_edges=11374
+RESULT variant=order_size_asc ef=168937 recall=1 latency_us=674.038173913 distances=2000 expansions=2000 rejected_edges=4424 duplicate_edges=36369
+SUMMARY variant=order_size_asc gate_us=91.2618695652 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=6.678872176 degree_mean=24.0638344472 local_edges=2374436 connector_edges=1652935 jump_edges=37901
+RESULT variant=order_size_desc ef=32 recall=0.839130434783 latency_us=5.25317391304 distances=164 expansions=28 rejected_edges=205 duplicate_edges=312
+RESULT variant=order_size_desc ef=128 recall=0.913043478261 latency_us=22.8790434783 distances=374 expansions=92 rejected_edges=484 duplicate_edges=1189
+RESULT variant=order_size_desc ef=512 recall=0.95652173913 latency_us=80.6093043478 distances=722 expansions=260 rejected_edges=1217 duplicate_edges=3785
+RESULT variant=order_size_desc ef=2048 recall=0.995652173913 latency_us=235.152434783 distances=1262 expansions=687 rejected_edges=2496 duplicate_edges=11374
+RESULT variant=order_size_desc ef=168937 recall=1 latency_us=662.561521739 distances=2000 expansions=2000 rejected_edges=4424 duplicate_edges=36369
+SUMMARY variant=order_size_desc gate_us=80.6093043478 gate_recall=0.95652173913 recall_max=1 max_ef_miss_queries=0 build_s=6.604772012 degree_mean=24.0638344472 local_edges=2374436 connector_edges=1652935 jump_edges=37901
+RESULT variant=order_fcfs_dag ef=32 recall=0.808695652174 latency_us=5.1797826087 distances=149 expansions=29 rejected_edges=214 duplicate_edges=338
+RESULT variant=order_fcfs_dag ef=128 recall=0.865217391304 latency_us=22.7389130435 distances=332 expansions=93 rejected_edges=520 duplicate_edges=1232
+RESULT variant=order_fcfs_dag ef=512 recall=0.939130434783 latency_us=81.0873913043 distances=649 expansions=260 rejected_edges=1231 duplicate_edges=3844
+RESULT variant=order_fcfs_dag ef=2048 recall=0.973913043478 latency_us=198.185478261 distances=1133 expansions=688 rejected_edges=2534 duplicate_edges=11516
+RESULT variant=order_fcfs_dag ef=168937 recall=1 latency_us=656.566130435 distances=2000 expansions=2000 rejected_edges=4372 duplicate_edges=36416
+SUMMARY variant=order_fcfs_dag gate_us=198.185478261 gate_recall=0.973913043478 recall_max=1 max_ef_miss_queries=0 build_s=6.821326904 degree_mean=24.0577138223 local_edges=2374436 connector_edges=1651919 jump_edges=37883
+RESULT variant=order_fcfs_asc ef=32 recall=0.808695652174 latency_us=5.14886956522 distances=149 expansions=29 rejected_edges=214 duplicate_edges=338
+RESULT variant=order_fcfs_asc ef=128 recall=0.865217391304 latency_us=20.3190869565 distances=332 expansions=93 rejected_edges=521 duplicate_edges=1233
+RESULT variant=order_fcfs_asc ef=512 recall=0.939130434783 latency_us=75.901173913 distances=650 expansions=260 rejected_edges=1234 duplicate_edges=3840
+RESULT variant=order_fcfs_asc ef=2048 recall=0.973913043478 latency_us=201.373913043 distances=1133 expansions=688 rejected_edges=2539 duplicate_edges=11511
+RESULT variant=order_fcfs_asc ef=168937 recall=1 latency_us=655.058869565 distances=2000 expansions=2000 rejected_edges=4376 duplicate_edges=36411
+SUMMARY variant=order_fcfs_asc gate_us=201.373913043 gate_recall=0.973913043478 recall_max=1 max_ef_miss_queries=0 build_s=6.631886984 degree_mean=24.0570153371 local_edges=2374436 connector_edges=1651800 jump_edges=37884
+RESULT variant=order_fcfs_desc ef=32 recall=0.791304347826 latency_us=5.81169565217 distances=148 expansions=29 rejected_edges=239 duplicate_edges=332
+RESULT variant=order_fcfs_desc ef=128 recall=0.865217391304 latency_us=22.1073913043 distances=325 expansions=93 rejected_edges=530 duplicate_edges=1215
+RESULT variant=order_fcfs_desc ef=512 recall=0.939130434783 latency_us=103.249652174 distances=643 expansions=259 rejected_edges=1251 duplicate_edges=3833
+RESULT variant=order_fcfs_desc ef=2048 recall=0.978260869565 latency_us=228.397304348 distances=1119 expansions=688 rejected_edges=2573 duplicate_edges=11542
+RESULT variant=order_fcfs_desc ef=168937 recall=1 latency_us=674.103956522 distances=2000 expansions=2000 rejected_edges=4442 duplicate_edges=36360
+SUMMARY variant=order_fcfs_desc gate_us=228.397304348 gate_recall=0.978260869565 recall_max=1 max_ef_miss_queries=0 build_s=6.643435824 degree_mean=24.064947288 local_edges=2374436 connector_edges=1653158 jump_edges=37866
+building global graph for global arms
+ARM arm=merged ef=32 recall=0.839130434783 latency_us=5.49847826087 distances=164.608695652 expansions=28.1304347826 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat ef=32 recall=0.839130434783 latency_us=6.38817391304 distances=164.608695652 expansions=28.1304347826 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner ef=32 recall=0.839130434783 latency_us=5.54217391304 distances=164.608695652 expansions=28.1304347826 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_bitmap ef=32 recall=0.839130434783 latency_us=5.31260869565 distances=164.608695652 expansions=28.1304347826 graphs=0 bitmap_build_us=83.7650434783 max_ef_miss=0
+ARM arm=merged_dense ef=32 recall=0.839130434783 latency_us=5.60108695652 distances=164.608695652 expansions=28.1304347826 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner_dense ef=32 recall=0.839130434783 latency_us=5.69426086957 distances=164.608695652 expansions=28.1304347826 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_prune16_dense ef=32 recall=0.839130434783 latency_us=4.17743478261 distances=124.695652174 expansions=28 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_shared ef=32 recall=0.995652173913 latency_us=26.9110869565 distances=653.869565217 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_pergraph ef=32 recall=1 latency_us=44.9424782609 distances=958.652173913 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_acorn1 ef=32 recall=0.290389924086 latency_us=136.238695652 distances=413.52173913 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_prefilter ef=32 recall=0.0816942719117 latency_us=6.70239130435 distances=50.5217391304 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged ef=128 recall=0.913043478261 latency_us=21.8663043478 distances=374.52173913 expansions=92.1739130435 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat ef=128 recall=0.913043478261 latency_us=27.1689565217 distances=374.52173913 expansions=92.1739130435 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner ef=128 recall=0.913043478261 latency_us=23.6108695652 distances=374.52173913 expansions=92.1739130435 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_bitmap ef=128 recall=0.913043478261 latency_us=20.5965652174 distances=374.52173913 expansions=92.1739130435 graphs=0 bitmap_build_us=84.2203478261 max_ef_miss=0
+ARM arm=merged_dense ef=128 recall=0.913043478261 latency_us=21.429826087 distances=374.52173913 expansions=92.1739130435 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner_dense ef=128 recall=0.913043478261 latency_us=22.8400434783 distances=374.52173913 expansions=92.1739130435 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_prune16_dense ef=128 recall=0.891304347826 latency_us=14.9433913043 distances=268.260869565 expansions=87.5652173913 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_shared ef=128 recall=1 latency_us=27.9146521739 distances=695.173913043 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_pergraph ef=128 recall=1 latency_us=104.62926087 distances=1448.26086957 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_acorn1 ef=128 recall=0.342563837129 latency_us=279.079956522 distances=526.086956522 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_prefilter ef=128 recall=0.0860420979986 latency_us=9.86956521739 distances=62.5652173913 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged ef=512 recall=0.95652173913 latency_us=95.3339130435 distances=722.782608696 expansions=260.913043478 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat ef=512 recall=0.95652173913 latency_us=107.813913043 distances=722.782608696 expansions=260.913043478 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner ef=512 recall=0.95652173913 latency_us=98.3202173913 distances=722.782608696 expansions=260.913043478 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_bitmap ef=512 recall=0.95652173913 latency_us=83.971 distances=722.782608696 expansions=260.913043478 graphs=0 bitmap_build_us=96.3 max_ef_miss=0
+ARM arm=merged_dense ef=512 recall=0.95652173913 latency_us=81.9189565217 distances=722.782608696 expansions=260.913043478 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner_dense ef=512 recall=0.95652173913 latency_us=89.9846086957 distances=722.782608696 expansions=260.913043478 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_prune16_dense ef=512 recall=0.95652173913 latency_us=82.2543478261 distances=625.695652174 expansions=271.652173913 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_shared ef=512 recall=1 latency_us=41.3666521739 distances=827.217391304 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_pergraph ef=512 recall=1 latency_us=204.254913043 distances=1941.86956522 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_acorn1 ef=512 recall=0.359955141477 latency_us=979.665521739 distances=786.608695652 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_prefilter ef=512 recall=0.103433402346 latency_us=23.3300869565 distances=107.565217391 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged ef=2048 recall=0.995652173913 latency_us=225.862608696 distances=1262.91304348 expansions=687.956521739 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat ef=2048 recall=0.995652173913 latency_us=268.264086957 distances=1262.91304348 expansions=687.956521739 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner ef=2048 recall=0.995652173913 latency_us=299.405347826 distances=1262.91304348 expansions=687.956521739 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_bitmap ef=2048 recall=0.995652173913 latency_us=234.955695652 distances=1262.91304348 expansions=687.956521739 graphs=0 bitmap_build_us=97.7385217391 max_ef_miss=0
+ARM arm=merged_dense ef=2048 recall=0.995652173913 latency_us=226.51073913 distances=1262.91304348 expansions=687.956521739 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner_dense ef=2048 recall=0.995652173913 latency_us=262.25373913 distances=1262.91304348 expansions=687.956521739 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_prune16_dense ef=2048 recall=0.995652173913 latency_us=220.815173913 distances=1129.08695652 expansions=687.956521739 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_shared ef=2048 recall=1 latency_us=74.3121304348 distances=1145.95652174 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_pergraph ef=2048 recall=1 latency_us=243.995086957 distances=2120.39130435 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_acorn1 ef=2048 recall=0.359955141477 latency_us=3503.3313913 distances=1250.43478261 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_prefilter ef=2048 recall=0.107781228433 latency_us=88.4306086957 distances=264.130434783 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged ef=168937 recall=1 latency_us=698.075956522 distances=2000.47826087 expansions=2000.47826087 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat ef=168937 recall=1 latency_us=971.777304348 distances=2000.47826087 expansions=2000.47826087 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner ef=168937 recall=1 latency_us=969.790826087 distances=2000.47826087 expansions=2000.47826087 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_bitmap ef=168937 recall=1 latency_us=739.641043478 distances=2000.47826087 expansions=2000.47826087 graphs=0 bitmap_build_us=89.341826087 max_ef_miss=0
+ARM arm=merged_dense ef=168937 recall=1 latency_us=659.841391304 distances=2000.47826087 expansions=2000.47826087 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_flat_owner_dense ef=168937 recall=1 latency_us=884.197565217 distances=2000.47826087 expansions=2000.47826087 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=merged_prune16_dense ef=168937 recall=1 latency_us=719.34826087 distances=2000.26086957 expansions=2000.26086957 graphs=0 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_shared ef=168937 recall=1 latency_us=258.444 distances=2120.69565217 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=nodeann_pergraph ef=168937 recall=1 latency_us=246.911304348 distances=2120.69565217 expansions=0 graphs=10.0434782609 bitmap_build_us=0 max_ef_miss=0
+ARM arm=global_acorn1 ef=168937 recall=0.359955141477 latency_us=11996.9120435 distances=2218.34782609 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=19
+ARM arm=global_prefilter ef=168937 recall=0.107781228433 latency_us=652.139043478 distances=914.565217391 expansions=0 graphs=0 bitmap_build_us=0 max_ef_miss=22
+KERNEL sink=559116
+SCOPE sink=10514079941175

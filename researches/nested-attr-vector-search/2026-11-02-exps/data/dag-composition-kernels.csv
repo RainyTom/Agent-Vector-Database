@@ -1,0 +1,15 @@
+kernel,pattern,checks,build_us,ns_per_check,matched
+char_owner,trace,2447,0,0.495709031467,0
+owner_bitmap,trace,2447,0,0.704536166735,0
+item_bitmap,trace,2447,94.058,0.380874540253,0
+char_owner,trace,258,0,0.542635658915,0
+owner_bitmap,trace,258,0,0.658914728682,0
+item_bitmap,trace,258,72.005,0.468992248062,0
+char_owner,trace,142,0,0.56338028169,0
+owner_bitmap,trace,142,0,0.774647887324,0
+item_bitmap,trace,142,71.565,0.492957746479,0
+char_owner,trace,4987,0,0.449969921797,0
+owner_bitmap,trace,4987,0,0.63485061159,0
+item_bitmap,trace,4987,99.237,0.363545217566,0
+label_scan,multilabel,200000,525.559,2.548045,1
+item_bitmap,multilabel,200000,0,0.30778,1
