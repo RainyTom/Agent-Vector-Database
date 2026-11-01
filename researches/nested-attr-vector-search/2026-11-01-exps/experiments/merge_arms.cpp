@@ -180,6 +180,15 @@ static Merged build(const Vectors& base, const Workload& w, RawL2Space& l2) {
                     if (d < best[h]) { best[h] = d; endpoints[h] = {u, v}; }
                 }
         }
+        // Geometric joins: every portal gets its nearest portal in each other input.
+        for (size_t g = 0; g < groups.size(); ++g)
+            for (size_t h = 0; h < groups.size(); ++h) if (g != h)
+                for (Id u : groups[g]) {
+                    Pair nearest{std::numeric_limits<float>::infinity(), 0};
+                    for (Id v : groups[h])
+                        nearest = std::min(nearest, Pair{l2.dist(base.at(u), base.at(v)), v});
+                    connect(u, nearest.second);
+                }
         m.portals[c] = representatives(std::move(pool), base, l2);
     }
     size_t connected = normalize();
