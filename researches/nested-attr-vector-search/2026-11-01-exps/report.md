@@ -118,3 +118,11 @@ B4全局过滤HNSW保留历史参考，当前不强制重跑。若要使用现�
 数字仅为有限语义检查，不是SciHTC漏答数、ANN召回或性能实验。证据：[data/dag-positioning-review-check.json](data/dag-positioning-review-check.json)。复现：`itertools.product((0,1),repeat=6)`枚举`itertools.combinations(range(4),2)`边集；DFS可达定义inclusive；选每节点max(parent)；比较每对象祖先集合即可。无需服务器真实向量，不建立永久回归测试或新生产代码。
 
 本轮新增这份独立复核及小证据，不覆盖a1db223的原报告或论文笔记。关键待补：实际canonical语义差、当前全局/局部执行器接线统一、保留Extra混合条件，以及真正的DAG组合机制查重。
+
+## 7. 后续理论方案：DAG-CoPack
+
+按用户要求停止继续铺设诊断矩阵，直接完成[共访分组与图内联合过滤设计](dag-copack-design.md)。方案不修改HNSW搜索核心：按层级scope共访分配共享图，用概念闭包、concept→block映射与图内owner/属性posting保留完整DAG资格。
+
+本次给出了可计算合并准则、查询流程、精确局部搜索下的top-k合并证明及动态维护边界。合并准则明确权衡少启动图与新增scope外对象；不把它当成已验证时延模型。owner变化可以只改组内元数据，但布局可能漂移；DAG闭包与图重建成本没有省略。
+
+此次追加未运行实验、未修改生产源码，没有新速度或召回数字。目标改为直接实施理论方案并看查询效率，不再先做信息oracle诊断；组合机制可作为贡献候选，新颖性仍未充分排查。
