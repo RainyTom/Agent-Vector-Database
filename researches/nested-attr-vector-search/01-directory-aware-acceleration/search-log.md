@@ -82,3 +82,13 @@
 
 代码事实（`src/repro.cpp:238-241`）：原型用 `std::to_string(v)` 拼路径键，**名称未物化**；`rewrite_subtree_paths`（`:334-345`）只在 `move()`/`merge()` 调用，无 rename 路径。因此 **$O(m_u)$ 的改名级联是“把名称写进键”这一设计选择的代价，不是目录表示的固有代价**——这正是可量化的取舍。判据改为 R1 结果逐位不变、R2 向量侧写入量为 0、R3 旧名查询显式拒绝或别名（不得静默空结果）、R4 成本界、R5 别名回收。§5 的引用计数撤销降为可选扩展（只服务 B 类）。重命名在已筛前序中未见专门讨论，但属系统/协议贡献而非新索引。详见[§9](2026-10-28-exps/dynamic-attribute-updates.md#9-重命名作为一等更新本轮修正优先于-36)。
 
+
+## 2026-11-01 DAG资格驱动的单队列编码搜索：窄检索
+
+用户目标：避免每owner图独立top-k与多路合并，保留层级多属性语义。候选机制见[设计](../2026-11-01-exps/dag-qualified-code-search.md)。这是filtered ANN邻近问题，不是vector join。
+
+检索词：`filtered vector search product quantization trie hierarchical labels DAG index`；`"filtered" "product quantization" "index" nearest neighbor`。来源为Web搜索及原始期刊网页；覆盖很窄，没有追完引用链。补查本地papers/relations未命中VA-Trie、1470或PQBF，未新增未精读论文正式记录。
+
+核读[VA-Trie原始网页摘要](https://crad.ict.ac.cn/en/article/id/1470)：元数据为Dong Daoguo、Liu Zhenzhong、Xue Xiangyang；2005，Journal of Computer Research and Development 42(12):2213–2218。摘要明确quantization压缩向量，再由Trie组织近似表示。因此该组合不能单独声称新颖。全文未读，算法界、实验与限制未核实。
+
+搜索还返回PQBF及filtered ANN benchmark，未读全文，不据此填写机制。待补查：filtered IVF/PQ与VA索引，DAG/偏序资格在几何前缀上的非空证据、wavelet/range emptiness、约束NN。当前不能声称未有相关工作。
