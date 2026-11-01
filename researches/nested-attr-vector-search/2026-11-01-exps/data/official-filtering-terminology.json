@@ -1,0 +1,48 @@
+{
+  "checked_on": "2026-11-01",
+  "kind": "targeted_terminology_review_not_system_benchmark",
+  "sources": [
+    {
+      "title": "Filtering | Weaviate Documentation",
+      "url": "https://docs.weaviate.io/weaviate/concepts/filtering",
+      "sections": ["Efficient Pre-Filtered Searches in Weaviate", "Flat-Search Cutoff"],
+      "quotes": [
+        "An inverted index (similar to a traditional search engine) is used to create an allow-list of eligible candidates.",
+        "The index will move along any node's edges normally, but will only add ids to the result set that are present on the allow list.",
+        "Weaviate offers an option to automatically switch to a flat (brute-force) vector search when a filter becomes too restrictive."
+      ],
+      "use": "Distinguish metadata candidate generation, graph-result filtering, and an exact-scan query-plan fallback. These are not three new ANN indexes.",
+      "version_limit": "Versionless live documentation; establishes checked terminology, not historical behavior of every release."
+    },
+    {
+      "title": "How we speed up filtered vector search with ACORN",
+      "authors": ["Abdel Rodriguez", "John Trengrove", "Joon-Pil Hwang"],
+      "published_on": "2024-11-19",
+      "url": "https://weaviate.io/blog/speed-up-filtered-vector-search",
+      "sections": ["Pre-filtering for vector search", "Weaviate filtered search, pre-ACORN", "Weaviate implementation of ACORN"],
+      "quotes": [
+        "we use this approach for small filters (configurable by the flatSearchCutOff parameter)",
+        "we decided not to modify the indexing from “vanilla” HNSW.",
+        "We only use the two-hop expansion if the connecting node does not pass the filter."
+      ],
+      "use": "A search algorithm can make a real contribution without inventing an index name. The blog's custom query algorithm must not be conflated with the paper's construction variants or our ordinary hnswlib traversal."
+    },
+    {
+      "title": "Indexing | Qdrant Documentation",
+      "url": "https://qdrant.tech/documentation/manage-data/indexing/",
+      "sections": ["Payload Index", "Vector Index", "Filterable HNSW Index"],
+      "quotes": [
+        "The index is also used to accurately estimate the filter cardinality, which helps the query planning choose a search strategy.",
+        "When the maximum estimated amount of points that a condition satisfies is smaller than full_scan_threshold_kb, the query planner will use full-scan search instead of HNSW index traversal for better performance.",
+        "Qdrant solves this problem by extending the HNSW graph with additional edges based on indexed payload values."
+      ],
+      "use": "Separates payload index, strategy selection and actual extra graph edges. Our exact candidate count is computed by enumerating/filtering scope, not a free cardinality estimate; our graph has no such payload-aware extra edges.",
+      "version_limit": "Live page redirected from concepts/indexing to manage-data/indexing. No latency or recall result is imported."
+    }
+  ],
+  "limitations": [
+    "No new ANN, maintenance or author-system benchmarks were run.",
+    "Standard-component overlap does not prove that all possible future combinations lack novelty.",
+    "Paper-specific structural comparisons are recorded separately in report.md with local full-text references."
+  ]
+}

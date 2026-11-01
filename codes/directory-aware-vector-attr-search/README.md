@@ -221,7 +221,7 @@ python scripts/run_closure_small_ef.py \
 
 **完成状态：** 服务器3aaa0ed已完成102次静态与36次有限维护；资格执行改进成立，H无独立收益，停止扩展。见[结果复核与分析勘误](../../researches/nested-attr-vector-search/2026-10-31-exps/eligibility-3aaa0ed-review.md)。以下命令是历史复现，不是新任务；未修改查询算法或基线去追正结果。
 
-`eligibility_index.h`以真实目录树、稀疏direct-owner word postings及属性bitplanes取得完整资格mask/E，计入查询成本；V/T/M/B/R/D/I同步维护。两程序新增 `--eligibility-policy off|cap|hybrid|exact`、`--eligible-scan-threshold 512`。默认off保留原算法；cap截断合法堆容量，hybrid在小E上直接精确扫描，exact提供同资格取得的扫描控制。图/pool仍构建维护，Exact不代表独立无图内存成绩。原rank编译/候选池/剪枝不改。
+`eligibility_index.h`当前是**直接目录成员倒排表 + 属性逐对象过滤**：`owner → [(word,bits), …]`记录直接成员，查询时展开子树、并集posting，再读取对象记录判断category/range/tags，产生精确候选位图/E。2026-10-31早期版本使用属性bitplanes，后续`922281c`已删除；不能把当前结构称为完整多属性倒排索引。V/T/M/B/R/D/I同步维护。`--eligibility-policy off|cap|hybrid|exact`选择查询策略：cap截断合法堆容量，hybrid在小E上切到精确扫描，exact为扫描控制；它们不是不同ANN索引。图/pool仍构建维护，Exact不代表独立无图内存成绩。
 
 **当前主基线为纯NodeANN（用户后续指定）：** 驱动显式传入 `--scan-threshold 0 --eligibility-policy off`，每个非空direct目录建立局部HNSW，不做小目录扫描、资格前置或自适应规划。变体名A-graph；旧scan512为A-hybrid-reference，仅作历史参考。A-aware不纳入本轮。C++默认参数保留以便历史复现，不能用默认值代替驱动中的纯图合同。逐query自动核对扫描组/扫描距离为0、graph_calls=fanout。
 
@@ -236,9 +236,11 @@ python scripts/run_eligibility.py \
 
 真实两数据集固定102次静态、36次有限维护，ef15/20；保留全部点，不自动升预算或扩N。主比较针对纯NodeANN；混合参考差异如实披露，不设置额外胜出门槛。源SHA、输入SHA、独立GT、完整e2e与维护成本入账。历史`run_closure_small_ef.py`仍绑定7654f1e的原始blob；要复现旧版本请用相应独立checkout，不绕过其校验。
 
-## 整目录层级分块共享图（2026-10-31，新任务）
+## DFS目录组装箱的分区HNSW（历史名：整目录层级分块共享图）
 
 完整实现提交`cdc28f3`。`src/packed_index.h`将DFS相邻的**完整direct-owner组**合并为物理HNSW；大组独立，不改图边/停止规则，不使用proxy筛块。`dynamic_triad --arm P --eligibility-policy cap --pack-layout dfs --pack-size 4096`执行精确资格后搜索所有含合格对象的块。shuffle/node为组织消融；hybrid单列小E扫描。主纯A保持scan0/off。
+
+**结构与命名边界（2026-11-01）：** 当前是平坦分区集合、每分区一张普通HNSW，不是沿目录树导航的多级ANN。`dfs/shuffle/node`分别表示DFS顺序装箱、随机目录顺序装箱、不合并目录三种分区构造配置；不表示三种ANN算法。P-dfs与P-dfs-aware共用同一索引，区别是后者有小候选集精确扫描的查询计划。整目录不切分只保证在初始layout/repack时成立，动态split可切开目录组；B是装箱目标，超大目录允许独占超过B的分区。详见[结构与前序核对](../../researches/nested-attr-vector-search/2026-11-01-exps/report.md)。
 
 V/T/M/B/R维护当前资格、位置冻结；D同步压实、I支持首插/复活/有界split；`--pack-final-repack 1`完整恢复布局，停顿/距离/插入入账。单线程、固定base向量ID空间，不含任意新向量或并发协议。
 

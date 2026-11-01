@@ -1,0 +1,60 @@
+{
+  "kind": "existing_artifact_structure_review",
+  "new_ann_runs": 0,
+  "source_manifest": "work/packed/static-sift100k-l2048-random-run1/manifest.json",
+  "source_manifest_sha256": "46930f9a63c88c812b605f092365ed0e98d2f47fa13a459a0569e81ba2a5cf1e",
+  "M": 16,
+  "efConstruction": 200,
+  "layouts": [
+    {
+      "historical_label": "P-node",
+      "source": "work/packed/static-sift100k-l2048-random-run1/sift100k-l2048-random/static/runs/P-node-ef20-rep0.summary.json",
+      "sha256": "df6b8f88ca9396401f410a9e9544156095bcb914fd6ea4dc713ec5261e9f683f",
+      "pack_layout": "node",
+      "pack_size": 4096,
+      "physical_block_count": 2341,
+      "active_packed_graph_count": 2341,
+      "eligibility_policy": "cap"
+    },
+    {
+      "historical_label": "P-shuffle",
+      "source": "work/packed/static-sift100k-l2048-random-run1/sift100k-l2048-random/static/runs/P-shuffle-ef20-rep0.summary.json",
+      "sha256": "494eada264ceb9b127a78d42a4818b2c552d1149a69d85050a7332c9fb47d326",
+      "pack_layout": "shuffle",
+      "pack_size": 4096,
+      "physical_block_count": 25,
+      "active_packed_graph_count": 25,
+      "eligibility_policy": "cap"
+    },
+    {
+      "historical_label": "P-dfs",
+      "source": "work/packed/static-sift100k-l2048-random-run1/sift100k-l2048-random/static/runs/P-dfs-ef20-rep0.summary.json",
+      "sha256": "219bba28e0c652fdb6dccaf388d8e4983769b45bec8efbeb573ba2aba431da6d",
+      "pack_layout": "dfs",
+      "pack_size": 4096,
+      "physical_block_count": 25,
+      "active_packed_graph_count": 25,
+      "eligibility_policy": "cap"
+    },
+    {
+      "historical_label": "P-dfs-aware",
+      "source": "work/packed/static-sift100k-l2048-random-run1/sift100k-l2048-random/static/runs/P-dfs-aware-ef20-rep0.summary.json",
+      "sha256": "bfa1a2c7ef99e3ca2e87de5b842d9b34db3ed6326c9cc1f6f3a37212a99ab857",
+      "pack_layout": "dfs",
+      "pack_size": 4096,
+      "physical_block_count": 25,
+      "active_packed_graph_count": 25,
+      "eligibility_policy": "hybrid"
+    }
+  ],
+  "sources": {
+    "codes/directory-aware-vector-attr-search/src/eligibility_index.h": "4480827cc74b0f728d6e2c2a623d32e098ac4a85dbc3ff773ddaec468ab7678c",
+    "codes/directory-aware-vector-attr-search/src/packed_index.h": "765ea5facdf5f8adfa764c118b90b5fcf9ed7a75a1129109710300b259b9b431",
+    "codes/directory-aware-vector-attr-search/src/dynamic_triad.cpp": "3a984f070b40a642cb02ddc3c2ff7cb6f2e26ea1628e128df1858224ef9497a0"
+  },
+  "limitations": [
+    "These block counts describe one existing dataset, not a general equality guarantee.",
+    "No cache-miss counters or new performance measurements were collected.",
+    "Historical labels are not names of separate ANN algorithms."
+  ]
+}

@@ -134,3 +134,11 @@
 - iRangeGraph/Curator沿用已归档前序，不声称重新精读；旧2026-10-29任务已有owner/place/routes解耦，不作为本轮首创。TrieHI预印本问题定义也不因未正式发表而忽略。
 - [完整方案](../2026-10-31-exps/packed-index-plan.md)只把整owner组DFS物理装箱及其有限维护作为可检验机制；新颖性风险高、非穷尽检索。150次真实程序合成回放证明有限语义/生命周期，不证明真实数据优势或论文门槛。
 
+
+## 2026-11-01 索引形式、命名与前序纠偏
+
+- 用户质疑“资格索引/层级分块索引/三种布局”过度包装。本轮先核总论文/关系索引、当前源码与已存结果，再定向核读Directory-Aware §III–IV、Curator §3–4.2、ACORN §5、iRangeGraph §3及qd-tree §3；Filtered-DiskANN补核共享图与剪边边界。
+- Web检索：`site:weaviate.io inverted index HNSW pre-filtering allow list ACORN`及Qdrant payload/full-scan/HNSW术语；实际阅读[Weaviate Filtering](https://docs.weaviate.io/weaviate/concepts/filtering)、[2024 ACORN博客](https://weaviate.io/blog/speed-up-filtered-vector-search)、[Qdrant Indexing](https://qdrant.tech/documentation/manage-data/indexing/)。仅补标准组件命名，不移植厂商性能数字，不声称穷尽前序。
+- [核对报告](../2026-11-01-exps/report.md)将当前结构展开为“直接目录倒排＋scope内属性逐对象过滤＋DFS装箱平坦分区HNSW”；aware是小候选集扫描计划。当前不具备Curator的标签自适应层级、iRangeGraph的按范围组边或ACORN的谓词子图遍历。NodeANN是项目基线，不是Directory-Aware原文方法。
+- 实际执行只读旧manifest/summary结构字段和SHA：P-node 2341分区，P-shuffle/P-dfs/P-dfs-aware在该100k样本各25分区；新ANN运行0。初次输出因缺data目录失败，补创建后成功。原始实验标签/CSV不改，当前README和报告明确解释；顺序容器收益降为工程优化，更新O(W)、动态split/大组例外等边界一并勘误。
+- 未新增论文或关系，不重启停止路线。下一步缺口是新结构的明确存储不变量、减少的搜索工作和更新依赖，而不是再起缩写。

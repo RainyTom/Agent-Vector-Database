@@ -212,3 +212,8 @@
 - 新读Window Filters ICML2024 §4.2–4.3/§5.2及相关实现段，确认有序子集ANN/覆盖/blowup是直接前序；完整书目、全文与实验归档仍待补，不伪填已精读记录。
 - [方案](../researches/nested-attr-vector-search/2026-10-31-exps/packed-index-plan.md)保留经典装箱/聚簇布局、TrieHI、iRangeGraph/Curator和旧owner/place的重合边界；当前不宣称创新审查通过。
 
+
+## 2026-11-01 当前索引术语与结构核对
+
+- 不新增/合并论文，不变更书目版本和关系计数。复核既有Directory-Aware/TrieHI、Curator、ACORN、iRangeGraph、Filtered-DiskANN、qd-tree正文相关章节；[当日核对报告](../researches/nested-attr-vector-search/2026-11-01-exps/report.md)提供原始链接、本地定位及结构差异。
+- 明确“目录倒排＋逐对象过滤”“平坦分区HNSW”“小候选集扫描回退”与真正的标签自适应层级、范围邻接组合、谓词子图搜索的区别。官方Weaviate/Qdrant文档仅作术语证据；不当作论文新增条目，不借其性能数字证明项目胜出。
