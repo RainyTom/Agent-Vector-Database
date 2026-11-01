@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 # Run from repository root; fixed offline workload, no changes to autoresearch.sh.
+# Historical three-arm result-filter-reference reproduction only.
+# Current qualification-first baseline: run_qualification_first.sh or bash autoresearch.sh.
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 hnsw=codes/directory-aware-vector-attr-search/deps/hnswlib
 experiment=researches/nested-attr-vector-search/2026-11-02-exps

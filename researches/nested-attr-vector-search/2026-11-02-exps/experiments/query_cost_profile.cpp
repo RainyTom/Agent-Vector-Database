@@ -1,4 +1,4 @@
-// Fixed-workload diagnostic. Native graph/search semantics are not modified.
+// Native result-filter reference and explicit qualification-first global search on the same index.
 #define main merge_benchmark_main
 #include "../../2026-11-01-exps/experiments/merge_arms.cpp"
 #undef main
@@ -149,13 +149,15 @@ struct Runner {
     RawL2Space& raw;
     Merged& merged;
     Graph& global;
+    QualifiedOwnerEntries qualified_entries;
     Probe probe;
     Scratch scratch;
     std::vector<char> allowed, ancestor;
     std::vector<Id> roots;
     Runner(const Vectors& b, const Vectors& q, const Workload& workload, RawL2Space& l2,
            Merged& m, Graph& g) : base(b), queries(q), w(workload), raw(l2), merged(m), global(g),
-           probe(l2, b, workload), scratch(b.n), allowed(w.members.size()), ancestor(w.members.size()) {
+           qualified_entries(g, workload), probe(l2, b, workload), scratch(b.n),
+           allowed(w.members.size()), ancestor(w.members.size()) {
         roots.reserve(w.members.size());
     }
     void resolve(size_t query) {
@@ -174,6 +176,16 @@ struct Runner {
         if (mode == Mode::Off) resolve(query);
         else { auto begin = Clock::now(); resolve(query); probe.stats.scope_us = us(begin); }
         if (!count) return {};
+        if (arm == 3) {
+            if (mode == Mode::Off)
+                return search_global_prefilter(global, qualified_entries, queries.at(query), 10, ef, scratch,
+                    [&](Id u) { return bool(allowed[w.owner[u]]); },
+                    [&](Id c) { return bool(allowed[c]); });
+            NativeScope hook(global, probe);
+            return search_global_prefilter(global, qualified_entries, queries.at(query), 10, ef, scratch,
+                [&](Id u) { return probe.item_allowed(u); },
+                [&](Id c) { return probe.owner_allowed(c); });
+        }
         if (arm == 0) {
             size_t calls = 0;
             if (mode == Mode::Off)
@@ -221,7 +233,8 @@ static void same_result(std::vector<Id> a, std::vector<Id> b) {
 
 #ifndef QUERY_COST_PROFILE_TEST
 int main(int argc, char** argv) try {
-    require(argc == 6, "usage: query_cost_profile BASE QUERY DAG_DIR OUT.csv OUT.json");
+    require(argc == 6 || (argc == 7 && std::string(argv[6]) == "--qualification-first"),
+            "usage: query_cost_profile BASE QUERY DAG_DIR OUT.csv OUT.json [--qualification-first]");
     Workload w = load_workload(argv[3]);
     Vectors base = load_vectors(argv[1], w.owner.size()), queries = load_vectors(argv[2], 24);
     require(base.dim == 128 && queries.dim == base.dim, "SIFT128 required");
@@ -234,13 +247,17 @@ int main(int argc, char** argv) try {
     cost::Runner runner(base, queries, w, l2, merged, global);
     double timer_ns = cost::calibrate_timer();
     std::ofstream csv(argv[4]); require(bool(csv), "cannot write CSV");
-    csv << "arm,ef,query,eligible,truth,hits,normal_us,count_pass_us,profile_pass_us,scope_us,"
+    csv << "arm,ef,query,eligible,truth,hits,returned,normal_us,count_pass_us,profile_pass_us,scope_us,"
            "distance_calls,distance_qualified,distance_rejected,unique_distance_items,item_checks,item_rejects,"
            "owner_checks,owner_rejects,distance_raw_us,item_raw_us,owner_raw_us,distance_est_us,item_est_us,owner_est_us\n";
     csv << std::setprecision(12);
     size_t checked = 0, empty_queries = 0;
-    const std::array<size_t, 3> efs{512, 32, 32};
-    const std::array<const char*, 3> names{"merged", "global_filtered", "nodeann"};
+    std::vector<size_t> efs{512, 32, 32};
+    std::vector<const char*> names{"merged", "global_filtered", "nodeann"};
+    if (argc == 7) {
+        names[1] = "global_result_filter";
+        names.push_back("global_prefilter"); efs.push_back(32);
+    }
     struct Prepared { size_t eligible = 0, truth_size = 0; float kth_distance = 0; };
     struct Observation {
         std::vector<Id> result;
@@ -248,7 +265,7 @@ int main(int argc, char** argv) try {
         cost::Stats counts;
     };
     std::array<Prepared, 24> prepared{};
-    std::array<std::array<Observation, 24>, 3> observations;
+    std::vector<std::array<Observation, 24>> observations(names.size());
     for (size_t query = 0; query < 24; ++query) {
         runner.resolve(query);
         auto& p = prepared[query];
@@ -262,7 +279,7 @@ int main(int argc, char** argv) try {
         else p.kth_distance = truth.top().first;
     }
     // Finish all ordinary timings before installing any per-operation probes.
-    for (int arm = 0; arm < 3; ++arm) for (size_t query = 0; query < 24; ++query) {
+    for (size_t arm = 0; arm < names.size(); ++arm) for (size_t query = 0; query < 24; ++query) {
         auto& observation = observations[arm][query];
         std::vector<double> times;
         for (int repeat = 0; repeat < 4; ++repeat) {
@@ -273,7 +290,7 @@ int main(int argc, char** argv) try {
         std::sort(times.begin(), times.end());
         observation.normal_us = times[1];
     }
-    for (int arm = 0; arm < 3; ++arm) for (size_t query = 0; query < 24; ++query) {
+    for (size_t arm = 0; arm < names.size(); ++arm) for (size_t query = 0; query < 24; ++query) {
         auto& observation = observations[arm][query];
         auto begin = Clock::now();
         auto result = runner.run(arm, query, efs[arm], prepared[query].eligible, cost::Mode::Count);
@@ -281,7 +298,7 @@ int main(int argc, char** argv) try {
         observation.counts = runner.probe.stats;
         cost::same_result(observation.result, result);
     }
-    for (int arm = 0; arm < 3; ++arm) for (size_t query = 0; query < 24; ++query) {
+    for (size_t arm = 0; arm < names.size(); ++arm) for (size_t query = 0; query < 24; ++query) {
         const auto& observation = observations[arm][query];
         const auto& p = prepared[query];
         std::vector<std::pair<double, cost::Stats>> samples;
@@ -303,9 +320,12 @@ int main(int argc, char** argv) try {
             require(runner.allowed[w.owner[u]], "result violates attributes");
             if (l2.dist(queries.at(query), base.at(u)) <= p.kth_distance) ++hits;
         }
-        require(observation.result.size() == std::min(size_t(10), p.eligible), "unexpected result count");
+        if (arm == 3) require(observation.result.size() <= std::min(size_t(10), p.eligible),
+                              "prefilter returned too many results");
+        else require(observation.result.size() == std::min(size_t(10), p.eligible), "unexpected result count");
         csv << names[arm] << ',' << efs[arm] << ',' << query << ',' << p.eligible << ',' << p.truth_size << ',' << hits
-            << ',' << observation.normal_us << ',' << observation.count_us << ',' << samples[1].first << ',' << s.scope_us
+            << ',' << observation.result.size() << ',' << observation.normal_us << ',' << observation.count_us
+            << ',' << samples[1].first << ',' << s.scope_us
             << ',' << s.distances << ',' << s.qualified_distances << ',' << s.rejected_distances << ',' << s.unique_distances
             << ',' << s.item_checks << ',' << s.item_rejects << ',' << s.owner_checks << ',' << s.owner_rejects
             << ',' << s.distance_ns / 1000 << ',' << s.item_ns / 1000 << ',' << s.owner_ns / 1000
@@ -315,6 +335,37 @@ int main(int argc, char** argv) try {
         ++checked;
     }
     require(bool(csv), "CSV write failed");
+    if (argc == 7) {
+        std::ofstream sweep(std::string(argv[4]) + ".sweep.csv");
+        require(bool(sweep), "cannot write qualification-first sweep");
+        sweep << "ef,query,eligible,truth,returned,hits,normal_us,distance_calls,distance_rejected,item_checks,owner_checks\n";
+        sweep << std::setprecision(12);
+        for (size_t ef : {size_t(32), size_t(128), size_t(512), size_t(2048), base.n})
+            for (size_t query = 0; query < 24; ++query) {
+                const auto& p = prepared[query];
+                std::vector<Id> result;
+                std::vector<double> times;
+                for (int repeat = 0; repeat < 4; ++repeat) {
+                    auto begin = Clock::now();
+                    result = runner.run(3, query, ef, p.eligible, cost::Mode::Off);
+                    if (repeat) times.push_back(us(begin));
+                }
+                std::sort(times.begin(), times.end());
+                auto counted = runner.run(3, query, ef, p.eligible, cost::Mode::Count);
+                cost::same_result(result, counted);
+                const auto& s = runner.probe.stats;
+                require(s.rejected_distances == 0, "sweep computed unqualified distance");
+                size_t hits = 0;
+                for (Id u : result) {
+                    require(runner.allowed[w.owner[u]], "sweep returned disqualified item");
+                    if (l2.dist(queries.at(query), base.at(u)) <= p.kth_distance) ++hits;
+                }
+                sweep << ef << ',' << query << ',' << p.eligible << ',' << p.truth_size << ',' << result.size()
+                    << ',' << hits << ',' << times[1] << ',' << s.distances << ',' << s.rejected_distances
+                    << ',' << s.item_checks << ',' << s.owner_checks << '\n';
+            }
+        require(bool(sweep), "qualification-first sweep write failed");
+    }
     std::ofstream metadata(argv[5]); require(bool(metadata), "cannot write metadata");
     metadata << std::setprecision(12) << "{\n  \"timer_pair_ns\": " << timer_ns
         << ",\n  \"verified_query_arm_rows\": " << checked << ",\n  \"empty_queries\": " << empty_queries

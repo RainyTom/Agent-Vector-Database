@@ -26,7 +26,8 @@ double replay(size_t size, Operation operation) {
 }
 }
 int main(int argc, char** argv) try {
-    require(argc == 5, "usage: query_cost_replay BASE QUERY DAG_DIR OUT.csv");
+    require(argc == 5 || (argc == 6 && std::string(argv[5]) == "--qualification-first"),
+            "usage: query_cost_replay BASE QUERY DAG_DIR OUT.csv [--qualification-first]");
     Workload w = load_workload(argv[3]);
     Vectors base = load_vectors(argv[1], w.owner.size()), queries = load_vectors(argv[2], 24);
     RawL2Space raw(base.dim);
@@ -39,10 +40,14 @@ int main(int argc, char** argv) try {
     std::ofstream csv(argv[4]); require(bool(csv), "cannot write replay CSV");
     csv << "arm,ef,query,eligible,distance_calls,item_checks,owner_checks,l2_replay_us,item_replay_us,owner_replay_us\n";
     csv << std::setprecision(12);
-    const std::array<size_t, 3> efs{512, 32, 32};
-    const std::array<const char*, 3> names{"merged", "global_filtered", "nodeann"};
+    std::vector<size_t> efs{512, 32, 32};
+    std::vector<const char*> names{"merged", "global_filtered", "nodeann"};
+    if (argc == 6) {
+        names[1] = "global_result_filter";
+        names.push_back("global_prefilter"); efs.push_back(32);
+    }
     size_t checked = 0;
-    for (int arm = 0; arm < 3; ++arm) for (size_t query = 0; query < 24; ++query) {
+    for (size_t arm = 0; arm < names.size(); ++arm) for (size_t query = 0; query < 24; ++query) {
         runner.resolve(query);
         size_t eligible = 0;
         for (Id c = 0; c < w.members.size(); ++c) if (runner.allowed[c]) eligible += w.members[c].size();

@@ -63,11 +63,11 @@ D 是下闭集。若每个子树构建连通，则每个 min(D) 的锥内连通�
 - owner：原计数保持不变，以 mt19937 seed=20261101 打乱 owner 数组，消除按概念顺序与 SIFT 行顺序对齐的伪相关。是人工绑定控制组，不是真实语义标注。
 - scope：从既有 1,234 行查询中均匀选取 24 行，覆盖单概念及 antichain OR；同一行绑定固定 SIFT query。
 - GT：扫描合格 item，使用共同 FP32 L2。Recall@10 采用距离边界 ties-aware 定义：任意距离不大于第 min(10,|S|) 名的返回 item 均可命中；分母 min(10,|S|)。空结果查询从 recall 与延迟均值中排除。
-- 搜索预算：ef={32,128,512,2048,168937}；最大预算同时验证穷尽结果与 GT 一致，否则脚本非零退出。
-- 三臂：本方案；随机插入序原生全局 HNSW + 结果过滤 callback（导航不剪枝、保留原生高层）；每 owner 原生局部 HNSW 的 NodeANN 参考（独立 top-k 后归并，仅作参考臂）。不把后者称为已经复现某篇论文完整实现。
-- 计时：各 ef/查询预热 1 次，运行 3 次取中位数，再对非空查询取均值；包含 scope 解析、入口计算、搜索、结果提取，不含 GT、构建、CSV 输出。索引与向量均驻内存，三个臂共用 scope 解析实现。
-- 主指标 `merged_query_us`：新方案中 query-average Recall@10≥0.95 的最快 ef 点。参考臂各自取同门槛下最快点；这是相同质量下限，不是精确匹配的 Recall 曲线。
-- 次指标：新方案 recall、两参考臂延迟、构建秒数、各类有向邻接数、穷尽错误数。
+- 搜索预算：ef={32,128,512,2048,168937}。合并图、NodeANN 与旧后置过滤参考在最大预算校验 GT；严格前置过滤 HNSW 不假设过滤后的图连通，其最大预算漏答另列，不混入前述一致性指标。
+- 主比较三臂：本方案；随机插入序全局 HNSW 上的严格前置资格检查（入口/高层/底层均不计算不合格 item 距离、不经它导航）；每 owner 原生局部 HNSW 的 NodeANN 参考。全局前置过滤保留原图层级，以每个合格 owner 的静态最高层代表作为入口，底层共用单队列。另保留 `global_result_filter` 原生 callback 作为旧参考，不将其称为前置过滤基线。
+- 计时：各 ef/查询预热 1 次，运行 3 次取中位数，再对非空查询取均值；包含 scope 解析、入口计算、搜索、结果提取，不含 GT、构建、CSV 输出。索引与向量均驻内存，各臂共用 scope 解析实现。
+- 主指标 `merged_query_us`：新方案中 query-average Recall@10≥0.95 的最快 ef 点。前置全局基线只在过门槛时输出 `global_prefilter_us`；否则显式输出 `global_prefilter_quality_gate=0` 和 `global_prefilter_recall_max`，不把低召回延迟当作同质量成绩。旧参考延迟另名为 `global_result_filter_us`。
+- 次指标包括 NodeANN 延迟、构建秒数、各类有向邻接数、`reference_exhaustive_errors` 和 `global_prefilter_exhaustive_miss_queries`。完整语义、成本与召回见[前置资格实验](../2026-11-02-exps/report.md#7-全局-hnsw-统一采用前置资格检查)；历史后置过滤数据保持原样，不用新定义重解释旧数字。
 
 ## 7. 证据边界与下一项机制检查
 

@@ -89,6 +89,8 @@ SIFT owner 为保留计数的随机绑定，并非真实语义标签。DAG 接�
 
 ## 6. 三臂实际距离调用次数、资格判断与内核时间
 
+本节中的“全局过滤 HNSW”专指原生后置结果过滤参考；当前主基线统一前置资格检查，语义与新实测见 §7。历史数据不按新定义改名重算。
+
 ### 6.1 设置与计数口径
 
 固定原有 SIFT×CCS 数据、owner 打乱、24 条 query/scope 配对；合并图 ef=512、全局过滤图 ef=32、owner-local NodeANN ef=32，不改变索引或过滤语义。23 条非空查询参与均值；1 条空查询仍记录为三个零距离行。新增计数与所有原有 query 的 hits 相同，合并图距离数与保存的 run26 逐条一致。
@@ -164,3 +166,71 @@ SIFT owner 为保留计数的随机绑定，并非真实语义标签。DAG 接�
 - 在原合并搜索中抽取可注入资格谓词/距离包装的同一个模板执行器；正常 wrapper 不启用新 Probe 的分类/逐操作时钟，保留原有合并臂的局部距离次数计数。未复制一份不同搜索算法，也未修改 hnswlib 或 RawL2Space。
 - `query_cost_profile_test.cpp` 和原 `merge_arms_test.cpp` 均实际编译并通过。覆盖不合格导航距离计数、原生重复调用与不同 item 的区别、owner/item 区分、正常/计数/计时/trace 结果一致，以及 native hook 在正常和异常路径恢复。
 - 实际 SIFT 测量、72 条 trace、分析与交叉核验均已运行，退出 0；二进制留在 ignored `work/` 或 `/tmp`。
+
+## 7. 全局 HNSW 统一采用前置资格检查
+
+### 7.1 当前基线语义
+
+主比较为合并图、**global_prefilter** 和 NodeANN，三者均不计算属性不合格 item 的查询距离。原生 callback 的后置结果过滤另名为 **global_result_filter**，只保留为旧参考，不能用它的 81,041 次距离调用代表新的前置过滤基线。
+
+全局索引仍是同一份随机序原生 HNSW（M=16、efConstruction=200、保留全部原生层和邻接）。搜索在以下位置均先判断资格，失败即跳过，不算距离、不入队、不借其邻接继续导航：
+
+1. 查询入口；
+2. 各高层 greedy 导航遇到的邻居；
+3. level-0 best-first 扩展遇到的邻居。
+
+为了避免原始全局入口不合格导致直接无入口，构建阶段按 owner 保存一个静态最高层真实 item，层数相同选最小 item ID。查询仅选择合格 owner 的代表，沿合格高层边下降，最终共用**一个**底层 frontier 和结果堆；没有每 owner 独立 top-k 后归并。入口元数据不扫描查询向量、不使用 GT，不改变原始图边。
+
+没有加入精确扫描、对不合格桥的无距离展开或其他回退。空 scope 为零距离；如果合格子图或入口覆盖不足，允许少于 k 个真实结果，按真实 GT 分母计召回，不用返回条数替换分母，也不补假结果。
+
+### 7.2 固定 SIFT 工作负载实测
+
+沿用相同 168,937 个 SIFT128 base、24 个 query/scope 配对、随机 owner 绑定；以下为 23 条非空查询均值。正常计时、计数、在线分项计时与 trace/replay 分开运行，96 个 query/arm 行的结果及操作数一致。合并图、NodeANN 和旧参考的 hits 与调用次数均与此前记录逐条一致。
+
+| 主比较方案 | ef | Recall@10 | 正常查询时间（µs） | 实际距离调用/查询 | 不合格距离调用/查询 |
+|---|---:|---:|---:|---:|---:|
+| 全局 HNSW，严格前置过滤 | 32 | 0.08169 | 8.72 | 50.52 | **0** |
+| 合并图，前置过滤 | 512 | 0.95652 | 86.77 | 722.78 | **0** |
+| owner-local NodeANN | 32 | 1.00000 | 58.22 | 958.65 | **0** |
+
+新全局基线每查询另有约 411.83 次 item 判断、1,929 次 owner 入口选择判断；其中约 361.30 次 item 判断拒绝。item/owner/L2 的在线分项原始值和批量重放时间均保留在汇总 JSON，计时限制与 §6 相同，不当作无扰动在线总时间的可加分解。
+
+**8.72 µs 不是同质量加速成绩。** 18/23 条查询未返回足够的 min(10,|S|) 个结果，平均只返回 3.61 个真实 item。旧后置参考仍为 Recall=1，仅作为单列对照，不放回主基线名下。
+
+### 7.3 增大预算的结果
+
+| 前置全局 HNSW 的 ef | Recall@10 | 平均实际距离调用 | 达到平均 Recall≥0.95 |
+|---:|---:|---:|---|
+| 32 | 0.08169 | 50.52 | 否 |
+| 128 | 0.08604 | 62.57 | 否 |
+| 512 | 0.10343 | 107.57 | 否 |
+| 2,048 | 0.10778 | 264.13 | 否 |
+| 168,937 | 0.10778 | 914.57 | 否 |
+
+所有预算均为不合格零距离。最大预算时 22/23 条查询没有完全命中 GT，18 条仍不足目标条数。实现已满足前置判断语义，但当前严格跳过式全局图无法在此数据上提供所需质量。
+
+过滤会移除原本可用的导航节点；预算增大并不恢复被禁止经过的路径。本轮未统计真实过滤图的连通分量，也未寻找最优多入口策略，不能把全部损失精确归因于某个分量数或声称所有前置过滤算法都如此。合成回归明确覆盖了“合格节点只能通过不合格桥相连”的情形，确保不会暗中跨桥或精扫来抬召回。
+
+### 7.4 默认入口已切换并实际运行
+
+已执行 `bash autoresearch.sh`，默认输出 `merged/global_prefilter/nodeann` 三个主臂及独立的 `global_result_filter` 旧参考。新基线不是只存在于额外诊断脚本中。
+
+默认入口的 460 条非空 query/arm/ef 行已与测量脚本的 hits 对齐。它明确输出：
+
+```text
+METRIC global_prefilter_quality_gate=0
+METRIC global_prefilter_recall_max=0.107781228433
+METRIC reference_exhaustive_errors=0
+METRIC global_prefilter_exhaustive_miss_queries=22
+```
+
+未达到质量门槛时不输出通过门槛的 `global_prefilter_us`，不填 0、NaN 或旧参考时间。旧结果过滤的时间指标独立为 `global_result_filter_us`；删除旧的含混指标名 `global_filtered_us`。参考三臂的最大预算 GT 校验与前置全局图的漏答分开报告，不用一个 `exhaustive_errors=0` 暗示四臂都精确。
+
+### 7.5 证据、复现与局限
+
+- [最终汇总](data/qualification-first-final-summary.json)、[四臂逐查询分项 CSV](data/qualification-first-profile.csv)、[预算扫描](data/qualification-first-profile.csv.sweep.csv)、[内核重放](data/qualification-first-replay.csv)、[元数据](data/qualification-first-meta.json)。
+- [默认入口 CSV](data/qualification-first-canonical.csv)、[默认入口完整输出](data/qualification-first-canonical-output.txt)、[输入 SHA256](data/qualification-first-input-sha256.txt)。历史数据未覆盖；大向量/索引/二进制仍不提交。
+- [搜索实现](experiments/global_prefilter_hnsw.h)、[测量与验证命令](experiments/qualification-first-protocol.txt)、[执行脚本](experiments/run_qualification_first.sh)、[交叉核验分析](experiments/analyze_qualification_first.py)。
+- `global_prefilter_test.cpp`、四臂 `query_cost_profile_test.cpp`、原 `merge_arms_test.cpp` 均已实际编译运行通过。覆盖不合格原始入口、强制高层、底层过滤、空/全合格 scope、断开的合格分量、距离/结果/trace 一致及 native hook 恢复。
+- 不修改固定 hnswlib 或 RawL2Space；图主导航、DAG 多父及共享后代一份不变。新全局基线是原图上的显式资格前置搜索，不冒充原生 callback 提供同样语义。
+- 随机 owner 绑定、OR 查询、小型优化查询集、未统一内存预算等局限保留。若需要零不合格距离且恢复导航，应另外定义合格桥接或多跳展开策略；本轮未擅自加入，也不把低召回结果宣传成收益。
