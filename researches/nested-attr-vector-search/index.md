@@ -51,6 +51,8 @@
 
 - **[方案 v8：概念纯净聚类 + 质心图 + 残差 SQ（IGP 式）](2026-11-01-exps/dag-igp-quantized-scheme-v8.md)**：按概念内部 k-means 得概念纯净质心，item 存 `(质心ID, 2bit/维残差码)`，图建在质心上（`K=n/B`）；质心级剪枝精确，代价是量化与每质心 top-k 两个新增近似来源。
 
+- **[方案 v9：(质心 × 概念) 分桶](2026-11-01-exps/dag-centroid-bucket-scheme-v9.md)**：允许质心横跨多个概念，把桶切到 `(μ, c)`，剪枝精确性由桶提供；聚类策略与剪枝正确性解耦，混合质心的损失限制在桶级。
+
 ## 相邻主题
 
 - [前缀包含过滤](../containment-filtered-vector-search/index.md)
