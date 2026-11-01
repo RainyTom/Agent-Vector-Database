@@ -1,0 +1,35 @@
+{
+  "kind": "down_density_measurement_not_ann_experiment",
+  "vectors": "work/packed/sift-fvecs-run1/sift_base.fvecs",
+  "workload": "work/dag-scope/workload-run1",
+  "items": 168937,
+  "concepts": 1929,
+  "sampled_items": 1000,
+  "k": 10,
+  "rho_real_mean": 0.2027,
+  "rho_null_mean": 0.1249,
+  "lift_mean": 1.623,
+  "restricted_to_cone_share_below_half": {
+    "items": 1000,
+    "rho_real_mean": 0.2027,
+    "rho_null_mean": 0.1249,
+    "lift_mean": 1.623
+  },
+  "cone_item_share_mean": 0.02945,
+  "file_order": {
+    "contiguous_owner_runs": 768,
+    "grouped_by_concept": true,
+    "note": "SIFT1M is ordered by source image, so a concept-grouped file order creates spurious local correlation; the ANN probes shuffle object ids for exactly this reason"
+  },
+  "random_vs_random_lift": 1.013,
+  "interpretation": [
+    "lift near 1 means the concept hierarchy carries no information about geometric neighbourhoods under this label-vector binding; the current binding was assigned randomly, so near-1 is expected and is not evidence about real corpora",
+    "a down-edge-only graph cannot beat an unrestricted graph when lift ~ 1",
+    "this quantity, not the DAG shape, decides whether cone pruning can win"
+  ],
+  "limits": [
+    "brute-force neighbours, no ANN, no timing",
+    "single binding; no real text embeddings available in this checkout",
+    "mean is dominated by large cones, hence the restricted row"
+  ]
+}
