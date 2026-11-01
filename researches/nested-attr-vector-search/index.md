@@ -33,6 +33,8 @@
 - [多版本目录](05-versioned-directory-search/README.md)、[继承权限](06-inherited-acl-search/README.md)
 - [Laminar Edge Sharing 历史记录](07-laminar-edge-sharing/index.md)
 
+- **[下闭锥图：DAG 层级多属性过滤的单图搜索](2026-11-01-exps/dag-cone-graph-design.md)**：合格集是 poset 下闭集，据此可精确剪掉整种子树并把可访问集限制在入口最小锥（真实 DAG 上 p50 0.86%、p95 6.4%）；一张图、单队列，不回到每概念 top-k 合并。设计已完成，未实现、无性能数字。
+
 ## 相邻主题
 
 - [前缀包含过滤](../containment-filtered-vector-search/index.md)
