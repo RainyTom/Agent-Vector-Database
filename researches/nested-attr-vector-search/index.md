@@ -41,6 +41,8 @@
 
 - **[方案 v3：CGP（静态分簇图）](2026-11-01-exps/dag-cgp-scheme-v3.md)**：概念纯净簇 + 静态合并（`Bmax`/`τ`）+ 簇内 HNSW + 可比簇桥；位图/Bloom 做准入、Trie 做范围归约、量化只做簇粗排，图仍是唯一导航核心。
 
+- **[方案 v4：ESG（入口选择型全局图）](2026-11-01-exps/dag-esg-scheme-v4.md)**：不改边、只改入口——一张标准 HNSW + 每概念 `k_e` 个代表入口，按质心/PQ 粗排取 `t` 组作为种子；位图/Bloom 筛入口组，图仍是唯一导航核心，无每概念 top-k 与归并。
+
 ## 相邻主题
 
 - [前缀包含过滤](../containment-filtered-vector-search/index.md)
