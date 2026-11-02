@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "query_rows": 3840,
+  "batch_rows": 960,
+  "cells": [
+    [
+      10,
+      32
+    ],
+    [
+      100,
+      128
+    ]
+  ],
+  "runs": 2,
+  "note": "NodeANN reference is fixed n=k, not a full n sweep. Ordered-ID and timed-checksum equality are enforced in C++; this audit recomputes CSV aggregates."
+}

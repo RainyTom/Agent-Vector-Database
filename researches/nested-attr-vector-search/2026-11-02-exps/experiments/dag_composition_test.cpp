@@ -136,6 +136,43 @@ int main() try {
             }
         }
     }
+    // Rejection caching is query-local: a shared rejected neighbor is tested
+    // once, but becomes reachable when the next query allows its attribute.
+    Merged repeated;
+    repeated.edges.resize(base.n); repeated.portals.resize(w.members.size());
+    repeated.portals[1] = {a};
+    repeated.edges[a] = {b, rejected};
+    repeated.edges[b] = {rejected};
+    repeated.edges[rejected] = {a};
+    SearchStats denied_work, allowed_work;
+    const auto denied = search_counted(10, repeated, base, raw, base.at(a), {1}, 32,
+        scratch, [&](Id u) { return w.owner[u] == 1; }, denied_work);
+    require(denied.size() == 2 && denied_work.rejected_edges == 1 &&
+            denied_work.item_checks == 3 && denied_work.distances == 2,
+            "repeated rejection was not cached within the query");
+    const auto allowed = search_counted(10, repeated, base, raw, base.at(a), {1}, 32,
+        scratch, [&](Id u) { return w.owner[u] == 1 || w.owner[u] == 3; }, allowed_work);
+    require(allowed.size() == 3 && allowed_work.distances == 3 &&
+            allowed_work.rejected_distances == 0, "a previous rejection leaked into a new query");
+    // Full result heap replacement preserves pair ordering for exact ties,
+    // including width changes, descending seed order, and epoch wraparound.
+    Vectors tied; tied.dim = 1; tied.n = 200; tied.x.assign(tied.n, 1.0f);
+    RawL2Space tie_l2(1);
+    Merged tie_graph; tie_graph.edges.resize(tied.n); tie_graph.portals.resize(1);
+    for (Id u = Id(tied.n); u-- > 0;) tie_graph.portals[0].push_back(u);
+    Scratch tie_scratch(tied.n);
+    tie_scratch.epoch = std::numeric_limits<uint32_t>::max();
+    std::fill(tie_scratch.seen.begin(), tie_scratch.seen.end(), 1);
+    const float zero = 0;
+    for (const auto& cell : {std::pair<size_t,size_t>{10,32}, {100,128}, {10,32}}) {
+        SearchStats tie_work;
+        auto nearest = search_counted(cell.first, tie_graph, tied, tie_l2, &zero, {0},
+            cell.second, tie_scratch, [](Id) { return true; }, tie_work);
+        std::vector<Id> expected;
+        for (Id u = Id(cell.first); u-- > 0;) expected.push_back(u);
+        require(nearest == expected && tie_work.distances == tied.n,
+                "heap replacement or reused workspace changed tied top-k");
+    }
     // Native hook uses the same squared-L2 kernel and never escapes its selected attribute.
     auto mask = direct.allowed;
     auto& local = *graph.local[1]; local.setEf(base.n);

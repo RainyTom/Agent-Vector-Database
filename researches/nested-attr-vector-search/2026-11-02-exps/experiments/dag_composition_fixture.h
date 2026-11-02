@@ -108,6 +108,9 @@ struct Merged {
 struct Scratch {
     std::vector<uint32_t> seen;
     uint32_t epoch = 0;
+    // DAG executor reuses capacity across queries; native arms leave these empty.
+    std::vector<Pair> frontier, best;
+    std::vector<Id> pending;
     explicit Scratch(size_t n) : seen(n) {}
 };
 struct Query {

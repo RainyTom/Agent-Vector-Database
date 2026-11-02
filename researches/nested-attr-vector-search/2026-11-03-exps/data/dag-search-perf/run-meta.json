@@ -1,0 +1,32 @@
+{
+  "runs": 2,
+  "reference_commit": "282eaaa",
+  "cases": [
+    [
+      10,
+      32
+    ],
+    [
+      100,
+      128
+    ]
+  ],
+  "NQ": 120,
+  "hnsw_M": 64,
+  "efConstruction": 200,
+  "protocol": "10 rounds x 16 passes over the complete selected subset; one full-pass warmup; implementation order shuffled with fixed seed; upper median batch",
+  "invariants": "ordered IDs, hits, distances, expansions and adjacency equal before/memo/after for every query; counted/normal IDs equal; every timed pass equals audited checksum; zero unqualified distances",
+  "nodeann": "independent native hnswlib copy; fixed local n=k; no n sweep in this diagnosis; recall=1; comparison is not exact-equal-recall",
+  "representation": "unchanged item graph, vectors, entries and owner mapping; single frontier; no local-graph fallback or per-query copied graph",
+  "width_note": "fixed requested ef32/ef128; unchanged legacy merged caller min(ef,eligible), then max(k,ef) inside executor; NodeANN uses requested ef per local graph",
+  "reuse": "run2 uses the identical binaries from run1; per-implementation shared workspace, never per-query full-sized visited arrays",
+  "limitations": [
+    "one synthetic random-owner SIFT workload",
+    "120 non-held-out query/scope pairs",
+    "one construction seed",
+    "search-only timings",
+    "two runs do not establish confidence intervals",
+    "one recursive k100 many-owner subset had a 1.3% slowdown in run1, not in run2"
+  ],
+  "binary_hash_note": "Binary SHA256 captured after both runs; repeated runs were invoked without rebuilding, not independently hash-attested at each process start."
+}

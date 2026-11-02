@@ -27,6 +27,14 @@ bash autoresearch.sh
 
 历史24/120构图变体驱动仍可显式运行`bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_composition_validation.sh`；它不是当前默认Pareto矩阵。新增分层/b/等字节剪枝仅有[研究设计](../../researches/nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)，尚非已实现臂。
 
+### DAG 执行器更新
+
+`dag_merge` 已合入查询内拒绝缓存、frontier/best/pending 容量复用、结果堆 replace-root 和资格通过后的批量评分/预取。图结构、入口及距离内核不变，不以原生局部图回退代替单图搜索。复用工作区须由单一查询独占；查询期间资格掩码固定。容量按历史高水位保留，结果仍会分配，不称零分配。
+
+仅严格 `b=0` 路径把拒绝状态写入本次 seen；后续查询由 epoch 隔离。未来有预算的桥跳转不能直接复用这个布尔状态。资格检查/拒绝计数和 trace 会减少，duplicate计数会增加，距离/扩展/邻接计数及返回顺序不变。未改造的CSR/dense臂保留旧拒绝检查方式，是独立消融，不能要求它们的资格调用数也相同。
+
+只跑两格的真实before/after对照、完整审计和限制见[性能修复报告](../../researches/nested-attr-vector-search/2026-11-03-exps/report.md)。旧精确原因百分比分解已撤回。
+
 行为回归：
 
 ```bash

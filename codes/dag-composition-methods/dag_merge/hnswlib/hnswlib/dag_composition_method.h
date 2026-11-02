@@ -246,43 +246,89 @@ static std::vector<Id> search_counted(size_t k, const Merged& m, const Vectors& 
     Qualification qualifies, SearchStats& stats,
     const std::vector<std::vector<Id>>* entries = nullptr) {
     ef = std::max(ef, k);
-    ++scratch.epoch;
-    std::priority_queue<Pair, std::vector<Pair>, std::greater<Pair>> frontier;
-    std::priority_queue<Pair> best;
-    auto offer = [&](Id u) {
+    if (++scratch.epoch == 0) {
+        std::fill(scratch.seen.begin(), scratch.seen.end(), 0);
+        scratch.epoch = 1;
+    }
+    auto& frontier = scratch.frontier;
+    auto& best = scratch.best;
+    auto& pending = scratch.pending;
+    frontier.clear(); best.clear(); pending.clear();
+    if (frontier.capacity() < ef) frontier.reserve(ef);
+    if (best.capacity() < ef) best.reserve(ef);
+    const std::greater<Pair> nearer;
+    // Qualification is immutable during one b=0 query. Cache failures too;
+    // revisiting a rejected item can neither score nor traverse it.
+    auto admit = [&](Id u) {
         if (scratch.seen[u] == scratch.epoch) {
             if constexpr (Count) ++stats.duplicate_edges;
             return;
         }
+        scratch.seen[u] = scratch.epoch;
         if constexpr (Count) {
             ++stats.item_checks;
             if (stats.trace_enabled) stats.trace.push_back(u);
         }
         if (!qualifies(u)) { if constexpr (Count) ++stats.rejected_edges; return; }
-        scratch.seen[u] = scratch.epoch;
-        Pair p{l2.dist(query, base.at(u)), u};
-        if constexpr (Count) {
-            ++stats.distances;
-            stats.rejected_distances += !qualifies(u); // diagnostic attribution, not an algorithmic check
-        }
-        if (best.size() < ef || p < best.top()) {
-            frontier.push(p); best.push(p);
-            if (best.size() > ef) best.pop();
-        }
+        pending.push_back(u);
+#if defined(__GNUC__) || defined(__clang__)
+        // Only qualified vectors are prefetched; distance order stays unchanged.
+        __builtin_prefetch(base.at(u), 0, 1);
+        if (base.dim > 16) __builtin_prefetch(base.at(u) + 16, 0, 1);
+#endif
     };
-    for (Id c : roots) for (Id u : (entries ? *entries : m.portals)[c]) offer(u);
+    auto score_pending = [&]() {
+        for (Id u : pending) {
+            Pair p{l2.dist(query, base.at(u)), u};
+            if constexpr (Count) {
+                ++stats.distances;
+                stats.rejected_distances += !qualifies(u);
+            }
+            if (best.size() == ef && !(p < best.front())) continue;
+            frontier.push_back(p);
+            std::push_heap(frontier.begin(), frontier.end(), nearer);
+            if (best.size() < ef) {
+                best.push_back(p);
+                std::push_heap(best.begin(), best.end());
+            } else {
+                // Replace the worst in one sift-down, rather than push + pop.
+                size_t parent = 0;
+                for (size_t child = 1; child < best.size(); child = 2 * parent + 1) {
+                    if (child + 1 < best.size() && best[child] < best[child + 1]) ++child;
+                    if (!(p < best[child])) break;
+                    best[parent] = best[child];
+                    parent = child;
+                }
+                best[parent] = p;
+            }
+        }
+        pending.clear();
+    };
+    for (Id c : roots) for (Id u : (entries ? *entries : m.portals)[c]) admit(u);
+    score_pending();
     while (!frontier.empty()) {
-        Pair p = frontier.top(); frontier.pop();
-        if (best.size() == ef && p > best.top()) break;
+        Pair p = frontier.front();
+        if (best.size() == ef && p > best.front()) break;
+        std::pop_heap(frontier.begin(), frontier.end(), nearer);
+        frontier.pop_back();
         if constexpr (Count) {
             ++stats.expansions;
             stats.adjacency_entries += m.edges[p.second].size();
         }
-        for (Id v : m.edges[p.second]) offer(v);
+        for (Id v : m.edges[p.second]) admit(v);
+        score_pending();
     }
-    while (best.size() > k) best.pop();
+    while (best.size() > k) {
+        std::pop_heap(best.begin(), best.end());
+        best.pop_back();
+    }
     std::vector<Id> result;
-    while (!best.empty()) { result.push_back(best.top().second); best.pop(); }
+    result.reserve(best.size());
+    while (!best.empty()) {
+        std::pop_heap(best.begin(), best.end());
+        result.push_back(best.back().second);
+        best.pop_back();
+    }
     return result;
 }
 
