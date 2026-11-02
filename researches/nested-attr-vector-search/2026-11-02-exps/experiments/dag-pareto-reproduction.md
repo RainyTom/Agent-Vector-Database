@@ -65,6 +65,30 @@ bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_edge_p
 
 程序强制检查结果ID、距离数、扩展数、CSR布局、hits与每遍校验和一致，任一不符即中止且不写CSV。每查询剪枝图构建28.2–30.2 ms，排除在所有计时外，因此该消融是诊断性反事实，不是可实施优化。计时为16遍/批×10轮中位数，两臂每轮交替顺序。输出`work/edge-prune-m64/`，分析写同目录`analysis/`（反事实与拒绝比例两张表）。
 
+## 单属性查询的表示分解（§4.3）
+
+```bash
+g++ -std=c++17 -O3 -march=native -pthread \
+  -Icodes/dag-composition-methods/dag_merge/hnswlib \
+  -Icodes/directory-aware-vector-attr-search/src \
+  researches/nested-attr-vector-search/2026-11-02-exps/experiments/dag_induced_probe.cpp \
+  -o work/edge-prune-m64/build/dag_induced_probe
+taskset -c 3 work/edge-prune-m64/build/dag_induced_probe \
+  work/packed/sift-fvecs-run1/sift_base.fvecs work/packed/sift-fvecs-run1/sift_query.fvecs \
+  work/dag-scope/workload-run1 work/edge-prune-m64/induced-probe.csv 120
+
+g++ -std=c++17 -O3 -march=native -pthread \
+  -Icodes/dag-composition-methods/dag_merge/hnswlib \
+  -Icodes/directory-aware-vector-attr-search/src \
+  researches/nested-attr-vector-search/2026-11-02-exps/experiments/dag_degree_probe.cpp \
+  -o work/edge-prune-m64/build/dag_degree_probe
+taskset -c 3 work/edge-prune-m64/build/dag_degree_probe \
+  work/packed/sift-fvecs-run1/sift_base.fvecs work/dag-scope/workload-run1 \
+  work/edge-prune-m64/degree-probe.json 120
+```
+
+三臂分别是全局合并图、同邻接的紧凑局部表示、原生局部HNSW；局部id按全局id升序编号，前两臂的结果ID、距离数与扩展数必须逐条相同，否则中止。探针绝对水平比fanout协议高约18%，只用于同进程比值。
+
 ## 设计有限探针（不是分层ANN运行）
 
 ```bash
