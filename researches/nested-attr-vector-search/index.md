@@ -4,19 +4,17 @@
 
 ## 当前工作
 
-- **[交付文档：属性内 HNSW + DAG 门户合并 + 单队列搜索](2026-11-02-exps/dag-composition-delivery.md)**：完整方案——属性内建图参数与算法、portal 最远点采样的代码与复杂度、三趟合并的代码与每属性边数公式、查询算法与终止条件、参数表、统一 ef 口径、实测结论、正确性验证与复现命令。
+- **[当前交付：从原始记录到属性DAG合并图](2026-11-02-exps/dag-composition-delivery.md)**：区分属性节点与ANN节点；定义直属/递归两类查询、直属/子图两类入口、属性内HNSW、DAG连接、单队列搜索及CSR/bitmap消融。
 
-- **[DAG组合顺序、邻居调整、高速路径与bitmap资格判断](2026-11-02-exps/dag-composition-report.md)**：固定SIFT×CCS、统一ef口径、11臂配对测量。组合顺序在距离优先准入下不可观测（FCFS更差）；出度剪枝16–24+21KB visited位图是唯一稳定收益（配对−10%）；jump高速边无收益；比NodeANN慢只发生在大scope（≥50合格item慢6–10倍且召回降至.55），小scope反而更快。char资格表0.5ns/check，位图单owner谓词更慢、多标签谓词快8.3×。
+- **[独立hnswlib实验验证](2026-11-02-exps/dag-validation-report.md)**：本方案、NodeANN、ACORN搜索策略和严格过滤控制分目录、分库、分进程；同ef主比较，24/120查询及两种语义分别报告，空查询、欠填、最大预算漏答与bitmap完整成本单列。
 
-- **[当前全局策略：ACORN-1一/二跳搜索移植](2026-11-02-exps/report.md#8-acorn-1-搜索策略全一二跳邻域扩展)**：高层/底层扩展所有一跳中间点，过滤后M截断；不合格零距离、单底层队列，默认 `bash autoresearch.sh` 已接入。保留hnswlib RNG图与本地入口，非作者完整ACORN索引复现；已测邻接成本，当前未达到召回门槛。
+- **[历史24查询组合观察](2026-11-02-exps/dag-composition-report.md)**：共库递归原型数据仅作历史诊断；split-ef不等于总工作相同，剪枝不保证诱导连通，微基准不代表端到端收益。
 
-- **[严格前置过滤控制：无桥接HNSW](2026-11-02-exps/report.md#7-全局-hnsw-统一采用前置资格检查)**：入口/高层/底层均先判断并完全跳过不合格节点，保留为`global_prefilter`消融；当前主全局搜索见ACORN策略。旧后置过滤仍只作`global_result_filter`单列参考，低召回延迟不作同质量成绩。
+- **[ACORN搜索策略来源与适配范围](2026-11-02-exps/report.md#8-acorn-1-搜索策略全一二跳邻域扩展)**：全一/二跳扩展，先资格后距离；保留RNG构图，与作者完整索引不同。当前实现放在独立`acorn1`目录。
 
-- **[距离调用与资格检查成本](2026-11-02-exps/report.md#6-三臂实际距离调用次数资格判断与内核时间)**：§6 为原生后置参考的分项，§7 为严格跳过控制，§8 为当前ACORN五臂测量。实际距离、不合格评分、item/owner判断及邻接扩展分开记录；未测成本不填0，探针或重放不替代正常总时间。
+- **[历史距离调用与资格核成本](2026-11-02-exps/report.md#6-三臂实际距离调用次数资格判断与内核时间)**：旧profile/replay只覆盖其注明工作负载，不与当前正常计时直接混比。
 
-- **[基线差距诊断：过滤终止边界与执行器不对齐](2026-11-02-exps/report.md)**：旧原生后置对照在合格数不足 ef 时可能搜索耗尽；合并图是扁平 NSW，NodeANN 保留原生 HNSW 高层，差距不能只归因于 DAG 合并规则。原始差距诊断基于旧数据与独立终止探针，当前全局基线以前置检查为准。
-
-- **[当前方案：直属 NSW 图沿 DAG 保边合并与跨层跳转](2026-11-01-exps/dag-local-nsw-merge-scheme.md)**：[12 次固定 SIFT 实验](2026-11-01-exps/report.md#19-静态合并与跳转的12次固定工作负载实验)。保留局部边、几何门户连接、分散 item 桥与反向接入限额；不量化、共享后代一份、单队列。平均质量门槛下有所改善，但仍慢于 NodeANN 参考且尾部质量不足。入口 `bash autoresearch.sh`，原始 CSV/log 已持久化。
+- **[原始保边合并设计与历史实验](2026-11-01-exps/dag-local-nsw-merge-scheme.md)**：原有图主导航、多父DAG、共享后代及保边基线保留；当前协议以交付文档为准。
 
 - [01 目录感知加速（静态 DSQ，hnswlib NodeANN 基线已重测）](01-directory-aware-acceleration/README.md)
 - **[08 动态混合向量搜索（动态三臂维护成本对照）](08-dynamic-hybrid-vector-search/README.md)**：[当前证据边界](08-dynamic-hybrid-vector-search/2026-10-29-exps/scheme-status.md)、[原树/两遍GT协议](08-dynamic-hybrid-vector-search/2026-10-29-exps/wiki-topology-protocol.md)、[当日报告与图](08-dynamic-hybrid-vector-search/2026-10-29-exps/report.md)。旧inline计时仅诊断；不预设高更新率优胜，不以旧并发探针证明一致性。

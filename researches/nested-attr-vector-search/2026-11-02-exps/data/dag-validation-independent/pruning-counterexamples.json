@@ -1,0 +1,112 @@
+[
+  {
+    "semantics": "recursive",
+    "arm": "merged_prune16_dense",
+    "query": 11,
+    "eligible": 91,
+    "truth": 10,
+    "hits": 10,
+    "returned": 10,
+    "distances": 90,
+    "source_scope": 113
+  },
+  {
+    "semantics": "recursive",
+    "arm": "merged_prune16_dense",
+    "query": 12,
+    "eligible": 10918,
+    "truth": 10,
+    "hits": 10,
+    "returned": 10,
+    "distances": 10917,
+    "source_scope": 124
+  },
+  {
+    "semantics": "recursive",
+    "arm": "merged_prune16_dense",
+    "query": 17,
+    "eligible": 14,
+    "truth": 10,
+    "hits": 6,
+    "returned": 8,
+    "distances": 8,
+    "source_scope": 176
+  },
+  {
+    "semantics": "recursive",
+    "arm": "merged_prune16_dense",
+    "query": 35,
+    "eligible": 13,
+    "truth": 10,
+    "hits": 10,
+    "returned": 10,
+    "distances": 12,
+    "source_scope": 362
+  },
+  {
+    "semantics": "recursive",
+    "arm": "merged_prune16_dense",
+    "query": 70,
+    "eligible": 13,
+    "truth": 10,
+    "hits": 9,
+    "returned": 10,
+    "distances": 12,
+    "source_scope": 725
+  },
+  {
+    "semantics": "recursive",
+    "arm": "merged_prune24_dense",
+    "query": 12,
+    "eligible": 10918,
+    "truth": 10,
+    "hits": 10,
+    "returned": 10,
+    "distances": 10917,
+    "source_scope": 124
+  },
+  {
+    "semantics": "direct",
+    "arm": "merged_prune16_dense",
+    "query": 11,
+    "eligible": 9,
+    "truth": 9,
+    "hits": 8,
+    "returned": 8,
+    "distances": 8,
+    "source_scope": 113
+  },
+  {
+    "semantics": "direct",
+    "arm": "merged_prune16_dense",
+    "query": 17,
+    "eligible": 14,
+    "truth": 10,
+    "hits": 6,
+    "returned": 8,
+    "distances": 8,
+    "source_scope": 176
+  },
+  {
+    "semantics": "direct",
+    "arm": "merged_prune16_dense",
+    "query": 35,
+    "eligible": 13,
+    "truth": 10,
+    "hits": 10,
+    "returned": 10,
+    "distances": 12,
+    "source_scope": 362
+  },
+  {
+    "semantics": "direct",
+    "arm": "merged_prune16_dense",
+    "query": 70,
+    "eligible": 13,
+    "truth": 10,
+    "hits": 9,
+    "returned": 10,
+    "distances": 12,
+    "source_scope": 725
+  }
+]

@@ -1,168 +1,105 @@
-// Invariants for the parameterised DAG composition builder.
-// Not a performance experiment: small synthetic graphs only.
+// Behavioral validation against exact geometry; uses the DAG method's own fork.
+#define DAG_VALIDATION_FAMILY 0
 #define DAG_COMPOSITION_LIBRARY
-#define main merge_benchmark_main
 #include "dag_composition_bench.cpp"
-#undef main
 
-static Workload synthetic(size_t owners, size_t per_owner) {
-    // Concept down-sets hold CONCEPT ids, exactly like merge_arms' loader:
-    // 0 -> 1,2; 1 -> 3; 2 -> 3,4; 4 -> 5  (empty internal groups, shared descendant)
+static Workload fixture() {
     Workload w;
-    require(owners == 6, "synthetic DAG has six concepts");
-    w.children = {{1, 2}, {3}, {3, 4}, {}, {5}, {}};
-    w.topo = {0, 1, 2, 3, 4, 5};
-    w.owner.resize(owners * per_owner);
-    for (size_t o = 0; o < owners; ++o)
-        for (size_t j = 0; j < per_owner; ++j) w.owner[o * per_owner + j] = Id(o);
-    w.members.resize(owners);
-    for (Id u = 0; u < w.owner.size(); ++u) w.members[w.owner[u]].push_back(u);
-    w.desc.resize(owners);
-    for (Id c = 0; c < owners; ++c) w.desc[c] = {c};
+    w.children = {{1, 2}, {3}, {3, 4}, {}, {5}, {}, {}};
+    w.topo = {0, 1, 2, 3, 4, 5, 6}; // attribute 6 has no items, even recursively
+    w.members.resize(7); w.desc.resize(7);
+    for (Id owner = 0; owner < 6; ++owner) for (Id j = 0; j < 24; ++j) {
+        Id item = Id(w.owner.size()); w.owner.push_back(owner); w.members[owner].push_back(item);
+    }
     for (auto it = w.topo.rbegin(); it != w.topo.rend(); ++it) {
-        Id c = *it;
-        std::vector<Id> merged = w.desc[c];
-        for (Id child : w.children[c])
-            merged.insert(merged.end(), w.desc[child].begin(), w.desc[child].end());
-        std::sort(merged.begin(), merged.end());
-        merged.erase(std::unique(merged.begin(), merged.end()), merged.end());
-        w.desc[c] = std::move(merged);
+        auto& row = w.desc[*it]; row.push_back(*it);
+        for (Id child : w.children[*it]) row.insert(row.end(), w.desc[child].begin(), w.desc[child].end());
+        std::sort(row.begin(), row.end()); row.erase(std::unique(row.begin(), row.end()), row.end());
     }
     return w;
 }
-
+static std::vector<Id> exact(const Workload& w, const Vectors& base, RawL2Space& raw,
+                             const float* vector, const Query& scope) {
+    std::vector<Pair> scored;
+    for (Id u = 0; u < base.n; ++u) if (scope.allowed[w.owner[u]])
+        scored.emplace_back(raw.dist(vector, base.at(u)), u);
+    std::sort(scored.begin(), scored.end());
+    if (scored.size() > 10) scored.resize(10);
+    std::vector<Id> ids;
+    for (auto it = scored.rbegin(); it != scored.rend(); ++it) ids.push_back(it->second);
+    return ids;
+}
 int main() try {
-    Workload w = synthetic(6, 24);
-    Vectors base;
-    base.n = w.owner.size(); base.dim = 8;
-    std::mt19937 rng(7);
-    std::uniform_real_distribution<float> pick(0.f, 100.f);
-    base.x.resize(base.n * base.dim);
-    for (auto& x : base.x) x = pick(rng);
-    RawL2Space l2(base.dim);
-
-    // 1. Baseline knobs must reproduce the committed builder edge for edge.
-    Merged reference = build(base, w, l2);
-    Merged variant = build_variant(base, w, l2, Knobs{.name = "baseline"});
-    require(variant.portals == reference.portals, "baseline portals differ from committed build");
-    require(variant.edges == reference.edges, "baseline adjacency differs from committed build");
-    require(variant.local_edges == reference.local_edges &&
-            variant.connector_edges == reference.connector_edges &&
-            variant.jump_edges == reference.jump_edges, "baseline edge accounting differs");
-
-    // 2. Portal sets must not depend on composition order (children-first phase).
-    Merged asc = build_variant(base, w, l2, Knobs{.name = "order1", .order = 1});
-    Merged desc = build_variant(base, w, l2, Knobs{.name = "order2", .order = 2});
-    require(asc.portals == reference.portals && desc.portals == reference.portals,
-            "composition order changed portal selection");
-
-    // 3. Highway modes are nested supersets.
-    Merged j0 = build_variant(base, w, l2, Knobs{.name = "jump0", .jump_mode = 0});
-    Merged j2 = build_variant(base, w, l2, Knobs{.name = "jump2", .jump_mode = 2});
-    Merged j3 = build_variant(base, w, l2, Knobs{.name = "jump3", .jump_mode = 3});
-    auto subset = [](const Merged& a, const Merged& b) {
-        for (Id u = 0; u < a.edges.size(); ++u)
-            for (Id v : a.edges[u])
-                if (!std::binary_search(b.edges[u].begin(), b.edges[u].end(), v)) return false;
-        return true;
-    };
-    require(subset(j0, reference) && subset(reference, j2) && subset(j2, j3),
-            "highway modes are not nested supersets");
-    require(j0.jump_edges == 0 && reference.jump_edges > 0 && j2.jump_edges > reference.jump_edges,
-            "highway edge accounting wrong");
-
-    // 4. Pruning contracts degree, keeps sorted/unique adjacency, never self-loops.
-    for (size_t M : {8u, 16u}) {
-        Merged pruned = build_variant(base, w, l2, Knobs{.name = "prune", .prune_m = M});
-        for (Id u = 0; u < pruned.edges.size(); ++u) {
+    auto w = fixture();
+    Vectors base; base.n = w.owner.size(); base.dim = 8; base.x.resize(base.n * base.dim);
+    std::mt19937 rng(7); std::uniform_real_distribution<float> values(0, 100);
+    for (float& x : base.x) x = values(rng);
+    RawL2Space raw(base.dim);
+    auto graph = build_variant(base, w, raw, Knobs{});
+    const auto direct = resolve_scope(w, {1}, false), recursive = resolve_scope(w, {1}, true);
+    require(direct.allowed[1] && !direct.allowed[3] && recursive.allowed[3], "direct/recursive predicate conflated");
+    require(resolve_scope(w, {1, 3}, true).roots == std::vector<Id>{1}, "recursive ancestor not absorbed");
+    require(resolve_scope(w, {1, 3}, false).roots == std::vector<Id>({1, 3}), "direct descendant incorrectly absorbed");
+    // Force a subtree portal to an ineligible descendant: direct searches MUST
+    // start from own representatives instead, not become an empty search.
+    graph.portals[1] = {w.members[3].front()};
+    Scratch scratch(base.n); DenseScratch dense(base.n); auto csr = flatten(graph, w);
+    for (bool descend : {false, true}) for (Id attr = 0; attr < 7; ++attr) {
+        auto q = resolve_scope(w, {attr}, descend);
+        const auto& entries = query_entries(graph, descend);
+        auto predicate = [&](Id u) { return bool(q.allowed[w.owner[u]]); };
+        for (Id vector = 0; vector < 5; ++vector) {
+            SearchStats counted, unused, flat, bits;
+            auto result = search_counted(graph, base, raw, base.at(vector), q.roots, base.n,
+                                         scratch, predicate, counted, &entries);
+            auto normal = search_counted<false>(graph, base, raw, base.at(vector), q.roots, base.n,
+                                                scratch, predicate, unused, &entries);
+            auto contiguous = search_csr<true>(csr, graph, w, base, raw, base.at(vector), q.roots, base.n,
+                scratch, [&](Id, Id owner) { return bool(q.allowed[owner]); }, flat, &entries);
+            VecEdges edges{&graph.edges, &w};
+            auto bitset = search_dense(edges, graph, base, raw, base.at(vector), q.roots, base.n,
+                dense, [&](Id, Id owner) { return bool(q.allowed[owner]); }, bits, &entries);
+            require(result == exact(w, base, raw, base.at(vector), q), "unpruned search disagrees with exact GT");
+            require(result == normal && result == contiguous && result == bitset, "execution representation changed IDs");
+            require(counted.distances == flat.distances && counted.distances == bits.distances &&
+                    counted.adjacency_entries == bits.adjacency_entries, "execution representation changed work");
+            if (attr == 6) require(result.empty() && counted.distances == 0, "empty scope performed distances");
+        }
+    }
+    // Degree pruning is an approximation, NOT an induced-connectivity guarantee.
+    for (size_t cap : {16u, 24u}) {
+        auto pruned = build_variant(base, w, raw, Knobs{.name = "prune", .prune_m = cap});
+        for (Id u = 0; u < base.n; ++u) {
             const auto& row = pruned.edges[u];
-            require(row.size() <= M, "pruning exceeded degree cap");
-            require(std::is_sorted(row.begin(), row.end()), "pruned row unsorted");
-            require(std::adjacent_find(row.begin(), row.end()) == row.end(), "pruned row duplicated");
-            require(std::find(row.begin(), row.end(), u) == row.end(), "pruned row kept self loop");
-        }
-        // Every item is still reachable from its owner portal through kept edges.
-        Scratch scratch(base.n);
-        for (Id c = 0; c < w.members.size(); ++c) {
-            std::vector<char> seen(base.n, 0);
-            std::vector<Id> stack(pruned.portals[c].begin(), pruned.portals[c].end());
-            for (Id u : stack) seen[u] = 1;
-            while (!stack.empty()) {
-                Id u = stack.back(); stack.pop_back();
-                for (Id v : pruned.edges[u]) if (!seen[v]) { seen[v] = 1; stack.push_back(v); }
-            }
-            for (Id u = 0; u < base.n; ++u)
-                if (std::binary_search(w.desc[c].begin(), w.desc[c].end(), w.owner[u]))
-                    require(seen[u], "pruning disconnected an in-scope item");
+            require(row.size() <= cap && std::is_sorted(row.begin(), row.end()) &&
+                std::adjacent_find(row.begin(), row.end()) == row.end() &&
+                !std::binary_search(row.begin(), row.end(), u), "invalid degree-pruned adjacency");
         }
     }
-
-    // 5. Counted search agrees with the committed search and never scores unqualified items.
-    std::vector<char> allowed(w.members.size());
-    for (Id d : w.desc[2]) allowed[d] = 1;
-    std::vector<Id> roots{2};
-    Scratch scratch(base.n);
-    for (Id q = 0; q < 10; ++q) {
-        size_t calls = 0;
-        auto expected = search(reference, w, base, l2, base.at(q), allowed, roots, base.n, scratch, calls);
-        SearchStats stats;
-        auto counted = search_counted(reference, base, l2, base.at(q), roots, base.n, scratch,
-                                      [&](Id u) { return bool(allowed[w.owner[u]]); }, stats);
-        require(expected == counted, "counted search diverged from committed search");
-        require(stats.distances == calls, "counted distance total diverged");
-        for (Id u : counted) require(allowed[w.owner[u]], "counted search returned unqualified item");
+    // A full-graph bridge through an ineligible vertex is not an induced path.
+    Merged bridge; bridge.edges.resize(base.n); bridge.portals.resize(w.members.size());
+    Id a = w.members[1][0], rejected = w.members[3][0], b = w.members[1][1];
+    bridge.edges[a] = {rejected}; bridge.edges[rejected] = {b}; bridge.portals[1] = {a};
+    SearchStats isolated;
+    auto partial = search_counted(bridge, base, raw, base.at(a), {1}, base.n, scratch,
+        [&](Id u) { return bool(direct.allowed[w.owner[u]]); }, isolated);
+    require(partial == std::vector<Id>{a} && isolated.distances == 1 && isolated.rejected_edges == 1,
+            "search secretly crossed an unqualified bridge");
+    // Native hook uses the same squared-L2 kernel and never escapes its selected attribute.
+    auto mask = direct.allowed;
+    auto& local = *graph.local[1]; local.setEf(base.n);
+    auto original_fn = local.fstdistfunc_; auto original_parameter = local.dist_func_param_;
+    {
+        NativeCounter counter(local, w, mask);
+        auto result = labels(local.searchKnn(base.at(0), 10));
+        require(result == exact(w, base, raw, base.at(0), direct) && counter.rejected == 0,
+                "native local search or attribution differs");
     }
-
-    // 6. First-come reverse admission is order-sensitive but keeps the invariants.
-    Merged f_dag = build_variant(base, w, l2, Knobs{.name = "fcfs", .reverse_mode = 1});
-    Merged f_asc = build_variant(base, w, l2, Knobs{.name = "fcfs1", .order = 1, .reverse_mode = 1});
-    Merged f_desc = build_variant(base, w, l2, Knobs{.name = "fcfs2", .order = 2, .reverse_mode = 1});
-    require(f_dag.portals == reference.portals && f_asc.portals == reference.portals,
-            "first-come admission changed portal selection");
-    require(f_asc.edges != f_dag.edges || f_desc.edges != f_dag.edges,
-            "first-come admission is order-insensitive: composition order unobservable");
-    for (const Merged* m : {&f_dag, &f_asc, &f_desc}) {
-        size_t edges = 0;
-        for (const auto& row : m->edges) {
-            require(std::is_sorted(row.begin(), row.end()), "fcfs row unsorted");
-            require(std::adjacent_find(row.begin(), row.end()) == row.end(), "fcfs row duplicated");
-            edges += row.size();
-        }
-        require(edges > 0, "fcfs graph empty");
-    }
-
-    // 7. Dense visited set yields exactly the epoch-stamped results.
-    DenseScratch dense(base.n);
-    for (Id q = 0; q < 10; ++q) {
-        SearchStats dense_stats, epoch_stats;
-        VecEdges edges{&reference.edges, &w};
-        auto dense_result = search_dense(edges, reference, base, l2, base.at(q), roots, base.n, dense,
-                                         [&](Id, Id owner) { return bool(allowed[owner]); }, dense_stats);
-        auto epoch_result = search_counted(reference, base, l2, base.at(q), roots, base.n, scratch,
-                                           [&](Id u) { return bool(allowed[w.owner[u]]); }, epoch_stats);
-        require(dense_result == epoch_result, "dense visited set changed the result");
-        require(dense_stats.distances == epoch_stats.distances, "dense visited changed distance count");
-        require(dense_stats.duplicate_edges == epoch_stats.duplicate_edges,
-                "dense visited changed duplicate-edge count");
-    }
-
-    // 8. Qualification kernels agree on every owner and item.
-    CharKernel bytes{allowed};
-    OwnerBitmapKernel owners;
-    owners.words.assign((allowed.size() + 63) / 64, 0);
-    for (Id d = 0; d < allowed.size(); ++d)
-        if (allowed[d]) owners.words[d >> 6] |= UINT64_C(1) << (d & 63);
-    ItemBitmapKernel items;
-    items.words.assign((base.n + 63) / 64, 0);
-    for (Id u = 0; u < base.n; ++u)
-        if (bytes(w.owner[u])) items.words[u >> 6] |= UINT64_C(1) << (u & 63);
-    for (Id d = 0; d < allowed.size(); ++d) require(bytes(d) == owners(d), "owner bitmap mismatch");
-    for (Id u = 0; u < base.n; ++u) require(bytes(w.owner[u]) == items(u), "item bitmap mismatch");
-
-    std::cout << "PASS baseline equivalence, order-invariant portals, nested highway modes, "
-                 "degree cap/connectivity, counted search, qualification kernels\n";
+    require(local.fstdistfunc_ == original_fn && local.dist_func_param_ == original_parameter,
+            "native distance hook was not restored");
+    std::cout << "PASS direct/recursive GT, qualified entries, shared descendants, empty scope, "
+                 "normal/count/CSR/visited equivalence, pruning bounds, induced-path boundary, native hook\n";
     return 0;
 } catch (const std::exception& e) {
-    std::cerr << e.what() << '\n';
-    return 1;
+    std::cerr << e.what() << '\n'; return 1;
 }

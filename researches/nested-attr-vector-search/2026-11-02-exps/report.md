@@ -305,3 +305,13 @@ METRIC global_prefilter_exhaustive_miss_queries=22
 - [搜索头文件](experiments/global_acorn1_hnsw.h)、[协议与已执行命令](experiments/acorn1-protocol.txt)、[运行入口](experiments/run_acorn1.sh)、[分析程序](experiments/analyze_acorn1.py)。
 - 本次是搜索机制移植，不是作者不剪枝索引或gamma构图；入口、邻域顺序/去重、队列与扫描调度差异均明确记录。不能由这组观测断言ACORN在SIFT上无效。
 - 小型优化查询集、人工随机owner绑定、仅OR谓词、未统一内存预算等限制不变。未测所有臂的邻接成本或真实过滤图分量数；不对未测因素分配时间百分比，也不声明新颖性。
+
+## 9. 独立 hnswlib 与递归/非递归完整验证
+
+当前交付见[从原始数据到索引的方案](dag-composition-delivery.md)、[本轮验证报告](dag-validation-report.md)。四方案在`codes/dag-composition-methods/`各有独立hnswlib源码、LICENSE、UPSTREAM指纹与main.cpp；实际编译依赖及源码SHA检查通过。`bash autoresearch.sh`现运行该独立方案矩阵，不覆盖§8的历史CSV。
+
+本轮已实际执行24/120查询×递归/非递归，5档同ef、12个执行臂，共17,280条arm记录；24查询另有22种构图配置，共5,280条变体记录。正常时间与计数分离并验证ID一致，所有不合格距离为0，未知native邻接计数留空，空查询独立报告。原生NodeANN每图直接使用同一ef，split-ef仅是控制。
+
+扩大集合发现prune16在最大ef仍漏GT，并非只降低有限ef召回；prune24也存在丢失远端合格item但top-10未受影响的案例。不能据原型的整图可达测试声称诱导连通或直接启用剪枝。bitmap复用实验计入分配、物化、释放并逐向量核验；观测收益不单调，不宣布统一交点。完整数字及反例均在[独立证据目录](data/dag-validation-independent/)。
+
+当前可验收的是分库运行、两类资格语义、同ef测量与明确失败边界，不是对NodeANN或完整ACORN的普遍性能优势。120查询样本分布不同且非held-out；新颖性、真实标签相关性及统一内存预算仍未充分验证。

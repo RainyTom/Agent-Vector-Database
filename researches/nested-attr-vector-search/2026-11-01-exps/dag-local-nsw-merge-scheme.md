@@ -56,18 +56,12 @@ D 是下闭集。若每个子树构建连通，则每个 min(D) 的锥内连通�
 
 ## 6. 固定 SIFT benchmark
 
-入口：仓库根目录 `bash autoresearch.sh`。无网络、固定种子、单线程、固定编译选项；运行结果写入 ignored 的 `work/autoresearch-dag-merge/`。脚本记录五个离线输入的 SHA256，并核对 hnswlib revision `ca426729609b3221563047ceb269cc1213e0d376`。
+当前入口为`bash autoresearch.sh`，执行四个独立方案目录的hnswlib程序。输入仍为SIFT前168,937条base和原CCS DAG；分别测24/120查询的递归与非递归模式。详见[当前交付](../2026-11-02-exps/dag-composition-delivery.md)与[实验验证](../2026-11-02-exps/dag-validation-report.md)。
 
-- 向量：已有 SIFT base 的前 168,937 行，128 维；前 24 个 SIFT query。
-- DAG：已有 SciHTC/CCS 工作负载，1,929 概念、2,040 边；使用该快照，不与其他 CCS 解析版本混用。
-- owner：原计数保持不变，以 mt19937 seed=20261101 打乱 owner 数组，消除按概念顺序与 SIFT 行顺序对齐的伪相关。是人工绑定控制组，不是真实语义标注。
-- scope：从既有 1,234 行查询中均匀选取 24 行，覆盖单概念及 antichain OR；同一行绑定固定 SIFT query。
-- GT：扫描合格 item，使用共同 FP32 L2。Recall@10 采用距离边界 ties-aware 定义：任意距离不大于第 min(10,|S|) 名的返回 item 均可命中；分母 min(10,|S|)。空结果查询从 recall 与延迟均值中排除。
-- 搜索预算：ef={32,128,512,2048,168937}。合并图、NodeANN与旧后置参考在最大预算校验GT；ACORN-1搜索移植及严格前置控制的最大预算漏答分别记录，不假设其谓词子图必然连通。
-- 主比较为本方案、`global_acorn1`搜索策略移植、owner-local NodeANN。ACORN臂在原hnswlib各层收集全一/二跳邻居，局部去重、谓词过滤后截断M，不计算不合格item距离；保留原RNG图及合格owner入口，故不是作者完整ACORN索引复现。`global_prefilter`严格跳过控制和`global_result_filter`原生后置参考继续单列。
-- 计时：各ef/查询预热1次、运行3次取中位数，再对非空查询取均值；包含scope、入口、搜索和结果提取，排除GT、构建、CSV输出。主搜索均为单底层队列；NodeANN仅作为独立检索归并参考。
-- 主指标`merged_query_us`仍为合并图在平均Recall≥0.95下的最快已测点。全局策略仅在过门槛时输出`global_acorn1_us`；未过时输出`global_acorn1_quality_gate=0`与`global_acorn1_recall_max`，不把低召回延迟当作同质量成绩。严格控制与旧后置参考的指标不混名。
-- 次指标保留NodeANN延迟、构建、邻接数及`reference_exhaustive_errors`，另列`global_acorn1_exhaustive_miss_queries`和严格控制漏答。ACORN还测邻接检查/二跳展开/合格候选，其他臂未测的邻接工作不填0。原文、后端差异及完整实测见[ACORN报告](../2026-11-02-exps/report.md#8-acorn-1-搜索策略全一二跳邻域扩展)；历史观察不改名覆盖。
+- 原生NodeANN每个合格图使用与其他主臂相同的ef；`max(k,ef/G)`只保留为split-ef控制，不声称等总工作。
+- 正常时间与计数执行分离，同一query/mode/ef验证返回ID一致；scope、GT和构建不含在搜索时间中，单列其代价。
+- 递归入口为子图代表，非递归入口为直属代表；资格、GT与空结果分别统计。历史数据不覆盖。
+- 在同一ef下比较Recall/欠填/距离/时间；最大ef也可能漏答，不把平均达标视为逐查询保证。不再将各臂不同ef下的最快过门槛时间作为主比较。
 
 ## 7. 证据边界与下一项机制检查
 
@@ -79,12 +73,5 @@ D 是下闭集。若每个子树构建连通，则每个 min(D) 的锥内连通�
 
 ### 7.1 组合顺序、邻居与跳转的定向实验
 
-[2026-11-02 组合实验](../2026-11-02-exps/dag-composition-report.md) 在统一 ef 口径下重测了这一节的四个可调维：
-
-- 组合顺序：反向桥按距离准入时与顺序无关（升序/降序建出逐边相同的图）；改成先到先得后顺序可观测，但 ef=512 召回从 .9565 降到 .9391。不调顺序。
-- 邻居：portal 8 已是合理点（4/16/32 无稳定收益）；出度 diverse 剪枝到 16–24 是唯一同时改善召回与延迟的调整；分布式桥与反向桥是召回的来源，不能删。
-- 高速跳转：jump0/1/2/3 召回曲线完全相同，延迟差异落在 ±8–15% 噪声带内；本负载不支持增加跳转边。
-- 执行：21 KB visited 位图替代 675 KB 数组，配对中位 −7.6%；CSR 扁平邻接反而更慢，不作为改进。
-
-上述结论只覆盖本 fixture 与本搜索器；大 scope 上合并图召回降到 .55 属质量缺陷，不能与 NodeANN 的均值延迟直接对比。
+历史[24查询原型观察](../2026-11-02-exps/dag-composition-report.md)仅覆盖递归模式和当时的共库执行器。portal数量、准入、跳转、剪枝和visited表示保留为实验因素，不能直接视为默认优化。剪枝可能删除局部边、破坏合格诱导子图；平面跳转不等于恢复HNSW层次。CSR只改变邻接布局，不改图和向量。当前结论以独立库验证为准。
 
