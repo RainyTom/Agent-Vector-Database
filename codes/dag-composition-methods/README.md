@@ -13,6 +13,8 @@
 
 共同 harness 位于 `researches/nested-attr-vector-search/2026-11-02-exps/experiments/`，统一数据、固定参数/插入序列、直接/递归资格、GT、正常计时、计数和结果输出。hnswlib 的建图/搜索算法代码由该程序自己的 include path 提供；不包含旧 `merge_arms.cpp`。
 
+当前四方案统一 `M=64`、`efConstruction=200`，各自库扩展声明自己的构图参数；全局索引也使用对应方案的参数。原生 level-0 容量为 `2M=128`，上层为64。portal=8、反向桥上限16与可选合并后剪枝上限不是HNSW的M；未剪枝`merged`为主臂。ACORN搜索邻域截断读取实际`graph.M_`，本轮也随M变为64。
+
 ## 执行
 
 ```bash
@@ -21,7 +23,9 @@ bash autoresearch.sh
 
 脚本分别编译四个 `main.cpp`，生成独立进程。编译用 `-MMD` 记录真实依赖，验证没有跨目录引用，也没有回落到旧共享 `deps/hnswlib`。每个源 header 的 SHA256 单独存档。
 
-输出目录默认为 `work/dag-composition-validation-independent/`；可用 `DAG_VALIDATION_OUT` 改工作目录、`DAG_VALIDATION_CPU` 指定绑核。24 查询完整变体、120 查询主臂验证均分别测 `recursive` 与 `direct`。原始方案结果保存在各 run 的方法子目录，只在其上聚合 CSV，不合并任何图对象。
+当前默认输出`work/dag-two-cases-m64/`，可用`DAG_PARETO_OUT`、`DAG_PARETO_CPU`、`DAG_PARETO_NQ`设置。正式矩阵为120查询×recursive/direct，只含两个固定格：`k=10,efSearch=32`与`k=100,efSearch=128`；NodeANN每图n在格内取1…k，其他方案各一个固定点。原生宽度至少为k，统一按`max(k,efSearch)`执行并同时记录请求/有效值。正常整批预热后测10批次，每批遍历非空查询16遍，计数另跑。程序保存全部点、原始批次和实测值，见[两格比较报告](../../researches/nested-attr-vector-search/2026-11-02-exps/dag-two-cases-report.md)。旧M16与九格探索数据保留，不改写。
+
+历史24/120构图变体驱动仍可显式运行`bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_composition_validation.sh`；它不是当前默认Pareto矩阵。新增分层/b/等字节剪枝仅有[研究设计](../../researches/nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)，尚非已实现臂。
 
 行为回归：
 

@@ -41,25 +41,27 @@ static const std::vector<std::vector<Id>>& query_entries(const ComposedGraph& gr
 static void write_roots(std::ostream& out, const std::vector<Id>& roots) {
     for (size_t i = 0; i < roots.size(); ++i) { if (i) out << ';'; out << roots[i]; }
 }
-static size_t checked_hits(const std::vector<Id>& result, const Query& q,
+static size_t checked_hits(size_t k, const std::vector<Id>& result, const Query& q,
                            const Workload& w, const Vectors& base, RawL2Space& raw, const float* vector) {
-    require(result.size() <= std::min<size_t>(10, q.count), "too many results");
+    const size_t truth_count = std::min(k, q.count);
+    require(result.size() <= truth_count && q.truth.size() >= truth_count, "invalid result/GT capacity");
     std::vector<Id> unique(result);
     std::sort(unique.begin(), unique.end());
     require(std::adjacent_find(unique.begin(), unique.end()) == unique.end(), "duplicate result");
     if (q.truth.empty()) { require(result.empty(), "nonempty result for empty scope"); return 0; }
     size_t hits = 0;
-    const float boundary = raw.dist(vector, base.at(q.truth.front()));
+    const float boundary = raw.dist(vector, base.at(q.truth[q.truth.size() - truth_count]));
     for (Id u : result) {
         require(u < base.n && q.allowed[w.owner[u]], "disqualified result");
         hits += raw.dist(vector, base.at(u)) <= boundary;
     }
     return hits;
 }
+#include "dag_pareto_benchmark.h"
 // -------------------------------------------------------------------- main
 static int bench_main(int argc, char** argv) try {
     require(argc >= 5, "usage: dag_composition_bench BASE.fvecs QUERY.fvecs DAG_DIR OUTDIR "
-                       "[NQ] [all|arms|variants] [recursive|direct]");
+                       "[NQ] [all|arms|variants|pareto] [recursive|direct]");
     const size_t NQ = argc > 5 ? size_t(std::stoul(argv[5])) : 24;
     require(NQ >= 2 && NQ <= 10000, "invalid query count");
     const std::string mode = argc > 6 ? argv[6] : "all";
@@ -76,6 +78,7 @@ static int bench_main(int argc, char** argv) try {
     // Query scopes, roots and exact GT are computed once, outside every timer.
     std::vector<Query> workload(NQ);
     std::vector<std::vector<Id>> qdirs(NQ);   // attributes named by each query
+    const size_t truth_limit = mode == "pareto" ? 100 : 10;
     std::ofstream query_csv(out + "/queries-" + semantics + ".csv");
     require(bool(query_csv), "cannot write query manifest");
     query_csv << "query,source_scope,vector_query_id,eligible,truth,roots,roots_semantics\n";
@@ -87,13 +90,17 @@ static int bench_main(int argc, char** argv) try {
         for (Id u = 0; u < base.n; ++u) if (q.allowed[w.owner[u]]) {
             ++q.count;
             truth.emplace(l2.dist(queries.at(i), base.at(u)), u);
-            if (truth.size() > 10) truth.pop();
+            if (truth.size() > truth_limit) truth.pop();
         }
         while (!truth.empty()) { q.truth.push_back(truth.top().second); truth.pop(); }
         query_csv << i << ',' << i * (w.scopes.size() - 1) / (NQ - 1) << ',' << i << ','
                   << q.count << ',' << q.truth.size() << ',';
         write_roots(query_csv, q.roots);
         query_csv << ',' << semantics << '\n';
+    }
+    if (mode == "pareto") {
+        run_pareto(base, queries, w, l2, workload, recursive, out);
+        return 0;
     }
 
     const Knobs variants[] = {
@@ -151,17 +158,17 @@ static int bench_main(int argc, char** argv) try {
                 for (int repeat = 0; repeat < 11; ++repeat) {
                     SearchStats unused;
                     auto t0 = Clock::now();
-                    result = q.count ? search_counted<false>(built, base, l2, queries.at(i), q.roots,
+                    result = q.count ? search_counted<false>(10, built, base, l2, queries.at(i), q.roots,
                         std::min(ef, q.count), scratch,
                         [&](Id u) { return bool(q.allowed[w.owner[u]]); }, unused, &entry) : std::vector<Id>{};
                     double elapsed = us(t0);
                     if (repeat) timings.push_back(elapsed);
                 }
-                const auto counted = q.count ? search_counted(built, base, l2, queries.at(i), q.roots,
+                const auto counted = q.count ? search_counted(10, built, base, l2, queries.at(i), q.roots,
                     std::min(ef, q.count), scratch,
                     [&](Id u) { return bool(q.allowed[w.owner[u]]); }, stats, &entry) : std::vector<Id>{};
                 require(counted == result, "variant normal/count mismatch");
-                const size_t hits = checked_hits(result, q, w, base, l2, queries.at(i));
+                const size_t hits = checked_hits(10, result, q, w, base, l2, queries.at(i));
                 if (ef == base.n && hits != q.truth.size()) ++max_ef_misses;
                 if (q.count) {
                     recall_sum += double(hits) / q.truth.size();
@@ -200,7 +207,7 @@ static int bench_main(int argc, char** argv) try {
     // Native NodeANN and graph methods receive the same ef value. The split-ef
     // NodeANN control is separate; it is NOT an equal-total-work guarantee.
     if (mode != "variants") {
-        Graph global(&l2, DAG_VALIDATION_FAMILY >= 2 ? base.n : 1, 16, 200, 100);
+        Graph global(&l2, DAG_VALIDATION_FAMILY >= 2 ? base.n : 1, kHnswM, kHnswEfConstruction, 100);
         if (DAG_VALIDATION_FAMILY >= 2) {
             std::vector<Id> order(base.n); std::iota(order.begin(), order.end(), 0);
             std::mt19937 rng(20261101); std::shuffle(order.begin(), order.end(), rng);
@@ -209,6 +216,7 @@ static int bench_main(int argc, char** argv) try {
         QualifiedOwnerEntries entries(global, w);
         auto baseline = DAG_VALIDATION_FAMILY < 2 ? build_variant(base, w, l2, Knobs{}) : ComposedGraph{};
         baseline.local.resize(w.members.size());
+        write_index_parameters(out, global, baseline);
         auto pruned = DAG_VALIDATION_FAMILY == 0 ?
             build_variant(base, w, l2, Knobs{.name = "prune16", .prune_m = 16}) : ComposedGraph{};
         auto pruned24 = DAG_VALIDATION_FAMILY == 0 ?
@@ -251,18 +259,18 @@ static int bench_main(int argc, char** argv) try {
                     const auto& entry = query_entries(baseline, recursive);
                     if (arm == 0 || arm == 3) {
                         if (arm == 0)
-                            return search_counted<Count>(baseline, base, l2, queries.at(i), q.roots,
+                            return search_counted<Count>(10, baseline, base, l2, queries.at(i), q.roots,
                                 std::min(ef, q.count), scratch,
                                 [&](Id u) { return bool(q.allowed[w.owner[u]]); }, stats, &entry);
-                        return search_counted<Count>(baseline, base, l2, queries.at(i), q.roots,
+                        return search_counted<Count>(10, baseline, base, l2, queries.at(i), q.roots,
                             std::min(ef, q.count), scratch, [&](Id u) { return items(u); }, stats, &entry);
                     }
                     if (arm == 1 || arm == 2) {
                         if (arm == 1)
-                            return search_csr<false, Count>(csr, baseline, w, base, l2, queries.at(i),
+                            return search_csr<false, Count>(10, csr, baseline, w, base, l2, queries.at(i),
                                 q.roots, std::min(ef, q.count), scratch,
                                 [&](Id, Id owner) { return bool(q.allowed[owner]); }, stats, &entry);
-                        return search_csr<true, Count>(csr, baseline, w, base, l2, queries.at(i),
+                        return search_csr<true, Count>(10, csr, baseline, w, base, l2, queries.at(i),
                             q.roots, std::min(ef, q.count), scratch,
                             [&](Id, Id owner) { return bool(q.allowed[owner]); }, stats, &entry);
                     }
@@ -271,37 +279,20 @@ static int bench_main(int argc, char** argv) try {
                         const auto& source_entry = query_entries(source, recursive);
                         if (arm == 5) {
                             CsrEdges edges{&csr, &w};
-                            return search_dense<Count>(edges, baseline, base, l2, queries.at(i), q.roots,
+                            return search_dense<Count>(10, edges, baseline, base, l2, queries.at(i), q.roots,
                                 std::min(ef, q.count), dense,
                                 [&](Id, Id owner) { return bool(q.allowed[owner]); }, stats, &source_entry);
                         }
                         VecEdges edges{&source.edges, &w};
-                        return search_dense<Count>(edges, source, base, l2, queries.at(i), q.roots,
+                        return search_dense<Count>(10, edges, source, base, l2, queries.at(i), q.roots,
                             std::min(ef, q.count), dense,
                             [&](Id, Id owner) { return bool(q.allowed[owner]); }, stats, &source_entry);
                     }
-                    if (arm == 8 || arm == 9) {
-                        std::priority_queue<Pair> top;
-                        for (Id c = 0; c < q.allowed.size(); ++c) {
-                            if constexpr (Count) ++stats.owner_checks;
-                            if (!q.allowed[c] || !baseline.local[c]) continue;
-                            auto& graph = *baseline.local[c];
-                            graph.setEf(local_ef);
-                            std::priority_queue<std::pair<float, hnswlib::labeltype>> local;
-                            if constexpr (Count) {
-                                NativeCounter counter(graph, w, q.allowed);
-                                local = graph.searchKnn(queries.at(i), 10);
-                                stats.distances += counter.distances;
-                                stats.rejected_distances += counter.rejected;
-                            } else local = graph.searchKnn(queries.at(i), 10);
-                            while (!local.empty()) {
-                                top.emplace(local.top().first, Id(local.top().second)); local.pop();
-                                if (top.size() > 10) top.pop();
-                            }
-                        }
-                        while (!top.empty()) { result.push_back(top.top().second); top.pop(); }
-                        return result;
-                    }
+#if DAG_VALIDATION_FAMILY == 1
+                    if (arm == 8 || arm == 9)
+                        return search_nodeann_topn<Count>(baseline, w, q.allowed,
+                            queries.at(i), 10, 10, local_ef, stats);
+#endif
                     auto item_ok = [&](Id u) {
                         if constexpr (Count) ++stats.item_checks;
                         return bool(q.allowed[w.owner[u]]);
@@ -349,7 +340,7 @@ static int bench_main(int argc, char** argv) try {
                 auto counted_result = execute(std::true_type{}, stats);
                 require(normal == counted_result, "normal/count result IDs differ");
                 require(stats.rejected_distances == 0, "query distance to unqualified item");
-                const size_t hits = checked_hits(normal, q, w, base, l2, queries.at(i));
+                const size_t hits = checked_hits(10, normal, q, w, base, l2, queries.at(i));
                 arms << names[arm] << ',' << ef << ',';
                 if (arm == 8 || arm == 9) arms << local_ef;
                 arms << ',' << i << ',' << q.count << ',' << q.truth.size() << ',' << hits << ','
@@ -381,7 +372,7 @@ static int bench_main(int argc, char** argv) try {
             stats.trace_enabled = true;
             {
                 // Baseline trace for this query (ef=512); build is outside the loop.
-                search_counted(built, base, l2, queries.at(qi), q.roots, std::min<size_t>(512, q.count),
+                search_counted(10, built, base, l2, queries.at(qi), q.roots, std::min<size_t>(512, q.count),
                     local_scratch, [&](Id u) { return bool(q.allowed[w.owner[u]]); }, stats, &query_entries(built, recursive));
             }
             CharKernel bytes{q.allowed};
@@ -524,10 +515,10 @@ static int bench_main(int argc, char** argv) try {
             for (size_t k = 0; k < K; ++k) {
                 SearchStats bytes, bits;
                 const auto* vector = queries.at((scope_query + k) % NQ);
-                expected[k] = search_counted(graph, base, l2, vector, q.roots,
+                expected[k] = search_counted(10, graph, base, l2, vector, q.roots,
                     std::min<size_t>(512, q.count), scratch,
                     [&](Id u) { return bool(q.allowed[w.owner[u]]); }, bytes, &entry);
-                const auto result = search_counted(graph, base, l2, vector, q.roots,
+                const auto result = search_counted(10, graph, base, l2, vector, q.roots,
                     std::min<size_t>(512, q.count), scratch, [&](Id u) { return verified(u); }, bits, &entry);
                 require(result == expected[k] && bytes.distances == bits.distances &&
                     bytes.expansions == bits.expansions && bytes.item_checks == bits.item_checks,
@@ -548,7 +539,7 @@ static int bench_main(int argc, char** argv) try {
                             t_build = us(begin);
                             for (size_t k = 0; k < K; ++k) {
                                 SearchStats unused;
-                                observed[k] = search_counted<false>(graph, base, l2,
+                                observed[k] = search_counted<false>(10, graph, base, l2,
                                     queries.at((scope_query + k) % NQ), q.roots,
                                     std::min<size_t>(512, q.count), scratch,
                                     [&](Id u) { return items(u); }, unused, &entry);
@@ -558,7 +549,7 @@ static int bench_main(int argc, char** argv) try {
                     } else {
                         for (size_t k = 0; k < K; ++k) {
                             SearchStats unused;
-                            observed[k] = search_counted<false>(graph, base, l2,
+                            observed[k] = search_counted<false>(10, graph, base, l2,
                                 queries.at((scope_query + k) % NQ), q.roots,
                                 std::min<size_t>(512, q.count), scratch,
                                 [&](Id u) { return bool(q.allowed[w.owner[u]]); }, unused, &entry);

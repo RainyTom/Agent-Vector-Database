@@ -1,0 +1,15 @@
+{
+  "M": 64,
+  "efConstruction": 200,
+  "maxM0": 128,
+  "before_effective_neighbors": 1,
+  "after_effective_neighbors": 0,
+  "before_level0_neighbor_bytes_per_capacity_item": 516,
+  "after_level0_neighbor_bytes_per_capacity_item": 516,
+  "before_record_stride": 1036,
+  "after_record_stride": 1036,
+  "upper_level_neighbor_bytes_per_occurrence": 260,
+  "allocation_base_unchanged": true,
+  "label_lock_payload_bytes": 2621440,
+  "scope": "Two-item native hnswlib allocation probe; not RSS, a compact service index, or ANN performance"
+}

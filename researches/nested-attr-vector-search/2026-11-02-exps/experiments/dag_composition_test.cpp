@@ -18,13 +18,13 @@ static Workload fixture() {
     }
     return w;
 }
-static std::vector<Id> exact(const Workload& w, const Vectors& base, RawL2Space& raw,
+static std::vector<Id> exact(size_t k, const Workload& w, const Vectors& base, RawL2Space& raw,
                              const float* vector, const Query& scope) {
     std::vector<Pair> scored;
     for (Id u = 0; u < base.n; ++u) if (scope.allowed[w.owner[u]])
         scored.emplace_back(raw.dist(vector, base.at(u)), u);
     std::sort(scored.begin(), scored.end());
-    if (scored.size() > 10) scored.resize(10);
+    if (scored.size() > k) scored.resize(k);
     std::vector<Id> ids;
     for (auto it = scored.rbegin(); it != scored.rend(); ++it) ids.push_back(it->second);
     return ids;
@@ -50,20 +50,44 @@ int main() try {
         auto predicate = [&](Id u) { return bool(q.allowed[w.owner[u]]); };
         for (Id vector = 0; vector < 5; ++vector) {
             SearchStats counted, unused, flat, bits;
-            auto result = search_counted(graph, base, raw, base.at(vector), q.roots, base.n,
+            auto result = search_counted(10, graph, base, raw, base.at(vector), q.roots, base.n,
                                          scratch, predicate, counted, &entries);
-            auto normal = search_counted<false>(graph, base, raw, base.at(vector), q.roots, base.n,
+            auto normal = search_counted<false>(10, graph, base, raw, base.at(vector), q.roots, base.n,
                                                 scratch, predicate, unused, &entries);
-            auto contiguous = search_csr<true>(csr, graph, w, base, raw, base.at(vector), q.roots, base.n,
+            auto contiguous = search_csr<true>(10, csr, graph, w, base, raw, base.at(vector), q.roots, base.n,
                 scratch, [&](Id, Id owner) { return bool(q.allowed[owner]); }, flat, &entries);
             VecEdges edges{&graph.edges, &w};
-            auto bitset = search_dense(edges, graph, base, raw, base.at(vector), q.roots, base.n,
+            auto bitset = search_dense(10, edges, graph, base, raw, base.at(vector), q.roots, base.n,
                 dense, [&](Id, Id owner) { return bool(q.allowed[owner]); }, bits, &entries);
-            require(result == exact(w, base, raw, base.at(vector), q), "unpruned search disagrees with exact GT");
+            require(result == exact(10, w, base, raw, base.at(vector), q), "unpruned search disagrees with exact GT");
             require(result == normal && result == contiguous && result == bitset, "execution representation changed IDs");
             require(counted.distances == flat.distances && counted.distances == bits.distances &&
                     counted.adjacency_entries == bits.adjacency_entries, "execution representation changed work");
             if (attr == 6) require(result.empty() && counted.distances == 0, "empty scope performed distances");
+        }
+    }
+    // A cached top-100 GT must provide the correct top-10/50/100 boundary.
+    for (size_t k : {10u, 50u, 100u}) for (bool descend : {false, true}) {
+        auto q = resolve_scope(w, {0}, descend);
+        for (Id owner = 0; owner < w.members.size(); ++owner)
+            if (q.allowed[owner]) q.count += w.members[owner].size();
+        q.truth = exact(100, w, base, raw, base.at(0), q);
+        const auto& entry = query_entries(graph, descend);
+        SearchStats stats, flat_work;
+        auto predicate = [&](Id u) { return bool(q.allowed[w.owner[u]]); };
+        const auto result = search_counted(k, graph, base, raw, base.at(0), q.roots,
+            base.n, scratch, predicate, stats, &entry);
+        require(result == exact(k, w, base, raw, base.at(0), q), "global k silently stayed at ten");
+        require(checked_hits(k, result, q, w, base, raw, base.at(0)) == std::min(k, q.count),
+                "cached GT uses the wrong k boundary or denominator");
+        auto contiguous = search_csr<true>(k, csr, graph, w, base, raw, base.at(0), q.roots,
+            base.n, scratch, [&](Id, Id owner) { return bool(q.allowed[owner]); }, flat_work, &entry);
+        require(contiguous == result, "CSR retained a fixed top-ten limit");
+        if (descend && k >= 50) {
+            SearchStats bounded;
+            const auto filled = search_counted(k, graph, base, raw, base.at(0), q.roots,
+                k == 50 ? 32 : 64, scratch, predicate, bounded, &entry);
+            require(filled.size() == k, "ef below k truncated the result capacity");
         }
     }
     // Degree pruning is an approximation, NOT an induced-connectivity guarantee.
@@ -81,7 +105,7 @@ int main() try {
     Id a = w.members[1][0], rejected = w.members[3][0], b = w.members[1][1];
     bridge.edges[a] = {rejected}; bridge.edges[rejected] = {b}; bridge.portals[1] = {a};
     SearchStats isolated;
-    auto partial = search_counted(bridge, base, raw, base.at(a), {1}, base.n, scratch,
+    auto partial = search_counted(10, bridge, base, raw, base.at(a), {1}, base.n, scratch,
         [&](Id u) { return bool(direct.allowed[w.owner[u]]); }, isolated);
     require(partial == std::vector<Id>{a} && isolated.distances == 1 && isolated.rejected_edges == 1,
             "search secretly crossed an unqualified bridge");
@@ -92,7 +116,7 @@ int main() try {
     {
         NativeCounter counter(local, w, mask);
         auto result = labels(local.searchKnn(base.at(0), 10));
-        require(result == exact(w, base, raw, base.at(0), direct) && counter.rejected == 0,
+        require(result == exact(10, w, base, raw, base.at(0), direct) && counter.rejected == 0,
                 "native local search or attribution differs");
     }
     require(local.fstdistfunc_ == original_fn && local.dist_func_param_ == original_parameter,

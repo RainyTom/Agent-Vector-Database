@@ -1,4 +1,6 @@
-# 当前方案：直属 NSW 图 → DAG 自底向上保边合并 → 跨层跳转
+# 原始设计记录：直属 NSW 图 → DAG 自底向上保边合并 → 跨层跳转
+
+§1–5保留最初M16设计记录；当前交付统一使用“属性”，四方案参数为M=64、efConstruction=200，完整算法以[交付文档](../2026-11-02-exps/dag-composition-delivery.md)为准，不用下文历史M16数字解释当前图参数。
 
 ## 目标与语义
 
@@ -56,7 +58,7 @@ D 是下闭集。若每个子树构建连通，则每个 min(D) 的锥内连通�
 
 ## 6. 固定 SIFT benchmark
 
-当前入口为`bash autoresearch.sh`，执行四个独立方案目录的hnswlib程序。输入仍为SIFT前168,937条base和原CCS DAG；分别测24/120查询的递归与非递归模式。详见[当前交付](../2026-11-02-exps/dag-composition-delivery.md)与[实验验证](../2026-11-02-exps/dag-validation-report.md)。
+当前入口为`bash autoresearch.sh`，执行四个独立hnswlib方案的两格固定对比：M64/efC200、120查询×递归/非递归、`k=10/ef=32`与`k=100/ef=128`，NodeANN在格内扫n=1…k。详见[当前交付](../2026-11-02-exps/dag-composition-delivery.md)、[两格实测对比](../2026-11-02-exps/dag-two-cases-report.md)与[新增分层/b研究设计](../2026-11-02-exps/dag-layered-routing-design.md)。历史M16的24/120变体结果保留。
 
 - 原生NodeANN每个合格图使用与其他主臂相同的ef；`max(k,ef/G)`只保留为split-ef控制，不声称等总工作。
 - 正常时间与计数执行分离，同一query/mode/ef验证返回ID一致；scope、GT和构建不含在搜索时间中，单列其代价。

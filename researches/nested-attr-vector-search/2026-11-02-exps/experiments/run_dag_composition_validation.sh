@@ -3,7 +3,7 @@
 set -euo pipefail
 cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../../../.."
 export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
-out=${DAG_VALIDATION_OUT:-work/dag-composition-validation-independent}
+out=${DAG_VALIDATION_OUT:-work/dag-composition-validation-m64-efc200}
 methods=codes/dag-composition-methods
 base=work/packed/sift-fvecs-run1/sift_base.fvecs
 queries=work/packed/sift-fvecs-run1/sift_query.fvecs
@@ -39,12 +39,17 @@ python3 - "$out" <<'PY'
 import csv, json, pathlib, sys
 root = pathlib.Path(sys.argv[1])
 methods = ('dag_merge', 'nodeann', 'acorn1', 'global_prefilter')
+parameters = {}
 for nq in (24, 120):
     for sem in ('recursive', 'direct'):
         run = root / f'nq{nq}-{sem}'
         combined, fieldnames, manifest = [], None, None
         for method in methods:
             source = run / method
+            actual = json.loads((source / 'index-parameters.json').read_text())
+            assert (actual['hnsw_M'], actual['ef_construction'], actual['maxM0']) == (64, 200, 128), \
+                'actual native HNSW parameters differ from the agreed protocol'
+            parameters[f'{run.name}/{method}'] = actual
             with (source / f'arms-{sem}.csv').open() as f:
                 reader = csv.DictReader(f)
                 if fieldnames is None: fieldnames = reader.fieldnames
@@ -67,7 +72,8 @@ for method in methods:
             assert f'codes/dag-composition-methods/{other}/' not in deps, 'cross-method include'
     assert f'codes/dag-composition-methods/{method}/hnswlib/hnswlib/hnswalg.h' in deps
     assert 'codes/directory-aware-vector-attr-search/deps/hnswlib' not in deps
-print('PASS independent compilation and identical per-method query/GT manifests')
+(root / 'index-parameters.json').write_text(json.dumps(parameters, indent=2) + '\n')
+print('PASS independent compilation, actual M=64/efConstruction=200, and identical per-method query/GT manifests')
 PY
 python3 researches/nested-attr-vector-search/2026-11-02-exps/experiments/analyze_dag_validation.py \
     --dir "$out" --out "$out/summary.json"

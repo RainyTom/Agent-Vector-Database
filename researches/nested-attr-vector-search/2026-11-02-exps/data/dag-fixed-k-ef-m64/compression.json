@@ -1,0 +1,50 @@
+[
+  {
+    "path": "nq120-recursive/dag_merge/pareto-queries.csv.gz",
+    "uncompressed_bytes": 58586,
+    "compressed_bytes": 9527,
+    "uncompressed_sha256": "4cbe68b94c4ac0bd1b5bad4d84d3b688403f6c3ecd6c9a3b1266e4590bb0e089"
+  },
+  {
+    "path": "nq120-direct/dag_merge/pareto-queries.csv.gz",
+    "uncompressed_bytes": 57455,
+    "compressed_bytes": 8619,
+    "uncompressed_sha256": "5f5ad6cd38ea4a564d2849d6c78043a2878ba036473ede55fa8d7f0f5186dccf"
+  },
+  {
+    "path": "nq120-recursive/nodeann/pareto-queries.csv.gz",
+    "uncompressed_bytes": 3627374,
+    "compressed_bytes": 298688,
+    "uncompressed_sha256": "cd87cb9cf59c9393095a98b89bed90be327896cb52137680126cbeb97818fa53"
+  },
+  {
+    "path": "nq120-direct/nodeann/pareto-queries.csv.gz",
+    "uncompressed_bytes": 3565965,
+    "compressed_bytes": 289484,
+    "uncompressed_sha256": "4faacfad8da2b0e024016cc8cc369b53c0262f35148b2f213936488ed6554b06"
+  },
+  {
+    "path": "nq120-recursive/acorn1/pareto-queries.csv.gz",
+    "uncompressed_bytes": 68830,
+    "compressed_bytes": 9260,
+    "uncompressed_sha256": "9985cd5465da525f57f719189db32afb0d37b4d7dbaadd36c93b6d085446ccd0"
+  },
+  {
+    "path": "nq120-direct/acorn1/pareto-queries.csv.gz",
+    "uncompressed_bytes": 66699,
+    "compressed_bytes": 7724,
+    "uncompressed_sha256": "182d786c1db16bb699000258ff7cfa0439fe682d77cbb93f887ab59bab922861"
+  },
+  {
+    "path": "nq120-recursive/global_prefilter/pareto-queries.csv.gz",
+    "uncompressed_bytes": 64612,
+    "compressed_bytes": 5755,
+    "uncompressed_sha256": "4142d7b9ee0f15af1560bc8de288632b0f94652b7ce80d4e0fecec1c93b88ff8"
+  },
+  {
+    "path": "nq120-direct/global_prefilter/pareto-queries.csv.gz",
+    "uncompressed_bytes": 63578,
+    "compressed_bytes": 5261,
+    "uncompressed_sha256": "1815ab4aa10150638c13ee8b117ba03ea8acf3e32e430a0981633fccc0148e55"
+  }
+]

@@ -139,3 +139,16 @@ H2：把 ANN witness 的 false-empty、过滤器 false-negative 与候选搜索�
 - 数据/基线/指标：固定SIFT×CCS；本方案、原生NodeANN、ACORN策略移植分别持有独立hnswlib；记录Recall均值/最小值、欠填、最大预算漏答、正常时间与真实计数。
 - 最小实验：只恢复一类本地高层导航，其余入口/边/ef不变；验证共享后代、空属性及非递归入口，不先调其他旋钮。
 - 风险：额外高层增加距离和内存；筛选可能破坏层间通路；小scope开销占比更高。先做可达性和同ef质量验收，再比较时间。
+
+### 2026-11-02 RQ-C细化：层配额、OR入口与不合格跳转
+
+用户提出的新候选见[完整设计](../nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)，仍为研究者综合假设，非作者future work、非已确认新颖。HNSW/ACORN分层、FD入口与拼接、LSSG标签tier、TFANNS块度共享均是已有前序。
+
+- 可检验差异：固定逐层节点/边字节配额，DAG多父覆盖责任是否比random/size-only提升更有效；先跑原生层保留控制，不同时叠加所有因素。
+- 入口与语义：倒排保存Direct/Recursive两类真实入口；单真实seed和虚拟查询源多seed共享前沿分别测。递归安全下行边不自动适用于direct。
+- 预算：连续不合格中间点b与累计/全局预算分开；零不合格查询距离仍为硬约束，邻接/资格成本必须计数。普通visited可能抑制剩余预算更大的状态。
+- 剪枝：FD交集覆盖不能保证任意OR替代；更强谓词见证也不证明后继边保留或ANN召回。必要骨架超固定度时显式报告，不隐含扩容。
+- 评估改为两组固定(topk,efSearch)：`k=10/ef=32`与`k=100/ef=128`，组内不调参、不跨ef连线；NodeANN仅在格内扫n=1…k，以达到本方案该格Recall的最快点作同质量QPS比较。[当前平面图两格结果](../nested-attr-vector-search/2026-11-02-exps/dag-two-cases-report.md)：三格NodeANN更快(1.04–1.73×)，递归k=10格本方案更快但召回低2.3个点；不作为新分层收益。
+
+有限语义枚举/真实hnswlib分配探针已运行；分层ANN、同服务字节预算与UNG全文补查仍是后续实验/证据，不写成已验证结论。
+

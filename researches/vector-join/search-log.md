@@ -263,3 +263,10 @@
 
 本轮是既有B类filtered ANN工作的实现任务，不是新的vector join文献覆盖检索。先核papers/relations与ACORN本地全文，再定向阅读v1§5.1–5.3及作者固定commit `c259f11cdbec880671658eaa0d8747e2cc9de79d`，没有新增论文或追完引用链。核实全一/二跳扩展、RNG构图差异及入口/截断/回退边界；交付范围是hnswlib上的搜索策略移植，作者FAISS完整实现未运行。证据见[日期化审计](../../papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)；实现与实测见[当日报告](../nested-attr-vector-search/2026-11-02-exps/report.md)。不把普通filtered top-k称为join，不作新颖性声明。
 
+
+## 2026-11-02 层级过滤ANN的图拼接与预算边界
+
+先检查43篇总索引/30条关系及全文，再用vector similarity join、vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join联合graph/hierarchy/pruning做窄检索，随后转filtered ANN原始算法。修订已有ACORN/Filtered-DiskANN/LSSG/TFANNS的入口、分层、OR剪枝与预算证据；不新增候选正式条目或作者关系。详见[方向日志](../nested-attr-vector-search/01-directory-aware-acceleration/search-log.md)与[设计](../nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)。
+
+BigFANN、EMA、PathFinder、Veda仅核相关机制章节，完整书目/正式版本归档待补；UNG全文仍受限。没有完成全面引用链或查重，不宣称新颖性；本任务是B类filtered ANN，不是新的几何vector join。当前M64平面图的QPS–Recall/n扫描和有限语义探针已运行，新分层/b算法未实施。
+

@@ -1,0 +1,40 @@
+{
+  "observed_driver_wall_seconds": 753.02,
+  "command": "bash autoresearch.sh",
+  "benchmark_driver": "researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_pareto.sh",
+  "cpu_affinity": 3,
+  "threads": 1,
+  "NQ": 120,
+  "semantics": [
+    "recursive",
+    "direct"
+  ],
+  "points": 252,
+  "query_audit_rows": 30240,
+  "timed_batches": 2520,
+  "timed_queries": 4253760,
+  "M": 64,
+  "efConstruction": 200,
+  "k": 10,
+  "node_local_n": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "stopped_run": "Earlier fixed-n M64 validation run was cancelled after user requested Pareto sweeps; partial work is not formal evidence.",
+  "limitations": [
+    "single build seed per method",
+    "random owner binding; not real SIFT semantic attributes",
+    "120 source scopes resampled; not held-out",
+    "same M is not same resident memory",
+    "batch QPS is search-only, includes result checksum; excludes scope/GT/build",
+    "observed frontier, not confidence-supported universal ordering"
+  ]
+}

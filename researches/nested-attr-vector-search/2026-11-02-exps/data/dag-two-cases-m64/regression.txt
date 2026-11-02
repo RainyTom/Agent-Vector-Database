@@ -1,0 +1,5 @@
+PASS independent hnswlib compile dependencies
+PASS two fixed k/ef cells, effective widths, k-dependent GT, complete local-n grids, zero rejected distances, measured QPS; no cross-ef curves
+C++ variable-k cases: PASS local n vs global k, concentrated top-k, qualification, empty graph, normal/count equivalence
+C++ DAG semantics: PASS direct/recursive GT, qualified entries, shared descendants, empty scope, normal/count/CSR/visited equivalence, pruning bounds, induced-path boundary, native hook
+Python same-cell selection: Ran 4 tests; OK

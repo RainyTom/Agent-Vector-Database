@@ -1,0 +1,38 @@
+{
+  "command": "bash autoresearch.sh",
+  "observed_driver_wall_seconds": 413.8,
+  "M": 64,
+  "efConstruction": 200,
+  "NQ": 120,
+  "semantics": [
+    "recursive",
+    "direct"
+  ],
+  "cases": [
+    {
+      "k": 10,
+      "ef_requested": 32,
+      "ef_effective": 32
+    },
+    {
+      "k": 100,
+      "ef_requested": 128,
+      "ef_effective": 128
+    }
+  ],
+  "points": 232,
+  "query_audit_rows": 27840,
+  "timed_batches": 2320,
+  "timed_queries": 3916160,
+  "scope": "Only the two requested fixed cells; superseded nine-cell exploration retained separately at data/dag-fixed-k-ef-m64.",
+  "comparison": "Same-cell query-average recall at least the measured DAG point; overshoot retained.",
+  "limitations": [
+    "one build seed per method",
+    "random owner binding, not real SIFT semantics",
+    "120 non-held-out scopes",
+    "same M is not same resident bytes",
+    "search-only batch QPS; excludes scope/GT/build",
+    "short batches show ~5% run-to-run variation on the same binary, no confidence interval",
+    "no new layered graph or b traversal was run"
+  ]
+}

@@ -2,6 +2,9 @@
 // HNSW graph composition/search adaptation; method-local fork, not shared at runtime.
 #include "global_prefilter_hnsw.h"
 #include "global_acorn1_hnsw.h"
+
+static constexpr size_t kHnswM = 64;
+static constexpr size_t kHnswEfConstruction = 200;
 // ---------------------------------------------------------------- composition
 struct Knobs {
     const char* name = "baseline";
@@ -58,7 +61,7 @@ static ComposedGraph build_variant(const Vectors& base, const Workload& w, RawL2
         if (members.empty()) continue;
         own[c] = representatives_k(members, base, l2, kn.portals);
         auto& g = m.local[c];
-        g = std::make_unique<Graph>(&l2, members.size(), 16, 200, kn.local_seed + c);
+        g = std::make_unique<Graph>(&l2, members.size(), kHnswM, kHnswEfConstruction, kn.local_seed + c);
         if (kn.shuffle_local) {
             std::vector<Id> insertion(members);
             std::mt19937 rng(kn.local_seed + 7 * c);
@@ -238,10 +241,11 @@ struct SearchStats {
 };
 
 template<bool Count = true, class Qualification>
-static std::vector<Id> search_counted(const Merged& m, const Vectors& base, RawL2Space& l2,
+static std::vector<Id> search_counted(size_t k, const Merged& m, const Vectors& base, RawL2Space& l2,
     const float* query, const std::vector<Id>& roots, size_t ef, Scratch& scratch,
     Qualification qualifies, SearchStats& stats,
     const std::vector<std::vector<Id>>* entries = nullptr) {
+    ef = std::max(ef, k);
     ++scratch.epoch;
     std::priority_queue<Pair, std::vector<Pair>, std::greater<Pair>> frontier;
     std::priority_queue<Pair> best;
@@ -276,7 +280,7 @@ static std::vector<Id> search_counted(const Merged& m, const Vectors& base, RawL
         }
         for (Id v : m.edges[p.second]) offer(v);
     }
-    while (best.size() > 10) best.pop();
+    while (best.size() > k) best.pop();
     std::vector<Id> result;
     while (!best.empty()) { result.push_back(best.top().second); best.pop(); }
     return result;
@@ -335,10 +339,11 @@ static Csr flatten(const Merged& m, const Workload& w) {
 }
 
 template<bool INLINE_OWNER, bool Count = true, class Qualification>
-static std::vector<Id> search_csr(const Csr& csr, const Merged& m, const Workload& w,
+static std::vector<Id> search_csr(size_t k, const Csr& csr, const Merged& m, const Workload& w,
     const Vectors& base, RawL2Space& l2, const float* query, const std::vector<Id>& roots,
     size_t ef, Scratch& scratch, Qualification qualifies, SearchStats& stats,
     const std::vector<std::vector<Id>>* entries = nullptr) {
+    ef = std::max(ef, k);
     ++scratch.epoch;
     std::priority_queue<Pair, std::vector<Pair>, std::greater<Pair>> frontier;
     std::priority_queue<Pair> best;
@@ -372,7 +377,7 @@ static std::vector<Id> search_csr(const Csr& csr, const Merged& m, const Workloa
         for (uint64_t k = begin; k < end; ++k)
             offer(csr.ids[k], INLINE_OWNER ? csr.owners[k] : w.owner[csr.ids[k]]);
     }
-    while (best.size() > 10) best.pop();
+    while (best.size() > k) best.pop();
     std::vector<Id> result;
     while (!best.empty()) { result.push_back(best.top().second); best.pop(); }
     return result;
@@ -400,10 +405,11 @@ struct DenseScratch {
 };
 
 template<bool Count = true, class Edges, class Qualification>
-static std::vector<Id> search_dense(const Edges& edges, const Merged& m, const Vectors& base,
+static std::vector<Id> search_dense(size_t k, const Edges& edges, const Merged& m, const Vectors& base,
     RawL2Space& l2, const float* query, const std::vector<Id>& roots, size_t ef,
     DenseScratch& visited, Qualification qualifies, SearchStats& stats,
     const std::vector<std::vector<Id>>* entries = nullptr) {
+    ef = std::max(ef, k);
     visited.begin();
     std::priority_queue<Pair, std::vector<Pair>, std::greater<Pair>> frontier;
     std::priority_queue<Pair> best;
@@ -435,7 +441,7 @@ static std::vector<Id> search_dense(const Edges& edges, const Merged& m, const V
             offer(v, owner);
         });
     }
-    while (best.size() > 10) best.pop();
+    while (best.size() > k) best.pop();
     std::vector<Id> result;
     while (!best.empty()) { result.push_back(best.top().second); best.pop(); }
     return result;

@@ -50,18 +50,18 @@
 
 **非递归不能直接复用子树 portal**：子树代表可能全部属于后代。当前索引同时保存直属代表和子图代表，查询根据模式选择，无需查询向量或 GT 来补入口。
 
-GT 对当前模式的合格 item 做精确 squared-L2 top-10，分母为 `min(10,eligible)`。使用距离边界 ties-aware hits：允许距离不大于第 k 名的任意不同合格 item 命中，但返回数不得超过 k。欠填计入召回损失，不能按返回数归一化。空查询保留数据行、独立统计耗时，不计入非空 Recall 均值。
+GT 对当前模式的合格 item 做精确 squared-L2 top-k，分母为 `min(k,eligible)`；本轮比较格为k=10与k=100，GT在计时外缓存top-100并按格取对应距离边界。使用距离边界 ties-aware hits：允许距离不大于第 k 名的任意不同合格 item 命中，但返回数不得超过 k。欠填计入召回损失，不能按返回数归一化。空查询保留数据行、独立统计耗时，不计入非空 Recall 均值。
 
 ## 3. 属性内部：由向量记录建立本地 HNSW
 
 每个非空直属集合建立原生 `hnswlib::HierarchicalNSW<float>`：
 
 ```cpp
-local[a] = std::make_unique<Graph>(&raw_l2, members[a].size(), 16, 200, 100 + a);
+local[a] = std::make_unique<Graph>(&raw_l2, members[a].size(), 64, 200, 100 + a);
 for (Id item : members[a]) local[a]->addPoint(base.at(item), item);
 ```
 
-- M=16，efConstruction=200，原生 level-0 邻接容量为 32，上层为 16；最终合并图不受这个 32 的全局度上限约束。
+- 当前统一 M=64、efConstruction=200；四方案的本地/全局原生 HNSW 均按此构建。原生 level-0 邻接容量为 128，上层为 64；最终合并图不受这个 128 的全局度上限约束。此前 M=16 的 CSV 是历史结果，不改写为 M64。
 - 默认按 item ID 插入；局部随机层数的种子为 `100+a`。
 - 随机种子与插入顺序作为独立实验因素，不改变 owner 分布。
 - hnswlib 原生建图用高层 greedy descent、逐层 efConstruction 搜索、多样化邻居选择及反向邻接更新，不等同于全连接或全扫描。
@@ -136,7 +136,7 @@ farthest-first 鼓励代表分散，不保证靠近未来查询。原始欧氏�
 5. 邻居若已访问则跳过；未访问者先判断资格。不合格者不算查询距离、不入队、不借其邻接导航。
 6. 合格未访问节点计算 squared-L2；能进入当前 best 时加入 frontier。
 7. best 已满且当前最近待扩展项劣于 best 最差项时按启发式停止，或 frontier 耗尽。
-8. 从 best 取至多 10 个不同合格 item。
+8. 从 best 取至多 k 个不同合格 item；本轮k=10或100由固定比较格指定，搜索函数不内嵌固定10。
 
 **ef 不是距离调用上限、扩展次数上限，也不是 frontier 的硬容量。** best 的旧候选仍可留在 frontier。早停只是近似搜索规则，不证明尚未访问节点不可能含更近结果。访问 20% 的合格 item 既不是召回 20%，也不能单凭访问比例证明失败原因。
 
@@ -175,30 +175,33 @@ item bitmap 的构建、分配、初始化不能免费。复用同一 scope 时�
 
 ACORN 条目仍是搜索策略移植，不是作者完整索引复现：当前保留原生 RNG 构图，本地入口、枚举及队列口径与作者 FAISS 版本有已记录差异，扫描回退关闭，不是 ACORN-gamma。独立库不等于完成论文系统复现。
 
+ACORN每次邻域过滤后的截断上限读取实际`graph.M_`，当前为64。提高M同时改变原生图密度与该搜索上限，不是只扩大内存预留；portal=8、反向桥上限16、可选剪枝16/24/32均保持独立定义。
+
 ## 9. 实验验证协议
 
 - 同一 NQ 下，两种模式使用相同 source scope ID 和 query vector ID，独立生成 allowed 与 GT。
-- 24 查询全变体扫描，120 查询扩展验证；后者不是宣称独立 held-out 数据。
-- 全部主对照用同一 ef 网格 `{32,128,512,2048,168937}`。原生 NodeANN **每个本地图直接设置同一个 ef**。
-- `nodeann_shared=max(10,ef/G)` 单独标为 split-ef 控制，不作为“ef 总工作量相同”的原生 NodeANN。
-- 相同 ef 不代表相同距离调用或总候选数；每行记录实际次数。主结论只在同一 ef 对比，不再用各自最快过门槛的不同 ef 混成主比较。
-- 正常查询时间与 untimed 计数执行分离；同一行的两种执行必须返回相同 item ID。正常计时不写 trace、不安装 native 距离计数 hook。
-- 预热一次，再测十次取中位数；按非空查询统计 mean/p50/p95。scope 准备、GT、构建不含在搜索时间内；它们单列，不能称为完整端到端成本。
-- 所有查询保留空结果行；不合格距离调用必须为 0。未知的 native 邻接/扩展次数留空，不能填假 0。
-- 最大 ef 检查 missed GT 与可达工作量；剪枝失败必须报告，不能把平均 Recall 达标解释为逐查询保证。
-- 距离上限诊断只选择已运行的可行点，报告覆盖范围；不插值或外推成未运行的等工作成绩，不把总时间除以距离数叫作距离核时间。
-- 构建鲁棒性分别测原种子、新层数种子、改变种子并打乱插入顺序；只有三种配置，不冒称多次独立统计估计。
-- bitmap 复用验证每个 K 的结果和计数一致性、分配与构建总成本；只报告测试 scope 的观测交点，不宣称全局阈值。
+- 当前正式M64矩阵固定120查询，分别测direct/recursive；非held-out。此前M16的24/120构图变体与bitmap复用数据保留为历史证据。
+- 固定 M=64、efConstruction=200；从实际native index保存`index-parameters.json`。portal=8和反向桥16不变，不把它们当成M。
+- 只比较两组固定设置：`k=10, efSearch=32` 与 `k=100, efSearch=128`。组内不调ef、k或构图参数；不把不同ef的点连成曲线。
+- 全局k按组固定；NodeANN每个合格图返回同一n，格内扫全部整数`n=1…k`（k=100即1…100），再取全局top-k。n<k的欠填按`min(k,eligible)`分母计入损失。
+- 原生hnswlib宽度至少为返回数，故四方案及每个n统一按`max(k,efSearch)`执行；同时保存请求值与有效值两列。本轮两格均满足`efSearch≥k`，有效值等于请求值。
+- 同格比较以本方案实际query-average Recall为R*，在NodeANN同格已测n中取达到R*的最快点，报告QPS比、Recall超额、最小Recall、欠填与返回数。达不到R*就标未达标，不插值、不把低召回快点当同质量收益，也不称可部署n选择器。
+- 正常与计数执行分离，验证ID一致；正常执行不装native计数hook、不写trace。所有不合格查询距离为0，未知native邻接次数留空。
+- 当前按整批查询测QPS：预热一批，每计时批遍历非空query16遍，10个批次交错随机顺序测配置；用批次耗时上中位数计算吞吐。包含搜索/归并/结果消费，不含scope准备、GT、构建。
+- 空查询保留审计行、不计非空Recall/QPS；保存全部批次耗时和min/max，不冒称统计置信区间或端到端吞吐。
+- 各点保留mean/min Recall、返回数、实际L2调用、item/owner资格判断和可测邻接条目；不能以平均Recall替代逐query达标，也不把总时间除以距离数当L2核时间。
+- 当前未统一服务驻留字节；独立进程峰值RSS包括GT/构建/原生图副本和导出表示。后续层次与剪枝比较必须另核全层容量、元数据、向量副本及scratch。
+- 原24/120全变体驱动仍可显式运行，但本轮未把它在M64重跑的全部变体作为已完成成果。
 
 ## 10. 复现与证据
 
 ```bash
 bash autoresearch.sh
 # 或直接运行同一个入口：
-bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_composition_validation.sh
+bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_pareto.sh
 ```
 
-工作输出为 `work/dag-composition-validation-independent/`。每个 NQ/模式/方案有独立子目录，避免 120 查询覆盖 24 查询；可用 `DAG_VALIDATION_OUT` 改输出目录。小型正式 CSV/JSON、构建依赖及源码指纹保存在同日 `data/`，见 [验证报告](dag-validation-report.md)。不提交向量、索引、二进制。
+工作输出为`work/dag-two-cases-m64/`，由`DAG_PARETO_OUT`改目录。全部正式小型CSV/JSON/图、真实编译依赖、源码指纹及资源日志见[两格固定比较报告](dag-two-cases-report.md)。此前[M16验证报告](dag-validation-report.md)与九格/跨ef探索数据保留为历史，不提交向量、索引、二进制。
 
 行为回归覆盖直属/递归 GT、共享后代、空属性、后代 portal 不得代替直属入口、普通/计数/CSR/visited 结果一致、剪枝度约束、无法通过不合格桥导航及 native hook 恢复。有限测试不提供普遍连通性保证。
 
@@ -207,3 +210,5 @@ bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_co
 本轮验证的是可运行方案、查询语义和已测性能，不声称胜过 NodeANN 或完整 ACORN。历史 24 查询共库原型观察见 [历史组合报告](dag-composition-report.md)，不能替代当前独立库、递归/非递归的正式结果。
 
 单 owner、OR、随机属性绑定、小规模 query、未统一常驻内存仍是限制。剪枝、平面跳转、bitmap 均保留为实验因素，不能先宣布默认优化成功。下一步若测保留局部高层，应仍维持一张图和共享搜索前沿；不把 NodeANN 的多图 top-k 归并包装成我们的新算法。新颖性尚未充分排查。
+
+新增[分层、入口、b与预算剪枝设计](dag-layered-routing-design.md)明确哪些边保持direct/recursive资格、单真实入口与虚拟源的区别、剩余预算状态、OR替代条件和一般多父DAG的度预算反例；目前仅有限语义/内存探针已运行，分层ANN尚未实现，不能混入当前曲线。

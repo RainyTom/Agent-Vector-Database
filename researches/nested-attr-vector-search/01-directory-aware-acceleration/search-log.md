@@ -96,3 +96,14 @@
 ## 2026-11-02 ACORN-1搜索策略定向核查
 
 用户要求实现ACORN策略。先查既有论文索引、关系及本地ACORN全文，再核原文v1§5.1–5.3和作者固定commit；不是新一轮全面新颖性检索。确认扩展含所有合格/不合格中间点，过滤后M截断；作者索引不保留普通RNG剪枝，不能把本地现有hnswlib图上的搜索移植称为完整复现。原始入口、作者底层2M与队列细节及s_min回退均单列差异，见[审计](../../../papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)。实现与观测在[当日报告](../2026-11-02-exps/report.md)，保留图主导航、零不合格距离及单队列约束；正式稿/预印本差异仍待核。
+
+## 2026-11-02 分层DAG组合、入口与预算剪枝
+
+先复核papers/relations和既有ACORN、Filtered-DiskANN、LSSG、TFANNS、Curator、PathSeer全文，再按`vector similarity join / vector join / similarity self-join / high-dimensional similarity join / inner-product similarity join`联合graph/hierarchy/pruning做窄检索；返回ANN评测等邻近项，未找到据此可声称直接join新意的证据。随后定向核filtered graph stitching、hierarchical filtered ANN、entry point inverted map、FilteredRobustPrune、bounded rejected-node traversal。
+
+原文证据与项目推导见[专项设计](../2026-11-02-exps/dag-layered-routing-design.md)。FD Alg.1已有共享OR入口，Alg.3为端点共同标签交集而非二手概括的并集；ACORN保留HNSW层次；LSSG各tier同一V不等HNSW采样层。OR-safe witness、预算状态支配及多父DAG度数反例明确为本项目推导，不归给论文。
+
+新候选只列待办：BigFANN [正式PVLDB19(9)全文](https://www.vldb.org/pvldb/vol19/p2059-chen.pdf)已核§4.2–4.3的shared/exclusive预算；EMA [2606.00734v1](https://arxiv.org/html/2606.00734v1)已核§3，原上层给不合格点算距离，且其对FD的并集概括不替代FD原式；PathFinder [2511.00995v1](https://arxiv.org/html/2511.00995v1) §3–4仍为多图中间结果合并；Veda [2605.01342v1](https://arxiv.org/html/2605.01342v1) §6.2为lattice多索引执行。完整作者顺序、正式版本差异和全文归档未全核，不新增正式记录或照抄实验数字。
+
+最重要缺口仍是UNG [10.1145/3698822](https://doi.org/10.1145/3698822)原文，ACM 403，作者仓库不足以替代已核论文算法；不能断言我们的DAG组合新颖。已有工作属B类filtered ANN迁移，不称vector join。相关实验只包含当前平面图的M64/n/ef Pareto及有限语义/内存探针，新分层ANN未跑。
+

@@ -223,3 +223,10 @@
 - 修订既有ACORN记录，不新增工作或关系。核 v1 §5.1–5.3 与作者固定commit；补充[日期化审计](filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)，区分全一/二跳扩展、论文M与作者底层2M、RNG构图差异、入口与回退策略。
 - 本地实现是固定hnswlib上的ACORN-1搜索策略移植，作者FAISS代码未编译运行，不称完整ACORN-1/γ复现。总库仍为43工作/30关系；保留原PDF、旧日期元数据和正式稿差异待办，不制造作者引用边或新颖性结论。
 
+
+## 2026-11-02 分层、OR入口与固定预算剪枝复核
+
+- 修订ACORN、Filtered-DiskANN、LSSG、TFANNS四条既有记录：补原始层次/入口、共享OR搜索、强制度截断与过滤迁移边界；保留原版本、作者顺序和未核项。43工作/30关系不变。
+- [日期化研究证据](../researches/nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)区分论文事实与本项目OR替代点、预算状态和多父度数反例；不把局部资格见证称连通或召回定理。
+- BigFANN/EMA/PathFinder/Veda作为待核候选写检索日志，未完整核书目者不添造正式记录；UNG全文获取仍受限。新分层ANN没有实测收益或新颖性声明。
+
