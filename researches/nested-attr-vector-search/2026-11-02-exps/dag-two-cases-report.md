@@ -4,8 +4,9 @@
 
 只跑用户指定的两格：`k=10, efSearch=32` 与 `k=100, efSearch=128`。组内ef、k、构图、入口全部固定；不把不同ef连成曲线。
 
-- **非递归两格、递归k=100格：NodeANN在达到本方案Recall时更快**，1.04–1.73倍。
-- **递归k=10/ef32：本方案更快**，55.2k对48.1k QPS，但召回低2.3个点（0.9773对1.0），且最差查询仅0.40。
+- **非递归两格、递归k=100格：NodeANN在达到本方案Recall时更快**：非递归1.61–1.73倍（两次运行稳定），递归k=100为1.04–1.13倍（同一binary漂移可达7%，只算平手到略优）。
+- **递归k=10/ef32：本方案更快**，52.5–55.2k对48.1–49.1k QPS（0.87–0.94倍于NodeANN），但召回低2.3个点（0.9773对1.0），且最差查询仅0.40。
+- **反转的原因不是“单图 vs 多图”，而是合格集能否装进一张属性图**：单属性查询时NodeANN只跑一张小图并稳定快约1.7倍（四格一致）；只有G≥2时它才做多图合并，递归的多属性查询上我们反超1.5–1.9倍（§3.0）。
 - 这两格中，达标的NodeANN点全部是**n=k**：本方案召回已接近饱和，任何更小的n都低于R*。因此本组数据没有给出“少取局部结果也同质量更快”的证据；中间n只是更快但质量更低的点。
 - ACORN搜索移植与严格过滤在四格均**达不到**R*，最高召回仅0.16–0.27，不能拿其QPS作同质量比较。
 
@@ -31,18 +32,47 @@
 
 ## 3. 同质量QPS对比
 
-R*为本方案该格实测query-average Recall；NodeANN取同格内`Recall≥R*`的最快点。
+R*为本方案该格实测query-average Recall；NodeANN取同格内`Recall≥R*`的最快点。下表并列两次独立运行（同binary、同数据、不同进程）：
 
-| 模式 | (k,ef) | 本方案R* (min) | 本方案QPS | NodeANN 达标点 | Recall | QPS | NodeANN/本方案 |
-|---|---|---|---:|---|---:|---:|---:|
-| recursive | (10,32) | 0.977273 (0.40) | 55,194 | n=10 | 1.000000 | 48,090 | **0.87×** |
-| recursive | (100,128) | 0.989182 (0.57) | 21,703 | n=100 | 1.000000 | 22,646 | **1.04×** |
-| direct | (10,32) | 0.999010 (0.90) | 68,462 | n=10 | 1.000000 | 110,145 | **1.61×** |
-| direct | (100,128) | 0.999703 (0.97) | 27,106 | n=100 | 1.000000 | 46,926 | **1.73×** |
+| 模式 | (k,ef) | 本方案R* (min) | 本方案QPS 两次 | NodeANN 达标点 | NodeANN QPS 两次 | NodeANN/本方案 |
+|---|---|---|---:|---|---:|---:|
+| recursive | (10,32) | 0.977273 (0.40) | 55,194 / 52,499 | n=10 | 48,090 / 49,113 | **0.87–0.94×** |
+| recursive | (100,128) | 0.989182 (0.57) | 21,703 / 20,235 | n=100 | 22,646 / 22,933 | **1.04–1.13×** |
+| direct | (10,32) | 0.999010 (0.90) | 68,462 / 66,553 | n=10 | 110,145 / 107,363 | **1.61×** |
+| direct | (100,128) | 0.999703 (0.97) | 27,106 / 27,502 | n=100 | 46,926 / 45,826 | **1.67–1.73×** |
 
-![两项固定设置的同质量QPS对比](data/dag-two-cases-m64/analysis/fixed-k-ef-comparison.png)
+同一binary的重复运行漂移最大7%（递归k=100本方案），因此1.04×不能称稳定胜出；direct的1.6–1.7×跨两次运行稳定。
+
+![两项固定设置的同质量QPS对比](data/dag-two-cases-m64-run2/analysis/fixed-k-ef-comparison.png)
 
 图中每组只含同格数据；`x`标记表示该方案在本格任何已测配置下都未达到R*，不画零QPS柱。横轴下方给出R*，柱上给出达标NodeANN的n与实际Recall。
+
+### 3.0 为什么 direct 反转、recursive 不反转
+
+把同一格的查询按“合格item落在几个属性”拆成两组，**分别用同一16遍协议做批量计时**（`fanout-batches.csv`）：
+
+| 模式 | (k,ef) | 子集 | 查询数 | 平均合格数 | 平均属性图数 | 本方案QPS | NodeANN QPS | NodeANN/本方案 |
+|---|---|---|---:|---:|---:|---:|---:|---:|
+| recursive | (10,32) | 1个属性 | 74 | 151 | 1.00 | 94,128 | 156,473 | 1.66× |
+| recursive | (10,32) | ≥2个属性 | 36 | 932 | 5.08 | 46,428 | 24,711 | **0.53×** |
+| recursive | (100,128) | 1个属性 | 74 | 151 | 1.00 | 44,105 | 76,965 | 1.75× |
+| recursive | (100,128) | ≥2个属性 | 36 | 932 | 5.08 | 15,684 | 10,499 | **0.67×** |
+| direct | (10,32) | 1个属性 | 88 | 219 | 1.00 | 78,435 | 132,817 | 1.69× |
+| direct | (10,32) | ≥2个属性 | 13 | 352 | 2.46 | 71,327 | 72,782 | 1.02× |
+| direct | (100,128) | 1个属性 | 88 | 219 | 1.00 | 31,190 | 53,257 | 1.71× |
+| direct | (100,128) | ≥2个属性 | 13 | 352 | 2.46 | 26,723 | 29,818 | 1.12× |
+
+![按合格属性数拆分的同口径QPS](data/dag-two-cases-m64-run2/analysis/fanout-latency.png)
+
+三点结论：
+
+1. **合格集只落在一个属性时，NodeANN 稳定快约1.7倍**，四格一致。此时它只跑一张小局部图，根本没有任何“多图合并”。
+2. **递归的多属性查询（36/110，平均5.08张图、最多24张）才是历史观察成立的地方**：NodeANN 每多一张图就多一次独立遍历与归并，我们反超1.5–1.9倍。
+3. **direct 只有13/101条多属性查询（平均2.46张，最多3张）**，其收益不足以抵消88条单属性查询上的1.7倍劣势；这就是 direct 整体反转的原因。
+
+因此正确的轴不是“单图 vs 多图”，而是**合格集能否全部装进一张属性图**。我们的168k单图对所有属性共用，单属性查询时仍要读跨owner边：k=10递归有57%、k=100非递归有80%的邻居准入被资格拒绝（`1 - distances/item_checks`）。NodeANN 在单属性查询时退化成一张小图，反而是“单图”那一侧；它只有在 G≥2 时才变成多图合并。
+
+归因口径限制：子集批次的QPS不能用来还原整批（子集工作集更小，重组结果比整体高5–37%）。上表只用于同协议下的方向与倍数比较；整批结论以§3为准。
 
 ### 3.1 未达成同质量的方案
 
@@ -74,7 +104,7 @@ R*为本方案该格实测query-average Recall；NodeANN取同格内`Recall≥R*
 
 NodeANN外层只判owner后进整张合格局部图，故item资格为0；这不是没有过滤。native邻接未知留空，不填0。
 
-递归k=10格本方案L2更少（133对201）却更慢，说明差异不能只用距离次数解释；候选堆、邻接读取、拒绝边的资格判断与缓存都是未隔离因素。非递归两格本方案L2亦更少而更慢，同属待拆解的开销，不是已完成的因果结论。
+递归k=10格本方案L2更少（133对201）却更慢，说明差异不能只用距离次数解释；在单属性子集上，我们的邻接里57%（k=10）到80%（k=100非递归）的准入被资格拒绝，这部分读取与判断没有换成有效距离。候选堆、邻接读取、缓存与拒绝边处理仍是待隔离因素，不是已完成的因果分解。
 
 当前单图只导出局部HNSW的level-0，NodeANN保留完整原生层次。此比较**同时**改变图结构、层次与过滤方式，不能把差距归给任何单一机制。
 
@@ -84,9 +114,9 @@ NodeANN外层只判owner后进整张合格局部图，故item资格为0；这不
 
 ## 5. 重复运行波动
 
-同一cell在先前九格探索（同binary逻辑、同数据）与本轮各测一次，Recall逐位相同（搜索确定性），QPS变化：recursive (10,32) −4.5%/(NodeANN −0.8%)、recursive (100,128) +3.7%/+3.5%、direct (10,32) +1.6%/+1.4%、direct (100,128) +1.5%/−2.7%。
+同一binary、同数据、不同进程共跑三次（九格探索一次 + 两格两次）。Recall逐位相同（搜索确定性）；QPS最大漂移：本方案 −6.8%（递归k=100），NodeANN +3.5%。四格的NodeANN/本方案比值分别落在 0.87–0.94、1.04–1.13、1.61、1.67–1.73。
 
-因此小于约5%的QPS差异不应被解释为算法优劣；1.04×的递归k=100格属于该量级，不能当作稳定胜出。只测两个独立构建/两次运行，不提供置信区间。
+所以**递归k=100的1.04–1.13×属于噪声量级**，只能说平手到略优；direct的1.6–1.7×稳定。只测少量独立运行，不提供置信区间，也没有做多次独立构建。
 
 ## 6. 内存与范围边界
 
@@ -100,11 +130,11 @@ NodeANN外层只判owner后进整张合格局部图，故item资格为0；这不
 bash autoresearch.sh
 ```
 
-默认输出`work/dag-two-cases-m64/`。正式小数据在[data/dag-two-cases-m64](data/dag-two-cases-m64/)：
+默认输出`work/dag-two-cases-m64/`。两次独立运行分别归档：[run2（含拆分批次与本文图）](data/dag-two-cases-m64-run2/)、[run1（同协议，无拆分批次）](data/dag-two-cases-m64/)。
 
-- [完整摘要](data/dag-two-cases-m64/analysis/summary.json)、[同质量对比CSV](data/dag-two-cases-m64/analysis/matched-comparison.csv)、[对比图](data/dag-two-cases-m64/analysis/fixed-k-ef-comparison.png)。
-- 每方法`pareto-points.csv`（全部点，含n=1…k）、`pareto-queries.csv.gz`（无损压缩的逐query审计）、`pareto-batches.csv`（10批次原始耗时）、`index-parameters.json`、`process-resource.txt`。
-- [执行元数据](data/dag-two-cases-m64/run-meta.json)、[压缩校验](data/dag-two-cases-m64/compression.json)、[已执行检查](data/dag-two-cases-m64/regression.txt)、[硬件](data/dag-two-cases-m64/hardware.json)、`build/*.d`与源码SHA。
+- [完整摘要](data/dag-two-cases-m64-run2/analysis/summary.json)、[同质量对比CSV](data/dag-two-cases-m64-run2/analysis/matched-comparison.csv)、[对比图](data/dag-two-cases-m64-run2/analysis/fixed-k-ef-comparison.png)、[按合格属性数拆分的QPS图](data/dag-two-cases-m64-run2/analysis/fanout-latency.png)。
+- 每方法`pareto-points.csv`（全部点，含n=1…k）、`pareto-queries.csv.gz`（无损压缩的逐query审计）、`pareto-batches.csv`（10批次原始耗时）、`fanout-batches.csv`（两个查询子集的分子集批次）、`index-parameters.json`、`process-resource.txt`。
+- [执行元数据](data/dag-two-cases-m64-run2/run-meta.json)、[压缩校验](data/dag-two-cases-m64-run2/compression.json)、[已执行检查](data/dag-two-cases-m64-run2/regression.txt)、[硬件](data/dag-two-cases-m64-run2/hardware.json)、`build/*.d`与源码SHA。
 - 协议与命令：[复现说明](experiments/dag-pareto-reproduction.md)；分析器：[analyze_dag_pareto.py](experiments/analyze_dag_pareto.py)。
 
 旧九格/跨ef探索的原始点与源码快照保留在`data/dag-fixed-k-ef-m64/`、`data/dag-pareto-m64-efc200/`，其图已撤下，不作为交付对比。

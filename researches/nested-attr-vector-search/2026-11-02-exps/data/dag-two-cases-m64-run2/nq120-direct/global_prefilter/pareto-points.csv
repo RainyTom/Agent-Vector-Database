@@ -1,0 +1,3 @@
+arm,k,ef_requested,ef_effective,n,hnsw_M,ef_construction,nonempty,empty,recall_mean,pair_recall,recall_min,returned_mean,qps,median_batch_us,batch_passes,repetitions,distances_mean,item_checks_mean,owner_checks_mean,adjacency_entries_mean,batch_min_us,batch_max_us
+global_prefilter,10,32,32,0,64,200,101,19,0.0325043218607575,0.0267765190525232,0,1.24752475247525,494192.625031346,3269.98,16,10,2.51485148514851,54.8316831683168,1929,,3220.74,3892.909
+global_prefilter,100,128,128,0,64,200,101,19,0.0377801460448096,0.011836979322745,0,1.24752475247525,492625.854321755,3280.38,16,10,2.51485148514851,54.8316831683168,1929,,3215.16,3359.973

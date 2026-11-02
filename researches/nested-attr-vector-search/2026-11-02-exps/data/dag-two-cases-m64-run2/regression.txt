@@ -1,0 +1,3 @@
+PASS independent hnswlib compile dependencies
+PASS two fixed k/ef cells, effective widths, k-dependent GT, complete local-n grids, zero rejected distances, measured QPS; no cross-ef curves
+Fan-out subsets timed with the same 16-pass protocol; subset batches are attribution only.

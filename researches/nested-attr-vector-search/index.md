@@ -6,7 +6,7 @@
 
 - **[当前交付：从原始记录到属性DAG合并图](2026-11-02-exps/dag-composition-delivery.md)**：区分属性节点与ANN节点；定义直属/递归两类查询、直属/子图两类入口、属性内HNSW、DAG连接、单队列搜索及CSR/bitmap消融。
 
-- **[当前对比：k=10/ef32 与 k=100/ef128 的同质量QPS](2026-11-02-exps/dag-two-cases-report.md)**：只跑用户指定的两组固定(topk,efSearch)，组内不调参；NodeANN仅在格内扫n=1…k。四格中三格NodeANN达R*时更快(1.04–1.73×)，递归k=10格本方案更快但召回低2.3个点。ACORN移植与严格过滤四格均未达R*。
+- **[当前对比：k=10/ef32 与 k=100/ef128 的同质量QPS](2026-11-02-exps/dag-two-cases-report.md)**：只跑用户指定的两组固定(topk,efSearch)，组内不调参；NodeANN仅在格内扫n=1…k。按合格属性数拆分后原因明确：单属性查询NodeANN只跑一张小图、稳定快1.66–1.75×；≥2属性查询才复现“多图合并更慢”，递归上我们反超1.5–1.9×，而direct仅13条多属性查询不足以翻盘。ACORN移植与严格过滤四格均未达R*。
 - [历史探索：M64九档ef与局部n扫描](2026-11-02-exps/dag-pareto-m64-report.md)：跨ef图已撤下，仅保留原始点和源码快照，不作交付对比。
 
 - **[分层、属性倒排入口、b跳转与等内存剪枝](2026-11-02-exps/dag-layered-routing-design.md)**：原生高层控制与DAG提升候选、资格保持条件、OR剪枝反例、预算状态及物理容量账；新策略尚非已测ANN臂，不宣称新颖性。

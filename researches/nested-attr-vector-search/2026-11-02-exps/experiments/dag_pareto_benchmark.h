@@ -209,6 +209,44 @@ static void run_pareto(const Vectors& base, const Vectors& vectors, const Worklo
         if (DAG_VALIDATION_FAMILY == 0 || DAG_VALIDATION_FAMILY == 2) result << point.work.adjacency_entries / count;
         result << ',' << sorted.front() << ',' << sorted.back() << '\n';
     }
+    // Fan-out attribution at the same protocol as the headline: the two query
+    // subsets are timed as separate batches, so their QPS combine back to the total.
+    std::vector<size_t> one_graph, many_graphs;
+    for (size_t i : nonempty) {
+        size_t groups = 0;
+        for (Id attr = 0; attr < workload[i].allowed.size(); ++attr)
+            groups += workload[i].allowed[attr] && !w.members[attr].empty();
+        (groups == 1 ? one_graph : many_graphs).push_back(i);
+    }
+    std::vector<const ParetoPoint*> compared;
+    for (const auto& point : points)
+        if (std::string_view(point.arm) == "merged" || point.local_n == point.k)
+            compared.push_back(&point);
+    std::ofstream fanout(out + "/fanout-batches.csv");
+    require(bool(fanout), "cannot write fan-out batches");
+    fanout << "arm,k,ef_requested,ef_effective,n,group,queries,sample,batch_us\n" << std::setprecision(15);
+    for (const auto* point : compared) {
+        for (const auto& [label, subset] : {std::pair{"one_graph", &one_graph},
+                                           std::pair{"many_graphs", &many_graphs}}) {
+            if (subset->empty()) continue;
+            uint64_t checksum = UINT64_C(1469598103934665603);
+            std::vector<double> timings;
+            for (size_t round = 0; round <= repetitions; ++round) {
+                auto begin = Clock::now();
+                for (size_t pass = 0; pass < batch_passes; ++pass)
+                    for (size_t i : *subset) {
+                        SearchStats unused;
+                        checksum = result_checksum(checksum, i,
+                            execute(std::false_type{}, *point, i, unused));
+                    }
+                timings.push_back(us(begin));
+            }
+            for (size_t sample = 0; sample < repetitions; ++sample)
+                fanout << point->arm << ',' << point->k << ',' << point->ef_requested << ','
+                       << point->ef_effective << ',' << point->local_n << ',' << label << ','
+                       << subset->size() << ',' << sample << ',' << timings[sample + 1] << '\n';
+        }
+    }
     std::cout << "MATCHED family=" << DAG_VALIDATION_FAMILY
               << " cases=" << sizeof(cases) / sizeof(cases[0]) << " points=" << points.size()
               << " nonempty=" << nonempty.size() << " M=" << kHnswM

@@ -166,6 +166,26 @@ def audit_run(root, semantics, nq):
             'acorn1': select_at_reference([p for p in cell if p['arm'] == 'global_acorn1'], reference),
             'strict_control': select_at_reference([p for p in cell if p['arm'] == 'global_prefilter'], reference),
             'nodeann_within_cell_frontier': frontier([p for p in cell if p['arm'] == 'nodeann_pergraph'])})
+        latency = load(run / 'dag_merge' / 'fanout-batches.csv')
+        latency += load(run / 'nodeann' / 'fanout-batches.csv')
+        groups = {}
+        for arm, n in (('merged', 0), ('nodeann_pergraph', k)):
+            for label in ('one_graph', 'many_graphs'):
+                samples = sorted(float(r['batch_us']) for r in latency
+                                 if (r['arm'], int(r['k']), int(r['ef_requested']), int(r['n']), r['group'])
+                                    == (arm, k, ef, n, label))
+                queries = {int(r['queries']) for r in latency
+                           if (r['arm'], int(r['k']), int(r['ef_requested']), int(r['n']), r['group'])
+                              == (arm, k, ef, n, label)}
+                if not queries:
+                    groups.setdefault(label, {})[arm] = {'queries': 0, 'qps': None, 'median_batch_us': None}
+                    continue
+                require(len(queries) == 1 and len(samples) == 10, 'fan-out batch samples incomplete')
+                q = queries.pop()
+                elapsed = samples[5]
+                groups.setdefault(label, {})[arm] = {
+                    'queries': q, 'median_batch_us': elapsed, 'qps': q * 16e6 / elapsed}
+        comparisons[-1]['fanout_qps'] = groups
     return {'parameters': parameters, 'points': all_points, 'comparisons': comparisons,
             'node_n_distances_invariant_at_fixed_k_and_ef': all(len(v) == 1 for v in distances.values()),
             'node_fanout': {'nonempty': len(fanout), 'one_graph': fanout.count(1),
@@ -224,6 +244,49 @@ def draw_comparison(runs, out):
     fig.legend(handles=handles, loc='outside lower center', ncol=2, fontsize=9)
     fig.suptitle('Fixed-case comparisons only — M=64, efConstruction=200\nRecall matching uses query-average recall; overshoot and tail quality remain in CSV')
     fig.savefig(out / 'fixed-k-ef-comparison.png', dpi=140)
+    plt.close(fig)
+    draw_fanout(runs, out)
+
+
+def draw_fanout(runs, out):
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    colors = {'merged': '#0072b2', 'nodeann_pergraph': '#d55e00'}
+    names = {'merged': 'DAG single graph', 'nodeann_pergraph': 'NodeANN (n=k)'}
+    ks = sorted({c['k'] for c in runs['recursive']['comparisons']})
+    fig, axes = plt.subplots(len(ks), 2, figsize=(10, 3.6 * len(ks)), layout='constrained', squeeze=False)
+    for row, k in enumerate(ks):
+        for col, semantics in enumerate(('recursive', 'direct')):
+            ax = axes[row, col]
+            cell = next(c for c in runs[semantics]['comparisons'] if c['k'] == k)
+            labels, hi = [], 0
+            for offset, group in enumerate(('one_graph', 'many_graphs')):
+                values = cell['fanout_qps'][group]
+                for arm_index, arm in enumerate(('merged', 'nodeann_pergraph')):
+                    entry = values[arm]
+                    x = offset + (arm_index - .5) * .34
+                    if entry['qps'] is None:
+                        ax.annotate('none', (x, 1), ha='center', fontsize=7)
+                        continue
+                    ax.bar(x, entry['qps'] / 1000, .3, color=colors[arm], alpha=.9)
+                    ax.annotate(f"{entry['qps'] / 1000:.1f}k\nq={entry['queries']}",
+                                (x, entry['qps'] / 1000), xytext=(0, 3), textcoords='offset points',
+                                ha='center', fontsize=7)
+                    hi = max(hi, entry['qps'])
+                labels.append('1 eligible attribute' if group == 'one_graph' else '≥2 eligible attributes')
+            ax.set_xticks(range(2), labels)
+            ax.set_ylim(0, hi * 1.35 / 1000 if hi else 1)
+            ax.set_ylabel('Measured QPS (thousands)')
+            ax.set_title(f'{semantics}, topk={k}, efSearch={cell["ef_requested"]}')
+            ax.grid(axis='y', alpha=.18); ax.set_axisbelow(True)
+            ax.spines[['top', 'right']].set_visible(False)
+    handles = [plt.Rectangle((0, 0), 1, 1, color=colors[a]) for a in ('merged', 'nodeann_pergraph')]
+    fig.legend(handles, [names[a] for a in ('merged', 'nodeann_pergraph')],
+               loc='outside lower center', ncol=2, fontsize=9)
+    fig.suptitle('Fan-out attribution: the two query subsets are timed as separate batches\n'
+                 'Same 16-pass protocol as the headline; groups split by how many attributes hold eligible items')
+    fig.savefig(out / 'fanout-latency.png', dpi=140)
     plt.close(fig)
 
 
