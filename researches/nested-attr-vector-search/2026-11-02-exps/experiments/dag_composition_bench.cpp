@@ -58,10 +58,231 @@ static size_t checked_hits(size_t k, const std::vector<Id>& result, const Query&
     return hits;
 }
 #include "dag_pareto_benchmark.h"
+// ------------------------- per-query cross-owner edge pruning ablation
+// Entry lists and every qualified adjacency row stay verbatim; only edges whose
+// target owner fails this query's qualification are dropped. Traversal rejects
+// such a target before computing a distance and never marks it visited, so the
+// pruned graph must return identical IDs with identical distance/expansion
+// work. A time difference therefore isolates reading, owner-loading and
+// rejecting those entries. Per-query copies are built outside all timed regions.
+static std::vector<std::vector<Id>> prune_rows(const std::vector<std::vector<Id>>& rows,
+                                               const std::vector<Id>& owner,
+                                               const std::vector<char>& allowed) {
+    std::vector<std::vector<Id>> kept(rows.size());
+    for (size_t u = 0; u < rows.size(); ++u) {
+        const auto& src = rows[u];
+        size_t n = 0;
+        for (Id v : src) n += bool(allowed[owner[v]]);
+        if (n == src.size()) { kept[u] = src; continue; }
+        kept[u].reserve(n);
+        for (Id v : src) if (allowed[owner[v]]) kept[u].push_back(v);
+    }
+    return kept;
+}
+static Csr flatten_rows(const std::vector<std::vector<Id>>& rows, const std::vector<Id>& owner,
+                        const std::vector<char>* allowed) {
+    Csr c;
+    c.offsets.assign(rows.size() + 1, 0);
+    for (size_t u = 0; u < rows.size(); ++u) {
+        size_t n = 0;
+        for (Id v : rows[u]) n += !allowed || bool((*allowed)[owner[v]]);
+        c.offsets[u + 1] = c.offsets[u] + n;
+    }
+    c.ids.resize(c.offsets.back());
+    c.owners.resize(c.offsets.back());
+    size_t at = 0;
+    for (size_t u = 0; u < rows.size(); ++u)
+        for (Id v : rows[u])
+            if (!allowed || bool((*allowed)[owner[v]])) { c.ids[at] = v; c.owners[at] = owner[v]; ++at; }
+    require(at == c.offsets.back(), "flattened edge count mismatch");
+    return c;
+}
+static constexpr size_t kEdgePasses = 16, kEdgeRounds = 10;
+struct EdgePruneRow {
+    size_t cell = 0, k = 0, ef = 0, query = 0, eligible = 0, truth = 0, hits = 0, groups = 0;
+    size_t edges = 0, edges_kept = 0, expanded = 0, expanded_kept = 0;
+    size_t distances = 0, expansions = 0, item_checks = 0;
+    double prune_build_us = 0;
+};
+static void run_edge_prune(const Vectors& base, const Vectors& queries, const Workload& w,
+                           RawL2Space& l2, const std::vector<Query>& workload,
+                           bool recursive, const std::string& semantics, const std::string& out) {
+    require(DAG_VALIDATION_FAMILY == 0, "edge-prune requires the merged-graph build");
+    constexpr std::pair<size_t, size_t> cells[] = {{10, 32}, {100, 128}};
+    auto graph = build_variant(base, w, l2, Knobs{});
+    const auto& entry = query_entries(graph, recursive);
+    Scratch scratch(base.n);
+    auto consume = [](const std::vector<Id>& ids) {
+        uint64_t h = UINT64_C(1469598103934665603);
+        for (Id v : ids) h = (h ^ v) * UINT64_C(1099511628211);
+        return h;
+    };
+    // Phase 1 (untimed): build every per-query pruned copy and audit it.
+    std::vector<Merged> pruned(workload.size());
+    std::vector<EdgePruneRow> table;
+    for (size_t i = 0; i < workload.size(); ++i) {
+        const auto& q = workload[i];
+        if (!q.count) continue;
+        const auto begin = Clock::now();
+        pruned[i].edges = prune_rows(graph.edges, w.owner, q.allowed);
+        pruned[i].portals = graph.portals;
+        const double per_query_build = us(begin);
+        Csr csr_full = flatten_rows(graph.edges, w.owner, nullptr);
+        Csr csr_pruned = flatten_rows(pruned[i].edges, w.owner, nullptr);
+        size_t groups = 0, query_edges = 0, query_kept = 0;
+        for (size_t u = 0; u < graph.edges.size(); ++u) {
+            query_edges += graph.edges[u].size();
+            query_kept += pruned[i].edges[u].size();
+        }
+        for (Id attr = 0; attr < q.allowed.size(); ++attr)
+            groups += q.allowed[attr] && !w.members[attr].empty();
+        for (size_t ci = 0; ci < 2; ++ci) {
+            const size_t k = cells[ci].first;
+            const size_t ef = std::min(std::max(k, cells[ci].second), q.count);
+            auto qualify_item = [&](Id u) { return bool(q.allowed[w.owner[u]]); };
+            auto qualify_owner = [&](Id, Id owner) { return bool(q.allowed[owner]); };
+            SearchStats wm, wp, wf, wfp;
+            const auto merged = search_counted<true>(k, graph, base, l2, queries.at(i), q.roots, ef,
+                scratch, qualify_item, wm, &entry);
+            const auto trimmed = search_counted<true>(k, pruned[i], base, l2, queries.at(i), q.roots, ef,
+                scratch, qualify_item, wp, &entry);
+            require(merged == trimmed, "edge pruning changed result IDs");
+            require(wm.distances == wp.distances && wm.expansions == wp.expansions,
+                    "edge pruning changed distance or expansion work");
+            const auto flat = search_csr<true, true>(k, csr_full, graph, w, base, l2, queries.at(i),
+                q.roots, ef, scratch, qualify_owner, wf, &entry);
+            const auto flat_pruned = search_csr<true, true>(k, csr_pruned, graph, w, base, l2, queries.at(i),
+                q.roots, ef, scratch, qualify_owner, wfp, &entry);
+            require(flat == merged && flat_pruned == trimmed, "flattened layout changed result IDs");
+            require(wf.distances == wm.distances && wfp.distances == wm.distances &&
+                    wf.expansions == wm.expansions && wfp.expansions == wm.expansions,
+                    "flattened layout changed distance or expansion work");
+            require(wfp.item_checks == wp.item_checks && wfp.duplicate_edges == wp.duplicate_edges,
+                    "flattened layout changed inspected offers");
+            require(wf.adjacency_entries == wm.adjacency_entries &&
+                    wp.adjacency_entries <= wm.adjacency_entries,
+                    "flattened adjacency counts disagree");
+            const size_t hits = checked_hits(k, merged, q, w, base, l2, queries.at(i));
+            require(checked_hits(k, trimmed, q, w, base, l2, queries.at(i)) == hits,
+                    "edge pruning changed the audited hits");
+            EdgePruneRow row;
+            row.cell = ci; row.k = k; row.ef = ef; row.query = i; row.eligible = q.count;
+            row.truth = std::min(k, q.count); row.hits = hits; row.groups = groups;
+            row.edges = query_edges; row.edges_kept = query_kept;
+            row.expanded = wm.adjacency_entries; row.expanded_kept = wp.adjacency_entries;
+            row.distances = wm.distances; row.expansions = wm.expansions;
+            row.item_checks = wm.item_checks;
+            row.prune_build_us = per_query_build;
+            table.push_back(row);
+        }
+    }
+    std::ofstream detail(out + "/edge-prune-queries-" + semantics + ".csv");
+    require(bool(detail), "cannot write edge-prune query rows");
+    detail << "cell,k,ef,query,group,eligible,truth,hits,edges,edges_kept,removed_fraction,"
+              "expanded,expanded_kept,expanded_removed_fraction,distances,expansions,item_checks,"
+              "rejected_offers,prune_build_us\n" << std::setprecision(12);
+    for (const auto& r : table)
+        detail << r.cell << ',' << r.k << ',' << r.ef << ',' << r.query << ','
+               << (r.groups == 1 ? "one_graph" : "many_graphs") << ',' << r.eligible << ',' << r.truth
+               << ',' << r.hits << ',' << r.edges << ',' << r.edges_kept << ','
+               << (r.edges ? double(r.edges - r.edges_kept) / r.edges : 0.0) << ','
+               << r.expanded << ',' << r.expanded_kept << ','
+               << (r.expanded ? double(r.expanded - r.expanded_kept) / r.expanded : 0.0) << ','
+               << r.distances << ',' << r.expansions << ',' << r.item_checks << ','
+               << (r.item_checks - r.distances) << ',' << r.prune_build_us << '\n';
+    // Phase 2: the fan-out batch protocol, so these times are comparable with
+    // the archived subset batches. Arms alternate every round.
+    std::ofstream samples(out + "/edge-prune-batches-" + semantics + ".csv");
+    require(bool(samples), "cannot write edge-prune batches");
+    samples << "semantics,cell,k,ef_requested,group,arm,sample,batch_us\n" << std::setprecision(12);
+    auto median = [](std::array<double, kEdgeRounds> a) {
+        std::sort(a.begin(), a.end());
+        return a[kEdgeRounds / 2];
+    };
+    std::ofstream summary(out + "/edge-prune-summary-" + semantics + ".csv");
+    require(bool(summary), "cannot write edge-prune summary");
+    summary << "semantics,cell,k,ef_requested,group,queries,us_merged,us_merged_pruned,"
+               "prune_delta_us,prune_delta_fraction,qps_merged,qps_merged_pruned,removed_fraction,"
+               "expanded_removed_fraction,reject_fraction,distances_mean,expansions_mean,"
+               "item_checks_mean,prune_build_us_mean,batch_us_merged,batch_us_pruned\n"
+            << std::setprecision(12);
+    const char* group_names[] = {"one_graph", "many_graphs", "all"};
+    for (size_t ci = 0; ci < 2; ++ci) {
+        const size_t k = cells[ci].first, requested = cells[ci].second;
+        std::vector<std::vector<size_t>> subsets(3);
+        for (const auto& r : table) {
+            if (r.cell != ci) continue;
+            subsets[2].push_back(r.query);
+            subsets[r.groups == 1 ? 0 : 1].push_back(r.query);
+        }
+        for (int gi = 0; gi < 3; ++gi) {
+            const auto& subset = subsets[gi];
+            if (subset.empty()) continue;
+            auto one_pass = [&](bool use_pruned) {
+                uint64_t h = 0;
+                for (size_t i : subset) {
+                    const auto& q = workload[i];
+                    const size_t ef = std::min(std::max(k, requested), q.count);
+                    SearchStats unused;
+                    auto qualify = [&](Id u) { return bool(q.allowed[w.owner[u]]); };
+                    h += consume(search_counted<false>(k, use_pruned ? pruned[i] : graph, base, l2,
+                        queries.at(i), q.roots, ef, scratch, qualify, unused, &entry));
+                }
+                return h;
+            };
+            const uint64_t expected = one_pass(false);
+            require(one_pass(true) == expected, "batch differs from audited results");
+            std::array<double, kEdgeRounds> bm{}, bp{};
+            for (size_t round = 0; round < kEdgeRounds; ++round) {
+                for (int order = 0; order < 2; ++order) {
+                    const bool use_pruned = (order == (round % 2)) ? false : true;
+                    const auto begin = Clock::now();
+                    for (size_t pass = 0; pass < kEdgePasses; ++pass)
+                        require(one_pass(use_pruned) == expected, "timed pass changed results");
+                    (use_pruned ? bp : bm)[round] = us(begin);
+                }
+            }
+            for (size_t round = 0; round < kEdgeRounds; ++round) {
+                samples << semantics << ',' << ci << ',' << k << ',' << requested << ','
+                        << group_names[gi] << ",merged," << round << ',' << bm[round] << '\n'
+                        << semantics << ',' << ci << ',' << k << ',' << requested << ','
+                        << group_names[gi] << ",merged_pruned," << round << ',' << bp[round] << '\n';
+            }
+            size_t count = 0, edges = 0, kept = 0, expanded = 0, expanded_kept = 0;
+            size_t distances = 0, expansions = 0, checks = 0;
+            double build_total = 0;
+            for (const auto& r : table) {
+                if (r.cell != ci || (gi < 2 && (r.groups == 1) != (gi == 0))) continue;
+                ++count; edges += r.edges; kept += r.edges_kept;
+                expanded += r.expanded; expanded_kept += r.expanded_kept;
+                distances += r.distances; expansions += r.expansions; checks += r.item_checks;
+                build_total += r.prune_build_us;
+            }
+            const double bm_med = median(bm), bp_med = median(bp);
+            const double um = bm_med / kEdgePasses / count, up = bp_med / kEdgePasses / count;
+            summary << semantics << ',' << ci << ',' << k << ',' << requested << ','
+                    << group_names[gi] << ',' << count << ',' << um << ',' << up
+                    << ',' << um - up << ',' << (um > 0 ? (um - up) / um : 0.0)
+                    << ',' << 1e6 / um << ',' << 1e6 / up
+                    << ',' << (edges ? double(edges - kept) / edges : 0.0)
+                    << ',' << (expanded ? double(expanded - expanded_kept) / expanded : 0.0)
+                    << ',' << (checks ? double(checks - distances) / checks : 0.0)
+                    << ',' << double(distances) / count << ',' << double(expansions) / count
+                    << ',' << double(checks) / count << ',' << build_total / count
+                    << ',' << bm_med << ',' << bp_med << '\n';
+            std::cout << "EDGE-PRUNE semantics=" << semantics << " k=" << k
+                      << " group=" << group_names[gi] << " queries=" << count
+                      << " us_merged=" << um << " us_merged_pruned=" << up
+                      << " prune_delta_fraction=" << (um > 0 ? (um - up) / um : 0.0)
+                      << " expanded_removed_fraction="
+                      << (expanded ? double(expanded - expanded_kept) / expanded : 0.0) << '\n';
+        }
+    }
+}
 // -------------------------------------------------------------------- main
 static int bench_main(int argc, char** argv) try {
     require(argc >= 5, "usage: dag_composition_bench BASE.fvecs QUERY.fvecs DAG_DIR OUTDIR "
-                       "[NQ] [all|arms|variants|pareto] [recursive|direct]");
+                       "[NQ] [all|arms|variants|pareto|edge-prune] [recursive|direct]");
     const size_t NQ = argc > 5 ? size_t(std::stoul(argv[5])) : 24;
     require(NQ >= 2 && NQ <= 10000, "invalid query count");
     const std::string mode = argc > 6 ? argv[6] : "all";
@@ -78,7 +299,7 @@ static int bench_main(int argc, char** argv) try {
     // Query scopes, roots and exact GT are computed once, outside every timer.
     std::vector<Query> workload(NQ);
     std::vector<std::vector<Id>> qdirs(NQ);   // attributes named by each query
-    const size_t truth_limit = mode == "pareto" ? 100 : 10;
+    const size_t truth_limit = mode == "pareto" || mode == "edge-prune" ? 100 : 10;
     std::ofstream query_csv(out + "/queries-" + semantics + ".csv");
     require(bool(query_csv), "cannot write query manifest");
     query_csv << "query,source_scope,vector_query_id,eligible,truth,roots,roots_semantics\n";
@@ -100,6 +321,10 @@ static int bench_main(int argc, char** argv) try {
     }
     if (mode == "pareto") {
         run_pareto(base, queries, w, l2, workload, recursive, out);
+        return 0;
+    }
+    if (mode == "edge-prune") {
+        run_edge_prune(base, queries, w, l2, workload, recursive, semantics, out);
         return 0;
     }
 

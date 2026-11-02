@@ -109,6 +109,33 @@ int main() try {
         [&](Id u) { return bool(direct.allowed[w.owner[u]]); }, isolated);
     require(partial == std::vector<Id>{a} && isolated.distances == 1 && isolated.rejected_edges == 1,
             "search secretly crossed an unqualified bridge");
+    // Per-query cross-owner edge pruning: entries and qualified rows are kept,
+    // so traversal must reproduce IDs and distance/expansion work exactly.
+    for (bool descend : {false, true}) for (Id attr = 0; attr < 7; ++attr) {
+        auto q = resolve_scope(w, {attr}, descend);
+        Merged pruned_graph;
+        pruned_graph.edges = prune_rows(graph.edges, w.owner, q.allowed);
+        pruned_graph.portals = graph.portals;
+        const auto& entry = query_entries(graph, descend);
+        for (Id vector : {Id(0), Id(5), Id(11)}) {
+            SearchStats full_work, pruned_work;
+            auto predicate = [&](Id u) { return bool(q.allowed[w.owner[u]]); };
+            const auto full = search_counted(10, graph, base, raw, base.at(vector), q.roots, base.n,
+                scratch, predicate, full_work, &entry);
+            const auto trimmed = search_counted(10, pruned_graph, base, raw, base.at(vector), q.roots, base.n,
+                scratch, predicate, pruned_work, &entry);
+            require(full == trimmed, "edge pruning changed result IDs");
+            require(full_work.distances == pruned_work.distances &&
+                    full_work.expansions == pruned_work.expansions, "edge pruning changed work");
+            for (size_t u = 0; u < pruned_graph.edges.size(); ++u) {
+                require(std::includes(graph.edges[u].begin(), graph.edges[u].end(),
+                                      pruned_graph.edges[u].begin(), pruned_graph.edges[u].end()),
+                        "pruned adjacency is not a subsequence of the original");
+                for (Id v : pruned_graph.edges[u])
+                    require(q.allowed[w.owner[v]], "pruned adjacency kept an ineligible target");
+            }
+        }
+    }
     // Native hook uses the same squared-L2 kernel and never escapes its selected attribute.
     auto mask = direct.allowed;
     auto& local = *graph.local[1]; local.setEf(base.n);

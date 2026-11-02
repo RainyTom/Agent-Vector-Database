@@ -70,7 +70,7 @@ R*为本方案该格实测query-average Recall；NodeANN取同格内`Recall≥R*
 2. **递归的多属性查询（36/110，平均5.08张图、最多24张）才是历史观察成立的地方**：NodeANN 每多一张图就多一次独立遍历与归并，我们反超1.5–1.9倍。
 3. **direct 只有13/101条多属性查询（平均2.46张，最多3张）**，其收益不足以抵消88条单属性查询上的1.7倍劣势；这就是 direct 整体反转的原因。
 
-因此正确的轴不是“单图 vs 多图”，而是**合格集能否全部装进一张属性图**。我们的168k单图对所有属性共用，单属性查询时仍要读跨owner边：k=10递归有57%、k=100非递归有80%的邻居准入被资格拒绝（`1 - distances/item_checks`）。NodeANN 在单属性查询时退化成一张小图，反而是“单图”那一侧；它只有在 G≥2 时才变成多图合并。
+因此正确的轴不是“单图 vs 多图”，而是**合格集能否全部装进一张属性图**。我们的168k单图对所有属性共用，单属性查询时大部分邻接准入仍指向别的owner：`1 - distances/item_checks` 按**全体查询**计为56.7%（递归k=10）、68.8%（递归k=100）、68.2%（直接k=10）、80.1%（直接k=100）；单属性子集更高，为71.6%、81.1%、71.5%、81.8%。但被拒绝的比例不等于代价：§4.2 的剪枝消融把所有这类条目删除，单属性查询也只节省10.4–26.0%时间，剪枝后NodeANN仍快1.37–1.74×。NodeANN 在单属性查询时退化成一张小图，反而是“单图”那一侧；它只有在 G≥2 时才变成多图合并。
 
 归因口径限制：子集批次的QPS不能用来还原整批（子集工作集更小，重组结果比整体高5–37%）。上表只用于同协议下的方向与倍数比较；整批结论以§3为准。
 
@@ -104,13 +104,39 @@ R*为本方案该格实测query-average Recall；NodeANN取同格内`Recall≥R*
 
 NodeANN外层只判owner后进整张合格局部图，故item资格为0；这不是没有过滤。native邻接未知留空，不填0。
 
-递归k=10格本方案L2更少（133对201）却更慢，说明差异不能只用距离次数解释；在单属性子集上，我们的邻接里57%（k=10）到80%（k=100非递归）的准入被资格拒绝，这部分读取与判断没有换成有效距离。候选堆、邻接读取、缓存与拒绝边处理仍是待隔离因素，不是已完成的因果分解。
+递归k=10格本方案L2更少（133对201）却更慢，说明差异不能只用距离次数解释；单属性子集上71.6%（递归k=10）到81.8%（直接k=100）的准入被资格拒绝，但§4.2 表明把这些条目全部删掉只收回10.4–26.0%的时间，所以“读取与拒绝跨owner边”只是少数成本。候选堆、单小图+native层次导航、邻接局部性等剩余因素仍未分别隔离，不是已完成的因果分解。
 
 当前单图只导出局部HNSW的level-0，NodeANN保留完整原生层次。此比较**同时**改变图结构、层次与过滤方式，不能把差距归给任何单一机制。
 
 ### 4.1 递归10格最差查询
 
 本方案在recursive (10,32) 有8条query未完全命中GT，最低Recall 0.40，而NodeANN同格全为1.0。平均0.9773不构成逐查询达标。
+
+### 4.2 跨owner边判废的代价：剪枝消融
+
+§3.0/§4 只能说明“多少邻接准入被拒”，不能说明“拒绝对时间贡献多少”。本节按查询删掉全部不合格目标的邻接条目，入口表与所有合格邻接行逐字保留、顺序不变，再比较同一搜索执行器的耗时。遍历本来就在算距离前拒绝这类目标、且不把它标记为visited，所以剪枝图必须返回相同ID、相同距离与扩展次数；该等价性在每条query×每格上强制检查（含CSR布局交叉检查、hits与计时校验和），任一不符即中止且不写CSV。
+
+这是诊断性反事实，不是可实施优化：每查询图副本的构建耗时单独测量并排除在计时外，为28.2–30.2 ms/query，比节省的1.2–6.8 µs高约四个数量级。
+
+计时沿用§3.0协议（16遍/批×10轮取中位数，两臂每轮交替顺序）。归档run2对同一binary与输入的最慢约3倍（逐query距离数完全一致），因此另在本会话重跑dag_merge与nodeann参考，不用归档时间做比值。
+
+| 模式 | (k,ef) | 子集 | 查询数 | 被删条目占已扩展邻接 | 节省（µs/query） | 节省比例 | 同会话NodeANN/本方案：剪枝前→剪枝后 |
+|---|---|---|---:|---:|---:|---:|---:|
+| recursive | (10,32) | 1个属性 | 74 | 19.4% | 1.76 | 16.5% | 1.83× → 1.37× |
+| recursive | (10,32) | ≥2个属性 | 36 | 11.1% | 1.72 | 8.1% | 0.64× → 0.52× |
+| recursive | (100,128) | 1个属性 | 74 | 16.8% | 2.91 | 12.0% | 1.87× → 1.59× |
+| recursive | (100,128) | ≥2个属性 | 36 | 9.8% | 4.84 | 7.2% | 0.77× → 0.66× |
+| direct | (10,32) | 1个属性 | 88 | 20.9% | 3.80 | 26.0% | 2.23× → 1.43× |
+| direct | (10,32) | ≥2个属性 | 13 | 14.1% | 1.22 | 8.5% | 1.22× → 1.04× |
+| direct | (100,128) | 1个属性 | 88 | 19.3% | 3.33 | 10.4% | 2.21× → 1.74× |
+| direct | (100,128) | ≥2个属性 | 13 | 12.4% | 6.77 | 18.1% | 1.29× → 0.91× |
+
+结论：
+
+1. **拒绝条目多、代价小。** 单属性查询中17–21%的已扩展邻接条目指向不合格owner（拒绝比例按offer计更高），全部删除只省16.5%/12.0%（递归k=10/k=100）与26.0%/10.4%（直接k=10/k=100）。
+2. **“跨owner边读取”不能解释§3的1.66–1.75×差距。** 即便把这些读取当作零成本，单属性查询上NodeANN仍快1.37–1.74×。§3.0原先把这部分列为反转原因属于过度归因，已按本节更正。
+3. **差额包含布局与局部性，不只是谓词。** 删除条目同时缩短邻接行、减少随机owner加载并改善局部性，因此节省比例是“读入+资格判断+缓存”的合计，不能拆成纯谓词成本。
+4. **剩余差距未分解。** direct 的≥2属性子集只有13条query（含18.1%与0.91×），不外推；单小图+native层次导航、候选堆、局部图规模等仍未分别隔离。
 
 ## 5. 重复运行波动
 
@@ -136,6 +162,17 @@ bash autoresearch.sh
 - 每方法`pareto-points.csv`（全部点，含n=1…k）、`pareto-queries.csv.gz`（无损压缩的逐query审计）、`pareto-batches.csv`（10批次原始耗时）、`fanout-batches.csv`（两个查询子集的分子集批次）、`index-parameters.json`、`process-resource.txt`。
 - [执行元数据](data/dag-two-cases-m64-run2/run-meta.json)、[压缩校验](data/dag-two-cases-m64-run2/compression.json)、[已执行检查](data/dag-two-cases-m64-run2/regression.txt)、[硬件](data/dag-two-cases-m64-run2/hardware.json)、`build/*.d`与源码SHA。
 - 协议与命令：[复现说明](experiments/dag-pareto-reproduction.md)；分析器：[analyze_dag_pareto.py](experiments/analyze_dag_pareto.py)。
+
+§4.2 的剪枝消融单独复现：
+
+```bash
+bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_edge_prune.sh
+```
+
+- [逐query审计](data/edge-prune-m64/nq120-recursive/edge-prune-queries-recursive.csv)、[分组汇总](data/edge-prune-m64/nq120-recursive/edge-prune-summary-recursive.csv)、[每轮原始批次](data/edge-prune-m64/nq120-recursive/edge-prune-batches-recursive.csv)（direct 同名一套）。
+- [反事实表](data/edge-prune-m64/analysis/gap-counterfactual.csv)、[拒绝比例表](data/edge-prune-m64/analysis/rejection-ratios.csv)、[同会话参考点](data/edge-prune-m64/envcheck/)、[运行元数据](data/edge-prune-m64/run-meta.json)。
+- 实现与检查：[dag_composition_bench.cpp](experiments/dag_composition_bench.cpp) 的`edge-prune`模式、分析器[analyze_edge_prune.py](experiments/analyze_edge_prune.py)；回归[dag_composition_test.cpp](experiments/dag_composition_test.cpp)新增“剪枝是原子序列且结果/工作量不变”。
+- 消融的所有等价性检查（结果ID、距离数、扩展数、CSR布局、hits、计时校验和）均在C++内强制，失败即中止；每查询剪枝图构建28.2–30.2 ms不进入任何计时。
 
 旧九格/跨ef探索的原始点与源码快照保留在`data/dag-fixed-k-ef-m64/`、`data/dag-pareto-m64-efc200/`，其图已撤下，不作为交付对比。
 

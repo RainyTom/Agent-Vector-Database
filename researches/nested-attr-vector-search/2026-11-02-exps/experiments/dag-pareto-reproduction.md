@@ -53,7 +53,17 @@ g++ -std=c++17 -O3 -march=native -pthread \
 python3 researches/nested-attr-vector-search/2026-11-02-exps/experiments/analyze_dag_pareto_test.py
 ```
 
-覆盖局部n≠全局k、全局top-k集中于一属性、k50/100不足k的正确分母、全量预算下真实top10/50/100、top100缓存边界、ef<k输出容量、直接/递归/共享后代/空属性/CSR及资格路径。Python回归阻止跨k/ef选点、排除低Recall快点、避免只选最高Recall、保持不达标缺失值及真实超额Recall。
+覆盖局部n≠全局k、全局top-k集中于一属性、k50/100不足k的正确分母、全量预算下真实top10/50/100、top100缓存边界、ef<k输出容量、直接/递归/共享后代/空属性/CSR及资格路径；同文件新增“按查询删除不合格目标邻接后结果与距离/扩展工作量不变”的检查。Python回归阻止跨k/ef选点、排除低Recall快点、避免只选最高Recall、保持不达标缺失值及真实超额Recall。
+
+## 跨owner边剪枝消融（归因诊断）
+
+```bash
+bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_edge_prune.sh
+```
+
+同一入口先在本会话重跑`dag_merge`与`nodeann`参考（归档绝对时间对同一binary与输入最多慢约3倍，逐query距离数一致），再运行`edge-prune`模式：按查询删除目标owner不合格的邻接条目，入口表与所有合格邻接行逐字保留、顺序不变。
+
+程序强制检查结果ID、距离数、扩展数、CSR布局、hits与每遍校验和一致，任一不符即中止且不写CSV。每查询剪枝图构建28.2–30.2 ms，排除在所有计时外，因此该消融是诊断性反事实，不是可实施优化。计时为16遍/批×10轮中位数，两臂每轮交替顺序。输出`work/edge-prune-m64/`，分析写同目录`analysis/`（反事实与拒绝比例两张表）。
 
 ## 设计有限探针（不是分层ANN运行）
 

@@ -1,0 +1,30 @@
+{
+  "run": "cross-owner edge pruning ablation with same-session reference arms",
+  "source_dir": "work/edge-prune-m64 (ignored; binaries excluded from the archive)",
+  "command": "bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_edge_prune.sh",
+  "observed_wall_seconds": 214.8,
+  "NQ": 120,
+  "M": 64,
+  "efConstruction": 200,
+  "cases": [
+    {"k": 10, "ef_requested": 32},
+    {"k": 100, "ef_requested": 128}
+  ],
+  "ablation": {
+    "edges_removed": "adjacency entries whose target owner fails this query's qualification; entry lists and every qualified adjacency row are kept verbatim in original order",
+    "semantics": "traversal rejects such a target before computing a distance and never marks it visited, so the pruned graph returns identical IDs with identical distance/expansion counts",
+    "enforced_checks": "per query and cell: identical result IDs, identical distances and expansions, CSR-layout cross-check, identical hits, and batch checksum equality on every timed pass; any failure aborts before a CSV row is written",
+    "build_cost": "per-query copy construction, measured separately and excluded from every timer",
+    "timing_protocol": "fan-out batch protocol: 16 passes per batch, 10 rounds, median; the two arms alternate order every round"
+  },
+  "reference": {
+    "why": "archived run2 absolute times are up to 3x slower than this session for the same binary and inputs, so the QPS ratio is re-measured here instead of rescaled",
+    "arms": "dag_merge (merged) and nodeann (per-graph, n=k), both with 120 queries, pareto mode",
+    "measured_at": "immediately before the ablation runs, same machine, same taskset CPU"
+  },
+  "not_claimed": [
+    "pruning as an implementable optimisation (per-query copy costs ~28-30 ms/query)",
+    "statistical confidence",
+    "decomposition of the remaining NodeANN gap into layering, local-graph size and candidate-heap costs"
+  ]
+}

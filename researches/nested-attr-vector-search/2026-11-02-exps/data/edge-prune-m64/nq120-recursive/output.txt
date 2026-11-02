@@ -1,0 +1,6 @@
+EDGE-PRUNE semantics=recursive k=10 group=one_graph queries=74 us_merged=10.637 us_merged_pruned=8.88007 prune_delta_fraction=0.165171 expanded_removed_fraction=0.194487
+EDGE-PRUNE semantics=recursive k=10 group=many_graphs queries=36 us_merged=21.352 us_merged_pruned=19.6296 prune_delta_fraction=0.0806649 expanded_removed_fraction=0.111237
+EDGE-PRUNE semantics=recursive k=10 group=all queries=110 us_merged=18.4709 us_merged_pruned=18.2064 prune_delta_fraction=0.0143229 expanded_removed_fraction=0.163267
+EDGE-PRUNE semantics=recursive k=100 group=one_graph queries=74 us_merged=24.236 us_merged_pruned=21.324 prune_delta_fraction=0.120151 expanded_removed_fraction=0.168329
+EDGE-PRUNE semantics=recursive k=100 group=many_graphs queries=36 us_merged=67.2472 us_merged_pruned=62.4029 prune_delta_fraction=0.0720374 expanded_removed_fraction=0.098315
+EDGE-PRUNE semantics=recursive k=100 group=all queries=110 us_merged=49.6669 us_merged_pruned=47.0376 prune_delta_fraction=0.0529388 expanded_removed_fraction=0.136979
