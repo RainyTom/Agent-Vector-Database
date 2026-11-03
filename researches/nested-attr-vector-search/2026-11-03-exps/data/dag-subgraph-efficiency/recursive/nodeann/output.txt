@@ -1,0 +1,25 @@
+kernel=AVX dim=128
+recursive nodeann_nk k=10 ef=32 G=11 nq=1 us=52.7464 R=1
+recursive nodeann_nk k=10 ef=32 G=1 nq=74 us=6.25243 R=1
+recursive nodeann_nk k=10 ef=32 G=9 nq=1 us=23.4481 R=1
+recursive nodeann_nk k=10 ef=32 G=17 nq=1 us=73.0262 R=1
+recursive nodeann_nk k=10 ef=32 G=3 nq=12 us=12.8107 R=1
+recursive nodeann_nk k=10 ef=32 G=4 nq=3 us=15.7541 R=1
+recursive nodeann_nk k=10 ef=32 G=6 nq=1 us=31.9226 R=1
+recursive nodeann_nk k=10 ef=32 G=24 nq=1 us=73.3718 R=1
+recursive nodeann_nk k=10 ef=32 G=5 nq=1 us=21.5508 R=1
+recursive nodeann_nk k=10 ef=32 G=2 nq=11 us=8.66718 R=1
+recursive nodeann_nk k=10 ef=32 G=7 nq=3 us=38.3179 R=1
+recursive nodeann_nk k=10 ef=32 G=20 nq=1 us=132.972 R=1
+recursive nodeann_nk k=100 ef=128 G=1 nq=74 us=12.8725 R=1
+recursive nodeann_nk k=100 ef=128 G=24 nq=1 us=165.505 R=1
+recursive nodeann_nk k=100 ef=128 G=17 nq=1 us=221.39 R=1
+recursive nodeann_nk k=100 ef=128 G=3 nq=12 us=34.0623 R=1
+recursive nodeann_nk k=100 ef=128 G=20 nq=1 us=378.669 R=1
+recursive nodeann_nk k=100 ef=128 G=5 nq=1 us=45.9606 R=1
+recursive nodeann_nk k=100 ef=128 G=11 nq=1 us=121.892 R=1
+recursive nodeann_nk k=100 ef=128 G=4 nq=3 us=33.5816 R=1
+recursive nodeann_nk k=100 ef=128 G=6 nq=1 us=69.0443 R=1
+recursive nodeann_nk k=100 ef=128 G=2 nq=11 us=23.7338 R=1
+recursive nodeann_nk k=100 ef=128 G=9 nq=1 us=51.8316 R=1
+recursive nodeann_nk k=100 ef=128 G=7 nq=3 us=135.267 R=1

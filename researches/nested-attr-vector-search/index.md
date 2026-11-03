@@ -6,7 +6,8 @@
 
 - **[当前交付：从原始记录到属性DAG合并图](2026-11-02-exps/dag-composition-delivery.md)**：区分属性节点与ANN节点；定义直属/递归两类查询、直属/子图两类入口、属性内HNSW、DAG连接、单队列搜索及CSR/bitmap消融。
 
-- **[最新：direct是否探索更多节点？](2026-11-03-exps/direct-work-report.md)**：补齐NodeANN原生上层/底层展开、邻接枚举与去重评分计数；含拒绝项的首次触达更多，不等于距离/展开更多。单属性多枚举约四分之一邻接；静态owner分段两版减少ID枚举却变慢，未采用。
+- **[最新：Direct/Recursive按子图数G的QPS折线对比](2026-11-03-exps/subgraph-efficiency-report.md)**：保持AVX，固定两格，按精确非空属性图数实测并同步绘Recall。Direct最大G=3，Recursive最大G=24；没有Direct G=5点，高G多为单query且部分漏答，不能当等质量Pareto优胜。
+- **[direct是否探索更多节点？](2026-11-03-exps/direct-work-report.md)**：补齐NodeANN原生上层/底层展开、邻接枚举与去重评分计数；含拒绝项的首次触达更多，不等于距离/展开更多。单属性多枚举约四分之一邻接；静态owner分段两版减少ID枚举却变慢，未采用。
 - **[DAG单图执行器性能修复与归因勘误](2026-11-03-exps/report.md)**：固定k10/ef32、k100/ef128，查询内拒绝缓存、堆容量复用、replace-root及合格向量批量评分/预取；两轮整批延迟下降15.4%–29.6%，逐查询结果/距离/扩展/邻接计数不变。撤回旧精确成本分账与固定图数交叉阈值；direct仍未胜过固定n=k的NodeANN，召回未改变。
 - [历史两格与n扫描对照](2026-11-02-exps/dag-two-cases-report.md)：保留原批次、子集与图，新增勘误；“多图就一定快”及“距离相近即可归因纯表示”均不成立。
 - [历史探索：M64九档ef与局部n扫描](2026-11-02-exps/dag-pareto-m64-report.md)：跨ef图已撤下，仅保留原始点和源码快照，不作交付对比。

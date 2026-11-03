@@ -1,0 +1,25 @@
+kernel=AVX dim=128
+recursive dag k=10 ef=32 G=11 nq=1 us=9.73875 R=0.4
+recursive dag k=10 ef=32 G=1 nq=74 us=8.06981 R=1
+recursive dag k=10 ef=32 G=9 nq=1 us=10.4363 R=1
+recursive dag k=10 ef=32 G=17 nq=1 us=15.0849 R=0.7
+recursive dag k=10 ef=32 G=3 nq=12 us=9.23054 R=0.983333
+recursive dag k=10 ef=32 G=4 nq=3 us=10.0736 R=1
+recursive dag k=10 ef=32 G=6 nq=1 us=10.606 R=1
+recursive dag k=10 ef=32 G=24 nq=1 us=14.1345 R=0.8
+recursive dag k=10 ef=32 G=5 nq=1 us=10.8227 R=1
+recursive dag k=10 ef=32 G=2 nq=11 us=7.8112 R=1
+recursive dag k=10 ef=32 G=7 nq=3 us=13.5828 R=0.766667
+recursive dag k=10 ef=32 G=20 nq=1 us=15.884 R=0.5
+recursive dag k=100 ef=128 G=1 nq=74 us=17.3757 R=1
+recursive dag k=100 ef=128 G=24 nq=1 us=44.2206 R=1
+recursive dag k=100 ef=128 G=17 nq=1 us=59.9643 R=0.99
+recursive dag k=100 ef=128 G=3 nq=12 us=29.5007 R=0.9975
+recursive dag k=100 ef=128 G=20 nq=1 us=65.7676 R=0.85
+recursive dag k=100 ef=128 G=5 nq=1 us=26.1313 R=1
+recursive dag k=100 ef=128 G=11 nq=1 us=26.8319 R=0.57
+recursive dag k=100 ef=128 G=4 nq=3 us=24.0229 R=1
+recursive dag k=100 ef=128 G=6 nq=1 us=27.0173 R=1
+recursive dag k=100 ef=128 G=2 nq=11 us=20.8423 R=1
+recursive dag k=100 ef=128 G=9 nq=1 us=20.2064 R=1
+recursive dag k=100 ef=128 G=7 nq=3 us=34.4924 R=0.81

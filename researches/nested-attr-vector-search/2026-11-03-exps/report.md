@@ -133,3 +133,16 @@ bash researches/nested-attr-vector-search/2026-11-03-exps/experiments/run_dag_se
 当前DAG相对NodeANN只少约6.0%/5.2%的距离calls，不是数量级减少。即便假设距离占80%、每次距离代价相同、其余成本不变，距离节省对应总时间也只有约4.8%/4.1%——这是条件计算，不是测得占比。单属性不同评分item近乎一致，更不应指望靠距离次数差覆盖明显执行差。
 
 因此保留“更多邻接触达是一项负担”，撤除其作为已证实主要瓶颈的含义。下一轮应优先核对向量访问/预取与执行路径，在保持距离值、有序输出、预算一致的条件下做对照；不能继续以“判断不是免费”代替剩余差距的证据。探针仅用于dispatch/数值smoke，不据此声称距离时间占比或AVX提速倍数。
+
+## 9. 保持SIMD：Direct/Recursive按子图数G的折线对比
+
+用户最新要求覆盖“不做SIMD”：保持SIMD，对Direct/Recursive按子图数汇总并画效率对比。未应用禁用SIMD参数，独立标量探针草稿已移除。本轮不改变服务搜索，只新增真实按G分组的测量。
+
+- [交付报告、折线图与定义](subgraph-efficiency-report.md)：G是查询覆盖的非空owner局部图数，Recursive包含去重后代；不是DAG启动G次搜索。NodeANN实际启动G张局部图，DAG仍一次合并图搜索。
+- 同120个配对：Direct G=0/1/2/3分别19/88/7/6条，最大3；Recursive非空110条、G=1为74条、G≥2为36条，最大24。没有Direct G=5，不插值补点。
+- SIMD实际四次运行都为AVX；M64/efConstruction200，仅k10/ef32与k100/ef128，NodeANN n=k。按精确G实测每组10轮×16遍，scope/GT/诊断在正常计时外。
+- 本批G=1均是NodeANN更快；G=2两语义、两格我们均快且双方Recall=1，但样本仅7/11条。G≥3不少快点有Recall损失；Recursive G=11仅一条query，Recall0.4/0.57，不当成功收益。
+- 主图QPS使用对数纵轴，下排同步给Recall；低样本点加外圈，四条线覆盖两方案和两语义。已打开检查实际PNG。没有重新宣称普遍图数交叉阈值，也未跑全n前沿。
+- [原始证据与图](data/dag-subgraph-efficiency/)、[960行/600批审计](data/dag-subgraph-efficiency/analysis/audit.json)。这次分组预热与旧one/many混合批次缓存状态不同，不把新旧时间拼成收益。
+
+下一步：补真实Direct五图和高G样本、优先检查高G漏答，再以同召回重扫n。尚未执行，不画预测点。

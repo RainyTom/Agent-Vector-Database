@@ -1,0 +1,36 @@
+{
+  "reference_commit": "e6628dd",
+  "distance_kernel": "AVX, no scalar cutover",
+  "nq_per_semantics": 120,
+  "cells": [
+    [
+      10,
+      32
+    ],
+    [
+      100,
+      128
+    ]
+  ],
+  "M": 64,
+  "efConstruction": 200,
+  "nodeann_local_n": "k",
+  "passes": 16,
+  "rounds": 10,
+  "cohort_order_seed": 20261103,
+  "workload": "same SIFT168937x128 FP32 owner-shuffled original 120 sampled query/scope pairs",
+  "group_definition": "G distinct allowed owners with nonempty local graphs; direct only named attributes, recursive deduplicated descendant closure",
+  "dag_searches_per_nonempty_query": 1,
+  "nodeann_searches_per_nonempty_query": "G",
+  "scope_preparation_and_GT": "excluded from normal timing",
+  "limitations": [
+    "normal timing separated from counts",
+    "cross-process method timings",
+    "cohort-specific warm cache and query mix",
+    "no direct G5 observations",
+    "fixed n=k, not full Pareto",
+    "higher G does not fix eligible population or difficulty",
+    "singleton query cohorts not independent repeated queries"
+  ],
+  "analysis_sha256": "13bc5d2fd68e81eb7be96b1024cd8958bab34fef1da522127bb8f7d6814166a3"
+}
