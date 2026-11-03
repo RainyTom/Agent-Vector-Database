@@ -237,3 +237,9 @@
 - 新增JAG→ACORN、Filtered-DiskANN、iRangeGraph三条§4.2原文明示比较关系；共33关系，不将项目类比伪造为作者继承。
 - [当前创新性审查](../researches/nested-attr-vector-search/2026-11-03-exps/alphaxiv-dag-novelty.md)明确Stitched局部图叠加、FD多入口OR共享搜索、LSSG单beam/bitmap、iRange自底向上和JAG预算的既有机制；具体DAG桥接组合仍未通过创新性确认，不宣称整方案已被某篇完整解决。
 - 8篇alphaXiv平台全文相关节与1篇额外作者原稿分来源归档；UNG/UniFilter目标正文仍缺，不伪造精读记录。实际运行资格标签归约，不新增ANN性能或作者复现实验。
+
+## 2026-11-03 属性动态更新前序与定位评估
+
+- 新增EMA（arXiv2606.00734v1，filtered-ann）唯一全文、日期化metadata与指定章节审读：边上Marker按位或聚合属性、惰性删除＋query-guided patch、属性-only更新以OR合并一跳反向边；§5.4实测属性-only 2.5 s/1M、patch≈全量重建12%。接收状态未核实，不按正式发表引用。总库46篇、36关系。
+- 新增EMA→ACORN、Filtered DiskANN、iRangeGraph三条§5.1原文明示基线关系；不把Table 1的能力判断写成作者互引。
+- [更新定位评估](../researches/nested-attr-vector-search/2026-11-03-exps/update-positioning.md)：先实测当前静态构图成本（约8 s/168,937项；5,697,634条有向边，其中连接桥1,652,935）与解析更新成本（单次换owner中位315,392次距离计算，约73–78次即等于一次重建），据此记录“支持频繁属性更新”当前的失效条件，不宣称已实现。

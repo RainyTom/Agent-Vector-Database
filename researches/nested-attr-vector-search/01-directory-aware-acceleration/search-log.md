@@ -115,3 +115,11 @@
 alphaXiv公开全文取得8篇、核相关节，另核FD作者原稿。JAG和HNSW Merge首次补全总索引，其他已存全文不复制；未用AI overview替代原文。浏览器broker不可用、llms.txt404，未调用AI Assistant/discovery MCP；UNG作者仓库可读但ACM PDF403，UniFilter全文仍缺。搜索结果窄/噪声大者已换同义式重搜，不声称引用闭包完成。
 
 结论见[评估](../2026-11-03-exps/alphaxiv-dag-novelty.md)：每标签建图后共享、合法多入口单队列、先资格后距离、bitmap等不能单独称新；Direct/Recursive OR可用命名空间祖先标签精确归约至overlap，本轮有限核验通过。多父DAG具体桥接尚未证与前序完整同构，也未证同成本新贡献。保留UNG/UniFilter正文、共享去重标签强基线、导航性质与公平质量/字节比较为待补；本轮不改算法、不报新ANN收益。
+
+## 2026-11-03 属性动态更新的查重与成本边界
+
+用户提出以“支持属性频繁更新”为差异化定位。先查本地`dynamic-attribute-updates.md`、MCI/EMA记录与`papers/relations`，再按dynamic filtered ANN、attribute update、patch/rebuild、HNSW delete 检索；并通过alphaXiv取得EMA v1全文核§1、§3.5、§4、§5.4。
+
+已核：属性only更新2.5 s/1M、删除1.3 s/1M、patch≈重建12%、20%/10%/50%阈值；其属性更新对一跳反向边FT做位或合并（§3.5原文）。数值range动态索引（Peng PVLDB18(10)、DIGRA、RangePQ+、ESF）仍仅据二手引用记录，正文未读，不作为判重证据。
+
+本侧实测：全量构图约8 s/168,937项、5,697,634有向边；单次换owner定向刷新祖先链中位315,392次距离计算，约73–78次等于一次重建。据此把“我们支持频繁更新”降级为**待验证假设**，并写明否证条件与最小实验；未实现更新路径、未跑churn曲线。EMA已入库，总库46篇/36关系。

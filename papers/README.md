@@ -5,7 +5,7 @@
 | 主主题 | 数量 | 内容与入口 |
 |---|---:|---|
 | vector-join | 7 | [几何向量连接](vector-join/README.md)：执行、复杂性、基数估计 |
-| filtered-ann | 13 | [过滤 ANN](filtered-ann/README.md)：标签、范围、共享结构、召回控制 |
+| filtered-ann | 14 | [过滤 ANN](filtered-ann/README.md)：标签、范围、共享结构、召回控制、动态更新 |
 | prefix-vector-search | 1 | [前缀与目录检索](prefix-vector-search/README.md)：Directory-Aware/TrieHI |
 | similarity-join | 1 | [一般相似连接](similarity-join/README.md)：多字段 equality/Hamming 等相邻问题 |
 | trajectory-search | 8 | [轨迹检索](trajectory-search/README.md)：完整轨迹/子轨迹 top-k、时空距离与混合范围查询 |
@@ -16,7 +16,7 @@
 | data-indexing | 4 | [属性索引与范围过滤](data-indexing/README.md)：Memento、Grafite、FlexFlood、Qd-tree |
 | incremental-views | 2 | [增量与因式分解视图](incremental-views/README.md)：F-IVM、DBSP |
 
-总计 **45 篇论文、33 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **46 篇论文、36 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -53,6 +53,8 @@ UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../re
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
 
 2026-11-03通过alphaXiv补齐JAG v1与HNSW Merge v1全文、日期化来源及审读，新增3条JAG原文明示比较关系。当前DAG组合方案的[创新性审查](../researches/nested-attr-vector-search/2026-11-03-exps/alphaxiv-dag-novelty.md)区分完整组合未证等价与基础机制已有；UNG原文仍缺，作者代码不冒充论文精读。
+
+2026-11-03追加EMA v1（filtered-ann）：它把属性动态更新作为主要贡献并实测（属性-only 2.5 s/1M、patch≈重建12%），因此频繁属性更新不能单独作为本项目新意；新增3条§5.1原文明示基线关系。同日[更新定位评估](../researches/nested-attr-vector-search/2026-11-03-exps/update-positioning.md)用本项目实测重建成本与解析更新成本记录该主张的失效条件。
 
 
 ## 索引字段与核实状态

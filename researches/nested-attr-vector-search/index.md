@@ -6,7 +6,8 @@
 
 - **[当前交付：从原始记录到属性DAG合并图](2026-11-02-exps/dag-composition-delivery.md)**：区分属性节点与ANN节点；定义直属/递归两类查询、直属/子图两类入口、属性内HNSW、DAG连接、单队列搜索及CSR/bitmap消融。
 
-- **[最新：依托alphaXiv的DAG组合图创新性审查](2026-11-03-exps/alphaxiv-dag-novelty.md)**：基础机制有Stitched/LSSG等直接前序；完整DAG桥接组合尚未证等价、也未证独立贡献。原文/作者代码分级，祖先标签归约实跑通过，UNG全文仍缺；不是平台AI评分。
+- **[最新：频繁属性更新能否作为差异化定位](2026-11-03-exps/update-positioning.md)**：实测当前静态构图约8 s，单次换owner的定向祖先链刷新中位约3.15×10^5次距离计算（约73次更新≈一次重建）；EMA已把动态更新作为主要贡献（属性-only 2.5 s/1M）。结论是“谓词状态图外、更新不修补边摘要”可辩护，但尚未实现，写出失效条件与最小实验。
+- **[依托alphaXiv的DAG组合图创新性审查](2026-11-03-exps/alphaxiv-dag-novelty.md)**：基础机制有Stitched/LSSG等直接前序；完整DAG桥接组合尚未证等价、也未证独立贡献。原文/作者代码分级，祖先标签归约实跑通过，UNG全文仍缺；不是平台AI评分。
 - **[Direct/Recursive按子图数G的QPS折线对比](2026-11-03-exps/subgraph-efficiency-report.md)**：保持AVX，固定两格，按精确非空属性图数实测并同步绘Recall。Direct最大G=3，Recursive最大G=24；没有Direct G=5点，高G多为单query且部分漏答，不能当等质量Pareto优胜。
 - **[direct是否探索更多节点？](2026-11-03-exps/direct-work-report.md)**：补齐NodeANN原生上层/底层展开、邻接枚举与去重评分计数；含拒绝项的首次触达更多，不等于距离/展开更多。单属性多枚举约四分之一邻接；静态owner分段两版减少ID枚举却变慢，未采用。
 - **[DAG单图执行器性能修复与归因勘误](2026-11-03-exps/report.md)**：固定k10/ef32、k100/ef128，查询内拒绝缓存、堆容量复用、replace-root及合格向量批量评分/预取；两轮整批延迟下降15.4%–29.6%，逐查询结果/距离/扩展/邻接计数不变。撤回旧精确成本分账与固定图数交叉阈值；direct仍未胜过固定n=k的NodeANN，召回未改变。
