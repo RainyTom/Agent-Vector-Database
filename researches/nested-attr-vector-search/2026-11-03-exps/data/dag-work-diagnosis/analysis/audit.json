@@ -1,0 +1,18 @@
+{
+  "status": "PASS",
+  "query_rows": 1440,
+  "batch_rows": 360,
+  "cases": [
+    [
+      10,
+      32
+    ],
+    [
+      100,
+      128
+    ]
+  ],
+  "variants": 2,
+  "semantics": "direct",
+  "note": "C++ enforces per-local-graph native ordered IDs and calls versus original native and old hook, candidate ordered IDs/D/expansions versus current, normal/count IDs, and every timed-pass checksum. Variants are implementation revisions, not independent repeated builds of one implementation."
+}
