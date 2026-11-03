@@ -5,18 +5,18 @@
 | 主主题 | 数量 | 内容与入口 |
 |---|---:|---|
 | vector-join | 7 | [几何向量连接](vector-join/README.md)：执行、复杂性、基数估计 |
-| filtered-ann | 12 | [过滤 ANN](filtered-ann/README.md)：标签、范围、共享结构、召回控制 |
+| filtered-ann | 13 | [过滤 ANN](filtered-ann/README.md)：标签、范围、共享结构、召回控制 |
 | prefix-vector-search | 1 | [前缀与目录检索](prefix-vector-search/README.md)：Directory-Aware/TrieHI |
 | similarity-join | 1 | [一般相似连接](similarity-join/README.md)：多字段 equality/Hamming 等相邻问题 |
 | trajectory-search | 8 | [轨迹检索](trajectory-search/README.md)：完整轨迹/子轨迹 top-k、时空距离与混合范围查询 |
 | multi-vector-search | 2 | [多向量/向量集合检索](multi-vector-search/README.md)：BioVSS表示与MSG组合空间图 |
-| vector-ann | 4 | [向量ANN机制](vector-ann/README.md)：Hubness、CDMG、Flash、多代表分区路由 |
+| vector-ann | 5 | [向量ANN机制](vector-ann/README.md)：Hubness、CDMG、Flash、多代表分区路由、HNSW合并 |
 | memory-systems | 1 | [记忆管理系统](memory-systems/README.md)：VikingMem |
 | hybrid-retrieval | 1 | [多路相关性检索](hybrid-retrieval/README.md)：Balancing the Blend；不是scalar-filtered ANN |
 | data-indexing | 4 | [属性索引与范围过滤](data-indexing/README.md)：Memento、Grafite、FlexFlood、Qd-tree |
 | incremental-views | 2 | [增量与因式分解视图](incremental-views/README.md)：F-IVM、DBSP |
 
-总计 **43 篇论文、30 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
+总计 **45 篇论文、33 条关系**。统一入口：[papers.jsonl](papers.jsonl)、[relations.jsonl](relations.jsonl)、[变更记录](changelog.md)。每条论文用 `topic` 标明主主题，`local_dir` 必须位于对应目录；一篇一份全文，跨主题关系不受目录限制。
 
 ```text
 papers/
@@ -51,6 +51,9 @@ papers/
 UniFilter 和 UNG 的原文全文尚缺，仍列在[研究候选与证据](../researches/containment-filtered-vector-search/evidence/)，不计入上述43篇工作。获取受限与理论未提供是两种不同状态。
 
 2026-10-19 的目录迁移对应关系见[迁移清单](reorganization-2026-10-19.json)。A/B/C 保留其原意义：A 为直接几何 vector join，B 为可迁移 ANN/向量数据库研究，C 为有明确迁移价值的邻近问题；不将 B/C 论文放入 vector-join 目录。
+
+2026-11-03通过alphaXiv补齐JAG v1与HNSW Merge v1全文、日期化来源及审读，新增3条JAG原文明示比较关系。当前DAG组合方案的[创新性审查](../researches/nested-attr-vector-search/2026-11-03-exps/alphaxiv-dag-novelty.md)区分完整组合未证等价与基础机制已有；UNG原文仍缺，作者代码不冒充论文精读。
+
 
 ## 索引字段与核实状态
 

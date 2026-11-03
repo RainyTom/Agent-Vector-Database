@@ -1,0 +1,19 @@
+{
+  "date": "2026-11-03",
+  "alphaXiv_full_text_papers": 8,
+  "additional_author_pdf": 1,
+  "interactive_browser": "failed: Shared browser daemon unavailable (broker start or Chromium launch failed)",
+  "llms_txt": "HTTP404",
+  "UNG_ACM_pdf": "HTTP403",
+  "alphaXiv_AI_assistant_invoked": false,
+  "alphaXiv_discovery_MCP_invoked": false,
+  "actual_workflow": "site:alphaxiv.org / general synonym searches via web_search; alphaXiv public paper pages and alternate-markdown/PDF retrieval; primary text comparison; local author evidence separately labeled",
+  "assessment_author": "本研究助理；不是alphaXiv官方认证/AI评分",
+  "new_ANN_experiments": false,
+  "new_finite_scope_reduction_experiment": true,
+  "closest_missing_primary_text": [
+    "UNG DOI10.1145/3698822",
+    "UniFilter DOI10.1145/3769765"
+  ],
+  "existing_primary_texts_not_duplicated": true
+}

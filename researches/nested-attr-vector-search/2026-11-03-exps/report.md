@@ -146,3 +146,15 @@ bash researches/nested-attr-vector-search/2026-11-03-exps/experiments/run_dag_se
 - [原始证据与图](data/dag-subgraph-efficiency/)、[960行/600批审计](data/dag-subgraph-efficiency/analysis/audit.json)。这次分组预热与旧one/many混合批次缓存状态不同，不把新旧时间拼成收益。
 
 下一步：补真实Direct五图和高G样本、优先检查高G漏答，再以同召回重扫n。尚未执行，不画预测点。
+
+## 10. 依托alphaXiv审查当前DAG组合图创新性
+
+[完整评估](alphaxiv-dag-novelty.md)针对当前已实现方案，不沿用历史六方向的自动停止决定。通过alphaXiv公开全文核相关节8篇，另核作者Filtered-DiskANN原稿；交互浏览器不可用，未调用平台AI Assistant/discovery MCP，不把研究者判断冒充平台认证。
+
+- Stitched已有局部图叠加，Filtered-DiskANN Alg.1/§3.1已有OR、多标签起点、共享队列与合格邻居导航；LSSG已有倒排bitmap、多入口单beam、过滤后距离。自底向上复用有iRangeGraph，普通HNSW merge有NGM/IGTM/CGTM，单图多尺度/总度预算有JAG。
+- 最接近的UNG存在标签集分组、包含DAG与跨组连接的作者代码证据；但目标论文全文仍403，containment共享队列与overlap多轮搜索不混写。不能称整方案重复或新颖性已通过。
+- 本轮新验证：真实1929属性/2040边，7442082个singleton两模式owner判断及462960个复合scope判断，命名空间祖先标签overlap与Direct/Recursive OR资格全部一致。问题可表达性不是新增；索引/成本/召回并未据此等价。
+- 剩余待证的是外部多父DAG上的具体代表汇总与桥布局，是否在去重共享标签的强基线上带来新导航性质或同质量/同字节优势。未实现的全局分层、b>0、预算剪枝不计入贡献。
+- 新增JAG/HNSW Merge规范全文记录，45篇/33关系。无新ANN性能实验，无检索实现或SIMD变更；[来源/访问边界/决定/验证数据](data/alphaxiv-dag-novelty/)已保存。
+
+当前结论：**尚未通过创新性确认，不等于证明完整方案重复。** 缺口是UNG/UniFilter目标正文、完整近邻引用链与相同质量/成本的实证，而不是再换一个术语。

@@ -1,0 +1,28 @@
+{
+  "reference_commit": "64214c2",
+  "source": "codes/dag-composition-methods/dag_merge/hnswlib/hnswlib/dag_composition_method.h",
+  "source_sha256": "246f0a4b59bb5585e0b24a4d695f516e1f7f8f912483d51851a51997850e23f4",
+  "implemented": [
+    "single-owner direct HNSW graphs M64 efConstruction200",
+    "symmetric level0 union",
+    "bottom-up real-item farthest-first summaries p8",
+    "group MST and nearest representatives",
+    "distributed direct-item bridges with reverse cap16",
+    "owner-to-subtree shortcuts",
+    "direct OR / recursive OR mode-specific entries",
+    "one shared frontier, b0 qualification before distance",
+    "AVX FP32 raw L2"
+  ],
+  "not_implemented": [
+    "new global layers",
+    "b>0 traversal",
+    "equal-byte pruning"
+  ],
+  "not_claimed": [
+    "geometric vector join",
+    "native multi-owner AND evaluation",
+    "alphaXiv AI review",
+    "whole scheme proven duplicate",
+    "novelty certified"
+  ]
+}

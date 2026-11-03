@@ -107,3 +107,11 @@
 
 最重要缺口仍是UNG [10.1145/3698822](https://doi.org/10.1145/3698822)原文，ACM 403，作者仓库不足以替代已核论文算法；不能断言我们的DAG组合新颖。已有工作属B类filtered ANN迁移，不称vector join。相关实验只包含当前平面图的M64/n/ef Pareto及有限语义/内存探针，新分层ANN未跑。
 
+
+## 2026-11-03 当前DAG组合图alphaXiv创新性核查
+
+对象为直属owner局部HNSW沿外部多父DAG组合、最终一次共享item图搜索；不是旧六方向或编码树方案。先查papers/relations和既有全文，再搜vector similarity join/vector join/similarity self-join/high-dimensional similarity join/inner-product similarity join；返回SimJoin/DiskJoin等，未将普通ANN误称join。随后定向搜filtered ANN hierarchy DAG、Stitched Vamana、HNSW merge/MST、hierarchical labels、UNG题名与DOI及site:alphaxiv.org。完整[实际检索词](../2026-11-03-exps/data/alphaxiv-dag-novelty/search-queries.json)与[来源](../2026-11-03-exps/data/alphaxiv-dag-novelty/sources.json)已保存。
+
+alphaXiv公开全文取得8篇、核相关节，另核FD作者原稿。JAG和HNSW Merge首次补全总索引，其他已存全文不复制；未用AI overview替代原文。浏览器broker不可用、llms.txt404，未调用AI Assistant/discovery MCP；UNG作者仓库可读但ACM PDF403，UniFilter全文仍缺。搜索结果窄/噪声大者已换同义式重搜，不声称引用闭包完成。
+
+结论见[评估](../2026-11-03-exps/alphaxiv-dag-novelty.md)：每标签建图后共享、合法多入口单队列、先资格后距离、bitmap等不能单独称新；Direct/Recursive OR可用命名空间祖先标签精确归约至overlap，本轮有限核验通过。多父DAG具体桥接尚未证与前序完整同构，也未证同成本新贡献。保留UNG/UniFilter正文、共享去重标签强基线、导航性质与公平质量/字节比较为待补；本轮不改算法、不报新ANN收益。

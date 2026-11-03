@@ -2,13 +2,13 @@
 
 带标签、数值范围、图范围或质量约束的单查询近似近邻搜索；这些论文自身不研究 vector join。
 
-当前收录 12 篇已保存全文的论文。每篇只在一个主主题存放；跨主题可检索，不复制材料。
+当前收录 13 篇已保存全文的论文。每篇只在一个主主题存放；跨主题可检索，不复制材料。
 
 ## 子方向
 
 系统实现资料另存研究笔记：[Weaviate filtering](../../researches/containment-filtered-vector-search/systems/weaviate-filtering.md)。产品文档不冒充论文条目；Weaviate定制ACORN、原论文ACORN与已核读PathSeer原文分别追踪。
 
-- 通用过滤与共享结构：ACORN、Curator、RWalks、PathSeer。
+- 通用过滤与共享结构：ACORN、Curator、RWalks、PathSeer、JAG。
 - 标签感知构图与索引选择：Filtered-DiskANN、TFANNS/Packing、ELI、LSSG。
 - 范围过滤：iRangeGraph、Graph Range Filters/DLH、Grant。
 - 召回控制：VADER。
@@ -29,6 +29,7 @@ UNG 与 UniFilter 原论文全文仍缺，作者海报/代码/综述和候选记
 | [Tag-Filtered Approximate Nearest Neighbor Search](https://doi.org/10.1109/ICDE65448.2025.00272) | 2025；2025 IEEE 41st International Conference on Data Engineering (ICDE), 3642–3654 | [目录](10.1109-ICDE65448.2025.00272-tag-filtered-ann/)、[阅读报告](10.1109-ICDE65448.2025.00272-tag-filtered-ann/paper.report.md) |
 | [RWalks: Random Walks as Attribute Diffusers for Filtered Vector Search](https://doi.org/10.1145/3725349) | 2025；Proceedings of the ACM on Management of Data 3(3), Article 212 (2025); SIGMOD 2025 | [目录](10.1145-3725349-rwalks/)、[阅读报告](10.1145-3725349-rwalks/paper.report.md) |
 | [PathSeer: Adaptive Neighbor Handling for Efficient Filtered ANN Search](https://doi.org/10.1145/3802098) | 2026；PACMMOD4(3),Article221／SIGMOD2026 | [目录](10.1145-3802098-pathseer/)、[阅读报告](10.1145-3802098-pathseer/paper.report.md) |
+| [JAG: Joint Attribute Graphs for Filtered Nearest Neighbor Search](https://www.alphaxiv.org/abs/2602.10258v1) | 2026预印本v1；正式venue/DOI未核实 | [目录](2602.10258-jag/)、[阅读报告](2602.10258-jag/paper.report.md) |
 
 从项目根目录检索本主题：
 

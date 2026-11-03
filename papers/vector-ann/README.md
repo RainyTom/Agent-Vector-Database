@@ -1,6 +1,6 @@
 # vector-ann
 
-单查询向量ANN：图导航机理、跨分布图与现代CPU构建。它们不是层级多属性硬过滤算法，也不是vector join。
+单查询向量ANN：图导航机理、跨分布图、分区路由、现代CPU构建与HNSW合并。它们不是层级多属性硬过滤算法，也不是vector join。
 
 | 工作 | 版本 | 原文 |
 |---|---|---|
@@ -8,5 +8,6 @@
 | Hubness | formal PACMMOD2026,27 pages,secondary PDF mirror | [全文](10.1145-3802120-hubness/paper.md)、[来源及审读入口](10.1145-3802120-hubness/metadata-2026-10-29.json) |
 | Flash | arXiv2502.18113v1,2025-02-25; formal2025 metadata separately verified | [全文](2502.18113-flash/paper.md)、[来源及审读入口](2502.18113-flash/metadata-2026-10-29.json) |
 | Unleashing Graph Partitioning / kRt / hRt | 正式PVLDB18(6),1649–1662,2025；核§1–3.2、§4.3–4.5，hRt完整证明待核 | [全文](2025-graph-partition-routing/paper.md)、[审读](2025-graph-partition-routing/paper.report.md) |
+| Three Algorithms for Merging HNSW Graphs / NGM / IGTM / CGTM | arXiv2505.16064v1,2025-05-21；正式venue未核实；核§1.4、§2、§4–5、§7 | [全文](2505.16064-hnsw-merge/paper.md)、[审读](2505.16064-hnsw-merge/paper.report.md) |
 
 统一书目、完整作者和局限见[总索引](../papers.jsonl)。未运行作者代码。

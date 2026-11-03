@@ -230,3 +230,10 @@
 - [日期化研究证据](../researches/nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)区分论文事实与本项目OR替代点、预算状态和多父度数反例；不把局部资格见证称连通或召回定理。
 - BigFANN/EMA/PathFinder/Veda作为待核候选写检索日志，未完整核书目者不添造正式记录；UNG全文获取仍受限。新分层ANN没有实测收益或新颖性声明。
 
+
+## 2026-11-03 alphaXiv复核当前DAG图组合
+
+- 新增JAG（arXiv2602.10258v1，filtered-ann）与Three Algorithms for Merging HNSW Graphs（arXiv2505.16064v1，vector-ann），各一份全文、日期化metadata/SHA和指定章节审读；正式venue均未核实，不把上传年冒称正式发表年。总库45篇。
+- 新增JAG→ACORN、Filtered-DiskANN、iRangeGraph三条§4.2原文明示比较关系；共33关系，不将项目类比伪造为作者继承。
+- [当前创新性审查](../researches/nested-attr-vector-search/2026-11-03-exps/alphaxiv-dag-novelty.md)明确Stitched局部图叠加、FD多入口OR共享搜索、LSSG单beam/bitmap、iRange自底向上和JAG预算的既有机制；具体DAG桥接组合仍未通过创新性确认，不宣称整方案已被某篇完整解决。
+- 8篇alphaXiv平台全文相关节与1篇额外作者原稿分来源归档；UNG/UniFilter目标正文仍缺，不伪造精读记录。实际运行资格标签归约，不新增ANN性能或作者复现实验。
