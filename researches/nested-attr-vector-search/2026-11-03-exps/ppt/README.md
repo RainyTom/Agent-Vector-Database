@@ -3,7 +3,7 @@
 10 页，16:9。当前版本 2026-11-03。
 
 - 成品：[hierarchical-hybrid-search-deck.pptx](hierarchical-hybrid-search-deck.pptx)
-- 生成脚本：[build_deck_v5.py](build_deck_v5.py)（python-pptx；文字均为可编辑文本框）
+- 生成脚本：[build_deck_v6.py](build_deck_v6.py)（python-pptx；文字、示意图与伪代码均为可编辑对象）
 - 版面检查：[check_deck.py](check_deck.py)（文字溢出、元素越界、文本框互相遮挡、图片超出页面）
 - 校徽：`njupt-logo.png`；示意图：`fig/`（来源与提示词见 [fig/PROMPTS.md](fig/PROMPTS.md)）
 
@@ -12,18 +12,22 @@
 | 页 | 内容 |
 |---|---|
 | 1 | 封面 |
-| 2 | 应用场景：ACM CCS 概念体系与两种检索语义（图 1，真实概念名与篇数） |
-| 3 | 两种语义的规模差异（直属篇数 / 含后代篇数，SciHTC 标注统计） |
+| 2 | 应用场景：ACM CCS 概念体系与两种检索语义（图 1） |
+| 3 | 两种语义的规模差异（直属 / 含后代，SciHTC 统计） |
 | 4 | 研究动机：概念范围摊平后，变更代价沿子树传播（图 2） |
 | 5 | 现有工作：仅列已发表工作 |
-| 6 | 索引形态：四个组成部分（图 3） |
-| 7 | 构建算法：算法 1 与参数、输出规模（图 4） |
-| 8 | 合并规则：代表点选择与出度控制 |
-| 9 | 查询算法：算法 2 |
-| 10 | 实验设置与结果、限制 |
+| 6 | 索引总览：四个组件与五个构建步骤 |
+| 7 | 步骤一：属性内局部图（图 3） |
+| 8 | 步骤二：代表点选择与两类代表递推（图 4） |
+| 9 | 步骤三：合并——输入组与四类边（图 5） |
+| 10 | 步骤四：沿 DAG 逐层推进（图 6） |
+| 11 | 步骤五：对称化、CSR 落盘与入口表（图 7） |
+| 12 | 构建算法汇总（算法 1 伪代码、参数、输出规模、自检项） |
+| 13 | 查询算法（算法 2 伪代码、执行性质） |
+| 14 | 实验设置与结果、限制 |
 
-先前两版（四卡片式；以 TrieHI 等未发表工作作为相关工作）已被本版替代，文件与脚本保留在 git 历史中。
-本版按“已发表”标准列相关工作：LSSG、JAG、EMA 与 TrieHI 均未确认正式发表，故不列入第 5 页，只在该页脚注说明。
+索引部分占 6 页：一页总览、五页分步（局部图 → 代表点 → 合并边类型 → 逐层推进 → 落盘），
+每页配一张示意图；第 12 页给完整伪代码作为汇总，不与分步图重复。
 
 ## 数字来源
 
@@ -42,7 +46,7 @@
 ## 重新生成
 
 ```bash
-python3 researches/nested-attr-vector-search/2026-11-03-exps/ppt/build_deck_v5.py \
+python3 researches/nested-attr-vector-search/2026-11-03-exps/ppt/build_deck_v6.py \
   --logo researches/nested-attr-vector-search/2026-11-03-exps/ppt/njupt-logo.png \
   --figdir researches/nested-attr-vector-search/2026-11-03-exps/ppt/fig \
   --out researches/nested-attr-vector-search/2026-11-03-exps/ppt/hierarchical-hybrid-search-deck.pptx
