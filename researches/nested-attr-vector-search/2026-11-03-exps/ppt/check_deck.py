@@ -49,6 +49,9 @@ def main():
             if x < -0.01 or y < -0.01 or x + w > W + 0.01 or y + h > H + 0.01:
                 problems.append(f'slide {idx}: {sh.name} outside slide '
                                 f'({x:.2f},{y:.2f},{w:.2f}x{h:.2f})')
+            if sh.shape_type == 13 and (x + w > W + 0.01 or y + h > H + 0.01):
+                problems.append(f'slide {idx}: picture {sh.name} exceeds slide '
+                                f'(bottom {y+h:.2f} in / right {x+w:.2f} in)')
             if not sh.has_text_frame:
                 continue
             body = sh.text_frame.text

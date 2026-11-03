@@ -1,69 +1,69 @@
-# 汇报用 PPT：层级属性约束下的向量检索
+# 汇报 PPT：层级属性约束下的向量混合搜索
 
-10 页，16:9，可直接打开编辑。生成日期 2026-11-03。
+10 页，16:9。当前版本 2026-11-03。
 
-- 成品：[dag-vector-search-deck.pptx](dag-vector-search-deck.pptx)
-- 生成脚本：[build_deck.py](build_deck.py)（python-pptx，纯形状，文字均可改）
-- 版面检查：[check_deck.py](check_deck.py)（文字溢出、越界、文本框互相遮挡）
-- 校徽：[njupt-logo.png](njupt-logo.png)
+- 成品：[hierarchical-hybrid-search-deck.pptx](hierarchical-hybrid-search-deck.pptx)
+- 生成脚本：[build_deck_v4.py](build_deck_v4.py)（python-pptx；文字均为可编辑文本框）
+- 版面检查：[check_deck.py](check_deck.py)（文字溢出、元素越界、文本框互相遮挡、图片超出页面）
+- 校徽：`njupt-logo.png`；示意图：`fig/`（来源与提示词见 [fig/PROMPTS.md](fig/PROMPTS.md)）
 
-## 页面顺序
+## 页面结构
 
 | 页 | 内容 |
 |---|---|
-| 1 | 封面：题目、副标题、校徽、日期 |
-| 2 | 研究背景：属性是 DAG、两种作用域、数据与属性都在变 |
-| 3 | 研究动机：逐属性局部图 / 全局图过滤 / 边摘要 三条路的问题 |
-| 4 | 研究问题：输入、合格集、三个子问题、约束（不改距离核/不量化） |
-| 5 | 方案总览：五步流程 + 与既有做法的关键差别 |
-| 6 | 索引建立①：属性内 HNSW（M=64, efC=200）与两类入口代表 |
-| 7 | 索引建立②：沿 DAG 逆拓扑组合，四类边与边数拆分 + 示意图 |
-| 8 | 两种查询：Direct / Recursive 对照 + 单队列搜索流程（b=0） |
-| 9 | 实测现状：4 个规模数字、按子图数 G 的加速比、三条边界 |
-| 10 | 已实现 / 未实现 / 下一步（按优先级）+ 一句结论 |
+| 1 | 封面 |
+| 2 | 研究动机：层级属性摊平后的递归更新代价（图 1） |
+| 3 | 现有工作：四种摊平方式及其更新代价 |
+| 4 | 现有工作：层级感知索引与动态维护 |
+| 5 | 问题定义：记号、合格集合、实验约束 |
+| 6 | 索引形态：四个组成部分与数据形态（图 2） |
+| 7 | 构建算法（算法 1 伪代码 + 参数与输出规模，图 3） |
+| 8 | 合并规则：代表点选择与出度控制（伪代码 + 边类型表 + 行度分布） |
+| 9 | 查询算法（算法 2 伪代码 + 执行性质） |
+| 10 | 实验设置与结果、限制 |
 
-## 数字来源（均可追溯到仓库）
+先前版本（`dag-vector-search-deck.pptx`，四卡片式排版、含大量说明性副标题）已被本版替代；该文件与对应脚本保留在 git 历史中。
+
+## 数字来源
 
 | 数字 | 来源 |
 |---|---|
-| 168,937 项、1,929 属性、2,040 边、103 多父、768 非空直属集合 | [构图交付文档](../../2026-11-02-exps/dag-composition-delivery.md) |
-| 5,697,634 有向边 = 本地 4,019,094 + 桥 1,652,935 + 快捷 25,605；最大行度 193；构建 7.99–8.21 s | [构建成本实测](../data/dag-update-cost/build-cost.csv) |
-| 6,589 入口条目 | 同上 `portals` 列 |
-| 每项祖先属性数 4.21（最大 11） | [更新成本模型](../data/dag-update-cost/update-cost-model.json) |
-| G 分组加速比 0.79 / 1.16 / 2.49 等 | [按子图数比较](../subgraph-efficiency-report.md)、[ratios.csv](../data/dag-subgraph-efficiency/analysis/ratios.csv) |
-| 距离调用只少 6%/5% | [原生工作量诊断](../direct-work-report.md) |
-| 单次换属主中位约 3.15×10⁵ 次距离计算 | [更新定位评估](../update-positioning.md) |
-| 创新性边界（Stitched/LSSG/UNG 等前序） | [alphaXiv 审查](../alphaxiv-dag-novelty.md) |
-
-第 9、10 页刻意保留“未证实”措辞：单属性更慢、G≥3 有召回下降、更新未实现。对外汇报时不要把这些数字改成总体胜出。
-
-## 校徽来源与替换
-
-`njupt-logo.png` 取自第三方标识镜像站（urongda.com，1024×1047 RGBA），SHA256 为
-`242611eac2115917faab4f186ce9d82bc8b5e3e1d274618d1b60f7b010a4b2df`。
-**不是学校宣传部发布的矢量原件**；正式对外使用请替换为 [宣传部下载区](https://xcb.njupt.edu.cn/) 的官方 SVG/AI 版本，文件名保持 `njupt-logo.png` 即可重跑脚本。
+| 1,929 属性 / 2,040 边 / 103 多父 / 深度 ≤ 6 / 扇出最大 18 | 本机统计 `work/dag-shape.json`（由 `work/dag-scope/workload-run1` 计算） |
+| 整库祖先位图 880,649 条；子树 MOVE 中位 576、p90 7,511、根 156,370（17.8%） | 同上脚本，按 PE-OFFLINE 口径计数 |
+| 5,697,634 有向边（本地 4,019,094 / 桥 1,652,935 / 快捷 25,605）；最大行度 193；构建 8.0–8.2 s | [构建成本实测](../data/dag-update-cost/build-cost.csv) |
+| 行度 中位 26 / p90 74 / p99 98 / 均值 33.7；>64 共 26,254 行、>128 共 122 行 | 同上 CSV 的 `deg_*` 列 |
+| 入口 6,589 条、非空属性 768 个 | 同上 |
+| 加速比 0.79 / 1.16 / 2.49（G = 1/2/3） | [按子图数比较](../subgraph-efficiency-report.md) |
+| 更新成本估算与失效条件 | [更新定位评估](../update-positioning.md) |
+| 前序与创新性边界 | [alphaXiv 审查](../alphaxiv-dag-novelty.md) |
 
 ## 重新生成
 
 ```bash
-python3 researches/nested-attr-vector-search/2026-11-03-exps/ppt/build_deck.py \
+python3 researches/nested-attr-vector-search/2026-11-03-exps/ppt/build_deck_v4.py \
   --logo researches/nested-attr-vector-search/2026-11-03-exps/ppt/njupt-logo.png \
-  --out researches/nested-attr-vector-search/2026-11-03-exps/ppt/dag-vector-search-deck.pptx
+  --figdir researches/nested-attr-vector-search/2026-11-03-exps/ppt/fig \
+  --out researches/nested-attr-vector-search/2026-11-03-exps/ppt/hierarchical-hybrid-search-deck.pptx
 python3 researches/nested-attr-vector-search/2026-11-03-exps/ppt/check_deck.py \
-  --deck researches/nested-attr-vector-search/2026-11-03-exps/ppt/dag-vector-search-deck.pptx
+  --deck researches/nested-attr-vector-search/2026-11-03-exps/ppt/hierarchical-hybrid-search-deck.pptx
 ```
 
-渲染核对（需要 LibreOffice 与 poppler）：
+渲染核对（需 LibreOffice 与 poppler）：
 
 ```bash
-soffice --headless --convert-to pdf --outdir work/ppt-njupt/render <pptx>
-pdftoppm -r 110 -png work/ppt-njupt/render/*.pdf work/ppt-njupt/render/slide
+soffice --headless --convert-to pdf --outdir /tmp/deck <pptx>
+pdftoppm -r 110 -png /tmp/deck/*.pdf /tmp/deck/slide
 ```
 
-本轮已实际执行：`check_deck.py` 报 `text_boxes_checked=160 problems=0`；LibreOffice 导出 10 页 PDF 并逐页转 PNG 人工查看，修正了封面校徽在深色底不可见、卡片过高留白、第 7 页结论行压框、第 8 页分隔条过重等问题。生成用的 LibreOffice/中文字体是本次为渲染核对新装的系统组件，PPT 文件本身不依赖它们。
+本轮已执行：`check_deck.py` 报 `text_boxes_checked=141 problems=0`；导出 PDF 并逐页转 PNG 检查，修掉了图片超出页面、图注压页码、表格列宽溢出与行距错位等问题。
 
-## 已知限制
+## 校徽来源
 
-- 字号按 PowerPoint 的 Microsoft YaHei 设定；在缺少该字体的机器上会用替代中文字体，行宽略有差异。
-- 第 7 页右侧 DAG 示意图是 5 节点示意，不是真实 1,929 节点拓扑。
-- 页面文字为可直接编辑的文本框，调整措辞后建议重跑 `check_deck.py`。
+`njupt-logo.png` 取自第三方标识镜像站（1024×1047 RGBA），SHA256 `242611eac2115917faab4f186ce9d82bc8b5e3e1d274618d1b60f7b010a4b2df`。
+不是学校宣传部矢量原件；对外使用请替换为[宣传部下载区](https://xcb.njupt.edu.cn/)的官方版本，文件名保持不变即可重跑脚本。
+
+## 限制
+
+- 字号按 Microsoft YaHei 设定，缺少该字体时行宽略有差异。
+- 示意图为结构示意，不对应真实拓扑或数据分布。
+- 第 10 页保留“单作用域更慢、G ≥ 3 部分样本召回 0.983–0.997、更新未实现”等限制，表述前需一致。
