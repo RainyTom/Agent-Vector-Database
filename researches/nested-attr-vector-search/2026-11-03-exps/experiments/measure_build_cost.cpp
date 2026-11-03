@@ -17,11 +17,21 @@ int main(int argc, char** argv) try {
     std::ofstream out(argv[3]);
     require(bool(out), "cannot write evidence");
     out << std::setprecision(15);
+    std::vector<size_t> degrees;
+    degrees.reserve(graph.edges.size());
+    for (const auto& row : graph.edges) degrees.push_back(row.size());
+    std::sort(degrees.begin(), degrees.end());
+    auto pct = [&](double q) { return degrees[std::min(degrees.size() - 1, size_t(q * degrees.size()))]; };
+    size_t over64 = 0, over128 = 0;
+    for (size_t d : degrees) { over64 += d > 64; over128 += d > 128; }
     out << "items,attributes,edges,nonempty_local,portals,total_directed_edges,max_row,"
-           "local_edges,connector_edges,jump_edges,build_ms\n";
+           "local_edges,connector_edges,jump_edges,build_ms,"
+           "deg_p50,deg_p90,deg_p99,deg_mean,rows_over64,rows_over128\n";
     out << base.n << ',' << w.members.size() << ',' << w.owner.size() << ',' << nonempty << ',' << portals
         << ',' << edges << ',' << max_row << ',' << graph.local_edges << ',' << graph.connector_edges
-        << ',' << graph.jump_edges << ',' << build / 1000.0 << '\n';
+        << ',' << graph.jump_edges << ',' << build / 1000.0 << ','
+        << pct(0.5) << ',' << pct(0.9) << ',' << pct(0.99) << ','
+        << double(edges) / double(base.n) << ',' << over64 << ',' << over128 << '\n';
     std::cout << "build_ms=" << build / 1000.0 << " edges=" << edges << " portals=" << portals
               << " local=" << graph.local_edges << " connector=" << graph.connector_edges
               << " jump=" << graph.jump_edges << std::endl;
