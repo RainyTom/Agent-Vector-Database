@@ -147,113 +147,156 @@ def build(logo, out, figdir):
 
     # ---------------------------------------------------------------- 2
     s = blank(prs)
-    header(s, '研究动机', logo, 2, '层级属性被摊平后，属性更新的代价沿子树传播')
-    s.shapes.add_picture(str(fig('motivation.png')), Inches(7.55), Inches(1.45), width=Inches(5.15))
-    caption(s, Inches(7.55), Inches(4.62), Inches(5.15), '图 1', '层级结构摊平为扁平谓词的示意')
-    lines = [
-        ('现有工作将层级作用域转换为扁平谓词：查询期展开 ID 列表（PE-ONLINE），写入期展开祖先位图（TrieHI、PE-OFFLINE），'
-         '或编码为区间（iRangeGraph）与标签集合（LSSG、UNG、EMA）。', {}),
-        ('扁平表示写入索引后，一次属性变更需重写子树内全部条目。以本数据为例，整库祖先位图共 880,649 条；'
-         '一次子树 MOVE 需重写的中位数为 576 条，p90 为 7,511 条，根子树为 156,370 条，占全库 17.8%。', {}),
-        ('重命名同样触发重写：路径键包含名称。图侧另有代价：边摘要需 patch 或重建，谓词增强图需修改邻接。', {}),
-    ]
-    text(s, Inches(0.62), Inches(1.5), Inches(6.6), Inches(2.6), lines, size=11, space=9, line=1.25)
-    panel(s, Inches(0.62), Inches(4.05), Inches(6.6), Inches(1.05))
-    text(s, Inches(0.82), Inches(4.16), Inches(6.2), Inches(0.86),
-         [('本方案的取舍', {'size': 11.5, 'bold': True, 'color': BLUE}),
-          ('层级关系不写入索引。属性集合在查询时编译为 allowed 掩码；图只表示向量邻接。'
-           '重命名不产生图写入，MOVE 只更新祖先闭包集合。', {'size': 11})], size=11, space=6)
-    rule(s, Inches(0.62), Inches(5.95), Inches(12.1))
-    text(s, Inches(0.62), Inches(6.08), Inches(12.1), Inches(0.6),
-         [('由此确定两个设计问题：单张图能否同时服务两种作用域语义；合并规则能否在不重建索引的前提下保持可用。',
-           {'size': 11})], size=11)
+    header(s, '应用场景：ACM CCS 概念体系上的检索', logo, 2,
+           '论文按 CCS 路径标注，检索限定在某个概念及其后代之内')
+    rows = [('Information systems', 0, '4,440 / 31,810', False),
+            ('Information retrieval', 1, '3,722 / 10,881', False),
+            ('Document representation', 2, '1,579 / 1,647', False),
+            ('Retrieval models and ranking', 2, '1,373 / 1,373', False),
+            ('Search engine architectures and scalability', 2, '0 / 522', True)]
+    geom = []
+    for i, (name, depth, cnt, hot) in enumerate(rows):
+        x = Inches(0.62 + depth * 0.42)
+        y = Inches(1.48 + i * 0.72)
+        w = Inches(5.0 - depth * 0.42)
+        panel(s, x, y, w, Inches(0.56), fill=WHITE, border=ORANGE if hot else RULE)
+        text(s, x + Inches(0.1), y + Inches(0.05), w - Inches(0.2), Inches(0.22),
+             [(name, {'size': 8.5, 'bold': True, 'color': ORANGE if hot else BLUE})], size=8.5)
+        text(s, x + Inches(0.1), y + Inches(0.29), w - Inches(0.2), Inches(0.2),
+             [(cnt, {'size': 8, 'color': GRAY, 'latin': MONO})], size=8)
+        geom.append((x, y, w))
+    def elbow(parent_i, child_is, color_map=None):
+        px, py, pw = geom[parent_i]
+        bar_x = Emu(int(px + Inches(0.18)))
+        top = Emu(int(py + Inches(0.56)))
+        bottoms = [Emu(int(geom[j][1] + Inches(0.28))) for j in child_is]
+        ln = s.shapes.add_connector(1, bar_x, top, bar_x, max(bottoms))
+        ln.line.color.rgb = GRAY
+        ln.line.width = Pt(0.75)
+        for j, by in zip(child_is, bottoms):
+            cx = geom[j][0]
+            stub = s.shapes.add_connector(1, bar_x, by, Emu(int(cx)), by)
+            hot = color_map and color_map(j)
+            stub.line.color.rgb = ORANGE if hot else GRAY
+            stub.line.width = Pt(0.75)
+
+    elbow(0, [1])
+    elbow(1, [2, 3, 4], color_map=lambda j: rows[j][3])
+    caption(s, Inches(0.62), Inches(5.12), Inches(6.0), '图 1', 'CCS 分支；数值为直属篇数 / 含后代篇数')
+    text(s, Inches(0.62), Inches(5.42), Inches(6.15), Inches(1.5),
+         [('标注数据为 SciHTC：186,160 篇论文各带一条 CCS 路径，路径覆盖 816 个概念，其中 26 个概念有两个父节点'
+           '（如 Virtual reality 同属 Graphics systems and interfaces 与 Interaction paradigms）。', {'size': 9.5}),
+          ('内部概念可以没有直属论文：Search engine architectures and scalability 直属 0 篇、含后代 522 篇。',
+           {'size': 9.5, 'color': ORANGE})], size=9.5, space=5)
+    text(s, Inches(7.05), Inches(1.42), Inches(5.65), Inches(0.26), ['两种检索语义'], size=11, bold=True, color=BLUE)
+    text(s, Inches(7.05), Inches(1.74), Inches(5.65), Inches(1.75),
+         [('非递归（direct）', {'size': 10, 'bold': True}),
+          ('S_dir(a) = { x | owner(x) = a }', {'size': 10, 'latin': MONO}),
+          ('Information retrieval 取到 3,722 篇', {'size': 9, 'color': GRAY}),
+          ('递归（recursive）', {'size': 10, 'bold': True}),
+          ('S_rec(a) = { x | owner(x) ∈ Desc*(a) }', {'size': 10, 'latin': MONO}),
+          ('同一概念取到 10,881 篇', {'size': 9, 'color': GRAY})], size=10, space=5)
+    panel(s, Inches(7.05), Inches(3.62), Inches(5.65), Inches(1.55))
+    text(s, Inches(7.22), Inches(3.74), Inches(5.35), Inches(1.35),
+         [('查询形式', {'size': 10, 'bold': True, 'color': BLUE}),
+          ('q = (v, A, σ, k)', {'size': 10, 'latin': MONO}),
+          ('v 为查询向量，A ⊆ C 为概念集合（多概念取并），σ ∈ {direct, recursive}；', {'size': 9.5}),
+          ('返回 S_σ(A) 中距 v 最近的 k 个向量。', {'size': 9.5})], size=9.5, space=5)
+    text(s, Inches(7.05), Inches(5.35), Inches(5.65), Inches(1.2),
+         [('索引工作负载另按完整 CCS 树构造：1,929 个概念、2,040 条边、103 个多父概念；'
+           '168,937 篇论文按单一直属概念绑定并与随机向量配对。', {'size': 9, 'color': LIGHTGRAY})], size=9)
 
     # ---------------------------------------------------------------- 3
     s = blank(prs)
-    header(s, '现有工作：层级属性的四种摊平方式', logo, 3)
-    cols = [Inches(1.9), Inches(3.0), Inches(3.7), Inches(3.4)]
-    heads = ['方式', '代表工作', '摊平结果', '更新代价']
+    header(s, '两种语义的规模差异', logo, 3, '同一概念下，递归范围通常为直属范围的 2–7 倍')
+    cols = [Inches(3.55), Inches(2.0), Inches(2.2), Inches(1.6)]
+    heads = ['概念', '直属篇数', '含后代篇数', '倍数']
     x = Inches(0.62)
     for w, hd in zip(cols, heads):
-        text(s, x, Inches(1.35), w - Inches(0.1), Inches(0.26), [hd], size=10.5, bold=True, color=BLUE)
+        text(s, x, Inches(1.4), w - Inches(0.1), Inches(0.26), [hd], size=10, bold=True, color=BLUE)
         x += w
-    rule(s, Inches(0.62), Inches(1.66), Inches(12.0), color=BLUE, weight=1.0)
-    rows = [('查询期展开', 'PE-ONLINE；向量库的 IN 列表谓词', '子树 → OR 谓词或 ID 列表', '每次查询重新解析；子树大时谓词规模上升'),
-            ('写入期展开', 'TrieHI、PE-OFFLINE', 'item 写入其全部祖先位图', '子树 MOVE 重写 576–156,370 条'),
-            ('区间化', 'iRangeGraph、SeRF', '子树 → 若干有序区间', '有序结构维护困难；重排后区间失效'),
-            ('标签与虚拟谓词', 'LSSG、Curator、UNG、EMA', '层级 → 标签集合或虚拟标签位', '按位或只增不减，需 patch 或重建')]
+    rule(s, Inches(0.62), Inches(1.7), Inches(10.2), color=BLUE)
+    rows = [('Information systems', '4,440', '31,810', '7.2x'),
+            ('Information retrieval', '3,722', '10,881', '2.9x'),
+            ('Machine learning', '1,605', '3,193', '2.0x'),
+            ('Computer vision', '435', '3,209', '7.4x'),
+            ('Search engine architectures and scalability', '0', '522', '-')]
     for r, row in enumerate(rows):
-        y = Inches(1.76 + r * 0.72)
-        rule(s, Inches(0.62), y, Inches(12.0))
+        y = Inches(1.78 + r * 0.46)
+        rule(s, Inches(0.62), y, Inches(10.2))
         x = Inches(0.62)
         for c, cell in enumerate(row):
-            text(s, x, y + Inches(0.03), cols[c] - Inches(0.12), Inches(0.5), [cell], size=10,
-                 bold=(c == 0), color=BLUE if c == 0 else DARK)
+            hot = (c == 1 and cell == '0') or (c == 3 and cell == '-')
+            text(s, x, y + Inches(0.06), cols[c] - Inches(0.12), Inches(0.3), [cell], size=9.5,
+                 color=ORANGE if hot else DARK)
             x += cols[c]
-    rule(s, Inches(0.62), Inches(4.68), Inches(12.0))
-    text(s, Inches(0.62), Inches(4.86), Inches(12.1), Inches(1.5),
-         [('三点归纳', {'size': 11, 'bold': True, 'color': BLUE}),
-          ('1. 四类方法均把层级压缩为扁平谓词，因而可以复用已有的 filtered ANN 执行器。', {'size': 10.5}),
-          ('2. 代价转移至属性更新：子树内每个对象的扁平表示都需修改，成本随深度与扇出增长。', {'size': 10.5}),
-          ('3. 图增强方法（ACORN、Filtered-DiskANN）把谓词写入邻域，更新时需同时修改边。', {'size': 10.5})],
-         size=10.5, space=4)
+    text(s, Inches(11.0), Inches(1.4), Inches(1.7), Inches(0.26), ['说明'], size=10, bold=True, color=BLUE)
+    text(s, Inches(11.0), Inches(1.72), Inches(1.7), Inches(2.6),
+         [('倍数 = 含后代 ÷ 直属', {'size': 8.5, 'color': GRAY}),
+          ('直属为 0 时无法定义，记“-”', {'size': 8.5, 'color': GRAY}),
+          ('来源：SciHTC 标注路径', {'size': 8.5, 'color': GRAY})], size=8.5, space=8)
+    rule(s, Inches(0.62), Inches(4.85), Inches(12.1))
+    text(s, Inches(0.62), Inches(5.0), Inches(12.1), Inches(1.8),
+         [('三点观察', {'size': 10.5, 'bold': True, 'color': BLUE}),
+          ('1. 两种语义的结果集不同，不能用一方替代另一方：递归包含后代概念下的论文，非递归不包含。', {'size': 10}),
+          ('2. 越靠近上层倍数越大；内部概念可能没有直属论文，非递归检索返回空集。', {'size': 10}),
+          ('3. 概念体系存在多父：26 个概念有两条父链，后代集合互相重叠，不能按树处理。', {'size': 10})],
+         size=10, space=5)
 
     # ---------------------------------------------------------------- 4
     s = blank(prs)
-    header(s, '现有工作：层级感知索引与动态维护', logo, 4)
-    text(s, Inches(0.62), Inches(1.3), Inches(5.9), Inches(0.26), ['层级感知'], size=11, bold=True, color=BLUE)
-    text(s, Inches(6.75), Inches(1.3), Inches(5.9), Inches(0.26), ['动态维护'], size=11, bold=True, color=ORANGE)
-    left = [('TrieHI', '前缀树解析 recursive 与 non-recursive 作用域，不改变 ANN 索引布局', '单父树；多父 DAG 需先选路径'),
-            ('UNG', '按标签集分组构建组内图，依据标签包含 DAG 增加跨组边', '正文未取得，仅核对作者实现与海报'),
-            ('LSSG', '单张多 tier 图，tier 由标签集相似度分层；合法多入口与单 beam', 'tier 与语义层级无关；不含祖先闭包')]
-    right = [('EMA', '边级 Marker 汇总属性，惰性删除配合 patch', '属性更新做按位或，旧位不回收'),
-             ('动态 range 系列', 'DIGRA、RangePQ+、Peng 等支持数值属性更新', '数值区间；正文未读，仅记录存在'),
-             ('静态索引（MCI 表 1）', '多处方法标注为不支持构建后更新', '与本方案谓词在图外的设计形成对照')]
-    for col, items in enumerate((left, right)):
-        base_x = Inches(0.62 + col * 6.13)
-        for i, (nm, mech, lim) in enumerate(items):
-            y = Inches(1.62 + i * 1.28)
-            rule(s, base_x, y, Inches(5.85))
-            text(s, base_x, y + Inches(0.08), Inches(5.85), Inches(0.24), [nm], size=10.5, bold=True,
-                 color=BLUE if col == 0 else ORANGE)
-            text(s, base_x, y + Inches(0.34), Inches(5.85), Inches(0.36), [mech], size=10, color=DARK)
-            text(s, base_x, y + Inches(0.72), Inches(5.85), Inches(0.3),
-                 [('局限：' + lim, {'size': 9.5, 'color': LIGHTGRAY})], size=9.5)
-    rule(s, Inches(0.62), Inches(5.62), Inches(12.1))
-    text(s, Inches(0.62), Inches(5.74), Inches(12.1), Inches(1.2),
-         [('已检索文献中，尚无工作同时覆盖两种层级作用域、单张共享图与低维护成本的属性更新。'
-           'TrieHI 维护成本低但不共享图；UNG 与 LSSG 共享图但未处理更新；EMA 处理更新但属性为扁平谓词。',
-           {'size': 10.5})], size=10.5)
+    header(s, '研究动机', logo, 4, '概念范围被摊平写入索引后，概念变更的代价沿子树传播')
+    s.shapes.add_picture(str(fig('motivation.png')), Inches(7.55), Inches(1.45), width=Inches(5.15))
+    caption(s, Inches(7.55), Inches(4.62), Inches(5.15), '图 2', '层级结构摊平为扁平谓词的示意')
+    text(s, Inches(0.62), Inches(1.5), Inches(6.6), Inches(2.6),
+         [('现有工作把概念范围转换为扁平谓词：查询期展开 ID 列表，写入期展开祖先位图，或编码为区间与标签集合。', {}),
+          ('扁平表示写入索引后，一次概念变更需重写子树内全部条目。以本工作负载为例，整库祖先位图共 880,649 条；'
+           '一次子树 MOVE 需重写的中位数 576 条，p90 为 7,511 条，根子树 156,370 条，占全库 17.8%。', {}),
+          ('重命名同样触发重写：路径键包含名称。图侧另有代价：边摘要需 patch 或重建。', {})],
+         size=11, space=9, line=1.25)
+    panel(s, Inches(0.62), Inches(4.05), Inches(6.6), Inches(1.05))
+    text(s, Inches(0.82), Inches(4.16), Inches(6.2), Inches(0.86),
+         [('本方案的取舍', {'size': 11, 'bold': True, 'color': BLUE}),
+          ('概念集合不写入索引。属性在查询时编译为 allowed 掩码；图只表示向量邻接。', {'size': 10.5})], size=10.5, space=5)
+    rule(s, Inches(0.62), Inches(5.4), Inches(12.1))
+    text(s, Inches(0.62), Inches(5.55), Inches(12.1), Inches(0.6),
+         [('由此确定两个设计问题：单张图能否同时服务两种检索语义；合并规则能否在不重建索引的前提下保持可用。',
+           {'size': 11})], size=11)
 
     # ---------------------------------------------------------------- 5
     s = blank(prs)
-    header(s, '问题定义', logo, 5)
-    text(s, Inches(0.62), Inches(1.3), Inches(6.0), Inches(2.5),
-         [('记号', {'size': 11, 'bold': True, 'color': BLUE}),
-          ('V = {x_i}：d 维向量集合，|V| = n', {'size': 10.5, 'latin': MONO}),
-          ('G = (C, E)：属性有向无环图，|C| = m', {'size': 10.5, 'latin': MONO}),
-          ('owner(x) ∈ C：对象的直属属性', {'size': 10.5, 'latin': MONO}),
-          ('Desc*(a)：a 及其全部后代属性', {'size': 10.5, 'latin': MONO}),
-          ('q = (v, A, σ, k)：A ⊆ C，σ ∈ {direct, recursive}', {'size': 10.5, 'latin': MONO})], size=10.5, space=6)
-    text(s, Inches(6.75), Inches(1.3), Inches(6.0), Inches(2.5),
-         [('合格集合', {'size': 11, 'bold': True, 'color': ORANGE}),
-          ('S_dir(A) = { x | owner(x) ∈ A }', {'size': 10.5, 'latin': MONO}),
-          ('S_rec(A) = { x | owner(x) ∈ ∪_{a∈A} Desc*(a) }', {'size': 10.5, 'latin': MONO}),
-          ('输出：S_σ(A) 中距 v 最近的 k 个向量（近似）', {'size': 10.5}),
-          ('评价：query-average Recall@k 与查询时延', {'size': 10.5})], size=10.5, space=6)
-    rule(s, Inches(0.62), Inches(3.9), Inches(12.1))
-    text(s, Inches(0.62), Inches(4.02), Inches(12.1), Inches(2.0),
-         [('实验约束', {'size': 11, 'bold': True, 'color': BLUE}),
-          ('距离函数固定为 128 维 FP32 平方欧氏距离，AVX 实现；不使用量化、不引入第二层近似。', {'size': 10.5}),
-          ('ground truth 在规定作用域内精确计算，分母取 min(k, |S_σ(A)|)；空作用域结果单独统计，不并入均值。', {'size': 10.5}),
-          ('属性与向量为随机绑定：本数据可验证结构行为，不构成属性—向量相关性的结论。', {'size': 10.5})],
-         size=10.5, space=6)
+    header(s, '现有工作（仅列已发表）', logo, 5)
+    cols = [Inches(2.85), Inches(2.3), Inches(3.6), Inches(3.25)]
+    heads = ['工作', '发表', '机制', '与本问题的关系']
+    x = Inches(0.62)
+    for w, hd in zip(cols, heads):
+        text(s, x, Inches(1.35), w - Inches(0.1), Inches(0.26), [hd], size=10, bold=True, color=BLUE)
+        x += w
+    rule(s, Inches(0.62), Inches(1.64), Inches(12.0), color=BLUE)
+    rows = [('ACORN', 'SIGMOD 2024', '谓词子图遍历，加密 HNSW 邻域', '谓词无关；层级需自行编码'),
+            ('Filtered-DiskANN', 'WWW 2023', '过滤感知构图；按标签建图后拼接', '单标签或析取；不处理层级闭包'),
+            ('iRangeGraph', 'SIGMOD 2025', '分段树上的范围专用图', '数值区间；非多父概念闭包'),
+            ('UNG', 'SIGMOD 2025', '按标签集分组，依包含 DAG 加跨组边', '最接近；未讨论属性更新'),
+            ('Curator', 'SIGMOD 2026', '共享聚类树上的分组索引', '基于划分；不共享图邻接'),
+            ('TFANNS', 'ICDE 2025', '标签图与共享度数预算', '标签合取；块内共享，非概念 DAG'),
+            ('动态范围检索', 'PVLDB 2025', '支持数值属性更新的范围索引', '数值区间；未读正文，仅记录存在')]
+    for r, row in enumerate(rows):
+        y = Inches(1.72 + r * 0.56)
+        rule(s, Inches(0.62), y, Inches(12.0))
+        x = Inches(0.62)
+        for c, cell in enumerate(row):
+            text(s, x, y + Inches(0.05), cols[c] - Inches(0.12), Inches(0.42), [cell], size=9.5,
+                 bold=(c == 0), color=BLUE if c == 0 else DARK)
+            x += cols[c]
+    text(s, Inches(0.62), Inches(6.5), Inches(12.1), Inches(0.5),
+         [('未列入：LSSG、JAG、EMA 等未见正式发表；TrieHI（Directory-Aware）发表状态未核实，故不在相关工作列出。'
+           '结论只引用已发表版本。', {'size': 9, 'color': LIGHTGRAY})], size=9)
 
     # ---------------------------------------------------------------- 6
     s = blank(prs)
     header(s, '索引形态', logo, 6, '单层平面邻接，加两张派生入口表；层级仅出现在入口与掩码中')
     s.shapes.add_picture(str(fig('morphology.png')), Inches(0.62), Inches(1.42), width=Inches(6.35))
-    caption(s, Inches(0.62), Inches(5.02), Inches(6.35), '图 2', '属性组、代表点与合并后的单层邻接')
+    caption(s, Inches(0.62), Inches(5.02), Inches(6.35), '图 3', '属性组、代表点与合并后的单层邻接')
     rows = [('局部图 L(c)', '每个非空直属集合一个 HNSW：M = 64，efC = 200，level-0 容量 2M = 128', '768'),
             ('入口表 S_dir / S_sub', 'attr → 至多 8 个真实 item，倒排数组', '6,589'),
             ('邻接 row(u)', '本地 level-0 边、桥边、快捷边对称化去重', '5,697,634 边'),
@@ -304,7 +347,7 @@ def build(logo, out, figdir):
           ('快捷边 25,605', {'size': 9.5, 'latin': MONO}),
           ('构建时间 8.0–8.2 s', {'size': 9.5})], size=9.5, space=5)
     s.shapes.add_picture(str(fig('merge.png')), Inches(0.62), Inches(4.82), width=Inches(3.55))
-    caption(s, Inches(0.62), Inches(6.74), Inches(3.6), '图 3', '选点、桥接与合并')
+    caption(s, Inches(0.62), Inches(6.74), Inches(3.6), '图 4', '选点、桥接与合并')
     text(s, Inches(4.45), Inches(4.95), Inches(8.3), Inches(1.45),
          [('第 9–13 行只生成组间接口；本地 level-0 边在第 15 行并入，保边不减边。默认不做全局出度剪枝，'
            '合并后最大行度 193。', {'size': 10}),

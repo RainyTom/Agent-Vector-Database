@@ -3,7 +3,7 @@
 10 页，16:9。当前版本 2026-11-03。
 
 - 成品：[hierarchical-hybrid-search-deck.pptx](hierarchical-hybrid-search-deck.pptx)
-- 生成脚本：[build_deck_v4.py](build_deck_v4.py)（python-pptx；文字均为可编辑文本框）
+- 生成脚本：[build_deck_v5.py](build_deck_v5.py)（python-pptx；文字均为可编辑文本框）
 - 版面检查：[check_deck.py](check_deck.py)（文字溢出、元素越界、文本框互相遮挡、图片超出页面）
 - 校徽：`njupt-logo.png`；示意图：`fig/`（来源与提示词见 [fig/PROMPTS.md](fig/PROMPTS.md)）
 
@@ -12,24 +12,26 @@
 | 页 | 内容 |
 |---|---|
 | 1 | 封面 |
-| 2 | 研究动机：层级属性摊平后的递归更新代价（图 1） |
-| 3 | 现有工作：四种摊平方式及其更新代价 |
-| 4 | 现有工作：层级感知索引与动态维护 |
-| 5 | 问题定义：记号、合格集合、实验约束 |
-| 6 | 索引形态：四个组成部分与数据形态（图 2） |
-| 7 | 构建算法（算法 1 伪代码 + 参数与输出规模，图 3） |
-| 8 | 合并规则：代表点选择与出度控制（伪代码 + 边类型表 + 行度分布） |
-| 9 | 查询算法（算法 2 伪代码 + 执行性质） |
+| 2 | 应用场景：ACM CCS 概念体系与两种检索语义（图 1，真实概念名与篇数） |
+| 3 | 两种语义的规模差异（直属篇数 / 含后代篇数，SciHTC 标注统计） |
+| 4 | 研究动机：概念范围摊平后，变更代价沿子树传播（图 2） |
+| 5 | 现有工作：仅列已发表工作 |
+| 6 | 索引形态：四个组成部分（图 3） |
+| 7 | 构建算法：算法 1 与参数、输出规模（图 4） |
+| 8 | 合并规则：代表点选择与出度控制 |
+| 9 | 查询算法：算法 2 |
 | 10 | 实验设置与结果、限制 |
 
-先前版本（`dag-vector-search-deck.pptx`，四卡片式排版、含大量说明性副标题）已被本版替代；该文件与对应脚本保留在 git 历史中。
+先前两版（四卡片式；以 TrieHI 等未发表工作作为相关工作）已被本版替代，文件与脚本保留在 git 历史中。
+本版按“已发表”标准列相关工作：LSSG、JAG、EMA 与 TrieHI 均未确认正式发表，故不列入第 5 页，只在该页脚注说明。
 
 ## 数字来源
 
 | 数字 | 来源 |
 |---|---|
-| 1,929 属性 / 2,040 边 / 103 多父 / 深度 ≤ 6 / 扇出最大 18 | 本机统计 `work/dag-shape.json`（由 `work/dag-scope/workload-run1` 计算） |
-| 整库祖先位图 880,649 条；子树 MOVE 中位 576、p90 7,511、根 156,370（17.8%） | 同上脚本，按 PE-OFFLINE 口径计数 |
+| 1,929 概念 / 2,040 边 / 103 多父 / 深度 ≤ 6 / 扇出最大 18 | 本机统计，已归档为 [dag-shape.json](../data/dag-update-cost/dag-shape.json) |
+| 整库祖先位图 880,649 条；子树 MOVE 中位 576、p90 7,511、根 156,370（17.8%） | 同上，按 PE-OFFLINE 口径计数 |
+| SciHTC 186,160 篇、816 个概念、26 个多父；Information retrieval 3,722/10,881 等 | [ccs-scenario-stats.json](../data/ccs-scenario-stats.json)，由 [ccs_scenario_stats.py](../experiments/ccs_scenario_stats.py) 生成 |
 | 5,697,634 有向边（本地 4,019,094 / 桥 1,652,935 / 快捷 25,605）；最大行度 193；构建 8.0–8.2 s | [构建成本实测](../data/dag-update-cost/build-cost.csv) |
 | 行度 中位 26 / p90 74 / p99 98 / 均值 33.7；>64 共 26,254 行、>128 共 122 行 | 同上 CSV 的 `deg_*` 列 |
 | 入口 6,589 条、非空属性 768 个 | 同上 |
@@ -40,7 +42,7 @@
 ## 重新生成
 
 ```bash
-python3 researches/nested-attr-vector-search/2026-11-03-exps/ppt/build_deck_v4.py \
+python3 researches/nested-attr-vector-search/2026-11-03-exps/ppt/build_deck_v5.py \
   --logo researches/nested-attr-vector-search/2026-11-03-exps/ppt/njupt-logo.png \
   --figdir researches/nested-attr-vector-search/2026-11-03-exps/ppt/fig \
   --out researches/nested-attr-vector-search/2026-11-03-exps/ppt/hierarchical-hybrid-search-deck.pptx
@@ -65,5 +67,5 @@ pdftoppm -r 110 -png /tmp/deck/*.pdf /tmp/deck/slide
 ## 限制
 
 - 字号按 Microsoft YaHei 设定，缺少该字体时行宽略有差异。
-- 示意图为结构示意，不对应真实拓扑或数据分布。
+- 图 1 为 CCS 概念的缩进树示意，节点名为真实概念，篇数取自 SciHTC 标注；图 2–4 为示意图，不对应真实拓扑。
 - 第 10 页保留“单作用域更慢、G ≥ 3 部分样本召回 0.983–0.997、更新未实现”等限制，表述前需一致。

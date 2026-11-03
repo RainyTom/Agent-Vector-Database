@@ -1,0 +1,124 @@
+#!/usr/bin/env python3
+"""v4 deck: neutral academic wording, figure plates from image generation,
+pseudocode without rationale blocks.
+"""
+import argparse
+from pathlib import Path
+
+from pptx import Presentation
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE
+from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
+from pptx.util import Emu, Inches, Pt
+
+BLUE = RGBColor(0x1F, 0x3F, 0x86)
+MIST = RGBColor(0xF2, 0xF4, 0xF8)
+ORANGE = RGBColor(0xB5, 0x5A, 0x1E)
+GRAY = RGBColor(0x4C, 0x51, 0x5C)
+LIGHTGRAY = RGBColor(0x77, 0x7C, 0x86)
+DARK = RGBColor(0x1A, 0x1D, 0x24)
+WHITE = RGBColor(0xFF, 0xFF, 0xFF)
+RULE = RGBColor(0xB8, 0xC2, 0xD4)
+CODEBG = RGBColor(0xF6, 0xF7, 0xF9)
+FONT = 'Microsoft YaHei'
+MONO = 'Consolas'
+W, H = Inches(13.333), Inches(7.5)
+
+
+def _paint(run, size, bold, color, latin, italic=False):
+    f = run.font
+    f.size = Pt(size)
+    f.bold = bold
+    f.italic = italic
+    f.color.rgb = color
+    f.name = latin
+    rPr = run._r.get_or_add_rPr()
+    ns = '{http://schemas.openxmlformats.org/drawingml/2006/main}'
+    for tag in ('ea', 'cs'):
+        el = rPr.find(ns + tag)
+        if el is None:
+            el = rPr.makeelement(ns + tag, {})
+            rPr.append(el)
+        el.set('typeface', FONT)
+
+
+def text(slide, x, y, w, h, lines, size=12, bold=False, color=DARK, align=PP_ALIGN.LEFT,
+         anchor=MSO_ANCHOR.TOP, space=4, latin=FONT, line=None):
+    tb = slide.shapes.add_textbox(x, y, w, h)
+    tf = tb.text_frame
+    tf.word_wrap = True
+    tf.vertical_anchor = anchor
+    tf.margin_left = tf.margin_right = Emu(0)
+    tf.margin_top = tf.margin_bottom = Emu(0)
+    for i, item in enumerate(lines):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.alignment = align
+        p.space_after = Pt(space)
+        if line:
+            p.line_spacing = line
+        content, opts = item if isinstance(item, tuple) else (item, {})
+        run = p.add_run()
+        run.text = content
+        _paint(run, opts.get('size', size), opts.get('bold', bold), opts.get('color', color),
+               opts.get('latin', latin), opts.get('italic', False))
+    return tb
+
+
+def rule(slide, x, y, w, color=RULE, weight=0.75):
+    ln = slide.shapes.add_connector(1, x, y, x + w, y)
+    ln.line.color.rgb = color
+    ln.line.width = Pt(weight)
+
+
+def panel(slide, x, y, w, h, fill=MIST, border=RULE):
+    s = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, x, y, w, h)
+    s.fill.solid()
+    s.fill.fore_color.rgb = fill
+    s.line.color.rgb = border
+    s.line.width = Pt(0.75)
+    s.shadow.inherit = False
+    return s
+
+
+def arrow(slide, x1, y1, x2, y2, color=GRAY, width=1.0):
+    ln = slide.shapes.add_connector(1, x1, y1, x2, y2)
+    ln.line.color.rgb = color
+    ln.line.width = Pt(width)
+    body = ln.line._get_or_add_ln()
+    head = body.makeelement('{http://schemas.openxmlformats.org/drawingml/2006/main}tailEnd', {})
+    head.set('type', 'triangle')
+    body.append(head)
+    return ln
+
+
+def pseudocode(slide, x, y, w, h, lines, title, size=9.5):
+    panel(slide, x, y, w, h, fill=CODEBG, border=RULE)
+    pad = Inches(0.14)
+    text(slide, x + pad, y + Inches(0.09), w - 2*pad, Inches(0.24),
+         [(title, {'size': 9.5, 'bold': True, 'color': BLUE})], size=9.5)
+    body = [(f'{i:>2}  {ln}', {'size': size, 'latin': MONO}) for i, ln in enumerate(lines, 1)]
+    text(slide, x + pad, y + Inches(0.37), w - 2*pad, h - Inches(0.45), body,
+         size=size, space=1.5, latin=MONO)
+
+
+def header(slide, title, logo, number, subtitle=None):
+    text(slide, Inches(0.62), Inches(0.42), Inches(10.4), Inches(0.5), [title], size=23, bold=True, color=BLUE)
+    rule(slide, Inches(0.62), Inches(1.0), Inches(12.1), color=RULE, weight=1.0)
+    if subtitle:
+        text(slide, Inches(0.62), Inches(1.08), Inches(11.6), Inches(0.3), [subtitle],
+             size=10.5, color=LIGHTGRAY)
+    if logo:
+        slide.shapes.add_picture(str(logo), Inches(11.85), Inches(0.36), height=Inches(0.56))
+    text(slide, Inches(0.62), Inches(7.08), Inches(1.2), Inches(0.26), [str(number)],
+         size=9, color=LIGHTGRAY)
+
+
+def blank(prs):
+    return prs.slides.add_slide(prs.slide_layouts[6])
+
+
+def caption(slide, x, y, w, label, note=''):
+    text(slide, x, y, w, Inches(0.28),
+         [(label + ('   ' + note if note else ''), {'size': 9, 'color': LIGHTGRAY, 'italic': False})], size=9)
+
+
