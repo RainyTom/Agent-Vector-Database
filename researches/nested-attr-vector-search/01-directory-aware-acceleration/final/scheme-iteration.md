@@ -338,3 +338,57 @@ IVM 的 delta 规则能机械推导 eq-join 的增量，但：①MOVE 是**目�
 | 结构变更维护 | **仅剩跨边界 delta** | TrieHI 覆盖单侧祖先链；ALJoin 无树 |
 
 若轮 7 也被判为 IVM 应用，则**该问题的机制维度已耗尽**，只能写 L2/L3：新设定 + 通配语义订正 + 三条上限/负结果 + 系统与评测。
+
+---
+
+## 轮 8：归约定理——解释为什么前七轮必然失败
+
+### 定理（谓词层是一个合取查询）
+把两侧的祖先路径物化为关系
+\[
+\mathrm{Path}_A=\{(a,c):c\in\mathrm{Anc}(c_a)\},\qquad \mathrm{Path}_B=\{(b,c):c\in\mathrm{Anc}(c_b)\},
+\]
+则品类可比较等价于
+\[
+\mathrm{CatCompat}(a,b)\iff \exists c:\ (a,c)\in\mathrm{Path}_A\wedge(b,c)\in\mathrm{Path}_B\ \vee\ \text{（对称项：}\exists c:(b,c)\in\mathrm{Path}_A\wedge(a,c)\in\mathrm{Path}_B\text{）},
+\]
+属性兼容是逐维的等值或通配，可写成对 \(\mathrm{Attr}\) 关系的等值连接 + 通配谓词。于是整个算子为
+\[
+\mathrm{Ans}=\sigma_{\,d(a,b)\le\varepsilon}\Big(\mathrm{Compat}\big(\mathrm{Path}_A,\mathrm{Path}_B,\mathrm{Attr}_A,\mathrm{Attr}_B\big)\Big).
+\]
+
+### 推论（为什么七轮都被前序吃掉）
+1. 谓词侧的**一切**结构化机制（分块、局部性、增量、计划选择）都是这个合取查询上的**连接顺序 / 视图维护**问题；
+2. 因此"品类分块"≡ 连接顺序，"MOVE 的祖先链局部性"≡ 增量视图维护，"免枚举基数"≡ 基数估计，"分层抽样"≡ 近似查询处理。四类前序分别对应这四件事，且都已成熟。
+3. 唯一不属于关系层的是 `d(a,b)≤ε` 这个 UDF，而它正是经典阈值连接的对象。
+
+**结论：在原问题（精确全对枚举）的谓词侧不存在 L1 机制；这是可证的结构性原因，不是检索不足。**
+
+---
+
+## 轮 9（唯一可能过 G1 的重构）：非对称"最近兼容邻居"
+
+### 问题重构
+原式输出 \(A\times B\) 中所有满足条件的对；改为：对每个 \(a\in A\)，输出**距离最近的兼容** \(b\)（per-row top-1），即
+\[
+f(a)=\arg\min_{b\in B,\ \mathrm{CatCompat}(a,b)\wedge \mathrm{AttrCompat}(a,b)} d(a,b).
+\]
+输出规模 \(O(|A|)\)，不是 \(O(|A||B|)\)；这是跨平台对齐的实际需求（"给 A 侧每个商品找最佳对照"）。
+
+### 为什么可能未被占（待核）
+- **与 filtered ANN 的区别**：filtered ANN 的谓词作用在**被检索对象自身**（label∈集合）；这里的谓词是**对关系**（品类可与 a 比较 ∧ 属性与 a 兼容），查询侧与对象侧不对称，**不能**退化成单侧过滤。
+- **与 join 的区别**：不枚举全对，无输出爆炸；也不等于对 a 做一次普通的 filtered kNN。
+- **与"每概念 top-k 再合并"的区别**：比较集是 \(\bigcup_{c\in \mathrm{Anc}(c_a)\cup\mathrm{Desc}(c_a)}\mathrm{Local}_B(c)\) 与属性兼容集的**交**，不是单概念子图。
+
+### 可能的理论点（G3 草案）
+- **T1（可比集结构）**：比较集 = 路径并 \(\cup\) 子树并 \(\cap\) 属性相容集；给出其大小与"最近邻落在哪个分支"的界。
+- **T2（分支定界正确性）**：若对每个分支有质心底界（到分支代表的下界），可按分支优先级搜索，给出**精确**的 top-1 证书（第一个被证明优于所有未展开分支下界的候选）。
+- **T3（代价界）**：总距离调用 ≤ \(\sum_{\text{visited branches}} |\text{sampled}|\)，并与"单张全局图 + 掩码"对比的上界。
+- **T4（与 filtered ANN 的分离例）**：构造数据使"把谓词近似为对象侧过滤"的任一方法必错（因兼容性依赖 a 的品类路径），而本方法正确。
+
+### 风险
+1. 可能已有"per-row nearest neighbor join with predicates"或"retrieval with query-dependent candidate sets"；
+2. 若判为 L2，仍需靠 T4 的分离例与系统实现撑。
+
+### 下一步
+派 `novelty-auditor` 核验：nearest neighbor join / constrained kNN / per-row retrieval with pair predicates / filtered ANN 的 query-dependent candidate set。
