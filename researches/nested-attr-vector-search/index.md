@@ -4,6 +4,8 @@
 
 ## 当前工作
 
+- **[最新：研究问题、方案与可行路径重新确认](2026-11-04-exps/report.md)**：重述问题与三条独立假设（结构/入口终止/维护）；列组件职责与 MST 与近代表桥的功能重叠；证据台账分"成立/已撤回/未验证"，其中**S0（单张全局 HNSW + 掩码）从未在同一 harness 跑过**、recursive 0.675–0.869× 不是等召回；给出 P0 归因、P1 覆盖终止、P2 代表树、P3 维护解耦四条路径及各自证伪判据。无新实验数字。
+
 - **[当前交付：从原始记录到属性DAG合并图](2026-11-02-exps/dag-composition-delivery.md)**：区分属性节点与ANN节点；定义直属/递归两类查询、直属/子图两类入口、属性内HNSW、DAG连接、单队列搜索及CSR/bitmap消融。
 
 - **[汇报PPT（10页，含校徽与三张示意图）](2026-11-03-exps/ppt/README.md)**：[pptx](2026-11-03-exps/ppt/hierarchical-hybrid-search-deck.pptx)。动机为属性扁平化后的递归更新；形态页给出 DAG 与四个组件；构建与查询用算法伪代码，合并规则单列选点与出度。配图由 GrsAI 生成，提示词见 [fig/PROMPTS.md](2026-11-03-exps/ppt/fig/PROMPTS.md)；LibreOffice 实际渲染逐页核对。
