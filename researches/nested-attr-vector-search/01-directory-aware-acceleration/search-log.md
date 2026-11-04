@@ -123,3 +123,18 @@ alphaXiv公开全文取得8篇、核相关节，另核FD作者原稿。JAG和HNS
 已核：属性only更新2.5 s/1M、删除1.3 s/1M、patch≈重建12%、20%/10%/50%阈值；其属性更新对一跳反向边FT做位或合并（§3.5原文）。数值range动态索引（Peng PVLDB18(10)、DIGRA、RangePQ+、ESF）仍仅据二手引用记录，正文未读，不作为判重证据。
 
 本侧实测：全量构图约8 s/168,937项、5,697,634有向边；单次换owner定向刷新祖先链中位315,392次距离计算，约73–78次等于一次重建。据此把“我们支持频繁更新”降级为**待验证假设**，并写明否证条件与最小实验；未实现更新路径、未跑churn曲线。EMA已入库，总库46篇/36关系。
+
+## 2026-11-05 SciHTC 的跟进与利用工作（候选，未精读）
+
+来源：用户提供的线索。检索式：无（等待逐篇核验）。状态：`未精读`，标识符按用户给出的 alphaxiv 链接记录，DOI/venue 未核实；按约定先不入 `papers/papers.jsonl`。
+
+| 工作 | 标识符（待核） | 对 SciHTC 的用法 | 与本方向的关系 |
+|---|---|---|---|
+| MATCH: Multi-stage Article Tagging to Concept Hierarchies | arXiv 2610.25948（用户给出） | 把 SciHTC 当作 CS 领域典型树形层级多标签基准，做多视角嵌入检索 + 分类法约束过滤 + LLM 重排序 | 目标是打标与检索管线，输出单对象标签/排序，不产生对象对 |
+| Can LLMs Serve as Effective Classifiers for HMC of Scientific Documents at Industrial Scale? | arXiv 2412.05137（用户给出） | 以 SciHTC 为参照，研究树标签超上下文窗口时的稠密检索 + LLM 零样本层级匹配 | 同上，属于 HTC/检索 |
+| Your Next State-of-the-Art Could Come from Another Domain: A Cross-Domain Analysis of HTC | 未给出标识符（待检索） | 直接采用 SciHTC（含 SciHTC-83 / SciHTC-800 子集）作为科学文献基准，与 MatchXML、XR-Transformer、HiAGM 等比对 | 基准与结构分析，非 join |
+| Efficient Few-shot Learning for Multi-label Classification with Many Classes (FusionSent) | arXiv 2410.05770（用户给出） | 用 SciHTC 做少样本多标签匹配/检索，对比学习微调句子嵌入 | 同上，属于分类与向量检索 |
+
+边界：以上四篇都用 SciHTC 做**分类或单查询检索**，未出现"输出对象对"的用法；因此 SciHTC 上的 `cross / threshold / exact` 连接在本轮检索范围内未被占据。同时它们也说明 SciHTC 只提供**层级标签与文本**，不提供 facet 属性，也不提供两个平台的划分——join 实验必须自行合成这两部分并明确标注。
+
+待办：核 4 篇的 DOI/venue/发表状态；补检索"vector join + taxonomy / category compatibility"。

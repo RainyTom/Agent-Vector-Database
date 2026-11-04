@@ -144,3 +144,21 @@ PathSeer 论文的 SIFT + 合成标签基准。本项目的选择率基线
 | `production/nested-attr-vector-search/work/fixtures_ccs` | 由 A 节 `sift-128-euclidean.hdf5` 生成（见 `src/prep_ccs.py`） |
 
 总下载量：A+B+C 约 3.8GB（不含 D 的 ~12GB Drive 文件）。
+
+## E. SciHTC（层级多标签科学文献，ACM CCS）
+
+目录：`datasets/scihtc/`（**只保留派生的结构与标签 fixture，不含论文文本**）。详见该目录 `README.md`。
+
+| 本地文件 | 大小 | 内容 |
+|---|---:|---|
+| `scihtc_tree.txt` | 6.1K | 830 条边 / 830 节点 / 1 根 / 0 多父（单父树） |
+| `scihtc_bindings.txt` | 645K | 186,160 行，每行一个概念 ID；768 个不同概念 |
+| `workload_scihtc.txt` | 9.6K | 1,000 条查询 |
+| `dsm_scihtc.txt` | 26K | 2,000 条 MOVE/MERGE |
+| `wiki_*.txt` | 符号链接 | 同文件别名，保持旧脚本路径可用 |
+
+出处：Sadat & Caragea, EMNLP 2022（ACL Anthology `2022.emnlp-main.610`），仓库 `github.com/msadat3/SciHTC`。
+
+可得性：论文 ID 与标签在 Google Drive；完整数据集需邮件申请；标题/摘要/关键词需 ACM proceedings 授权后重建。
+
+缺口：本地无论文文本、无 paper ID ⇒ 不能在本仓库内直接生成该数据集的 text embedding。
