@@ -68,7 +68,7 @@ def main():
     ap.add_argument('--tree', default='datasets/scihtc/scihtc_tree.txt')
     ap.add_argument('--bindings', default='datasets/scihtc/scihtc_bindings.txt')
     ap.add_argument('--out', default='datasets/sift-attr')
-    ap.add_argument('--n', type=int, default=20000, help='两侧对象总数')
+    ap.add_argument('--n', type=int, default=40000, help='两侧对象总数')
     ap.add_argument('--ratio', type=float, default=0.5, help='A 侧占比')
     ap.add_argument('--seed', type=int, default=20261105)
     ap.add_argument('--n-queries', type=int, default=200)
@@ -78,6 +78,8 @@ def main():
     ap.add_argument('--depth-A-max', type=int, default=4, help='A 侧可选品类最大深度')
     ap.add_argument('--depth-B-min', type=int, default=3, help='B 侧可选品类最小深度')
     ap.add_argument('--vec-space', type=int, default=1000000, help='SIFT train 行数上界')
+    ap.add_argument('--min-scope-A', type=int, default=500)
+    ap.add_argument('--min-scope-B', type=int, default=500)
     args = ap.parse_args()
 
     rng = random.Random(args.seed)
@@ -121,13 +123,34 @@ def main():
     for i in range(nB):
         rows_B.append([i, vecs[nA + i], sample_concept(pool_B)] + sample_facets(known_B))
 
-    # 查询：u 从全部被标注概念中按规模加权取样，φ 取 1~2 个 facet 的具体值
-    qconcepts = [c for c in counts]
+    # 查询：u 取"两侧后代里都有对象"的概念，权重=两侧较小规模；φ 只用两侧都常知的维度
+    catA_cnt, catB_cnt = Counter(r[2] for r in rows_A), Counter(r[2] for r in rows_B)
+
+    def desc_sum(u, cnt):
+        tot, stack, seen = 0, [u], set()
+        while stack:
+            v = stack.pop()
+            if v in seen:
+                continue
+            seen.add(v)
+            tot += cnt.get(v, 0)
+            stack.extend(children[v])
+        return tot
+
+    qconcepts, qweights = [], []
+    for c in counts:
+        na, nb = desc_sum(c, catA_cnt), desc_sum(c, catB_cnt)
+        if na >= args.min_scope_A and nb >= args.min_scope_B:
+            qconcepts.append(c)
+            qweights.append(min(na, nb))
+    assert qconcepts, '没有两侧都非空的查询根'
+
+    shared_dims = [d for d in range(len(doms)) if min(known_A[d], known_B[d]) >= 0.5]
     queries = []
     for qid in range(args.n_queries):
-        u = rng.choices(qconcepts, weights=[counts[c] for c in qconcepts], k=1)[0]
-        k_phi = rng.choice([1, 1, 2])
-        dims = rng.sample(range(len(doms)), k_phi)
+        u = rng.choices(qconcepts, weights=qweights, k=1)[0]
+        k_phi = rng.choices([0, 1, 2], weights=[0.2, 0.6, 0.2], k=1)[0]
+        dims = rng.sample(shared_dims, min(k_phi, len(shared_dims)))
         phi = [(d, rng.randrange(doms[d])) for d in dims]
         queries.append([qid, u] + [len(phi)] + [x for d, v in phi for x in (d, v)])
 
@@ -195,7 +218,8 @@ def main():
         'facet_doms': doms, 'known_rate_A': known_A, 'known_rate_B': known_B,
         'depth_A_max': args.depth_A_max, 'depth_B_min': args.depth_B_min,
         'vec_space': args.vec_space, 'vector_source': 'datasets/sift-128-euclidean.hdf5 (train)',
-        'n_queries': args.n_queries,
+        'n_queries': args.n_queries, 'min_scope': [args.min_scope_A, args.min_scope_B],
+        'shared_dims_for_phi': shared_dims,
         'distinct_concepts_A': len(by_cat_A), 'distinct_concepts_B': len(by_cat_B),
         'compatible_concept_pairs': compat_pairs,
         'candidate_pair_upper_bound': cand,
