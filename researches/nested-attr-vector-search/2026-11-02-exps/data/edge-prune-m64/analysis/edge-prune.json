@@ -1,8 +1,0 @@
-{
-  "prune_equals_unpruned": true,
-  "note": "ID and distance/expansion equality are enforced inside the C++ runner; a failed check aborts before any CSV row is written. distances_match compares the ablation work counters with the archived run2 per-query audit; the archived run is used only for that audit, never for timing.",
-  "source": "work/edge-prune-m64",
-  "reference": "work/edge-prune-m64/envcheck",
-  "archive": "researches/nested-attr-vector-search/2026-11-02-exps/data/dag-two-cases-m64-run2",
-  "prune_build_cost": "per-query copy construction, measured outside every timer"
-}

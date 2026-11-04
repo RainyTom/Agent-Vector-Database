@@ -1,6 +1,0 @@
-recursive nodeann_nk k=10 ef=32 group=all us=23.2958 R=1 checks=0
-recursive nodeann_nk k=10 ef=32 group=one_owner us=6.30961 R=1 checks=0
-recursive nodeann_nk k=10 ef=32 group=many_owners us=43.1397 R=1 checks=0
-recursive nodeann_nk k=100 ef=128 group=all us=46.4995 R=1 checks=0
-recursive nodeann_nk k=100 ef=128 group=one_owner us=13.0453 R=1 checks=0
-recursive nodeann_nk k=100 ef=128 group=many_owners us=99.6669 R=1 checks=0

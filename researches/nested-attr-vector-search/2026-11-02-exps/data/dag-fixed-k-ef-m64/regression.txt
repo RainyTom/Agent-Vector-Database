@@ -1,4 +1,0 @@
-PASS local n vs global k, concentrated top-k, qualification, empty graph, normal/count equivalence
-PASS direct/recursive GT, qualified entries, shared descendants, empty scope, normal/count/CSR/visited equivalence, pruning bounds, induced-path boundary, native hook
-Variable-k C++ cases exercised top10/50/100, cached top100 GT, underfull scopes, and ef below k.
-Python same-cell selection: Ran 4 tests; OK.

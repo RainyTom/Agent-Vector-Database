@@ -136,7 +136,7 @@ SIFT 25k/50k/100k、MNIST 25k、Fashion-MNIST 25k（合成 1365 节点层级，�
 - 全部稠密语料（11 个，n=25k，统一 M=16）：LES-v2 在 **glove100（1.29×，空间 0.94×）、glove200（1.90×，空间 0.77×）** 反超；nytimes 上 PSG 到 ef=512 也只有 0.891 召回，LES 达标；lastfm 在 r98 为 1.17×。其余 8 个落后，**所有原生 L2 语料全败**。8 个非原生度量语料为 min–max 量化代理，不是原生任务。
 - TRIEHI 目录层 + **同一** BF-HNSW 图：Recall 逐位相同，QPS 变化 −3.7%～+8.6%，元数据 4.27–17.07 MB。候选解析不是瓶颈，Directory-Aware 与 LES 作用于不同层。
 
-原始数据：`2026-10-20-exps/data/five_l2_20261020T104139Z-68414a0f.csv` 与 `five_l2_sweep_20261020T104139Z-68414a0f.csv`；记录见 [five-l2-benchmark.md](2026-10-20-exps/experiments/five-l2-benchmark.md)。
+原始数据：`2026-10-20-exps/data/five_l2_20261020T104139Z-68414a0f.csv` 与 `five_l2_sweep_20261020T104139Z-68414a0f.csv`；记录见 five-l2-benchmark.md（目标已随实验目录清理删除）。
 
 ## 4. 局限与开放问题
 
@@ -148,26 +148,26 @@ SIFT 25k/50k/100k、MNIST 25k、Fashion-MNIST 25k（合成 1365 节点层级，�
 
 ## 5. 导航
 
-当前执行入口（用户明确重启）：[参数扫描与帕累托前沿规划](2026-10-20-exps/experiments/pareto-sweep-plan.md)。目标是在明确资源预算和recall区间形成前沿贡献；已生成 [现有B1配置探索图](figures/pareto_b1_observed_20261020.png)，参数覆盖未完成。下方收束决定为上一轮历史状态。
+当前执行入口（用户明确重启）：参数扫描与帕累托前沿规划（目标已随实验目录清理删除）。目标是在明确资源预算和recall区间形成前沿贡献；已生成 [现有B1配置探索图](figures/pareto_b1_observed_20261020.png)，参数覆盖未完成。下方收束决定为上一轮历史状态。
 
-最新决定：[ee90400回传复核与路线收束](2026-10-20-exps/experiments/les-closeout-ee90400.md)。停止本轮新增优化，保留E0/varint/B1与负结果，先补回缺失证据并整理限制；A1未启动。后列交接为历史计划。
+最新决定：ee90400回传复核与路线收束（目标已随实验目录清理删除）。停止本轮新增优化，保留E0/varint/B1与负结果，先补回缺失证据并整理限制；A1未启动。后列交接为历史计划。
 
-当前下一轮：[同空间证据补齐与作用域 ef 预算策略](2026-10-20-exps/experiments/remote-round2-budget-policy.md)。E0已由远端实现，S1全量列表字典关闭；M12尚缺已入库的配对逐轮记录，计时边界仍需统一。优先验证B1预算表，anchor按诊断条件启动。
+当前下一轮：同空间证据补齐与作用域 ef 预算策略（目标已随实验目录清理删除）。E0已由远端实现，S1全量列表字典关闭；M12尚缺已入库的配对逐轮记录，计时边界仍需统一。优先验证B1预算表，anchor按诊断条件启动。
 
-下一轮远端执行入口：[LES-v3 实验指导](2026-10-20-exps/experiments/remote-next-round.md)。状态：待执行；先校正严格 recall 门槛、查询调度与计时口径，再做成本归因和相近空间对照。
+下一轮远端执行入口：LES-v3 实验指导（目标已随实验目录清理删除）。状态：待执行；先校正严格 recall 门槛、查询调度与计时口径，再做成本归因和相近空间对照。
 
-方案改进：[实现规格与取舍](2026-10-20-exps/experiments/les-improvement-plan.md)。优先搜索内存复用与保留作用域邻接的共享表示；按条件验证并集补充搜索或多入口，均为待实现假设。
+方案改进：实现规格与取舍（目标已随实验目录清理删除）。优先搜索内存复用与保留作用域邻接的共享表示；按条件验证并集补充搜索或多入口，均为待实现假设。
 
 | 内容 | 位置 |
 |---|---|
-| 逐日实验记录与数据 | [2026-10-20-exps/](2026-10-20-exps/) |
+| 逐日实验记录与数据 | 2026-10-20-exps/（目标已随实验目录清理删除） |
 | 基线改造评估（ACORN / Filtered-HNSW / LSSG / iRangeGraph / PathSeer） | [baseline-adaptation.md](baseline-adaptation.md) |
 | 评测协议 | [benchmark-protocol.md](benchmark-protocol.md) |
-| Directory-Aware / TrieHI 基线评估 | [2026-10-20-exps/experiments/directory-aware-baseline.md](2026-10-20-exps/experiments/directory-aware-baseline.md) |
-| Directory-Aware DSQ/DSM 复现记录 | [2026-10-20-exps/experiments/directory-aware-reproduction.md](2026-10-20-exps/experiments/directory-aware-reproduction.md) |
-| LES 原型实现记录 | [2026-10-20-exps/experiments/les-prototype.md](2026-10-20-exps/experiments/les-prototype.md) |
-| Exact 缺口与两项创新验证 | [2026-10-20-exps/experiments/exact-gap.md](2026-10-20-exps/experiments/exact-gap.md) |
-| 五个补充负载（固定工作点与同召回） | [2026-10-20-exps/experiments/five-l2-benchmark.md](2026-10-20-exps/experiments/five-l2-benchmark.md) |
+| Directory-Aware / TrieHI 基线评估 | 2026-10-20-exps/experiments/directory-aware-baseline.md（目标已随实验目录清理删除） |
+| Directory-Aware DSQ/DSM 复现记录 | 2026-10-20-exps/experiments/directory-aware-reproduction.md（目标已随实验目录清理删除） |
+| LES 原型实现记录 | 2026-10-20-exps/experiments/les-prototype.md（目标已随实验目录清理删除） |
+| Exact 缺口与两项创新验证 | 2026-10-20-exps/experiments/exact-gap.md（目标已随实验目录清理删除） |
+| 五个补充负载（固定工作点与同召回） | 2026-10-20-exps/experiments/five-l2-benchmark.md（目标已随实验目录清理删除） |
 
 ## 6. 复现
 

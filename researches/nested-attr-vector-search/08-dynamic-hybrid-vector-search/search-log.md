@@ -19,7 +19,7 @@
 
 先查`papers/papers.jsonl`、`relations.jsonl`、现有全文/研究笔记及完整交接。先检索`vector similarity join hierarchical`、`vector join attribute`、`inner-product similarity join`，再查`PathSeer Adaptive Neighbor 2026`、`vector search subtree maintenance taxonomy reparenting`、`vector search adaptive partition Quake`；直接join首轮为范围核对，未完成全部同义词和引用闭包。本任务属于B类单查询filtered ANN，不是几何vector join。
 
-原始来源：TrieHI arXiv、ELI正式PVLDB全文、Quake OSDI正式稿；ACORN/Curator/iRangeGraph/Filtered-DiskANN核本地原文与Crossref；PathSeer ACM403，使用已有正式PDF镜像文本；VADER v2与EMA v1为预印本，正式发表状态不推断。所读章节及链接见[机制审计](2026-10-29-exps/literature-mechanisms-review.md)、[独立判断](2026-10-29-exps/independent-review.md)。
+原始来源：TrieHI arXiv、ELI正式PVLDB全文、Quake OSDI正式稿；ACORN/Curator/iRangeGraph/Filtered-DiskANN核本地原文与Crossref；PathSeer ACM403，使用已有正式PDF镜像文本；VADER v2与EMA v1为预印本，正式发表状态不推断。所读章节及链接见机制审计（目标已随实验目录清理删除）、独立判断（目标已随实验目录清理删除）。
 
 纠正旧检索断言：TrieHI已有MOVE/MERGE，Curator已有Bloom删除重算、复杂布尔临时索引/缓存；Quake已有动态多层预算，VADER已有filter-aware召回预测。没有“更复杂图才能创新”或“没查到即空白”的结论。新增Quake/EMA的章节证据保存在机制审计，不因尚未完成统一主题归档、全书目/版本/实验字段就补造完整论文记录；作为重点候选待入总库。
 
@@ -33,7 +33,7 @@
 - 主要发现：普通稀疏倒排＋残差证书有L2AP直接前序；几何posting组摘要有Seismic前序。优先问题改为不扫描eligible、不逐谓词物化而取得条件extrema/区间排除证书。该问题新颖性尚未充分排查。
 - 来源失败保留：FCVI声明DOI的Crossref404；VA-file PDF提取/查询失败；L2AP正式页动态内容未给可读书目，本轮不补猜DOI。BioVSS正式ICDE身份由其他原始来源交叉核实。
 - 待补：VA-file原文、range-min/successor/wavelet/bitmap条件极值数据结构、dense-to-sparse覆盖与signed/un-normalized L2转换、条件证书的属性更新复杂度。没有搜索到同名方案不是不存在证明。
-- 详证：[新机制判断](2026-10-29-exps/pruning-index-directions.md)、[前序对照](2026-10-29-exps/pruning-prior-art-2026-10-29.md)。本轮只运行合成逻辑smoke，无新ANN矩阵。
+- 详证：新机制判断（目标已随实验目录清理删除）、前序对照（目标已随实验目录清理删除）。本轮只运行合成逻辑smoke，无新ANN矩阵。
 
 
 ## 2026-10-29 七篇指定论文的全文机制学习
@@ -41,7 +41,7 @@
 - 先查总库30条与27关系及原文；直接join范围检索使用`"vector similarity join" "hierarchical" OR "high-dimensional similarity join" "attributes" OR "inner-product similarity join"`，返回DiskJoin/PODS/FastAVJ/PHiDJ等范围线索，未当成新的join综述。随后按七篇精确题名、DOI、arXiv/作者主页/仓库核查。
 - MSG读正式SCIS全文；Hubness读正式PACMMOD镜像全文；VikingMem/Blend读官方PVLDB正式全文；Flash读arXiv v1并核正式元数据；Directory-Aware复核已有v1全文。CDMG正式ACM各入口403，经GitHub历史恢复2025-05-08技术报告，未冒称正式29页精读。
 - 发现MSG仍有指数级组合邻接，CDMG理想路径/融合近似/实际GreedySearch保证不可混同，Hubness不能简化成均匀入度更好，Blend相关性融合不等于属性过滤。用户再次明确层级＋多属性硬过滤，已写入任务书。
-- 详见[七篇原文复核](2026-10-29-exps/seven-paper-inspiration-review.md)；候选A/B均未完成最近前序证明级查重。待核：条件遮挡/剪枝证据、共享适用域的FilteredVamana/UNG/Packing等；条件极值的range/wavelet前序；CDMG正式版差异。
+- 详见七篇原文复核（目标已随实验目录清理删除）；候选A/B均未完成最近前序证明级查重。待核：条件遮挡/剪枝证据、共享适用域的FilteredVamana/UNG/Packing等；条件极值的range/wavelet前序；CDMG正式版差异。
 - 新增6条、修订1条，2条原文引用；仅运行5项合成语义反例。没有作者代码复现或新ANN性能网格。
 
 ## 2026-10-30 真实诊断的上游归因复核
@@ -49,7 +49,7 @@
 - 先核本分支论文/关系与既有机制审读，完整读7756064报告、机制审查、协议、阅读清单、复现及诊断源码。服务器与七篇审读分支共同祖先01ef7d6，不覆盖任一分支记录；服务器稀疏B与上游条件遮挡B不同。
 - 直接join范围检索：`"vector similarity join" "pivot" OR "inner-product similarity join" "norm"`；再检索`Omni family all purpose access methods similarity queries 2001 pivot distance lower bound pdf`、`"Pivot-based metric indexing" "pdf"`、`product quantization distance lower bounds exact nearest neighbor subspace minimum sum admissible`。搜索回答只作线索，不把AI推导当论文保证。
 - 原文核查PVLDB2017 Pivot-based Metric Indexing §2.3、§5.1–5.2，确认三角不等式pivot下界、球界及距离区间索引为经典控制。ACM入口403，改用官方PVLDB全文成功。OMNI2001出版页无可读正文，未冒称全文精读；PQ论文线索未核正文，不据此主张新的量化界或实施PQ。
-- 新数据分析仅用既有64行root/scope-only控制，去basis重复为32个case；WIKI/SIFT无过滤oracle分别88.4710%/92.0365%，阈值与过滤pooled不同，不直接相减。未重跑服务器失败/诊断或新ANN。具体来源、脚本、限制见[上游报告](../2026-10-30-exps/report.md)。
+- 新数据分析仅用既有64行root/scope-only控制，去basis重复为32个case；WIKI/SIFT无过滤oracle分别88.4710%/92.0365%，阈值与过滤pooled不同，不直接相减。未重跑服务器失败/诊断或新ANN。具体来源、脚本、限制见上游报告（目标已随实验目录清理删除）。
 - 下一步E0为同最终τ下D_B/D_H/D_F归因；有机会才E1嵌套联合阶数及范数/固定中心控制。候选仍未通过新颖性门；经典下界或范围查询不换名立项，但不要求所有基础原语全新。
 - 文献仅加章节证据候选，未新增完整总库记录；本分支仍36工作/29关系，与服务器36/31是不同集合，待显式整合后才能报联合计数。
 
@@ -57,7 +57,7 @@
 
 - 先查总索引/既有机制审读，复核ACORN v1 §5.2–5.3、Curator v3 §4.2原文。直接join范围检索`"vector similarity join" "index" "filter" OR "inner-product similarity join" "index"`，再检索`"filtered vector search" "bitmap" "index" OR "hybrid" "Trie" "ANN"`，定位SIEVE及其他综述线索。
 - 新读SIEVE arXiv2507.11907v2 §1–3、§4.1开头；其明确复用HNSW/bitmap和集合选择，将贡献定位到size/time/recall模型与服务机制。仅保存相关节选，正式版与全部实验未核，不新增完整精读条目；新搜到的survey/system-analysis仅作线索，不冒称精读。
-- 修正过强门禁：基础组件已有不等于不能使用；不要求所有方法产生安全L2下界或先完成证书E0/E1。新增六族研究卡与跨族筛选协议，区别探索门和贡献门，详见[机制方案](../2026-10-30-exps/index-mechanism-portfolio.md)。
+- 修正过强门禁：基础组件已有不等于不能使用；不要求所有方法产生安全L2下界或先完成证书E0/E1。新增六族研究卡与跨族筛选协议，区别探索门和贡献门，详见机制方案（目标已随实验目录清理删除）。
 - 同时收紧旧“新观察”：过滤遮挡点造成剪枝路径失效已在ACORN正文明确论述，可作设计起点，不可当首次发现；可研究具体共享/恢复/更新机制，不能据前序存在关闭整个图族。
 - 无新ANN或真实数据筛选实验；所有新机制卡未执行。待补查项按入选具体方案展开：F1资格接口与联合视图、F2共享集合/层级布局、F3候选恢复、F4双空间分区、F5代理候选覆盖；不一次穷尽全领域才允许小探索。
 
@@ -65,7 +65,7 @@
 
 - 先查papers/relations与本地六族边界。先搜`"vector similarity join" "index" "factorized" OR "inner-product similarity join" "filter"`，再搜`"FlexFlood" multidimensional learned index`、`"query" "data layout" "index" "SIGMOD 2025" workload tree`及动态range filter/factorized IVM原始来源。
 - 核读Memento2408.05625v3、Grafite2311.15380v2、FlexFlood2411.09205v2、Qd-tree作者SIGMOD2020 PDF、F-IVM正式期刊正文、DBSP正式PVLDB2023 PDF的相关章节。保存全文提取和文本SHA；作者代码未运行。FlexFlood workshop身份另核官方accepted papers页；Memento/Grafite正式书目另核Crossref。
-- 具体存储/查询/更新、保证条件、退化、最近前序与实验见[综合报告](../2026-10-30-exps/cross-domain-index-transfer.md)。本地执行7组语义构造，不是新WIKI/SIFT实验；不能把range filter误差与合取共现歧义混为一谈。
+- 具体存储/查询/更新、保证条件、退化、最近前序与实验见综合报告（目标已随实验目录清理删除）。本地执行7组语义构造，不是新WIKI/SIFT实验；不能把range filter误差与合取共现歧义混为一谈。
 - 新增6工作、1关系，总库42/30；未合并服务器分支。覆盖限制：NeuroCuts仅由Qd-tree引用链确认；其他新近range filter/Oasis/Proteus及布局工作未全部深读；FlexFlood后续正式venue未核。方案级最近前序、作者代码固定commit/许可证兼容与真实共同见证机会待补，不宣称穷尽或新颖性已通过。
 
 ## 2026-10-30 具体WQR方案与最近同构核查
@@ -73,7 +73,7 @@
 - 用户要求本地完成设计，下游只实施。先核论文库、现行源码与三臂语义；LSP无可用C++server，按已定位源码读取，不改现有执行器。
 - 先搜`"vector similarity join" "signature" OR "inner-product similarity join" "filter"`，再检索conjunctive/bit-sliced signatures、filtered centroids/bitmap routing、vector partition pruning representatives；旧signature机制仅作查重线索，不将哈希签名换名立项。
 - 核Curator v3 §4.2与SIEVE v2 §2.2/§6，新增PVLDB2025多代表图路由直接前序。Curator的local/lazy早有本地证据，修正近期草案的过强差异；本方案最终使用zone支持域而非整块非空激活。
-- 最终结构与证明/退化/全部当前事件见[WQR冻结规格](../2026-10-30-exps/wqr-index-spec.md)。初稿对抗审查中的“删源对象须重选portal”被独立proxy生命周期规则取代；完整记录保留，不能混用旧草案。
+- 最终结构与证明/退化/全部当前事件见WQR冻结规格（目标已随实验目录清理删除）。初稿对抗审查中的“删源对象须重选portal”被独立proxy生命周期规则取代；完整记录保留，不能混用旧草案。
 - 已运行bitplane/Euler有限枚举与真实hnswlib proxy/local路径，正例和失败反例均保留；未运行WIKI/SIFT。新检索候选Learning Cluster Representatives for ANN、Cracking Vector Search Indexes、Filtered Vector Search in a Disaggregated Lakehouse未核全文，待补，不宣称穷尽。
 - 总库43/30，不合并服务器7756064。结构性新颖性只认已读前序间的具体组合差异；“首次”和端到端收益仍未证实。下游不再承担方案选择。
 
@@ -82,14 +82,14 @@
 - 固定来源为服务器0837918：完整核读联合报告、分析、协议、复现、audit，并读取452行pooled CSV，按整数计数重算四行主结果。未重跑失败或逐条独立复核173568行；原始query审计结论保留服务器来源。
 - 接受WIKI既定64维同对象完整投影与径向lift无排除的归因修正；SIFT F增量须与同种whole联合界相减。推导余空间方向项及同投影同余范数反例，不将经典反三角等式认作新贡献。
 - 不新增文献检索或论文记录：IMI/CNN/Simplex本轮只核服务器证据与定位，未在本机独立重读全文。服务器39/33与本分支43/30未合并，不能合计或覆盖。
-- [WQR规格](../2026-10-30-exps/wqr-index-spec.md)保留原维proxy与支持域资格机制；新增“exact-proxy非Recall上界”、逐query质量分解不可直接乘macro均值、属性快照不随新分块重生成三项验收约束。服务器不再承担设计，也不新开余空间编码支线。
-- 本地实际执行：四行CSV重算及三组有限构造；新增真实数据/ANN实验均0。见[报告§13](../2026-10-30-exps/report.md#13-同日续轮接收0837918的联合信息诊断)和复现记录。待补仍是WQR真实路由覆盖、同质量全成本与更近机制前序；无首次或论文充分性结论。
+- WQR规格（目标已随实验目录清理删除）保留原维proxy与支持域资格机制；新增“exact-proxy非Recall上界”、逐query质量分解不可直接乘macro均值、属性快照不随新分块重生成三项验收约束。服务器不再承担设计，也不新开余空间编码支线。
+- 本地实际执行：四行CSV重算及三组有限构造；新增真实数据/ANN实验均0。见报告§13（目标已随实验目录清理删除）和复现记录。待补仍是WQR真实路由覆盖、同质量全成本与更近机制前序；无首次或论文充分性结论。
 
 ## 2026-10-30 审核8649e55实现与E0合同
 
 - 无新增文献检索或论文条目。固定读取commit API三个改动文件，重建两份新增源码并核Git blob SHA；不合并wqr-implementation。
 - 独立只读评审与实际新反例共同确认硬资格、Euler、numeric、ID/slot、计数、D/I和replay缺陷。用户原E0成功按原样保留，但不能外推合同通过；原fixture未重跑。
-- 先修复/补全E0再顺序E1/E2；完整指令见[实现审计](../2026-10-30-exps/wqr-8649e55-implementation-review.md)。没有更换方案、没有NodeANN/WIKI/SIFT新性能对照，不把缺实现、实现错或环境ASan失败写成算法失败。
+- 先修复/补全E0再顺序E1/E2；完整指令见实现审计（目标已随实验目录清理删除）。没有更换方案、没有NodeANN/WIKI/SIFT新性能对照，不把缺实现、实现错或环境ASan失败写成算法失败。
 - 新增诊断及原runner混合事件运行均有命令和结果；ASan启动受环境阻塞后改用UBSan/checked vector，未伪称内存安全检查全面通过。无新论文或关系，维护研究记录与原始反例即可。
 
 ## 2026-10-30 接收c1c24e8并收尾WQR
@@ -97,11 +97,11 @@
 - 完整核读最终报告、网格脚本、E0/runner/索引相关实现及三臂定义；源blob校验一致。接受服务器已报告的冻结候选负结果，不重跑性能实验，不再将状态保留为“尚未实施”。
 - 纠正arm C=PE-OFFLINE而非NodeANN、均值/p50混用、仅5个L点不覆盖全部L<C、coverage相等不证明路由序列精确、macro/非空质量聚合需明确分母。源码显示额外loader向量副本、维护图内距离漏计，不能声称固有RSS倍率或完整维护已过门。
 - 新发现split容量1025对象写入1024槽，在本机定点C++探针实际复现越界断言退出134。它与未触发split时的路由失败分开；不重做原E0，不擅自否定所有E1。
-- 当前执行入口为[阶段收尾](../2026-10-30-exps/wqr-c1c24e8-closeout.md)：小聚合归档、口径纠正、定点容量修复；停止扩规模、调参追正和新机制。服务器raw聚合不可访问，所有未复核数字注明来源。无新论文/关系条目。
+- 当前执行入口为阶段收尾（目标已随实验目录清理删除）：小聚合归档、口径纠正、定点容量修复；停止扩规模、调参追正和新机制。服务器raw聚合不可访问，所有未复核数字注明来源。无新论文/关系条目。
 
 ## 2026-10-30 效率优先的新任务：谓词可寻址邻域
 
-- 用户要求下一轮任务，明确内存是辅助目标。新增[邻域页任务书](../2026-10-30-exps/next-neighborhood-plan.md)：一张图、一份向量、可按层级多属性资格访问的二跳集合；普通二跳作为近机制对照。WQR继续停止，不用更大proxy预算追正。
+- 用户要求下一轮任务，明确内存是辅助目标。新增邻域页任务书（目标已随实验目录清理删除）：一张图、一份向量、可按层级多属性资格访问的二跳集合；普通二跳作为近机制对照。WQR继续停止，不用更大proxy预算追正。
 - 本轮复用已读ACORN/Curator等前序判断，尚未新搜或精读图数据库bitmap邻接/可达性索引，明确新颖性待查；服务器可先做小原型，不等文献闭包。
 - 实际执行仅有限集合探针：4096图、262144资格交集、49152更新依赖核对，失败0；新真实ANN实验0。真实三臂查询、属性/目录及I/D短更新成本全部待做，不将计划数字当结果。
 
@@ -110,13 +110,13 @@
 - 先查papers/relations与本地全文；核读TrieHI v1 §IV-A/B（paper.md657–875）、ACORN §5.1–5.3（453–511、590–633）、PathSeer §3–4（529–585、649–708）。TrieHI是元数据scope索引，不改ANN；NPI核心是二跳对象集合及其可寻址扩展，不能把目录维护或混合导航本身当首次。
 - Web检索：`filtered ANN bitmap two-hop index`、`graph two-hop bitmap index neighbors`、`filtered ANN materialized neighbors`。读[DiskANN官方过滤算法工程说明](https://github.com/microsoft/DiskANN/wiki/Evaluation-of-Filtered-Search-Algorithms)，不移植其QPS或recall结论。覆盖有限，无“查无前序”结论。
 - 待核命中：arXiv1812.10977图数据库压缩表示、2606.19898 Query-aware Routing、2604.00102 Fiber-Navigable Search及图bitmap邻接文献；只保留检索待办，不填算法/实验，也不判完全重合。
-- 交付[完整方案描述](../2026-10-30-exps/npi-complete-design.md)，非代码。768搜索等价、256有限全量结果和18容器边界模型检查通过；真实ANN0。现有论文元数据未变，不新增重复记录/推断引用边。
+- 交付完整方案描述（目标已随实验目录清理删除），非代码。768搜索等价、256有限全量结果和18容器边界模型检查通过；真实ANN0。现有论文元数据未变，不新增重复记录/推断引用边。
 
 ## 2026-10-30 层级参与核心机制的纠偏
 
 - 接受用户批评：NPI只是普通谓词邻域取得优化，撤下层级论文主线。核读历史D2、HLG及LES收尾，不将旧共享图/连接支架改名重启。
 - 检索`hierarchical filtered graph pruning ancestor`命中较窄，转原文引用链；读[RNSG v2 §2–3](https://arxiv.org/html/2603.12913v2)的几何见证、attribute-between与heredity定义/证明，以及本地iRangeGraph既有摘录。RNSG只是相关章节核读，未新增完整精读条目或声称正式版已核。
-- 新研究设计为[子树闭包约束的可恢复邻接](../2026-10-30-exps/hierarchy-closure-design.md)。直接迁移范围闭包见证思想，同时明确子树族允许不同见证、动态拓扑与属性改变触发恢复；新颖性仍需继续核动态层状剪枝/证书，不能仅凭LCA命名认证。
+- 新研究设计为子树闭包约束的可恢复邻接（目标已随实验目录清理删除）。直接迁移范围闭包见证思想，同时明确子树族允许不同见证、动态拓扑与属性改变触发恢复；新颖性仍需继续核动态层状剪枝/证书，不能仅凭LCA命名认证。
 - 实际执行有限四对象模型384次scope限制检查及两类边恢复；不是ANN性能。已更新NPI/旧任务书/P0入口状态，防止后续误开二跳原型。
 
 ## 2026-10-30 NPI结果接收与闭包候选本地实现
@@ -124,7 +124,7 @@
 - 核读502753c完整NPI报告与源码接口，接受其同质量e2e失败，不重跑旧失败来确认。NodeANN/RawL2源码blob与502753c一致；导入同提交的dataset/predicate头文件，保留来源。
 - 本轮为实现与实验设计，不新增文献搜索/条目。直接前序仍为RNSG的between/heredity；同池R规则消融不是完整RNSG作者实现。层级闭包、当前Extra见证和动态恢复组合的新颖性仍待机制/前序共同支持。
 - 已实现真实C++核心、全事件维护、独立GT与六臂脚本；3项实际CLI回归通过。纠正“每次I指纹必变”的测试误要求，以及direct范围不适用recursive限制性质。真实WIKI/SIFT运行0。
-- 当前执行入口切换为[完整服务器合同](../2026-10-30-exps/closure-server-plan.md)，E1/E2先测是否减少实际展开并赢真实NodeANN，再按门槛测动态与强制压实成本；不重启二跳、WQR或仅维护调参。
+- 当前执行入口切换为完整服务器合同（目标已随实验目录清理删除），E1/E2先测是否减少实际展开并赢真实NodeANN，再按门槛测动态与强制压实成本；不重启二跳、WQR或仅维护调参。
 
 ## 2026-10-31 整目录分块共享图的前序边界
 
@@ -132,5 +132,5 @@
 - TFANNS本地paper.md705–725明确块内degree资源共享与global mask。新候选不改degree，而是完整目录组共享普通物理HNSW；generic packing/shared-resource仍非新思想。
 - 核读[Window Filters原文](https://jshun.csail.mit.edu/filteredANN.pdf)§4.2–4.3、§5.2和§6相关实现段：多层有序子集ANN、覆盖查询、SuperPostfiltering、blowup/空间权衡已有。未完整核实验与书目信息，不新增伪精读论文条目；列入后续完整归档待办。
 - iRangeGraph/Curator沿用已归档前序，不声称重新精读；旧2026-10-29任务已有owner/place/routes解耦，不作为本轮首创。TrieHI预印本问题定义也不因未正式发表而忽略。
-- [完整方案](../2026-10-31-exps/packed-index-plan.md)只把整owner组DFS物理装箱及其有限维护作为可检验机制；新颖性风险高、非穷尽检索。150次真实程序合成回放证明有限语义/生命周期，不证明真实数据优势或论文门槛。
+- 完整方案（目标已随实验目录清理删除）只把整owner组DFS物理装箱及其有限维护作为可检验机制；新颖性风险高、非穷尽检索。150次真实程序合成回放证明有限语义/生命周期，不证明真实数据优势或论文门槛。
 

@@ -1,6 +1,0 @@
-direct nodeann_nk k=10 ef=32 group=all us=8.95003 R=1 checks=0
-direct nodeann_nk k=10 ef=32 group=one_owner us=7.35548 R=1 checks=0
-direct nodeann_nk k=10 ef=32 group=many_owners us=12.1058 R=1 checks=0
-direct nodeann_nk k=100 ef=128 group=all us=21.0817 R=1 checks=0
-direct nodeann_nk k=100 ef=128 group=one_owner us=16.8919 R=1 checks=0
-direct nodeann_nk k=100 ef=128 group=many_owners us=33.5309 R=1 checks=0

@@ -7,7 +7,7 @@ This is the official implementation for paper [Navigating Labels and Vectors: A 
 
 UNG is a general framework that supports various graph-based ANNS algorithms, which is currently implemented with the Vamana algorithm in [DiskANN](https://github.com/microsoft/DiskANN).
 
-![Overview of the UNG framework](figures/overivew.png)
+!Overview of the UNG framework（目标已随实验目录清理删除）
 
 ## Overview
 
@@ -18,7 +18,7 @@ Given a query vector $q$ with label set $f_q=\{a,b,...,z\}$, UNG finds top-K sim
 - **Overlap** ($f_q \cap f_v \neq \emptyset$): `SELECT top-K similar vectors WHERE label_1=a OR label_2=b`
 - **No-filter** (traditional ANNS): `SELECT top-K similar vectors without any label constraints`
 
-![An example of filtered ANNS](figures/example.png)
+!An example of filtered ANNS（目标已随实验目录清理删除）
 
 This repository also supports random generation of base and query label sets following five distributions:
 - Zipf

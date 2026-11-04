@@ -2,7 +2,7 @@
 
 日期：2026-10-27。范围：`researches/nested-attr-vector-search/01-directory-aware-acceleration/` 的 TrieHI 复现、选择率测量与属性分区索引 baseline。数据与图均来自本地实测，未核实处单独标注。
 
-**当前结论边界**：下文§4.1–4.7保留历史记录，不支持“NodeANN总是更快”或“目录解析是唯一瓶颈”的概括。完整WIKI两类基线已重跑，见§4.8及[完整报告](2026-10-28-exps/report.md)：局部全HNSW递归macro recall=0.999559、6.839 ms；全列表IVF达到recall=1、25.126 ms。默认threshold=0保持不变，Flat仅作对照。已修复转换脚本把int位模式数值转换的问题，并确认旧`data/real/test.f32`受影响；另修复457行约束对456条向量的越界，以及NODE双重scope解析。旧ANN质量/延迟不可与新结果直接连线；未逐一核查的历史实验不推断污染范围，向量无关的目录/DSM记录不自动失效。
+**当前结论边界**：下文§4.1–4.7保留历史记录，不支持“NodeANN总是更快”或“目录解析是唯一瓶颈”的概括。完整WIKI两类基线已重跑，见§4.8及完整报告（目标已随实验目录清理删除）：局部全HNSW递归macro recall=0.999559、6.839 ms；全列表IVF达到recall=1、25.126 ms。默认threshold=0保持不变，Flat仅作对照。已修复转换脚本把int位模式数值转换的问题，并确认旧`data/real/test.f32`受影响；另修复457行约束对456条向量的越界，以及NODE双重scope解析。旧ANN质量/延迟不可与新结果直接连线；未逐一核查的历史实验不推断污染范围，向量无关的目录/DSM记录不自动失效。
 
 ---
 
@@ -276,9 +276,9 @@ CCS 扫描明细（recursive，hsw/flat 节点数随阈值）：
 | 局部Flat精确对照 | 1.000000 | 1.000000 | 4.305 |
 | A TrieHI + 全局IVF np1024 | 1.000000 | 1.000000 | 25.126 |
 
-三目录表示在固定全局执行器参数下命中数完全相同；PE-Online/Offline完整行、非递归、p95、QPS、构建与RSS见[当轮报告](2026-10-28-exps/report.md)。局部HNSW递归枚举仅93.279µs（1.36%端到端），其余主要是搜索/合并；不能沿用旧“目录枚举主导”判断。non-recursive局部HNSW recall=1，平均5.329µs；全列表IVF+TrieHI recall=1，8.207ms，但workload中位scope仅2，不能外推到大scope。
+三目录表示在固定全局执行器参数下命中数完全相同；PE-Online/Offline完整行、非递归、p95、QPS、构建与RSS见当轮报告（目标已随实验目录清理删除）。局部HNSW递归枚举仅93.279µs（1.36%端到端），其余主要是搜索/合并；不能沿用旧“目录枚举主导”判断。non-recursive局部HNSW recall=1，平均5.329µs；全列表IVF+TrieHI recall=1，8.207ms，但workload中位scope仅2，不能外推到大scope。
 
-本轮只跑DSQ，没有新增MOVE/MERGE结果。现有prototype以数值node id取posting并维护模拟路径字符串，不是完整生产字符串键字典；目录表示绝对延迟不与论文逐项等价。全部原始数据、输入hash及命令保存在[启动日实验目录](2026-10-27-exps/)，旧CSV未覆盖。
+本轮只跑DSQ，没有新增MOVE/MERGE结果。现有prototype以数值node id取posting并维护模拟路径字符串，不是完整生产字符串键字典；目录表示绝对延迟不与论文逐项等价。全部原始数据、输入hash及命令保存在启动日实验目录（目标已随实验目录清理删除），旧CSV未覆盖。
 
 ---
 

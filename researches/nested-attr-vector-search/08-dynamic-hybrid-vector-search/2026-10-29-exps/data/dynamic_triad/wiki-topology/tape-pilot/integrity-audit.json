@@ -1,7 +1,0 @@
-{
-  "valid_provenance_accepted": true,
-  "mutated_copy_rejected": true,
-  "exception_type": "ValueError",
-  "observed_error": "oracle tape SHA mismatch",
-  "original_tape_and_stamp_still_valid": true
-}

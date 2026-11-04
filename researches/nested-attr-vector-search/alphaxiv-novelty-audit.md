@@ -121,4 +121,4 @@ CertEx是逐点GPU排除，不是目录摘要前沿；不把它写成完整实�
 
 ## 2026-11-03：当前DAG组合图另案审查
 
-上述六方向判定是历史对象，不自动停止当前用户提出的DAG图组合。新对象的[日期化评估](2026-11-03-exps/alphaxiv-dag-novelty.md)已核Stitched/LSSG/UNG作者材料/iRangeGraph/HNSW Merge/JAG等：基础机制已有强前序，完整组合尚未证同构、也未证独立贡献。此次仅使用alphaXiv公开全文与补充作者材料，未调用AI Assistant/discovery MCP；与本文件2026-10-19的工具访问方式不同。原历史证据不覆盖、不改写。
+上述六方向判定是历史对象，不自动停止当前用户提出的DAG图组合。新对象的日期化评估（目标已随实验目录清理删除）已核Stitched/LSSG/UNG作者材料/iRangeGraph/HNSW Merge/JAG等：基础机制已有强前序，完整组合尚未证同构、也未证独立贡献。此次仅使用alphaXiv公开全文与补充作者材料，未调用AI Assistant/discovery MCP；与本文件2026-10-19的工具访问方式不同。原历史证据不覆盖、不改写。

@@ -1,7 +1,0 @@
-kernel=AVX dim=128
-direct nodeann_nk k=10 ef=32 G=3 nq=6 us=28.2437 R=1
-direct nodeann_nk k=10 ef=32 G=1 nq=88 us=7.54246 R=1
-direct nodeann_nk k=10 ef=32 G=2 nq=7 us=9.00867 R=1
-direct nodeann_nk k=100 ef=128 G=2 nq=7 us=22.2484 R=1
-direct nodeann_nk k=100 ef=128 G=3 nq=6 us=35.8549 R=1
-direct nodeann_nk k=100 ef=128 G=1 nq=88 us=16.9736 R=1

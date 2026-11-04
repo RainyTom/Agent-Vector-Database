@@ -98,7 +98,7 @@ make -C build -j10 faiss          # -> build/faiss/libfaiss.so
 - 完成 `fixtures_ccs → PathSeer/FAISS` 转换器（含位图 popcount、golden 可行性、0-based 检查）与位图自测（1 维链：Filtered-HNSW 返回最近可行点，后过滤返回空）。
 - Filtered-HNSW（FAISS HNSW + 位图 selector）与 ACORN（占位/主标签 metadata）已在同一 1000 条 Subtree 查询上测通：
   Filtered-HNSW 在 ef=384 时 1,282 qps / 0.9524，同召回下 B4 为 74,706 qps / 0.9641；ACORN 位图版最高 0.848，达不到门槛。
-  详细数据与公平性说明：[daily/2026-10-20-exps/experiments/pathseer-filtered-ann.md](2026-10-20-exps/experiments/pathseer-filtered-ann.md)。
+  详细数据与公平性说明：daily/2026-10-20-exps/experiments/pathseer-filtered-ann.md（目标已随实验目录清理删除）。
 
 - 生成 CCS 形状的层级工作负载（`prep_ccs.py`）：1365 节点（深度 5、4 叉、1024 叶），每对象 1–5 个直接标签（均值 2.1），25% 的对象主标签落在中间节点，叶类目按 Zipf(1.1) 偏斜并与 512 个向量中心相关；1000 条 Subtree 查询、1000 条 Exact 查询与精确 oracle。
 - 统计（`stats_ccs.json`）：直接标注按深度为 0/4941/5628/5529/5737/187613；Subtree 作用域 p50/p95/max = 10334/49305/86699；Exact 作用域 p50/p95/max = 126/396/6973；空 Exact 作用域 1 个（合成数据的局限）。

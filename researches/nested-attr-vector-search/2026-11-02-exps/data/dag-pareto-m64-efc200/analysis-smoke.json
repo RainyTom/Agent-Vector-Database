@@ -1,6 +1,0 @@
-{
-  "case": "synthetic all-single-graph diagnostic control on loaded audit rows; not ANN evidence",
-  "before": "ZeroDivisionError reproduced",
-  "after": "PASS empty G>1 groups have zero queries and null metrics",
-  "benchmark_CSV_modified": false
-}

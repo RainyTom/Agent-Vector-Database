@@ -1,7 +1,0 @@
-kernel=AVX dim=128
-direct dag k=10 ef=32 G=3 nq=6 us=11.3258 R=0.983333
-direct dag k=10 ef=32 G=1 nq=88 us=9.54603 R=1
-direct dag k=10 ef=32 G=2 nq=7 us=7.74605 R=1
-direct dag k=100 ef=128 G=2 nq=7 us=19.9442 R=1
-direct dag k=100 ef=128 G=3 nq=6 us=25.2874 R=0.995
-direct dag k=100 ef=128 G=1 nq=88 us=25.7996 R=1

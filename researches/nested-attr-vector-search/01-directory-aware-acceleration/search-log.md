@@ -22,7 +22,7 @@
 
 本地原文证据：[iRangeGraph](https://arxiv.org/abs/2409.02571) `paper.md:407-520` 的范围/segment-tree共享图；[Curator](https://arxiv.org/abs/2601.01291) `paper.md:450-500,650-715` 的子树连续ID与按需谓词索引；Packing相关块组织沿用既有全文记录。VA-file原始PDF本轮未成功读取，不能把snippet当精读。没有新增未经完整书目核实的论文条目，既有D0–D5停止/暂停决定不变。
 
-实际完成12轮冻结WIKI实验，见[报告§9](2026-10-28-exps/report.md#9-autoresearch-静态dsq迭代)。scope-run/tile执行候选有效，但DFS区间、bulk scan、SIMD、partial-distance及局部top-k合并都不是单独新贡献；tile cutoff组合的新颖性仍未充分排查。未运行holdout、多数据集或动态维护，不宣称覆盖所有前序。
+实际完成12轮冻结WIKI实验，见报告§9（目标已随实验目录清理删除）。scope-run/tile执行候选有效，但DFS区间、bulk scan、SIMD、partial-distance及局部top-k合并都不是单独新贡献；tile cutoff组合的新颖性仍未充分排查。未运行holdout、多数据集或动态维护，不宣称覆盖所有前序。
 
 ## 2026-10-28 NodeANN递归路由诊断与APS前序
 
@@ -30,7 +30,7 @@
 
 新候选：[Quake: Adaptive Indexing for Vector Search，OSDI2025正式论文](https://www.usenix.org/system/files/osdi25-mohoney.pdf)，另有[arXiv:2506.03437](https://arxiv.org/abs/2506.03437)。本轮原文核到§2.3和§5 Eq.7–9/Alg1（PDF含封面页8–9）：uniform-density与Voronoi半空间近似下预测分区含近邻概率，利用当前第k距离更新概率并按估计recall停止。尚未完整精读理论、实验或引用闭包，列入待精读，不填造完整论文索引或精确recall保证。SPANN/LAET/Auncel为Quake正文引用的继续追查线索，未按二手描述认定完整等价。
 
-实际节点诊断见[报告§10](2026-10-28-exps/report.md#10-用户新问题递归查询能否只搜索有希望的node)：质心截断有较大漏召回；单球best-first保住GT但向量剪枝少。目录语义Node非Voronoi几何分区是待检验差异，不足认证新颖；多球/学习router/federated shard selection仍需补查。没有新算法SOTA或新颖性声明。
+实际节点诊断见报告§10（目标已随实验目录清理删除）：质心截断有较大漏召回；单球best-first保住GT但向量剪枝少。目录语义Node非Voronoi几何分区是待检验差异，不足认证新颖；多球/学习router/federated shard selection仍需补查。没有新算法SOTA或新颖性声明。
 
 ## 2026-10-28 树-图协同、双空间剪枝与图嫁接的前序核对
 
@@ -40,19 +40,19 @@
 
 判断：树+图联合组织、过滤图连通性修复、按选择比选索引/分区、球界剪枝均有直接前序；"无条件的任意子树有界连通度"不成立，需条件化或按子树加边（后者已发表）。真正空白在**目录MOVE/MERGE与向量图的一致性维护**，但须先证明不修图会造成质量损失。
 
-本轮实测见[报告§11](2026-10-28-exps/report.md#11-审稿人视角树-图协同双空间剪枝与图嫁接的可检验性)：过滤图在高选择率下召回塌陷（PG 0.032–0.040）而非延迟上升；精确scope扫描在大scope尾部占99.6%时间（7.06ms@16.8k）；语义Node几何cohesion仅0.80–0.90且多球仅收缩1–4%，球界只裁9.45%向量。未实现新图索引，无SOTA或新颖性声明。
+本轮实测见报告§11（目标已随实验目录清理删除）：过滤图在高选择率下召回塌陷（PG 0.032–0.040）而非延迟上升；精确scope扫描在大scope尾部占99.6%时间（7.06ms@16.8k）；语义Node几何cohesion仅0.80–0.90且多球仅收缩1–4%，球界只裁9.45%向量。未实现新图索引，无SOTA或新颖性声明。
 
 ## 2026-10-28 IGP 量化、NodeANN 与离线 GPU
 
 先查 `papers/papers.jsonl`、`relations.jsonl` 和本方向报告/全文笔记，无IGP、iFVS、LOPQ、SymphonyQG现有完整索引条目。先检索 `vector similarity join`、`high-dimensional similarity join`、`inner-product similarity join` + quantization/compressed/residual，并补 `vector join`、`similarity self-join` 的SQ/PQ/残差变体；随后查 filtered ANN、hierarchical/local/partitioned quantization、quantized graph/refinement。没有把多向量MaxSim或普通ANN称为几何join，也不以无命中证明新颖性。
 
-核心核查：[IGP 作者全文](https://www4.comp.polyu.edu.hk/~csmlyiu/conf/SIGIR25_IGP.pdf) §3.1–3.2、§4–4.2、Table6，Crossref DOI `10.1145/3726302.3730004`，及用户指定仓库固定commit `1899e9316e71b023518f9090fc64fe66dbd0c202` 的CPU入口、共享VQ/SQ训练/打包/解码、质心图、GPU encoder。量化沿用ColBERTv2；当前CPU源码是GIGP+的较快单线程版本，不能与原2025配置混写。GPU训练/assignment/编码存在，非GPU HNSW构图证据；重建不normalize、精排不取raw FP32，迁移须保留原squared-L2。[完整调研与源码定位](2026-10-28-exps/igp-quantization-assessment.md)。
+核心核查：[IGP 作者全文](https://www4.comp.polyu.edu.hk/~csmlyiu/conf/SIGIR25_IGP.pdf) §3.1–3.2、§4–4.2、Table6，Crossref DOI `10.1145/3726302.3730004`，及用户指定仓库固定commit `1899e9316e71b023518f9090fc64fe66dbd0c202` 的CPU入口、共享VQ/SQ训练/打包/解码、质心图、GPU encoder。量化沿用ColBERTv2；当前CPU源码是GIGP+的较快单线程版本，不能与原2025配置混写。GPU训练/assignment/编码存在，非GPU HNSW构图证据；重建不normalize、精排不取raw FP32，迁移须保留原squared-L2。完整调研与源码定位（目标已随实验目录清理删除）。
 
 继续核到直接前序：[iFVS arXiv:2607.22922v1](https://arxiv.org/html/2607.22922v1) §2–4，已做固定PQ codes、query+predicate条件码本及维度权重；正式venue未核实，HTML workshop模板不完整，不当作正式PVLDB论文。其GPU推理与本项目CPU测量不能直接比较。作者future work为unseen-query泛化及workload-shift自调整；目录MOVE下可合并低秩误差摘要是本项目综合推导的待验假设，不写成作者future work或已证空白。
 
 背景核查：[LOPQ CVPR2014原文](https://www.cv-foundation.org/openaccess/content_cvpr_2014/papers/Kalantidis_Locally_Optimized_Product_2014_CVPR_paper.pdf) §4.1/§5.4/§6 的局部residual量化及模型/LUT开销；[SymphonyQG arXiv v1](https://arxiv.org/html/2411.12229) §2.2/§3.1–3.2 的量化图与隐式精排；[low-bit decision study 2609.09854](https://arxiv.org/abs/2609.09854)仅核摘要，完整证明仍待读。多尺度量化/VA-file/RaBitQ及动态谓词编码的引用链未闭合，尚未充分查新。
 
-本轮没有运行训练/建图/编码/检索实验；仅审计既有CSV/退出记录、查询GPU设备/包metadata并做解析内存计算。新增日期化[IGP书目/方法审计](2026-10-28-exps/data/igp-literature-audit-2026-10-28.json)、[直接前序审计](2026-10-28-exps/data/quantization-prior-art-audit-2026-10-28.json)，不声称新增完整全篇论文索引。后续详细研究仍只存本方向目录，实验由用户按命令执行。
+本轮没有运行训练/建图/编码/检索实验；仅审计既有CSV/退出记录、查询GPU设备/包metadata并做解析内存计算。新增日期化IGP书目/方法审计（目标已随实验目录清理删除）、直接前序审计（目标已随实验目录清理删除），不声称新增完整全篇论文索引。后续详细研究仍只存本方向目录，实验由用户按命令执行。
 
 ### 2026-10-28 续：决策级翻转理论使一条设计被否证
 
@@ -62,7 +62,7 @@
 
 证书角度另核本地 [VADER 报告](../../../papers/filtered-ann/2609.38053-vader/paper.report.md)（arXiv 2609.38053v2，页面自述 VLDB 2027，正式卷期/DOI 未核实）：filter-aware GBDT 召回预测 + 早停、按 partition 粒度预测、无无条件逐查询证书、$R_{QUT}$ 0.16–0.35。conANN（PVLDB 2025）与 DARTH+（HAL 2026）本轮只见 VADER 参考文献条目，正文未读，不判断覆盖。可能残留缝隙是“以目录 scope 为 block 的证书 + MOVE/MERGE 后失效”，**未证实**。
 
-为使上述判断可执行，新增 [scope_quantization_probe.py](2026-10-28-exps/experiments/scope_quantization_probe.py)：质心-only 重建当最粗代理量化器，比较同 scope 与跨节点配对对的残差相关/独立性比/翻转率。脚本已在 `work/hlg/smoke`（12 点、4 维、4 中心）冒烟跑通，非研究结论；全量预检待用户执行。
+为使上述判断可执行，新增 scope_quantization_probe.py（目标已随实验目录清理删除）：质心-only 重建当最粗代理量化器，比较同 scope 与跨节点配对对的残差相关/独立性比/翻转率。脚本已在 `work/hlg/smoke`（12 点、4 维、4 中心）冒烟跑通，非研究结论；全量预检待用户执行。
 
 ## 2026-10-28 属性频繁更新下的层级过滤 ANN 初筛
 
@@ -76,11 +76,11 @@
 
 **动态 range 已非空白**：MCI §2.2 称 DSG、DIGRA、RangePQ+ 支持动态特征更新；书目另见 DIGRA（PACMMOD 3(3) 148, doi:10.1145/3725399）、Efficient Dynamic Indexing（PACMMOD 3(3) 152, doi:10.1145/3725401）、Dynamic range-filtering ANN（PVLDB 18(10) 3256–3268）。正文均**未读**，仅记录存在。
 
-**判定**：数值 range + 动态、flat label + 动态（EMA）都已有前序；“解耦 ANN 与属性索引”只能当基线。可辩护窄缝收敛为**祖先闭包（层级）谓词 + 高频 MOVE/重标注 + 查询快照一致性 + 可撤销聚合**，其结构优势是更新只沿一条祖先路径传播（$O(h)$），而边级摘要必须动 $O(M)$ 条边且无法撤销。方案、U1–U5 否证条件与指标见[专项记录](2026-10-28-exps/dynamic-attribute-updates.md)。本轮未实现、未运行；不声称该子问题无人研究，检索链未闭合。
+**判定**：数值 range + 动态、flat label + 动态（EMA）都已有前序；“解耦 ANN 与属性索引”只能当基线。可辩护窄缝收敛为**祖先闭包（层级）谓词 + 高频 MOVE/重标注 + 查询快照一致性 + 可撤销聚合**，其结构优势是更新只沿一条祖先路径传播（$O(h)$），而边级摘要必须动 $O(M)$ 条边且无法撤销。方案、U1–U5 否证条件与指标见专项记录（目标已随实验目录清理删除）。本轮未实现、未运行；不声称该子问题无人研究，检索链未闭合。
 
 **同日收窄（用户澄清重心）**：更新重点是**重命名**这类“只改标识、不改成员集合”的 A 类更新，不是通用 churn。据此把三类更新分开：A 标识/名称（成员不变，召回**必须**不变）、B 成员（改绑定/增删标签）、C 拓扑（MOVE/MERGE）。混成单一 churn 率会把实现 bug 与算法近似混在一起。
 
-代码事实（`src/repro.cpp:238-241`）：原型用 `std::to_string(v)` 拼路径键，**名称未物化**；`rewrite_subtree_paths`（`:334-345`）只在 `move()`/`merge()` 调用，无 rename 路径。因此 **$O(m_u)$ 的改名级联是“把名称写进键”这一设计选择的代价，不是目录表示的固有代价**——这正是可量化的取舍。判据改为 R1 结果逐位不变、R2 向量侧写入量为 0、R3 旧名查询显式拒绝或别名（不得静默空结果）、R4 成本界、R5 别名回收。§5 的引用计数撤销降为可选扩展（只服务 B 类）。重命名在已筛前序中未见专门讨论，但属系统/协议贡献而非新索引。详见[§9](2026-10-28-exps/dynamic-attribute-updates.md#9-重命名作为一等更新本轮修正优先于-36)。
+代码事实（`src/repro.cpp:238-241`）：原型用 `std::to_string(v)` 拼路径键，**名称未物化**；`rewrite_subtree_paths`（`:334-345`）只在 `move()`/`merge()` 调用，无 rename 路径。因此 **$O(m_u)$ 的改名级联是“把名称写进键”这一设计选择的代价，不是目录表示的固有代价**——这正是可量化的取舍。判据改为 R1 结果逐位不变、R2 向量侧写入量为 0、R3 旧名查询显式拒绝或别名（不得静默空结果）、R4 成本界、R5 别名回收。§5 的引用计数撤销降为可选扩展（只服务 B 类）。重命名在已筛前序中未见专门讨论，但属系统/协议贡献而非新索引。详见§9（目标已随实验目录清理删除）。
 
 
 ## 2026-11-01 DAG资格驱动的单队列编码搜索：窄检索
@@ -95,7 +95,7 @@
 
 ## 2026-11-02 ACORN-1搜索策略定向核查
 
-用户要求实现ACORN策略。先查既有论文索引、关系及本地ACORN全文，再核原文v1§5.1–5.3和作者固定commit；不是新一轮全面新颖性检索。确认扩展含所有合格/不合格中间点，过滤后M截断；作者索引不保留普通RNG剪枝，不能把本地现有hnswlib图上的搜索移植称为完整复现。原始入口、作者底层2M与队列细节及s_min回退均单列差异，见[审计](../../../papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)。实现与观测在[当日报告](../2026-11-02-exps/report.md)，保留图主导航、零不合格距离及单队列约束；正式稿/预印本差异仍待核。
+用户要求实现ACORN策略。先查既有论文索引、关系及本地ACORN全文，再核原文v1§5.1–5.3和作者固定commit；不是新一轮全面新颖性检索。确认扩展含所有合格/不合格中间点，过滤后M截断；作者索引不保留普通RNG剪枝，不能把本地现有hnswlib图上的搜索移植称为完整复现。原始入口、作者底层2M与队列细节及s_min回退均单列差异，见[审计](../../../papers/filtered-ann/2403.04871-acorn/implementation-audit-2026-11-02.md)。实现与观测在当日报告（目标已随实验目录清理删除），保留图主导航、零不合格距离及单队列约束；正式稿/预印本差异仍待核。
 
 ## 2026-11-02 分层DAG组合、入口与预算剪枝
 
@@ -110,11 +110,11 @@
 
 ## 2026-11-03 当前DAG组合图alphaXiv创新性核查
 
-对象为直属owner局部HNSW沿外部多父DAG组合、最终一次共享item图搜索；不是旧六方向或编码树方案。先查papers/relations和既有全文，再搜vector similarity join/vector join/similarity self-join/high-dimensional similarity join/inner-product similarity join；返回SimJoin/DiskJoin等，未将普通ANN误称join。随后定向搜filtered ANN hierarchy DAG、Stitched Vamana、HNSW merge/MST、hierarchical labels、UNG题名与DOI及site:alphaxiv.org。完整[实际检索词](../2026-11-03-exps/data/alphaxiv-dag-novelty/search-queries.json)与[来源](../2026-11-03-exps/data/alphaxiv-dag-novelty/sources.json)已保存。
+对象为直属owner局部HNSW沿外部多父DAG组合、最终一次共享item图搜索；不是旧六方向或编码树方案。先查papers/relations和既有全文，再搜vector similarity join/vector join/similarity self-join/high-dimensional similarity join/inner-product similarity join；返回SimJoin/DiskJoin等，未将普通ANN误称join。随后定向搜filtered ANN hierarchy DAG、Stitched Vamana、HNSW merge/MST、hierarchical labels、UNG题名与DOI及site:alphaxiv.org。完整实际检索词（目标已随实验目录清理删除）与来源（目标已随实验目录清理删除）已保存。
 
 alphaXiv公开全文取得8篇、核相关节，另核FD作者原稿。JAG和HNSW Merge首次补全总索引，其他已存全文不复制；未用AI overview替代原文。浏览器broker不可用、llms.txt404，未调用AI Assistant/discovery MCP；UNG作者仓库可读但ACM PDF403，UniFilter全文仍缺。搜索结果窄/噪声大者已换同义式重搜，不声称引用闭包完成。
 
-结论见[评估](../2026-11-03-exps/alphaxiv-dag-novelty.md)：每标签建图后共享、合法多入口单队列、先资格后距离、bitmap等不能单独称新；Direct/Recursive OR可用命名空间祖先标签精确归约至overlap，本轮有限核验通过。多父DAG具体桥接尚未证与前序完整同构，也未证同成本新贡献。保留UNG/UniFilter正文、共享去重标签强基线、导航性质与公平质量/字节比较为待补；本轮不改算法、不报新ANN收益。
+结论见评估（目标已随实验目录清理删除）：每标签建图后共享、合法多入口单队列、先资格后距离、bitmap等不能单独称新；Direct/Recursive OR可用命名空间祖先标签精确归约至overlap，本轮有限核验通过。多父DAG具体桥接尚未证与前序完整同构，也未证同成本新贡献。保留UNG/UniFilter正文、共享去重标签强基线、导航性质与公平质量/字节比较为待补；本轮不改算法、不报新ANN收益。
 
 ## 2026-11-03 属性动态更新的查重与成本边界
 

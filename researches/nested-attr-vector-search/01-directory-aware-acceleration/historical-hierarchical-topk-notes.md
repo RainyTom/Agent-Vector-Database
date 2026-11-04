@@ -1,6 +1,6 @@
 # 层级属性 top-k：历史问题与基线笔记
 
-本文保留原总导航中的 Introduction、Problem Definition、overlap 细化与朴素基线，不作为当前 HLG 实施计划。当前研究入口见[本方向导航](README.md)，WIKI / HLG 状态见[2026-10-28 报告](2026-10-28-exps/report.md)。
+本文保留原总导航中的 Introduction、Problem Definition、overlap 细化与朴素基线，不作为当前 HLG 实施计划。当前研究入口见[本方向导航](README.md)，WIKI / HLG 状态见2026-10-28 报告（目标已随实验目录清理删除）。
 
 历史单路径前缀语义见[规范入口](../../containment-filtered-vector-search/index.md)；商品目录向量连接的独立问题见 [Problem Formulation](problem-formulation.md)。单查询 top-k、集合 overlap 与 cross threshold join 不得混同。
 
