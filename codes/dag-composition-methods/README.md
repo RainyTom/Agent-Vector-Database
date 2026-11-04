@@ -25,7 +25,7 @@ bash autoresearch.sh
 
 当前默认输出`work/dag-two-cases-m64/`，可用`DAG_PARETO_OUT`、`DAG_PARETO_CPU`、`DAG_PARETO_NQ`设置。正式矩阵为120查询×recursive/direct，只含两个固定格：`k=10,efSearch=32`与`k=100,efSearch=128`；NodeANN每图n在格内取1…k，其他方案各一个固定点。原生宽度至少为k，统一按`max(k,efSearch)`执行并同时记录请求/有效值。正常整批预热后测10批次，每批遍历非空查询16遍，计数另跑。程序保存全部点、原始批次和实测值，见[两格比较报告](../../researches/nested-attr-vector-search/2026-11-02-exps/dag-two-cases-report.md)。旧M16与九格探索数据保留，不改写。
 
-历史24/120构图变体驱动仍可显式运行`bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_composition_validation.sh`；它不是当前默认Pareto矩阵。新增分层/b/等字节剪枝仅有[研究设计](../../researches/nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)，尚非已实现臂。
+历史24/120构图变体驱动仍可显式运行`bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_composition_validation.sh`；它不是当前默认Pareto矩阵。新增分层/b/等字节剪枝仅有研究设计（原设计文档已随方案清理删除），尚非已实现臂。
 
 ### DAG 执行器更新
 

@@ -266,7 +266,7 @@
 
 ## 2026-11-02 层级过滤ANN的图拼接与预算边界
 
-先检查43篇总索引/30条关系及全文，再用vector similarity join、vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join联合graph/hierarchy/pruning做窄检索，随后转filtered ANN原始算法。修订已有ACORN/Filtered-DiskANN/LSSG/TFANNS的入口、分层、OR剪枝与预算证据；不新增候选正式条目或作者关系。详见[方向日志](../nested-attr-vector-search/01-directory-aware-acceleration/search-log.md)与[设计](../nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)。
+先检查43篇总索引/30条关系及全文，再用vector similarity join、vector join、similarity self-join、high-dimensional similarity join、inner-product similarity join联合graph/hierarchy/pruning做窄检索，随后转filtered ANN原始算法。修订已有ACORN/Filtered-DiskANN/LSSG/TFANNS的入口、分层、OR剪枝与预算证据；不新增候选正式条目或作者关系。详见[方向日志](../nested-attr-vector-search/01-directory-aware-acceleration/search-log.md)与设计（原设计文档已随方案清理删除）。
 
 BigFANN、EMA、PathFinder、Veda仅核相关机制章节，完整书目/正式版本归档待补；UNG全文仍受限。没有完成全面引用链或查重，不宣称新颖性；本任务是B类filtered ANN，不是新的几何vector join。当前M64平面图的QPS–Recall/n扫描和有限语义探针已运行，新分层/b算法未实施。
 

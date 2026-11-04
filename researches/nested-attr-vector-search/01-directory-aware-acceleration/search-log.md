@@ -85,7 +85,7 @@
 
 ## 2026-11-01 DAG资格驱动的单队列编码搜索：窄检索
 
-用户目标：避免每owner图独立top-k与多路合并，保留层级多属性语义。候选机制见[设计](../2026-11-01-exps/dag-qualified-code-search.md)。这是filtered ANN邻近问题，不是vector join。
+用户目标：避免每owner图独立top-k与多路合并，保留层级多属性语义。候选机制见设计（原设计文档已随方案清理删除）。这是filtered ANN邻近问题，不是vector join。
 
 检索词：`filtered vector search product quantization trie hierarchical labels DAG index`；`"filtered" "product quantization" "index" nearest neighbor`。来源为Web搜索及原始期刊网页；覆盖很窄，没有追完引用链。补查本地papers/relations未命中VA-Trie、1470或PQBF，未新增未精读论文正式记录。
 
@@ -101,7 +101,7 @@
 
 先复核papers/relations和既有ACORN、Filtered-DiskANN、LSSG、TFANNS、Curator、PathSeer全文，再按`vector similarity join / vector join / similarity self-join / high-dimensional similarity join / inner-product similarity join`联合graph/hierarchy/pruning做窄检索；返回ANN评测等邻近项，未找到据此可声称直接join新意的证据。随后定向核filtered graph stitching、hierarchical filtered ANN、entry point inverted map、FilteredRobustPrune、bounded rejected-node traversal。
 
-原文证据与项目推导见[专项设计](../2026-11-02-exps/dag-layered-routing-design.md)。FD Alg.1已有共享OR入口，Alg.3为端点共同标签交集而非二手概括的并集；ACORN保留HNSW层次；LSSG各tier同一V不等HNSW采样层。OR-safe witness、预算状态支配及多父DAG度数反例明确为本项目推导，不归给论文。
+原文证据与项目推导见专项设计（原设计文档已随方案清理删除）。FD Alg.1已有共享OR入口，Alg.3为端点共同标签交集而非二手概括的并集；ACORN保留HNSW层次；LSSG各tier同一V不等HNSW采样层。OR-safe witness、预算状态支配及多父DAG度数反例明确为本项目推导，不归给论文。
 
 新候选只列待办：BigFANN [正式PVLDB19(9)全文](https://www.vldb.org/pvldb/vol19/p2059-chen.pdf)已核§4.2–4.3的shared/exclusive预算；EMA [2606.00734v1](https://arxiv.org/html/2606.00734v1)已核§3，原上层给不合格点算距离，且其对FD的并集概括不替代FD原式；PathFinder [2511.00995v1](https://arxiv.org/html/2511.00995v1) §3–4仍为多图中间结果合并；Veda [2605.01342v1](https://arxiv.org/html/2605.01342v1) §6.2为lattice多索引执行。完整作者顺序、正式版本差异和全文归档未全核，不新增正式记录或照抄实验数字。
 

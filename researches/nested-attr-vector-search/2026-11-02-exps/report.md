@@ -343,7 +343,7 @@ METRIC global_prefilter_exhaustive_miss_queries=22
 
 ## 11. 分层、属性倒排入口、b与边预算研究
 
-交付[完整候选设计](dag-layered-routing-design.md)，不是新增ANN实现：先保留原生高层作控制，再比较相同层配额的random/size/DAG覆盖提升。区分单真实seed、全评分选1与虚拟查询源多seed；只做一次共享图搜索，不退回多图top-k归并。
+交付完整候选设计（原设计文档已随方案清理删除），不是新增ANN实现：先保留原生高层作控制，再比较相同层配额的random/size/DAG覆盖提升。区分单真实seed、全评分选1与虚拟查询源多seed；只做一次共享图搜索，不退回多图top-k归并。
 
 当前双向桥不能保证资格沿边保持。对全部递归OR查询安全的边要求目标owner是源owner后代，对全部direct OR则须同owner。连续b按不合格中间点计，到合格点后重新扩展；累计不重置和全局工作额另列。预算状态必须区分剩余量、层级和距离缓存，不能沿用布尔visited。
 

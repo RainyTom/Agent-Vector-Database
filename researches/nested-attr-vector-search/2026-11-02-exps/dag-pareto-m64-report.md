@@ -14,4 +14,4 @@
 
 新的当前入口仍为`bash autoresearch.sh`，但只跑上述两格，不复现本历史矩阵。搜索函数按k返回结果，栅格宽度按`max(k,efSearch)`归一；NodeANN只在同一格内扫n，并以是否达到该格本方案Recall判断QPS可比；真实Recall超额与未达标状态均保留，不插值、不跨格连线。九格探索的数据另存在`data/dag-fixed-k-ef-m64/`，其图不进入交付。
 
-分层、倒排入口、b及剪枝的候选算法与理论边界继续见[研究设计](dag-layered-routing-design.md)，不把当前平面图测量冒称新策略成绩。M16历史证据另见[独立库报告](dag-validation-report.md)。
+分层、倒排入口、b及剪枝的候选算法与理论边界继续见研究设计（原设计文档已随方案清理删除），不把当前平面图测量冒称新策略成绩。M16历史证据另见[独立库报告](dag-validation-report.md)。

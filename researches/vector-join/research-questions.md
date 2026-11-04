@@ -142,7 +142,7 @@ H2：把 ANN witness 的 false-empty、过滤器 false-negative 与候选搜索�
 
 ### 2026-11-02 RQ-C细化：层配额、OR入口与不合格跳转
 
-用户提出的新候选见[完整设计](../nested-attr-vector-search/2026-11-02-exps/dag-layered-routing-design.md)，仍为研究者综合假设，非作者future work、非已确认新颖。HNSW/ACORN分层、FD入口与拼接、LSSG标签tier、TFANNS块度共享均是已有前序。
+用户提出的新候选见完整设计（原设计文档已随方案清理删除），仍为研究者综合假设，非作者future work、非已确认新颖。HNSW/ACORN分层、FD入口与拼接、LSSG标签tier、TFANNS块度共享均是已有前序。
 
 - 可检验差异：固定逐层节点/边字节配额，DAG多父覆盖责任是否比random/size-only提升更有效；先跑原生层保留控制，不同时叠加所有因素。
 - 入口与语义：倒排保存Direct/Recursive两类真实入口；单真实seed和虚拟查询源多seed共享前沿分别测。递归安全下行边不自动适用于direct。

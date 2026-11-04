@@ -213,4 +213,4 @@ bash researches/nested-attr-vector-search/2026-11-02-exps/experiments/run_dag_pa
 
 单 owner、OR、随机属性绑定、小规模 query、未统一常驻内存仍是限制。剪枝、平面跳转、bitmap 均保留为实验因素，不能先宣布默认优化成功。下一步若测保留局部高层，应仍维持一张图和共享搜索前沿；不把 NodeANN 的多图 top-k 归并包装成我们的新算法。新颖性尚未充分排查。
 
-新增[分层、入口、b与预算剪枝设计](dag-layered-routing-design.md)明确哪些边保持direct/recursive资格、单真实入口与虚拟源的区别、剩余预算状态、OR替代条件和一般多父DAG的度预算反例；目前仅有限语义/内存探针已运行，分层ANN尚未实现，不能混入当前曲线。
+新增分层、入口、b与预算剪枝设计（原设计文档已随方案清理删除）明确哪些边保持direct/recursive资格、单真实入口与虚拟源的区别、剩余预算状态、OR替代条件和一般多父DAG的度预算反例；目前仅有限语义/内存探针已运行，分层ANN尚未实现，不能混入当前曲线。
