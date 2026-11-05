@@ -51,8 +51,8 @@ int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1";
     std::string mode = "nodeann", vecfile = "recon.bin";
     bool nosimd = false;
-    int repeat = 20;
-    int k = 10, ef = 32, queries = 200, M = 16, efC = 200;
+    int repeat = 1;
+    int k = 50, ef = 50, queries = 200, M = 16, efC = 200, perN = 50;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         auto nx = [&]() { return std::string(argv[++i]); };
@@ -67,6 +67,7 @@ int main(int argc, char** argv) {
         else if (a == "--vec") vecfile = nx();
         else if (a == "--nosimd") nosimd = true;
         else if (a == "--repeat") repeat = std::stoi(nx());
+        else if (a == "--N") perN = std::stoi(nx());
     }
 
     // 向量（PQ 还原）
@@ -184,7 +185,7 @@ int main(int argc, char** argv) {
                 auto g = graphs.find(c);
                 if (g == graphs.end()) continue;
                 ++graph_searches;
-                auto r = g->second->searchKnn(qv.data() + size_t(qi) * DIM, k);
+                auto r = g->second->searchKnn(qv.data() + size_t(qi) * DIM, perN);
                 while (!r.empty()) {
                     auto pr = r.top(); r.pop();
                     int id = members[c][pr.second];
@@ -222,7 +223,7 @@ int main(int argc, char** argv) {
     std::sort(lat.begin(), lat.end());
     double mean = 0; for (double v : lat) mean += v; mean /= double(lat.size());
     std::printf("{\n  \"method\": \"nodeann\", \"objects\": %d, \"concepts\": %zu, \"queries\": %d,\n", n, members.size(), nq);
-    std::printf("  \"M\": %d, \"efC\": %d, \"ef\": %d, \"k\": %d,\n", M, efC, ef, k);
+    std::printf("  \"M\": %d, \"efC\": %d, \"ef\": %d, \"k\": %d,\n", M, efC, ef, k, perN);
     std::printf("  \"recall\": %.6f, \"graph_searches\": %ld,\n", double(hit) / double(std::max<long>(denom, 1)), graph_searches);
     double qps_best = double(nq) * 1000.0 / best_pass_ms;
     double qps_avg = double(nq) * 1000.0 / (sum_pass_ms / repeat);
