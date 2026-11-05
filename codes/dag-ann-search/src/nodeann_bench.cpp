@@ -51,6 +51,7 @@ int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1";
     std::string mode = "nodeann", vecfile = "recon.bin";
     bool nosimd = false;
+    int repeat = 20;
     int k = 10, ef = 32, queries = 200, M = 16, efC = 200;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -65,6 +66,7 @@ int main(int argc, char** argv) {
         else if (a == "--mode") mode = nx();
         else if (a == "--vec") vecfile = nx();
         else if (a == "--nosimd") nosimd = true;
+        else if (a == "--repeat") repeat = std::stoi(nx());
     }
 
     // 向量（PQ 还原）
@@ -163,6 +165,9 @@ int main(int argc, char** argv) {
 
     long hit = 0, denom = 0, graph_searches = 0;
     std::vector<double> lat;
+    double best_pass_ms = 1e18, sum_pass_ms = 0;
+    for (int rep = 0; rep < repeat; ++rep) {
+    Timer pass_t;
     for (int qi = 0; qi < nq; ++qi) {
         std::unordered_set<int> scope;
         std::vector<int> stack = qconcepts[qi];
@@ -208,15 +213,21 @@ int main(int argc, char** argv) {
         for (int j = 0; j < k; ++j) if (gt[size_t(qi) * k + j] >= 0) ++e;
         int h = 0;
         for (int j = 0; j < k; ++j) if (gt[size_t(qi) * k + j] >= 0 && got.count(gt[size_t(qi) * k + j])) ++h;
-        hit += h; denom += std::min(k, e);
+        if (rep == 0) { hit += h; denom += std::min(k, e); }
+    }
+    double pass_ms = pass_t.ms();
+    best_pass_ms = std::min(best_pass_ms, pass_ms);
+    sum_pass_ms += pass_ms;
     }
     std::sort(lat.begin(), lat.end());
     double mean = 0; for (double v : lat) mean += v; mean /= double(lat.size());
     std::printf("{\n  \"method\": \"nodeann\", \"objects\": %d, \"concepts\": %zu, \"queries\": %d,\n", n, members.size(), nq);
     std::printf("  \"M\": %d, \"efC\": %d, \"ef\": %d, \"k\": %d,\n", M, efC, ef, k);
     std::printf("  \"recall\": %.6f, \"graph_searches\": %ld,\n", double(hit) / double(std::max<long>(denom, 1)), graph_searches);
-    std::printf("  \"latency_ms_mean\": %.4f, \"latency_ms_p50\": %.4f, \"latency_ms_p95\": %.4f,\n",
-                mean, lat[lat.size() / 2], lat[size_t(lat.size() * 0.95)]);
+    double qps_best = double(nq) * 1000.0 / best_pass_ms;
+    double qps_avg = double(nq) * 1000.0 / (sum_pass_ms / repeat);
+    std::printf("  \"repeat\": %d, \"qps_best_pass\": %.1f, \"qps_avg_pass\": %.1f, \"per_query_us\": %.2f,\n",
+                repeat, qps_best, qps_avg, sum_pass_ms / repeat / double(nq) * 1000.0);
     std::printf("  \"build_ms\": %.1f, \"graph_bytes_est\": %zu, \"vector_source\": \"PQ(m=16) reconstructed\"\n}\n", build_ms, graph_bytes);
     return 0;
 }
