@@ -53,6 +53,8 @@ int main(int argc, char** argv) {
     bool nosimd = false;
     int repeat = 1;
     std::string idxdir = "";
+    std::string origfile = "orig.bin";
+    int pool = 0;
     int k = 50, ef = 50, queries = 200, M = 16, efC = 200, perN = 50;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -70,6 +72,8 @@ int main(int argc, char** argv) {
         else if (a == "--repeat") repeat = std::stoi(nx());
         else if (a == "--N") perN = std::stoi(nx());
         else if (a == "--index-dir") idxdir = nx();
+        else if (a == "--orig-file") origfile = nx();
+        else if (a == "--pool") pool = std::stoi(nx());
     }
 
     // 向量（PQ 还原）
@@ -85,6 +89,16 @@ int main(int argc, char** argv) {
         std::fclose(f);
     }
     const int n = int(vec.size() / DIM);
+    std::vector<float> orig;
+    bool need_orig = (mode == "rerank");
+    if (need_orig) {
+        FILE* f = std::fopen((dir + "/" + origfile).c_str(), "rb");
+        if (!f) { std::fprintf(stderr, "missing %s\n", origfile.c_str()); return 2; }
+        orig.resize(size_t(n) * DIM);
+        size_t got = std::fread(orig.data(), sizeof(float), orig.size(), f);
+        std::fclose(f);
+        if (got != orig.size()) { std::fprintf(stderr, "orig size mismatch\n"); return 2; }
+    }
 
     // 对象 -> 直属概念
     std::vector<int> owner;
@@ -196,7 +210,27 @@ int main(int argc, char** argv) {
         }
         Timer t;
         std::priority_queue<std::pair<float, int>> best;   // max-heap of (dist, id)
-        if (mode == "nodeann") {
+        if (mode == "rerank") {
+            int want = pool > 0 ? pool : perN;
+            std::vector<std::pair<float, int>> cand;
+            for (int c : scope) {
+                auto g = graphs.find(c);
+                if (g == graphs.end()) continue;
+                ++graph_searches;
+                auto r = g->second->searchKnn(qv.data() + size_t(qi) * DIM, want);
+                while (!r.empty()) { auto pr = r.top(); r.pop(); cand.push_back({pr.first, members[c][pr.second]}); }
+            }
+            // 用原始 FP32 重排前 k
+            std::priority_queue<std::pair<float, int>> ex;   // max-heap
+            const float* q = qv.data() + size_t(qi) * DIM;
+            for (auto& pr : cand) {
+                const float* x = orig.data() + size_t(pr.second) * DIM;
+                float s = 0; for (int d = 0; d < DIM; ++d) { float t = x[d] - q[d]; s += t * t; }
+                if (int(ex.size()) < k) ex.push({s, pr.second});
+                else if (s < ex.top().first) { ex.pop(); ex.push({s, pr.second}); }
+            }
+            best = ex;
+        } else if (mode == "nodeann") {
             for (int c : scope) {
                 auto g = graphs.find(c);
                 if (g == graphs.end()) continue;
