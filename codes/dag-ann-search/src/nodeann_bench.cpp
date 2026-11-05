@@ -16,6 +16,28 @@
 
 using namespace hnswlib;
 
+// 标量 L2 空间：纯 for 循环，不调用 hnswlib 的 SIMD 内核
+struct ScalarL2Space : public SpaceInterface<float> {
+    size_t dim_;
+    size_t data_size_;
+    DISTFUNC<float> fstdistfunc_;
+    ScalarL2Space(size_t dim) : dim_(dim), data_size_(dim * sizeof(float)) {
+        fstdistfunc_ = [](const void* p1, const void* p2, const void* qty_ptr) -> float {
+            const float* a = (const float*)p1;
+            const float* b = (const float*)p2;
+            size_t d = *(const size_t*)qty_ptr;
+            float s = 0.0f;
+            for (size_t i = 0; i < d; ++i) { float t = a[i] - b[i]; s += t * t; }
+            return s;
+        };
+    }
+    size_t get_data_size() override { return data_size_; }
+    DISTFUNC<float> get_dist_func() override { return fstdistfunc_; }
+    void* get_dist_func_param() override { return &dim_; }
+    ~ScalarL2Space() override {}
+};
+
+
 static const int DIM = 128;
 
 struct Timer {
@@ -28,6 +50,7 @@ struct Timer {
 int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1";
     std::string mode = "nodeann", vecfile = "recon.bin";
+    bool nosimd = false;
     int k = 10, ef = 32, queries = 200, M = 16, efC = 200;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -41,6 +64,7 @@ int main(int argc, char** argv) {
         else if (a == "--efC") efC = std::stoi(nx());
         else if (a == "--mode") mode = nx();
         else if (a == "--vec") vecfile = nx();
+        else if (a == "--nosimd") nosimd = true;
     }
 
     // 向量（PQ 还原）
@@ -98,7 +122,9 @@ int main(int argc, char** argv) {
     // 每概念建图
     std::unordered_map<int, std::vector<int>> members;
     for (int i = 0; i < n; ++i) members[owner[i]].push_back(i);
-    L2Space space(DIM);
+    L2Space simd_space(DIM);
+    ScalarL2Space scalar_space(DIM);
+    SpaceInterface<float>& space = nosimd ? (SpaceInterface<float>&)scalar_space : (SpaceInterface<float>&)simd_space;
     std::unordered_map<int, HierarchicalNSW<float>*> graphs;
     Timer build;
     size_t graph_bytes = 0;
