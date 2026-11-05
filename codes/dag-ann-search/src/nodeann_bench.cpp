@@ -52,6 +52,7 @@ int main(int argc, char** argv) {
     std::string mode = "nodeann", vecfile = "recon.bin";
     bool nosimd = false;
     int repeat = 1;
+    std::string idxdir = "";
     int k = 50, ef = 50, queries = 200, M = 16, efC = 200, perN = 50;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -68,6 +69,7 @@ int main(int argc, char** argv) {
         else if (a == "--nosimd") nosimd = true;
         else if (a == "--repeat") repeat = std::stoi(nx());
         else if (a == "--N") perN = std::stoi(nx());
+        else if (a == "--index-dir") idxdir = nx();
     }
 
     // 向量（PQ 还原）
@@ -131,9 +133,23 @@ int main(int argc, char** argv) {
     std::unordered_map<int, HierarchicalNSW<float>*> graphs;
     Timer build;
     size_t graph_bytes = 0;
+    int reused = 0;
     for (auto& [c, ids] : members) {
-        auto* g = new HierarchicalNSW<float>(&space, ids.size(), M, efC, 100 + c);
-        for (size_t j = 0; j < ids.size(); ++j) g->addPoint(vec.data() + size_t(ids[j]) * DIM, j);
+        std::string path = idxdir.empty() ? std::string() : (idxdir + "/c" + std::to_string(c) + ".bin");
+        HierarchicalNSW<float>* g = nullptr;
+        if (!path.empty()) {
+            FILE* f = std::fopen(path.c_str(), "rb");
+            if (f) {
+                std::fclose(f);
+                g = new HierarchicalNSW<float>(&space, path, false, ids.size());
+                ++reused;
+            }
+        }
+        if (!g) {
+            g = new HierarchicalNSW<float>(&space, ids.size(), M, efC, 100 + c);
+            for (size_t j = 0; j < ids.size(); ++j) g->addPoint(vec.data() + size_t(ids[j]) * DIM, j);
+            if (!path.empty()) g->saveIndex(path);
+        }
         graphs[c] = g;
         graph_bytes += ids.size() * (M * 2 * sizeof(int) + sizeof(float) * DIM);
     }
@@ -229,6 +245,6 @@ int main(int argc, char** argv) {
     double qps_avg = double(nq) * 1000.0 / (sum_pass_ms / repeat);
     std::printf("  \"repeat\": %d, \"qps_best_pass\": %.1f, \"qps_avg_pass\": %.1f, \"per_query_us\": %.2f,\n",
                 repeat, qps_best, qps_avg, sum_pass_ms / repeat / double(nq) * 1000.0);
-    std::printf("  \"build_ms\": %.1f, \"graph_bytes_est\": %zu, \"vector_source\": \"PQ(m=16) reconstructed\"\n}\n", build_ms, graph_bytes);
+    std::printf("  \"build_ms\": %.1f, \"graphs_reused\": %d, \"graph_dir\": \"%s\"\n}\n", build_ms, reused, idxdir.c_str());
     return 0;
 }
