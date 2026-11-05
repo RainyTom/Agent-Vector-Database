@@ -101,7 +101,7 @@ int main(int argc, char** argv) {
       qv.resize(b / sizeof(float)); if (std::fread(qv.data(), sizeof(float), qv.size(), f) != qv.size()) return 2; std::fclose(f); }
     const int nq = std::min<int>(int(qv.size() / DIM), int(qc.size()));
 
-    long hit = 0, denom = 0, dist_calls = 0;
+    long hit = 0, denom = 0, dist_calls = 0, uniq_visited = 0, pushes = 0, allowed_seen = 0, res_sizes = 0;
     auto t_all = std::chrono::steady_clock::now();
     std::vector<char> allowed(n);
     for (int qi = 0; qi < nq; ++qi) {
@@ -121,6 +121,7 @@ int main(int argc, char** argv) {
         const float* q = qv.data() + size_t(qi) * DIM;
         std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, std::greater<>> cand;
         std::unordered_set<int> visited;
+        std::unordered_set<int> pushed;
         std::priority_queue<std::pair<float, int>> res;   // max-heap of accepted
         auto push_if_allowed = [&](int id, float d) {
             if (int(res.size()) < k) res.push({d, id});
@@ -132,13 +133,14 @@ int main(int argc, char** argv) {
             int id = int(g->getExternalLabel(ep));
             float d = space.get_dist_func()(vec.data() + size_t(id) * DIM, q, space.get_dist_func_param());
             ++dist_calls;
-            cand.push({d, id});
+            cand.push({d, id}); pushed.insert(id);
         }
+        size_t pushes_before = size_t(dist_calls);
         while (!cand.empty()) {
             auto [d, u] = cand.top(); cand.pop();
             if (visited.count(u)) continue;
             visited.insert(u);
-            if (!res.empty() && d > res.top().first && int(visited.size()) > size_t(ef)) break;
+            if (int(res.size()) >= k && d > res.top().first) break;
             if (allowed[u]) push_if_allowed(u, d);
             // 邻接
             int* ll = (int*)g->get_linklist0(u);
@@ -147,10 +149,10 @@ int main(int argc, char** argv) {
             bool expand_two_hop = (!allowed[u]) || (int(res.size()) < k);
             for (size_t i = 0; i < cnt; ++i) {
                 int v = int(g->getExternalLabel((tableint)ids[i]));
-                if (visited.count(v)) continue;
+                if (visited.count(v) || pushed.count(v)) continue;
                 float dv = space.get_dist_func()(vec.data() + size_t(v) * DIM, q, space.get_dist_func_param());
-                ++dist_calls;
-                cand.push({dv, v});
+                ++dist_calls; ++pushes;
+                cand.push({dv, v}); pushed.insert(v);
             }
             if (expand_two_hop && !allowed[u]) {
                 for (size_t i = 0; i < cnt; ++i) {
@@ -160,16 +162,19 @@ int main(int argc, char** argv) {
                     int* d2 = ll2 + 1;
                     for (size_t j = 0; j < c2; ++j) {
                         int w = int(g->getExternalLabel((tableint)d2[j]));
-                        if (visited.count(w)) continue;
+                        if (visited.count(w) || pushed.count(w)) continue;
                         float dw = space.get_dist_func()(vec.data() + size_t(w) * DIM, q, space.get_dist_func_param());
-                        ++dist_calls;
-                        cand.push({dw, w});
+                        ++dist_calls; ++pushes;
+                        cand.push({dw, w}); pushed.insert(w);
                     }
                 }
             }
         }
+        uniq_visited += (long)visited.size();
+        allowed_seen += (long)std::count(allowed.begin(), allowed.end(), (char)1);
         std::unordered_set<int> got;
         while (!res.empty()) { got.insert(res.top().second); res.pop(); }
+        res_sizes += (long)got.size();
         int e2 = 0, h2 = 0;
         for (int j = 0; j < k; ++j) { int id = gt[size_t(qi) * k + j]; if (id >= 0) { ++e2; if (got.count(id)) ++h2; } }
         hit += h2; denom += std::min(k, e2);
@@ -177,7 +182,9 @@ int main(int argc, char** argv) {
     double secs = std::chrono::duration<double>(std::chrono::steady_clock::now() - t_all).count();
     std::printf("{\n  \"method\": \"acorn_style\", \"mode\": \"%s\", \"objects\": %d, \"M\": %d, \"efC\": %d, \"ef\": %d, \"k\": %d,\n",
                 mode.c_str(), n, M, efC, ef, k);
-    std::printf("  \"recall\": %.6f, \"qps\": %.1f, \"dist_calls\": %ld, \"build_ms\": %.1f\n}\n",
-                double(hit) / double(std::max<long>(denom, 1)), nq / secs, dist_calls, build_ms);
+    std::printf("  \"recall\": %.6f, \"qps\": %.1f, \"dist_calls\": %ld, \"build_ms\": %.1f,\n", double(hit) / double(std::max<long>(denom,1)), nq / secs, dist_calls, build_ms);
+    std::printf("  \"uniq_visited_per_q\": %.1f, \"pushes_per_q\": %.1f, \"allowed_per_q\": %.1f, \"res_per_q\": %.2f, \"dup_rate\": %.2f\n}\n",
+                double(uniq_visited)/nq, double(pushes)/nq, double(allowed_seen)/nq, double(res_sizes)/nq,
+                double(pushes)/std::max<double>(double(uniq_visited),1.0));
     return 0;
 }
