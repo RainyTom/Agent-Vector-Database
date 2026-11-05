@@ -1,3 +1,5 @@
+> **2026-11-05 状态：本文件为历史依据，不再是主线。** 当前问题定义见 [problem-formulation-search.md](problem-formulation-search.md)（CCS 概念 DAG 下的多属性 + 向量过滤搜索）。
+
 # Problem Formulation：层级品类与多维属性约束下的跨平台向量连接
 
 ## 问题背景
