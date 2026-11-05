@@ -50,3 +50,38 @@ work/venv-embed/bin/python codes/dag-ann-search/scripts/prepare_pq.py --data wor
 
 - PQ 32× 是**召回上限**来源：1M 上连精确扫描也只有 0.858。任何新方案若在 code 空间搜索，天花板同样受此约束；要突破必须做**原始向量重排（rerank）**，那是新方案的范畴，不是基线的修改。
 - 基线不含属性谓词（当前查询只有概念范围）；多属性过滤属于新方案要覆盖的设定，不在基线内。
+
+---
+
+## 附：新增候选基线（2026-11-05 之后）
+
+研究问题需要**同一索引同时回答"属性包含"与"属性集相等"**。文献结论：
+
+| 方案 | 支持范围（原文） | 零重建切换 | 开源 |
+|---|---|---|---|
+| **LSSG**（arXiv:2609.15058，接收声明 SIGMOD'27 未独立确认） | 明确 equality/containment/overlap，同一多层图按层与 scope 选 | 是 | `nju-websoft/LSSG` |
+| **UNG**（DOI 10.1145/3698822，已发表） | 四种谓词；但官方 `--scenario equality` 去掉 LNG 与跨组边 | **否**（两次构建） | `YZ-Cai/Unified-Navigating-Graph` |
+| **ACORN**（DOI 10.1145/3654923，已发表） | 谓词无关，`search` 接受 `filter_ids_map` 位图 | 是 | `guestrin-lab/ACORN`（FAISS 分支，`faiss/IndexACORN.{h,cpp}`） |
+| Filtered-DiskANN / Stitched（DOI 10.1145/3543507.3583552） | 原文限于"单过滤器精确匹配"，AND 与集合相等列为 future work | 否 | `microsoft/DiskANN` |
+| SIEVE（DOI 10.14778/3749646.3749725） | 每种 predicate form 一个索引 | 否 | `BillyZhaohengLi/SIEVE-vldb25` |
+| TRIEHI（arXiv:2606.16903，预印本） | 递归=子树包含、非递归=精确节点，同一 trie | 是 | 并入 `volcengine/OpenViking` |
+
+**空白**：以上全部在**平坦标签集**上，没有一篇处理 **DAG 可达闭包 + 多父**。
+
+### 已测：ACORN 形态在低选择率下退化（本仓库移植，标量距离 + PQ 码）
+
+168k / 20 查询 / k=50 / ef=50 / M=32：
+
+| 指标 | 数值 |
+|---|---:|
+| recall@50 | 0.8975 |
+| 每查询不同访问节点 | **67,877** |
+| 每查询作用域内合格对象 | 2,375（**1.4% 选择率**） |
+| 每查询距离调用 | 106,235 |
+| 结果数 | 42.5 / 50 |
+| QPS | **0.4** |
+
+同规模同口径对照：B-scan 0.9132 @ 10,544 QPS、B-nodeann 0.9132 @ 10,880 QPS。
+⇒ **全局图 + 谓词位图在此选择率下慢约 2.5 万倍，且凑不满 k**。与 ACORN 论文自身成本模型（低于 $1/\gamma$ 选择率退回 pre-filter）一致。
+
+> 勘误：早先一版结果 recall≈0.03 / 0.9 QPS 是移植 bug（终止条件过早、距离计算未去重 668×），已修；上表为修正后数据。
