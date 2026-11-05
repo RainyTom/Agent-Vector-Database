@@ -119,7 +119,9 @@ int main(int argc, char** argv) {
         }
         // ACORN 风格：best-first，命中过滤的收进结果；未命中的候选做 2 跳扩展
         const float* q = qv.data() + size_t(qi) * DIM;
-        std::priority_queue<std::pair<float, int>, std::vector<std::pair<float, int>>, std::greater<>> cand;
+        std::vector<std::pair<float, int>> cand;   // 小顶堆（std::push_heap/pop_heap + greater）
+        auto cand_cmp = [](const std::pair<float,int>& a, const std::pair<float,int>& b){ return a.first > b.first; };
+        auto cand_push = [&](float d, int id){ cand.push_back({d, id}); std::push_heap(cand.begin(), cand.end(), cand_cmp); };
         std::unordered_set<int> visited;
         std::unordered_set<int> pushed;
         std::priority_queue<std::pair<float, int>> res;   // max-heap of accepted
@@ -133,26 +135,32 @@ int main(int argc, char** argv) {
             int id = int(g->getExternalLabel(ep));
             float d = space.get_dist_func()(vec.data() + size_t(id) * DIM, q, space.get_dist_func_param());
             ++dist_calls;
-            cand.push({d, id}); pushed.insert(id);
+            cand_push(d, id); pushed.insert(id);
         }
         size_t pushes_before = size_t(dist_calls);
         while (!cand.empty()) {
-            auto [d, u] = cand.top(); cand.pop();
+            std::pop_heap(cand.begin(), cand.end(), cand_cmp);
+            auto [d, u] = cand.back(); cand.pop_back();
+            // ACORN 的相对距离停止条件：候选堆中比 d 更近的个数 >= efSearch 即停
+            { size_t below = 0; for (auto& c : cand) if (c.first < d) ++below;
+              if (int(below) >= ef) break; }
             if (visited.count(u)) continue;
             visited.insert(u);
-            if (int(res.size()) >= k && d > res.top().first) break;
             if (allowed[u]) push_if_allowed(u, d);
             // 邻接
             int* ll = (int*)g->get_linklist0(u);
             size_t cnt = g->getListCount((linklistsizeint*)ll);
             int* ids = ll + 1;
-            bool expand_two_hop = (!allowed[u]) || (int(res.size()) < k);
+            bool expand_two_hop = true;   // ACORN-1: gamma == 1 → 对每个邻居都做一跳扩展
+            int num_found = 0;
             for (size_t i = 0; i < cnt; ++i) {
                 int v = int(g->getExternalLabel((tableint)ids[i]));
+                if (allowed[v]) ++num_found;
+                if (allowed[v] && num_found >= 2 * M) { expand_two_hop = false; }
                 if (visited.count(v) || pushed.count(v)) continue;
                 float dv = space.get_dist_func()(vec.data() + size_t(v) * DIM, q, space.get_dist_func_param());
                 ++dist_calls; ++pushes;
-                cand.push({dv, v}); pushed.insert(v);
+                cand_push(dv, v); pushed.insert(v);
             }
             if (expand_two_hop && !allowed[u]) {
                 for (size_t i = 0; i < cnt; ++i) {
@@ -165,7 +173,7 @@ int main(int argc, char** argv) {
                         if (visited.count(w) || pushed.count(w)) continue;
                         float dw = space.get_dist_func()(vec.data() + size_t(w) * DIM, q, space.get_dist_func_param());
                         ++dist_calls; ++pushes;
-                        cand.push({dw, w}); pushed.insert(w);
+                        cand_push(dw, w); pushed.insert(w);
                     }
                 }
             }
