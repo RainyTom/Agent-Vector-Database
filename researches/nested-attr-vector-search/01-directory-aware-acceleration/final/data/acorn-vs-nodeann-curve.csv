@@ -1,0 +1,34 @@
+series,recall,qps
+"NodeANN (per-concept graphs, sweep N)",0.223591,22414.4
+"NodeANN (per-concept graphs, sweep N)",0.366651,23829.4
+"NodeANN (per-concept graphs, sweep N)",0.476196,18304.8
+"NodeANN (per-concept graphs, sweep N)",0.571293,16118.0
+"NodeANN (per-concept graphs, sweep N)",0.651468,16221.2
+"NodeANN (per-concept graphs, sweep N)",0.721696,15268.6
+"NodeANN (per-concept graphs, sweep N)",0.837162,12241.5
+"NodeANN (per-concept graphs, sweep N)",0.913193,11061.7
+"NodeANN (per-concept graphs, sweep N)",0.913074,9764.3
+"NodeANN (per-concept graphs, sweep N)",0.913193,7684.2
+"ACORN γ=1,  M=64, Mβ=64 (sweep ef)",0.439721,1660.4
+"ACORN γ=1,  M=64, Mβ=64 (sweep ef)",0.503908,1263.6
+"ACORN γ=1,  M=64, Mβ=64 (sweep ef)",0.549384,598.0
+"ACORN γ=1,  M=64, Mβ=64 (sweep ef)",0.549384,757.4
+"ACORN γ=1,  M=64, Mβ=64 (sweep ef)",0.549384,744.8
+"ACORN γ=1,  M=64, Mβ=64 (sweep ef)",0.549384,730.2
+"ACORN γ=1,  M=64, Mβ=64 (sweep ef)",0.549384,740.5
+"ACORN γ=1,  M=32, Mβ=32 (sweep ef)",0.233183,2402.4
+"ACORN γ=1,  M=32, Mβ=32 (sweep ef)",0.305542,1682.0
+"ACORN γ=1,  M=32, Mβ=32 (sweep ef)",0.305542,1812.9
+"ACORN γ=1,  M=32, Mβ=32 (sweep ef)",0.305542,1969.0
+"ACORN γ=1,  M=32, Mβ=32 (sweep ef)",0.305542,2007.0
+"ACORN γ=1,  M=32, Mβ=32 (sweep ef)",0.305542,1974.2
+"ACORN γ=12, M=64, Mβ=64 (sweep ef)",0.287541,2546.1
+"ACORN γ=12, M=64, Mβ=64 (sweep ef)",0.363098,1648.7
+"ACORN γ=12, M=64, Mβ=64 (sweep ef)",0.363098,1758.4
+"ACORN γ=12, M=32, Mβ=32 (sweep ef)",0.168404,3414.9
+"ACORN γ=12, M=32, Mβ=32 (sweep ef)",0.257461,2650.7
+"ACORN γ=12, M=32, Mβ=32 (sweep ef)",0.257461,2743.6
+"ACORN γ=12, M=32, Mβ=32 (sweep ef)",0.257461,2798.5
+"ACORN γ=12, M=32, Mβ=32 (sweep ef)",0.257461,2719.4
+"ACORN γ=12, M=32, Mβ=32 (sweep ef)",0.257461,2671.3
+exact scan,0.913193,10479.8
