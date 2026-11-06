@@ -1,0 +1,4 @@
+{"arm":"flat_single_layer","N":10,"ef":50,"k":50,"queries":200,"recall":0.365111,"qps":9339.6,"searches_per_q":4.20,"us_per_concept":25.5}
+{"arm":"hnsw_multi_layer","N":10,"ef":50,"k":50,"queries":200,"recall":0.366769,"qps":19019.6,"searches_per_q":4.20,"us_per_concept":12.5}
+{"arm":"flat_single_layer","N":60,"ef":50,"k":50,"queries":200,"recall":0.910114,"qps":9445.8,"searches_per_q":4.20,"us_per_concept":25.2}
+{"arm":"hnsw_multi_layer","N":60,"ef":50,"k":50,"queries":200,"recall":0.913193,"qps":16449.9,"searches_per_q":4.20,"us_per_concept":14.5}
