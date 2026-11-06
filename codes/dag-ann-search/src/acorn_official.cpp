@@ -8,6 +8,7 @@
 //
 // 另有 --thresh：实现 ACORN 方法本体的选择率回退（s < thresh 走 pre-filter），默认关闭（纯 ACORN 曲线）。
 #include <faiss/IndexACORN.h>
+#include <faiss/impl/ACORN.h>
 
 #include <algorithm>
 #include <chrono>
@@ -77,6 +78,7 @@ int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vecfile = "orig.bin", mode = "containment";
     int k = 50, M = 32, nq_max = 200;
     std::vector<int> gammas{12}, mbetas{32}, efs{50};
+    bool nofilter = false;   // 纯 ANN（不传 filter map），用于拆"枚举开销 vs 过滤开销"
     double thresh = -1.0;   // >=0 则启用选择率回退（方法本体）；<0 纯 ACORN 曲线
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -95,6 +97,7 @@ int main(int argc, char** argv) {
         else if (a == "--efs") efs = split_ints(nx());
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--thresh") thresh = std::stod(nx());
+        else if (a == "--nofilter") nofilter = true;
     }
 
     std::vector<float> base, queries;
@@ -150,7 +153,7 @@ int main(int argc, char** argv) {
         long cnt = 0;
         for (int c : qscope[qi]) { auto it = members.find(c); if (it != members.end()) cnt += long(it->second.size()); }
         qsel[qi] = double(cnt) / double(n);
-        for (size_t i = 0; i < n; ++i) filt[size_t(qi) * n + i] = want.count(owner[i]) ? 1 : 0;
+        for (size_t i = 0; i < n; ++i) filt[size_t(qi) * n + i] = nofilter ? 1 : (want.count(owner[i]) ? 1 : 0);
     }
 
     std::vector<faiss::idx_t> ids(size_t(k), -1);
@@ -175,6 +178,7 @@ int main(int argc, char** argv) {
                 long bhit[NBAND] = {0}, bden[NBAND] = {0}, bn[NBAND] = {0};
                 double bsec[NBAND] = {0};
 
+                const size_t ndis0 = faiss::acorn_stats.ndis, n10 = faiss::acorn_stats.n1, n20 = faiss::acorn_stats.n2;
                 const auto t1 = std::chrono::steady_clock::now();
                 for (int qi = 0; qi < nq; ++qi) {
                     const auto q0 = std::chrono::steady_clock::now();
@@ -211,7 +215,10 @@ int main(int argc, char** argv) {
                     std::printf("%s{\"lo\":%.2f,\"hi\":%.2f,\"n\":%ld,\"recall\":%s,\"qps\":%s}",
                                 bi ? "," : "", BAND_LO[bi], BAND_HI[bi], bn[bi], rb, qb);
                 }
-                std::printf("]}\n");
+                std::printf("],\"ndis_per_q\":%.1f,\"n1_per_q\":%.1f,\"n2_per_q\":%.1f}\n",
+                            double(faiss::acorn_stats.ndis - ndis0) / std::max(1, nq),
+                            double(faiss::acorn_stats.n1 - n10) / std::max(1, nq),
+                            double(faiss::acorn_stats.n2 - n20) / std::max(1, nq));
                 std::fflush(stdout);
             }
         }
