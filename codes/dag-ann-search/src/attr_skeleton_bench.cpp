@@ -149,6 +149,7 @@ int main(int argc, char** argv) {
     int k = 50, M = 16, efC = 200, nq_max = 200, Kcap = 8, repeat = 1, pdiv = 50, ef2 = 16;
     bool skip_links = true;
     bool do_merge = true;
+    bool diag = false;
     std::vector<int> efs{50};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -164,6 +165,7 @@ int main(int argc, char** argv) {
         else if (a == "--ef2") ef2 = std::max(1, std::stoi(nx()));
         else if (a == "--no-skip") skip_links = false;
         else if (a == "--no-merge") do_merge = false;
+        else if (a == "--diag") diag = true;
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t;
@@ -352,9 +354,8 @@ int main(int argc, char** argv) {
                 gbr[gc].push_back(gp);
                 is_gw[gc] = 1;          // 网关节点也是骨架节点：可走 q2 通道
                 ++n_merge_edges;
-                rep_prune(gp);
+                // 合并边**冻结**：不参与任何剪枝
             }
-            for (uint32_t rc : ag[size_t(ci)].reps) rep_prune(abase[size_t(ci)] + rc);
         }
     }
     // 兜底修复：仍然没有入边的属性，强制连一条到最近有成员祖先的代表点
@@ -395,8 +396,11 @@ int main(int argc, char** argv) {
                 }
         }
     }
-    std::fprintf(stderr, "[L2-merge] %ld cross-attribute rep edges (+%ld repaired), RNG-pruned to %d\n",
-                 n_merge_edges, n_repair, Rdeg);
+    // 度控制：合并边冻结、原始边一律不动 —— 允许总度超过 Rdeg。
+    // 依据：剪掉原始边会破坏属性内连通性（实测会同时降低属性触达数与召回）。
+    long n_intra_dropped = 0;
+    std::fprintf(stderr, "[L2-merge] %ld cross-attribute edges (+%ld repaired, FROZEN); intra edges trimmed by %ld; degree cap %d\n",
+                 n_merge_edges, n_repair, n_intra_dropped, Rdeg);
     // 统计：属性层入边（本属性任一代表点，是否有来自**其他属性**代表点的边）
     {
         std::vector<long> in_deg(size_t(A), 0);
@@ -470,6 +474,40 @@ int main(int argc, char** argv) {
     std::fprintf(stderr, "[L3] %d bitmaps x %d words = %.2f MB\n", A, words,
                  double(A) * words * 8.0 / 1048576.0);
 
+    // 诊断：对前若干查询做"范围内全图 BFS"，检验 D 导出子图是否连通
+    if (diag) {
+        std::vector<uint32_t> seen(size_t(n), 0);
+        for (int qi = 0; qi < std::min(nq, 5); ++qi) {
+            std::vector<uint64_t> bm(size_t(words), 0);
+            for (int c : qc[qi]) { auto it = apos.find(c); if (it != apos.end()) {
+                const auto& d = desc[size_t(it->second)];
+                for (int w = 0; w < words; ++w) bm[size_t(w)] |= d[size_t(w)]; } }
+            auto in_scope = [&](uint32_t gi) { const uint32_t a = attr_of[gi]; return ((bm[a/64] >> (a%64)) & 1ull) != 0; };
+            std::vector<int> inD;
+            for (int w = 0; w < words; ++w) { uint64_t x = bm[size_t(w)];
+                while (x) { const int b = __builtin_ctzll(x); x &= x-1; const int a = w*64+b;
+                    if (a < A && !ag[size_t(a)].members.empty()) inD.push_back(a); } }
+            // BFS
+            std::vector<uint32_t> st;
+            for (int c : qc[qi]) { auto it = apos.find(c); if (it == apos.end()) continue;
+                for (uint32_t r : ag[size_t(it->second)].reps) st.push_back(abase[size_t(it->second)] + r); }
+            std::unordered_set<uint32_t> vis(st.begin(), st.end());
+            std::unordered_set<int> attr_seen;
+            while (!st.empty()) {
+                const uint32_t u = st.back(); st.pop_back();
+                if (!in_scope(u)) continue;
+                attr_seen.insert(int(attr_of[u]));
+                auto go = [&](uint32_t v) { if (in_scope(v) && vis.insert(v).second) st.push_back(v); };
+                for (uint32_t j = adj_off[u]; j < adj_off[u+1]; ++j) go(adj_dat[j]);
+                for (uint32_t j = br_off[u]; j < br_off[u+1]; ++j) go(br_dat[j]);
+            }
+            std::fprintf(stderr, "[diag q%d] |D|=%zu  BFS 可达属性=%zu", qi, inD.size(), attr_seen.size());
+            int miss_attr = 0; std::string names;
+            for (int a : inD) if (!attr_seen.count(a)) { ++miss_attr; if (miss_attr <= 4) names += " a" + std::to_string(aids[size_t(a)]); }
+            std::fprintf(stderr, "  不可达属性=%d%s\n", miss_attr, names.c_str());
+        }
+    }
+
     std::vector<uint32_t> vstamp(size_t(n), 0);
     uint32_t token = 0;
     std::vector<uint64_t> bm(size_t(words), 0);
@@ -525,16 +563,19 @@ int main(int argc, char** argv) {
                 }
                 if (any) entered.insert(attr_of[gi]);
             };
-            for (int c : qc[qi]) {
-                auto it = apos.find(c);
-                if (it == apos.end()) continue;
-                const int a = it->second;
-                if (ag[size_t(a)].members.empty()) continue;
-                // 种子 = 该属性的**全部代表点**（单入口是任意点，质量差）
+            // 种子：D 中**每个属性**一个入口（取距查询最近的代表点）。
+            // 单队列不变：这些种子只是同一个队列里的多个起点。
+            for (int a : inD) {
+                uint32_t bi = ag[size_t(a)].entry;
+                float bd = dist2(q, base.data() + size_t(ag[size_t(a)].members[bi]) * DIM);
+                ++dists;
                 for (uint32_t r : ag[size_t(a)].reps) {
-                    ++seeds_sum;
-                    offer(abase[size_t(a)] + r);
+                    const float d = dist2(q, base.data() + size_t(ag[size_t(a)].members[r]) * DIM);
+                    ++dists;
+                    if (d < bd) { bd = d; bi = r; }
                 }
+                ++seeds_sum;
+                offer(abase[size_t(a)] + bi);
             }
             while (!q1_cand.empty() || !q2_cand.empty()) {
                 const float d1 = q1_cand.empty() ? INFINITY : -q1_cand.top().first;
