@@ -1,5 +1,0 @@
-{"tau": 0, "blocks": 1929, "blocks_per_q": 4.2, "recall": 0.912719, "qps": 12058.2, "dists": 410}
-{"tau": 32, "blocks": 591, "blocks_per_q": 3.58, "recall": 0.908929, "qps": 10851.3, "dists": 564}
-{"tau": 64, "blocks": 473, "blocks_per_q": 3.19, "recall": 0.906679, "qps": 9066.5, "dists": 625}
-{"tau": 128, "blocks": 333, "blocks_per_q": 2.55, "recall": 0.88252, "qps": 7720.4, "dists": 868}
-{"tau": 256, "blocks": 247, "blocks_per_q": 2.21, "recall": 0.867125, "qps": 6033.9, "dists": 1145}
