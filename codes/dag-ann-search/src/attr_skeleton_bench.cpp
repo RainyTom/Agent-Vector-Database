@@ -60,96 +60,33 @@ static void shrink_list(const float* base, const Vec& ids, uint32_t bl, Vec& lis
     list.swap(keep);
 }
 
-static void build_attr_graph(const float* base, const Vec& ids, int M, int efC, int nrep, AttrGraph& g) {
+// 用 hnswlib 建该属性的多层索引，然后取 layer 0 邻接作为属性内局部图。
+// 这样建图质量与基线同源（同 RNG 剪边、同层次构建），不需要自写启发式。
+static void build_attr_graph(const float* base, const Vec& ids, int M, int efC, int nrep,
+                             int seed, AttrGraph& g) {
     const int n = int(ids.size());
     g.members = ids;
     g.adj.assign(size_t(n), {});
     if (n == 0) return;
     if (n == 1) { g.entry = 0; g.reps = {0}; return; }
 
-    g.adj[0].push_back(1);
-    g.adj[1].push_back(0);
-    std::vector<uint32_t> vis(size_t(n), 0);
-    uint32_t tok = 0;
-    std::vector<std::pair<float, uint32_t>> cands;
+    RawL2Space space(DIM);
+    hnswlib::HierarchicalNSW<float> idx(&space, size_t(n), M, efC, seed);
+    for (int i = 0; i < n; ++i) idx.addPoint(base + size_t(ids[size_t(i)]) * DIM, hnswlib::labeltype(i));
 
-    for (int i = 2; i < n; ++i) {
-        ++tok;
-        const float* q = base + size_t(ids[size_t(i)]) * DIM;
-        std::priority_queue<std::pair<float, uint32_t>> fr;
-        fr.push({-dist2(q, base + size_t(ids[g.entry]) * DIM), g.entry});
-        vis[g.entry] = tok;
-        cands.clear();
-        while (!fr.empty()) {
-            const auto [nd, v] = fr.top(); fr.pop();
-            const float dv = -nd;
-            if (cands.size() >= size_t(efC)) {
-                float worst = 0;
-                for (auto& c : cands) worst = std::max(worst, c.first);
-                if (dv > worst) break;
-            }
-            cands.push_back({dv, v});
-            for (uint32_t w : g.adj[v]) {
-                if (vis[w] == tok) continue;
-                vis[w] = tok;
-                fr.push({-dist2(q, base + size_t(ids[w]) * DIM), w});
-            }
-        }
-        std::sort(cands.begin(), cands.end());
-        if (cands.size() > size_t(efC)) cands.resize(size_t(efC));
-
-        Vec chosen;
-        for (auto& c : cands) {
-            if (int(chosen.size()) >= M) break;
-            const float* p = base + size_t(ids[c.second]) * DIM;
-            bool ok = true;
-            for (uint32_t s : chosen) if (dist2(p, base + size_t(ids[s]) * DIM) < c.first) { ok = false; break; }
-            if (ok) chosen.push_back(c.second);
-        }
-        if (chosen.empty() && !cands.empty()) chosen.push_back(cands[0].second);
-
-        g.adj[size_t(i)] = chosen;
-        for (uint32_t w : chosen) {           // 反向边收缩
-            g.adj[w].push_back(uint32_t(i));
-            if (int(g.adj[w].size()) > M) shrink_list(base, ids, w, g.adj[w], M);
-        }
-    }
-    // 孤立点补边
+    // 取 layer 0 邻接
     for (int i = 0; i < n; ++i) {
-        if (!g.adj[size_t(i)].empty()) continue;
-        const float* pi = base + size_t(ids[size_t(i)]) * DIM;
-        float best = INFINITY; int bid = -1;
-        for (int j = 0; j < n; ++j) {
-            if (j == i) continue;
-            const float d = dist2(pi, base + size_t(ids[size_t(j)]) * DIM);
-            if (d < best) { best = d; bid = j; }
-        }
-        if (bid >= 0) { g.adj[size_t(i)].push_back(uint32_t(bid)); g.adj[size_t(bid)].push_back(uint32_t(i)); }
-    }
-    // 连通修补
-    {
-        std::vector<int> comp(size_t(n), -1);
-        int nc = 0;
-        for (int s0 = 0; s0 < n; ++s0) {
-            if (comp[size_t(s0)] >= 0) continue;
-            std::vector<int> st{s0};
-            comp[size_t(s0)] = nc;
-            while (!st.empty()) {
-                const int v = st.back(); st.pop_back();
-                for (uint32_t w : g.adj[size_t(v)]) if (comp[w] < 0) { comp[w] = nc; st.push_back(int(w)); }
-            }
-            ++nc;
-        }
-        if (nc > 1) {
-            std::vector<uint32_t> rep(size_t(nc), 0);
-            for (int c = 0; c < nc; ++c) for (int i = 0; i < n; ++i) if (comp[size_t(i)] == c) { rep[size_t(c)] = uint32_t(i); break; }
-            for (int c = 1; c < nc; ++c) {
-                g.adj[rep[0]].push_back(rep[size_t(c)]);
-                g.adj[rep[size_t(c)]].push_back(rep[0]);
-            }
+        int* data = (int*) idx.get_linklist0(hnswlib::tableint(i));
+        const size_t cnt = idx.getListCount((hnswlib::linklistsizeint*) data);
+        auto& L = g.adj[size_t(i)];
+        L.reserve(cnt);
+        for (size_t j = 0; j < cnt; ++j) {
+            const int nb = data[j + 1];
+            if (nb >= 0 && nb < n && nb != i) L.push_back(uint32_t(nb));
         }
     }
-    // 代表点：farthest-first，数量 = min(K, ceil(n/p))
+
+    // 代表点：farthest-first
     const int K2 = std::max(1, std::min(n, nrep));
     g.reps.clear();
     g.reps.push_back(0);
@@ -165,7 +102,7 @@ static void build_attr_graph(const float* base, const Vec& ids, int M, int efC, 
         }
         g.reps.push_back(bid);
     }
-    // 代表点上的 MST，边并入局部图
+    // 代表点 MST，边并入局部图（保持双向）
     const int R = int(g.reps.size());
     if (R >= 2) {
         std::vector<char> in(size_t(R), 0);
@@ -288,7 +225,7 @@ int main(int argc, char** argv) {
         const auto t0 = std::chrono::steady_clock::now();
         for (int i = 0; i < A; ++i) {
             const int nrep = std::max(1, std::min(Kcap, int(mem[size_t(i)].size()) / std::max(1, pdiv) + 1));
-            build_attr_graph(base.data(), mem[size_t(i)], M, efC, nrep, ag[size_t(i)]);
+            build_attr_graph(base.data(), mem[size_t(i)], M, efC, nrep, 100 + i, ag[size_t(i)]);
         }
         std::fprintf(stderr, "[L1] %d attribute graphs in %.1fs (M=%d efC=%d p=%d Kcap=%d)\n", A,
                      std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(), M, efC, pdiv, Kcap);
@@ -296,16 +233,18 @@ int main(int argc, char** argv) {
 
     // 全局图：属性图拼接 + 单向门户/跳转边（独立表）
     std::vector<uint32_t> abase(size_t(A), 0);
-    std::vector<uint32_t> attr_of, obj_of;
+    std::vector<uint32_t> attr_of, obj_of, obj2node;
     {
         size_t tot = 0;
         for (int i = 0; i < A; ++i) { abase[size_t(i)] = uint32_t(tot); tot += ag[size_t(i)].members.size(); }
         attr_of.assign(tot, 0);
         obj_of.assign(tot, 0);
+        obj2node.assign(n, 0);
         for (int i = 0; i < A; ++i)
             for (size_t j = 0; j < ag[size_t(i)].members.size(); ++j) {
                 attr_of[abase[size_t(i)] + j] = uint32_t(i);
                 obj_of[abase[size_t(i)] + j] = ag[size_t(i)].members[j];
+                obj2node[ag[size_t(i)].members[j]] = abase[size_t(i)] + uint32_t(j);
             }
         g_obj_of = obj_of;
     }
@@ -315,10 +254,12 @@ int main(int argc, char** argv) {
         for (size_t j = 0; j < ag[size_t(i)].adj.size(); ++j)
             for (uint32_t w : ag[size_t(i)].adj[size_t(j)]) gadj[off + j].push_back(off + w);
     }
+    std::vector<char> is_rep(size_t(n), 0), is_gw(size_t(n), 0);
     // L2 的跨属性边：**按拓扑序自底向上合并**，合并时双向更新代表点邻居并做 RNG 调整。
     // 说明：不存在"跳转边"这一独立机制；祖先可达深层后代，靠的是合并过程中
     //       代表点邻居被反复更新（下层代表点不是建完就冻结）。
     const int Rdeg = 16;                        // 代表点跨属性邻居的度上界
+    const int PPROT = 2;                        // 每个代表点至少保留的跨属性边数（防止属性成为孤岛）
     std::vector<uint32_t> rep_owner(size_t(n), UINT32_MAX);   // 代表点 -> 所属属性
     for (int i = 0; i < A; ++i)
         for (uint32_t r : ag[size_t(i)].reps) rep_owner[abase[size_t(i)] + r] = uint32_t(i);
@@ -358,14 +299,18 @@ int main(int argc, char** argv) {
             return dist2(pn, base.data() + size_t(node_objid(a)) * DIM) <
                    dist2(pn, base.data() + size_t(node_objid(b)) * DIM);
         });
+        const uint32_t self_attr = rep_owner[node];
         Vec keep;
+        int cross_kept = 0;
         for (uint32_t c : L) {
             if (int(keep.size()) >= Rdeg) break;
+            const bool cross = (rep_owner[c] != self_attr);
             const float* pc = base.data() + size_t(node_objid(c)) * DIM;
             const float dq = dist2(pc, pn);
             bool ok = true;
             for (uint32_t k2 : keep) if (dist2(pc, base.data() + size_t(node_objid(k2)) * DIM) < dq) { ok = false; break; }
-            if (ok) keep.push_back(c);
+            if (ok) { keep.push_back(c); if (cross) ++cross_kept; }
+            else if (cross && cross_kept < PPROT) { keep.push_back(c); ++cross_kept; }   // 保底额度
         }
         L.swap(keep);
     };
@@ -375,27 +320,113 @@ int main(int argc, char** argv) {
         if (!do_merge) break;
         if (ag[size_t(ci)].members.empty()) continue;
         const int cid = aids[size_t(ci)];
-        for (int pch : parents[cid]) {
-            auto pit = apos.find(pch);
-            if (pit == apos.end()) continue;
-            const int pi = pit->second;
-            if (ag[size_t(pi)].members.empty()) continue;
+        // 候选父：直接父；若直接父无成员（无代表点），继续上溯至最近有成员的祖先
+        std::vector<int> up;
+        {
+            std::vector<int> cur;
+            for (int pch : parents[cid]) { auto it = apos.find(pch); if (it != apos.end()) cur.push_back(it->second); }
+            std::unordered_set<int> seen;
+            for (int lvl = 0; lvl < 8 && !cur.empty(); ++lvl) {
+                std::vector<int> nxt;
+                for (int a : cur) {
+                    if (!seen.insert(a).second) continue;
+                    if (!ag[size_t(a)].members.empty()) { up.push_back(a); continue; }   // 找到有代表的祖先
+                    for (int pp : parents[aids[size_t(a)]]) { auto it = apos.find(pp); if (it != apos.end()) nxt.push_back(it->second); }
+                }
+                cur.swap(nxt);
+            }
+        }
+        for (int pi : up) {
             // 合并：父代表点 ↔ 子代表点（双向），并立即更新双方的邻居表
+            // 网关边：派给父代表点 → 子属性中**距它最近的对象**（几何相邻处接入）
             for (uint32_t rp : ag[size_t(pi)].reps) {
                 const uint32_t gp = abase[size_t(pi)] + rp;
-                for (uint32_t rc : ag[size_t(ci)].reps) {
-                    const uint32_t gc = abase[size_t(ci)] + rc;
-                    gbr[gp].push_back(gc);
-                    gbr[gc].push_back(gp);
-                    ++n_merge_edges;
+                const float* pp = base.data() + size_t(ag[size_t(pi)].members[rp]) * DIM;
+                float best = INFINITY; uint32_t bid = 0;
+                for (size_t j = 0; j < ag[size_t(ci)].members.size(); ++j) {
+                    const float d = dist2(pp, base.data() + size_t(ag[size_t(ci)].members[j]) * DIM);
+                    if (d < best) { best = d; bid = uint32_t(j); }
                 }
+                const uint32_t gc = abase[size_t(ci)] + bid;
+                gbr[gp].push_back(gc);
+                gbr[gc].push_back(gp);
+                is_gw[gc] = 1;          // 网关节点也是骨架节点：可走 q2 通道
+                ++n_merge_edges;
                 rep_prune(gp);
             }
             for (uint32_t rc : ag[size_t(ci)].reps) rep_prune(abase[size_t(ci)] + rc);
         }
     }
-    std::fprintf(stderr, "[L2-merge] %ld cross-attribute rep edges (bidirectional, RNG-pruned to %d)\n",
-                 n_merge_edges, Rdeg);
+    // 兜底修复：仍然没有入边的属性，强制连一条到最近有成员祖先的代表点
+    long n_repair = 0;
+    {
+        std::vector<uint32_t> rep_attr0(size_t(n), UINT32_MAX);
+        for (int i = 0; i < A; ++i)
+            for (uint32_t r : ag[size_t(i)].reps) rep_attr0[abase[size_t(i)] + r] = uint32_t(i);
+        std::vector<long> indeg0(size_t(A), 0);
+        for (size_t node = 0; node < n; ++node) {
+            if (rep_attr0[node] == UINT32_MAX) continue;
+            for (uint32_t t : gbr[node])
+                if (rep_attr0[t] != UINT32_MAX && rep_attr0[t] != rep_attr0[node]) ++indeg0[rep_attr0[t]];
+        }
+        for (int i = 0; i < A; ++i) {
+            if (ag[size_t(i)].members.empty() || indeg0[size_t(i)] > 0) continue;
+            // 向上找最近有成员的祖先
+            std::vector<int> cur;
+            for (int pp : parents[aids[size_t(i)]]) { auto it = apos.find(pp); if (it != apos.end()) cur.push_back(it->second); }
+            std::unordered_set<int> seen;
+            int found = -1;
+            for (int lvl = 0; lvl < 8 && !cur.empty() && found < 0; ++lvl) {
+                std::vector<int> nxt;
+                for (int a : cur) {
+                    if (!seen.insert(a).second) continue;
+                    if (!ag[size_t(a)].members.empty()) { found = a; break; }
+                    for (int pp : parents[aids[size_t(a)]]) { auto it = apos.find(pp); if (it != apos.end()) nxt.push_back(it->second); }
+                }
+                cur.swap(nxt);
+            }
+            if (found < 0) continue;
+            for (uint32_t rc : ag[size_t(i)].reps)
+                for (uint32_t rp : ag[size_t(found)].reps) {
+                    gbr[abase[size_t(found)] + rp].push_back(abase[size_t(i)] + rc);
+                    gbr[abase[size_t(i)] + rc].push_back(abase[size_t(found)] + rp);
+                    is_gw[abase[size_t(i)] + rc] = 1;
+                    ++n_repair;
+                }
+        }
+    }
+    std::fprintf(stderr, "[L2-merge] %ld cross-attribute rep edges (+%ld repaired), RNG-pruned to %d\n",
+                 n_merge_edges, n_repair, Rdeg);
+    // 统计：属性层入边（本属性任一代表点，是否有来自**其他属性**代表点的边）
+    {
+        std::vector<long> in_deg(size_t(A), 0);
+        std::vector<uint32_t> rep_attr(size_t(n), UINT32_MAX);
+        for (int i = 0; i < A; ++i)
+            for (uint32_t r : ag[size_t(i)].reps) rep_attr[abase[size_t(i)] + r] = uint32_t(i);
+        for (size_t node = 0; node < n; ++node) {
+            if (rep_attr[node] == UINT32_MAX) continue;
+            for (uint32_t t : gbr[node])
+                if (rep_attr[t] != UINT32_MAX && rep_attr[t] != rep_attr[node]) ++in_deg[rep_attr[t]];
+        }
+        long with_mem = 0, no_in = 0, no_in_items = 0, tot_items = 0;
+        std::vector<std::string> samples;
+        for (int i = 0; i < A; ++i) {
+            if (ag[size_t(i)].members.empty()) continue;
+            ++with_mem;
+            tot_items += long(ag[size_t(i)].members.size());
+            if (in_deg[size_t(i)] == 0) {
+                ++no_in;
+                no_in_items += long(ag[size_t(i)].members.size());
+                if (samples.size() < 8) samples.push_back("a" + std::to_string(aids[size_t(i)]) + "(n=" + std::to_string(ag[size_t(i)].members.size()) + ")");
+            }
+        }
+        std::fprintf(stderr, "[coverage] attrs with members=%ld; zero-in-edge=%ld (%.1f%%); their items=%ld (%.1f%% of %ld)\n",
+                     with_mem, no_in, 100.0 * double(no_in) / double(with_mem),
+                     no_in_items, 100.0 * double(no_in_items) / double(tot_items), tot_items);
+        std::fprintf(stderr, "[coverage] samples:");
+        for (auto& x : samples) std::fprintf(stderr, " %s", x.c_str());
+        std::fprintf(stderr, "\n");
+    }
 
     // 扁平化
     std::vector<uint32_t> adj_off(size_t(n) + 1, 0), adj_dat, br_off(size_t(n) + 1, 0), br_dat;
@@ -410,7 +441,6 @@ int main(int argc, char** argv) {
             for (uint32_t x : gbr[i]) br_dat[w2++] = x;
         }
     }
-    std::vector<char> is_rep(size_t(n), 0);
     size_t nrep_tot = 0;
     for (int i = 0; i < A; ++i)
         for (uint32_t r : ag[size_t(i)].reps) { is_rep[abase[size_t(i)] + r] = 1; ++nrep_tot; }
@@ -446,6 +476,7 @@ int main(int argc, char** argv) {
 
     for (int ef : efs) {
         long hit = 0, denom = 0, dists = 0, elig_sum = 0, entered_sum = 0, inD_sum = 0, seeds_sum = 0;
+        long miss_attr_not_entered = 0, miss_item_not_visited = 0, miss_ranked_out = 0, gt_total = 0, miss_rejected = 0, touched_sum = 0;
         const auto t1 = std::chrono::steady_clock::now();
         for (int round = 0; round < repeat; ++round)
         for (int qi = 0; qi < nq; ++qi) {
@@ -477,16 +508,18 @@ int main(int argc, char** argv) {
             ++token;
 
             std::priority_queue<std::pair<float,uint32_t>> q1_cand, q1_keep, q2_cand, q2_keep;
-            std::unordered_set<uint32_t> entered;
+            std::unordered_set<uint32_t> entered, touched;
             auto offer = [&](uint32_t gi) {
                 if (vstamp[gi] == token) return;      // 首次接触即标记，距离只算一次
                 vstamp[gi] = token;
+                if (!eligible(gi)) return;            // 范围外：连距离都不算，不占预算
+                touched.insert(attr_of[gi]);
                 const float d = dist2(q, base.data() + size_t(obj_of[gi]) * DIM);
                 ++dists;
                 bool any = false;
                 if (int(q1_keep.size()) < ef) { q1_keep.push({d, gi}); q1_cand.push({-d, gi}); any = true; }
                 else if (d < q1_keep.top().first) { q1_keep.pop(); q1_keep.push({d, gi}); q1_cand.push({-d, gi}); any = true; }
-                if (is_rep[gi]) {
+                if (is_rep[gi] || is_gw[gi]) {
                     if (int(q2_keep.size()) < ef2) { q2_keep.push({d, gi}); q2_cand.push({-d, gi}); any = true; }
                     else if (d < q2_keep.top().first) { q2_keep.pop(); q2_keep.push({d, gi}); q2_cand.push({-d, gi}); any = true; }
                 }
@@ -497,8 +530,11 @@ int main(int argc, char** argv) {
                 if (it == apos.end()) continue;
                 const int a = it->second;
                 if (ag[size_t(a)].members.empty()) continue;
-                ++seeds_sum;
-                offer(abase[size_t(a)] + ag[size_t(a)].entry);
+                // 种子 = 该属性的**全部代表点**（单入口是任意点，质量差）
+                for (uint32_t r : ag[size_t(a)].reps) {
+                    ++seeds_sum;
+                    offer(abase[size_t(a)] + r);
+                }
             }
             while (!q1_cand.empty() || !q2_cand.empty()) {
                 const float d1 = q1_cand.empty() ? INFINITY : -q1_cand.top().first;
@@ -506,8 +542,6 @@ int main(int argc, char** argv) {
                 uint32_t gi;
                 if (d1 <= d2) { gi = q1_cand.top().second; q1_cand.pop(); }
                 else { gi = q2_cand.top().second; q2_cand.pop(); }
-                // 越界即停：节点所属属性不在 D 内时，不展开其邻居（位图判定）
-                if (!eligible(gi)) continue;
                 for (uint32_t j = adj_off[gi]; j < adj_off[gi + 1]; ++j) offer(adj_dat[j]);
                 for (uint32_t j = br_off[gi]; j < br_off[gi + 1]; ++j) offer(br_dat[j]);
             }
@@ -534,15 +568,26 @@ int main(int argc, char** argv) {
             int e = 0, h = 0;
             for (int j = 0; j < k; ++j) {
                 const int g2 = gt[size_t(qi) * k + j];
-                if (g2 >= 0) { ++e; if (topk.count(g2)) ++h; }
+                if (g2 < 0) continue;
+                ++e; ++gt_total;
+                if (topk.count(g2)) { ++h; continue; }
+                // 未命中：归为三类
+                const uint32_t node = obj2node[size_t(g2)];
+                const bool attr_in = entered.count(attr_of[node]) > 0;
+                const bool node_seen = (vstamp[node] == token);
+                if (!attr_in && !node_seen)      ++miss_attr_not_entered;   // 结构不可达
+                else if (!attr_in && node_seen)  ++miss_rejected;           // 访问过但准入拒收
+                else if (attr_in && !node_seen)  ++miss_item_not_visited;   // 进了属性但没搜到它
+                else                             ++miss_ranked_out;
             }
             hit += h; denom += std::min(k, e);
             entered_sum += long(entered.size());
+            touched_sum += long(touched.size());
         }
         const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
         std::printf("{\"ef\":%d,\"ef2\":%d,\"p\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"skip\":%d,\"queries\":%d,\"repeat\":%d,"
                     "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.1f,\"eligible_per_q\":%.1f,"
-                    "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f}\n",
+                    "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f,\"miss_attr_not_entered\":%.4f,\"miss_item_not_visited\":%.4f,\"miss_ranked_out\":%.4f,\"miss_rejected\":%.4f,\"attrs_touched\":%.2f}\n",
                     ef, ef2, pdiv, k, M, efC, int(skip_links), nq, repeat,
                     double(hit) / double(std::max<long>(denom, 1)),
                     double(nq) * repeat / s,
@@ -550,7 +595,12 @@ int main(int argc, char** argv) {
                     double(elig_sum) / (double(nq) * repeat),
                     double(dists) / std::max<double>(1.0, double(elig_sum)),
                     double(entered_sum) / (double(nq) * repeat),
-                    double(inD_sum) / (double(nq) * repeat));
+                    double(inD_sum) / (double(nq) * repeat),
+                    double(miss_attr_not_entered) / std::max<long>(1, gt_total),
+                    double(miss_item_not_visited) / std::max<long>(1, gt_total),
+                    double(miss_ranked_out) / std::max<long>(1, gt_total),
+                    double(miss_rejected) / std::max<long>(1, gt_total),
+                    double(touched_sum) / (double(nq) * repeat));
         std::fflush(stdout);
     }
     return 0;
