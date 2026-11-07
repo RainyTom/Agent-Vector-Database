@@ -17,6 +17,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <functional>
 #include <vector>
 
 #include "hnswlib/hnswlib.h"
@@ -279,6 +280,52 @@ static void flatten_adj(LocalGraph& g) {
     std::vector<Vec>().swap(g.adj);   // 释放原结构，避免两套并存
 }
 
+// 概念级位图：desc[c] = 后代闭包（含自身）。查询时 U 的闭包 = 各 desc 的按位或，
+// 之后按置位枚举概念。用于替代逐查询的 DAG 展开（O(|U|*C/64) 而不是 O(|D|*deg)）。
+struct ConceptBits {
+    int words = 0;
+    std::vector<std::vector<uint64_t>> desc;
+    std::vector<long> count;     // 每概念直属图片数
+    std::vector<int> cid_of;     // 稠密下标 -> 概念 id
+    std::unordered_map<int,int> pos;  // 概念 id -> 位图下标
+
+    void build(const std::unordered_map<int, std::vector<int>>& children,
+               const std::unordered_map<int, LocalGraph>& G) {
+        // 位图必须覆盖**全部概念**（含没有直属图片的中间概念），否则闭包传播会断链
+        std::unordered_map<int,int> pos;
+        std::vector<int> ids;
+        auto add = [&](int c) { if (pos.emplace(c, int(ids.size())).second) ids.push_back(c); };
+        for (auto& kv : G) add(kv.first);
+        for (auto& kv : children) { add(kv.first); for (int ch : kv.second) add(ch); }
+        cid_of = ids;
+        this->pos = pos;
+        const int C = int(ids.size());
+        words = (C + 63) / 64;
+        desc.assign(size_t(C), std::vector<uint64_t>(size_t(words), 0));
+        count.assign(size_t(C), 0);
+        for (auto& kv : G) count[size_t(pos[kv.first])] = long(kv.second.members.size());
+        // 拓扑序（子在前）：按子节点递归汇总
+        std::vector<int> state(size_t(C), 0);
+        std::function<void(int)> dfs = [&](int u) {
+            if (state[size_t(u)] == 2) return;
+            if (state[size_t(u)] == 1) return;   // DAG 保证不会成环，防御性返回
+            state[size_t(u)] = 1;
+            auto it = children.find(ids[size_t(u)]);
+            if (it != children.end()) {
+                for (int ch : it->second) {
+                    auto pc = pos.find(ch);
+                    if (pc == pos.end()) continue;
+                    dfs(pc->second);
+                    for (int w = 0; w < words; ++w) desc[size_t(u)][size_t(w)] |= desc[size_t(pc->second)][size_t(w)];
+                }
+            }
+            desc[size_t(u)][size_t(u) / 64] |= (uint64_t(1) << (u % 64));
+            state[size_t(u)] = 2;
+        };
+        for (int i = 0; i < C; ++i) dfs(i);
+    }
+};
+
 int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vec = "recon.bin";
     int k = 50, M = 16, efC = 200, nq_max = 200, nrep = 8, per_concept_N = 50, repeat = 1;
@@ -361,6 +408,11 @@ int main(int argc, char** argv) {
         }
     }
 
+    ConceptBits bits;
+    bits.build(children, G);
+    std::fprintf(stderr, "[bits] %zu concepts, %d words/bitmap, %.1f MB\n",
+                 bits.desc.size(), bits.words,
+                 double(bits.desc.size()) * bits.words * 8.0 / 1048576.0);
     std::vector<uint32_t> stamp(size_t(n), 0);
     uint32_t token = 0;
     std::vector<std::pair<float, int>> merged;
@@ -375,14 +427,26 @@ int main(int argc, char** argv) {
             const auto t1 = std::chrono::steady_clock::now();
             for (int round = 0; round < repeat; ++round)
             for (int qi = 0; qi < nq; ++qi) {
-                std::unordered_set<int> D;
-                {
-                    std::vector<int> st = qc[qi];
-                    while (!st.empty()) { const int c = st.back(); st.pop_back(); if (!D.insert(c).second) continue;
-                        auto it = children.find(c); if (it != children.end()) for (int w : it->second) st.push_back(w); }
+                // 位图闭包：U 中每个概念的 desc 位图按位或，再枚举置位
+                static std::vector<uint64_t> bm;
+                bm.assign(size_t(bits.words), 0);
+                for (int c : qc[qi]) {
+                    auto it = bits.pos.find(c);
+                    if (it == bits.pos.end()) continue;
+                    const auto& d = bits.desc[size_t(it->second)];
+                    for (int w = 0; w < bits.words; ++w) bm[size_t(w)] |= d[size_t(w)];
                 }
                 std::vector<int> inD;
-                for (int c : D) if (G.count(c)) inD.push_back(c);
+                inD.reserve(64);
+                for (int w = 0; w < bits.words; ++w) {
+                    uint64_t x = bm[size_t(w)];
+                    while (x) {
+                        const int b = __builtin_ctzll(x);
+                        x &= x - 1;
+                        const int ci = w * 64 + b;
+                        if (ci < int(bits.cid_of.size()) && G.count(bits.cid_of[size_t(ci)])) inD.push_back(bits.cid_of[size_t(ci)]);
+                    }
+                }
                 if (inD.empty()) continue;
                 const float* q = queries.data() + size_t(qi) * DIM;
 
@@ -505,7 +569,12 @@ int main(int argc, char** argv) {
                         for (uint32_t kk = g.adj_off[li]; kk < g.adj_off[li + 1]; ++kk) push(ci, g.adj_dat[kk]);
                         if (li < g.portal.size()) {
                             for (uint32_t tgt : g.portal[li]) {
-                                if (!D.count(int(tgt))) continue;
+                                {
+                                    auto tp2 = bits.pos.find(int(tgt));
+                                    if (tp2 == bits.pos.end()) continue;
+                                    const int tci = tp2->second;
+                                    if (((bm[size_t(tci) / 64] >> (tci % 64)) & 1ull) == 0) continue;
+                                }
                                 auto it = cpos.find(int(tgt));
                                 if (it == cpos.end()) continue;
                                 push(it->second, best_entry_ci(it->second), /*force=*/false);

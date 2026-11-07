@@ -80,6 +80,7 @@ int main(int argc, char** argv) {
     std::vector<int> gammas{12}, mbetas{32}, efs{50};
     bool nofilter = false;   // 纯 ANN（不传 filter map），用于拆"枚举开销 vs 过滤开销"
     double thresh = -1.0;   // >=0 则启用选择率回退（方法本体）；<0 纯 ACORN 曲线
+    std::vector<double> sweep;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         auto nx = [&]() { return std::string(argv[++i]); };
@@ -97,6 +98,8 @@ int main(int argc, char** argv) {
         else if (a == "--efs") efs = split_ints(nx());
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--thresh") thresh = std::stod(nx());
+        else if (a == "--sweep") { std::stringstream ss(nx()); std::string t;
+            while (std::getline(ss, t, ',')) if (!t.empty()) sweep.push_back(std::stod(t)); }
         else if (a == "--nofilter") nofilter = true;
     }
 
@@ -169,6 +172,8 @@ int main(int argc, char** argv) {
             const double build_s = std::chrono::duration<double>(std::chrono::steady_clock::now() - tb).count();
 
             for (int ef : efs) {
+              std::vector<double> ths = sweep.empty() ? std::vector<double>{thresh} : sweep;
+              for (double th : ths) {
                 faiss::SearchParametersACORN sp;
                 sp.efSearch = ef;
                 sp.check_relative_distance = true;
@@ -182,7 +187,7 @@ int main(int argc, char** argv) {
                 const auto t1 = std::chrono::steady_clock::now();
                 for (int qi = 0; qi < nq; ++qi) {
                     const auto q0 = std::chrono::steady_clock::now();
-                    const bool use_pf = thresh >= 0 && qsel[qi] < thresh;
+                    const bool use_pf = th >= 0 && qsel[qi] < th;
                     if (use_pf) {
                         scan_query(queries.data() + size_t(qi) * DIM, qscope[qi], members, base.data(), k, ids.data(), dis.data());
                         ++pf_q;
@@ -207,7 +212,7 @@ int main(int argc, char** argv) {
                 std::printf("{\"mode\":\"%s\",\"n\":%zu,\"queries\":%d,\"M\":%d,\"gamma\":%d,\"Mbeta\":%d,\"ef\":%d,\"k\":%d,",
                             mode.c_str(), n, nq, M, g, mb, ef, k);
                 std::printf("\"thresh\":%.4f,\"pf_q\":%ld,\"recall\":%.6f,\"qps\":%.1f,\"build_s\":%.1f,\"bands\":[",
-                            thresh, pf_q, double(hit) / double(std::max<long>(denom, 1)), nq / total, build_s);
+                            th, pf_q, double(hit) / double(std::max<long>(denom, 1)), nq / total, build_s);
                 for (int bi = 0; bi < NBAND; ++bi) {
                     char rb[32] = "null", qb[32] = "null";
                     if (bden[bi] > 0) std::snprintf(rb, sizeof rb, "%.4f", double(bhit[bi]) / double(bden[bi]));
@@ -220,8 +225,9 @@ int main(int argc, char** argv) {
                             double(faiss::acorn_stats.n1 - n10) / std::max(1, nq),
                             double(faiss::acorn_stats.n2 - n20) / std::max(1, nq));
                 std::fflush(stdout);
-            }
-        }
-    }
+              }   // thresh
+            }       // ef
+        }           // mbeta
+    }               // gamma
     return 0;
 }
