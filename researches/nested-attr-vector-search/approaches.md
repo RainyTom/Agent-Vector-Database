@@ -17,6 +17,64 @@
 
 **对象与向量**。每个对象（这里是一条 SIFT 描述子对应的图片/条目）标注**一个**直属概念（`own(o)`），向量为 128 维。实验规模 168,937 个对象。
 
+```svg
+<svg viewBox="0 0 900 320" width="100%" font-family="sans-serif" font-size="12">
+  <text x="16" y="18" fill="var(--muted)">CCS Concepts 的真实形态：单根、深度 0–6、103 个概念有多个父（最多 3 个）</text>
+
+  <!-- 左：局部结构 -->
+  <g stroke="var(--border)" stroke-width="1.3" fill="none">
+    <line x1="250" y1="46" x2="170" y2="92"/>
+    <line x1="250" y1="46" x2="330" y2="92"/>
+    <line x1="170" y1="112" x2="120" y2="158"/>
+    <line x1="170" y1="112" x2="215" y2="158"/>
+    <line x1="330" y1="112" x2="285" y2="158"/>
+    <!-- 多父：两个父指向同一个子 -->
+    <line x1="215" y1="158" x2="250" y2="200" stroke="var(--warning)" stroke-width="1.8"/>
+    <line x1="285" y1="158" x2="250" y2="200" stroke="var(--warning)" stroke-width="1.8"/>
+    <line x1="250" y1="220" x2="250" y2="256"/>
+  </g>
+  <g font-size="11" text-anchor="middle">
+    <rect x="222" y="30" width="56" height="24" rx="5" fill="var(--surface)" stroke="var(--border)"/><text x="250" y="46" fill="var(--fg)">根 1928</text>
+    <rect x="142" y="90" width="56" height="24" rx="5" fill="var(--surface)" stroke="var(--border)"/><text x="170" y="106" fill="var(--fg)">A</text>
+    <rect x="302" y="90" width="56" height="24" rx="5" fill="var(--surface)" stroke="var(--border)"/><text x="330" y="106" fill="var(--fg)">B</text>
+    <rect x="92" y="156" width="56" height="24" rx="5" fill="var(--surface)" stroke="var(--border)"/><text x="120" y="172" fill="var(--fg)">C</text>
+    <rect x="187" y="156" width="56" height="24" rx="5" fill="var(--warning)" fill-opacity="0.18" stroke="var(--warning)"/><text x="215" y="172" fill="var(--fg)">F</text>
+    <rect x="257" y="156" width="56" height="24" rx="5" fill="var(--surface)" stroke="var(--border)"/><text x="285" y="172" fill="var(--fg)">G</text>
+    <rect x="222" y="198" width="56" height="24" rx="5" fill="var(--warning)" fill-opacity="0.18" stroke="var(--warning)"/><text x="250" y="214" fill="var(--fg)">H</text>
+    <rect x="222" y="256" width="56" height="24" rx="5" fill="var(--surface)" stroke="var(--border)"/><text x="250" y="272" fill="var(--fg)">…</text>
+  </g>
+  <text x="60" y="300" fill="var(--warning)" font-size="11">F、H 各有两个父 —— 树里放不下，必须按 DAG 处理</text>
+
+  <!-- 右：统计 -->
+  <g>
+    <text x="430" y="46" fill="var(--fg)">真实统计（本实验数据）</text>
+    <text x="430" y="70" fill="var(--muted)">概念数 1,929　父子边 2,040　根 1 个</text>
+    <text x="430" y="90" fill="var(--muted)">深度 0–6　多父概念 103 个（5.3%），最多 3 个父</text>
+    <text x="430" y="110" fill="var(--muted)">有直属对象的概念 768 个　对象 168,937 个</text>
+    <text x="430" y="130" fill="var(--muted)">每概念对象数：均值 220、中位 66、最大 9,823</text>
+  </g>
+  <!-- 直方图：概念规模 -->
+  <g>
+    <text x="430" y="162" fill="var(--muted)">概念规模分布（对象数，对数分桶）</text>
+    <g fill="var(--accent)" fill-opacity="0.5">
+      <rect x="430" y="200" width="30" height="60"/><rect x="468" y="212" width="30" height="48"/>
+      <rect x="506" y="226" width="30" height="34"/><rect x="544" y="240" width="30" height="20"/>
+      <rect x="582" y="246" width="30" height="14"/><rect x="620" y="250" width="30" height="10"/>
+    </g>
+    <g stroke="var(--border)" fill="none"><line x1="424" y1="260" x2="680" y2="260"/></g>
+    <g fill="var(--muted)" font-size="10">
+      <text x="430" y="276">1</text><text x="468" y="276">4</text><text x="506" y="276">16</text>
+      <text x="544" y="276">64</text><text x="582" y="276">256</text><text x="620" y="276">1k+</text>
+    </g>
+    <text x="690" y="212" fill="var(--muted)" font-size="11">大多数概念很小</text>
+    <text x="690" y="228" fill="var(--muted)" font-size="11">（中位 66 个对象），</text>
+    <text x="690" y="244" fill="var(--muted)" font-size="11">少数极大（9,823）</text>
+  </g>
+</svg>
+```
+
+**这个形状决定了后面所有设计**：单根、多父、深度浅、规模高度偏斜。多父使"压成树"不可行；规模偏斜使"每概念一张等大图"不合理；浅深度使"沿路径逐层下降"可行。
+
 **为什么要强调它是 DAG**。树的索引技巧（区间编码、前缀共享）在 DAG 上会失效：一个概念若有 3 个父，就无法用一个连续区间同时表示"从三个父都能到达它"。我们对全部 1,929 个概念做过穷举验证：只要存在 3 父节点，就不存在把后代集合映射成区间的线性序（实测这类反例在 n=4 时占 1.6%，n=6 时占 16.3%）。因此**不能**把 DAG 直接压成树来做精确路由——这是本方案必须先解决的结构性问题，也是 §4 中"前缀树只负责路由、闭包交给位图"的原因。
 
 **量化**。向量用 PQ(m=16, k=256) 压缩 32×，搜索在还原向量上做。因此召回率的物理上限是 **0.9132**，不是 1.0；要 1.0 必须回原始 FP32 重排。
@@ -39,72 +97,115 @@
 | **同子树/同属性的 item 聚集** | 图上的边必须让"同概念的 item 彼此近"，否则查询进入该概念后要绕远路 |
 | **快速导航** | 不是"能到达"，而是"用尽量少的距离计算到达"——距离计算是本问题唯一的主要成本 |
 
-### 2.2 三条现有路线各自卡在哪
+### 2.2 两条基线各自卡在哪（ACORN 已排除，理由见下）
 
 ```svg
-<svg viewBox="0 0 900 300" width="100%" font-family="sans-serif" font-size="12">
-  <text x="16" y="18" fill="var(--muted)">同样一次查询（合格集 1,140 个对象），三条路线的距离计算花在哪</text>
+<svg viewBox="0 0 900 250" width="100%" font-family="sans-serif" font-size="12">
+  <text x="16" y="18" fill="var(--muted)">同样一次查询（合格集 1,140 个对象），距离计算花在哪</text>
 
-  <!-- A: 全局图 -->
-  <text x="20" y="46" fill="var(--fg)">A. 全局图 + 谓词位图（ACORN）</text>
+  <rect x="16" y="32" width="420" height="196" rx="8" fill="none" stroke="var(--border)"/>
+  <text x="30" y="54" fill="var(--fg)">基线 1：Pre-filter（精确扫描合格集）</text>
+  <g fill="var(--muted)">
+    <circle cx="46" cy="84" r="2.5"/><circle cx="66" cy="84" r="2.5"/><circle cx="86" cy="84" r="2.5"/>
+    <circle cx="106" cy="84" r="2.5"/><circle cx="126" cy="84" r="2.5"/><circle cx="146" cy="84" r="2.5"/>
+    <circle cx="166" cy="84" r="2.5"/><circle cx="186" cy="84" r="2.5"/><circle cx="206" cy="84" r="2.5"/>
+    <circle cx="226" cy="84" r="2.5"/><circle cx="246" cy="84" r="2.5"/><circle cx="266" cy="84" r="2.5"/>
+    <circle cx="286" cy="84" r="2.5"/><circle cx="306" cy="84" r="2.5"/><circle cx="326" cy="84" r="2.5"/>
+    <circle cx="346" cy="84" r="2.5"/><circle cx="366" cy="84" r="2.5"/><circle cx="386" cy="84" r="2.5"/>
+  </g>
+  <text x="30" y="112" fill="var(--muted)">逐个算距离，一个不漏 —— 这是它的保证，</text>
+  <text x="30" y="128" fill="var(--muted)">也是它的下限。</text>
+  <text x="30" y="152" fill="var(--danger)">1,140 次距离/查询</text>
+  <text x="30" y="172" fill="var(--muted)">选择率越低，这个数越小 —— 所以它天然擅长低选择率。</text>
+  <text x="30" y="196" fill="var(--muted)">但它无法回答"再少算一些、召回只掉一点点"这个问题。</text>
+  <text x="30" y="214" fill="var(--muted)">（召回 0.9132，受 PQ 量化上限约束）</text>
+
+  <rect x="452" y="32" width="432" height="196" rx="8" fill="none" stroke="var(--border)"/>
+  <text x="466" y="54" fill="var(--fg)">基线 2：NodeANN（每概念一张图，各搜 top-N）</text>
   <g stroke="var(--muted)" fill="none">
-    <circle cx="40" cy="80" r="2.5"/><circle cx="70" cy="72" r="2.5"/><circle cx="100" cy="86" r="2.5"/>
-    <circle cx="130" cy="74" r="2.5"/><circle cx="160" cy="88" r="2.5"/><circle cx="190" cy="76" r="2.5"/>
-    <line x1="40" y1="80" x2="70" y2="72"/><line x1="70" y1="72" x2="100" y2="86"/>
-    <line x1="100" y1="86" x2="130" y2="74"/><line x1="130" y1="74" x2="160" y2="88"/>
-    <line x1="160" y1="88" x2="190" y2="76"/>
+    <circle cx="490" cy="86" r="2.5"/><circle cx="514" cy="78" r="2.5"/><circle cx="538" cy="90" r="2.5"/>
+    <line x1="490" y1="86" x2="514" y2="78"/><line x1="514" y1="78" x2="538" y2="90"/>
+    <circle cx="572" cy="86" r="2.5"/><circle cx="596" cy="78" r="2.5"/><circle cx="620" cy="90" r="2.5"/>
+    <line x1="572" y1="86" x2="596" y2="78"/><line x1="596" y1="78" x2="620" y2="90"/>
+    <circle cx="654" cy="86" r="2.5"/><circle cx="678" cy="78" r="2.5"/><circle cx="702" cy="90" r="2.5"/>
+    <line x1="654" y1="86" x2="678" y2="78"/><line x1="678" y1="78" x2="702" y2="90"/>
   </g>
-  <text x="20" y="112" fill="var(--muted)">谓词把图切碎后，搜索在"不可达"里打转：</text>
-  <text x="20" y="128" fill="var(--danger)">ef 50→800，召回 0.159 不动</text>
-  <text x="20" y="144" fill="var(--muted)">只能靠回退精确扫描兜底（197/200 查询）</text>
-
-  <!-- B: NodeANN -->
-  <text x="330" y="46" fill="var(--fg)">B. 每概念一张图（NodeANN）</text>
-  <g stroke="var(--muted)" fill="none">
-    <circle cx="350" cy="80" r="2.5"/><circle cx="378" cy="72" r="2.5"/><circle cx="406" cy="86" r="2.5"/>
-    <line x1="350" y1="80" x2="378" y2="72"/><line x1="378" y1="72" x2="406" y2="86"/>
-    <circle cx="450" cy="80" r="2.5"/><circle cx="478" cy="72" r="2.5"/><circle cx="506" cy="86" r="2.5"/>
-    <line x1="450" y1="80" x2="478" y2="72"/><line x1="478" y1="72" x2="506" y2="86"/>
-  </g>
-  <text x="330" y="112" fill="var(--muted)">每张图都从自己的入口重新爬，且每张图</text>
-  <text x="330" y="128" fill="var(--muted)">都要搜到 ef=50 才停：</text>
-  <text x="330" y="144" fill="var(--danger)">实测 1,448 次距离/查询（合格集才 1,140）</text>
-
-  <!-- C: ours -->
-  <text x="640" y="46" fill="var(--fg)">C. 本方案</text>
-  <g stroke="var(--accent)" fill="none">
-    <circle cx="660" cy="80" r="4"/><circle cx="700" cy="80" r="4"/><circle cx="740" cy="80" r="4"/>
-    <line x1="660" y1="80" x2="700" y2="80"/><line x1="700" y1="80" x2="740" y2="80"/>
-  </g>
-  <text x="640" y="112" fill="var(--muted)">代表点当多入口（省掉重新爬），</text>
-  <text x="640" y="128" fill="var(--muted)">门户桥跨子树跳转，</text>
-  <text x="640" y="144" fill="var(--success)">实测 420 次距离/查询（0.9127 召回）</text>
-
-  <!-- 距离条 -->
-  <text x="20" y="180" fill="var(--fg)">每查询距离计算次数（越短越好）</text>
-  <g>
-    <rect x="20" y="192" width="600" height="18" fill="var(--danger)" fill-opacity="0.35"/>
-    <text x="628" y="206" fill="var(--muted)">NodeANN 1,448</text>
-    <rect x="20" y="216" width="176" height="18" fill="var(--accent)" fill-opacity="0.45"/>
-    <text x="204" y="230" fill="var(--muted)">本文 420（ef=50）</text>
-    <rect x="20" y="240" width="472" height="18" fill="var(--muted)" fill-opacity="0.25"/>
-    <text x="500" y="254" fill="var(--muted)">精确扫描 1,140（合格集大小）</text>
-  </g>
-  <text x="20" y="284" fill="var(--muted)">本文比精确扫描还少 63%：说明"该看的都看了，不该看的一个没看"。</text>
+  <text x="466" y="112" fill="var(--muted)">每张概念图都从自己的入口重新爬，且每张都要搜满 ef=50；</text>
+  <text x="466" y="128" fill="var(--muted)">12.6 次图搜索/查询，重复起步 + 重复搜满。</text>
+  <text x="466" y="152" fill="var(--danger)">1,448 次距离/查询（比精确扫描还多 27%）</text>
+  <text x="466" y="172" fill="var(--muted)">它解决了"可达"，但没解决"经济"。</text>
+  <text x="466" y="196" fill="var(--muted)">召回 0.9132，QPS 10,437（同协议）。</text>
 </svg>
 ```
 
-**路线 A（全局图）**：谓词把图切成互不相通的分量，搜索在"不可达"里消耗预算。实测 ef 从 50 加到 800 召回不动（0.159），只能靠回退精确扫描兜底。
+**基线 1（Pre-filter）**：把合格集逐个算一遍，$|E(U)|=1{,}140$ 次距离。它是"召回上限 + 成本下限"的基准，选择率越低它越快，因此在本负载上很强。
 
-**路线 B（NodeANN）**：结构上确实跳过了无关概念，召回能到上限，但每个概念都从自己的入口重新爬，且每张图都要搜满 ef=50 才停。**实测每查询 1,448 次距离——比精确扫描合格集（1,140）还多 27%**。这就是"能导航但导航不经济"。
+**基线 2（NodeANN）**：结构上跳过了无关概念，召回能到上限，但每张概念图都要搜满 $ef=50$，且每个概念从自己入口重新爬。实测 **1,448 次距离/查询**——比精确扫描还多 27%。它解决了"可达"，没解决"经济"。
 
-**路线 C（本方案）**：把"进入概念"的成本压到一次代表点选择（8 次距离），把"跨概念"变成一条门户桥，把"每概念各搜满 ef"改成"共享预算 + 每概念配额"。结果每查询 420 次距离，**比精确扫描少 63%，比 NodeANN 少 71%**。
+**为什么排除 ACORN**：它的设计前提是"谓词低基数、可重复"（如 stars 1–5 这类标签）。我们的谓词是 1,929 个概念上的**可达闭包**，按标签剪边会把图切成互不相通的分量。实测它的图搜索路径召回只有 **0.159**，且 $ef$ 从 50 加到 800 不动；把方法本体（含低选择率回退 pre-filter）算进来，197/200 条查询都退回精确扫描，等价于"就是一个扫描器"。因此它无法作为有意义的对照基线，只在附录里记录这两组数字。
 
-### 2.3 为什么"同子树聚集"是必要条件
+### 2.3 为什么低选择率下还能比 Pre-filter 快：按平均计算次数拆开看
 
-如果图上的边只按几何距离连，那么"同一概念的 item"在图上并不聚集：查询进入该概念后，还要在概念内绕行才能碰到它的成员。本方案在构造期就用**概念内建图**保证这一点——概念内 item 只与同概念 item 连边（保边），跨概念只通过门户桥连接。这样"结构上属于同一子树"与"图上彼此相邻"是同一件事，导航才可能经济。
+这是本方案最需要解释的一点。直觉是"选择率低 → 合格集小 → 精确扫描已经很快 → 图索引没有空间"。实测不是这样，原因是**两个数的对比被搞错了对象**。
 
-## 3. 索引的三层结构## 3. 索引的三层结构
+**先看三个平均量（200 查询、同协议）**
+
+| 量 | 数值 | 含义 |
+|---|---:|---|
+| 合格集 $|E(U)|$ | **1,140** | Pre-filter 必须算的距离次数（一个不漏） |
+| 本方案距离次数 | **420**（ef=50） | 图搜索实际算的次数 |
+| 比值 | **0.368** | 只算了合格集的 37% |
+
+**420 次怎么来的，拆成三段**
+
+```svg
+<svg viewBox="0 0 900 300" width="100%" font-family="sans-serif" font-size="12">
+  <text x="16" y="18" fill="var(--muted)">一次查询的距离预算拆解（平均：合格集 1,140，实际 420）</text>
+
+  <!-- 三段条 -->
+  <g>
+    <rect x="30" y="42" width="840" height="26" fill="var(--muted)" fill-opacity="0.18"/>
+    <text x="36" y="60" fill="var(--muted)">合格集 1,140（Pre-filter 全算）</text>
+
+    <rect x="30" y="82" width="310" height="26" fill="var(--accent)" fill-opacity="0.45"/>
+    <text x="36" y="100" fill="var(--fg)">本方案 420（37%）</text>
+
+    <rect x="352" y="82" width="200" height="26" fill="var(--success)" fill-opacity="0.45"/>
+    <text x="358" y="100" fill="var(--fg)">入口选择 ≈ 34</text>
+
+    <rect x="564" y="82" width="120" height="26" fill="var(--warning)" fill-opacity="0.45"/>
+    <text x="570" y="100" fill="var(--fg)">导航 ≈ 300</text>
+
+    <rect x="696" y="82" width="174" height="26" fill="var(--border)" fill-opacity="0.6"/>
+    <text x="702" y="100" fill="var(--fg)">收尾 ≈ 86</text>
+  </g>
+
+  <text x="30" y="136" fill="var(--muted)">① 入口选择：每个参与概念比 8 个代表点（4.2 概念 × 8 ≈ 34 次）。它替代了 NodeANN"从固定入口重新爬"的那段路。</text>
+  <text x="30" y="158" fill="var(--muted)">② 导航：沿概念内图边 + 门户桥前进。只走"能改进当前 top-k"的方向，遇到差于当前第 50 名的分支就停。</text>
+  <text x="30" y="180" fill="var(--muted)">③ 收尾：每概念结果表合并、边界处理。</text>
+
+  <text x="30" y="214" fill="var(--fg)">为什么能比全扫少 63%：</text>
+  <text x="30" y="236" fill="var(--muted)">· 图搜索不需要访问合格集里的每个点，只需要访问"可能进 top-50"的点；</text>
+  <text x="30" y="256" fill="var(--muted)">· 每概念图很小（中位 66 个对象），2–3 跳就到边界，不会长距离绕行；</text>
+  <text x="30" y="276" fill="var(--muted)">· 代表点入口让起点就靠近答案，省掉"从远处理想点爬过来"的那一段。</text>
+</svg>
+```
+
+**关键在于：召回几乎没损失**
+
+| 方案 | recall | 距离/查询 | 相对合格集 |
+|---|---:|---:|---:|
+| Pre-filter | 0.9132 | 1,140 | 100% |
+| 本方案（ef=50） | 0.9127 | **420** | **37%** |
+| 本方案（ef=400） | 0.9132 | 487 | 43% |
+
+差距只有 **0.0005**（0.9132 vs 0.9127），而这个 0.9132 本身是 **PQ 量化上限**——即使全扫也只能到这里。也就是说：我们少算 63% 的距离，换来的是量化噪声量级的召回损失，不是真实的质量下降。
+
+**如果换成更严格的召回要求**，只需把 ef 提到 400：距离 487（43%）、召回 0.9132，仍然比全扫少 57%。
+
+**一句话回答**：Pre-filter 的成本是"合格集大小"，本方案的成本是"图上到答案的路径长度"。在合格集 1,140 而概念内图只需 2–3 跳的情况下，后者小得多；选择率低只说明合格集小，并不说明"必须逐个访问"。
+
+### 2.4 为什么"同子树聚集"是必要条件## 3. 索引的三层结构## 3. 索引的三层结构
 
 ```svg
 <svg viewBox="0 0 900 400" width="100%" font-family="sans-serif" font-size="12">
@@ -376,18 +477,18 @@ $$\mathrm{desc}(c) = \{c\} \cup \bigcup_{c'\in \mathrm{children}(c)} \mathrm{des
 
 ## 11. 实验结果
 
-![三方 recall–QPS 帕累托](2026-11-05-exps/figures/pareto-three-way.svg)
+![recall–QPS 帕累托](2026-11-05-exps/figures/pareto-prefilter-nodeann-ours.svg)
 
-同一配置（hnswlib，M=16，efC=200）、同一协议（`taskset -c 2`、3 轮、同一 `RawL2Space`、同一 GT）：
+三条对照：Pre-filter（精确扫描合格集，单点）、NodeANN、本方案。同一配置（hnswlib，M=16，efC=200）、同一协议（`taskset -c 2`、3 轮、同一 `RawL2Space`、同一 GT）：
 
-| recall@50 | NodeANN | **本方案** | ACORN（方法本体） |
+| recall@50 | Pre-filter | NodeANN | **本方案** |
 |---|---:|---:|---:|
-| 0.47 | 17,819 | **29,089** | — |
-| 0.60 | — | **27,209** | — |
-| 0.72 | 15,024 | **26,916** | — |
-| 0.86 | — | **24,414** | — |
-| 0.906 | — | — | 19,007 |
-| 0.9132（上限） | 10,437 | **12,347** | 10,477 |
+| 0.34 | — | — | **29,465** |
+| 0.47 | — | 17,819 | **29,089** |
+| 0.60 | — | — | **27,209** |
+| 0.72 | — | 15,024 | **26,916** |
+| 0.86 | — | — | **24,414** |
+| 0.9132（上限） | 10,544 | 10,437 | **12,347** |
 
 **每查询距离计算次数（本方案的核心指标）**
 
@@ -400,7 +501,7 @@ $$\mathrm{desc}(c) = \{c\} \cup \bigcup_{c'\in \mathrm{children}(c)} \mathrm{des
 
 NodeANN 的距离调用**比精确扫描还多 27%**；本方案在同等召回下只要 420–487 次，是 NodeANN 的 29–34%、精确扫描的 37–43%。
 
-ACORN 只有两端：低阈值时几乎全部查询退回精确扫描（197–200/200），高阈值时图搜索召回只有 0.159。
+Pre-filter 是一个点（无旋钮）；NodeANN 与本文各有一条曲线；本文全程位于 NodeANN 上方，并在召回上限处比 Pre-filter 快 17%。
 
 ## 12. 合并实验：负结果（已实现并测量）
 

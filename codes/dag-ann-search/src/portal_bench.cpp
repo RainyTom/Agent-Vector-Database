@@ -408,6 +408,8 @@ int main(int argc, char** argv) {
         }
     }
 
+    std::unordered_map<int, std::vector<uint32_t>> members_all;
+    for (auto& kv : G) members_all.emplace(kv.first, kv.second.members);
     ConceptBits bits;
     bits.build(children, G);
     std::fprintf(stderr, "[bits] %zu concepts, %d words/bitmap, %.1f MB\n",
@@ -422,7 +424,7 @@ int main(int argc, char** argv) {
 
     for (const std::string& mode : modes) {
         for (int ef : efs) {
-            long hit = 0, denom = 0, dists = 0, cov_sum = 0, d_sum = 0;
+            long hit = 0, denom = 0, dists = 0, cov_sum = 0, d_sum = 0, elig_sum = 0;
             double best_round = 1e30, sum_round = 0;
             const auto t1 = std::chrono::steady_clock::now();
             for (int round = 0; round < repeat; ++round)
@@ -448,6 +450,7 @@ int main(int argc, char** argv) {
                     }
                 }
                 if (inD.empty()) continue;
+                { long e2 = 0; for (int c : inD) { auto it = members_all.find(c); if (it != members_all.end()) e2 += long(it->second.size()); } elig_sum += e2; }
                 const float* q = queries.data() + size_t(qi) * DIM;
 
                 ++ec_token;
@@ -606,12 +609,14 @@ int main(int argc, char** argv) {
             }
             const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
             std::printf("{\"mode\":\"%s\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"reps\":%d,\"overflow\":%d,\"mink\":%d,\"queries\":%d,\"repeat\":%d,"
-                        "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.0f,\"concepts_covered\":%.2f,\"concepts_in_scope\":%.2f}\n",
+                        "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.0f,\"concepts_covered\":%.2f,\"concepts_in_scope\":%.2f,\"eligible_per_q\":%.1f,\"dist_over_eligible\":%.3f}\n",
                         mode.c_str(), ef, k, M, efC, nrep, int(overflow), int(mink), nq, repeat,
                         double(hit) / double(std::max<long>(denom, 1)),
                         double(nq) * repeat / s,
                         double(dists) / (double(nq) * repeat),
-                        double(cov_sum) / (double(nq) * repeat), double(d_sum) / (double(nq) * repeat));
+                        double(cov_sum) / (double(nq) * repeat), double(d_sum) / (double(nq) * repeat),
+                        double(elig_sum) / (double(nq) * repeat),
+                        double(dists) / std::max<double>(1.0, double(elig_sum)));
             std::fflush(stdout);
         }
     }

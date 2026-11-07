@@ -1,0 +1,3 @@
+{"mode":"r","ef":50,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"mink":1,"queries":200,"repeat":3,"recall":0.912719,"qps":15403.7,"dists_per_q":420,"concepts_covered":4.20,"concepts_in_scope":4.20,"eligible_per_q":1140.2,"dist_over_eligible":0.368}
+{"mode":"r","ef":100,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"mink":1,"queries":200,"repeat":3,"recall":0.912838,"qps":14851.7,"dists_per_q":435,"concepts_covered":4.20,"concepts_in_scope":4.20,"eligible_per_q":1140.2,"dist_over_eligible":0.382}
+{"mode":"r","ef":400,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"mink":1,"queries":200,"repeat":3,"recall":0.913193,"qps":11693.6,"dists_per_q":487,"concepts_covered":4.20,"concepts_in_scope":4.20,"eligible_per_q":1140.2,"dist_over_eligible":0.427}
