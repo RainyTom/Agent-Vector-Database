@@ -9,16 +9,16 @@ NodeANN,0.837162,12241.5
 NodeANN,0.913193,11061.7
 NodeANN,0.913074,9764.3
 NodeANN,0.913193,7684.2
-NodeANN+ recursive,0.472999,13898.0
-NodeANN+ recursive,0.808977,11640.9
-NodeANN+ recursive,0.880388,10213.1
-NodeANN+ recursive,0.90514,8207.1
-NodeANN+ recursive,0.910469,7007.4
-NodeANN+ non-recursive,0.571056,13055.1
-NodeANN+ non-recursive,0.913074,9503.2
-NodeANN+ non-recursive,0.913193,6981.9
-NodeANN+ non-recursive,0.913193,5582.0
-NodeANN+ non-recursive,0.913193,4403.8
+NodeANN+ recursive v2,0.47288,16452.9
+NodeANN+ recursive v2,0.808622,13859.0
+NodeANN+ recursive v2,0.88181,10824.5
+NodeANN+ recursive v2,0.905495,7810.0
+NodeANN+ recursive v2,0.910943,6729.5
+NodeANN+ non-recursive v2,0.57082,14978.3
+NodeANN+ non-recursive v2,0.912719,10494.3
+NodeANN+ non-recursive v2,0.913074,7551.3
+NodeANN+ non-recursive v2,0.913193,6019.3
+NodeANN+ non-recursive v2,0.913193,4741.0
 ACORN g=1 M=64,0.439721,1660.4
 ACORN g=1 M=64,0.503908,1263.6
 ACORN g=1 M=64,0.549384,598.0

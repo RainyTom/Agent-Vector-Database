@@ -1,0 +1,10 @@
+{"mode":"nr","ef":20,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.570820,"qps":14978.3,"dists_per_q":291,"concepts_covered":0.00,"concepts_in_scope":0.00}
+{"mode":"nr","ef":50,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.912719,"qps":10494.3,"dists_per_q":411,"concepts_covered":0.00,"concepts_in_scope":0.00}
+{"mode":"nr","ef":100,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.913074,"qps":7551.3,"dists_per_q":522,"concepts_covered":0.00,"concepts_in_scope":0.00}
+{"mode":"nr","ef":200,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.913193,"qps":6019.3,"dists_per_q":648,"concepts_covered":0.00,"concepts_in_scope":0.00}
+{"mode":"nr","ef":400,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.913193,"qps":4741.0,"dists_per_q":775,"concepts_covered":0.00,"concepts_in_scope":0.00}
+{"mode":"r","ef":20,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.472880,"qps":16452.9,"dists_per_q":242,"concepts_covered":4.20,"concepts_in_scope":4.20}
+{"mode":"r","ef":50,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.808622,"qps":13859.0,"dists_per_q":291,"concepts_covered":4.20,"concepts_in_scope":4.20}
+{"mode":"r","ef":100,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.881810,"qps":10824.5,"dists_per_q":341,"concepts_covered":4.20,"concepts_in_scope":4.20}
+{"mode":"r","ef":200,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.905495,"qps":7810.0,"dists_per_q":409,"concepts_covered":4.20,"concepts_in_scope":4.20}
+{"mode":"r","ef":400,"k":50,"M":16,"efC":200,"reps":8,"overflow":1,"queries":200,"recall":0.910943,"qps":6729.5,"dists_per_q":494,"concepts_covered":4.20,"concepts_in_scope":4.20}
