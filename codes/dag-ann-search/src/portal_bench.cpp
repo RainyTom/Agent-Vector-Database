@@ -19,6 +19,9 @@
 #include <unordered_set>
 #include <vector>
 
+#include "hnswlib/hnswlib.h"
+#include "raw_l2_space.h"
+
 static constexpr int DIM = 128;
 using Vec = std::vector<uint32_t>;
 
@@ -29,6 +32,7 @@ struct LocalGraph {
     Vec reps;
     Vec mst_edges;      // 扁平：(u,v) 对
     mutable std::vector<uint32_t> vstamp;   // 紧凑 visited（按局部 id）
+    float radius = 0.f;                     // 覆盖半径（到入口的最大距离）
     std::vector<uint32_t> adj_off;          // n+1 偏移
     std::vector<uint32_t> adj_dat;          // 连续邻接
     uint32_t entry = 0;
@@ -45,11 +49,9 @@ static bool readf(const std::string& p, std::vector<float>& v) {
     std::fclose(f);
     return ok;
 }
-static inline float l2(const float* a, const float* b) {
-    float s = 0.f;
-    for (int d = 0; d < DIM; ++d) { const float t = a[d] - b[d]; s += t * t; }
-    return s;
-}
+// 距离：必须走项目的 RawL2Space（hnswlib L2Space::get_dist_func），与基线同源
+static RawL2Space g_space(DIM);
+static inline float l2(const float* a, const float* b) { return g_space.dist(a, b); }
 
 // RNG 启发式：候选按到 base 的距离升序，保留 v 当且仅当对已保留的 u 都有 d(v,u) > d(v,base)
 static void shrink_list(const float* base, const Vec& ids, uint32_t base_local, Vec& list, int M) {
@@ -174,6 +176,13 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, int n
         }
         g.reps.push_back(bid);
     }
+    // 覆盖半径：以入口为 anchor
+    {
+        const float* pa = base + size_t(ids[g.entry]) * DIM;
+        float r = 0.f;
+        for (int i = 0; i < n; ++i) r = std::max(r, l2(pa, base + size_t(ids[size_t(i)]) * DIM));
+        g.radius = std::sqrt(r);
+    }
     // (3) reps 上的 MST（Prim，K 很小），MST 边作为图边加入
     {
         const int K2 = int(g.reps.size());
@@ -204,6 +213,60 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, int n
     }
 }
 
+
+// ---- 手写堆（避免 std::push_heap/pop_heap 与 pair 移动的开销） ----
+struct MinHeap {                       // 按距离升序弹出
+    std::vector<float> d;
+    std::vector<uint64_t> v;           // (concept_idx<<32)|local_id
+    void clear() { d.clear(); v.clear(); }
+    size_t size() const { return d.size(); }
+    bool empty() const { return d.empty(); }
+    void push(float dist, uint64_t id) {
+        d.push_back(dist); v.push_back(id);
+        size_t i = d.size() - 1;
+        while (i) {
+            const size_t par = (i - 1) / 2;
+            if (d[par] <= d[i]) break;
+            std::swap(d[par], d[i]); std::swap(v[par], v[i]); i = par;
+        }
+    }
+    void pop() {
+        d[0] = d.back(); v[0] = v.back(); d.pop_back(); v.pop_back();
+        size_t i = 0; const size_t n = d.size();
+        while (true) {
+            size_t l = 2 * i + 1, r = l + 1, m = i;
+            if (l < n && d[l] < d[m]) m = l;
+            if (r < n && d[r] < d[m]) m = r;
+            if (m == i) break;
+            std::swap(d[m], d[i]); std::swap(v[m], v[i]); i = m;
+        }
+    }
+};
+struct MaxHeap {                       // 结果表：容量 ef_c，保留最小的一批
+    std::vector<float> d;
+    std::vector<uint32_t> v;
+    void reserve(size_t n) { d.reserve(n + 1); v.reserve(n + 1); }
+    size_t size() const { return d.size(); }
+    bool empty() const { return d.empty(); }
+    float worst() const { return d.empty() ? INFINITY : d[0]; }
+    void push(float dist, uint32_t id) {
+        d.push_back(dist); v.push_back(id);
+        size_t i = d.size() - 1;
+        while (i) { const size_t par = (i - 1) / 2;
+            if (d[par] >= d[i]) break;
+            std::swap(d[par], d[i]); std::swap(v[par], v[i]); i = par; }
+    }
+    void replace_top(float dist, uint32_t id) {
+        d[0] = dist; v[0] = id;
+        size_t i = 0; const size_t n = d.size();
+        while (true) { size_t l = 2 * i + 1, r = l + 1, m = i;
+            if (l < n && d[l] > d[m]) m = l;
+            if (r < n && d[r] > d[m]) m = r;
+            if (m == i) break;
+            std::swap(d[m], d[i]); std::swap(v[m], v[i]); i = m; }
+    }
+};
+
 static void flatten_adj(LocalGraph& g) {
     const size_t n = g.adj.size();
     g.adj_off.assign(n + 1, 0);
@@ -218,7 +281,7 @@ static void flatten_adj(LocalGraph& g) {
 
 int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vec = "recon.bin";
-    int k = 50, M = 16, efC = 200, nq_max = 200, nrep = 8, per_concept_N = 50;
+    int k = 50, M = 16, efC = 200, nq_max = 200, nrep = 8, per_concept_N = 50, repeat = 1;
     bool overflow = true;
     std::vector<int> efs{50};
     std::vector<std::string> modes{"nr", "r"};
@@ -234,6 +297,7 @@ int main(int argc, char** argv) {
         else if (a == "--reps") nrep = std::stoi(nx());
         else if (a == "--capN") per_concept_N = std::stoi(nx());
         else if (a == "--queries") nq_max = std::stoi(nx());
+        else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--no-overflow") overflow = false;
         else if (a == "--modes") { modes.clear(); std::stringstream ss(nx()); std::string t; while (std::getline(ss, t, ',')) if (!t.empty()) modes.push_back(t); }
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t; while (std::getline(ss, t, ',')) if (!t.empty()) efs.push_back(std::stoi(t)); }
@@ -306,7 +370,9 @@ int main(int argc, char** argv) {
     for (const std::string& mode : modes) {
         for (int ef : efs) {
             long hit = 0, denom = 0, dists = 0, cov_sum = 0, d_sum = 0;
+            double best_round = 1e30, sum_round = 0;
             const auto t1 = std::chrono::steady_clock::now();
+            for (int round = 0; round < repeat; ++round)
             for (int qi = 0; qi < nq; ++qi) {
                 std::unordered_set<int> D;
                 {
@@ -366,15 +432,14 @@ int main(int argc, char** argv) {
                             merged.push_back({local[i].first, int(g.members[local[i].second])});
                     }
                 } else {
-                    const int ef_c = std::max(8, ef / std::max<int>(1, int(inD.size())));
+                    const int ef_c = std::max(k, ef / std::max<int>(1, int(inD.size())));
                     // 每概念结果表：稠密数组 + 手动堆（避免 map 查找与 priority_queue 的额外封装）
-                    static std::vector<std::vector<std::pair<float, uint32_t>>> pc;
+                    static std::vector<MaxHeap> pc;
                     static std::vector<int> touched;
                     if (pc.size() < Gp.size()) pc.resize(Gp.size());
                     touched.clear();
-                    std::vector<std::pair<float, std::pair<int, uint32_t>>> frontier;
-                    frontier.reserve(512);
-                    std::priority_queue<float> gworst;
+                    MinHeap frontier;
+                    std::priority_queue<float> gworst;   // 全局 k 名最差（用于超额放行）
                     ++token;
                     auto push = [&](int ci, uint32_t li, bool force = false) {
                         LocalGraph& g = *Gp[ci];
@@ -383,17 +448,16 @@ int main(int argc, char** argv) {
                         const float d = l2(q, base.data() + size_t(g.members[li]) * DIM);
                         ++dists;
                         auto& b = pc[size_t(ci)];
-                        if (b.empty()) touched.push_back(ci);
+                        if (b.empty()) { touched.push_back(ci); b.reserve(size_t(ef_c) + 1); }
                         bool keep;
-                        if (int(b.size()) < ef_c) { b.push_back({d, li}); std::push_heap(b.begin(), b.end()); keep = true; }
-                        else if (d < b.front().first) { std::pop_heap(b.begin(), b.end()); b.back() = {d, li}; std::push_heap(b.begin(), b.end()); keep = true; }
+                        if (int(b.size()) < ef_c) { b.push(d, li); keep = true; }
+                        else if (d < b.worst()) { b.replace_top(d, li); keep = true; }
                         else keep = false;
-                        bool slack = overflow && !gworst.empty() && gworst.size() >= size_t(ef) && d <= gworst.top();
+                        bool slack = overflow && !gworst.empty() && gworst.size() >= size_t(k) && d <= gworst.top();
                         if (!force && !keep && !slack) return;
-                        if (gworst.size() < size_t(ef)) gworst.push(d);
+                        if (gworst.size() < size_t(k)) gworst.push(d);
                         else if (d < gworst.top()) { gworst.pop(); gworst.push(d); }
-                        frontier.push_back({-d, {ci, li}});
-                        std::push_heap(frontier.begin(), frontier.end());
+                        frontier.push(d, (uint64_t(ci) << 32) | uint64_t(li));
                     };
                     auto best_entry_ci = [&](int ci) -> uint32_t {
                         if (ec_stamp[size_t(ci)] == ec_token) return ec_li[size_t(ci)];
@@ -410,16 +474,30 @@ int main(int argc, char** argv) {
                         ec_li[size_t(ci)] = bi;
                         return bi;
                     };
-                    for (int c : inD) push(cpos[c], best_entry_ci(cpos[c]), /*force=*/true);
+                    // 概念级下界：d(q,anchor) - radius，升序准入；下界超过当前第 k 名即整概念跳过
+                    struct Cand { float lb; int ci; };
+                    std::vector<Cand> order; order.reserve(inD.size());
+                    for (int c : inD) {
+                        const int ci = cpos[c];
+                        const LocalGraph& g = *Gp[size_t(ci)];
+                        const float dq = std::sqrt(l2(q, base.data() + size_t(g.members[g.entry]) * DIM));
+                        ++dists;
+                        order.push_back({std::max(0.f, dq - g.radius), ci});
+                    }
+                    std::sort(order.begin(), order.end(), [](const Cand& a, const Cand& b) { return a.lb < b.lb; });
+                    for (const Cand& cd : order) {
+                        if (!gworst.empty() && gworst.size() >= size_t(k) && cd.lb * cd.lb > gworst.top()) continue;
+                        push(cd.ci, best_entry_ci(cd.ci), /*force=*/true);
+                    }
                     while (!frontier.empty()) {
-                        std::pop_heap(frontier.begin(), frontier.end());
-                        const auto tp = frontier.back(); frontier.pop_back();
-                        const float dv = -tp.first;
-                        const int ci = tp.second.first;
-                        const uint32_t li = tp.second.second;
+                        const float dv = frontier.d[0];
+                        const uint64_t packed = frontier.v[0];
+                        frontier.pop();
+                        const int ci = int(packed >> 32);
+                        const uint32_t li = uint32_t(packed & 0xffffffffu);
                         LocalGraph& g = *Gp[size_t(ci)];
                         const auto& b = pc[size_t(ci)];
-                        if (int(b.size()) >= ef_c && dv > b.front().first) {
+                        if (int(b.size()) >= ef_c && dv > b.worst()) {
                             if (!(overflow && !gworst.empty() && dv <= gworst.top())) continue;
                         }
                         for (uint32_t kk = g.adj_off[li]; kk < g.adj_off[li + 1]; ++kk) push(ci, g.adj_dat[kk]);
@@ -436,9 +514,8 @@ int main(int argc, char** argv) {
                     for (int ci : touched) {
                         auto& b = pc[size_t(ci)];
                         const LocalGraph& g = *Gp[size_t(ci)];
-                        std::sort(b.begin(), b.end());
-                        for (auto& pr : b) merged.push_back({pr.first, int(g.members[pr.second])});
-                        b.clear();
+                        for (size_t i = 0; i < b.size(); ++i) merged.push_back({b.d[i], int(g.members[b.v[i]])});
+                        b.d.clear(); b.v.clear();
                     }
                 }
                 const size_t keep = std::min<size_t>(k, merged.size());
@@ -448,13 +525,22 @@ int main(int argc, char** argv) {
                 int e = 0, h = 0;
                 for (int j = 0; j < k; ++j) { const int g = gt[size_t(qi) * k + j]; if (g >= 0) { ++e; if (topk.count(g)) ++h; } }
                 hit += h; denom += std::min(k, e);
+                if (qi + 1 == nq) {   // 一轮结束
+                    const auto now = std::chrono::steady_clock::now();
+                    const double rs = std::chrono::duration<double>(now - t1).count();
+                    const double this_round = (round == 0) ? rs : (rs - sum_round);
+                    sum_round = rs;
+                    best_round = std::min(best_round, this_round);
+                }
             }
             const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
-            std::printf("{\"mode\":\"%s\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"reps\":%d,\"overflow\":%d,\"queries\":%d,"
+            std::printf("{\"mode\":\"%s\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"reps\":%d,\"overflow\":%d,\"queries\":%d,\"repeat\":%d,"
                         "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.0f,\"concepts_covered\":%.2f,\"concepts_in_scope\":%.2f}\n",
-                        mode.c_str(), ef, k, M, efC, nrep, int(overflow), nq,
-                        double(hit) / double(std::max<long>(denom, 1)), nq / s, double(dists) / nq,
-                        double(cov_sum) / nq, double(d_sum) / nq);
+                        mode.c_str(), ef, k, M, efC, nrep, int(overflow), nq, repeat,
+                        double(hit) / double(std::max<long>(denom, 1)),
+                        double(nq) * repeat / s,
+                        double(dists) / (double(nq) * repeat),
+                        double(cov_sum) / (double(nq) * repeat), double(d_sum) / (double(nq) * repeat));
             std::fflush(stdout);
         }
     }
