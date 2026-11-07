@@ -338,8 +338,8 @@ if __name__=='__main__':
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('action',choices=['measure','attribute','render','nodeann-sweep'])
     ap.add_argument('--runs',type=int,default=3)
-    ap.add_argument('--k',type=int,default=50)
-    ap.add_argument('--out',default='2026-11-07-exps',help='experiment directory under researches/nested-attr-vector-search')
+    ap.add_argument('--k',type=int,default=10)
+    ap.add_argument('--out',default='2026-11-08-exps',help='experiment directory under researches/nested-attr-vector-search')
     ap.add_argument('--trace',default=None)
     args=ap.parse_args()
     K = args.k

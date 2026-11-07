@@ -2,7 +2,7 @@
 
 本文说明 **ASI（Attribute-Skeleton Index，属性骨架索引）** 如何把属性内近邻图、跨属性网关和属性闭包组合起来，以及 **DQS（Dual-Queue Search，双队列检索）** 如何在一次查询中使用它们。实验图中的 `NodeANN+` 指当前 ASI+DQS，正文统一简称 ASI；`NodeANN` 指每非空属性一张独立 HNSW 的对照基线。阅读不要求预先了解 HNSW；关键是分清两张图：属性之间的包含关系，以及对象之间用于搜索的近邻关系。
 
-**实现依据**：[活跃源码 `attr_skeleton_bench.cpp`](../../codes/dag-ann-search/src/attr_skeleton_bench.cpp)。ASI 加 DQS 是实验图中的 **ASI（NodeANN+）**。问题口径见 [problem_def.md](problem_def.md)，数据准备见 [prepare_pq.py](../../codes/dag-ann-search/scripts/prepare_pq.py) 与 [prepare_large.py](../../codes/dag-ann-search/scripts/prepare_large.py)。下文将当前实现与目标设计分开陈述，实验图使用 [2026-11-07 当日目录](2026-11-07-exps/)。历史实现与旧实验不能替代当前代码的证据。
+**实现依据**：[活跃源码 `attr_skeleton_bench.cpp`](../../codes/dag-ann-search/src/attr_skeleton_bench.cpp)。ASI 加 DQS 是实验图中的 **ASI（NodeANN+）**。问题口径见 [problem_def.md](problem_def.md)，数据准备见 [prepare_pq.py](../../codes/dag-ann-search/scripts/prepare_pq.py) 与 [prepare_large.py](../../codes/dag-ann-search/scripts/prepare_large.py)。下文将当前实现与目标设计分开陈述，实验图使用 [2026-11-08 当日目录](2026-11-08-exps/)。历史实现与旧实验不能替代当前代码的证据。
 
 ## 1. 查询究竟在找什么
 
@@ -20,7 +20,7 @@ $$D=\operatorname{Desc}^{+}(U),\qquad E(U)=\{o\in O:own(o)\in D\}.$$
 
 ### 1.2 一个包含 12 个对象的例子
 
-![六个属性构成的 DAG，六个节点各直属两个对象；A 与 B 共同指向只出现一次的 F 节点，总计 12 个对象。](2026-11-07-exps/figures/toy-dag.svg)
+![六个属性构成的 DAG，六个节点各直属两个对象；A 与 B 共同指向只出现一次的 F 节点，总计 12 个对象。](2026-11-08-exps/figures/toy-dag.svg)
 
 **图 1　属性包含关系与对象直属归属。** 箭头向下表示父属性包含子属性。六个属性各有两个示例对象，直属对象总数为 12。对象名称只用于讲解，不代表真实实验的对象 ID。
 
@@ -57,7 +57,7 @@ PQ 码为每对象 16 字节，原始 128 维 FP32 为 512 字节，二者的**�
 
 ASI 把直属对象图接入一张统一对象图，一条查询共享搜索状态，不给每个属性单独建立结果堆。跨属性边提供导航路径；属性闭包位图限制可访问范围。当前采用全闭包多种子初始化，因而跨属性边的贡献还必须与“每属性已有入口”的贡献分开评估。
 
-![ASI 构造流程：对象按直属属性分组，经 hnswlib 多层 HNSW 构建后只保留 layer 0，选择代表点并补 MST；逆拓扑合并生成网关边；全部属性另建闭包位图；对象图与位图共同供 DQS 使用。](2026-11-07-exps/figures/asi-build.svg)
+![ASI 构造流程：对象按直属属性分组，经 hnswlib 多层 HNSW 构建后只保留 layer 0，选择代表点并补 MST；逆拓扑合并生成网关边；全部属性另建闭包位图；对象图与位图共同供 DQS 使用。](2026-11-08-exps/figures/asi-build.svg)
 
 **图 2　当前 ASI 的构建与查询依赖。** 局部图和跨属性边连接对象；闭包位图连接的是资格判断逻辑，不是新增一层向量近邻图。
 
@@ -105,7 +105,7 @@ $$g(r,c)\in\arg\min_{x\in S_c}d(v(r),v(x)).$$
 
 向独立跨属性邻接表加入 $r\to g(r,c)$ 与 $g(r,c)\to r$，并将子侧对象标为网关。网关可能已经是代表点，也可能是普通对象。DQS 的第二通道接收两者。
 
-![跨属性合并示意：非空祖先 P 的代表点经空中间属性 X 对应的父子路径，与 F 中离该代表点最近的对象网关双向连接。网关不必是 F 的代表点；F 原有局部边继续保留。](2026-11-07-exps/figures/asi-merge.svg)
+![跨属性合并示意：非空祖先 P 的代表点经空中间属性 X 对应的父子路径，与 F 中离该代表点最近的对象网关双向连接。网关不必是 F 的代表点；F 原有局部边继续保留。](2026-11-08-exps/figures/asi-merge.svg)
 
 **图 3　最近对象网关与空祖先回退。** 虚线表示属性 DAG 关系或角色说明，粗双向线表示对象图中的冻结跨属性边。跨过空属性建立边并不删除空属性，资格闭包仍然经过它。
 
@@ -170,7 +170,7 @@ DQS 为**整条查询**维护两条通道，不为每个属性维护一套队列
 
 **$ef$ 与 $ef_2$ 限制 keep，不是 cand 的硬容量，也不是距离调用次数。** 准入时同时写入相应 `cand` 和 `keep`。当前实现没有在 `keep` 淘汰对象时删除其 `cand` 条目，故候选堆可能保留已淘汰的陈旧项。当前循环也没有“cand 最近距离超过 keep 最差距离就停止”的标准 beam 终止条件，而是处理到两个 cand 都空。
 
-![DQS 流程：闭包多种子初始化，首次接触标记后先判资格，合格对象进入 q1，代表点或网关还可独立进入 q2；两个 cand 按距离交替弹出，直到均为空，最后合并 keep 去重取 top-k。](2026-11-07-exps/figures/dqs-search.svg)
+![DQS 流程：闭包多种子初始化，首次接触标记后先判资格，合格对象进入 q1，代表点或网关还可独立进入 q2；两个 cand 按距离交替弹出，直到均为空，最后合并 keep 去重取 top-k。](2026-11-08-exps/figures/dqs-search.svg)
 
 **图 4　当前 DQS 的准入、展开与输出。** 两条通道共享本查询对象标记和属性范围；独立准入意味着对象可同时进入两个 cand。
 
@@ -236,19 +236,21 @@ $q_2$ 的尝试不是 $q_1$ 拒绝后的 fallback，而是对代表点或网关*
 
 ### 8.1 公共输入与对齐条件
 
-主规模为 168,937 个对象，SIFT 128 维，主口径 $k=50$（§9.6 另有 $k=10$ 复核），对齐查询前缀与属性 OR 闭包。1M 使用经验标签分布扩展，是另一个规模条件，不能把两者的选择率和 QPS 混为同一行。原 workload 文件含有比基准更多的查询，实际测量数量由 `--queries` 和向量查询文件共同确定。
+主规模为 168,937 个对象，SIFT 128 维，$k=10$，对齐查询前缀与属性 OR 闭包。1M 使用经验标签分布扩展，是另一个规模条件，不能把两者的选择率和 QPS 混为同一行。原 workload 文件含有比基准更多的查询，实际测量数量由 `--queries` 和向量查询文件共同确定。
 
 所有比较必须同时对齐：对象与归属、属性 DAG、查询顺序与范围、搜索向量、原始 GT、$k$、距离实现、编译选项、线程与绑核条件。常用局部构造配置为 $M=16,efC=200,K_{cap}=8,p=50$；$ef$、$ef_2$、$p$ 的实际扫描值以图和当日记录为准。源码的默认 $ef_2=16$ 不代表实验必然使用 16。
 
-Pareto 图每方法只画一条曲线：该方法的全部实测配置按严格支配关系筛选后连接，未拟合、未外推。两条曲线的左段都含有输出容量小于 $k$ 的配置（ASI 为两个 keep 的并集 $ef+ef_2$，NodeANN 为每属性预算 $N$），这类点的召回被“返回条数不足 $k$”压低，因此不能与右端的满容量点等同解释；数据文件把这些点标为 `capacity_limited`。
+参数网格按 $k$ 定位，不用固定绝对值：ASI 取 $ef\in\{5,10,15,20,30,40,60,100,200,400\}$；NodeANN 取耦合 $ef=N\in\{2,\dots,30\}$ 与 $N=10$ 时的 $ef\in\{20,40,80\}$。$k$ 变化后必须重设网格，否则采到的只是容量边界而不是算法的回溯宽度。
 
-NodeANN 的两个参数作用不同：$N$ 只决定每个属性返回多少候选，不改变 HNSW 搜索宽度；$ef$ 决定搜索宽度，代码取 $\max(ef,N)$。只扫 $N$ 时距离调用恒为 455.5 次/查询，吞吐几乎不动，而 $N\ge50$ 后召回已固定，故满容量区内只剩一个非支配点。要读出 NodeANN 的 trade-off，必须让 $ef$ 与 $N$ 一起下降（$ef=N=5,\dots,40$）。
+Pareto 图每方法只画一条曲线：该方法的全部实测配置按严格支配关系筛选后连接，未拟合、未外推。曲线左段可能含有输出容量小于 $k$ 的配置（ASI 为两个 keep 的并集 $ef+ef_2$，NodeANN 为每属性预算 $N$），这类点的召回被“返回条数不足 $k$”压低，不能与右端的满容量点等同解释；数据文件把这些点标为 `capacity_limited`。本轮 $ef_2=16$ 使 ASI 最小的 $ef=5$ 也有 21 的输出容量，故 ASI 整条曲线满容量；NodeANN 的 $N<10$ 段则容量不足。
 
-构建不进入查询 QPS。本轮 [协议元数据](2026-11-07-exps/data/scheme-protocol.json) 固定 CPU 2、单线程，编译为 `-O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION`，双方距离内核共用 `RawL2Space`。逐查询累计闭包求解、种子选择、搜索及结果排序去重的时间；GT 命中评估、oracle 全扫描与 trace 写盘在计时外。代码、可执行文件与输入数据的哈希保存在该协议文件中。先前 HNSW 参照仅禁用编译器自动向量化，没有禁用 hnswlib 手写 SSE，不能直接与本轮标量结果比较。绑核不等于独占 CPU；WSL 频率未锁定，吞吐仍受系统负载影响。
+NodeANN 的两个参数作用不同：$N$ 只决定每个属性返回多少候选，不改变 HNSW 搜索宽度；$ef$ 决定搜索宽度，代码取 $\max(ef,N)$。固定 $ef=10$ 只扫 $N$ 时距离调用恒为 258.2 次/查询，吞吐几乎不动，召回在 $N\ge40$ 后固定在 0.843157。要读出 NodeANN 的 trade-off，必须让 $ef$ 与 $N$ 一起下降（$ef=N=2,\dots,30$）。
+
+构建不进入查询 QPS。本轮 [协议元数据](2026-11-08-exps/data/scheme-protocol.json) 固定 CPU 2、单线程，编译为 `-O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION`，双方距离内核共用 `RawL2Space`。逐查询累计闭包求解、种子选择、搜索及结果排序去重的时间；GT 命中评估、oracle 全扫描与 trace 写盘在计时外。代码、可执行文件与输入数据的哈希保存在该协议文件中。绑核不等于独占 CPU；WSL 频率未锁定，吞吐仍受系统负载影响。
 
 ### 8.2 GT 文件与召回口径
 
-本轮 `gt_50.txt` 有 40,000 字节，对应 $200\times50\times4$ 字节 int32。独立逐查询原始 FP32 全范围扫描得到的 oracle 与文件中的 8,444 个 GT ID **全部一致**。本轮核对确认加载文件与 GT 语义、dtype 相符；文件生成规则与其他脚本可能不同，不能仅按路径或脚本推断已使用的数据。
+`gt_10.txt` 为 8,000 字节，对应 $200\times10\times4$ 字节 int32。其中 17 条查询的合格对象少于 10（最少 5），故含 49 个 `-1` 填充，有效 GT 条目共 1,951。独立逐查询原始 FP32 全范围扫描得到的 oracle 与文件中内容**逐条一致**（200 条全部通过断言）；这是必查项：文件不是独立生成的查询结果，只有逐条断言才能证明其内容等于该查询的精确 top-10。
 
 令 $T_i$ 为第 $i$ 条查询的非负 GT ID 集合、$R_i$ 为输出去重后的对象集合。当前可执行程序报告聚合 ID 命中率：
 
@@ -258,11 +260,11 @@ $$\mathrm{recall}_{\mathrm{ID}}=\frac{\sum_i |T_i\cap R_i|}{\sum_i\min(k,|T_i|)}
 
 对 PQ 还原向量做范围内精确扫描，可得到一个可复核的**表示参照**：它反映还原距离排序相对于原始距离 GT 的重合度。有限预算图搜索还会叠加漏访与候选保留损失，但某些近似输出也可能偶然保留原始 GT 中的对象、超过还原向量精确 top-k 的 ID 重合度。因此该参照不构成所有近似算法的数学硬上限，更不应称为“物理上限”。
 
-当日追踪固定 $ef_2=16,p=50,K_{cap}=8$，比较 $ef\in\{50,200,800\}$；完整命中数与 recall 保存在 [追踪汇总](2026-11-07-exps/data/miss-attribution.json)，并由图 7 展示。PQ 还原向量的 exact top-50 与 FP32 GT 有 7,711 个 ID 重合，$7,711/8,444=0.913193$。近似输出还找回过 PQ-exact top-50 之外的 FP32-GT ID，具体数量记录在 `pq_recovered`，因此该数值只作为 exact 排序重合参照。
+当日追踪固定 $ef_2=16,p=50,K_{cap}=8$，比较 $ef\in\{10,40,200\}$；完整命中数与 recall 保存在 [追踪汇总](2026-11-08-exps/data/miss-attribution.json)，并由图 7 展示。PQ 还原向量的 exact top-10 与 FP32 GT 有 1,645 个 ID 重合，$1,645/1,951=0.843157$。近似输出还找回过 PQ-exact top-10 之外的 FP32-GT ID，具体数量记录在 `pq_recovered`，因此该数值只作为 exact 排序重合参照。
 
 ### 8.3 成本指标
 
-- **QPS**：计时区间内的查询总数除以墙钟秒，单位 queries/s。本轮主曲线每点运行 3 个独立进程，每进程内重复 3 轮，每轮 200 查询；共 9 批。跨进程汇总使用总查询数除以总墙钟时间，等价于等查询量下三次进程 QPS 的调和平均。消融每点为 1 个进程、进程内 3 轮，不提供跨种子置信区间。
+- **QPS**：计时区间内的查询总数除以墙钟秒，单位 queries/s。主曲线每点运行 3 个独立进程，每进程内重复 3 轮，每轮 200 查询；共 9 批。跨进程汇总使用总查询数除以总墙钟时间，等价于等查询量下三次进程 QPS 的调和平均。消融每点为 1 个进程、进程内 3 轮，不提供跨种子置信区间。
 - **距离/查询**：运行期间累计的查询距离调用数除以查询总数；不包含索引构建距离。ASI 的种子筛选重复距离计入其中。
 - **邻接槽位扫描数**：每展开一个对象，读取其局部及跨属性邻接表的每个目标槽位即计一次；重复边、重复展开、已访问或越界目标也计入。当前活跃文件的 JSON 没有输出该字段，不能从距离数反推出精确槽位数。
 - **`attrs_in_D`**：合格闭包中非空直属属性数。空结构属性仍在位图中，但不增加此项。
@@ -273,73 +275,54 @@ $$\mathrm{recall}_{\mathrm{ID}}=\frac{\sum_i |T_i\cap R_i|}{\sum_i\min(k,|T_i|)}
 
 ### 8.4 漏召回归因必须按追踪顺序解释
 
-本轮图和 `data/miss-attribution.json` 使用六类**操作性互斥归因**，以未命中 FP32 GT 条目为对象，按优先级先归因 PQ exact 排序位移，再检查属性准入、距离计算、队列准入与最终输出。`data/miss-attribution-per-query.jsonl` 保存逐查询计数。令 PQ exact top-50 为搜索表示上的参照集合；类别顺序与判定如下。
+本轮图和 `data/miss-attribution.json` 使用六类**操作性互斥归因**，以未命中 FP32 GT 条目为对象，按优先级先归因 PQ exact 排序位移，再检查属性准入、距离计算、队列准入与最终输出。`data/miss-attribution-per-query.jsonl` 保存逐查询计数。令 PQ exact top-$k$ 为搜索表示上的参照集合；类别顺序与判定如下。
 
 | 类别 | 判定 | 解释 |
 |---|---|---|
-| `quantization` | GT 条目不在同一范围内 PQ exact top-50 | 相对于 PQ exact 的排序位移类别；这里是优先级归因，不等于量化与导航因果可分 |
-| `attribute_unentered` | 属于 PQ exact top-50，但所在属性没有对象被队列准入 | 按属性准入阶段计数 |
+| `quantization` | GT 条目不在同一范围内 PQ exact top-$k$ | 相对于 PQ exact 的排序位移类别；这里是优先级归因，不等于量化与导航因果可分 |
+| `attribute_unentered` | 属于 PQ exact top-$k$，但所在属性没有对象被队列准入 | 按属性准入阶段计数 |
 | `not_navigated` | 属性已有准入对象，GT 对象既不在 `evaluated` 也不在 `seed_evaluated` | 属性被接入不代表这个对象已被计算距离 |
 | `rejected` | GT 对象在 `evaluated` 中，但不在 `admitted` 中 | 已通过 `offer` 算距离，却从未成功进入任一通道；不包括只算种子距离 |
 | `entry_score_only` | GT 对象只参加入口/种子距离比较，未作为搜索队列中的对象被评估 | 单独区分 seed-only 距离，不能将其称作搜索导航已访问 |
 | `lost_after_admission` | GT 对象曾准入，但未进入最终去重 top-k 输出 | 含 keep 被淘汰或结果并集排序后未入 top-k |
 
-六类按优先顺序每个未命中 GT 只计一次。PQ exact top-50 以外的 GT 即使也有导航问题，也先计入 `quantization`，故这是归因约定，不是因果实验。全 GT 分母上的比例存于 `all_gt_percent`；只在漏项分母上的比例存于 `missed_only_percent`。二者不能互换。`attrs_touched` 表示计算过距离的属性；`entered_attrs` 表示至少一个对象成功准入的属性，前者不蕴含后者。两项在逐查询 trace 中分别保存。
+六类按优先顺序每个未命中 GT 只计一次。PQ exact top-$k$ 以外的 GT 即使也有导航问题，也先计入 `quantization`，故这是归因约定，不是因果实验。全 GT 分母上的比例存于 `all_gt_percent`；只在漏项分母上的比例存于 `missed_only_percent`。二者不能互换。`attrs_touched` 表示计算过距离的属性；`entered_attrs` 表示至少一个对象成功准入的属性，前者不蕴含后者。两项在逐查询 trace 中分别保存。
 
-本轮三档均有 `attribute_unentered=0`、`rejected=0`、`entry_score_only=0`、`lost_after_admission=0`；未命中项因此落在 PQ exact 排序位移与“属性已有准入但 GT 对象尚未计算距离”两类。全部计数与两套分母比例见 [汇总 JSON](2026-11-07-exps/data/miss-attribution.json)，逐查询轨迹见 [JSONL](2026-11-07-exps/data/miss-attribution-per-query.jsonl)。可按 `hits + 各类 misses = gt` 核对每档的分割。这些操作性归因不证明任意范围可达，也不代表其他参数或查询分布上的结果。
+本轮三档 `rejected`、`entry_score_only`、`lost_after_admission` 均为 0；`attribute_unentered` 仅在 $ef=10$ 出现 1 条（0.051%）。未命中项因此集中在 PQ exact 排序位移与“属性已有准入但 GT 对象尚未计算距离”两类：$ef=10$ 为 283/1,951 与 84/1,951，$ef=40$ 为 295 与 39，$ef=200$ 为 300 与 20。全部计数与两套分母比例见 [汇总 JSON](2026-11-08-exps/data/miss-attribution.json)，逐查询轨迹见 [JSONL](2026-11-08-exps/data/miss-attribution-per-query.jsonl)。可按 `hits + 各类 misses = gt` 核对每档的分割。这些操作性归因不证明任意范围可达，也不代表其他参数或查询分布上的结果。
 
 ## 9. 当日图表与可复核的比较问题
 
-本节展示 [2026-11-07](2026-11-07-exps/) 的九张图与 [2026-11-08](2026-11-08-exps/) 的 top-10 复核图。[主曲线汇总](2026-11-07-exps/data/scheme-summary.json) 保存全部实测点；[原始运行记录](2026-11-07-exps/data/scheme-measurements.jsonl) 保存命令、输出与消融值；[Pareto 点选择](2026-11-07-exps/data/pareto-selection.json) 可复核哪些点被支配。图展示测量，前述算法说明以活跃源码为准。root-only、总度控制或完整连通性保证均不能由这些图推出。
+本节展示 [2026-11-08](2026-11-08-exps/) 的五张图。[主曲线汇总](2026-11-08-exps/data/scheme-summary.json) 保存全部实测点；[原始运行记录](2026-11-08-exps/data/scheme-measurements.jsonl) 保存命令、输出与消融值；[Pareto 点选择](2026-11-08-exps/data/pareto-selection.json) 可复核哪些点被支配。图展示测量，前述算法说明以活跃源码为准。root-only、总度控制或完整连通性保证均不能由这些图推出。
 
 ### 9.1 Recall 与吞吐的 Pareto 比较
 
-![ASI 与 NodeANN 在 top-50 口径下的 recall–throughput Pareto 曲线，各一条。](2026-11-07-exps/figures/pareto.svg)
+![ASI 与 NodeANN 的 recall–throughput Pareto 曲线，各一条。](2026-11-08-exps/figures/pareto.svg)
 
-**图 5　Recall–throughput Pareto，$k=50$。** 每条线是一个方法在全部实测配置上的严格非支配点，无拟合与外推。两线在约 0.474 处相遇；更低的召回只有 NodeANN 有点（从 0.2229/28,883.3 开始），0.474 到约 0.90 之间 ASI 在上方，交叉点落在 ASI $ef=50$ 的 0.8955/16,670.5 与 $ef=200$ 的 0.9036/10,547.3 之间，之后 NodeANN 更高。交叉处两点的召回相差约 0.002：NodeANN $ef=N=15$ 为 0.4762/19,325.8 QPS，ASI $ef=20$ 为 0.4741/22,236.8。顶端 NodeANN $N=50$ 为 0.9132/11,361.3，ASI $ef=800$ 为 0.9125/5,911.8。曲线左段含容量不足 50 的配置：NodeANN $ef=N=5\ldots40$（如 0.2229/28,883.3）与 ASI $ef=20,30$（$ef+ef_2$ 分别为 36、46），其召回受返回条数限制，不能与右端满容量点混读。顶点处 NodeANN 领先的原因是本工作负载每属性平均约 220 个对象，$ef=50$ 已接近穷尽该属性；该交叉不推广到属性规模更大的数据。
+**图 5　Recall–throughput Pareto，$k=10$。** 每条线是一个方法在全部实测配置上的严格非支配点，无拟合与外推。NodeANN 覆盖 0.2911–0.8432，ASI 覆盖 0.5284–0.8391；两线在 ASI 起点附近几乎重合（ASI $ef=5$ 为 0.5284/30,164.7，NodeANN 同召回插值约 29.9k），此后直到约 0.82 ASI 在上方，交叉点落在 ASI $ef=15$ 的 0.8201/26,309.8 与 $ef=20$ 的 0.8242/23,234.9 之间，再往上 NodeANN 更高。顶端 NodeANN $N=40$（搜索宽度 40）为 0.843157/12,513.8，ASI $ef=400$ 为 0.839057/7,430.2。NodeANN 的 $N<10$ 段容量不足，召回受返回条数限制；ASI 因 $ef_2=16$ 全程满容量。顶点处 NodeANN 领先的原因是本工作负载每属性平均约 220 个对象，$ef=10\ldots40$ 已接近穷尽该属性；该交叉不推广到属性规模更大的数据。
 
 ### 9.2 指标概览：召回、吞吐与距离调用
 
-![ASI 三个工作点、NodeANN 与 Pre-filter 的 recall、QPS、平均距离调用条形概览；各列独立尺度。](2026-11-07-exps/figures/metric-overview.svg)
+![ASI 三个工作点、NodeANN 与 Pre-filter 的 recall、QPS、平均距离调用条形概览；各列独立尺度。](2026-11-08-exps/figures/metric-overview.svg)
 
-**图 6　五个工作点的并排指标概览。** 各列各用独立尺度，蓝色标出该列最优值。ASI 从 $ef=50$ 到 800，距离调用从 326.0 增至 681.9，recall 从 0.895547 升至 0.912482，QPS 从 16,670.5 降至 5,911.8。NodeANN $N=50$ 的 recall 为 0.913193、距离调用 455.5、QPS 11,361.3；Pre-filter 的距离调用 1,140.2，QPS 约 10,551.8。距离更少不保证延迟同比例下降；当前未报告邻接槽位数，不能由距离数推断槽位扫描量。计数排除构建距离，并按全部查询批次归一化；旧的 1,448 次/查询不属于本轮对齐基线。
+**图 6　五个工作点的并排指标概览。** 各列各用独立尺度，蓝色标出该列最优值。ASI 从 $ef=10$ 到 200，距离调用从 222.2 增至 464.5，recall 从 0.811379 升至 0.835982，QPS 从 29,230.6 降至 9,956.0。NodeANN $N=40$ 的 recall 为 0.843157、距离调用 422.1、QPS 12,513.8；Pre-filter 的距离调用 1,140.2，QPS 约 11,019。距离更少不保证延迟同比例下降；当前未报告邻接槽位数，不能由距离数推断槽位扫描量。计数排除构建距离，并按全部查询批次归一化。
 
 ### 9.3 未命中项在什么阶段丢失
 
-![未命中 FP32 真值的互斥归因柱状图，蓝色为 PQ 排序位移、绿色为属性内未导航到，其他类别本轮为零。](2026-11-07-exps/figures/miss-attribution.svg)
+![未命中 FP32 真值的互斥归因柱状图，蓝色为 PQ 排序位移、绿色为属性内未导航到，其他类别接近零。](2026-11-08-exps/figures/miss-attribution.svg)
 
-**图 7　GT 条目归因。** 六类互斥标签、优先级与分母见 §8.4 及 [机器可读汇总](2026-11-07-exps/data/miss-attribution.json)。图以全部 8,444 个 GT 条目为分母；零值类别在数据文件中仍显式记录。优先级量化类与导航损失可能重叠，不能将其解释为因果分解。
+**图 7　GT 条目归因。** 六类互斥标签、优先级与分母见 §8.4 及 [机器可读汇总](2026-11-08-exps/data/miss-attribution.json)。图以全部 1,951 个 GT 条目为分母；零值类别在数据文件中仍显式记录。$ef=10$ 时 PQ 排序位移占 14.51%、属性内未导航到占 4.31%；$ef=200$ 时分别为 15.38% 与 1.03%。在漏项分母上，量化份额随 $ef$ 上升从 76.9% 到 93.8%，说明加大搜索宽度更快被表示误差吃掉。优先级量化类与导航损失可能重叠，不能将其解释为因果分解。
 
 ### 9.4 第二通道容量 $ef_2$
 
-![固定 $ef=200$ 与 $p=50$ 时，第二通道 keep 容量 $ef_2$ 的消融。](2026-11-07-exps/figures/ablation-ef2.svg)
+![固定 $ef=40$ 与 $p=50$ 时，第二通道 keep 容量 $ef_2$ 的消融。](2026-11-08-exps/figures/ablation-ef2.svg)
 
-**图 8　$ef_2$ 消融。** 固定 $ef=200,p=50,M=16,efC=200,K_{cap}=8$，改变 $ef_2\in\{8,16,32,64\}$。recall 从 0.9030（8）升至 0.9057（32、64），QPS 则从 10.94k 降至 9.16k；在这四个单进程、三遍测量点中，32 到 64 没有观察到 recall 增长。CLI 将 `--ef2` 截断至至少 1，故消融没有真正关闭 $q_2$。该套每点一个进程，不提供跨种子置信区间。
+**图 8　$ef_2$ 消融。** 固定 $ef=40,p=50,M=16,efC=200,K_{cap}=8$，改变 $ef_2\in\{8,16,32,64\}$。recall 为 0.8273、0.8288、0.8334、0.8334，QPS 为 19,387.5、19,362.5、15,572.6、16,168.0；32 与 64 的召回相同，没有观察到继续增长。CLI 将 `--ef2` 截断至至少 1，故消融没有真正关闭 $q_2$。该套每点一个进程，不提供跨种子置信区间。
 
 ### 9.5 代表点密度参数 $p$
 
-![固定 $ef=200$ 与 $ef_2=16$ 时，代表点密度参数 $p$ 的消融。](2026-11-07-exps/figures/ablation-p.svg)
+![固定 $ef=40$ 与 $ef_2=16$ 时，代表点密度参数 $p$ 的消融。](2026-11-08-exps/figures/ablation-p.svg)
 
-**图 9　$p$ 消融。** 固定 $ef=200,ef_2=16,M=16,efC=200,K_{cap}=8$，比较 $p\in\{10,25,50,100\}$。recall 分别为 0.9037、0.9042、0.9036、0.9021，已测范围相差约 0.0021；QPS 在约 9.85k–10.64k 间非单调变化。这些点是一进程三遍，不能据此声称小 $p$ 普遍提高吞吐或召回。较小 $p$ 通常请求更多代表点，但受 $K_{cap}$ 截断；它同时改变种子比较、局部 MST、父侧网关与 repair 边。
-
-### 9.6 top-10 口径复核
-
-同一对象集、同一批查询、同一编译与距离内核，把 $k$ 改为 10 重跑，参数网格随之围绕 $k$ 重设（ASI $ef\in[5,400]$；NodeANN 耦合 $ef=N\in\{2,\dots,30\}$）。真值文件取 `gt_50.txt` 的每查询前 10 列，并由 FP32 全范围扫描逐查询断言与文件内容相等（200 条全部通过）；有效条目 1,951，17 条查询合格数不足 10。完整数据见 [当日记录](2026-11-08-exps/report.md)。
-
-| 项 | $k=50$ | $k=10$ |
-|---|---|---|
-| PQ 还原向量精确 top-$k$ 与 FP32 真值的 ID 重合 | 7,711/8,444 = 0.913193 | 1,645/1,951 = 0.843157 |
-| ASI 满容量曲线 | 0.7891–0.9125，17,567.9–5,911.8 QPS | 0.5284–0.8391，30,164.7–7,430.2 QPS |
-| NodeANN 满容量前沿点数 | 1 | 4（0.8380–0.8432，22,822.5–12,513.8 QPS） |
-| 顶端同召回附近吞吐 | NodeANN 11,361.3 vs ASI 5,911.8 | NodeANN 12,513.8 vs ASI 7,430.2 |
-
-$k=10$ 下有两点变化。第一，表示上限从 0.913193 降到 0.843157：在漏项分母上 PQ 排序位移占 76.9%（$ef=10$）到 93.8%（$ef=200$），“属性内未导航到”从 22.8% 降到 6.2%。加大搜索宽度的边际收益因此更快被表示误差吃掉。第二，NodeANN 出现了四个满容量非支配点：$N=10$ 时召回 0.8380，尚未触及 0.843157 的天花板，继续增大 $N$ 仍能换取召回；只有到 $N\ge40$ 才饱和。这与 $k=50$ 时 $N=50$ 立刻饱和是同一机制的两种情况，取决于该 $k$ 下每属性搜索是否已经无损。
-
-![ASI 与 NodeANN 在 top-10 口径下的 recall–throughput Pareto 曲线，各一条。](2026-11-08-exps/figures/pareto.svg)
-
-**图 10　Recall–throughput Pareto，$k=10$。** 与图 5 相同的一点一线规则，只是 $k$ 与真值前缀改为 10，参数网格围绕 $k$ 重设。NodeANN 覆盖 0.2911–0.8432，其中 $N<10$ 的左段容量不足、召回受返回条数限制；ASI 覆盖 0.5284–0.8391，$ef_2=16$ 使最小的 $ef=5$ 也有 21 的输出容量，故整条曲线均为满容量；交叉点移动到约 0.82：ASI $ef=15$ 的 0.8201/26,309.8 仍高于 NodeANN，而 $ef=20$ 的 0.8242/23,234.9 已被略超过。
-
-两臂的适用区间未变但边界移动：召回约 0.81 时 ASI $ef=10$ 为 29,230.6 QPS，NodeANN 在同召回约 23k；召回 0.8390 以上 NodeANN 同时更快且更高（12,513.8 @ 0.8432，而 ASI 最高只到 0.8391/7,430.2）。交叉点位于 0.8201–0.8242 之间，仍由每属性平均约 220 个对象这一事实决定，不能外推到属性基数更大的数据。
+**图 9　$p$ 消融。** 固定 $ef=40,ef_2=16,M=16,efC=200,K_{cap}=8$，比较 $p\in\{10,25,50,100\}$。recall 分别为 0.8288、0.8298、0.8288、0.8288，已测范围相差不超过 0.001；QPS 为 15,679.5、18,972.6、18,047.8、17,195.9。这些点是一进程三遍，不能据此声称某个 $p$ 普遍更好。较小 $p$ 通常请求更多代表点，但受 $K_{cap}$ 截断；它同时改变种子比较、局部 MST、父侧网关与 repair 边。
 
 ## 10. 可证范围与研究边界
 
@@ -351,7 +334,7 @@ $k=10$ 下有两点变化。第一，表示上限从 0.913193 降到 0.843157：
 
 本轮数据是 CCS 结构与 SIFT 几何的绑定实验。多属性 OR 的逻辑由闭包支持，但查询属性数量、范围重叠、空属性入口和规模扩展应分别描述其实际覆盖，不能从单一工作负载推广到所有层级过滤查询。当前结果也不构成新颖性或发表状态的证据。
 
-本工作负载每属性平均约 220 个对象，NodeANN 的 $ef=50$ 已接近穷尽单个属性，因此它在表示上限 0.913193 处只需 11,361.3 QPS，而 ASI 到 0.912482 已降到 5,911.8。该交叉只说明在这份数据的对象规模与标签粒度下，顶端由 per-attribute 小图胜出；不能据此认为 ASI 在高召回端普遍更慢，也不能反过来声称它在中段普遍更快。要检验这一点必须换更大基数或更细粒度的工作负载。
+本工作负载每属性平均约 220 个对象，NodeANN 用 $ef=40$ 就已在表示上限 0.843157 处完成任务（12,513.8 QPS），而 ASI 最高只到 0.839057/7,430.2。该交叉只说明在这份数据的对象规模与标签粒度下，顶端由 per-attribute 小图胜出；不能据此认为 ASI 在高召回端普遍更慢，也不能反过来声称它在中段普遍更快。要检验这一点必须换更大基数或更细粒度的工作负载。
 
 ## 11. 复现与检查
 
@@ -364,14 +347,14 @@ g++ -std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTO
 g++ -std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION \
   -I codes/directory-aware-vector-attr-search/src -I codes/dag-composition-methods/nodeann/hnswlib \
   codes/dag-ann-search/src/nodeann_bench.cpp -o work/nodeann_measured
-python3 codes/dag-ann-search/scripts/illustrate_asi.py measure --runs 3
+python3 codes/dag-ann-search/scripts/illustrate_asi.py measure --k 10 --out 2026-11-08-exps --runs 3
 mkdir -p work/asi-evidence
 taskset -c 2 ./work/attr_skeleton --dir work/dag-ann --work work/dag-scope/workload-run1 \
-  --vec recon.bin --M 16 --efC 200 --p 50 --ef2 16 --efs 50,200,800 --queries 200 \
-  --repeat 1 --trace-file work/asi-evidence/trace-ef-50-200-800.jsonl
-python3 codes/dag-ann-search/scripts/illustrate_asi.py attribute \
-  --trace work/asi-evidence/trace-ef-50-200-800.jsonl
-python3 codes/dag-ann-search/scripts/illustrate_asi.py render
+  --vec recon.bin --k 10 --M 16 --efC 200 --p 50 --ef2 16 --efs 10,40,200 --queries 200 \
+  --repeat 1 --trace-file work/asi-evidence/trace-k10-ef-10-40-200.jsonl
+python3 codes/dag-ann-search/scripts/illustrate_asi.py attribute --k 10 --out 2026-11-08-exps \
+  --trace work/asi-evidence/trace-k10-ef-10-40-200.jsonl
+python3 codes/dag-ann-search/scripts/illustrate_asi.py render --k 10 --out 2026-11-08-exps
 ```
 
-`scheme-measurements.jsonl` 保存全部配置及命令，`scheme-summary.json` 保存聚合值，`pareto-selection.json` 保存容量排除与支配筛选。归因诊断单独执行，其 QPS 不纳入性能图。每档均校验 `hits + 六类 misses = 8444`，并核对原始 FP32 精确扫描与保存 GT 一致。图形导出为 SVG，结构示意不使用虚构实验距离。
+`scheme-measurements.jsonl` 保存全部配置及命令，`scheme-summary.json` 保存聚合值，`pareto-selection.json` 保存支配筛选与 `capacity_limited` 标记。归因诊断单独执行，其 QPS 不纳入性能图。每档均校验 `hits + 六类 misses = 1951`，并核对原始 FP32 精确扫描与保存 GT 一致。图形导出为 SVG，结构示意不使用虚构实验距离。

@@ -1,6 +1,6 @@
 {
   "criteria": "academic-figures: width <= 7.4 in at export size, visible text >= 7 pt, no clipped or empty axes; each SVG opened via read :img and visually inspected.",
-  "visual_inspection": "top-10 pareto/metric-overview/miss-attribution inspected after the 2026-11-08 measurement",
+  "visual_inspection": "result charts plus the four structure diagrams inspected in this directory",
   "checks": {
     "ablation-ef2.svg": {
       "inspected": true,
@@ -31,6 +31,15 @@
         0,
         255
       ]
+    },
+    "asi-build.svg": {
+      "inspected": true
+    },
+    "asi-merge.svg": {
+      "inspected": true
+    },
+    "dqs-search.svg": {
+      "inspected": true
     },
     "metric-overview.svg": {
       "inspected": true,
@@ -76,6 +85,12 @@
         0,
         255
       ]
+    },
+    "recursive-controlled.svg": {
+      "inspected": true
+    },
+    "toy-dag.svg": {
+      "inspected": true
     }
   }
 }

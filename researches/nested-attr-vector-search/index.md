@@ -2,8 +2,7 @@
 
 - [问题定义与本轮评测口径](problem_def.md)
 - [ASI/DQS 当前实现、机制与实验比较](approaches.md)
-- [2026-11-07 实验记录：top-50](2026-11-07-exps/report.md)
 - [2026-11-08 实验记录：top-10](2026-11-08-exps/report.md)
-- [top-50 协议与哈希](2026-11-07-exps/data/scheme-protocol.json) · [top-10 协议与哈希](2026-11-08-exps/data/scheme-protocol.json)
-- [top-50 Pareto](2026-11-07-exps/figures/pareto.svg) · [top-10 Pareto](2026-11-08-exps/figures/pareto.svg) · [指标概览](2026-11-07-exps/figures/metric-overview.svg) · [漏召回归因](2026-11-07-exps/figures/miss-attribution.svg)
+- [实验协议与哈希](2026-11-08-exps/data/scheme-protocol.json)
+- [Pareto](2026-11-08-exps/figures/pareto.svg) · [指标概览](2026-11-08-exps/figures/metric-overview.svg) · [漏召回归因](2026-11-08-exps/figures/miss-attribution.svg)
 - [基线口径历史记录](2026-11-05-exps/baselines-frozen.md)
