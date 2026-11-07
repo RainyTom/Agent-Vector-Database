@@ -263,13 +263,12 @@ def render(args):
     save(DATA/'scheme-summary.json',rows)
     full=[r for r in rows if r['fixed_k_capacity']]
     short=[r for r in rows if not r['fixed_k_capacity']]
-    fronts={m:pareto([r for r in full if r['method']==m]) for m in ['NodeANN','ASI']}
-    short_fronts={m:pareto([r for r in short if r['method']==m]) for m in ['NodeANN','ASI']}
+    # One frontier per method over every measured point; capacity is annotated, not split.
+    fronts={m:pareto([r for r in rows if r['method']==m]) for m in ['NodeANN','ASI']}
     save(DATA/'pareto-selection.json',dict(
-        rule='Per-method exact dominance, applied separately to full-capacity points (ASI output reserve ef+ef2 >= k; NodeANN per-attribute reserve N >= k) and capacity-limited points (reserve < k). No smoothing or extrapolation.',
-        fronts=fronts,capacity_limited_frontiers=short_fronts,
-        capacity_excluded=short,
-        dominated=[r for r in full if r not in sum(fronts.values(),[])]))
+        rule='Per-method exact dominance over all measured configurations (capacity-limited ones included); no smoothing or extrapolation. Points with output reserve < k are marked capacity_limited for annotation.',
+        fronts=fronts,capacity_limited=[r for r in rows if not r['fixed_k_capacity']],
+        dominated=[r for r in rows if r not in sum(fronts.values(),[])]))
     def export(fig,name):
         fig.savefig(FIG/(name+'.svg'),bbox_inches='tight',pad_inches=.08)
         fig.savefig(WORK/(name+'.png'),dpi=160,bbox_inches='tight',pad_inches=.08)
@@ -279,20 +278,14 @@ def render(args):
     pre_qps=[r['qps_avg_pass'] for r in pre_runs]
     pre_ref=dict(method='Pre-filter',recall=pre_runs[0]['recall'],qps=len(pre_qps)/sum(1/x for x in pre_qps),distances=pre_runs[0]['dist_calls_per_q'])
     fig,ax=plt.subplots(figsize=(7.1,3.7))
-    for method,color,marker in [('NodeANN','#0072B2','o'),('ASI','#009E73','D')]:
-        rr=[r for r in full if r['method']==method];ff=fronts[method]
-        ax.scatter([r['recall'] for r in rr],[r['qps']/1000 for r in rr],s=13,color=color,alpha=.22)
+    for method,color,marker,label in [('NodeANN','#0072B2','o','NodeANN'),('ASI','#009E73','D','Ours (ASI)')]:
+        ff=fronts[method]
         ax.plot([r['recall'] for r in ff],[r['qps']/1000 for r in ff],marker=marker,color=color,
-                lw=1.8,ms=4.5,label=f'ASI (full top-{K})' if method=='ASI' else f'NodeANN (full top-{K})')
-    for method,color,marker in [('NodeANN','#0072B2','o'),('ASI','#009E73','D')]:
-        ff=short_fronts[method]
-        ax.plot([r['recall'] for r in ff],[r['qps']/1000 for r in ff],marker=marker,color=color,
-                lw=1.2,ls='--',ms=4,mfc='white',label='ASI (reserve < k)' if method=='ASI' else 'NodeANN (reserve < k)')
-    ax.scatter([pre_ref['recall']],[pre_ref['qps']/1000],marker='*',s=100,color='#555555',label='Pre-filter exact reference',zorder=5)
-    ax.set(xlabel=f'Recall@{K} against original FP32',ylabel='Throughput (k queries/s)',xlim=(.18,.99))
-    ax.grid(axis='y',color='.90',lw=.6);ax.legend(frameon=False,loc='upper right',ncol=1)
-    ax.text(.02,.03,f'Solid: output reserve >= {K} per attribute. Dashed: reserve < {K}, recall capped by shortfall.',
-            transform=ax.transAxes,ha='left',va='bottom',fontsize=7.5,color='.35')
+                lw=1.9,ms=4.5,label=label)
+    ax.set(xlabel=f'Recall@{K} against original FP32',ylabel='Throughput (k queries/s)')
+    ax.set_xlim(min(r['recall'] for r in rows)-.03,max(r['recall'] for r in rows)+.03)
+    ax.set_ylim(0,max(r['qps'] for r in rows)/1000*1.08)
+    ax.grid(axis='y',color='.90',lw=.6);ax.legend(frameon=False,loc='upper right')
     fig.tight_layout();export(fig,'pareto')
     # Dashboard: three ASI operating points plus NodeANN and exact scan.
     dash_efs = [10,40,200] if K==10 else [50,200,800]
