@@ -89,5 +89,77 @@
     "toy-dag.svg": {
       "inspected": true
     }
-  }
+  },
+  "portable_label_checks": {
+    "ablation-ef2.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 70,
+      "preserved_editable_labels": 0
+    },
+    "ablation-p.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 73,
+      "preserved_editable_labels": 0
+    },
+    "asi-build.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 28,
+      "preserved_editable_labels": 21
+    },
+    "asi-merge.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 22,
+      "preserved_editable_labels": 15
+    },
+    "dqs-search.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 46,
+      "preserved_editable_labels": 32
+    },
+    "metric-overview.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 77,
+      "preserved_editable_labels": 0
+    },
+    "miss-attribution.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 82,
+      "preserved_editable_labels": 0
+    },
+    "pareto.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 62,
+      "preserved_editable_labels": 0
+    },
+    "toy-dag.svg": {
+      "live_text_nodes": 0,
+      "embedded_raster_images": 0,
+      "external_hrefs": 0,
+      "outlined_paths": 22,
+      "preserved_editable_labels": 15
+    }
+  },
+  "generation_dependencies": {
+    "matplotlib": "3.11.2",
+    "cairocffi": "1.7.1",
+    "cffi": "2.1.1",
+    "tinycss2": "1.5.1"
+  },
+  "label_portability": "All rendered labels are glyph paths, not SVG text; four structure SVGs keep original editable labels in metadata#editable-svg-source. Viewing needs no installed label fonts. Original viewer-specific failure cause remains unconfirmed."
 }

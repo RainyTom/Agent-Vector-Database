@@ -76,3 +76,34 @@ PQ 还原向量的精确 top-10 与原始 FP32 真值有 1,645/1,951 的 ID 重�
 ## 下一步
 
 在保持 $k=10$ 的前提下补多属性 OR 与不同闭包大小；用更大属性基数的工作负载检验交叉点是否随属性规模右移。参数、数据与程序哈希见 `data/scheme-protocol.json`，图见 `figures/`。
+
+## 补充：SVG 兼容性与既有 top-10 trace 再分析
+
+本补充没有新建索引、运行新导航算法或测量 FP32 rerank。主曲线及其计时数据保持原样。
+
+- 九张 SVG 的可见文字统一导出为字形路径，消除显示时的字体/CSS 文字依赖。四张结构图原来的 83 个文字节点仍保存在 SVG metadata 中，可用 `svg_labels.py --extract-source` 恢复。已运行 `python3 codes/dag-ann-search/scripts/illustrate_asi.py render`，逐图检查没有可见 `<text>`、嵌入位图或外部引用，并检查实际图像预览；Pareto 仍只有 NodeANN 与 Ours (ASI)。具体计数和生成依赖版本见 [`data/figure-validation.json`](data/figure-validation.json)。用户阅读器的具体失效原因尚未复现，字体/CSS 兼容性原因仍属 `[INFERENCE]`。
+- 对 `work/asi-evidence/trace-k10-ef-10-40-200.jsonl` 的 600 条已有记录重新计算全部 FP32 GT 的候选覆盖、PQ exact GT 的发现与返回、种子评分重复次数。源 trace SHA256 为 `60fc42400e7540991f5fb0bf8e1e8f3bc7c1a53e831669edacdd04b20a7640a4`。新增汇总 [`candidate-coverage.json`](data/candidate-coverage.json) 与逐查询数据 [`candidate-coverage-per-query.jsonl`](data/candidate-coverage-per-query.jsonl)；结果、解释和候选机制见 [`approaches.md` §12](../approaches.md#12-在当前框架内提高效率与召回)。
+- 候选覆盖不是当前程序的返回 recall，也不包含重排时间。当前缺少 NodeANN 同口径候选 trace，没有证据声称 FP32 rerank 后 ASI 更快。下一轮优先级以 §12.5 为准，新机制尚未通过完整新颖性与理论门槛。
+
+可从 §11 的 trace 命令重新生成输入，再用以下命令复核核心集合计数；它不重新运行搜索：
+
+```bash
+python3 - <<'PY'
+import json
+from collections import Counter, defaultdict
+from pathlib import Path
+counts = defaultdict(Counter)
+for line in Path("work/asi-evidence/trace-k10-ef-10-40-200.jsonl").open():
+    t = json.loads(line)
+    F, P, R, V, S = (set(t[k]) for k in
+                      ("fp_top", "pq_top", "returned", "evaluated", "seed_evaluated"))
+    counts[t["ef"]].update(gt=len(F), returned=len(F & R), offered=len(F & V),
+        unseen=len(F - (V | S)), found_not_returned=len((F & V) - R),
+        pq_offered=len(P & V), pq_returned=len(P & R),
+        duplicate_calls=len(t["evaluated"]) + len(t["seed_evaluated"]) - len(V | S))
+for ef, c in sorted(counts.items()):
+    assert c["returned"] + c["found_not_returned"] + c["unseen"] == c["gt"] == 1951
+    assert c["pq_offered"] == c["pq_returned"]
+    print(ef, dict(c))
+PY
+```

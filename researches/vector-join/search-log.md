@@ -270,3 +270,12 @@
 
 BigFANN、EMA、PathFinder、Veda仅核相关机制章节，完整书目/正式版本归档待补；UNG全文仍受限。没有完成全面引用链或查重，不宣称新颖性；本任务是B类filtered ANN，不是新的几何vector join。当前M64平面图的QPS–Recall/n扫描和有限语义探针已运行，新分层/b算法未实施。
 
+
+## 2026-11-07 UTC：ASI top-10 导航候选的前序边界
+
+先检查 `papers/papers.jsonl` 与 `relations.jsonl`，再以 vector similarity join、vector join、similarity self-join、inner-product similarity join 联合检索，随后定向核 HNSW 层次导航与 query-guided graph construction。此轮是 B 类层级 filtered ANN 的可迁移机制探索，不是新的 vector join 算法；直接 join 命中未开展全文核查，不据此更新其方法记录。
+
+- [HNSW，arXiv:1603.09320](https://arxiv.org/abs/1603.09320)：核原始摘要关于多层、距离尺度分离及上层入口搜索的描述。所读版本状态为预印本，正式期刊版本本轮未确认。恢复 ASI 已丢弃的高层属于已有机制控制组，不能作为独立新颖性。
+- [RoarGraph，PVLDB 17(11), 2735–2749, 2024](https://www.vldb.org/pvldb/vol17/p2735-chen.pdf)，DOI [10.14778/3681954.3681959](https://doi.org/10.14778/3681954.3681959)：官方正文确认已发表，重点核 §4.2.1–4.2.3 的查询引导二部图、投影和邻居选择。原问题是 cross-modal ANN；可迁移点为用查询分布补路径，不直接支持层级范围或几何 join。完整理论、实验与版本归档未做，暂列候选，不填造完整论文记录。
+
+方案判断与现有 trace 再分析见 [approaches.md §12](../nested-attr-vector-search/approaches.md#12-在当前框架内提高效率与召回)。范围条件化路径覆盖、固定绕行机会的最近邻仍待系统检索，FP32 重排也未做完整新颖性审查。未追完引用链、未声称穷尽文献，没有新方法性能实验。

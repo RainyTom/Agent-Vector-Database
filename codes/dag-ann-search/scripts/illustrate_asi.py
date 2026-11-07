@@ -4,6 +4,26 @@
 All diagnostic references come from the C++ trace (RawL2Space full scans).
 No parameter points are fabricated or interpolated for tabulated claims.
 """
+
+# SVG labels must be paths: embedded source retains editable Chinese diagram text.
+# The conversion helper also gives the matplotlib exports native title/desc nodes.
+FIGURE_ACCESSIBILITY = {
+    'pareto': (
+        'NodeANN and Ours (ASI): measured recall-throughput frontier',
+        'Measured non-dominated configurations at k=10, with recall against original FP32 and throughput in thousands of queries per second. Legend: NodeANN; Ours (ASI).'),
+    'metric-overview': (
+        'Recall, throughput and distance evaluations at k=10',
+        'Three ASI configurations, NodeANN and exact pre-filter scan; each metric has an independent horizontal scale. Values come from retained top-10 measurement records.'),
+    'miss-attribution': (
+        'Operational attribution of missed FP32 top-10 results',
+        'Stacked percentages of all FP32 ground-truth pairs by PQ rank displacement, attribute admission, navigation, queue admission and final output; precedence is operational, not a causal intervention.'),
+    'ablation-ef2': (
+        'ASI representative reserve ablation at k=10',
+        'Measured recall and throughput against representative reserve ef2 with the other displayed parameters fixed.'),
+    'ablation-p': (
+        'ASI sampling denominator ablation at k=10',
+        'Measured recall and throughput against sampling denominator p with the other displayed parameters fixed.'),
+}
 import argparse
 import collections
 import csv
@@ -219,10 +239,13 @@ def render(args):
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     import numpy as np
+    from svg_labels import self_contained_svg
     plt.rcParams.update({'font.family':'DejaVu Sans','font.size':9,'axes.labelsize':10,
                          'xtick.labelsize':8,'ytick.labelsize':8,'legend.fontsize':8,
-                         'axes.spines.top':False,'axes.spines.right':False,'svg.hashsalt':'asi-evidence'})
+                         'axes.spines.top':False,'axes.spines.right':False,'svg.hashsalt':'asi-evidence',
+                         'svg.fonttype':'path'})
     FIG.mkdir(parents=True,exist_ok=True)
+    WORK.mkdir(parents=True,exist_ok=True)
     rows,ablations=summaries()
     save(DATA/'scheme-summary.json',rows)
     full=[r for r in rows if r['fixed_k_capacity']]
@@ -235,6 +258,7 @@ def render(args):
         dominated=[r for r in rows if r not in sum(fronts.values(),[])]))
     def export(fig,name):
         fig.savefig(FIG/(name+'.svg'),bbox_inches='tight',pad_inches=.08)
+        self_contained_svg(FIG/(name+'.svg'), *FIGURE_ACCESSIBILITY[name])
         fig.savefig(WORK/(name+'.png'),dpi=160,bbox_inches='tight',pad_inches=.08)
         plt.close(fig)
     pre_runs=[rr for rec in (json.loads(line) for line in (DATA/'prefilter-matched.jsonl').read_text().splitlines() if line.strip())
@@ -295,6 +319,8 @@ def render(args):
             ax.set(xlabel=xlabel,ylabel=title);ax.set_xticks([r['value'] for r in aa]);ax.grid(alpha=.2)
         fig.suptitle(f'ef={aa[0].get("ef",K)}; '+('p=50' if key=='ef2' else 'ef2=16'),fontsize=9)
         fig.tight_layout();export(fig,'ablation-'+key)
+    for name in ['asi-build', 'asi-merge', 'dqs-search', 'toy-dag']:
+        self_contained_svg(FIG/(name+'.svg'))
     print(json.dumps(dict(frontiers=fronts,attribution=points),indent=2))
 
 
