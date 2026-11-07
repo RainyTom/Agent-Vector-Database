@@ -282,7 +282,7 @@ static void flatten_adj(LocalGraph& g) {
 int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vec = "recon.bin";
     int k = 50, M = 16, efC = 200, nq_max = 200, nrep = 8, per_concept_N = 50, repeat = 1;
-    bool overflow = true;
+    bool overflow = true, mink = true;
     std::vector<int> efs{50};
     std::vector<std::string> modes{"nr", "r"};
     for (int i = 1; i < argc; ++i) {
@@ -299,6 +299,7 @@ int main(int argc, char** argv) {
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--no-overflow") overflow = false;
+        else if (a == "--no-mink") mink = false;   // ef_c 下界退化为 ef/|D|
         else if (a == "--modes") { modes.clear(); std::stringstream ss(nx()); std::string t; while (std::getline(ss, t, ',')) if (!t.empty()) modes.push_back(t); }
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t; while (std::getline(ss, t, ',')) if (!t.empty()) efs.push_back(std::stoi(t)); }
     }
@@ -432,7 +433,8 @@ int main(int argc, char** argv) {
                             merged.push_back({local[i].first, int(g.members[local[i].second])});
                     }
                 } else {
-                    const int ef_c = std::max(k, ef / std::max<int>(1, int(inD.size())));
+                    const int ef_c = mink ? std::max(k, ef / std::max<int>(1, int(inD.size())))
+                                          : std::max(8, ef / std::max<int>(1, int(inD.size())));
                     // 每概念结果表：稠密数组 + 手动堆（避免 map 查找与 priority_queue 的额外封装）
                     static std::vector<MaxHeap> pc;
                     static std::vector<int> touched;
@@ -534,9 +536,9 @@ int main(int argc, char** argv) {
                 }
             }
             const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
-            std::printf("{\"mode\":\"%s\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"reps\":%d,\"overflow\":%d,\"queries\":%d,\"repeat\":%d,"
+            std::printf("{\"mode\":\"%s\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"reps\":%d,\"overflow\":%d,\"mink\":%d,\"queries\":%d,\"repeat\":%d,"
                         "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.0f,\"concepts_covered\":%.2f,\"concepts_in_scope\":%.2f}\n",
-                        mode.c_str(), ef, k, M, efC, nrep, int(overflow), nq, repeat,
+                        mode.c_str(), ef, k, M, efC, nrep, int(overflow), int(mink), nq, repeat,
                         double(hit) / double(std::max<long>(denom, 1)),
                         double(nq) * repeat / s,
                         double(dists) / (double(nq) * repeat),
