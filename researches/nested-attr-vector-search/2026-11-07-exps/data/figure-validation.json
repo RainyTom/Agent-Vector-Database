@@ -1,0 +1,11 @@
+{
+  "checks": {
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/pareto.svg": [],
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/metric-overview.svg": [],
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/miss-attribution.svg": [],
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/ablation-ef2.svg": [],
+    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/ablation-p.svg": []
+  },
+  "criteria": "academic-figures audit_figure: width <=7.4in, visible font >=7pt, no clipped or empty axes",
+  "visual_inspection": "5 result SVGs plus 4 structure SVGs opened via read :img"
+}

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 470" role="img" aria-labelledby="title desc">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<title id="title">Parent representative connects to the nearest object in a descendant attribute</title><desc id="desc">A nonempty ancestor P connects over empty intermediate attribute X to object g in F nearest to parent representative rp. The gateway g need not be a representative. Frozen object-graph edges are bidirectional, distinct from taxonomy edges.</desc>
+<style>text{font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;fill:#172536}.node{fill:#fff;stroke:#2563a8;stroke-width:2}.empty{fill:#f1f5f9;stroke:#64748b;stroke-width:2}.gate{fill:#fff2cc;stroke:#a36a00;stroke-width:2.5}.edge{stroke:#198754;stroke-width:4;fill:none;marker-start:url(#green);marker-end:url(#green)}.tax{stroke:#64748b;stroke-width:2;stroke-dasharray:7 6;fill:none;marker-end:url(#gray)}.local{stroke:#2563a8;stroke-width:2;fill:none;marker-end:url(#blue)}.label{font-size:18px;font-weight:700}.small{font-size:15px;fill:#334155}.note{font-size:14px;fill:#475569}</style><defs><marker id="green" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#198754"/></marker><marker id="gray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker><marker id="blue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#2563a8"/></marker></defs>
+<text x="28" y="34" class="label">空中间属性上方的父代表点，连接到最近子对象网关</text>
+<rect class="node" x="75" y="142" width="240" height="204" rx="16"/><text x="195" y="174" class="label" text-anchor="middle">非空父侧属性 P</text>
+<circle cx="195" cy="242" r="27" fill="#dbeafe" stroke="#2563a8" stroke-width="2"/><text x="195" y="248" class="label" text-anchor="middle">rₚ</text><text x="195" y="300" class="small" text-anchor="middle">父代表点</text>
+<rect class="empty" x="395" y="168" width="150" height="142" rx="16"/><text x="470" y="202" class="label" text-anchor="middle">空属性 X</text><text x="470" y="225" class="small" text-anchor="middle">无对象</text><text x="470" y="285" class="small" text-anchor="middle">无代表点</text>
+<rect class="node" x="635" y="112" width="245" height="250" rx="16"/><text x="757" y="145" class="label" text-anchor="middle">非空子属性 F</text>
+<circle cx="700" cy="228" r="28" class="gate"/><text x="700" y="234" class="label" text-anchor="middle">g</text><text x="700" y="275" class="small" text-anchor="middle">最近对象网关</text>
+<circle cx="815" cy="228" r="23" fill="#dbeafe" stroke="#2563a8" stroke-width="2"/><text x="815" y="234" class="label" text-anchor="middle">r_f</text><text x="815" y="275" class="small" text-anchor="middle">代表点</text>
+<path class="edge" d="M225 242H668"/>
+<path class="tax" d="M315 170C340 130 370 130 395 185"/><path class="tax" d="M545 185C575 145 605 145 635 170"/>
+<path class="local" d="M728 228H786"/><text x="757" y="323" class="small" text-anchor="middle">局部近邻边保留</text>
+<text x="28" y="405" class="note">选择规则：g = argminₓ d(v(rₚ), v(x))，x 遍历 F 的全部直属对象；g 不必等于 r_f。</text>
+<text x="28" y="432" class="note">虚线为属性 DAG 路径；绿色双向边是对象图中的跨属性邻接。主合并边冻结，原始局部边不被替换。</text>
+</svg>

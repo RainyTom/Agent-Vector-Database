@@ -1,15 +1,14 @@
-// Attribute-Skeleton Index (ASI)：属性 DAG 上的骨架图索引与双队列检索。
+// Attribute-Skeleton Index (ASI)：保留属性 DAG 的资格闭包，并将属性内对象图接成共享搜索图。
 //
-// 索引三部分：
-//   L1 属性内局部图 (ALG)   —— 每属性一张单层图（RNG 选边 + 反向边收缩 + 连通修补）
-//   L2 代表点骨架 (RS)      —— 每属性按 1/p 取 farthest-first 代表点，代表点间建 MST；
-//                              并向"直接子属性入口"与"≥2 跳后代入口"建单向跳转边
-//   L3 闭包位图 (CL)        —— 每属性一张后代闭包位图，用于闭包求解与资格判定
+// 构建：
+//   1. 每个非空直属属性独立构建 hnswlib 多层 HNSW，只导出 layer 0 的有向邻接表。
+//   2. 属性内 farthest-first 代表点以 MST 双向连接；不补普通对象的连通边。
+//   3. 逆拓扑处理属性 DAG，为父代表点连接子属性中的最近对象；跨属性边双向冻结，repair 另加边。
+//   4. 为包含空属性的完整 DAG 构建后代闭包位图。
 //
-// 检索：
-//   q1（容量 ef，收所有节点）+ q2（容量 ef2，只收代表节点），各自维护
-//   cand（最近优先，决定展开顺序）与 keep（容量上限，决定淘汰阈值）。
-//   每次从两队列取更近者展开；邻居先试 q1，若为代表节点且进不了 q1 仍可进 q2。
+// 查询：全闭包 D 中每个非空属性的最近代表点作种子；offer 先去重、再检查资格。
+// q1 收所有范围内对象，q2 独立尝试接纳代表点或网关；两条通道各有 cand 与 keep，
+// cand 共同驱动展开，最终合并两个 keep、按 ID 去重并取 top-k。
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -41,27 +40,8 @@ struct AttrGraph {
     uint32_t entry = 0;
 };
 
-static void shrink_list(const float* base, const Vec& ids, uint32_t bl, Vec& list, int M) {
-    if (int(list.size()) <= M) return;
-    std::sort(list.begin(), list.end(), [&](uint32_t a, uint32_t b) {
-        return dist2(base + size_t(ids[a]) * DIM, base + size_t(ids[bl]) * DIM) <
-               dist2(base + size_t(ids[b]) * DIM, base + size_t(ids[bl]) * DIM);
-    });
-    Vec keep;
-    const float* pb = base + size_t(ids[bl]) * DIM;
-    for (uint32_t c : list) {
-        if (int(keep.size()) >= M) break;
-        const float* pc = base + size_t(ids[c]) * DIM;
-        const float dq = dist2(pc, pb);
-        bool ok = true;
-        for (uint32_t k : keep) if (dist2(pc, base + size_t(ids[k]) * DIM) < dq) { ok = false; break; }
-        if (ok) keep.push_back(c);
-    }
-    list.swap(keep);
-}
 
-// 用 hnswlib 建该属性的多层索引，然后取 layer 0 邻接作为属性内局部图。
-// 这样建图质量与基线同源（同 RNG 剪边、同层次构建），不需要自写启发式。
+// 局部图由 hnswlib 的完整多层构建导出 layer 0；查询不使用高层导航。
 static void build_attr_graph(const float* base, const Vec& ids, int M, int efC, int nrep,
                              int seed, AttrGraph& g) {
     const int n = int(ids.size());
@@ -150,6 +130,7 @@ int main(int argc, char** argv) {
     bool skip_links = true;
     bool do_merge = true;
     bool diag = false;
+    std::string trace_file;
     std::vector<int> efs{50};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -167,6 +148,7 @@ int main(int argc, char** argv) {
         else if (a == "--no-merge") do_merge = false;
         else if (a == "--diag") diag = true;
         else if (a == "--queries") nq_max = std::stoi(nx());
+        else if (a == "--trace-file") trace_file = nx();
         else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t;
             while (std::getline(ss, t, ',')) if (!t.empty()) efs.push_back(std::stoi(t)); }
@@ -190,6 +172,16 @@ int main(int argc, char** argv) {
     std::vector<int> gt(size_t(nq) * k, -1);
     { FILE* f = std::fopen((dir + "/gt_" + std::to_string(k) + ".txt").c_str(), "rb");
       if (f) { if (std::fread(gt.data(), sizeof(int32_t), gt.size(), f) != gt.size()) {} std::fclose(f); } }
+    std::vector<float> original;
+    FILE* trace = nullptr;
+    if (!trace_file.empty()) {
+        if (!readf(dir + "/orig.bin", original) || original.size() != base.size()) {
+            std::fprintf(stderr, "original vector dimensions do not match search vectors\n");
+            return 2;
+        }
+        trace = std::fopen(trace_file.c_str(), "w");
+        if (!trace) { std::perror(trace_file.c_str()); return 2; }
+    }
 
     // 属性全集与编号
     std::vector<int> aids;
@@ -257,15 +249,7 @@ int main(int argc, char** argv) {
             for (uint32_t w : ag[size_t(i)].adj[size_t(j)]) gadj[off + j].push_back(off + w);
     }
     std::vector<char> is_rep(size_t(n), 0), is_gw(size_t(n), 0);
-    // L2 的跨属性边：**按拓扑序自底向上合并**，合并时双向更新代表点邻居并做 RNG 调整。
-    // 说明：不存在"跳转边"这一独立机制；祖先可达深层后代，靠的是合并过程中
-    //       代表点邻居被反复更新（下层代表点不是建完就冻结）。
-    const int Rdeg = 16;                        // 代表点跨属性邻居的度上界
-    const int PPROT = 2;                        // 每个代表点至少保留的跨属性边数（防止属性成为孤岛）
-    std::vector<uint32_t> rep_owner(size_t(n), UINT32_MAX);   // 代表点 -> 所属属性
-    for (int i = 0; i < A; ++i)
-        for (uint32_t r : ag[size_t(i)].reps) rep_owner[abase[size_t(i)] + r] = uint32_t(i);
-
+    // 跨属性网关边独立存储并冻结；原始局部边与代表点 MST 边均不剪除。
     // 拓扑序（子先于父）
     std::vector<int> topo;
     {
@@ -292,31 +276,7 @@ int main(int argc, char** argv) {
     // 自底向上：先处理深度大的属性（把子树的代表点合并进父侧）
     std::reverse(topo.begin(), topo.end());
 
-    // 代表点的邻居表（跨属性），以全局节点号存储，合并时做 RNG 调整
-    auto rep_prune = [&](uint32_t node) {
-        Vec& L = gbr[node];
-        if (int(L.size()) <= Rdeg) return;
-        const float* pn = base.data() + size_t(node_objid(node)) * DIM;
-        std::sort(L.begin(), L.end(), [&](uint32_t a, uint32_t b) {
-            return dist2(pn, base.data() + size_t(node_objid(a)) * DIM) <
-                   dist2(pn, base.data() + size_t(node_objid(b)) * DIM);
-        });
-        const uint32_t self_attr = rep_owner[node];
-        Vec keep;
-        int cross_kept = 0;
-        for (uint32_t c : L) {
-            if (int(keep.size()) >= Rdeg) break;
-            const bool cross = (rep_owner[c] != self_attr);
-            const float* pc = base.data() + size_t(node_objid(c)) * DIM;
-            const float dq = dist2(pc, pn);
-            bool ok = true;
-            for (uint32_t k2 : keep) if (dist2(pc, base.data() + size_t(node_objid(k2)) * DIM) < dq) { ok = false; break; }
-            if (ok) { keep.push_back(c); if (cross) ++cross_kept; }
-            else if (cross && cross_kept < PPROT) { keep.push_back(c); ++cross_kept; }   // 保底额度
-        }
-        L.swap(keep);
-    };
-
+    // Cross-attribute gateway adjacency is stored separately in gbr.
     long n_merge_edges = 0;
     for (int ci : topo) {
         if (!do_merge) break;
@@ -396,11 +356,8 @@ int main(int argc, char** argv) {
                 }
         }
     }
-    // 度控制：合并边冻结、原始边一律不动 —— 允许总度超过 Rdeg。
-    // 依据：剪掉原始边会破坏属性内连通性（实测会同时降低属性触达数与召回）。
-    long n_intra_dropped = 0;
-    std::fprintf(stderr, "[L2-merge] %ld cross-attribute edges (+%ld repaired, FROZEN); intra edges trimmed by %ld; degree cap %d\n",
-                 n_merge_edges, n_repair, n_intra_dropped, Rdeg);
+    std::fprintf(stderr, "[L2-merge] %ld cross-attribute edges (+%ld repaired); local and MST edges retained\n",
+                 n_merge_edges, n_repair);
     // 统计：属性层入边（本属性任一代表点，是否有来自**其他属性**代表点的边）
     {
         std::vector<long> in_deg(size_t(A), 0);
@@ -515,9 +472,12 @@ int main(int argc, char** argv) {
     for (int ef : efs) {
         long hit = 0, denom = 0, dists = 0, elig_sum = 0, entered_sum = 0, inD_sum = 0, seeds_sum = 0;
         long miss_attr_not_entered = 0, miss_item_not_visited = 0, miss_ranked_out = 0, gt_total = 0, miss_rejected = 0, touched_sum = 0;
+        double query_seconds = 0;
         const auto t1 = std::chrono::steady_clock::now();
         for (int round = 0; round < repeat; ++round)
         for (int qi = 0; qi < nq; ++qi) {
+            const auto query_start = std::chrono::steady_clock::now();
+            std::vector<uint32_t> evaluated, admitted, seed_evaluated;
             std::fill(bm.begin(), bm.end(), 0ull);
             for (int c : qc[qi]) {
                 auto it = apos.find(c);
@@ -554,6 +514,7 @@ int main(int argc, char** argv) {
                 touched.insert(attr_of[gi]);
                 const float d = dist2(q, base.data() + size_t(obj_of[gi]) * DIM);
                 ++dists;
+                if (trace && round == 0) evaluated.push_back(obj_of[gi]);
                 bool any = false;
                 if (int(q1_keep.size()) < ef) { q1_keep.push({d, gi}); q1_cand.push({-d, gi}); any = true; }
                 else if (d < q1_keep.top().first) { q1_keep.pop(); q1_keep.push({d, gi}); q1_cand.push({-d, gi}); any = true; }
@@ -562,6 +523,7 @@ int main(int argc, char** argv) {
                     else if (d < q2_keep.top().first) { q2_keep.pop(); q2_keep.push({d, gi}); q2_cand.push({-d, gi}); any = true; }
                 }
                 if (any) entered.insert(attr_of[gi]);
+                if (any && trace && round == 0) admitted.push_back(obj_of[gi]);
             };
             // 种子：D 中**每个属性**一个入口（取距查询最近的代表点）。
             // 单队列不变：这些种子只是同一个队列里的多个起点。
@@ -569,9 +531,11 @@ int main(int argc, char** argv) {
                 uint32_t bi = ag[size_t(a)].entry;
                 float bd = dist2(q, base.data() + size_t(ag[size_t(a)].members[bi]) * DIM);
                 ++dists;
+                if (trace && round == 0) seed_evaluated.push_back(ag[size_t(a)].members[bi]);
                 for (uint32_t r : ag[size_t(a)].reps) {
                     const float d = dist2(q, base.data() + size_t(ag[size_t(a)].members[r]) * DIM);
                     ++dists;
+                    if (trace && round == 0) seed_evaluated.push_back(ag[size_t(a)].members[r]);
                     if (d < bd) { bd = d; bi = r; }
                 }
                 ++seeds_sum;
@@ -604,6 +568,51 @@ int main(int argc, char** argv) {
                       [](const std::pair<float,int>& a, const std::pair<float,int>& b) { return a.second == b.second; }),
                       out.end());
             const size_t keep = std::min<size_t>(k, out.size());
+            query_seconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - query_start).count();
+            if (trace && round == 0) {
+                // Reference scans are diagnostics only: never part of query throughput.
+                std::vector<std::pair<float, uint32_t>> pq_exact, fp_exact;
+                for (int a : inD) {
+                    for (uint32_t id : ag[size_t(a)].members) {
+                        pq_exact.emplace_back(dist2(q, base.data() + size_t(id) * DIM), id);
+                        fp_exact.emplace_back(dist2(q, original.data() + size_t(id) * DIM), id);
+                    }
+                }
+                const size_t ref_k = std::min<size_t>(k, pq_exact.size());
+                std::partial_sort(pq_exact.begin(), pq_exact.begin() + ref_k, pq_exact.end());
+                std::partial_sort(fp_exact.begin(), fp_exact.begin() + ref_k, fp_exact.end());
+                const float pq_kth = ref_k ? pq_exact[ref_k - 1].first : 0.f;
+                const float fp_kth = ref_k ? fp_exact[ref_k - 1].first : 0.f;
+                auto ids_json = [&](const char* key, const std::vector<uint32_t>& values) {
+                    std::fprintf(trace, ",\"%s\":[", key);
+                    for (size_t j = 0; j < values.size(); ++j)
+                        std::fprintf(trace, "%s%u", j ? "," : "", values[j]);
+                    std::fprintf(trace, "]");
+                };
+                std::fprintf(trace, "{\"ef\":%d,\"ef2\":%d,\"p\":%d,\"qi\":%d,\"eligible\":%zu,\"pq_kth\":%.9g,\"fp_kth\":%.9g",
+                             ef, ef2, pdiv, qi, pq_exact.size(), pq_kth, fp_kth);
+                std::vector<uint32_t> pq_ids, fp_ids, result_ids, entered_attrs, touched_attrs;
+                for (size_t j = 0; j < ref_k; ++j) {
+                    pq_ids.push_back(pq_exact[j].second);
+                    fp_ids.push_back(fp_exact[j].second);
+                }
+                for (size_t j = 0; j < keep; ++j) result_ids.push_back(uint32_t(out[j].second));
+                for (uint32_t a : entered) entered_attrs.push_back(uint32_t(aids[a]));
+                for (uint32_t a : touched) touched_attrs.push_back(uint32_t(aids[a]));
+                ids_json("fp_top", fp_ids); ids_json("pq_top", pq_ids);
+                ids_json("returned", result_ids); ids_json("evaluated", evaluated);
+                ids_json("admitted", admitted); ids_json("seed_evaluated", seed_evaluated);
+                ids_json("entered_attrs", entered_attrs); ids_json("touched_attrs", touched_attrs);
+                std::fprintf(trace, ",\"missing_reference_distances\":[");
+                bool first = true;
+                std::unordered_set<uint32_t> result_set(result_ids.begin(), result_ids.end());
+                for (uint32_t id : fp_ids) if (!result_set.count(id)) {
+                    std::fprintf(trace, "%s[%u,%.9g]", first ? "" : ",", id,
+                                 dist2(q, base.data() + size_t(id) * DIM));
+                    first = false;
+                }
+                std::fprintf(trace, "]}\n");
+            }
             std::unordered_set<int> topk;
             for (size_t i = 0; i < keep; ++i) topk.insert(out[i].second);
             int e = 0, h = 0;
@@ -631,7 +640,7 @@ int main(int argc, char** argv) {
                     "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f,\"miss_attr_not_entered\":%.4f,\"miss_item_not_visited\":%.4f,\"miss_ranked_out\":%.4f,\"miss_rejected\":%.4f,\"attrs_touched\":%.2f}\n",
                     ef, ef2, pdiv, k, M, efC, int(skip_links), nq, repeat,
                     double(hit) / double(std::max<long>(denom, 1)),
-                    double(nq) * repeat / s,
+                    double(nq) * repeat / query_seconds,
                     double(dists) / (double(nq) * repeat),
                     double(elig_sum) / (double(nq) * repeat),
                     double(dists) / std::max<double>(1.0, double(elig_sum)),
@@ -644,5 +653,6 @@ int main(int argc, char** argv) {
                     double(touched_sum) / (double(nq) * repeat));
         std::fflush(stdout);
     }
+    if (trace) std::fclose(trace);
     return 0;
 }

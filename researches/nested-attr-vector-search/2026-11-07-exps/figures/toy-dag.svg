@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 940 450" role="img" aria-labelledby="title desc">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<title id="title">Twelve objects on a multi-parent attribute DAG with one shared node</title><desc id="desc">Each of the six attributes R, A, B, C, E, F owns two example objects. R points to A and B; A points to C and the one shared F node; B points to E and that same F node.</desc>
+<style>text{font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;fill:#172536}.edge{stroke:#64748b;stroke-width:2.4;fill:none;marker-end:url(#arrow)}.node{fill:#fff;stroke:#2563a8;stroke-width:2}.shared{fill:#fff4cf;stroke:#a36a00;stroke-width:2.5}.label{font-size:18px;font-weight:700}.detail{font-size:14px;fill:#334155}.note{font-size:15px;fill:#475569}</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker></defs>
+<text x="28" y="32" font-size="21" font-weight="700">属性 DAG 与对象直属归属（12 个示例对象）</text>
+<path class="edge" d="M445 104L278 175"/><path class="edge" d="M495 104L662 175"/>
+<path class="edge" d="M245 225L170 316"/><path class="edge" d="M300 225L450 310"/>
+<path class="edge" d="M640 225L490 310"/><path class="edge" d="M695 225L770 316"/>
+<rect class="node" x="405" y="55" width="130" height="55" rx="12"/><text class="label" x="470" y="80" text-anchor="middle">R</text><text class="detail" x="470" y="100" text-anchor="middle">对象 r₁、r₂</text>
+<rect class="node" x="195" y="170" width="150" height="58" rx="12"/><text class="label" x="270" y="195" text-anchor="middle">A</text><text class="detail" x="270" y="217" text-anchor="middle">对象 a₁、a₂</text>
+<rect class="node" x="595" y="170" width="150" height="58" rx="12"/><text class="label" x="670" y="195" text-anchor="middle">B</text><text class="detail" x="670" y="217" text-anchor="middle">对象 b₁、b₂</text>
+<rect class="node" x="95" y="310" width="150" height="58" rx="12"/><text class="label" x="170" y="335" text-anchor="middle">C</text><text class="detail" x="170" y="357" text-anchor="middle">对象 c₁、c₂</text>
+<rect class="node shared" x="395" y="310" width="150" height="58" rx="12"/><text class="label" x="470" y="335" text-anchor="middle">F（共享）</text><text class="detail" x="470" y="357" text-anchor="middle">对象 f₁、f₂</text>
+<rect class="node" x="695" y="310" width="150" height="58" rx="12"/><text class="label" x="770" y="335" text-anchor="middle">E</text><text class="detail" x="770" y="357" text-anchor="middle">对象 e₁、e₂</text>
+<text class="note" x="28" y="410">F 只出现一次，A、B 都指向同一个 F；查询 A 或 B 的闭包各含 6 个对象。</text>
+<text class="note" x="28" y="434">查询 {A,B} 的并集含 10 个对象，F 的两对象只计一次；查询 R 才含全部 12 个。</text>
+</svg>

@@ -1,0 +1,260 @@
+{
+  "rule": "Only ef>=k (ASI) and N>=k (NodeANN), then exact per-method dominance; no smoothing or extrapolation.",
+  "fronts": {
+    "NodeANN": [
+      {
+        "method": "NodeANN",
+        "param": 50,
+        "recall": 0.913193,
+        "qps": 11842.813261909509,
+        "qps_min": 11591.0,
+        "qps_max": 12004.3,
+        "runs": 3,
+        "distances": 455.5,
+        "k": 50,
+        "fixed_k_capacity": true,
+        "effective_ef": 50
+      }
+    ],
+    "ASI": [
+      {
+        "method": "ASI",
+        "param": 50,
+        "recall": 0.895547,
+        "qps": 15833.923402697787,
+        "qps_min": 13839.5,
+        "qps_max": 17552.6,
+        "runs": 3,
+        "distances": 326.0,
+        "k": 50,
+        "fixed_k_capacity": true,
+        "effective_ef": 50
+      },
+      {
+        "method": "ASI",
+        "param": 80,
+        "recall": 0.8991,
+        "qps": 13681.278855925353,
+        "qps_min": 12485.7,
+        "qps_max": 14860.2,
+        "runs": 3,
+        "distances": 367.8,
+        "k": 50,
+        "fixed_k_capacity": true,
+        "effective_ef": 80
+      },
+      {
+        "method": "ASI",
+        "param": 100,
+        "recall": 0.900403,
+        "qps": 12953.687627117348,
+        "qps_min": 12130.0,
+        "qps_max": 13477.3,
+        "runs": 3,
+        "distances": 389.1,
+        "k": 50,
+        "fixed_k_capacity": true,
+        "effective_ef": 100
+      },
+      {
+        "method": "ASI",
+        "param": 200,
+        "recall": 0.9036,
+        "qps": 10067.846099488968,
+        "qps_min": 9593.8,
+        "qps_max": 10774.5,
+        "runs": 3,
+        "distances": 464.5,
+        "k": 50,
+        "fixed_k_capacity": true,
+        "effective_ef": 200
+      },
+      {
+        "method": "ASI",
+        "param": 400,
+        "recall": 0.909403,
+        "qps": 7709.930893733966,
+        "qps_min": 7457.8,
+        "qps_max": 7895.3,
+        "runs": 3,
+        "distances": 564.5,
+        "k": 50,
+        "fixed_k_capacity": true,
+        "effective_ef": 400
+      },
+      {
+        "method": "ASI",
+        "param": 800,
+        "recall": 0.912482,
+        "qps": 5958.340835506944,
+        "qps_min": 5760.5,
+        "qps_max": 6154.4,
+        "runs": 3,
+        "distances": 681.9,
+        "k": 50,
+        "fixed_k_capacity": true,
+        "effective_ef": 800
+      }
+    ]
+  },
+  "capacity_excluded": [
+    {
+      "method": "ASI",
+      "param": 20,
+      "recall": 0.474064,
+      "qps": 22866.05505747874,
+      "qps_min": 22177.8,
+      "qps_max": 23700.5,
+      "runs": 3,
+      "distances": 259.1,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 20
+    },
+    {
+      "method": "ASI",
+      "param": 30,
+      "recall": 0.640928,
+      "qps": 20994.34159178503,
+      "qps_min": 20013.1,
+      "qps_max": 22076.7,
+      "runs": 3,
+      "distances": 285.0,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 30
+    },
+    {
+      "method": "ASI",
+      "param": 40,
+      "recall": 0.789081,
+      "qps": 19573.047192973056,
+      "qps_min": 19400.1,
+      "qps_max": 19911.4,
+      "runs": 3,
+      "distances": 308.5,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 40
+    },
+    {
+      "method": "NodeANN",
+      "param": 10,
+      "recall": 0.366769,
+      "qps": 11870.761383724755,
+      "qps_min": 10527.2,
+      "qps_max": 12838.5,
+      "runs": 3,
+      "distances": 455.5,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 50
+    },
+    {
+      "method": "NodeANN",
+      "param": 15,
+      "recall": 0.476433,
+      "qps": 11948.74469511806,
+      "qps_min": 11541.3,
+      "qps_max": 12167.0,
+      "runs": 3,
+      "distances": 455.5,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 50
+    },
+    {
+      "method": "NodeANN",
+      "param": 20,
+      "recall": 0.571767,
+      "qps": 11922.521692231063,
+      "qps_min": 11344.1,
+      "qps_max": 12408.9,
+      "runs": 3,
+      "distances": 455.5,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 50
+    },
+    {
+      "method": "NodeANN",
+      "param": 25,
+      "recall": 0.651705,
+      "qps": 11771.63277342326,
+      "qps_min": 11414.5,
+      "qps_max": 12181.1,
+      "runs": 3,
+      "distances": 455.5,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 50
+    },
+    {
+      "method": "NodeANN",
+      "param": 30,
+      "recall": 0.722051,
+      "qps": 11659.786241139287,
+      "qps_min": 11305.4,
+      "qps_max": 11995.6,
+      "runs": 3,
+      "distances": 455.5,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 50
+    },
+    {
+      "method": "NodeANN",
+      "param": 40,
+      "recall": 0.837281,
+      "qps": 11010.379129197428,
+      "qps_min": 10512.1,
+      "qps_max": 11561.2,
+      "runs": 3,
+      "distances": 455.5,
+      "k": 50,
+      "fixed_k_capacity": false,
+      "effective_ef": 50
+    }
+  ],
+  "dominated": [
+    {
+      "method": "NodeANN",
+      "param": 60,
+      "recall": 0.913193,
+      "qps": 10784.239287369159,
+      "qps_min": 10654.1,
+      "qps_max": 11010.5,
+      "runs": 3,
+      "distances": 482.9,
+      "k": 50,
+      "fixed_k_capacity": true,
+      "effective_ef": 60
+    },
+    {
+      "method": "NodeANN",
+      "param": 80,
+      "recall": 0.913074,
+      "qps": 9341.42518364229,
+      "qps_min": 9082.4,
+      "qps_max": 9533.8,
+      "runs": 3,
+      "distances": 531.5,
+      "k": 50,
+      "fixed_k_capacity": true,
+      "effective_ef": 80
+    },
+    {
+      "method": "NodeANN",
+      "param": 120,
+      "recall": 0.913193,
+      "qps": 8161.906231951185,
+      "qps_min": 8027.4,
+      "qps_max": 8377.9,
+      "runs": 3,
+      "distances": 602.9,
+      "k": 50,
+      "fixed_k_capacity": true,
+      "effective_ef": 120
+    }
+  ]
+}

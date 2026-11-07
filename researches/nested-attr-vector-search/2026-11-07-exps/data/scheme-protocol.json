@@ -1,0 +1,48 @@
+{
+  "cpu": 2,
+  "repeats_per_process": 3,
+  "independent_process_runs": 3,
+  "flags": "-std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION",
+  "distance": "RawL2Space for both methods; manual vectorization disabled",
+  "timing": "sum per-query scope/search/materialized-result time; excludes recall evaluation, oracle scans and trace writes",
+  "note": "Affinity is not CPU exclusivity; WSL clock not locked. Graph construction/loading excluded.",
+  "hashes": {
+    "codes/dag-ann-search/src/attr_skeleton_bench.cpp": "a5e4284e739e1e3d30955988d69bdea4773405139cc24bbfd2f1c6855a0265f9",
+    "codes/dag-ann-search/src/nodeann_bench.cpp": "02af089c81bc0a69d7ea4694919895cb311c67d95d7fafafd6b0de97a6d44e49",
+    "work/attr_skeleton": "9c36e6a80b24f604c67088db047573899f792ade883486db4bbebd6d6c96a449",
+    "work/nodeann_measured": "cb89809ca5d6694e1e8eba9111bc855c47fe65ec75dd35ecf03d1d3899b4450e",
+    "work/dag-ann/orig.bin": "d4180b4edebce905e0b7ec0bcbdd6f7a48fe89e60276c53316291bf174954290",
+    "work/dag-ann/recon.bin": "86999303be1e8d25cbafe1eccc2dbbe81edc944d2f04b89d8546b64182f24ad4",
+    "work/dag-ann/queries.bin": "9fa182372cf6a32c6020005b23b50f7e94272d929af1dafd9a96b68828558098",
+    "work/dag-ann/gt_50.txt": "8dea1fdcfa3e6999b17967a675b7d2093287c666c688ab5d03d4dc57beb0223e",
+    "work/dag-scope/workload-run1/objects.txt": "9ab116887f0d96d2b536ff92637a593cbb2148b964479b86fffe663064ef691c",
+    "work/dag-scope/workload-run1/edges.tsv": "a2d919b35122fcd91c52c71b4dbb186d71eba84ac3185f67fff17f08f13e7cdc",
+    "work/dag-scope/workload-run1/queries.tsv": "80dcbc27fc0b1f774fb9889fe138510dad5115c156e900be982f8369b6b8f976",
+    "codes/directory-aware-vector-attr-search/src/raw_l2_space.h": "f159787e15095e6e08d6a3f08d20d5b677a18c09a1d6afe37bce94aa04cf6331",
+    "codes/dag-composition-methods/nodeann/hnswlib/hnswlib/hnswalg.h": "1e8c3b7bf11205b150bdebf939796307bcda888bea87db187bf3b1376f14ca9a",
+    "codes/dag-composition-methods/nodeann/hnswlib/hnswlib/space_l2.h": "c599d024657896412250b4fde1a95e39f8bc55cccd263f36c8948fa35779edf1"
+  },
+  "compiler": "g++ (Ubuntu 15.2.0-16ubuntu1) 15.2.0",
+  "python": "3.13.16 (main, Oct  3 2026, 01:06:22) [Clang 22.1.3 ]",
+  "versions": {
+    "numpy": "2.4.6",
+    "matplotlib": "3.11.2"
+  },
+  "ablation_process_runs": 1,
+  "aggregation": "3 equal-query process throughputs combined harmonically (total queries / total measured seconds)",
+  "trace_timing": "diagnostic traces are separate executions and are never used as throughput samples",
+  "baseline_note": "NodeANN uses supplied ef=50, cached per-attribute HNSW; ASI rebuilds and extracts level 0 with its existing seed convention. M/efConstruction aligned; graph realizations are not claimed identical.",
+  "baseline_cached_index_digest": "4175d85e4777c8dc9cc0b7de8acedcb99aa434fd33d9abfcf1986dcd029d46d2",
+  "measurement_hash_scope": "hashes records the exact source, binary and input digests associated with the reported full measurement runs; it is not the current source digest after review cleanup.",
+  "current_smoke": {
+    "source_hashes": {
+      "codes/dag-ann-search/src/attr_skeleton_bench.cpp": "b7f3c661a6b779e15ad9cdfde56b450a0e08945e8cb6d700a4768c564d0eea88",
+      "codes/dag-ann-search/src/nodeann_bench.cpp": "02af089c81bc0a69d7ea4694919895cb311c67d95d7fafafd6b0de97a6d44e49"
+    },
+    "binary_hashes": {
+      "work/attr_skeleton": "c6ac44051507fe8a30e934013260f329e19893953b0791488d9fdc01c52e0ad3",
+      "work/nodeann_measured": "cb89809ca5d6694e1e8eba9111bc855c47fe65ec75dd35ecf03d1d3899b4450e"
+    },
+    "scope": "Compiled from current sources and exercised on one query per method; not used for full benchmark aggregates. ASI review cleanup removed unused pruning helpers and corrected comments/logging without changing query/search logic."
+  }
+}

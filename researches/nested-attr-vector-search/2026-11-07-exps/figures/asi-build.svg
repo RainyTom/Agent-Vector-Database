@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1020 460" role="img" aria-labelledby="title desc">
+<rect width="100%" height="100%" fill="#ffffff"/>
+<title id="title">ASI construction pipeline</title><desc id="desc">Objects grouped by directly owned attribute are indexed with multilayer hnswlib; only layer zero is exported. Representatives and their MST are added, then reverse-topological attribute merging adds gateway edges. Full closure bitmaps are constructed separately and used by DQS.</desc>
+<style>text{font-family:'Noto Sans CJK SC','Source Han Sans SC','Microsoft YaHei',sans-serif;fill:#172536}.box{fill:#fff;stroke:#2563a8;stroke-width:2}.phase{fill:#eff6ff;stroke:#94a3b8;stroke-width:1.5}.out{fill:#ecfdf5;stroke:#198754;stroke-width:2}.arrow{stroke:#475569;stroke-width:2.5;fill:none;marker-end:url(#arr)}.title{font-size:20px;font-weight:700}.label{font-size:16px;font-weight:700}.small{font-size:14px;fill:#334155}.note{font-size:14px;fill:#475569}</style><defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#475569"/></marker></defs>
+<text x="28" y="34" class="title">ASI 构造与 DQS 的数据流</text>
+<rect class="phase" x="24" y="58" width="972" height="212" rx="16"/><text x="42" y="84" class="label">对象图：层级结构把局部近邻图接起来</text>
+<rect class="box" x="48" y="116" width="180" height="104" rx="12"/><text x="138" y="148" class="label" text-anchor="middle">直属属性分组</text><text x="138" y="174" class="small" text-anchor="middle">对象只归属一个属性</text><text x="138" y="198" class="small" text-anchor="middle">空属性不产生对象图</text>
+<path class="arrow" d="M228 168H272"/>
+<rect class="box" x="278" y="116" width="198" height="104" rx="12"/><text x="377" y="146" class="label" text-anchor="middle">hnswlib 多层构建</text><text x="377" y="174" class="small" text-anchor="middle">每属性独立构造 HNSW</text><text x="377" y="198" class="small" text-anchor="middle">插入顺序与种子固定</text>
+<path class="arrow" d="M476 168H520"/>
+<rect class="box" x="526" y="116" width="198" height="104" rx="12"/><text x="625" y="146" class="label" text-anchor="middle">仅导出 layer 0</text><text x="625" y="174" class="small" text-anchor="middle">保留有向局部邻接</text><text x="625" y="198" class="small" text-anchor="middle">再加代表点与 MST</text>
+<path class="arrow" d="M724 168H768"/>
+<rect class="out" x="774" y="116" width="194" height="104" rx="12"/><text x="871" y="146" class="label" text-anchor="middle">逆拓扑合并</text><text x="871" y="174" class="small" text-anchor="middle">父代表点 ↔ 最近子对象</text><text x="871" y="198" class="small" text-anchor="middle">冻结跨属性边与 repair</text>
+<rect class="phase" x="24" y="296" width="972" height="132" rx="16"/><text x="42" y="324" class="label">查询支撑：对象导航图与属性资格位图分工</text>
+<rect class="box" x="90" y="342" width="330" height="64" rx="12"/><text x="255" y="370" class="label" text-anchor="middle">完整对象图</text><text x="255" y="393" class="small" text-anchor="middle">局部边 + MST 边 + 跨属性网关</text>
+<rect class="box" x="458" y="342" width="250" height="64" rx="12"/><text x="583" y="370" class="label" text-anchor="middle">全部属性闭包位图</text><text x="583" y="393" class="small" text-anchor="middle">含无对象中间属性</text>
+<path class="arrow" d="M871 220V282H255V336"/><path class="arrow" d="M420 374H438V440H736V362H758"/><path class="arrow" d="M708 390H758"/>
+<rect class="out" x="764" y="342" width="202" height="64" rx="12"/><text x="865" y="370" class="label" text-anchor="middle">DQS 查询</text><text x="865" y="393" class="small" text-anchor="middle">检查资格，限制范围</text>
+</svg>
