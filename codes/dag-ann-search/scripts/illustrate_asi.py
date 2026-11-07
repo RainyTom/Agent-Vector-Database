@@ -17,10 +17,12 @@ import sys
 import time
 
 ROOT = Path(__file__).resolve().parents[3]
-OUT = ROOT / 'researches/nested-attr-vector-search/2026-11-07-exps'
+ROI = ROOT / 'researches/nested-attr-vector-search'
+OUT = ROI / '2026-11-07-exps'
 DATA = OUT / 'data'
 FIG = OUT / 'figures'
 WORK = ROOT / 'work/asi-evidence'
+K = 50
 
 
 def save(path, obj):
@@ -45,14 +47,24 @@ def run(command):
 def measure(args):
     DATA.mkdir(parents=True, exist_ok=True)
     WORK.mkdir(parents=True, exist_ok=True)
-    ef_values = [20,30,40,50,80,100,200,400,800]
-    N_values = [10,15,20,25,30,40,50,60,80,120]
+    # Parameter grids are positioned relative to k: the interesting region is the
+    # output reserve around k, not an absolute ef grid.
+    if K == 10:
+        ef_values = [5,10,15,20,30,40,60,100,200,400]
+        N_values = [4,6,8,10,15,20,30,40,60]
+        sweep_full = [20,40,80]
+        sweep_coupled = [2,4,6,8,10,15,20,30]
+    else:
+        ef_values = [20,30,40,50,80,100,200,400,800]
+        N_values = [10,15,20,25,30,40,50,60,80,120]
+        sweep_full = [100,200]
+        sweep_coupled = [5,10,15,20,25,32,40]
     base = ['taskset','-c','2','./work/attr_skeleton', '--dir','work/dag-ann',
             '--work','work/dag-scope/workload-run1','--vec','recon.bin',
-            '--k','50','--M','16','--efC','200','--queries','200', '--repeat','3']
+            '--k',str(K),'--M','16','--efC','200','--queries','200', '--repeat','3']
     nb = ['taskset','-c','2','./work/nodeann_measured','--dir','work/dag-ann',
           '--work','work/dag-scope/workload-run1','--vec','recon.bin', '--mode','nodeann',
-          '--k','50','--M','16','--efC','200','--ef','50','--queries','200','--repeat','3',
+          '--k',str(K),'--M','16','--efC','200','--ef',str(K),'--queries','200','--repeat','3',
           '--index-dir','work/dag-ann/idx','--nosimd']
     runs = []
     raw_path = DATA / 'scheme-measurements.jsonl'
@@ -67,18 +79,19 @@ def measure(args):
                 rec = dict(method=method, outer=outer, suite='pareto', **run(cmd))
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
                 print(method, outer, [(r['recall'],r.get('qps',r.get('qps_avg_pass'))) for r in rec['result']],flush=True)
+        ab_ef = 40 if K == 10 else 200
         for kind_main, values in [('ef2',[8,16,32,64]), ('p',[10,25,50,100])]:
             for value in values:
                 cmd = base + ['--p',str(value if kind_main=='p' else 50),
-                              '--ef2',str(value if kind_main=='ef2' else 16),'--efs','200']
-                rec = dict(method='ASI', outer=0, suite='ablation_'+kind_main,
+                              '--ef2',str(value if kind_main=='ef2' else 16),'--efs',str(ab_ef)]
+                rec = dict(method='ASI', outer=0, suite='ablation_'+kind_main, ef=ab_ef,
                            value=value, **run(cmd))
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
                 print(kind_main,value,rec['result'],flush=True)
         # NodeANN search width: N is only an output budget, so ef is the real knob.
         # Coupled (ef=N<k) gives the capacity-limited curve; ef>N at N=k shows saturation.
-        sweep = [(ef, 50, 'full_output') for ef in (100, 200, 50)]
-        sweep += [(x, x, 'coupled') for x in (5, 10, 15, 20, 25, 32, 40)]
+        sweep = [(ef, K, 'full_output') for ef in sweep_full + [K]]
+        sweep += [(x, x, 'coupled') for x in sweep_coupled]
         for outer in range(args.runs):
             order = list(sweep)
             if outer % 2:
@@ -91,7 +104,7 @@ def measure(args):
                                          for r in rec['result']], flush=True)
         pf = ['taskset','-c','2','./work/nodeann_measured','--dir','work/dag-ann',
               '--work','work/dag-scope/workload-run1','--vec','recon.bin','--mode','exact',
-              '--k','50','--M','16','--efC','200','--ef','50','--queries','200',
+              '--k',str(K),'--M','16','--efC','200','--ef',str(K),'--queries','200',
               '--repeat','3','--nosimd']
         with (DATA/'prefilter-matched.jsonl').open('w') as pf_out:
             for outer in range(args.runs):
@@ -104,10 +117,10 @@ def measure(args):
              'codes/dag-composition-methods/nodeann/hnswlib/hnswlib/hnswalg.h',
              'codes/dag-composition-methods/nodeann/hnswlib/hnswlib/space_l2.h',
              'work/attr_skeleton','work/nodeann_measured','work/dag-ann/orig.bin',
-             'work/dag-ann/recon.bin','work/dag-ann/queries.bin','work/dag-ann/gt_50.txt',
+             'work/dag-ann/recon.bin','work/dag-ann/queries.bin',f'work/dag-ann/gt_{K}.txt',
              'work/dag-scope/workload-run1/objects.txt','work/dag-scope/workload-run1/edges.tsv',
              'work/dag-scope/workload-run1/queries.tsv']
-    meta = dict(cpu=2, repeats_per_process=3, independent_process_runs=args.runs,
+    meta = dict(k=K, cpu=2, repeats_per_process=3, independent_process_runs=args.runs,
                 flags='-std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION',
                 distance='RawL2Space for both methods; manual vectorization disabled',
                 timing='sum per-query scope/search/materialized-result time; excludes recall evaluation, oracle scans and trace writes',
@@ -126,7 +139,7 @@ def measure(args):
 def attribution(args):
     import numpy as np
     owner = np.loadtxt(ROOT/'work/dag-scope/workload-run1/objects.txt',dtype=np.int32)
-    legacy = np.fromfile(ROOT/'work/dag-ann/gt_50.txt',dtype=np.int32).reshape(-1,50)
+    legacy = np.fromfile(ROOT/f'work/dag-ann/gt_{K}.txt',dtype=np.int32).reshape(-1,K)
     rows = []
     labels = ['quantization','attribute_unentered','not_navigated',
               'rejected','entry_score_only','lost_after_admission']
@@ -224,8 +237,8 @@ def summaries():
         rows.append(dict(method=method,param=param,recall=rr[0]['recall'],
                          qps=len(qps)/sum(1/x for x in qps), qps_min=min(qps),qps_max=max(qps),
                          runs=len(rr),distances=statistics.mean(r.get('dists_per_q',r.get('dist_calls_per_q',0)) for r in rr),
-                         k=50,ef=ef,perN=(perN or None),ef2=rr[0].get('ef2'),output_reserve=reserve,
-                         fixed_k_capacity=reserve>=50,
+                         k=K,ef=ef,perN=(perN or None),ef2=rr[0].get('ef2'),output_reserve=reserve,
+                         fixed_k_capacity=reserve>=K,
                          effective_ef=max(ef,perN) if method=='NodeANN' else ef))
     return rows,ablations
 
@@ -270,23 +283,24 @@ def render(args):
         rr=[r for r in full if r['method']==method];ff=fronts[method]
         ax.scatter([r['recall'] for r in rr],[r['qps']/1000 for r in rr],s=13,color=color,alpha=.22)
         ax.plot([r['recall'] for r in ff],[r['qps']/1000 for r in ff],marker=marker,color=color,
-                lw=1.8,ms=4.5,label='ASI (full top-50)' if method=='ASI' else 'NodeANN (full top-50)')
+                lw=1.8,ms=4.5,label=f'ASI (full top-{K})' if method=='ASI' else f'NodeANN (full top-{K})')
     for method,color,marker in [('NodeANN','#0072B2','o'),('ASI','#009E73','D')]:
         ff=short_fronts[method]
         ax.plot([r['recall'] for r in ff],[r['qps']/1000 for r in ff],marker=marker,color=color,
                 lw=1.2,ls='--',ms=4,mfc='white',label='ASI (reserve < k)' if method=='ASI' else 'NodeANN (reserve < k)')
     ax.scatter([pre_ref['recall']],[pre_ref['qps']/1000],marker='*',s=100,color='#555555',label='Pre-filter exact reference',zorder=5)
-    ax.set(xlabel='Recall@50 against original FP32',ylabel='Throughput (k queries/s)',xlim=(.18,.925))
+    ax.set(xlabel=f'Recall@{K} against original FP32',ylabel='Throughput (k queries/s)',xlim=(.18,.99))
     ax.grid(axis='y',color='.90',lw=.6);ax.legend(frameon=False,loc='upper right',ncol=1)
-    ax.text(.02,.03,'Solid: output reserve >= 50 per attribute. Dashed: reserve < 50, recall capped by shortfall.',
+    ax.text(.02,.03,f'Solid: output reserve >= {K} per attribute. Dashed: reserve < {K}, recall capped by shortfall.',
             transform=ax.transAxes,ha='left',va='bottom',fontsize=7.5,color='.35')
     fig.tight_layout();export(fig,'pareto')
     # Dashboard: three ASI operating points plus NodeANN and exact scan.
-    selected=[next(r for r in rows if r['method']=='ASI' and r['param']==ef) for ef in [50,200,800]]
-    selected += [max((r for r in full if r['method']=='NodeANN' and r['recall']>=.9),key=lambda r:r['qps']),pre_ref]
+    dash_efs = [10,40,200] if K==10 else [50,200,800]
+    selected=[next(r for r in rows if r['method']=='ASI' and r['param']==ef) for ef in dash_efs]
+    selected += [max((r for r in full if r['method']=='NodeANN'),key=lambda r:r['recall']),pre_ref]
     fig,axes=plt.subplots(1,3,figsize=(7.1,2.65),sharey=True,gridspec_kw={'wspace':.42})
     names=[f'ASI ef={r["param"]}' if r['method']=='ASI' else (f'NodeANN N={r["param"]}' if r['method']=='NodeANN' else 'Pre-filter exact') for r in selected]
-    for ax,key,title,fmt in zip(axes,['recall','qps','distances'],['Recall@50 ↑','QPS ↑','Distances / query ↓'],['.4f',',.0f',',.0f']):
+    for ax,key,title,fmt in zip(axes,['recall','qps','distances'],[f'Recall@{K} ↑','QPS ↑','Distances / query ↓'],['.4f',',.0f',',.0f']):
         vals=[r[key] for r in selected];best=min(vals) if key=='distances' else max(vals)
         ax.barh(np.arange(len(vals)),vals,height=.57,color=['#0072B2' if v==best else '#9AA7AE' for v in vals])
         for y,v in enumerate(vals):ax.text(v+max(vals)*.025,y,format(v,fmt),va='center',fontsize=8,fontweight='bold' if v==best else 'normal')
@@ -318,11 +332,11 @@ def render(args):
     for key,xlabel in [('ef2','Representative reserve ef2'),('p','Sampling denominator p')]:
         aa=sorted(ablations['ablation_'+key],key=lambda r:r['value'])
         fig,axes=plt.subplots(1,2,figsize=(7.1,2.85))
-        for ax,y,title,color in zip(axes,['recall','qps'],['Recall@50','Throughput (k queries/s)'],['#009E73','#0072B2']):
+        for ax,y,title,color in zip(axes,['recall','qps'],[f'Recall@{K}','Throughput (k queries/s)'],['#009E73','#0072B2']):
             vals=[r[y]/(1000 if y=='qps' else 1) for r in aa]
             ax.plot([r['value'] for r in aa],vals,'o-',color=color,lw=1.5,ms=4)
             ax.set(xlabel=xlabel,ylabel=title);ax.set_xticks([r['value'] for r in aa]);ax.grid(alpha=.2)
-        fig.suptitle('ef=200; '+('p=50' if key=='ef2' else 'ef2=16'),fontsize=9)
+        fig.suptitle(f'ef={aa[0].get("ef",K)}; '+('p=50' if key=='ef2' else 'ef2=16'),fontsize=9)
         fig.tight_layout();export(fig,'ablation-'+key)
     print(json.dumps(dict(frontiers=fronts,attribution=points),indent=2))
 
@@ -331,7 +345,14 @@ if __name__=='__main__':
     ap=argparse.ArgumentParser(description=__doc__)
     ap.add_argument('action',choices=['measure','attribute','render','nodeann-sweep'])
     ap.add_argument('--runs',type=int,default=3)
-    ap.add_argument('--trace',default=str(WORK/'trace.jsonl'))
+    ap.add_argument('--k',type=int,default=50)
+    ap.add_argument('--out',default='2026-11-07-exps',help='experiment directory under researches/nested-attr-vector-search')
+    ap.add_argument('--trace',default=None)
     args=ap.parse_args()
+    K = args.k
+    OUT = ROI / args.out
+    DATA = OUT / 'data'
+    FIG = OUT / 'figures'
+    args.trace = args.trace or str(WORK/'trace.jsonl')
     {'measure':measure,'attribute':attribution,'render':render,
      'nodeann-sweep':nodeann_sweep}[args.action](args)

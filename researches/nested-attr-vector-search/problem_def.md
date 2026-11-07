@@ -38,7 +38,7 @@ PQ 还原向量的精确 top-k 与原始 GT 的 ID 重合率是**表示参照**�
 
 | 项目 | 口径 |
 |---|---|
-| k | 50 |
+| k | 主口径 50；另按 top-10 复核，网格围绕该 $k$ 重设 |
 | 构图 | NodeANN 与 ASI 均以 hnswlib 的 $M=16,efConstruction=200$ 为基础；ASI 只导出 layer 0；不声称两者图的随机实现完全相同 |
 | 距离 | 共用 `RawL2Space`；同为 `-O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION` 编译 |
 | 计时 | CPU 2、单线程；计入范围求解、检索与结果物化，排除建图、GT 评估、归因 oracle 与诊断写盘 |

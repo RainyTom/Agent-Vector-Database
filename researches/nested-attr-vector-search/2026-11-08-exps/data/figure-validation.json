@@ -1,0 +1,81 @@
+{
+  "criteria": "academic-figures: width <= 7.4 in at export size, visible text >= 7 pt, no clipped or empty axes; each SVG opened via read :img and visually inspected.",
+  "visual_inspection": "top-10 pareto/metric-overview/miss-attribution inspected after the 2026-11-08 measurement",
+  "checks": {
+    "ablation-ef2.svg": {
+      "inspected": true,
+      "preview_px": [
+        1116,
+        450
+      ],
+      "preview_in": [
+        6.98,
+        2.81
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "ablation-p.svg": {
+      "inspected": true,
+      "preview_px": [
+        1116,
+        450
+      ],
+      "preview_in": [
+        6.98,
+        2.81
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "metric-overview.svg": {
+      "inspected": true,
+      "preview_px": [
+        1048,
+        412
+      ],
+      "preview_in": [
+        6.55,
+        2.58
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "miss-attribution.svg": {
+      "inspected": true,
+      "preview_px": [
+        1117,
+        559
+      ],
+      "preview_in": [
+        6.98,
+        3.49
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "pareto.svg": {
+      "inspected": true,
+      "preview_px": [
+        1117,
+        573
+      ],
+      "preview_in": [
+        6.98,
+        3.58
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    }
+  }
+}
