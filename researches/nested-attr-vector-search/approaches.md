@@ -32,6 +32,8 @@ $$\mathrm{TopK}(q,U,k)=\arg\min_{S\subseteq E(U),\,|S|=\min(k,|E(U)|)}\sum_{o\in
 3. （G3）**概念入口**：每个概念从该概念的入口与代表点中选择距查询最近的点启动；它与 HNSW 上层下降不同，没有多层导航。
 4. （G4）**预算可控**：为每个概念设置明确的候选容量，并允许满足全局阈值的候选继续扩展；不保证召回随预算单调。
 
+**研究范围**：后续方案设计与主实验只研究递归查询的单队列搜索。非递归模式保留为历史对照，不作为后续方案主线；其性能与 NodeANN 接近仅是待测假设，不作为理论等价结论。
+
 **非目标（明确排除）**
 
 - 物理层优化（SIMD、预取、连续排布的重排）不作为贡献；本文列出的三项实现优化仅用于对齐基线实现水平。
@@ -65,10 +67,10 @@ $$
 | $\mathrm{portal}(c):V_c\rightharpoonup 2^{C}$ | 门户桥：把 $V_c$ 中少数节点映射到子概念 id |
 
 门户桥在构造期建立：对每条 DAG 边 $c\to c'$，
-$$
-u^\*=\arg\min_{u\in \mathrm{rep}(c)\cup\{\mathrm{entry}(c)\}} d\big(v(\mathrm{entry}(c')),v(u)\big),\qquad
-c'\in \mathrm{portal}(c)[u^\*],\quad c\in \mathrm{portal}(c')[\mathrm{entry}(c')].
-$$
+\(
+u^*=\arg\min_{u\in \mathrm{rep}(c)\cup\{\mathrm{entry}(c)\}} d\big(v(\mathrm{entry}(c')),v(u)\big),\qquad
+c'\in \mathrm{portal}(c)[u^*],\quad c\in \mathrm{portal}(c')[\mathrm{entry}(c')].
+\)
 
 即：**父侧选距子入口最近的代表点**作为桥端点，子侧以入口回指父概念。
 
@@ -235,6 +237,10 @@ $$T_{\rm dist}=\sum_{c\in D}(1+|\mathrm{rep}(c)|)+N_{\rm first\text{-}visit}.$$
 ### 9.1 设置
 
 168,937 对象 / 1,929 概念 / 200 查询 / k=50 / PQ 还原向量 / 标量平方 L2（`-O2 -fno-tree-vectorize -fno-tree-slp-vectorize`）/ 单线程 / 建索引时间不计入 QPS。
+
+2026-11-07 的递归复测固定进程到逻辑 CPU 2，设置 `OMP_NUM_THREADS=OPENBLAS_NUM_THREADS=MKL_NUM_THREADS=1`。C++ 查询无托管垃圾回收；Python 仅启动子进程，未处于查询计时路径。绑核不等于独占 CPU；WSL 未暴露 CPU 2 的 cpufreq governor 文件，频率未锁定。每个方案执行三轮：NodeANN 每配置每轮三次查询批次并取批次平均，NodeANN+ 每配置每轮一次查询批次；不同统计粒度限制严格比较。QPS 的误差棒表示三轮结果的样本标准差，不能解释为置信区间。
+
+递归模式扫描 `ef=20,25,30,35,40,45,50,60,70,80,90,100,125,150,200,300,400,600,800`；NodeANN 扫描 `N=10,15,20,25,30,40,50,60,80`，固定 `ef=50`。构建命令使用 `g++ -std=c++17 -O2 -fno-tree-vectorize -fno-tree-slp-vectorize`；NodeANN 额外指定 `-Icodes/directory-aware-vector-attr-search/deps/hnswlib`。运行参数、每轮结果与 CPU 2 忙碌比例见 `2026-11-07-exps/data/recursive-controlled.jsonl`，汇总见 `recursive-controlled-summary.csv`。图 `2026-11-07-exps/figures/recursive-controlled.svg` 对各方法的三轮平均点做 Pareto 筛选，再按 recall 间距抽稀；全部结果保留在数据文件中，点间连线仅供阅读。
 
 ### 9.2 主结果（v4）
 
