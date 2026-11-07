@@ -17,6 +17,8 @@
 using namespace hnswlib;
 
 // 标量 L2 空间：纯 for 循环，不调用 hnswlib 的 SIMD 内核
+static unsigned long long g_dist_calls = 0;   // 统计用
+
 struct ScalarL2Space : public SpaceInterface<float> {
     size_t dim_;
     size_t data_size_;
@@ -28,6 +30,7 @@ struct ScalarL2Space : public SpaceInterface<float> {
             size_t d = *(const size_t*)qty_ptr;
             float s = 0.0f;
             for (size_t i = 0; i < d; ++i) { float t = a[i] - b[i]; s += t * t; }
+            ++g_dist_calls;
             return s;
         };
     }
@@ -274,7 +277,9 @@ int main(int argc, char** argv) {
     double mean = 0; for (double v : lat) mean += v; mean /= double(lat.size());
     std::printf("{\n  \"method\": \"nodeann\", \"objects\": %d, \"concepts\": %zu, \"queries\": %d,\n", n, members.size(), nq);
     std::printf("  \"M\": %d, \"efC\": %d, \"ef\": %d, \"k\": %d,\n", M, efC, ef, k, perN);
-    std::printf("  \"recall\": %.6f, \"graph_searches\": %ld,\n", double(hit) / double(std::max<long>(denom, 1)), graph_searches);
+    std::printf("  \"recall\": %.6f, \"graph_searches\": %ld, \"dist_calls_per_q\": %.1f,\n",
+                double(hit) / double(std::max<long>(denom, 1)), graph_searches,
+                double(g_dist_calls) / double(std::max(1, queries)));
     double qps_best = double(nq) * 1000.0 / best_pass_ms;
     double qps_avg = double(nq) * 1000.0 / (sum_pass_ms / repeat);
     std::printf("  \"repeat\": %d, \"qps_best_pass\": %.1f, \"qps_avg_pass\": %.1f, \"per_query_us\": %.2f,\n",
