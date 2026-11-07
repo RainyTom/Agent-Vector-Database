@@ -192,6 +192,9 @@ static void build_attr_graph(const float* base, const Vec& ids, int M, int efC, 
     }
 }
 
+static std::vector<uint32_t> g_obj_of;   // 全局节点号 -> 对象 id
+static inline uint32_t node_objid(uint32_t node) { return g_obj_of[node]; }
+
 static bool readf(const std::string& p, std::vector<float>& v) {
     FILE* f = std::fopen(p.c_str(), "rb");
     if (!f) return false;
@@ -208,6 +211,7 @@ int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vec = "recon.bin";
     int k = 50, M = 16, efC = 200, nq_max = 200, Kcap = 8, repeat = 1, pdiv = 50, ef2 = 16;
     bool skip_links = true;
+    bool do_merge = true;
     std::vector<int> efs{50};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -222,6 +226,7 @@ int main(int argc, char** argv) {
         else if (a == "--p") pdiv = std::max(1, std::stoi(nx()));
         else if (a == "--ef2") ef2 = std::max(1, std::stoi(nx()));
         else if (a == "--no-skip") skip_links = false;
+        else if (a == "--no-merge") do_merge = false;
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t;
@@ -302,6 +307,7 @@ int main(int argc, char** argv) {
                 attr_of[abase[size_t(i)] + j] = uint32_t(i);
                 obj_of[abase[size_t(i)] + j] = ag[size_t(i)].members[j];
             }
+        g_obj_of = obj_of;
     }
     std::vector<Vec> gadj(size_t(n), Vec{}), gbr(size_t(n), Vec{});
     for (int i = 0; i < A; ++i) {
@@ -309,43 +315,88 @@ int main(int argc, char** argv) {
         for (size_t j = 0; j < ag[size_t(i)].adj.size(); ++j)
             for (uint32_t w : ag[size_t(i)].adj[size_t(j)]) gadj[off + j].push_back(off + w);
     }
-    long n_portal = 0, n_skip = 0;
-    for (auto& kv : children) {                        // 直接门户：父代表点 -> 子入口（单向）
-        auto pit = apos.find(kv.first);
-        if (pit == apos.end()) continue;
-        for (int ch : kv.second) {
-            auto cit = apos.find(ch);
-            if (cit == apos.end()) continue;
-            const int pi = pit->second, ci = cit->second;
-            if (ag[size_t(pi)].members.empty() || ag[size_t(ci)].members.empty()) continue;
-            const uint32_t centry = abase[size_t(ci)] + ag[size_t(ci)].entry;
-            for (uint32_t r : ag[size_t(pi)].reps) {
-                gbr[abase[size_t(pi)] + r].push_back(centry);
-                ++n_portal;
+    // L2 的跨属性边：**按拓扑序自底向上合并**，合并时双向更新代表点邻居并做 RNG 调整。
+    // 说明：不存在"跳转边"这一独立机制；祖先可达深层后代，靠的是合并过程中
+    //       代表点邻居被反复更新（下层代表点不是建完就冻结）。
+    const int Rdeg = 16;                        // 代表点跨属性邻居的度上界
+    std::vector<uint32_t> rep_owner(size_t(n), UINT32_MAX);   // 代表点 -> 所属属性
+    for (int i = 0; i < A; ++i)
+        for (uint32_t r : ag[size_t(i)].reps) rep_owner[abase[size_t(i)] + r] = uint32_t(i);
+
+    // 拓扑序（子先于父）
+    std::vector<int> topo;
+    {
+        std::vector<int> indeg(size_t(A), 0);
+        for (auto& kv : children) {
+            auto pit = apos.find(kv.first);
+            if (pit == apos.end()) continue;
+            for (int ch : kv.second) { auto cit = apos.find(ch); if (cit != apos.end()) ++indeg[size_t(cit->second)]; }
+        }
+        std::vector<int> q;
+        for (int i = 0; i < A; ++i) if (indeg[size_t(i)] == 0) q.push_back(i);
+        for (size_t h = 0; h < q.size(); ++h) {
+            const int u = q[h];
+            topo.push_back(u);
+            auto it = children.find(aids[size_t(u)]);
+            if (it == children.end()) continue;
+            for (int ch : it->second) {
+                auto cit = apos.find(ch);
+                if (cit == apos.end()) continue;
+                if (--indeg[size_t(cit->second)] == 0) q.push_back(cit->second);
             }
         }
     }
-    if (skip_links) {                                   // 跳转边：祖先代表点 -> ≥2 跳后代入口
-        for (int i = 0; i < A; ++i) {
-            if (ag[size_t(i)].members.empty()) continue;
-            const uint32_t entry = abase[size_t(i)] + ag[size_t(i)].entry;
-            std::unordered_set<int> seen;
-            std::vector<int> frontier = parents[aids[size_t(i)]];
-            std::vector<int> cur;
-            for (int f : frontier) { auto it = apos.find(f); if (it != apos.end()) cur.push_back(it->second); }
-            for (int lvl = 0; lvl < 3 && !cur.empty(); ++lvl) {
-                std::vector<int> nxt;
-                for (int a : cur) {
-                    if (!seen.insert(a).second) continue;
-                    if (lvl >= 1 && !ag[size_t(a)].members.empty()) {
-                        for (uint32_t r : ag[size_t(a)].reps) { gbr[abase[size_t(a)] + r].push_back(entry); ++n_skip; }
-                    }
-                    for (int pp : parents[aids[size_t(a)]]) { auto it = apos.find(pp); if (it != apos.end()) nxt.push_back(it->second); }
+    // 自底向上：先处理深度大的属性（把子树的代表点合并进父侧）
+    std::reverse(topo.begin(), topo.end());
+
+    // 代表点的邻居表（跨属性），以全局节点号存储，合并时做 RNG 调整
+    auto rep_prune = [&](uint32_t node) {
+        Vec& L = gbr[node];
+        if (int(L.size()) <= Rdeg) return;
+        const float* pn = base.data() + size_t(node_objid(node)) * DIM;
+        std::sort(L.begin(), L.end(), [&](uint32_t a, uint32_t b) {
+            return dist2(pn, base.data() + size_t(node_objid(a)) * DIM) <
+                   dist2(pn, base.data() + size_t(node_objid(b)) * DIM);
+        });
+        Vec keep;
+        for (uint32_t c : L) {
+            if (int(keep.size()) >= Rdeg) break;
+            const float* pc = base.data() + size_t(node_objid(c)) * DIM;
+            const float dq = dist2(pc, pn);
+            bool ok = true;
+            for (uint32_t k2 : keep) if (dist2(pc, base.data() + size_t(node_objid(k2)) * DIM) < dq) { ok = false; break; }
+            if (ok) keep.push_back(c);
+        }
+        L.swap(keep);
+    };
+
+    long n_merge_edges = 0;
+    for (int ci : topo) {
+        if (!do_merge) break;
+        if (ag[size_t(ci)].members.empty()) continue;
+        const int cid = aids[size_t(ci)];
+        for (int pch : parents[cid]) {
+            auto pit = apos.find(pch);
+            if (pit == apos.end()) continue;
+            const int pi = pit->second;
+            if (ag[size_t(pi)].members.empty()) continue;
+            // 合并：父代表点 ↔ 子代表点（双向），并立即更新双方的邻居表
+            for (uint32_t rp : ag[size_t(pi)].reps) {
+                const uint32_t gp = abase[size_t(pi)] + rp;
+                for (uint32_t rc : ag[size_t(ci)].reps) {
+                    const uint32_t gc = abase[size_t(ci)] + rc;
+                    gbr[gp].push_back(gc);
+                    gbr[gc].push_back(gp);
+                    ++n_merge_edges;
                 }
-                cur.swap(nxt);
+                rep_prune(gp);
             }
+            for (uint32_t rc : ag[size_t(ci)].reps) rep_prune(abase[size_t(ci)] + rc);
         }
     }
+    std::fprintf(stderr, "[L2-merge] %ld cross-attribute rep edges (bidirectional, RNG-pruned to %d)\n",
+                 n_merge_edges, Rdeg);
+
     // 扁平化
     std::vector<uint32_t> adj_off(size_t(n) + 1, 0), adj_dat, br_off(size_t(n) + 1, 0), br_dat;
     {
@@ -363,8 +414,8 @@ int main(int argc, char** argv) {
     size_t nrep_tot = 0;
     for (int i = 0; i < A; ++i)
         for (uint32_t r : ag[size_t(i)].reps) { is_rep[abase[size_t(i)] + r] = 1; ++nrep_tot; }
-    std::fprintf(stderr, "[L2] %zu rep nodes, %ld portal edges, %ld skip edges; graph %zu intra edges (%.1f/node)\n",
-                 nrep_tot, n_portal, n_skip, adj_dat.size(), double(adj_dat.size()) / double(n));
+    std::fprintf(stderr, "[L2] %zu rep nodes; graph %zu intra edges (%.1f/node)\n",
+                 nrep_tot, adj_dat.size(), double(adj_dat.size()) / double(n));
 
     // L3：闭包位图（覆盖全部属性，含无对象的中间属性）
     const int words = (A + 63) / 64;
@@ -455,6 +506,8 @@ int main(int argc, char** argv) {
                 uint32_t gi;
                 if (d1 <= d2) { gi = q1_cand.top().second; q1_cand.pop(); }
                 else { gi = q2_cand.top().second; q2_cand.pop(); }
+                // 越界即停：节点所属属性不在 D 内时，不展开其邻居（位图判定）
+                if (!eligible(gi)) continue;
                 for (uint32_t j = adj_off[gi]; j < adj_off[gi + 1]; ++j) offer(adj_dat[j]);
                 for (uint32_t j = br_off[gi]; j < br_off[gi + 1]; ++j) offer(br_dat[j]);
             }
