@@ -466,18 +466,23 @@ int main(int argc, char** argv) {
     }
 
     std::vector<uint32_t> vstamp(size_t(n), 0);
+    std::vector<uint32_t> expanded_stamp(size_t(n), 0), seed_score_stamp(size_t(n), 0);
+    std::vector<float> seed_score(size_t(n), 0.f);
     uint32_t token = 0;
     std::vector<uint64_t> bm(size_t(words), 0);
 
     for (int ef : efs) {
         long hit = 0, denom = 0, dists = 0, elig_sum = 0, entered_sum = 0, inD_sum = 0, seeds_sum = 0;
         long miss_attr_not_entered = 0, miss_item_not_visited = 0, miss_ranked_out = 0, gt_total = 0, miss_rejected = 0, touched_sum = 0;
+        long expanded_sum = 0, adjacency_slots_sum = 0, distance_cache_hits_sum = 0;
         double query_seconds = 0;
         const auto t1 = std::chrono::steady_clock::now();
         for (int round = 0; round < repeat; ++round)
         for (int qi = 0; qi < nq; ++qi) {
             const auto query_start = std::chrono::steady_clock::now();
-            std::vector<uint32_t> evaluated, admitted, seed_evaluated;
+            std::vector<uint32_t> evaluated, admitted, seed_evaluated, expanded;
+            const long distances_before = dists;
+            long query_expanded = 0, query_adjacency_slots = 0, query_cache_hits = 0;
             std::fill(bm.begin(), bm.end(), 0ull);
             for (int c : qc[qi]) {
                 auto it = apos.find(c);
@@ -507,13 +512,31 @@ int main(int argc, char** argv) {
 
             std::priority_queue<std::pair<float,uint32_t>> q1_cand, q1_keep, q2_cand, q2_keep;
             std::unordered_set<uint32_t> entered, touched;
+            // 缓存评分不设置 first-touch：未选中的代表点仍须正常 offer。
+            auto seed_distance = [&](uint32_t gi) {
+                if (seed_score_stamp[gi] == token) {
+                    ++query_cache_hits;
+                    return seed_score[gi];
+                }
+                const float d = dist2(q, base.data() + size_t(obj_of[gi]) * DIM);
+                ++dists;
+                seed_score_stamp[gi] = token;
+                seed_score[gi] = d;
+                return d;
+            };
             auto offer = [&](uint32_t gi) {
                 if (vstamp[gi] == token) return;      // 首次接触即标记，距离只算一次
                 vstamp[gi] = token;
                 if (!eligible(gi)) return;            // 范围外：连距离都不算，不占预算
                 touched.insert(attr_of[gi]);
-                const float d = dist2(q, base.data() + size_t(obj_of[gi]) * DIM);
-                ++dists;
+                float d;
+                if (seed_score_stamp[gi] == token) {
+                    d = seed_score[gi];
+                    ++query_cache_hits;
+                } else {
+                    d = dist2(q, base.data() + size_t(obj_of[gi]) * DIM);
+                    ++dists;
+                }
                 if (trace && round == 0) evaluated.push_back(obj_of[gi]);
                 bool any = false;
                 if (int(q1_keep.size()) < ef) { q1_keep.push({d, gi}); q1_cand.push({-d, gi}); any = true; }
@@ -529,12 +552,10 @@ int main(int argc, char** argv) {
             // 单队列不变：这些种子只是同一个队列里的多个起点。
             for (int a : inD) {
                 uint32_t bi = ag[size_t(a)].entry;
-                float bd = dist2(q, base.data() + size_t(ag[size_t(a)].members[bi]) * DIM);
-                ++dists;
+                float bd = seed_distance(abase[size_t(a)] + bi);
                 if (trace && round == 0) seed_evaluated.push_back(ag[size_t(a)].members[bi]);
                 for (uint32_t r : ag[size_t(a)].reps) {
-                    const float d = dist2(q, base.data() + size_t(ag[size_t(a)].members[r]) * DIM);
-                    ++dists;
+                    const float d = seed_distance(abase[size_t(a)] + r);
                     if (trace && round == 0) seed_evaluated.push_back(ag[size_t(a)].members[r]);
                     if (d < bd) { bd = d; bi = r; }
                 }
@@ -547,6 +568,13 @@ int main(int argc, char** argv) {
                 uint32_t gi;
                 if (d1 <= d2) { gi = q1_cand.top().second; q1_cand.pop(); }
                 else { gi = q2_cand.top().second; q2_cand.pop(); }
+                // 仅在 pop 后去重，不改变双通道准入或队列弹出顺序。
+                if (expanded_stamp[gi] == token) continue;
+                expanded_stamp[gi] = token;
+                ++query_expanded;
+                query_adjacency_slots += long(adj_off[gi + 1] - adj_off[gi]);
+                query_adjacency_slots += long(br_off[gi + 1] - br_off[gi]);
+                if (trace && round == 0) expanded.push_back(obj_of[gi]);
                 for (uint32_t j = adj_off[gi]; j < adj_off[gi + 1]; ++j) offer(adj_dat[j]);
                 for (uint32_t j = br_off[gi]; j < br_off[gi + 1]; ++j) offer(br_dat[j]);
             }
@@ -568,6 +596,9 @@ int main(int argc, char** argv) {
                       [](const std::pair<float,int>& a, const std::pair<float,int>& b) { return a.second == b.second; }),
                       out.end());
             const size_t keep = std::min<size_t>(k, out.size());
+            expanded_sum += query_expanded;
+            adjacency_slots_sum += query_adjacency_slots;
+            distance_cache_hits_sum += query_cache_hits;
             query_seconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - query_start).count();
             if (trace && round == 0) {
                 // Reference scans are diagnostics only: never part of query throughput.
@@ -603,6 +634,9 @@ int main(int argc, char** argv) {
                 ids_json("returned", result_ids); ids_json("evaluated", evaluated);
                 ids_json("admitted", admitted); ids_json("seed_evaluated", seed_evaluated);
                 ids_json("entered_attrs", entered_attrs); ids_json("touched_attrs", touched_attrs);
+                ids_json("expanded", expanded);
+                std::fprintf(trace, ",\"distance_calls\":%ld,\"distance_cache_hits\":%ld,\"adjacency_slots\":%ld",
+                             dists - distances_before, query_cache_hits, query_adjacency_slots);
                 std::fprintf(trace, ",\"missing_reference_distances\":[");
                 bool first = true;
                 std::unordered_set<uint32_t> result_set(result_ids.begin(), result_ids.end());
@@ -637,7 +671,8 @@ int main(int argc, char** argv) {
         const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
         std::printf("{\"ef\":%d,\"ef2\":%d,\"p\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"skip\":%d,\"queries\":%d,\"repeat\":%d,"
                     "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.1f,\"eligible_per_q\":%.1f,"
-                    "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f,\"miss_attr_not_entered\":%.4f,\"miss_item_not_visited\":%.4f,\"miss_ranked_out\":%.4f,\"miss_rejected\":%.4f,\"attrs_touched\":%.2f}\n",
+                    "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f,\"miss_attr_not_entered\":%.4f,\"miss_item_not_visited\":%.4f,\"miss_ranked_out\":%.4f,\"miss_rejected\":%.4f,\"attrs_touched\":%.2f,"
+                    "\"expanded_per_q\":%.3f,\"adjacency_slots_per_q\":%.3f,\"distance_cache_hits_per_q\":%.3f}\n",
                     ef, ef2, pdiv, k, M, efC, int(skip_links), nq, repeat,
                     double(hit) / double(std::max<long>(denom, 1)),
                     double(nq) * repeat / query_seconds,
@@ -650,7 +685,10 @@ int main(int argc, char** argv) {
                     double(miss_item_not_visited) / std::max<long>(1, gt_total),
                     double(miss_ranked_out) / std::max<long>(1, gt_total),
                     double(miss_rejected) / std::max<long>(1, gt_total),
-                    double(touched_sum) / (double(nq) * repeat));
+                    double(touched_sum) / (double(nq) * repeat),
+                    double(expanded_sum) / (double(nq) * repeat),
+                    double(adjacency_slots_sum) / (double(nq) * repeat),
+                    double(distance_cache_hits_sum) / (double(nq) * repeat));
         std::fflush(stdout);
     }
     if (trace) std::fclose(trace);

@@ -107,3 +107,27 @@ for ef, c in sorted(counts.items()):
     print(ef, dict(c))
 PY
 ```
+
+## 输出保持组：重复展开与种子重复评分
+
+### 实现与设置
+
+活跃 `attr_skeleton_bench.cpp` 新增独立的展开代号和种子评分缓存，仅在 pop 后跳过重复邻接扫描；未改变双通道准入、严格距离比较、首次接触、种子顺序或最终排序。缓存不会把未选中的代表点标为已访问。每进程复用的新增数组元素载荷为 $12n$ 字节，当前约 1.93 MiB，不是完整 RSS。
+
+原逻辑先加入与修改后相同的距离、展开、槽位计数，保存对照快照。两侧均使用本记录原有的 scalar 编译选项、g++ 15.2.0、CPU 2；本组每点三个独立进程，每进程 100 轮 × 200 查询，依次 before/after、after/before、before/after。QPS 由查询计时聚合，构建、GT 计分、参考扫描和 trace 写盘排除；不能用进程 `wall_s` 代替。
+
+### 已运行检查与结果
+
+- 带计数的原逻辑逐项复现 600 条历史 trace；新增检查先在原逻辑观察到重复距离、重复展开，再在修改后通过。
+- 1000 条真实查询/配置记录覆盖 $ef=5,10,40,200,400$。输出 ID、候选评分请求、准入、种子请求顺序、参考结果与资格状态逐项相同。修改后的展开序列等于原序列首次出现的顺序；实际距离调用等于两类评分请求并集中的不同对象数，缓存命中与减少次数相符。
+- 同距向量 fixture 有 36 个对象、共享子属性的多父 DAG、重复属性 OR、空范围与重复代表点。$ef_2=1,16$ 共四次进程、30 对查询/配置检查通过，三轮聚合 recall 相同。仅首轮非空范围会写 trace，不声称有后续轮次逐条输出。
+- 同插桩条件下，$ef=10$ 聚合 QPS 从 28,995.5 到 31,005.7（+6.93%），距离减少 7.68%，邻接槽位减少 16.16%；recall 保持 0.811379。$ef=400$ 聚合 QPS 反降 1.01%。完整五档及逐对波动见 [`approaches.md` §12.6](../approaches.md#126-输出保持组的实测结果)，不作所有工作点加速的结论。
+
+### 数据与复核边界
+
+- [`work-removal-protocol.json`](data/work-removal-protocol.json)：原提交、仅插桩的补丁、前后编译与诊断命令、源码/二进制/数据哈希、fixture 输入规格与四次输出、计数定义。
+- [`work-removal-per-query.jsonl`](data/work-removal-per-query.jsonl)：1000 对主工作负载计数与语义比较。
+- [`work-removal-fixture-traces.jsonl`](data/work-removal-fixture-traces.jsonl)：两档 $ef_2$、前后版本的 60 条首轮原始记录。
+- [`work-removal-measurements.jsonl`](data/work-removal-measurements.jsonl) 与 [`work-removal-summary.json`](data/work-removal-summary.json)：六个计时进程、30 个配置结果、聚合值、每对变化和范围。
+
+WSL 时钟和 CPU 独占性未控制，三对不构成跨构建种子置信区间。修改保持召回，不能填补与 NodeANN 的高召回差距；未运行新的导航机制或 FP32 rerank。旧主曲线和原始记录保留，不与本组 QPS 混接；DQS 流程图与活跃实现说明已同步。

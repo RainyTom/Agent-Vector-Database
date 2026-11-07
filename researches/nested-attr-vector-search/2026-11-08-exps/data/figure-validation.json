@@ -161,5 +161,12 @@
     "cffi": "2.1.1",
     "tinycss2": "1.5.1"
   },
-  "label_portability": "All rendered labels are glyph paths, not SVG text; four structure SVGs keep original editable labels in metadata#editable-svg-source. Viewing needs no installed label fonts. Original viewer-specific failure cause remains unconfirmed."
+  "label_portability": "All rendered labels are glyph paths, not SVG text; four structure SVGs keep original editable labels in metadata#editable-svg-source. Viewing needs no installed label fonts. Original viewer-specific failure cause remains unconfirmed.",
+  "work_removal_dqs_update": {
+    "svg_sha256": "e866cd4973b11493e601edc5b33fd7d3fbc6bd03add30cdf8af06388b5a07845",
+    "outlined_labels": 32,
+    "live_text_nodes": 0,
+    "visual_preview": "read dqs-search.svg:img; cache reuse and pop-only dedup labels visible without clipping",
+    "preserved_original_text": true
+  }
 }
