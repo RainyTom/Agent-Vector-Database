@@ -67,14 +67,37 @@ def measure(args):
                 rec = dict(method=method, outer=outer, suite='pareto', **run(cmd))
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
                 print(method, outer, [(r['recall'],r.get('qps',r.get('qps_avg_pass'))) for r in rec['result']],flush=True)
-        for kind, values in [('ef2',[8,16,32,64]), ('p',[10,25,50,100])]:
+        for kind_main, values in [('ef2',[8,16,32,64]), ('p',[10,25,50,100])]:
             for value in values:
-                cmd = base + ['--p',str(value if kind=='p' else 50),
-                              '--ef2',str(value if kind=='ef2' else 16),'--efs','200']
-                rec = dict(method='ASI', outer=0, suite='ablation_'+kind,
+                cmd = base + ['--p',str(value if kind_main=='p' else 50),
+                              '--ef2',str(value if kind_main=='ef2' else 16),'--efs','200']
+                rec = dict(method='ASI', outer=0, suite='ablation_'+kind_main,
                            value=value, **run(cmd))
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
-                print(kind,value,rec['result'],flush=True)
+                print(kind_main,value,rec['result'],flush=True)
+        # NodeANN search width: N is only an output budget, so ef is the real knob.
+        # Coupled (ef=N<k) gives the capacity-limited curve; ef>N at N=k shows saturation.
+        sweep = [(ef, 50, 'full_output') for ef in (100, 200, 50)]
+        sweep += [(x, x, 'coupled') for x in (5, 10, 15, 20, 25, 32, 40)]
+        for outer in range(args.runs):
+            order = list(sweep)
+            if outer % 2:
+                order.reverse()
+            for ef, perN, kind_n in order:
+                rec = dict(method='NodeANN', outer=outer, suite='ef_sweep', kind=kind_n,
+                           ef=ef, perN=perN, **run(nb + ['--ef',str(ef),'--N',str(perN)]))
+                runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
+                print(kind_n, ef, perN, [(r['recall'], r['qps_avg_pass'], r['dist_calls_per_q'])
+                                         for r in rec['result']], flush=True)
+        pf = ['taskset','-c','2','./work/nodeann_measured','--dir','work/dag-ann',
+              '--work','work/dag-scope/workload-run1','--vec','recon.bin','--mode','exact',
+              '--k','50','--M','16','--efC','200','--ef','50','--queries','200',
+              '--repeat','3','--nosimd']
+        with (DATA/'prefilter-matched.jsonl').open('w') as pf_out:
+            for outer in range(args.runs):
+                rec = dict(method='Pre-filter', outer=outer, suite='reference', **run(pf))
+                pf_out.write(json.dumps(rec)+'\n'); pf_out.flush()
+                print('Pre-filter', outer, rec['result'][0]['qps_avg_pass'], flush=True)
     paths = ['codes/dag-ann-search/src/attr_skeleton_bench.cpp',
              'codes/dag-ann-search/src/nodeann_bench.cpp',
              'codes/directory-aware-vector-attr-search/src/raw_l2_space.h',
@@ -150,6 +173,35 @@ def attribution(args):
     print(json.dumps(summaries,indent=2))
 
 
+def nodeann_sweep(args):
+    """Sweep the knob NodeANN actually has: HNSW search width ef.
+
+    The earlier grid varied N (per-attribute output budget) while ef stayed at 50,
+    so distance calls were constant and recall saturated at the PQ representation
+    ceiling. Here ef varies with N fixed at k (full output) and with ef = N < k
+    (coupled, capacity-limited).
+    """
+    DATA.mkdir(parents=True, exist_ok=True)
+    nb = ['taskset','-c','2','./work/nodeann_measured','--dir','work/dag-ann',
+          '--work','work/dag-scope/workload-run1','--vec','recon.bin','--mode','nodeann',
+          '--k','50','--M','16','--efC','200','--queries','200','--repeat','3',
+          '--index-dir','work/dag-ann/idx','--nosimd']
+    jobs = [(ef, 50, 'full_output') for ef in (50, 100, 200)]
+    jobs += [(x, x, 'coupled') for x in (5, 10, 15, 20, 25, 32, 40)]
+    with (DATA/'nodeann-ef-sweep.jsonl').open('w') as f:
+        for outer in range(args.runs):
+            order = list(jobs)
+            if outer % 2:
+                order.reverse()
+            for ef, perN, kind in order:
+                cmd = nb + ['--ef', str(ef), '--N', str(perN)]
+                rec = dict(method='NodeANN', outer=outer, suite='ef_sweep',
+                           kind=kind, ef=ef, perN=perN, **run(cmd))
+                f.write(json.dumps(rec) + '\n'); f.flush()
+                print(kind, ef, perN, [(r['recall'], r['qps_avg_pass'], r['dist_calls_per_q'])
+                                       for r in rec['result']], flush=True)
+
+
 def summaries():
     groups=collections.defaultdict(list)
     ablations=collections.defaultdict(list)
@@ -158,17 +210,23 @@ def summaries():
         for r in rec['result']:
             if rec['suite']=='pareto':
                 param=r['ef'] if rec['method']=='ASI' else r['perN']
-                groups[rec['method'],param].append(r)
+                groups[rec['method'],param,r['ef'],r.get('perN',0)].append(r)
+            elif rec['suite']=='ef_sweep':
+                groups['NodeANN',r['perN'],r['ef'],r['perN']].append(r)
             else:ablations[rec['suite']].append(dict(value=rec['value'],**r))
     rows=[]
-    for (method,param),rr in groups.items():
+    for (method,param,ef,perN),rr in groups.items():
         qps=[r.get('qps',r.get('qps_avg_pass')) for r in rr]
         assert len({r['recall'] for r in rr})==1, 'recall changed across process runs'
+        # Distinct results are bounded by the union of both keep heaps: ef + ef2 for
+        # ASI, and the per-attribute reserve N for NodeANN.
+        reserve = (ef + rr[0].get('ef2', 0)) if method=='ASI' else perN
         rows.append(dict(method=method,param=param,recall=rr[0]['recall'],
                          qps=len(qps)/sum(1/x for x in qps), qps_min=min(qps),qps_max=max(qps),
                          runs=len(rr),distances=statistics.mean(r.get('dists_per_q',r.get('dist_calls_per_q',0)) for r in rr),
-                         k=50,fixed_k_capacity=param>=50,
-                         effective_ef=param if method=='ASI' else max(50,param)))
+                         k=50,ef=ef,perN=(perN or None),ef2=rr[0].get('ef2'),output_reserve=reserve,
+                         fixed_k_capacity=reserve>=50,
+                         effective_ef=max(ef,perN) if method=='NodeANN' else ef))
     return rows,ablations
 
 
@@ -190,33 +248,42 @@ def render(args):
     FIG.mkdir(parents=True,exist_ok=True)
     rows,ablations=summaries()
     save(DATA/'scheme-summary.json',rows)
-    valid=[r for r in rows if r['fixed_k_capacity']]
-    fronts={m:pareto([r for r in valid if r['method']==m]) for m in ['NodeANN','ASI']}
+    full=[r for r in rows if r['fixed_k_capacity']]
+    short=[r for r in rows if not r['fixed_k_capacity']]
+    fronts={m:pareto([r for r in full if r['method']==m]) for m in ['NodeANN','ASI']}
+    short_fronts={m:pareto([r for r in short if r['method']==m]) for m in ['NodeANN','ASI']}
     save(DATA/'pareto-selection.json',dict(
-        rule='Only ef>=k (ASI) and N>=k (NodeANN), then exact per-method dominance; no smoothing or extrapolation.',
-        fronts=fronts,capacity_excluded=[r for r in rows if not r['fixed_k_capacity']],
-        dominated=[r for r in valid if r not in sum(fronts.values(),[])]))
+        rule='Per-method exact dominance, applied separately to full-capacity points (ASI output reserve ef+ef2 >= k; NodeANN per-attribute reserve N >= k) and capacity-limited points (reserve < k). No smoothing or extrapolation.',
+        fronts=fronts,capacity_limited_frontiers=short_fronts,
+        capacity_excluded=short,
+        dominated=[r for r in full if r not in sum(fronts.values(),[])]))
     def export(fig,name):
         fig.savefig(FIG/(name+'.svg'),bbox_inches='tight',pad_inches=.08)
         fig.savefig(WORK/(name+'.png'),dpi=160,bbox_inches='tight',pad_inches=.08)
         plt.close(fig)
-    pre_records=[json.loads(line) for line in (DATA/'prefilter-matched.jsonl').read_text().splitlines() if line.strip()]
-    pre_runs=[r['result'] for r in pre_records]
+    pre_runs=[rr for rec in (json.loads(line) for line in (DATA/'prefilter-matched.jsonl').read_text().splitlines() if line.strip())
+              for rr in rec['result']]
     pre_qps=[r['qps_avg_pass'] for r in pre_runs]
     pre_ref=dict(method='Pre-filter',recall=pre_runs[0]['recall'],qps=len(pre_qps)/sum(1/x for x in pre_qps),distances=pre_runs[0]['dist_calls_per_q'])
     fig,ax=plt.subplots(figsize=(7.1,3.7))
     for method,color,marker in [('NodeANN','#0072B2','o'),('ASI','#009E73','D')]:
-        rr=[r for r in valid if r['method']==method];ff=fronts[method]
+        rr=[r for r in full if r['method']==method];ff=fronts[method]
         ax.scatter([r['recall'] for r in rr],[r['qps']/1000 for r in rr],s=13,color=color,alpha=.22)
-        ax.plot([r['recall'] for r in ff],[r['qps']/1000 for r in ff],marker=marker,color=color,lw=1.8,ms=4,label='ASI' if method=='ASI' else method)
-    ax.scatter([pre_ref['recall']],[pre_ref['qps']/1000],marker='*',s=100,color='#555555',label='Pre-filter exact reference (single point)',zorder=5)
-    ax.set(xlabel='Recall@50 against original FP32',ylabel='Throughput (k queries/s)',xlim=(.88,.916))
-    ax.grid(axis='y',color='.90',lw=.6);ax.legend(frameon=False,loc='lower left')
-    ax.text(.99,.98,'Faint points: measured but dominated.',transform=ax.transAxes,ha='right',va='top',fontsize=8,color='.35')
+        ax.plot([r['recall'] for r in ff],[r['qps']/1000 for r in ff],marker=marker,color=color,
+                lw=1.8,ms=4.5,label='ASI (full top-50)' if method=='ASI' else 'NodeANN (full top-50)')
+    for method,color,marker in [('NodeANN','#0072B2','o'),('ASI','#009E73','D')]:
+        ff=short_fronts[method]
+        ax.plot([r['recall'] for r in ff],[r['qps']/1000 for r in ff],marker=marker,color=color,
+                lw=1.2,ls='--',ms=4,mfc='white',label='ASI (reserve < k)' if method=='ASI' else 'NodeANN (reserve < k)')
+    ax.scatter([pre_ref['recall']],[pre_ref['qps']/1000],marker='*',s=100,color='#555555',label='Pre-filter exact reference',zorder=5)
+    ax.set(xlabel='Recall@50 against original FP32',ylabel='Throughput (k queries/s)',xlim=(.18,.925))
+    ax.grid(axis='y',color='.90',lw=.6);ax.legend(frameon=False,loc='upper right',ncol=1)
+    ax.text(.02,.03,'Solid: output reserve >= 50 per attribute. Dashed: reserve < 50, recall capped by shortfall.',
+            transform=ax.transAxes,ha='left',va='bottom',fontsize=7.5,color='.35')
     fig.tight_layout();export(fig,'pareto')
     # Dashboard: three ASI operating points plus NodeANN and exact scan.
     selected=[next(r for r in rows if r['method']=='ASI' and r['param']==ef) for ef in [50,200,800]]
-    selected += [max((r for r in valid if r['method']=='NodeANN' and r['recall']>=.9),key=lambda r:r['qps']),pre_ref]
+    selected += [max((r for r in full if r['method']=='NodeANN' and r['recall']>=.9),key=lambda r:r['qps']),pre_ref]
     fig,axes=plt.subplots(1,3,figsize=(7.1,2.65),sharey=True,gridspec_kw={'wspace':.42})
     names=[f'ASI ef={r["param"]}' if r['method']=='ASI' else (f'NodeANN N={r["param"]}' if r['method']=='NodeANN' else 'Pre-filter exact') for r in selected]
     for ax,key,title,fmt in zip(axes,['recall','qps','distances'],['Recall@50 ↑','QPS ↑','Distances / query ↓'],['.4f',',.0f',',.0f']):
@@ -262,8 +329,9 @@ def render(args):
 
 if __name__=='__main__':
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('action',choices=['measure','attribute','render'])
+    ap.add_argument('action',choices=['measure','attribute','render','nodeann-sweep'])
     ap.add_argument('--runs',type=int,default=3)
     ap.add_argument('--trace',default=str(WORK/'trace.jsonl'))
     args=ap.parse_args()
-    {'measure':measure,'attribute':attribution,'render':render}[args.action](args)
+    {'measure':measure,'attribute':attribution,'render':render,
+     'nodeann-sweep':nodeann_sweep}[args.action](args)

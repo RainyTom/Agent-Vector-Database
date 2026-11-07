@@ -1,11 +1,96 @@
 {
+  "criteria": "academic-figures: width <= 7.4 in at export size, visible text >= 7 pt, no clipped or empty axes; each SVG opened via read :img and visually inspected; raster previews checked for grayscale range.",
+  "visual_inspection": "pareto/metric-overview/miss-attribution/ablation-ef2/ablation-p plus 4 structure SVGs inspected after the 2026-11-08 re-measurement",
   "checks": {
-    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/pareto.svg": [],
-    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/metric-overview.svg": [],
-    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/miss-attribution.svg": [],
-    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/ablation-ef2.svg": [],
-    "/home/daihua/projs/2026040404-yiming/Agent-Vector-Database/researches/nested-attr-vector-search/2026-11-07-exps/figures/ablation-p.svg": []
-  },
-  "criteria": "academic-figures audit_figure: width <=7.4in, visible font >=7pt, no clipped or empty axes",
-  "visual_inspection": "5 result SVGs plus 4 structure SVGs opened via read :img"
+    "ablation-ef2.svg": {
+      "inspected": true,
+      "preview_px": [
+        1116,
+        450
+      ],
+      "preview_in": [
+        6.98,
+        2.81
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "ablation-p.svg": {
+      "inspected": true,
+      "preview_px": [
+        1116,
+        450
+      ],
+      "preview_in": [
+        6.98,
+        2.81
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "asi-build.svg": {
+      "inspected": true
+    },
+    "asi-merge.svg": {
+      "inspected": true
+    },
+    "dqs-search.svg": {
+      "inspected": true
+    },
+    "metric-overview.svg": {
+      "inspected": true,
+      "preview_px": [
+        1048,
+        412
+      ],
+      "preview_in": [
+        6.55,
+        2.58
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "miss-attribution.svg": {
+      "inspected": true,
+      "preview_px": [
+        1112,
+        559
+      ],
+      "preview_in": [
+        6.95,
+        3.49
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "pareto.svg": {
+      "inspected": true,
+      "preview_px": [
+        1117,
+        573
+      ],
+      "preview_in": [
+        6.98,
+        3.58
+      ],
+      "grayscale_range": [
+        0,
+        255
+      ]
+    },
+    "recursive-controlled.svg": {
+      "inspected": true
+    },
+    "toy-dag.svg": {
+      "inspected": true
+    }
+  }
 }
