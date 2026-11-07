@@ -1,0 +1,99 @@
+{
+  "batch": 1794075701494405835,
+  "entry_mode": "hnsw",
+  "fronts": {
+    "NodeANN": [
+      {
+        "method": "NodeANN",
+        "entry_mode": "hnsw",
+        "ef": 5,
+        "perN": 5,
+        "recall": 0.57919,
+        "qps": 31040.031993233366
+      },
+      {
+        "method": "NodeANN",
+        "entry_mode": "hnsw",
+        "ef": 10,
+        "perN": 10,
+        "recall": 0.838032,
+        "qps": 23049.050560251693
+      },
+      {
+        "method": "NodeANN",
+        "entry_mode": "hnsw",
+        "ef": 15,
+        "perN": 15,
+        "recall": 0.841107,
+        "qps": 20110.894103410497
+      },
+      {
+        "method": "NodeANN",
+        "entry_mode": "hnsw",
+        "ef": 20,
+        "perN": 20,
+        "recall": 0.842645,
+        "qps": 18067.070218022585
+      }
+    ],
+    "Ours": [
+      {
+        "method": "Ours",
+        "entry_mode": "hnsw",
+        "ef": 5,
+        "perN": null,
+        "recall": 0.535623,
+        "qps": 32340.7879085773
+      },
+      {
+        "method": "Ours",
+        "entry_mode": "hnsw",
+        "ef": 10,
+        "perN": null,
+        "recall": 0.82368,
+        "qps": 28002.36191284218
+      },
+      {
+        "method": "Ours",
+        "entry_mode": "hnsw",
+        "ef": 20,
+        "perN": null,
+        "recall": 0.830343,
+        "qps": 22290.398123139083
+      },
+      {
+        "method": "Ours",
+        "entry_mode": "hnsw",
+        "ef": 40,
+        "perN": null,
+        "recall": 0.834956,
+        "qps": 17104.445554931335
+      },
+      {
+        "method": "Ours",
+        "entry_mode": "hnsw",
+        "ef": 100,
+        "perN": null,
+        "recall": 0.837007,
+        "qps": 12478.804207136587
+      },
+      {
+        "method": "Ours",
+        "entry_mode": "hnsw",
+        "ef": 200,
+        "perN": null,
+        "recall": 0.843157,
+        "qps": 9531.154806859548
+      },
+      {
+        "method": "Ours",
+        "entry_mode": "hnsw",
+        "ef": 400,
+        "perN": null,
+        "recall": 0.84367,
+        "qps": 7407.82271381173
+      }
+    ]
+  },
+  "rule": "Exact per-method measured dominance; the 2% practical tolerance is not used to move points or redefine dominance."
+}

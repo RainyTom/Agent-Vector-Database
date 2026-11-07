@@ -131,3 +131,32 @@ PY
 - [`work-removal-measurements.jsonl`](data/work-removal-measurements.jsonl) 与 [`work-removal-summary.json`](data/work-removal-summary.json)：六个计时进程、30 个配置结果、聚合值、每对变化和范围。
 
 WSL 时钟和 CPU 独占性未控制，三对不构成跨构建种子置信区间。修改保持召回，不能填补与 NodeANN 的高召回差距；未运行新的导航机制或 FP32 rerank。旧主曲线和原始记录保留，不与本组 QPS 混接；DQS 流程图与活跃实现说明已同步。
+
+## 高层入口控制组：同原生图、相对 2% 容差
+
+### 设置与核验
+
+本组为已有 HNSW 组件对照，不声称新的索引贡献。先将 ASI seed 统一为 `100+concept_id`，与 NodeANN 按相同对象顺序构图；本批 768 张原生局部图的 label、底层/上层有序邻接、入口及层高逐项相同。ASI 之后仍补 MST 和跨属性边，因此不能称最终索引相同。
+
+ASI 两模式只改变入口选择，底层共用 DQS；不执行逐属性 top-k 归并，不改变网关、准入、最终 PQ 排序或 FP32-GT 计分。所有高层评分和扫描计入查询成本。`--entry-mode hnsw` 显式启用高层，默认仍为代表点入口。高层数组元素载荷为 1,074,060 bytes，不是总 RSS。
+
+- 1400 条代表点记录精确复现仅改 seed 的 `f5bb5f5` 参照的指定共同字段，未用 2% 放宽。
+- 独立 scalar-float32 重放对 200 条查询、839 个属性入口核对所选入口、完整评分请求序列及高层实际计数；执行代码和命令嵌在协议，输出在 `navigation-verification.json`。
+- 3600 条主工作负载归档与 raw/GT 跨文件核对通过。79 条边界记录核对资格、结果去重、缓存和单对象路径；只有首轮 trace，后续轮次只保留聚合值。
+- 全零距离 fixture 下，NodeANN 对重复 OR 的返回 ID 集合可能变化，但均为范围内合法同距对象。本组不宣称跨方法 tie 等价，也未用 2% 豁免这个差异。
+
+### 实测结果与决策
+
+三组交错进程、每点 100 轮×200 查询，共 18 个进程记录、54 个配置结果；使用查询 QPS 聚合，不选 best-pass，不使用含建图的进程时间。ASI $ef=5,10,20,40,100,200,400$；NodeANN $ef=N=5,10,15,20$，全部 top-10、CPU 2、scalar 距离。
+
+分析采用相对目标变化 $\le2\%$ 的实用无差别约定，**两侧均在相同目标窗口内独立选最快配置**，不声称统计等价，原始 Pareto 不调整。目标 recall=0.838032 时，高层 ASI $ef=10$ 的实际 recall 为 0.823680，最快 NodeANN $N=10$ 为 0.838032（相对低 1.71%）；QPS 为 28,002.4 对 23,049.1（+21.49%），三对均提高超过 2%。目标提高到 0.841107 或 0.842645 时，NodeANN $N=10$ 也满足窗口，Ours $ef=20$ 相对该已调参基线反降 3.29%，不保留以较慢 $N=15/20$ 作参照的加速主张。完整选择与原始描述性比值见 [`approaches.md` §12.8](../approaches.md#128-高层入口结果与-2-实用容差)。
+
+固定相同 $ef$ 时，高层 recall 增幅均小于 2%，聚合 QPS 反降约 2.08%–12.84%；不将这类点包装为有效改进。本轮支持的是在召回容差内降低底层预算后的吞吐比较，不支持严格等召回或普遍超过 NodeANN。
+
+### 证据与图
+
+`data/navigation-protocol.json` 保存构建/诊断命令、seed 参照补丁、输入依赖与哈希、核验代码；`navigation-graph-audit.json` 保存 768 图的规范化指纹；`navigation-per-query.jsonl`、`navigation-fixture-traces.jsonl` 保存实际逐查询记录；`navigation-measurements.jsonl` 追加计时批次，`navigation-summary.json` 保存完整点与逐对容差选择。
+
+新图为 [`figures/entry-control/pareto.svg`](figures/entry-control/pareto.svg)，只画 NodeANN 和 Ours（全局固定高层入口）。两条曲线均来自同一批新测量，不混接旧 QPS；旧图文件与原始数据保持。文字导出为字形路径，已检查实际预览、7 pt 字号下限、画布边界和灰度区分。
+
+局限：当前同一工作负载、同一构建 seed，无独立留出集；三组进程不是三个构图 seed。单属性查询性能不能推广到多属性 OR；fixture 只验证边界，不提供 OR 性能结果。保留显式高层入口，$ef=10$ 用作低目标容差对照，$ef=20$ 保留为高目标负结果；不做范围大小切换，不继续追逐小于 2% 的 recall 数字。

@@ -1,12 +1,12 @@
 // Attribute-Skeleton Index (ASI)：保留属性 DAG 的资格闭包，并将属性内对象图接成共享搜索图。
 //
 // 构建：
-//   1. 每个非空直属属性独立构建 hnswlib 多层 HNSW，只导出 layer 0 的有向邻接表。
+//   1. 每个非空直属属性独立构建 hnswlib HNSW，底层供 DQS，高层可选定位入口。
 //   2. 属性内 farthest-first 代表点以 MST 双向连接；不补普通对象的连通边。
 //   3. 逆拓扑处理属性 DAG，为父代表点连接子属性中的最近对象；跨属性边双向冻结，repair 另加边。
 //   4. 为包含空属性的完整 DAG 构建后代闭包位图。
 //
-// 查询：全闭包 D 中每个非空属性的最近代表点作种子；offer 先去重、再检查资格。
+// 查询：全闭包 D 每个非空属性选代表点或高层入口作种子；offer 先去重、再检查资格。
 // q1 收所有范围内对象，q2 独立尝试接纳代表点或网关；两条通道各有 cand 与 keep，
 // cand 共同驱动展开，最终合并两个 keep、按 ID 去重并取 top-k。
 #include <algorithm>
@@ -25,6 +25,7 @@
 
 #include "hnswlib/hnswlib.h"
 #include "raw_l2_space.h"
+#include "native_graph_audit.h"
 
 static constexpr int DIM = 128;
 using Vec = std::vector<uint32_t>;
@@ -38,21 +39,39 @@ struct AttrGraph {
     std::vector<Vec> adj;        // 局部邻接
     Vec reps;                    // 代表点（局部 id）
     uint32_t entry = 0;
+    uint32_t hnsw_entry = 0;
+    int max_level = 0;
+    Vec upper_row, upper_off, upper_dat;  // 节点 -> 高层行 -> 邻接，层号从 1 开始
 };
 
 
-// 局部图由 hnswlib 的完整多层构建导出 layer 0；查询不使用高层导航。
+// 导出原生 HNSW 的底层与高层；MST 只加入底层，高层仅供入口定位。
 static void build_attr_graph(const float* base, const Vec& ids, int M, int efC, int nrep,
-                             int seed, AttrGraph& g) {
+                             int seed, int concept, FILE* audit, AttrGraph& g) {
     const int n = int(ids.size());
     g.members = ids;
     g.adj.assign(size_t(n), {});
     if (n == 0) return;
-    if (n == 1) { g.entry = 0; g.reps = {0}; return; }
 
     RawL2Space space(DIM);
     hnswlib::HierarchicalNSW<float> idx(&space, size_t(n), M, efC, seed);
     for (int i = 0; i < n; ++i) idx.addPoint(base + size_t(ids[size_t(i)]) * DIM, hnswlib::labeltype(i));
+    if (audit) write_native_graph_audit(audit, concept, idx);
+    g.hnsw_entry = idx.enterpoint_node_;
+    g.max_level = idx.maxlevel_;
+    g.upper_row.resize(size_t(n) + 1);
+    g.upper_off.push_back(0);
+    for (int i = 0; i < n; ++i) {
+        g.upper_row[size_t(i)] = uint32_t(g.upper_off.size() - 1);
+        for (int level = 1; level <= idx.element_levels_[size_t(i)]; ++level) {
+            auto* links = idx.get_linklist(hnswlib::tableint(i), level);
+            const size_t count = idx.getListCount(links);
+            const auto* neighbors = reinterpret_cast<const hnswlib::tableint*>(links + 1);
+            g.upper_dat.insert(g.upper_dat.end(), neighbors, neighbors + count);
+            g.upper_off.push_back(uint32_t(g.upper_dat.size()));
+        }
+    }
+    g.upper_row[size_t(n)] = uint32_t(g.upper_off.size() - 1);
 
     // 取 layer 0 邻接
     for (int i = 0; i < n; ++i) {
@@ -130,7 +149,7 @@ int main(int argc, char** argv) {
     bool skip_links = true;
     bool do_merge = true;
     bool diag = false;
-    std::string trace_file;
+    std::string trace_file, graph_audit_file, entry_mode = "representative";
     std::vector<int> efs{50};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -149,9 +168,15 @@ int main(int argc, char** argv) {
         else if (a == "--diag") diag = true;
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--trace-file") trace_file = nx();
+        else if (a == "--entry-mode") entry_mode = nx();
+        else if (a == "--graph-audit-file") graph_audit_file = nx();
         else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t;
             while (std::getline(ss, t, ',')) if (!t.empty()) efs.push_back(std::stoi(t)); }
+    }
+    if (entry_mode != "representative" && entry_mode != "hnsw") {
+        std::fprintf(stderr, "entry-mode must be representative or hnsw\n");
+        return 2;
     }
 
     std::vector<float> base, queries;
@@ -216,14 +241,21 @@ int main(int argc, char** argv) {
     {
         std::vector<Vec> mem(size_t(A), Vec{});
         for (size_t i = 0; i < n; ++i) mem[size_t(apos[owner[i]])].push_back(uint32_t(i));
+        FILE* audit = graph_audit_file.empty() ? nullptr : std::fopen(graph_audit_file.c_str(), "w");
+        if (!graph_audit_file.empty() && !audit) { std::perror(graph_audit_file.c_str()); return 2; }
         const auto t0 = std::chrono::steady_clock::now();
         for (int i = 0; i < A; ++i) {
             const int nrep = std::max(1, std::min(Kcap, int(mem[size_t(i)].size()) / std::max(1, pdiv) + 1));
-            build_attr_graph(base.data(), mem[size_t(i)], M, efC, nrep, 100 + i, ag[size_t(i)]);
+            build_attr_graph(base.data(), mem[size_t(i)], M, efC, nrep,
+                             100 + aids[size_t(i)], aids[size_t(i)], audit, ag[size_t(i)]);
         }
+        if (audit) std::fclose(audit);
         std::fprintf(stderr, "[L1] %d attribute graphs in %.1fs (M=%d efC=%d p=%d Kcap=%d)\n", A,
                      std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(), M, efC, pdiv, Kcap);
     }
+    size_t upper_index_bytes = 0;
+    for (const auto& graph : ag)
+        upper_index_bytes += sizeof(uint32_t) * (graph.upper_row.size() + graph.upper_off.size() + graph.upper_dat.size());
 
     // 全局图：属性图拼接 + 单向门户/跳转边（独立表）
     std::vector<uint32_t> abase(size_t(A), 0);
@@ -475,14 +507,16 @@ int main(int argc, char** argv) {
         long hit = 0, denom = 0, dists = 0, elig_sum = 0, entered_sum = 0, inD_sum = 0, seeds_sum = 0;
         long miss_attr_not_entered = 0, miss_item_not_visited = 0, miss_ranked_out = 0, gt_total = 0, miss_rejected = 0, touched_sum = 0;
         long expanded_sum = 0, adjacency_slots_sum = 0, distance_cache_hits_sum = 0;
+        long upper_distances_sum = 0, upper_slots_sum = 0;
         double query_seconds = 0;
         const auto t1 = std::chrono::steady_clock::now();
         for (int round = 0; round < repeat; ++round)
         for (int qi = 0; qi < nq; ++qi) {
             const auto query_start = std::chrono::steady_clock::now();
-            std::vector<uint32_t> evaluated, admitted, seed_evaluated, expanded;
+            std::vector<uint32_t> evaluated, admitted, seed_evaluated, expanded, seed_nodes;
             const long distances_before = dists;
             long query_expanded = 0, query_adjacency_slots = 0, query_cache_hits = 0;
+            long query_upper_distances = 0, query_upper_slots = 0;
             std::fill(bm.begin(), bm.end(), 0ull);
             for (int c : qc[qi]) {
                 auto it = apos.find(c);
@@ -548,19 +582,44 @@ int main(int argc, char** argv) {
                 if (any) entered.insert(attr_of[gi]);
                 if (any && trace && round == 0) admitted.push_back(obj_of[gi]);
             };
-            // 种子：D 中**每个属性**一个入口（取距查询最近的代表点）。
-            // 单队列不变：这些种子只是同一个队列里的多个起点。
+            // 每个非空直属属性只选一个入口，底层仍共享 DQS 状态与结果。
             for (int a : inD) {
-                uint32_t bi = ag[size_t(a)].entry;
-                float bd = seed_distance(abase[size_t(a)] + bi);
-                if (trace && round == 0) seed_evaluated.push_back(ag[size_t(a)].members[bi]);
-                for (uint32_t r : ag[size_t(a)].reps) {
-                    const float d = seed_distance(abase[size_t(a)] + r);
-                    if (trace && round == 0) seed_evaluated.push_back(ag[size_t(a)].members[r]);
-                    if (d < bd) { bd = d; bi = r; }
+                const auto& graph = ag[size_t(a)];
+                const uint32_t offset = abase[size_t(a)];
+                auto score_seed = [&](uint32_t node) {
+                    if (trace && round == 0) seed_evaluated.push_back(obj_of[offset + node]);
+                    return seed_distance(offset + node);
+                };
+                uint32_t bi;
+                if (entry_mode == "hnsw") {
+                    const long before = dists;
+                    bi = graph.hnsw_entry;
+                    float bd = score_seed(bi);
+                    for (int level = graph.max_level; level > 0; --level) {
+                        bool changed = true;
+                        while (changed) {
+                            changed = false;
+                            const uint32_t row = graph.upper_row[bi] + uint32_t(level - 1);
+                            query_upper_slots += long(graph.upper_off[row + 1] - graph.upper_off[row]);
+                            for (uint32_t j = graph.upper_off[row]; j < graph.upper_off[row + 1]; ++j) {
+                                const uint32_t node = graph.upper_dat[j];
+                                const float distance = score_seed(node);
+                                if (distance < bd) { bd = distance; bi = node; changed = true; }
+                            }
+                        }
+                    }
+                    query_upper_distances += dists - before;
+                } else {
+                    bi = graph.entry;
+                    float bd = score_seed(bi);
+                    for (uint32_t node : graph.reps) {
+                        const float distance = score_seed(node);
+                        if (distance < bd) { bd = distance; bi = node; }
+                    }
                 }
                 ++seeds_sum;
-                offer(abase[size_t(a)] + bi);
+                if (trace && round == 0) seed_nodes.push_back(obj_of[offset + bi]);
+                offer(offset + bi);
             }
             while (!q1_cand.empty() || !q2_cand.empty()) {
                 const float d1 = q1_cand.empty() ? INFINITY : -q1_cand.top().first;
@@ -599,6 +658,9 @@ int main(int argc, char** argv) {
             expanded_sum += query_expanded;
             adjacency_slots_sum += query_adjacency_slots;
             distance_cache_hits_sum += query_cache_hits;
+            adjacency_slots_sum += query_upper_slots;
+            upper_distances_sum += query_upper_distances;
+            upper_slots_sum += query_upper_slots;
             query_seconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - query_start).count();
             if (trace && round == 0) {
                 // Reference scans are diagnostics only: never part of query throughput.
@@ -636,7 +698,10 @@ int main(int argc, char** argv) {
                 ids_json("entered_attrs", entered_attrs); ids_json("touched_attrs", touched_attrs);
                 ids_json("expanded", expanded);
                 std::fprintf(trace, ",\"distance_calls\":%ld,\"distance_cache_hits\":%ld,\"adjacency_slots\":%ld",
-                             dists - distances_before, query_cache_hits, query_adjacency_slots);
+                             dists - distances_before, query_cache_hits, query_adjacency_slots + query_upper_slots);
+                ids_json("seed_nodes", seed_nodes);
+                std::fprintf(trace, ",\"entry_mode\":\"%s\",\"upper_distance_calls\":%ld,\"upper_adjacency_slots\":%ld",
+                             entry_mode.c_str(), query_upper_distances, query_upper_slots);
                 std::fprintf(trace, ",\"missing_reference_distances\":[");
                 bool first = true;
                 std::unordered_set<uint32_t> result_set(result_ids.begin(), result_ids.end());
@@ -672,7 +737,8 @@ int main(int argc, char** argv) {
         std::printf("{\"ef\":%d,\"ef2\":%d,\"p\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"skip\":%d,\"queries\":%d,\"repeat\":%d,"
                     "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.1f,\"eligible_per_q\":%.1f,"
                     "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f,\"miss_attr_not_entered\":%.4f,\"miss_item_not_visited\":%.4f,\"miss_ranked_out\":%.4f,\"miss_rejected\":%.4f,\"attrs_touched\":%.2f,"
-                    "\"expanded_per_q\":%.3f,\"adjacency_slots_per_q\":%.3f,\"distance_cache_hits_per_q\":%.3f}\n",
+                    "\"expanded_per_q\":%.3f,\"adjacency_slots_per_q\":%.3f,\"distance_cache_hits_per_q\":%.3f,"
+                    "\"entry_mode\":\"%s\",\"upper_dists_per_q\":%.3f,\"upper_slots_per_q\":%.3f,\"upper_index_bytes\":%zu}\n",
                     ef, ef2, pdiv, k, M, efC, int(skip_links), nq, repeat,
                     double(hit) / double(std::max<long>(denom, 1)),
                     double(nq) * repeat / query_seconds,
@@ -688,7 +754,9 @@ int main(int argc, char** argv) {
                     double(touched_sum) / (double(nq) * repeat),
                     double(expanded_sum) / (double(nq) * repeat),
                     double(adjacency_slots_sum) / (double(nq) * repeat),
-                    double(distance_cache_hits_sum) / (double(nq) * repeat));
+                    double(distance_cache_hits_sum) / (double(nq) * repeat),
+                    entry_mode.c_str(), double(upper_distances_sum) / (double(nq) * repeat),
+                    double(upper_slots_sum) / (double(nq) * repeat), upper_index_bytes);
         std::fflush(stdout);
     }
     if (trace) std::fclose(trace);

@@ -149,6 +149,93 @@ def measure(args):
     save(DATA/'scheme-protocol.json',meta)
 
 
+def measure_entry(args):
+    """Append an entry-only control batch without replacing the original Pareto."""
+    DATA.mkdir(parents=True, exist_ok=True)
+    WORK.mkdir(parents=True, exist_ok=True)
+    index = WORK / 'navigation-index'
+    index.mkdir(exist_ok=True)
+    base = ['taskset','-c','2','./work/attr_skeleton','--dir','work/dag-ann',
+            '--work','work/dag-scope/workload-run1','--vec','recon.bin','--k',str(K),
+            '--M','16','--efC','200','--queries','200','--repeat','100',
+            '--p','50','--ef2','16','--efs','5,10,20,40,100,200,400']
+    node = ['taskset','-c','2','./work/nodeann_measured','--dir','work/dag-ann',
+            '--work','work/dag-scope/workload-run1','--vec','recon.bin','--k',str(K),
+            '--mode','nodeann','--M','16','--efC','200','--queries','200',
+            '--repeat','100','--nosimd','--index-dir',str(index)]
+    jobs = [('representative',base+['--entry-mode','representative']),
+            ('hnsw',base+['--entry-mode','hnsw'])]
+    jobs += [('NodeANN',node+['--ef',str(n),'--N',str(n)]) for n in [5,10,15,20]]
+    batch = time.time_ns()
+    with (DATA/'navigation-measurements.jsonl').open('a') as output:
+        for outer in range(args.runs):
+            order = jobs[outer % len(jobs):] + jobs[:outer % len(jobs)]
+            for variant, command in order:
+                record = dict(batch=batch, outer=outer, variant=variant,
+                              suite='entry_control', **run(command))
+                output.write(json.dumps(record)+'\n')
+                output.flush()
+                print(batch,outer,variant,
+                      [(r.get('ef'),r['recall'],r.get('qps',r.get('qps_avg_pass')))
+                       for r in record['result']],flush=True)
+
+
+def render_entry(args):
+    """Render exactly two measured frontiers from one complete control batch."""
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from svg_labels import self_contained_svg
+    records = [json.loads(line) for line in (DATA/'navigation-measurements.jsonl').read_text().splitlines() if line.strip()]
+    batch = max(record['batch'] for record in records)
+    groups = collections.defaultdict(list)
+    for record in records:
+        if record['batch'] != batch or record['variant'] not in ('hnsw','NodeANN'):
+            continue
+        for point in record['result']:
+            groups[(record['variant'],point['ef'],point.get('perN'))].append(point)
+    rows = []
+    for (variant, ef, per_n), points in groups.items():
+        if len(points) != 3 or len({point['recall'] for point in points}) != 1:
+            raise ValueError('Entry frontier requires three matching process groups per point')
+        qps = [point.get('qps',point.get('qps_avg_pass')) for point in points]
+        rows.append(dict(method='NodeANN' if variant=='NodeANN' else 'Ours',
+                         entry_mode='hnsw',ef=ef,perN=per_n,recall=points[0]['recall'],
+                         qps=len(qps)/sum(1/value for value in qps)))
+    if {row['method'] for row in rows} != {'NodeANN','Ours'}:
+        raise ValueError('Both measured methods are required')
+    fronts = {method:pareto([row for row in rows if row['method']==method])
+              for method in ['NodeANN','Ours']}
+    save(DATA/'navigation-pareto-selection.json',dict(
+        batch=batch,entry_mode='hnsw',fronts=fronts,
+        rule='Exact per-method measured dominance; the 2% practical tolerance is not used to move points or redefine dominance.'))
+    matplotlib.rcParams.update({'font.family':'DejaVu Sans','font.size':9,'axes.labelsize':10,
+                               'xtick.labelsize':8,'ytick.labelsize':8,'legend.fontsize':8,
+                               'axes.spines.top':False,'axes.spines.right':False,
+                               'svg.hashsalt':'asi-entry-control','svg.fonttype':'path'})
+    fig, ax = plt.subplots(figsize=(7.1,3.7))
+    for method, color, marker, label in [('NodeANN','#0072B2','o','NodeANN'),
+                                       ('Ours','#009E73','D','Ours (ASI)')]:
+        points = fronts[method]
+        ax.plot([row['recall'] for row in points],[row['qps']/1000 for row in points],
+                color=color,marker=marker,label=label,lw=1.5,ms=4)
+    ax.set(xlabel=f'Recall@{K} against original FP32',
+           ylabel='Throughput (k queries/s)',ylim=(0,None),
+           title='Same native graphs; ASI entry_mode=hnsw')
+    ax.grid(alpha=.2); ax.legend(frameon=False)
+    fig.tight_layout()
+    target = FIG/'entry-control'
+    target.mkdir(parents=True,exist_ok=True); WORK.mkdir(parents=True,exist_ok=True)
+    fig.savefig(target/'pareto.svg',bbox_inches='tight',pad_inches=.08)
+    self_contained_svg(target/'pareto.svg',
+                       'NodeANN and Ours (ASI): same-native-graph entry control',
+                       'Exactly two measured top-10 recall-throughput frontiers. Ours uses HNSW upper-layer entry and shared DQS; NodeANN searches each local HNSW. Three process groups, 100 passes per point; lines are not interpolation evidence. The 2% tolerance applies only to separate tabular comparisons.')
+    fig.savefig(WORK/'navigation-pareto.png',dpi=160,bbox_inches='tight',pad_inches=.08)
+    plt.close(fig)
+    print(json.dumps(dict(batch=batch,frontiers=fronts),indent=2))
+
+
+
 def attribution(args):
     import numpy as np
     owner = np.loadtxt(ROOT/'work/dag-scope/workload-run1/objects.txt',dtype=np.int32)
@@ -326,7 +413,7 @@ def render(args):
 
 if __name__=='__main__':
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('action',choices=['measure','attribute','render'])
+    ap.add_argument('action',choices=['measure','measure-entry','attribute','render','render-entry'])
     ap.add_argument('--runs',type=int,default=3)
     ap.add_argument('--k',type=int,choices=[10],default=K)
     ap.add_argument('--out',default='2026-11-08-exps',help='experiment directory under researches/nested-attr-vector-search')
@@ -337,4 +424,4 @@ if __name__=='__main__':
     DATA = OUT / 'data'
     FIG = OUT / 'figures'
     args.trace = args.trace or str(WORK/'trace-k10-ef-10-40-200.jsonl')
-    {'measure':measure,'attribute':attribution,'render':render}[args.action](args)
+    {'measure':measure,'measure-entry':measure_entry,'attribute':attribution,'render':render,'render-entry':render_entry}[args.action](args)

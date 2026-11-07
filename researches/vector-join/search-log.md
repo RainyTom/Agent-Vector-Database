@@ -279,3 +279,7 @@ BigFANN、EMA、PathFinder、Veda仅核相关机制章节，完整书目/正式�
 - [RoarGraph，PVLDB 17(11), 2735–2749, 2024](https://www.vldb.org/pvldb/vol17/p2735-chen.pdf)，DOI [10.14778/3681954.3681959](https://doi.org/10.14778/3681954.3681959)：官方正文确认已发表，重点核 §4.2.1–4.2.3 的查询引导二部图、投影和邻居选择。原问题是 cross-modal ANN；可迁移点为用查询分布补路径，不直接支持层级范围或几何 join。完整理论、实验与版本归档未做，暂列候选，不填造完整论文记录。
 
 方案判断与现有 trace 再分析见 [approaches.md §12](../nested-attr-vector-search/approaches.md#12-在当前框架内提高效率与召回)。范围条件化路径覆盖、固定绕行机会的最近邻仍待系统检索，FP32 重排也未做完整新颖性审查。未追完引用链、未声称穷尽文献，没有新方法性能实验。
+
+### HNSW 高层入口控制的实现复核
+
+沿用上述 B 类单查询 filtered ANN 分类，本轮只复核 [HNSW 原始摘要](https://arxiv.org/abs/1603.09320) 与钉住源码 `hnswalg.h:1423–1451`，不新增文献覆盖或新颖性声明。已运行同原生局部图的高层入口控制，有限预算下不推导召回保证；原始图对齐、独立重放与 2% 实用容差结果见 [approaches.md §12.7–12.8](../nested-attr-vector-search/approaches.md#127-高层入口控制组预先固定的设计)。没有新增未经完整归档的论文条目。

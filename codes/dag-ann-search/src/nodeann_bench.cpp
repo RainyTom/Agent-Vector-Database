@@ -14,6 +14,7 @@
 
 #include "hnswlib/hnswlib.h"
 #include "raw_l2_space.h"
+#include "native_graph_audit.h"
 
 using namespace hnswlib;
 
@@ -56,6 +57,7 @@ int main(int argc, char** argv) {
     int repeat = 1;
     std::string idxdir = "";
     std::string origfile = "orig.bin";
+    std::string trace_file, graph_audit_file;
     int pool = 0;
     int k = 50, ef = 50, queries = 200, M = 16, efC = 200, perN = 50;
     for (int i = 1; i < argc; ++i) {
@@ -76,7 +78,13 @@ int main(int argc, char** argv) {
         else if (a == "--index-dir") idxdir = nx();
         else if (a == "--orig-file") origfile = nx();
         else if (a == "--pool") pool = std::stoi(nx());
+        else if (a == "--trace-file") trace_file = nx();
+        else if (a == "--graph-audit-file") graph_audit_file = nx();
     }
+    FILE* trace = trace_file.empty() ? nullptr : std::fopen(trace_file.c_str(), "w");
+    if (!trace_file.empty() && !trace) { std::perror(trace_file.c_str()); return 2; }
+    FILE* audit = graph_audit_file.empty() ? nullptr : std::fopen(graph_audit_file.c_str(), "w");
+    if (!graph_audit_file.empty() && !audit) { std::perror(graph_audit_file.c_str()); return 2; }
 
     // 向量（PQ 还原）
     std::vector<float> vec;
@@ -165,10 +173,12 @@ int main(int argc, char** argv) {
             for (size_t j = 0; j < ids.size(); ++j) g->addPoint(vec.data() + size_t(ids[j]) * DIM, j);
             if (!path.empty()) g->saveIndex(path);
         }
+        if (audit) write_native_graph_audit(audit, c, *g);
         g->setEf(ef);
         graphs[c] = g;
         graph_bytes += ids.size() * (M * 2 * sizeof(int) + sizeof(float) * DIM);
     }
+    if (audit) std::fclose(audit);
     double build_ms = build.ms();
     space.calls = 0;  // exclude graph construction and index loading
 
@@ -209,6 +219,7 @@ int main(int argc, char** argv) {
     for (int rep = 0; rep < repeat; ++rep) {
     double pass_ms = 0;
     for (int qi = 0; qi < nq; ++qi) {
+        const auto distance_start = space.calls;
         Timer t;  // includes scope expansion, search, and result merge; excludes recall
         std::unordered_set<int> scope;
         std::vector<int> stack = qconcepts[qi];
@@ -276,6 +287,13 @@ int main(int argc, char** argv) {
         int h = 0;
         for (int j = 0; j < k; ++j) if (gt[size_t(qi) * k + j] >= 0 && got.count(gt[size_t(qi) * k + j])) ++h;
         if (rep == 0) { hit += h; denom += std::min(k, e); }
+        if (trace && rep == 0) {
+            std::fprintf(trace, "{\"qi\":%d,\"ef\":%d,\"perN\":%d,\"distance_calls\":%llu,\"returned\":[",
+                         qi, ef, perN, space.calls - distance_start);
+            bool first = true;
+            for (int id : got) { std::fprintf(trace, "%s%d", first ? "" : ",", id); first = false; }
+            std::fprintf(trace, "]}\n");
+        }
     }
     best_pass_ms = std::min(best_pass_ms, pass_ms);
     sum_pass_ms += pass_ms;
@@ -292,5 +310,6 @@ int main(int argc, char** argv) {
     std::printf("  \"repeat\": %d, \"qps_best_pass\": %.1f, \"qps_avg_pass\": %.1f, \"per_query_us\": %.2f,\n",
                 repeat, qps_best, qps_avg, sum_pass_ms / repeat / double(nq) * 1000.0);
     std::printf("  \"build_ms\": %.1f, \"graphs_reused\": %d, \"graph_dir\": \"%s\"\n}\n", build_ms, reused, idxdir.c_str());
+    if (trace) std::fclose(trace);
     return 0;
 }
