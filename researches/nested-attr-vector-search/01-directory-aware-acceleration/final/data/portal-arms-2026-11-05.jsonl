@@ -1,0 +1,8 @@
+{"arm":"P0_local_only","ef":200,"k":50,"M":16,"efC":100,"queries":200,"recall":0.819162,"qps":13766.3,"dists_per_q":223}
+{"arm":"P2_portal","ef":200,"k":50,"M":16,"efC":100,"queries":200,"recall":0.821649,"qps":13728.1,"dists_per_q":223}
+{"arm":"P0_local_only","ef":400,"k":50,"M":16,"efC":100,"queries":200,"recall":0.847347,"qps":10343.8,"dists_per_q":301}
+{"arm":"P2_portal","ef":400,"k":50,"M":16,"efC":100,"queries":200,"recall":0.836097,"qps":9657.5,"dists_per_q":292}
+{"arm":"P0_local_only","ef":800,"k":50,"M":16,"efC":100,"queries":200,"recall":0.872217,"qps":7113.3,"dists_per_q":400}
+{"arm":"P2_portal","ef":800,"k":50,"M":16,"efC":100,"queries":200,"recall":0.855874,"qps":6697.2,"dists_per_q":395}
+{"arm":"P0_local_only","ef":1600,"k":50,"M":16,"efC":100,"queries":200,"recall":0.884770,"qps":4919.9,"dists_per_q":547}
+{"arm":"P2_portal","ef":1600,"k":50,"M":16,"efC":100,"queries":200,"recall":0.871033,"qps":4563.5,"dists_per_q":526}
