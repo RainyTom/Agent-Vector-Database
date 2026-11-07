@@ -1,0 +1,4 @@
+{"mode":"global_single_queue","ef":50,"recall":0.375059,"qps":173.4,"dists_per_q":28608,"eligible_per_q":1140.2,"dist_over_eligible":25.091}
+{"mode":"global_single_queue","ef":100,"recall":0.365230,"qps":108.9,"dists_per_q":44410,"eligible_per_q":1140.2,"dist_over_eligible":38.950}
+{"mode":"global_single_queue","ef":200,"recall":0.363335,"qps":84.6,"dists_per_q":58832,"eligible_per_q":1140.2,"dist_over_eligible":51.599}
+{"mode":"global_single_queue","ef":400,"recall":0.362269,"qps":67.0,"dists_per_q":72776,"eligible_per_q":1140.2,"dist_over_eligible":63.829}
