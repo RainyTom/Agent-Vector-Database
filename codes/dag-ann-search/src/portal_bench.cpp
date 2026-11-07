@@ -253,6 +253,13 @@ int main(int argc, char** argv) {
         std::fprintf(stderr, "[build] %zu graphs in %.1fs (M=%d efC=%d reps=%d shrink+MST)\n", G.size(),
                      std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(), M, efC, nrep);
     }
+    // 稠密索引：查询热路径不再对 unordered_map 做哈希
+    std::unordered_map<int, int> cpos;
+    std::vector<LocalGraph*> Gp;
+    {
+        Gp.reserve(G.size());
+        for (auto& kv : G) { cpos[kv.first] = int(Gp.size()); Gp.push_back(&kv.second); }
+    }
     // (3) 门户桥：父侧选"距子入口最近"的 rep 或入口
     for (auto& [c, kids] : children) {
         auto pc = G.find(c);
@@ -336,53 +343,73 @@ int main(int argc, char** argv) {
                     }
                 } else {
                     const int ef_c = std::max(8, ef / std::max<int>(1, int(inD.size())));
-                    std::unordered_map<int, std::priority_queue<std::pair<float, uint32_t>>> pc;
-                    std::priority_queue<std::pair<float, std::pair<int, uint32_t>>> frontier;
+                    // 每概念结果表：稠密数组 + 手动堆（避免 map 查找与 priority_queue 的额外封装）
+                    static std::vector<std::vector<std::pair<float, uint32_t>>> pc;
+                    static std::vector<int> touched;
+                    if (pc.size() < Gp.size()) pc.resize(Gp.size());
+                    touched.clear();
+                    std::vector<std::pair<float, std::pair<int, uint32_t>>> frontier;
+                    frontier.reserve(512);
                     std::priority_queue<float> gworst;
                     ++token;
-                    auto push = [&](int c, uint32_t li, bool force = false) {
-                        const uint32_t gid = G[c].members[li];
-                        if (G[c].vstamp[li] == token) return;
-                        G[c].vstamp[li] = token;
-                        const float d = l2(q, base.data() + size_t(gid) * DIM);
+                    auto push = [&](int ci, uint32_t li, bool force = false) {
+                        LocalGraph& g = *Gp[ci];
+                        if (g.vstamp[li] == (uint32_t)token) return;
+                        g.vstamp[li] = (uint32_t)token;
+                        const float d = l2(q, base.data() + size_t(g.members[li]) * DIM);
                         ++dists;
-                        auto& b = pc[c];
+                        auto& b = pc[size_t(ci)];
+                        if (b.empty()) touched.push_back(ci);
                         bool keep;
-                        if (int(b.size()) < ef_c) { b.push({d, li}); keep = true; }
-                        else if (d < b.top().first) { b.pop(); b.push({d, li}); keep = true; }
+                        if (int(b.size()) < ef_c) { b.push_back({d, li}); std::push_heap(b.begin(), b.end()); keep = true; }
+                        else if (d < b.front().first) { std::pop_heap(b.begin(), b.end()); b.back() = {d, li}; std::push_heap(b.begin(), b.end()); keep = true; }
                         else keep = false;
-                        // (2) 预算超额：只要还在全局地板之上，就允许入队/展开
                         bool slack = overflow && !gworst.empty() && gworst.size() >= size_t(ef) && d <= gworst.top();
                         if (!force && !keep && !slack) return;
                         if (gworst.size() < size_t(ef)) gworst.push(d);
                         else if (d < gworst.top()) { gworst.pop(); gworst.push(d); }
-                        frontier.push({-d, {c, li}});
+                        frontier.push_back({-d, {ci, li}});
+                        std::push_heap(frontier.begin(), frontier.end());
                     };
-                    for (int c : inD) push(c, best_entry(c), /*force=*/true);
+                    auto best_entry_ci = [&](int ci) -> uint32_t {
+                        LocalGraph& g = *Gp[ci];
+                        uint32_t bi = g.entry; float bd = INFINITY;
+                        for (uint32_t r : g.reps) {
+                            const float d = l2(q, base.data() + size_t(g.members[r]) * DIM);
+                            ++dists;
+                            if (d < bd) { bd = d; bi = r; }
+                        }
+                        return bi;
+                    };
+                    for (int c : inD) push(cpos[c], best_entry_ci(cpos[c]), /*force=*/true);
                     while (!frontier.empty()) {
-                        const auto tp = frontier.top(); frontier.pop();
+                        std::pop_heap(frontier.begin(), frontier.end());
+                        const auto tp = frontier.back(); frontier.pop_back();
                         const float dv = -tp.first;
-                        const int c = tp.second.first;
+                        const int ci = tp.second.first;
                         const uint32_t li = tp.second.second;
-                        auto itc = pc.find(c);
-                        if (itc != pc.end() && int(itc->second.size()) >= ef_c && dv > itc->second.top().first) {
+                        LocalGraph& g = *Gp[size_t(ci)];
+                        const auto& b = pc[size_t(ci)];
+                        if (int(b.size()) >= ef_c && dv > b.front().first) {
                             if (!(overflow && !gworst.empty() && dv <= gworst.top())) continue;
                         }
-                        for (uint32_t w : G[c].adj[li]) push(c, w);
-                        if (li < G[c].portal.size()) {
-                            for (uint32_t tgt : G[c].portal[li]) {
+                        for (uint32_t w : g.adj[li]) push(ci, w);
+                        if (li < g.portal.size()) {
+                            for (uint32_t tgt : g.portal[li]) {
                                 if (!D.count(int(tgt))) continue;
-                                auto it = G.find(int(tgt));
-                                if (it == G.end()) continue;
-                                push(int(tgt), best_entry(int(tgt)), /*force=*/false);
+                                auto it = cpos.find(int(tgt));
+                                if (it == cpos.end()) continue;
+                                push(it->second, best_entry_ci(it->second), /*force=*/false);
                             }
                         }
                     }
-                    cov_sum += long(pc.size()); d_sum += long(inD.size());
-                    for (auto& kv : pc) {
-                        const LocalGraph& g = G[kv.first];
-                        while (!kv.second.empty()) { auto pr = kv.second.top(); kv.second.pop();
-                            merged.push_back({pr.first, int(g.members[pr.second])}); }
+                    cov_sum += long(touched.size()); d_sum += long(inD.size());
+                    for (int ci : touched) {
+                        auto& b = pc[size_t(ci)];
+                        const LocalGraph& g = *Gp[size_t(ci)];
+                        std::sort(b.begin(), b.end());
+                        for (auto& pr : b) merged.push_back({pr.first, int(g.members[pr.second])});
+                        b.clear();
                     }
                 }
                 const size_t keep = std::min<size_t>(k, merged.size());

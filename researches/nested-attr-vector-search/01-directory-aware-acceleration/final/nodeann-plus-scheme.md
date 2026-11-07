@@ -230,3 +230,29 @@ concept c ──► 局 部 图 G_c（单层）: items with own(i)=c
 - 去掉 push 内的 map 查表（把 `LocalGraph&` 直接传下去）与 `priority_queue` 换成 `std::vector` + `push_heap`；目标是把每距离代价压到 ~120 ns，届时 NR 会在 0.9132 处超过 11,062。
 - 递归臂的超额改为"概念内相对位置"允许（如候选在该概念前 ef_c 名内即可展开），把 0.905–0.911 段拉起来。
 - MST 目前只作为 intra-concept 捷径，尚未用于跨概念有序跳转（§3 的骨架跳转）。
+
+## 11. 热路径容器去掉哈希查表（2026-11-05）
+
+**问题定位**：`push`（每候选一次）在递归臂里做了 4 次 `unordered_map` 查表：
+
+| 位置 | 容器 | 每次候选取用 |
+|---|---|---|
+| `G[c].members[li]` | `unordered_map<int, LocalGraph> G` | 哈希 #1 |
+| `G[c].vstamp[li]` 读/写 | 同上 | 哈希 #2/#3 |
+| `pc[c]` | `unordered_map<int, priority_queue<...>> pc` | 哈希 #4（首访还插入，可能 rehash） |
+
+每查询约 300–400 个候选 → 1,200–1,600 次哈希，30–80 ns/次即 40–120 µs，与整条查询同量级。非递归臂只在概念循环外取一次 `const LocalGraph& g = G[c]`，所以没有这部分开销——这也是两臂差距的来源之一。
+
+**改法**：建稠密索引 `cpos: concept id → 0..C-1` 与 `vector<LocalGraph*> Gp`；`pc` 改为稠密
+`vector<vector<pair<float,uint32_t>>>` + 手动 `push_heap/pop_heap`，每查询只清理 touched 的概念。
+
+**效果**（同数据，200 查询）：
+
+| 点 | 改前 | 改后 | 变化 |
+|---|---:|---:|---:|
+| R ef=200（recall 0.9055） | 7,810 | **9,958** | **+27%** |
+| R ef=100（recall 0.8818） | 10,824 | **11,469** | +6% |
+| R ef=50（recall 0.8086） | 13,859 | 13,554 | −2%（噪声内） |
+| NR ef=200（recall 0.9132） | 6,019 | 6,211 | +3% |
+
+R 在 0.9055 处距 NodeANN（~11,150）还差 11%，剩余差距在"每距离的计算与堆操作"以及 `best_entry` 每次跳转重算 8 个代表点距离。
