@@ -1,16 +1,18 @@
-// NodeANN+ 执行臂：单层局部图 + 唯一入口 + 门户桥，单队列。
+// NodeANN+ 两种查询模式 + 适配我们结构的 HNSW 式搜索。
 //
-// 三个臂（同一份数据、同一标量距离、同一 ef 预算、同一 GT、单线程）：
-//   P0  local_only : 每概念一张单层图；查询把 **范围内所有概念的入口** 放进同一个队列，
-//                    图内边只在本概念内（结构跳过），队列共享 ef 预算。→ 与 NodeANN 同构，
-//                    但把内层索引换成单层图，用来隔离"内层索引"这一因子。
-//   P2  portal     : 只把 **覆盖概念的顶部入口**（其祖先不在范围内的那批）放进队列；
-//                    跨概念走 **门户桥**（父入口 ↔ 子入口，双向，独立邻接表），
-//                    因此靠桥"跳"进子树，而不是把所有入口都塞进队列。
+// 索引：每概念一张单层图（增量插入 + 启发式剪边 + 孤立点补边 + 组件桥接）；
+//       每概念额外维护 rep[]（farthest-first 代表点），作为"上层的替代物"——
+//       HNSW 用上层做入口下降，我们用"距查询最近的代表点"选入口。
+//       跨概念：门户桥（父{入口,最远代表} ↔ 子入口，双向，独立邻接表）。
 //
-// 构建：单层图 = 增量插入 + 启发式剪边（RNG 规则），不是精确 kNN 图；
-//       efC 为构建预算，M 为度上界。
-// 口径：PQ 还原 float32、k=50、ef 为查询预算、recall 以 gt_50.txt 为 GT。
+// 两种查询：
+//   NR（非递归）：对范围内**每个概念**各自从上式入口起做一次 beam，预算 ef，取 top-N，最后合并。
+//                 ——等价于 NodeANN 的结构，但内层换成单层图 + 代表点入口。
+//   R （递归）  ：只从**顶部概念**入口进**一个**队列；每概念各自持有 ef_c = max(8, ef/|D|) 的
+//                 结果表（这就是 HNSW 的 ef 在多图结构上的推广）；门上桥可跳进子概念，
+//                 跳进去消耗子概念自己的预算。
+//
+// 输出：每个 (mode, option, ef) 一条 JSON：recall/QPS/dists_per_q/entry_cost。
 #include <algorithm>
 #include <chrono>
 #include <cmath>
@@ -25,13 +27,14 @@
 #include <vector>
 
 static constexpr int DIM = 128;
-
 using Vec = std::vector<uint32_t>;
+
 struct LocalGraph {
-    Vec members;                 // local -> global id
-    std::vector<Vec> adj;        // 局部邻接（保边：只增不减，剪枝在建图时做）
-    std::vector<Vec> portal;     // 门户桥（独立表，不计入局部度）
-    uint32_t entry = 0;          // 局部入口
+    Vec members;
+    std::vector<Vec> adj;
+    std::vector<Vec> portal;
+    Vec reps;                 // 代表点（局部 id）
+    uint32_t entry = 0;
 };
 
 static bool readf(const std::string& p, std::vector<float>& v) {
@@ -45,20 +48,18 @@ static bool readf(const std::string& p, std::vector<float>& v) {
     std::fclose(f);
     return ok;
 }
-
 static inline float l2(const float* a, const float* b) {
     float s = 0.f;
     for (int d = 0; d < DIM; ++d) { const float t = a[d] - b[d]; s += t * t; }
     return s;
 }
 
-// 增量插入 + 启发式剪边（RNG：保留的候选与已选点之间必须比到查询点更远）
-static void build_local(const float* base, const Vec& ids, int M, int efC, LocalGraph& g) {
+static void build_local(const float* base, const Vec& ids, int M, int efC, int nrep, LocalGraph& g) {
     const int n = int(ids.size());
     g.members = ids;
     g.adj.assign(size_t(n), {});
-    g.portal.assign(size_t(n), {});   // 门户槽与局部节点一一对应，避免越界写
-    if (n == 1) { g.entry = 0; return; }
+    g.portal.assign(size_t(n), {});
+    if (n == 1) { g.entry = 0; g.reps = {0}; return; }
     g.adj[0].push_back(1);
     g.adj[1].push_back(0);
     g.entry = 0;
@@ -70,15 +71,14 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, Local
     for (int i = 2; i < n; ++i) {
         ++token;
         const float* q = base + size_t(ids[size_t(i)]) * DIM;
-        // 贪心 beam（构建期）
-        std::priority_queue<std::pair<float, uint32_t>> frontier;  // min-heap via -d
+        std::priority_queue<std::pair<float, uint32_t>> frontier;
         frontier.push({-l2(q, base + size_t(ids[g.entry]) * DIM), g.entry});
         visited[g.entry] = token;
         cands.clear();
         while (!frontier.empty()) {
             const auto [nd, v] = frontier.top(); frontier.pop();
             const float dv = -nd;
-            if (cands.size() >= size_t(efC) && dv > 0) {
+            if (cands.size() >= size_t(efC)) {
                 float worst = 0;
                 for (auto& c : cands) worst = std::max(worst, c.first);
                 if (dv > worst) break;
@@ -92,8 +92,6 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, Local
         }
         std::sort(cands.begin(), cands.end());
         if (cands.size() > size_t(efC)) cands.resize(size_t(efC));
-
-        // 启发式选择
         Vec chosen;
         for (auto& c : cands) {
             if (int(chosen.size()) >= M) break;
@@ -106,14 +104,12 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, Local
             if (ok) chosen.push_back(c.second);
         }
         if (chosen.empty() && !cands.empty()) chosen.push_back(cands[0].second);
-
         for (uint32_t w : chosen) {
             g.adj[size_t(i)].push_back(w);
             auto& back = g.adj[w];
             if (back.size() < size_t(2 * M)) back.push_back(uint32_t(i));
         }
     }
-    // 连通性修补：孤立节点补一条最近边
     for (int i = 0; i < n; ++i) {
         if (!g.adj[size_t(i)].empty()) continue;
         const float* pi = base + size_t(ids[size_t(i)]) * DIM;
@@ -125,7 +121,6 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, Local
         }
         if (bid >= 0) { g.adj[size_t(i)].push_back(uint32_t(bid)); g.adj[size_t(bid)].push_back(uint32_t(i)); }
     }
-    // 组件桥接（每组件代表 -> 0 号组件代表）
     std::vector<int> comp(size_t(n), -1);
     int ncomp = 0;
     for (int s0 = 0; s0 < n; ++s0) {
@@ -143,12 +138,29 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, Local
             g.adj[rep[size_t(c)]].push_back(rep[0]);
         }
     }
+    // farthest-first 代表点
+    const int K = std::min(nrep, n);
+    g.reps.clear();
+    g.reps.push_back(0);
+    std::vector<float> mind(size_t(n), INFINITY);
+    for (int r = 1; r < K; ++r) {
+        const uint32_t last = g.reps.back();
+        const float* pl = base + size_t(ids[last]) * DIM;
+        float far = -1; uint32_t bid = 0;
+        for (int i = 0; i < n; ++i) {
+            const float d = l2(pl, base + size_t(ids[size_t(i)]) * DIM);
+            if (d < mind[size_t(i)]) mind[size_t(i)] = d;
+            if (mind[size_t(i)] > far) { far = mind[size_t(i)]; bid = uint32_t(i); }
+        }
+        g.reps.push_back(bid);
+    }
 }
 
 int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vec = "recon.bin";
-    int k = 50, M = 16, efC = 100, nq_max = 200;
+    int k = 50, M = 16, efC = 100, nq_max = 200, nrep = 8, per_concept_N = 50;
     std::vector<int> efs{50};
+    std::vector<std::string> modes{"nr", "r"};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
         auto nx = [&]() { return std::string(argv[++i]); };
@@ -158,9 +170,11 @@ int main(int argc, char** argv) {
         else if (a == "--k") k = std::stoi(nx());
         else if (a == "--M") M = std::stoi(nx());
         else if (a == "--efC") efC = std::stoi(nx());
+        else if (a == "--reps") nrep = std::stoi(nx());
+        else if (a == "--capN") per_concept_N = std::stoi(nx());
         else if (a == "--queries") nq_max = std::stoi(nx());
-        else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t;
-            while (std::getline(ss, t, ',')) if (!t.empty()) efs.push_back(std::stoi(t)); }
+        else if (a == "--modes") { modes.clear(); std::stringstream ss(nx()); std::string t; while (std::getline(ss, t, ',')) if (!t.empty()) modes.push_back(t); }
+        else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t; while (std::getline(ss, t, ',')) if (!t.empty()) efs.push_back(std::stoi(t)); }
     }
 
     std::vector<float> base, queries;
@@ -182,42 +196,28 @@ int main(int argc, char** argv) {
     { FILE* f = std::fopen((dir + "/gt_" + std::to_string(k) + ".txt").c_str(), "rb");
       if (f) { if (std::fread(gt.data(), sizeof(int32_t), gt.size(), f) != gt.size()) {} std::fclose(f); } }
 
-    // 每概念单层图
     std::unordered_map<int, LocalGraph> G;
-    std::unordered_map<int, size_t> gid2concept;   // 无（用 owner 反查即可）
     {
         std::unordered_map<int, Vec> members;
         for (size_t i = 0; i < n; ++i) members[owner[i]].push_back(uint32_t(i));
         const auto t0 = std::chrono::steady_clock::now();
-        for (auto& [c, ids] : members) { LocalGraph g; build_local(base.data(), ids, M, efC, g); G.emplace(c, std::move(g)); }
-        std::fprintf(stderr, "[build] %zu local graphs in %.1fs (M=%d efC=%d)\n", G.size(),
-                     std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(), M, efC);
+        for (auto& [c, ids] : members) { LocalGraph g; build_local(base.data(), ids, M, efC, nrep, g); G.emplace(c, std::move(g)); }
+        std::fprintf(stderr, "[build] %zu graphs in %.1fs (M=%d efC=%d reps=%d)\n", G.size(),
+                     std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(), M, efC, nrep);
     }
-
-    // 门户桥：父入口 <-> 子入口（双向，独立邻接）
-    // 为让父子之间有多条通道，桥接父的入口 + 父的最远代表，到子的入口。
     for (auto& [c, kids] : children) {
         auto pc = G.find(c);
         if (pc == G.end()) continue;
-        LocalGraph& pg = pc->second;   // 注意：不得再用 G[c] 触发 rehash，否则引用悬空
-        // 父侧端点：入口 + 距入口最远的 1 个成员（粗略代表）
-        std::vector<uint32_t> anchors{pg.entry};
-        {
-            float far = -1; uint32_t bid = pg.entry;
-            const float* e = base.data() + size_t(pg.members[pg.entry]) * DIM;
-            for (uint32_t li = 0; li < pg.members.size(); ++li) {
-                const float d = l2(e, base.data() + size_t(pg.members[li]) * DIM);
-                if (d > far) { far = d; bid = li; }
-            }
-            anchors.push_back(bid);
-        }
+        LocalGraph& pg = pc->second;
+        Vec anchors{pg.entry};
+        for (uint32_t r : pg.reps) anchors.push_back(r);
         for (int kid : kids) {
             auto kc = G.find(kid);
             if (kc == G.end()) continue;
             LocalGraph& cg = kc->second;
             for (uint32_t a : anchors) {
-                pg.portal[a].push_back(uint32_t(kid));            // 用 concept id 作为"跨图指针"
-                cg.portal[cg.entry].push_back(uint32_t(c));       // 反向
+                pg.portal[a].push_back(uint32_t(kid));
+                cg.portal[cg.entry].push_back(uint32_t(c));
             }
         }
     }
@@ -226,63 +226,117 @@ int main(int argc, char** argv) {
     uint32_t token = 0;
     std::vector<std::pair<float, int>> merged;
 
-    for (int ef : efs) {
-        for (int arm = 0; arm < 2; ++arm) {   // 0 = local_only, 1 = portal
-            const char* name = arm == 0 ? "P0_local_only" : "P2_portal";
-            long hit = 0, denom = 0, dists = 0;
+    for (const std::string& mode : modes) {
+        for (int ef : efs) {
+            long hit = 0, denom = 0, dists = 0, cov_sum = 0, d_sum = 0;
             const auto t1 = std::chrono::steady_clock::now();
             for (int qi = 0; qi < nq; ++qi) {
-                // 范围 D（闭包）与"顶部概念"（祖先不在 D 内）
                 std::unordered_set<int> D;
                 {
                     std::vector<int> st = qc[qi];
                     while (!st.empty()) { const int c = st.back(); st.pop_back(); if (!D.insert(c).second) continue;
                         auto it = children.find(c); if (it != children.end()) for (int w : it->second) st.push_back(w); }
                 }
-                std::vector<int> seeds;
-                for (int c : D) {
-                    if (!G.count(c)) continue;                    // 该概念没有 item，跳过
-                    bool has_anc_in_D = false;
-                    for (int p : parents[c]) if (D.count(p)) { has_anc_in_D = true; break; }
-                    if (arm == 0 || !has_anc_in_D) seeds.push_back(c);
-                }
-                if (seeds.empty()) { for (int c : D) if (G.count(c)) seeds.push_back(c); }
-                if (seeds.empty()) continue;
-
+                std::vector<int> inD;
+                for (int c : D) if (G.count(c)) inD.push_back(c);
+                if (inD.empty()) continue;
                 const float* q = queries.data() + size_t(qi) * DIM;
-                ++token;
-                std::priority_queue<std::pair<float, int>> best;                  // max-heap of best ef (global id)
-                std::priority_queue<std::pair<float, std::pair<int, uint32_t>>> frontier;  // -d, (concept, local)
-                auto push = [&](int c, uint32_t li) {
-                    const uint32_t gid = G[c].members[li];
-                    if (stamp[gid] == token) return;
-                    stamp[gid] = token;
-                    const float d = l2(q, base.data() + size_t(gid) * DIM);
-                    ++dists;
-                    frontier.push({-d, {c, li}});
-                    if (int(best.size()) < ef) best.push({d, int(gid)});
-                    else if (d < best.top().first) { best.pop(); best.push({d, int(gid)}); }
-                };
-                for (int c : seeds) push(c, G[c].entry);
 
-                while (!frontier.empty()) {
-                    const auto top = frontier.top(); frontier.pop();
-                    const float dv = -top.first;
-                    if (int(best.size()) >= ef && dv > best.top().first) break;
-                    const int c = top.second.first;
-                    const uint32_t li = top.second.second;
-                    for (uint32_t w : G[c].adj[li]) push(c, w);
-                    if (arm == 1 && li < G[c].portal.size()) {
-                        for (uint32_t tgt : G[c].portal[li]) {
-                            auto it = G.find(int(tgt));
-                            if (it == G.end()) continue;
-                            if (!D.count(int(tgt))) continue;      // 只跳进范围内的概念
-                            push(int(tgt), it->second.entry);
+                auto best_entry = [&](int c) -> uint32_t {
+                    const LocalGraph& g = G[c];
+                    uint32_t bi = g.entry; float bd = INFINITY;
+                    for (uint32_t r : g.reps) {
+                        const float d = l2(q, base.data() + size_t(g.members[r]) * DIM);
+                        ++dists;
+                        if (d < bd) { bd = d; bi = r; }
+                    }
+                    return bi;
+                };
+
+                merged.clear();
+                if (mode == "nr") {
+                    for (int c : inD) {
+                        const LocalGraph& g = G[c];
+                        ++token;
+                        std::priority_queue<std::pair<float, uint32_t>> best;
+                        std::priority_queue<std::pair<float, uint32_t>> frontier;
+                        auto push = [&](uint32_t li) {
+                            const uint32_t gid = g.members[li];
+                            if (stamp[gid] == token) return;
+                            stamp[gid] = token;
+                            const float d = l2(q, base.data() + size_t(gid) * DIM);
+                            ++dists;
+                            frontier.push({-d, li});
+                            if (int(best.size()) < ef) best.push({d, li});
+                            else if (d < best.top().first) { best.pop(); best.push({d, li}); }
+                        };
+                        push(best_entry(c));
+                        while (!frontier.empty()) {
+                            const auto tp = frontier.top(); frontier.pop();
+                            const float dv = -tp.first;
+                            if (int(best.size()) >= ef && dv > best.top().first) break;
+                            for (uint32_t w : g.adj[tp.second]) push(w);
+                        }
+                        // 每概念取 top-N 并入结果
+                        std::vector<std::pair<float, uint32_t>> local;
+                        while (!best.empty()) { local.push_back(best.top()); best.pop(); }
+                        std::sort(local.begin(), local.end());
+                        for (size_t i = 0; i < local.size() && int(i) < per_concept_N; ++i)
+                            merged.push_back({local[i].first, int(g.members[local[i].second])});
+                    }
+                } else {   // 递归：单队列 + 每概念预算 + 门户桥
+                    const int dfull = int(inD.size());
+                    const int ef_c = std::max(8, ef / std::max(1, dfull));
+                    std::unordered_map<int, std::priority_queue<std::pair<float, uint32_t>>> pc;
+                    std::priority_queue<std::pair<float, std::pair<int, uint32_t>>> frontier;
+                    std::priority_queue<float> gworst;   // 全局 ef 内最差，用作"是否还值得展开"的地板
+                    ++token;
+                    auto push = [&](int c, uint32_t li, bool force = false) {
+                        const uint32_t gid = G[c].members[li];
+                        if (stamp[gid] == token) return;
+                        stamp[gid] = token;
+                        const float d = l2(q, base.data() + size_t(gid) * DIM);
+                        ++dists;
+                        auto& b = pc[c];
+                        bool keep;
+                        if (int(b.size()) < ef_c) { b.push({d, li}); keep = true; }
+                        else if (d < b.top().first) { b.pop(); b.push({d, li}); keep = true; }
+                        else keep = false;
+                        // 即使本概念预算已满，只要还在全局 ef 的地板之上，仍允许展开
+                        if (!force && !keep && (!gworst.empty() && gworst.size() >= size_t(ef) && d > gworst.top())) return;
+                        if (gworst.size() < size_t(ef)) gworst.push(d);
+                        else if (d < gworst.top()) { gworst.pop(); gworst.push(d); }
+                        frontier.push({-d, {c, li}});
+                    };
+                    // 递归下降：范围 D 内的概念逐个播种入口（预算仍按概念切分、队列仍共用）。
+                    // 之所以不沿 children 逐跳下降：真实 DAG 存在"无 item 的中间概念"，逐跳会漏掉其子树。
+                    for (int c : inD) push(c, best_entry(c), /*force=*/true);
+                    while (!frontier.empty()) {
+                        const auto tp = frontier.top(); frontier.pop();
+                        const float dv = -tp.first;
+                        const int c = tp.second.first;
+                        const uint32_t li = tp.second.second;
+                        auto itc = pc.find(c);
+                        if (itc != pc.end() && int(itc->second.size()) >= ef_c && dv > itc->second.top().first) continue;
+                        for (uint32_t w : G[c].adj[li]) push(c, w);
+                        if (li < G[c].portal.size()) {
+                            for (uint32_t tgt : G[c].portal[li]) {
+                                if (!D.count(int(tgt))) continue;
+                                auto it = G.find(int(tgt));
+                                if (it == G.end()) continue;
+                                push(int(tgt), best_entry(int(tgt)));
+                            }
+                        }
+                    }
+                    cov_sum += long(pc.size()); d_sum += long(inD.size());
+                    for (auto& kv : pc) {
+                        const LocalGraph& g = G[kv.first];
+                        while (!kv.second.empty()) {
+                            auto pr = kv.second.top(); kv.second.pop();
+                            merged.push_back({pr.first, int(g.members[pr.second])});
                         }
                     }
                 }
-                merged.clear();
-                while (!best.empty()) { merged.push_back({best.top().first, best.top().second}); best.pop(); }
                 const size_t keep = std::min<size_t>(k, merged.size());
                 std::partial_sort(merged.begin(), merged.begin() + keep, merged.end());
                 std::unordered_set<int> topk;
@@ -292,10 +346,12 @@ int main(int argc, char** argv) {
                 hit += h; denom += std::min(k, e);
             }
             const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
-            std::printf("{\"arm\":\"%s\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"queries\":%d,"
-                        "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.0f}\n",
-                        name, ef, k, M, efC, nq, double(hit) / double(std::max<long>(denom, 1)), nq / s,
-                        double(dists) / nq);
+            std::printf("{\"mode\":\"%s\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"reps\":%d,\"capN\":%d,\"queries\":%d,"
+                        "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.0f,"
+                        "\"concepts_covered\":%.2f,\"concepts_in_scope\":%.2f}\n",
+                        mode.c_str(), ef, k, M, efC, nrep, per_concept_N, nq,
+                        double(hit) / double(std::max<long>(denom, 1)), nq / s, double(dists) / nq,
+                        double(cov_sum) / nq, double(d_sum) / nq);
             std::fflush(stdout);
         }
     }
