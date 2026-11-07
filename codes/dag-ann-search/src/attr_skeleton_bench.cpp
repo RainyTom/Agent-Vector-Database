@@ -150,6 +150,8 @@ int main(int argc, char** argv) {
     bool do_merge = true;
     bool diag = false;
     std::string trace_file, graph_audit_file, entry_mode = "representative";
+    bool rerank_fp32 = false;
+    int rerank_pool = 0;
     std::vector<int> efs{50};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -170,6 +172,8 @@ int main(int argc, char** argv) {
         else if (a == "--trace-file") trace_file = nx();
         else if (a == "--entry-mode") entry_mode = nx();
         else if (a == "--graph-audit-file") graph_audit_file = nx();
+        else if (a == "--rerank-fp32") rerank_fp32 = true;
+        else if (a == "--rerank-pool") rerank_pool = std::stoi(nx());
         else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t;
             while (std::getline(ss, t, ',')) if (!t.empty()) efs.push_back(std::stoi(t)); }
@@ -199,11 +203,13 @@ int main(int argc, char** argv) {
       if (f) { if (std::fread(gt.data(), sizeof(int32_t), gt.size(), f) != gt.size()) {} std::fclose(f); } }
     std::vector<float> original;
     FILE* trace = nullptr;
-    if (!trace_file.empty()) {
+    if (!trace_file.empty() || rerank_fp32) {
         if (!readf(dir + "/orig.bin", original) || original.size() != base.size()) {
             std::fprintf(stderr, "original vector dimensions do not match search vectors\n");
             return 2;
         }
+    }
+    if (!trace_file.empty()) {
         trace = std::fopen(trace_file.c_str(), "w");
         if (!trace) { std::perror(trace_file.c_str()); return 2; }
     }
@@ -507,7 +513,7 @@ int main(int argc, char** argv) {
         long hit = 0, denom = 0, dists = 0, elig_sum = 0, entered_sum = 0, inD_sum = 0, seeds_sum = 0;
         long miss_attr_not_entered = 0, miss_item_not_visited = 0, miss_ranked_out = 0, gt_total = 0, miss_rejected = 0, touched_sum = 0;
         long expanded_sum = 0, adjacency_slots_sum = 0, distance_cache_hits_sum = 0;
-        long upper_distances_sum = 0, upper_slots_sum = 0;
+        long upper_distances_sum = 0, upper_slots_sum = 0, rerank_calls_sum = 0;
         double query_seconds = 0;
         const auto t1 = std::chrono::steady_clock::now();
         for (int round = 0; round < repeat; ++round)
@@ -516,7 +522,7 @@ int main(int argc, char** argv) {
             std::vector<uint32_t> evaluated, admitted, seed_evaluated, expanded, seed_nodes;
             const long distances_before = dists;
             long query_expanded = 0, query_adjacency_slots = 0, query_cache_hits = 0;
-            long query_upper_distances = 0, query_upper_slots = 0;
+            long query_upper_distances = 0, query_upper_slots = 0, query_rerank_calls = 0;
             std::fill(bm.begin(), bm.end(), 0ull);
             for (int c : qc[qi]) {
                 auto it = apos.find(c);
@@ -655,6 +661,18 @@ int main(int argc, char** argv) {
                       [](const std::pair<float,int>& a, const std::pair<float,int>& b) { return a.second == b.second; }),
                       out.end());
             const size_t keep = std::min<size_t>(k, out.size());
+            // 可选：用原始 FP32 对同一候选集重排，距离计入查询成本。
+            // --rerank-pool 限制两侧共同的重排预算；0 表示重排全部保留候选。
+            if (rerank_fp32) {
+                if (rerank_pool > 0 && out.size() > size_t(rerank_pool)) out.resize(size_t(rerank_pool));
+                for (auto& item : out) {
+                    item.first = dist2(q, original.data() + size_t(item.second) * DIM);
+                    ++dists;
+                    ++query_rerank_calls;
+                }
+                std::sort(out.begin(), out.end());
+            }
+            rerank_calls_sum += query_rerank_calls;
             expanded_sum += query_expanded;
             adjacency_slots_sum += query_adjacency_slots;
             distance_cache_hits_sum += query_cache_hits;
@@ -738,7 +756,7 @@ int main(int argc, char** argv) {
                     "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.1f,\"eligible_per_q\":%.1f,"
                     "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f,\"miss_attr_not_entered\":%.4f,\"miss_item_not_visited\":%.4f,\"miss_ranked_out\":%.4f,\"miss_rejected\":%.4f,\"attrs_touched\":%.2f,"
                     "\"expanded_per_q\":%.3f,\"adjacency_slots_per_q\":%.3f,\"distance_cache_hits_per_q\":%.3f,"
-                    "\"entry_mode\":\"%s\",\"upper_dists_per_q\":%.3f,\"upper_slots_per_q\":%.3f,\"upper_index_bytes\":%zu}\n",
+                    "\"entry_mode\":\"%s\",\"upper_dists_per_q\":%.3f,\"upper_slots_per_q\":%.3f,\"upper_index_bytes\":%zu,\"rerank_fp32\":%d,\"rerank_calls_per_q\":%.3f}\n",
                     ef, ef2, pdiv, k, M, efC, int(skip_links), nq, repeat,
                     double(hit) / double(std::max<long>(denom, 1)),
                     double(nq) * repeat / query_seconds,
@@ -756,7 +774,8 @@ int main(int argc, char** argv) {
                     double(adjacency_slots_sum) / (double(nq) * repeat),
                     double(distance_cache_hits_sum) / (double(nq) * repeat),
                     entry_mode.c_str(), double(upper_distances_sum) / (double(nq) * repeat),
-                    double(upper_slots_sum) / (double(nq) * repeat), upper_index_bytes);
+                    double(upper_slots_sum) / (double(nq) * repeat), upper_index_bytes,
+                    int(rerank_fp32), double(rerank_calls_sum) / (double(nq) * repeat));
         std::fflush(stdout);
     }
     if (trace) std::fclose(trace);

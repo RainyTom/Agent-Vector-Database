@@ -1722,8 +1722,8 @@
   },
   "selection_policy": "For each fixed target recall (taken from NodeANN N10/15/20), apply the same inclusive relative 2% band and full-output requirement to ALL methods; independently select each method's fastest measured point. Do not keep NodeANN at an unnecessarily slow reference setting while tuning Ours.",
   "final_source_hashes": {
-    "codes/dag-ann-search/src/attr_skeleton_bench.cpp": "4320f6b993921f8fdbf2b47e5c91066c3c71ff0e6587401706e13ea04c3b1ebf",
-    "codes/dag-ann-search/src/nodeann_bench.cpp": "b28abaf4c5c6306caf21f9c4bddab044ca1eeb2e0f7db96d8b7602c48f9ac642",
+    "codes/dag-ann-search/src/attr_skeleton_bench.cpp": "266cdebf8bb65c1d3ccde8fa739cf9ddb82741d85f3007a5326457d86351bd6e",
+    "codes/dag-ann-search/src/nodeann_bench.cpp": "56993f298ef1a0e425bd30facbe4a4cee8afe121f2a03f90069c5ecbf147c219",
     "codes/dag-ann-search/src/native_graph_audit.h": "de3c41ab8e8f280d8179fd1ab1f1de7e30f2c3df84f9acd7948d34481eb01dec",
     "codes/dag-ann-search/scripts/illustrate_asi.py": "859fd89569eba8850ae6c246b7b654424a9452b3c40a8e0c198f1b57fcf6ec3a"
   },
@@ -1739,5 +1739,336 @@
   },
   "plot_file": "researches/nested-attr-vector-search/2026-11-08-exps/figures/entry-control/pareto.svg",
   "plot_sha256": "4535db764b8deb80cae36be9c3e0ec2a226c5bd751eb9c40ad9d6ed87d239137",
-  "exact_quality_band_test": "With the same GT denominator: abs(candidate_fp_hits - target_fp_hits)*50 <= target_fp_hits. Inclusive boundary uses integer counts, not rounded recall."
+  "exact_quality_band_test": "With the same GT denominator: abs(candidate_fp_hits - target_fp_hits)*50 <= target_fp_hits. Inclusive boundary uses integer counts, not rounded recall.",
+  "rerank": {
+    "flags": [
+      "--rerank-fp32",
+      "--rerank-pool"
+    ],
+    "cost": "FP32 distances charged inside the timed query",
+    "pool_semantics": "ASI reranks the best pool candidates from its keep union; NodeANN first keeps pool by reconstruction distance then reranks with FP32",
+    "commands": {
+      "asi": [
+        "taskset",
+        "-c",
+        "2",
+        "./work/attr_skeleton",
+        "--dir",
+        "work/dag-ann",
+        "--work",
+        "work/dag-scope/workload-run1",
+        "--vec",
+        "recon.bin",
+        "--k",
+        "10",
+        "--M",
+        "16",
+        "--efC",
+        "200",
+        "--queries",
+        "200",
+        "--p",
+        "50",
+        "--ef2",
+        "16",
+        "--entry-mode",
+        "hnsw",
+        "--rerank-fp32",
+        "--repeat",
+        "20"
+      ],
+      "nodeann": [
+        "taskset",
+        "-c",
+        "2",
+        "./work/nodeann_measured",
+        "--dir",
+        "work/dag-ann",
+        "--work",
+        "work/dag-scope/workload-run1",
+        "--vec",
+        "recon.bin",
+        "--k",
+        "10",
+        "--M",
+        "16",
+        "--efC",
+        "200",
+        "--queries",
+        "200",
+        "--repeat",
+        "20",
+        "--nosimd",
+        "--index-dir",
+        "work/asi-evidence/navigation-index",
+        "--mode",
+        "nodeann",
+        "--rerank-fp32"
+      ]
+    },
+    "points_asi": {
+      "20": [
+        {
+          "ef": 10,
+          "recall": 0.832394,
+          "qps": 23962.1,
+          "dists": 241.4,
+          "rerank": 16.605
+        },
+        {
+          "ef": 20,
+          "recall": 0.956433,
+          "qps": 20447.6,
+          "dists": 277.0,
+          "rerank": 18.68
+        },
+        {
+          "ef": 40,
+          "recall": 0.964634,
+          "qps": 16517.0,
+          "dists": 318.2,
+          "rerank": 18.68
+        },
+        {
+          "ef": 80,
+          "recall": 0.967196,
+          "qps": 12284.5,
+          "dists": 374.1,
+          "rerank": 18.68
+        }
+      ],
+      "40": [
+        {
+          "ef": 10,
+          "recall": 0.832394,
+          "qps": 24868.4,
+          "dists": 243.1,
+          "rerank": 18.3
+        },
+        {
+          "ef": 20,
+          "recall": 0.957458,
+          "qps": 19971.7,
+          "dists": 285.0,
+          "rerank": 26.645
+        },
+        {
+          "ef": 40,
+          "recall": 0.980523,
+          "qps": 15886.6,
+          "dists": 334.2,
+          "rerank": 34.66
+        },
+        {
+          "ef": 80,
+          "recall": 0.983598,
+          "qps": 12600.7,
+          "dists": 390.1,
+          "rerank": 34.66
+        }
+      ],
+      "80": [
+        {
+          "ef": 10,
+          "recall": 0.832394,
+          "qps": 21909.3,
+          "dists": 243.1,
+          "rerank": 18.3
+        },
+        {
+          "ef": 20,
+          "recall": 0.957458,
+          "qps": 19665.9,
+          "dists": 285.0,
+          "rerank": 26.645
+        },
+        {
+          "ef": 40,
+          "recall": 0.980523,
+          "qps": 15918.9,
+          "dists": 341.2,
+          "rerank": 41.67
+        },
+        {
+          "ef": 80,
+          "recall": 0.985136,
+          "qps": 11030.1,
+          "dists": 418.4,
+          "rerank": 63.025
+        }
+      ]
+    },
+    "points_nodeann": {
+      "20": [
+        {
+          "N": 10,
+          "recall": 0.882624,
+          "qps": 21477.4,
+          "dists": 271.5,
+          "rerank": 13.3
+        },
+        {
+          "N": 20,
+          "recall": 0.976422,
+          "qps": 17186.8,
+          "dists": 348.0,
+          "rerank": 18.7
+        },
+        {
+          "N": 40,
+          "recall": 0.978473,
+          "qps": 12792.9,
+          "dists": 440.8,
+          "rerank": 18.7
+        },
+        {
+          "N": 80,
+          "recall": 0.978473,
+          "qps": 9657.6,
+          "dists": 550.2,
+          "rerank": 18.7
+        }
+      ],
+      "40": [
+        {
+          "N": 10,
+          "recall": 0.892363,
+          "qps": 20307.7,
+          "dists": 276.0,
+          "rerank": 17.8
+        },
+        {
+          "N": 20,
+          "recall": 0.989749,
+          "qps": 14492.4,
+          "dists": 354.8,
+          "rerank": 25.5
+        },
+        {
+          "N": 40,
+          "recall": 0.998462,
+          "qps": 12313.5,
+          "dists": 456.7,
+          "rerank": 34.7
+        },
+        {
+          "N": 80,
+          "recall": 0.998462,
+          "qps": 9115.0,
+          "dists": 566.1,
+          "rerank": 34.7
+        }
+      ],
+      "80": [
+        {
+          "N": 10,
+          "recall": 0.892363,
+          "qps": 20933.6,
+          "dists": 280.8,
+          "rerank": 22.6
+        },
+        {
+          "N": 20,
+          "recall": 0.990261,
+          "qps": 15520.3,
+          "dists": 363.5,
+          "rerank": 34.1
+        },
+        {
+          "N": 40,
+          "recall": 0.999487,
+          "qps": 11743.7,
+          "dists": 469.4,
+          "rerank": 47.4
+        },
+        {
+          "N": 80,
+          "recall": 1.0,
+          "qps": 8062.8,
+          "dists": 594.5,
+          "rerank": 63.0
+        }
+      ]
+    },
+    "comparison": [
+      {
+        "pool": 20,
+        "asi_ef": 40,
+        "asi_recall": 0.964634,
+        "asi_qps": 16517.0,
+        "nodeann_N": 20,
+        "nodeann_recall": 0.976422,
+        "nodeann_qps": 17186.8,
+        "qps_ratio": 0.96,
+        "within_2pct": false
+      },
+      {
+        "pool": 20,
+        "asi_ef": 80,
+        "asi_recall": 0.967196,
+        "asi_qps": 12284.5,
+        "nodeann_N": 20,
+        "nodeann_recall": 0.976422,
+        "nodeann_qps": 17186.8,
+        "qps_ratio": 0.71,
+        "within_2pct": false
+      },
+      {
+        "pool": 40,
+        "asi_ef": 40,
+        "asi_recall": 0.980523,
+        "asi_qps": 15886.6,
+        "nodeann_N": 20,
+        "nodeann_recall": 0.989749,
+        "nodeann_qps": 14492.4,
+        "qps_ratio": 1.1,
+        "within_2pct": false
+      },
+      {
+        "pool": 40,
+        "asi_ef": 80,
+        "asi_recall": 0.983598,
+        "asi_qps": 12600.7,
+        "nodeann_N": 20,
+        "nodeann_recall": 0.989749,
+        "nodeann_qps": 14492.4,
+        "qps_ratio": 0.87,
+        "within_2pct": false
+      },
+      {
+        "pool": 80,
+        "asi_ef": 40,
+        "asi_recall": 0.980523,
+        "asi_qps": 15918.9,
+        "nodeann_N": 20,
+        "nodeann_recall": 0.990261,
+        "nodeann_qps": 15520.3,
+        "qps_ratio": 1.03,
+        "within_2pct": false
+      },
+      {
+        "pool": 80,
+        "asi_ef": 80,
+        "asi_recall": 0.985136,
+        "asi_qps": 11030.1,
+        "nodeann_N": 20,
+        "nodeann_recall": 0.990261,
+        "nodeann_qps": 15520.3,
+        "qps_ratio": 0.71,
+        "within_2pct": false
+      }
+    ],
+    "verdict": "Six tolerance-matched combinations give QPS ratios 0.71-1.10 (median 0.96); all within the 2% indifference band in neither direction being established as a real difference.",
+    "limits": [
+      "Rerank only reorders already-retrieved candidates; 74 GT objects were never scored at ef=10 and stay unreachable.",
+      "Single workload, single build seed, 20 passes per point (not the 100-pass main batch).",
+      "NodeANN rerank pool is capped by its per-attribute search width, so very large pools may be unreachable at small N."
+    ]
+  },
+  "post_rerank_changes": "Added optional --rerank-fp32/--rerank-pool to both benchmarks after the entry-control batch; default path verified bit-identical on 200 representative queries (20 shared trace fields), recall 0.811379, zero rerank calls.",
+  "rerank_evidence": {
+    "rerank-asi-sweep.json": "39c518ebc89bc00d7b971d53299a56e299599a4c37347ef8137f7f0db895cfd7",
+    "rerank-symmetric.json": "9ec701d52b572e14e07f42d8a10b7de409f54983e1ce5921f0529133dc38163a",
+    "rerank-nodeann-sweep.json": "22fba37da9de402168e9d9c6a77bedfb48ddff2bcab4d49d73fe106bcf03c13e"
+  }
 }

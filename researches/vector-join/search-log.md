@@ -283,3 +283,15 @@ BigFANN、EMA、PathFinder、Veda仅核相关机制章节，完整书目/正式�
 ### HNSW 高层入口控制的实现复核
 
 沿用上述 B 类单查询 filtered ANN 分类，本轮只复核 [HNSW 原始摘要](https://arxiv.org/abs/1603.09320) 与钉住源码 `hnswalg.h:1423–1451`，不新增文献覆盖或新颖性声明。已运行同原生局部图的高层入口控制，有限预算下不推导召回保证；原始图对齐、独立重放与 2% 实用容差结果见 [approaches.md §12.7–12.8](../nested-attr-vector-search/approaches.md#127-高层入口控制组预先固定的设计)。没有新增未经完整归档的论文条目。
+
+## 2026-11-07 UTC：网关机制定向前序核查
+
+检查本地 `papers/papers.jsonl`、`relations.jsonl` 与已存全文后，定向检索 query-guided graph construction、coverage/submodular edge selection、gateway/bridge/cross-group edge、diversity-aware beam search、adaptive entry point 与 query-log-driven repair。问题仍是 B 类单查询 filtered ANN，不是 vector join。
+
+- RobustStitch（OOD-DiskANN，arXiv:2211.12850v2）：样本查询共邻居互连，状态预印本（未找到正式卷期）。
+- NGFix（PACMMOD 3(6) Article 318，DOI 10.1145/3769783）：历史查询 MST 式选边 + 可达性定理，状态已发表。
+- RoarGraph（PVLDB 17(11)，DOI 10.14778/3681954.3681959）：查询分布投影选边，状态已发表。
+- RACORN-1（arXiv 2607.00768v1）：filter-failing bridge 绕行 + 径向多样性采样，状态预印本。
+- ACORN（DOI 10.1145/3654923）、PathSeer（DOI 10.1145/3802098）：两跳扩展与逐次策略切换，状态已发表。
+
+判定：“按搜索路径覆盖选网关”与“绕行网关调度”均属已有工作变体，不满足立项门槛，本轮不实现。限制：dblp 工具持续报错，发表状态靠 Crossref/arXiv/官方页面交叉核对；未做前向引用爬取，未覆盖 SIGIR/CIKM/WSDM proceedings 全文；UNG 原文全文缺失。因此是“本轮未找到独立新意”，不是“无人做过”。证据表由独立检索代理给出，本文件只记结论与标识符，不新增未经完整归档的论文条目。

@@ -58,6 +58,7 @@ int main(int argc, char** argv) {
     std::string idxdir = "";
     std::string origfile = "orig.bin";
     std::string trace_file, graph_audit_file;
+    bool rerank_fp32 = false;
     int pool = 0;
     int k = 50, ef = 50, queries = 200, M = 16, efC = 200, perN = 50;
     for (int i = 1; i < argc; ++i) {
@@ -80,6 +81,7 @@ int main(int argc, char** argv) {
         else if (a == "--pool") pool = std::stoi(nx());
         else if (a == "--trace-file") trace_file = nx();
         else if (a == "--graph-audit-file") graph_audit_file = nx();
+        else if (a == "--rerank-fp32") rerank_fp32 = true;
     }
     FILE* trace = trace_file.empty() ? nullptr : std::fopen(trace_file.c_str(), "w");
     if (!trace_file.empty() && !trace) { std::perror(trace_file.c_str()); return 2; }
@@ -100,7 +102,7 @@ int main(int argc, char** argv) {
     }
     const int n = int(vec.size() / DIM);
     std::vector<float> orig;
-    bool need_orig = (mode == "rerank");
+    bool need_orig = (mode == "rerank") || rerank_fp32;
     if (need_orig) {
         FILE* f = std::fopen((dir + "/" + origfile).c_str(), "rb");
         if (!f) { std::fprintf(stderr, "missing %s\n", origfile.c_str()); return 2; }
@@ -213,7 +215,7 @@ int main(int argc, char** argv) {
     std::vector<int> concept_of(n);
     for (int i = 0; i < n; ++i) concept_of[i] = owner[i];
 
-    unsigned long long hit = 0, denom = 0, graph_searches = 0;
+    unsigned long long hit = 0, denom = 0, graph_searches = 0, rerank_calls = 0;
     std::vector<double> lat;
     double best_pass_ms = 1e18, sum_pass_ms = 0;
     for (int rep = 0; rep < repeat; ++rep) {
@@ -251,6 +253,7 @@ int main(int argc, char** argv) {
             }
             best = ex;
         } else if (mode == "nodeann") {
+            std::vector<std::pair<float, int>> cand;
             for (int c : scope) {
                 auto g = graphs.find(c);
                 if (g == graphs.end()) continue;
@@ -259,9 +262,27 @@ int main(int argc, char** argv) {
                 while (!r.empty()) {
                     auto pr = r.top(); r.pop();
                     int id = members[c][pr.second];
+                    if (rerank_fp32) { cand.push_back({pr.first, id}); continue; }
                     if (int(best.size()) < k) best.push({pr.first, id});
                     else if (pr.first < best.top().first) { best.pop(); best.push({pr.first, id}); }
                 }
+            }
+            // 同一候选流先按重构距离保留 pool 条，再用原始 FP32 重排；距离计入查询成本。
+            if (rerank_fp32) {
+                const size_t pool_size = size_t(pool > 0 ? pool : perN);
+                std::priority_queue<std::pair<float, int>> keep_pool;
+                for (auto& pr : cand) {
+                    if (keep_pool.size() < pool_size) keep_pool.push(pr);
+                    else if (pr.first < keep_pool.top().first) { keep_pool.pop(); keep_pool.push(pr); }
+                }
+                const float* q = qv.data() + size_t(qi) * DIM;
+                while (!keep_pool.empty()) {
+                    auto pr = keep_pool.top(); keep_pool.pop();
+                    const float s = space.dist(orig.data() + size_t(pr.second) * DIM, q);
+                    if (int(best.size()) < k) best.push({s, pr.second});
+                    else if (s < best.top().first) { best.pop(); best.push({s, pr.second}); }
+                }
+                rerank_calls += pool_size < cand.size() ? pool_size : cand.size();
             }
         } else {   // exact scan over the eligible set, on the given vector file
             for (int c : scope) {
@@ -309,6 +330,8 @@ int main(int argc, char** argv) {
     double qps_avg = double(nq) * 1000.0 / (sum_pass_ms / repeat);
     std::printf("  \"repeat\": %d, \"qps_best_pass\": %.1f, \"qps_avg_pass\": %.1f, \"per_query_us\": %.2f,\n",
                 repeat, qps_best, qps_avg, sum_pass_ms / repeat / double(nq) * 1000.0);
+    std::printf("  \"rerank_fp32\": %d, \"rerank_calls_per_q\": %.1f,\n", int(rerank_fp32),
+                double(rerank_calls) / double(std::max(1, nq * repeat)));
     std::printf("  \"build_ms\": %.1f, \"graphs_reused\": %d, \"graph_dir\": \"%s\"\n}\n", build_ms, reused, idxdir.c_str());
     if (trace) std::fclose(trace);
     return 0;
