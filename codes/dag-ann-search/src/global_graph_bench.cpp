@@ -59,7 +59,7 @@ static void shrink_list(const float* base, const Vec& ids, uint32_t bl, Vec& lis
     list.swap(keep);
 }
 
-static void build_concept(const float* base, const Vec& ids, int M, int efC, int K, ConceptGraph& g) {
+static void build_concept(const float* base, const Vec& ids, int M, int efC, int K, int pdiv, ConceptGraph& g) {
     const int n = int(ids.size());
     g.members = ids;
     g.adj.assign(size_t(n), {});
@@ -117,7 +117,7 @@ static void build_concept(const float* base, const Vec& ids, int M, int efC, int
         }
         if (bid >= 0) { g.adj[size_t(i)].push_back(uint32_t(bid)); g.adj[size_t(bid)].push_back(uint32_t(i)); }
     }
-    const int K2 = std::min(K, n);
+    const int K2 = std::max(1, std::min({K, n, std::max(1, n / std::max(1, pdiv)) + 1}));
     g.reps.clear(); g.reps.push_back(0);
     std::vector<float> mind(size_t(n), INFINITY);
     for (int r = 1; r < K2; ++r) {
@@ -145,7 +145,8 @@ static bool readf(const std::string& p, std::vector<float>& v) {
 
 int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vec = "recon.bin";
-    int k = 50, M = 16, efC = 200, nq_max = 200, K = 8, repeat = 1;
+    int k = 50, M = 16, efC = 200, nq_max = 200, K = 8, repeat = 1, pdiv = 50, ef2 = 16;
+    bool skip_links = true;
     std::vector<int> efs{50};
     for (int i = 1; i < argc; ++i) {
         const std::string a = argv[i];
@@ -157,6 +158,9 @@ int main(int argc, char** argv) {
         else if (a == "--M") M = std::stoi(nx());
         else if (a == "--efC") efC = std::stoi(nx());
         else if (a == "--K") K = std::stoi(nx());
+        else if (a == "--p") pdiv = std::max(1, std::stoi(nx()));
+        else if (a == "--no-skip") skip_links = false;
+        else if (a == "--ef2") ef2 = std::max(1, std::stoi(nx()));
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--repeat") repeat = std::max(1, std::stoi(nx()));
         else if (a == "--efs") { efs.clear(); std::stringstream ss(nx()); std::string t;
@@ -182,12 +186,19 @@ int main(int argc, char** argv) {
       if (f) { if (std::fread(gt.data(), sizeof(int32_t), gt.size(), f) != gt.size()) {} std::fclose(f); } }
 
     // 概念全集与位图
+    std::vector<std::vector<int>> parents_of;
     std::vector<int> cids;
     std::unordered_map<int,int> cpos;
     auto addc = [&](int c) { if (cpos.emplace(c, int(cids.size())).second) cids.push_back(c); };
     for (auto& kv : children) { addc(kv.first); for (int ch : kv.second) addc(ch); }
     for (int o : owner) addc(o);
     const int C = int(cids.size());
+    parents_of.assign(size_t(C), std::vector<int>{});
+    for (auto& kv : children) {
+        auto pit = cpos.find(kv.first);
+        if (pit == cpos.end()) continue;
+        for (int ch : kv.second) { auto cit = cpos.find(ch); if (cit != cpos.end()) parents_of[size_t(cit->second)].push_back(pit->second); }
+    }
     std::vector<std::vector<uint64_t>> desc(size_t(C), std::vector<uint64_t>{});
     {
         const int words = (C + 63) / 64;
@@ -208,13 +219,34 @@ int main(int argc, char** argv) {
         for (int i = 0; i < C; ++i) dfs(i);
     }
 
+    // 概念深度（从根 BFS）
+    std::vector<int> cdepth(size_t(C), 0);
+    {
+        std::vector<int> indeg(size_t(C), 0);
+        for (auto& kv : parents_of) for (size_t i2 = 0; i2 < parents_of.size(); ++i2) {}
+        std::vector<int> q2;
+        for (int i2 = 0; i2 < C; ++i2) if (parents_of[size_t(i2)].empty()) q2.push_back(i2);
+        std::vector<char> vis(size_t(C), 0);
+        for (size_t h = 0; h < q2.size(); ++h) {
+            const int u = q2[h];
+            if (vis[size_t(u)]) continue;
+            vis[size_t(u)] = 1;
+            auto it = children.find(cids[size_t(u)]);
+            if (it == children.end()) continue;
+            for (int ch : it->second) {
+                auto ci2 = cpos.find(ch);
+                if (ci2 == cpos.end()) continue;
+                if (!vis[size_t(ci2->second)]) { cdepth[size_t(ci2->second)] = cdepth[size_t(u)] + 1; q2.push_back(ci2->second); }
+            }
+        }
+    }
     // 逐概念建图，然后拼成一张全局图
     std::vector<ConceptGraph> cg(size_t(C), ConceptGraph{});
     {
         std::vector<Vec> mem(size_t(C), Vec{});
         for (size_t i = 0; i < n; ++i) mem[size_t(cpos[owner[i]])].push_back(uint32_t(i));
         const auto t0 = std::chrono::steady_clock::now();
-        for (int i = 0; i < C; ++i) if (!mem[size_t(i)].empty()) build_concept(base.data(), mem[size_t(i)], M, efC, K, cg[size_t(i)]);
+        for (int i = 0; i < C; ++i) if (!mem[size_t(i)].empty()) build_concept(base.data(), mem[size_t(i)], M, efC, K, pdiv, cg[size_t(i)]);
         std::fprintf(stderr, "[build] %d concept graphs in %.1fs\n", C,
                      std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count());
     }
@@ -222,19 +254,23 @@ int main(int argc, char** argv) {
     std::vector<uint32_t> goff(size_t(C) + 1, 0), cbase(size_t(C), 0);
     std::vector<uint32_t> concept_of;   // 节点号 -> 概念稠密下标
     std::vector<uint32_t> obj_of;       // 节点号 -> 对象 id
+    std::vector<uint32_t> obj2node;     // 对象 id -> 节点号
     {
         size_t tot = 0;
         for (int i = 0; i < C; ++i) { cbase[size_t(i)] = uint32_t(tot); tot += cg[size_t(i)].members.size(); }
         goff[C] = uint32_t(tot);
         concept_of.assign(tot, 0);
         obj_of.assign(tot, 0);
+        obj2node.assign(n, 0);
         for (int i = 0; i < C; ++i)
             for (size_t j = 0; j < cg[size_t(i)].members.size(); ++j) {
                 concept_of[cbase[size_t(i)] + j] = uint32_t(i);
                 obj_of[cbase[size_t(i)] + j] = cg[size_t(i)].members[j];
+                obj2node[cg[size_t(i)].members[j]] = cbase[size_t(i)] + uint32_t(j);
             }
     }
     std::vector<Vec> gadj(size_t(n), Vec{});
+    std::vector<Vec> gbridge(size_t(n), Vec{});   // 门户桥（独立表：始终可走）
     for (int i = 0; i < C; ++i) {
         const uint32_t off = cbase[size_t(i)];
         for (size_t j = 0; j < cg[size_t(i)].adj.size(); ++j)
@@ -254,17 +290,48 @@ int main(int argc, char** argv) {
             if (cg[size_t(ci)].members.empty()) continue;
             const uint32_t pentry = cbase[size_t(pi)] + cg[size_t(pi)].entry;
             const uint32_t centry = cbase[size_t(ci)] + cg[size_t(ci)].entry;
-            // 父侧锚点：距子入口最近的代表点
-            const float* ke = base.data() + size_t(cg[size_t(ci)].members[cg[size_t(ci)].entry]) * DIM;
-            uint32_t anchor = pentry; float bd = INFINITY;
-            for (uint32_t r : cg[size_t(pi)].reps) {
-                const uint32_t gid = cbase[size_t(pi)] + r;
-                const float d = dist2(ke, base.data() + size_t(cg[size_t(pi)].members[r]) * DIM);
-                if (d < bd) { bd = d; anchor = gid; }
+            // 门户桥：父侧 K 个代表点 ↔ 子侧 K 个代表点（全连接，K=8 → 每对 8x8）
+            // 理由：只连"最近的一个锚点"会导致搜索深入子图后找不到桥，无法继续下潜。
+            for (uint32_t rp : cg[size_t(pi)].reps) {
+                const uint32_t gp = cbase[size_t(pi)] + rp;
+                for (uint32_t rc : cg[size_t(ci)].reps) {
+                    const uint32_t gc = cbase[size_t(ci)] + rc;
+                    gbridge[gp].push_back(gc);   // 单向：只允许父 → 子
+                }
             }
-            gadj[anchor].push_back(centry);
-            gadj[centry].push_back(anchor);
         }
+    }
+    // 跳转边（skip links）：从祖先代表点直接连到"非直接后代"的入口，避免逐层线性下潜
+    if (skip_links) {
+        long nskip = 0;
+        for (int i = 0; i < C; ++i) {
+            if (cg[size_t(i)].members.empty()) continue;
+            for (int anc : parents_of[size_t(i)]) {   // 只看两层以上的祖先
+                (void)anc;
+            }
+            // 沿祖先链向上走 2 跳及以上
+            std::unordered_set<int> seen_anc;
+            std::vector<int> frontier = parents_of[size_t(i)];
+            for (int lvl = 0; lvl < 3 && !frontier.empty(); ++lvl) {
+                std::vector<int> nxt;
+                for (int a : frontier) {
+                    if (!seen_anc.insert(a).second) continue;
+                    if (lvl == 0) {   // 距离 1 的父：已有直接门户桥，跳过
+                        for (int pp : parents_of[size_t(a)]) nxt.push_back(pp);
+                        continue;
+                    }
+                    if (cg[size_t(a)].members.empty()) { for (int pp : parents_of[size_t(a)]) nxt.push_back(pp); continue; }
+                    const uint32_t target = cbase[size_t(i)] + cg[size_t(i)].entry;
+                    for (uint32_t r : cg[size_t(a)].reps) {
+                        gbridge[cbase[size_t(a)] + r].push_back(target);   // 单向：祖先 → 后代
+                        ++nskip;
+                    }
+                    for (int pp : parents_of[size_t(a)]) nxt.push_back(pp);
+                }
+                frontier.swap(nxt);
+            }
+        }
+        std::fprintf(stderr, "[skip] %ld skip links\n", nskip);
     }
     // 扁平化
     std::vector<uint32_t> adj_off(size_t(n) + 1, 0), adj_dat;
@@ -277,14 +344,33 @@ int main(int argc, char** argv) {
         for (size_t i = 0; i < n; ++i) for (uint32_t x : gadj[i]) adj_dat[w++] = x;
         std::vector<Vec>().swap(gadj);
     }
-    std::fprintf(stderr, "[global] %zu nodes, %zu edges (%.1f/node)\n", n, adj_dat.size(),
-                 double(adj_dat.size()) / double(n));
+    std::vector<uint32_t> br_off(size_t(n) + 1, 0), br_dat;
+    {
+        size_t tot = 0;
+        for (size_t i = 0; i < n; ++i) { br_off[i] = uint32_t(tot); tot += gbridge[i].size(); }
+        br_off[n] = uint32_t(tot);
+        br_dat.resize(tot);
+        size_t w = 0;
+        for (size_t i = 0; i < n; ++i) for (uint32_t x : gbridge[i]) br_dat[w++] = x;
+    }
+    std::fprintf(stderr, "[global] %zu nodes, %zu intra edges (%.1f/node), %zu portal edges\n", n, adj_dat.size(),
+                 double(adj_dat.size()) / double(n), br_dat.size());
 
+    std::vector<char> is_rep(size_t(n), 0);
+    {
+        size_t nrep_tot = 0;
+        for (int i = 0; i < C; ++i)
+            for (uint32_t r : cg[size_t(i)].reps) { is_rep[cbase[size_t(i)] + r] = 1; ++nrep_tot; }
+        std::fprintf(stderr, "[reps] %zu rep nodes (p=%d)\n", nrep_tot, pdiv);
+    }
     std::vector<uint32_t> vstamp(size_t(n), 0);
+    std::vector<uint32_t> cstamp(size_t(C), 0);
+    uint32_t ctoken = 0;
     uint32_t token = 0;
     std::vector<uint64_t> bm((size_t(C) + 63) / 64, 0);
     for (int ef : efs) {
-        long hit = 0, denom = 0, dists = 0, elig_sum = 0, seeds_sum = 0;
+        long hit = 0, denom = 0, dists = 0, elig_sum = 0, seeds_sum = 0, res_sum = 0, res_full = 0;
+        long cov_elig = 0, cov_concepts = 0, entered_sum = 0, inD_sum = 0;
         const auto t1 = std::chrono::steady_clock::now();
         for (int round = 0; round < repeat; ++round)
         for (int qi = 0; qi < nq; ++qi) {
@@ -299,7 +385,7 @@ int main(int argc, char** argv) {
                 const uint32_t ci = concept_of[gi];
                 return ((bm[ci / 64] >> (ci % 64)) & 1ull) != 0;
             };
-            // 参与概念
+            // 参与概念（D）
             std::vector<int> inD;
             for (size_t w = 0; w < bm.size(); ++w) {
                 uint64_t x = bm[w];
@@ -308,67 +394,160 @@ int main(int argc, char** argv) {
                     if (ci < C && !cg[size_t(ci)].members.empty()) inD.push_back(ci); }
             }
             if (inD.empty()) continue;
+            inD_sum += long(inD.size());
             for (int ci : inD) elig_sum += long(cg[size_t(ci)].members.size());
             const float* q = queries.data() + size_t(qi) * DIM;
-            ++token;
-            std::priority_queue<std::pair<float,uint32_t>> best;   // 全局唯一结果堆，容量 ef
-            std::priority_queue<std::pair<float,uint32_t>> fr;     // 全局唯一队列
-            auto push = [&](uint32_t gi) {
+            ++token; ++ctoken;
+            long entered = 0;
+            // 每概念结果堆：容量 ef_c = max(1, round(ef * n_c / |E|))，按子树规模比例分配
+            std::vector<std::vector<std::pair<float,uint32_t>>> pc(size_t(C), std::vector<std::pair<float,uint32_t>>{});
+            std::vector<int> cap(size_t(C), 0);
+            {
+                long total_el = 0;
+                for (int ci : inD) total_el += long(cg[size_t(ci)].members.size());
+                for (int ci : inD) {
+                    const long nc = long(cg[size_t(ci)].members.size());
+                    cap[size_t(ci)] = int(std::max<long>(1, (long(ef) * nc) / std::max<long>(1, total_el)));
+                    pc[size_t(ci)].reserve(size_t(cap[size_t(ci)]) + 1);
+                }
+            }
+            // q1 预算 ef 的动态分配：
+            //   初始额度 = max(k, ef/|D|)/2（保底，每个属性都有机会进入）
+            //   剩余额度 = ef - Σ初始额度，按“该属性已产出结果数”最少者优先补发
+            //   每当某属性结果数达到当前额度，就从余量里再拨一份给它
+            const int dfull = std::max<int>(1, int(inD.size()));
+            const int base_cap = std::max(k, ef / dfull) / 2;
+            std::vector<int> acap(size_t(C), 0);
+            long granted = 0;
+            for (int ci : inD) { acap[size_t(ci)] = base_cap; granted += base_cap; }
+            long pool = std::max<long>(0, long(ef) - granted);
+            static std::vector<std::vector<std::pair<float,uint32_t>>> akeep;
+            static std::vector<int> touched_a;
+            if (akeep.size() < size_t(C)) akeep.resize(size_t(C));
+            touched_a.clear();
+            std::priority_queue<std::pair<float,uint32_t>> cand;
+            std::priority_queue<std::pair<float,uint32_t>> q2_keep, q2_cand;
+            std::priority_queue<std::pair<float,uint32_t>> best;
+            auto topup = [&](int ci) {
+                // 某属性达到当前额度：从余量里补发（按剩余额度大小给，最小 8）
+                if (pool <= 0) return;
+                const int add = int(std::min<long>(std::max<long>(8, pool / 4), pool));
+                acap[size_t(ci)] += add;
+                pool -= add;
+            };
+            auto offer = [&](uint32_t gi) {
                 if (vstamp[gi] == token) return;
                 vstamp[gi] = token;
-                const float d = dist2(q, base.data() + size_t(gi) * DIM);
+                const float d = dist2(q, base.data() + size_t(obj_of[gi]) * DIM);
                 ++dists;
-                fr.push({-d, gi});
-                // 结果堆只收**合格**对象（谓词跳过）；否则 ef 条名额会被不合格对象占满
-                if (eligible(gi)) {
-                    if (int(best.size()) < ef) best.push({d, gi});
-                    else if (d < best.top().first) { best.pop(); best.push({d, gi}); }
+                const int ci = int(concept_of[gi]);
+                bool accepted = false;
+                auto& h = akeep[size_t(ci)];
+                if (h.empty()) touched_a.push_back(ci);
+                if (int(h.size()) < acap[size_t(ci)]) { h.push_back({d, gi}); std::push_heap(h.begin(), h.end()); accepted = true; }
+                else if (d < h.front().first) { std::pop_heap(h.begin(), h.end()); h.back() = {d, gi}; std::push_heap(h.begin(), h.end()); accepted = true; }
+                if (is_rep[gi]) {
+                    if (int(q2_keep.size()) < ef2) { q2_keep.push({d, gi}); q2_cand.push({-d, gi}); accepted = true; }
+                    else if (d < q2_keep.top().first) { q2_keep.pop(); q2_keep.push({d, gi}); q2_cand.push({-d, gi}); accepted = true; }
                 }
+                if (!accepted) return;
+                // 达到额度 → 申请补发
+                if (int(h.size()) >= acap[size_t(ci)] && pool > 0) topup(ci);
+                cand.push({-d, gi});
+                if (cstamp[ci] != ctoken) { cstamp[ci] = ctoken; ++entered; }
+                if (int(best.size()) < ef) best.push({d, gi});
+                else if (d < best.top().first) { best.pop(); best.push({d, gi}); }
             };
-            // 种子：范围内每个概念"距查询最近的代表点"
-            for (int ci : inD) {
-                const ConceptGraph& g = cg[size_t(ci)];
-                uint32_t bi = g.entry; float bd = INFINITY;
-                for (uint32_t r : g.reps) {
-                    const uint32_t gi = cbase[size_t(ci)] + r;
-                    const float d = dist2(q, base.data() + size_t(g.members[r]) * DIM);
-                    ++dists;
-                    if (d < bd) { bd = d; bi = r; }
-                }
+            for (int c : qc[qi]) {
+                auto it = cpos.find(c);
+                if (it == cpos.end()) continue;
+                const int ci = it->second;
+                if (cg[size_t(ci)].members.empty()) continue;
                 ++seeds_sum;
-                push(cbase[size_t(ci)] + bi);
+                offer(cbase[size_t(ci)] + cg[size_t(ci)].entry);
             }
-            while (!fr.empty()) {
-                const auto tp = fr.top(); fr.pop();
-                const float dv = -tp.first;
-                // 终止：结果堆已有足够结果，且当前点比堆内最差还差 → 不可能再改进
-                if (!best.empty() && int(best.size()) >= std::min(k, ef) && dv > best.top().first) break;
-                const uint32_t gi = tp.second;
-                for (uint32_t j = adj_off[gi]; j < adj_off[gi + 1]; ++j) push(adj_dat[j]);
+            while (!cand.empty() || !q2_cand.empty()) {
+                const float d1 = cand.empty() ? INFINITY : -cand.top().first;
+                const float d2 = q2_cand.empty() ? INFINITY : -q2_cand.top().first;
+                uint32_t gi;
+                if (d1 <= d2) { gi = cand.top().second; cand.pop(); }
+                else { gi = q2_cand.top().second; q2_cand.pop(); }
+                for (uint32_t j = adj_off[gi]; j < adj_off[gi + 1]; ++j) offer(adj_dat[j]);
+                for (uint32_t j = br_off[gi]; j < br_off[gi + 1]; ++j) offer(br_dat[j]);
             }
             // 结果只取合格对象
-            std::vector<std::pair<float,int>> res;
-            auto bk = best;
-            while (!bk.empty()) { auto pr = bk.top(); bk.pop(); res.push_back({pr.first, int(obj_of[pr.second])}); }
-            const size_t keep = std::min<size_t>(k, res.size());
-            std::partial_sort(res.begin(), res.begin() + keep, res.end());
+            std::vector<std::pair<float,int>> out;
+            { auto bk = best; while (!bk.empty()) { auto pr = bk.top(); bk.pop(); out.push_back({pr.first, int(obj_of[pr.second])}); } }
+            {   // 覆盖统计：本次查询访问到的不同合格概念数
+                std::unordered_set<int> seen;
+                for (uint32_t gi2 = 0; gi2 < 0; ++gi2) {}
+                (void)seen;
+            }
+            cov_concepts += 0;
+            entered_sum += entered;
+            if (qi < 3 && round == 0) {
+                int gt_visited = 0, gt_in_best = 0, gt_in_top = 0, gt_n = 0;
+                std::unordered_set<uint32_t> bset;
+                for (auto& b : pc) for (auto& pr : b) bset.insert(pr.second);
+                std::unordered_set<int> topset;
+                { auto tmp = out; const size_t kk = std::min<size_t>(k, tmp.size());
+                  std::partial_sort(tmp.begin(), tmp.begin() + kk, tmp.end());
+                  for (size_t i2 = 0; i2 < kk; ++i2) topset.insert(tmp[i2].second); }
+                for (int j = 0; j < k; ++j) {
+                    const int g2 = gt[size_t(qi) * k + j];
+                    if (g2 < 0) continue;
+                    ++gt_n;
+                    const uint32_t node = obj2node[g2];
+                    if (vstamp[node] == token) ++gt_visited;
+                    if (bset.count(node)) ++gt_in_best;
+                    if (topset.count(g2)) ++gt_in_top;
+                }
+                if (qi == 0) {
+                    for (int j = 0; j < 3; ++j) {
+                        const int g2 = gt[size_t(qi) * k + j];
+                        const uint32_t node = obj2node[g2];
+                        const float dnode = dist2(q, base.data() + size_t(node) * DIM);
+                        const float dobj = dist2(q, base.data() + size_t(g2) * DIM);
+                        (void)dnode; (void)dobj; (void)node;
+                    }
+                }
+                {
+                    // 真值点的距离 vs 我们返回的 top-50 的距离边界
+                    float gt_max = -1, top_max = -1;
+                    for (int j = 0; j < k; ++j) { const int g2 = gt[size_t(qi) * k + j]; if (g2 < 0) continue;
+                        gt_max = std::max(gt_max, dist2(q, base.data() + size_t(g2) * DIM)); }
+                    if (topset.size() == size_t(k)) {
+                        auto tmp = out; std::partial_sort(tmp.begin(), tmp.begin() + k, tmp.end());
+                        top_max = tmp[k - 1].first;
+                    }
+                    std::fprintf(stderr, "[q%d] gt=%d visited=%d in_best=%d in_top=%d | dists=%ld D=%zu\n",
+                                 qi, gt_n, gt_visited, gt_in_best, gt_in_top, dists, inD.size());
+                }
+            }
+            res_sum += long(out.size());
+            if (int(out.size()) >= k) ++res_full;
+            const size_t keep = std::min<size_t>(k, out.size());
+            std::partial_sort(out.begin(), out.begin() + keep, out.end());
             std::unordered_set<int> topk;
-            for (size_t i = 0; i < keep; ++i) topk.insert(res[i].second);
+            for (size_t i = 0; i < keep; ++i) topk.insert(out[i].second);
             int e = 0, h = 0;
             for (int j = 0; j < k; ++j) { const int g2 = gt[size_t(qi) * k + j]; if (g2 >= 0) { ++e; if (topk.count(g2)) ++h; } }
             hit += h; denom += std::min(k, e);
         }
         const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
-        std::printf("{\"mode\":\"global_single_queue\",\"ef\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"queries\":%d,\"repeat\":%d,"
+        std::printf("{\"mode\":\"global_single_queue\",\"ef\":%d,\"ef2\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"queries\":%d,\"repeat\":%d,"
                     "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.0f,\"eligible_per_q\":%.1f,"
-                    "\"dist_over_eligible\":%.3f,\"seeds_per_q\":%.2f}\n",
-                    ef, k, M, efC, nq, repeat,
+                    "\"dist_over_eligible\":%.3f,\"seeds_per_q\":%.2f,\"results_per_q\":%.1f,\"full_result_q\":%ld,\"eligible_visited_per_q\":%.1f,\"concepts_entered\":%.2f,\"concepts_in_D\":%.2f}\n",
+                    ef, ef2, k, M, efC, nq, repeat,
                     double(hit) / double(std::max<long>(denom, 1)),
                     double(nq) * repeat / s,
                     double(dists) / (double(nq) * repeat),
                     double(elig_sum) / (double(nq) * repeat),
                     double(dists) / std::max<double>(1.0, double(elig_sum)),
-                    double(seeds_sum) / (double(nq) * repeat));
+                    double(seeds_sum) / (double(nq) * repeat),
+                    double(res_sum) / (double(nq) * repeat), res_full,
+                    double(cov_elig) / (double(nq) * repeat),
+                    double(entered_sum) / (double(nq) * repeat), double(inD_sum) / (double(nq) * repeat));
         std::fflush(stdout);
     }
     return 0;
