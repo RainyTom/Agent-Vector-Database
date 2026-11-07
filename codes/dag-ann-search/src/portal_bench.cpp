@@ -29,6 +29,8 @@ struct LocalGraph {
     Vec reps;
     Vec mst_edges;      // 扁平：(u,v) 对
     mutable std::vector<uint32_t> vstamp;   // 紧凑 visited（按局部 id）
+    std::vector<uint32_t> adj_off;          // n+1 偏移
+    std::vector<uint32_t> adj_dat;          // 连续邻接
     uint32_t entry = 0;
 };
 
@@ -202,6 +204,18 @@ static void build_local(const float* base, const Vec& ids, int M, int efC, int n
     }
 }
 
+static void flatten_adj(LocalGraph& g) {
+    const size_t n = g.adj.size();
+    g.adj_off.assign(n + 1, 0);
+    size_t tot = 0;
+    for (size_t i = 0; i < n; ++i) { g.adj_off[i] = uint32_t(tot); tot += g.adj[i].size(); }
+    g.adj_off[n] = uint32_t(tot);
+    g.adj_dat.resize(tot);
+    size_t k2 = 0;
+    for (size_t i = 0; i < n; ++i) for (uint32_t w : g.adj[i]) g.adj_dat[k2++] = w;
+    std::vector<Vec>().swap(g.adj);   // 释放原结构，避免两套并存
+}
+
 int main(int argc, char** argv) {
     std::string dir = "work/dag-ann", work = "work/dag-scope/workload-run1", vec = "recon.bin";
     int k = 50, M = 16, efC = 200, nq_max = 200, nrep = 8, per_concept_N = 50;
@@ -253,6 +267,7 @@ int main(int argc, char** argv) {
         std::fprintf(stderr, "[build] %zu graphs in %.1fs (M=%d efC=%d reps=%d shrink+MST)\n", G.size(),
                      std::chrono::duration<double>(std::chrono::steady_clock::now() - t0).count(), M, efC, nrep);
     }
+    for (auto& kv : G) flatten_adj(kv.second);
     // 稠密索引：查询热路径不再对 unordered_map 做哈希
     std::unordered_map<int, int> cpos;
     std::vector<LocalGraph*> Gp;
@@ -284,6 +299,9 @@ int main(int argc, char** argv) {
     std::vector<uint32_t> stamp(size_t(n), 0);
     uint32_t token = 0;
     std::vector<std::pair<float, int>> merged;
+    // 每查询独立的入口缓存（绝不复用上一查询的结果）
+    std::vector<uint32_t> ec_stamp(Gp.size(), 0), ec_li(Gp.size(), 0);
+    uint32_t ec_token = 0;
 
     for (const std::string& mode : modes) {
         for (int ef : efs) {
@@ -301,14 +319,20 @@ int main(int argc, char** argv) {
                 if (inD.empty()) continue;
                 const float* q = queries.data() + size_t(qi) * DIM;
 
+                ++ec_token;
                 auto best_entry = [&](int c) -> uint32_t {
-                    const LocalGraph& g = G[c];
-                    uint32_t bi = g.entry; float bd = INFINITY;
+                    const int ci = cpos[c];
+                    if (ec_stamp[size_t(ci)] == ec_token) return ec_li[size_t(ci)];
+                    const LocalGraph& g = *Gp[size_t(ci)];
+                    uint32_t bi = g.entry; float bd = l2(q, base.data() + size_t(g.members[g.entry]) * DIM);
+                    ++dists;
                     for (uint32_t r : g.reps) {
                         const float d = l2(q, base.data() + size_t(g.members[r]) * DIM);
                         ++dists;
                         if (d < bd) { bd = d; bi = r; }
                     }
+                    ec_stamp[size_t(ci)] = ec_token;
+                    ec_li[size_t(ci)] = bi;
                     return bi;
                 };
 
@@ -333,7 +357,7 @@ int main(int argc, char** argv) {
                             const auto tp = frontier.top(); frontier.pop();
                             const float dv = -tp.first;
                             if (int(best.size()) >= ef && dv > best.top().first) break;
-                            for (uint32_t w : g.adj[tp.second]) push(w);
+                            for (uint32_t kk = g.adj_off[tp.second]; kk < g.adj_off[tp.second + 1]; ++kk) push(g.adj_dat[kk]);
                         }
                         std::vector<std::pair<float, uint32_t>> local;
                         while (!best.empty()) { local.push_back(best.top()); best.pop(); }
@@ -372,13 +396,18 @@ int main(int argc, char** argv) {
                         std::push_heap(frontier.begin(), frontier.end());
                     };
                     auto best_entry_ci = [&](int ci) -> uint32_t {
+                        if (ec_stamp[size_t(ci)] == ec_token) return ec_li[size_t(ci)];
                         LocalGraph& g = *Gp[ci];
-                        uint32_t bi = g.entry; float bd = INFINITY;
+                        uint32_t bi = g.entry;
+                        float bd = l2(q, base.data() + size_t(g.members[g.entry]) * DIM);
+                        ++dists;
                         for (uint32_t r : g.reps) {
                             const float d = l2(q, base.data() + size_t(g.members[r]) * DIM);
                             ++dists;
                             if (d < bd) { bd = d; bi = r; }
                         }
+                        ec_stamp[size_t(ci)] = ec_token;
+                        ec_li[size_t(ci)] = bi;
                         return bi;
                     };
                     for (int c : inD) push(cpos[c], best_entry_ci(cpos[c]), /*force=*/true);
@@ -393,7 +422,7 @@ int main(int argc, char** argv) {
                         if (int(b.size()) >= ef_c && dv > b.front().first) {
                             if (!(overflow && !gworst.empty() && dv <= gworst.top())) continue;
                         }
-                        for (uint32_t w : g.adj[li]) push(ci, w);
+                        for (uint32_t kk = g.adj_off[li]; kk < g.adj_off[li + 1]; ++kk) push(ci, g.adj_dat[kk]);
                         if (li < g.portal.size()) {
                             for (uint32_t tgt : g.portal[li]) {
                                 if (!D.count(int(tgt))) continue;
