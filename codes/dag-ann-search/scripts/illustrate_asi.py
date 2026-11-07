@@ -18,11 +18,11 @@ import time
 
 ROOT = Path(__file__).resolve().parents[3]
 ROI = ROOT / 'researches/nested-attr-vector-search'
-OUT = ROI / '2026-11-07-exps'
+OUT = ROI / '2026-11-08-exps'
 DATA = OUT / 'data'
 FIG = OUT / 'figures'
 WORK = ROOT / 'work/asi-evidence'
-K = 50
+K = 10
 
 
 def save(path, obj):
@@ -47,18 +47,11 @@ def run(command):
 def measure(args):
     DATA.mkdir(parents=True, exist_ok=True)
     WORK.mkdir(parents=True, exist_ok=True)
-    # Parameter grids are positioned relative to k: the interesting region is the
-    # output reserve around k, not an absolute ef grid.
-    if K == 10:
-        ef_values = [5,10,15,20,30,40,60,100,200,400]
-        N_values = [4,6,8,10,15,20,30,40,60]
-        sweep_full = [20,40,80]
-        sweep_coupled = [2,4,6,8,10,15,20,30]
-    else:
-        ef_values = [20,30,40,50,80,100,200,400,800]
-        N_values = [10,15,20,25,30,40,50,60,80,120]
-        sweep_full = [100,200]
-        sweep_coupled = [5,10,15,20,25,32,40]
+    # Search and output-budget grids for the retained top-10 experiment.
+    ef_values = [5,10,15,20,30,40,60,100,200,400]
+    N_values = [4,6,8,10,15,20,30,40,60]
+    sweep_full = [20,40,80]
+    sweep_coupled = [2,4,6,8,10,15,20,30]
     base = ['taskset','-c','2','./work/attr_skeleton', '--dir','work/dag-ann',
             '--work','work/dag-scope/workload-run1','--vec','recon.bin',
             '--k',str(K),'--M','16','--efC','200','--queries','200', '--repeat','3']
@@ -79,7 +72,7 @@ def measure(args):
                 rec = dict(method=method, outer=outer, suite='pareto', **run(cmd))
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
                 print(method, outer, [(r['recall'],r.get('qps',r.get('qps_avg_pass'))) for r in rec['result']],flush=True)
-        ab_ef = 40 if K == 10 else 200
+        ab_ef = 40
         for kind_main, values in [('ef2',[8,16,32,64]), ('p',[10,25,50,100])]:
             for value in values:
                 cmd = base + ['--p',str(value if kind_main=='p' else 50),
@@ -186,35 +179,6 @@ def attribution(args):
     print(json.dumps(summaries,indent=2))
 
 
-def nodeann_sweep(args):
-    """Sweep the knob NodeANN actually has: HNSW search width ef.
-
-    The earlier grid varied N (per-attribute output budget) while ef stayed at 50,
-    so distance calls were constant and recall saturated at the PQ representation
-    ceiling. Here ef varies with N fixed at k (full output) and with ef = N < k
-    (coupled, capacity-limited).
-    """
-    DATA.mkdir(parents=True, exist_ok=True)
-    nb = ['taskset','-c','2','./work/nodeann_measured','--dir','work/dag-ann',
-          '--work','work/dag-scope/workload-run1','--vec','recon.bin','--mode','nodeann',
-          '--k','50','--M','16','--efC','200','--queries','200','--repeat','3',
-          '--index-dir','work/dag-ann/idx','--nosimd']
-    jobs = [(ef, 50, 'full_output') for ef in (50, 100, 200)]
-    jobs += [(x, x, 'coupled') for x in (5, 10, 15, 20, 25, 32, 40)]
-    with (DATA/'nodeann-ef-sweep.jsonl').open('w') as f:
-        for outer in range(args.runs):
-            order = list(jobs)
-            if outer % 2:
-                order.reverse()
-            for ef, perN, kind in order:
-                cmd = nb + ['--ef', str(ef), '--N', str(perN)]
-                rec = dict(method='NodeANN', outer=outer, suite='ef_sweep',
-                           kind=kind, ef=ef, perN=perN, **run(cmd))
-                f.write(json.dumps(rec) + '\n'); f.flush()
-                print(kind, ef, perN, [(r['recall'], r['qps_avg_pass'], r['dist_calls_per_q'])
-                                       for r in rec['result']], flush=True)
-
-
 def summaries():
     groups=collections.defaultdict(list)
     ablations=collections.defaultdict(list)
@@ -288,7 +252,7 @@ def render(args):
     ax.grid(axis='y',color='.90',lw=.6);ax.legend(frameon=False,loc='upper right')
     fig.tight_layout();export(fig,'pareto')
     # Dashboard: three ASI operating points plus NodeANN and exact scan.
-    dash_efs = [10,40,200] if K==10 else [50,200,800]
+    dash_efs = [10,40,200]
     selected=[next(r for r in rows if r['method']=='ASI' and r['param']==ef) for ef in dash_efs]
     selected += [max((r for r in full if r['method']=='NodeANN'),key=lambda r:r['recall']),pre_ref]
     fig,axes=plt.subplots(1,3,figsize=(7.1,2.65),sharey=True,gridspec_kw={'wspace':.42})
@@ -336,9 +300,9 @@ def render(args):
 
 if __name__=='__main__':
     ap=argparse.ArgumentParser(description=__doc__)
-    ap.add_argument('action',choices=['measure','attribute','render','nodeann-sweep'])
+    ap.add_argument('action',choices=['measure','attribute','render'])
     ap.add_argument('--runs',type=int,default=3)
-    ap.add_argument('--k',type=int,default=10)
+    ap.add_argument('--k',type=int,choices=[10],default=K)
     ap.add_argument('--out',default='2026-11-08-exps',help='experiment directory under researches/nested-attr-vector-search')
     ap.add_argument('--trace',default=None)
     args=ap.parse_args()
@@ -346,6 +310,5 @@ if __name__=='__main__':
     OUT = ROI / args.out
     DATA = OUT / 'data'
     FIG = OUT / 'figures'
-    args.trace = args.trace or str(WORK/'trace.jsonl')
-    {'measure':measure,'attribute':attribution,'render':render,
-     'nodeann-sweep':nodeann_sweep}[args.action](args)
+    args.trace = args.trace or str(WORK/'trace-k10-ef-10-40-200.jsonl')
+    {'measure':measure,'attribute':attribution,'render':render}[args.action](args)
