@@ -75,7 +75,7 @@ def measure(args):
     base = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/attr_skeleton', '--dir','datasets/ccs-sift-dag',
             '--work','datasets/ccs-sift-dag','--vec','recon.bin',
             '--k',str(K),'--M','16','--efC','200','--queries','200', '--repeat','3']
-    nb = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
+    nb = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
           '--work','datasets/ccs-sift-dag','--vec','recon.bin', '--mode','nodeann',
           '--k',str(K),'--M','16','--efC','200','--ef',str(K),'--queries','200','--repeat','3',
           '--index-dir','datasets/ccs-sift-dag/idx','--nosimd']
@@ -115,7 +115,7 @@ def measure(args):
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
                 print(kind_n, ef, perN, [(r['recall'], r['qps_avg_pass'], r['dist_calls_per_q'])
                                          for r in rec['result']], flush=True)
-        pf = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
+        pf = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
               '--work','datasets/ccs-sift-dag','--vec','recon.bin','--mode','exact',
               '--k',str(K),'--M','16','--efC','200','--ef',str(K),'--queries','200',
               '--repeat','3','--nosimd']
@@ -125,11 +125,12 @@ def measure(args):
                 pf_out.write(json.dumps(rec)+'\n'); pf_out.flush()
                 print('Pre-filter', outer, rec['result'][0]['qps_avg_pass'], flush=True)
     paths = ['codes/NestedAttrVectorRetrieval/src/attr_skeleton_bench.cpp',
-             'codes/NestedAttrVectorRetrieval/src/nodeann_bench.cpp',
-             'codes/NestedAttrVectorRetrieval/src/raw_l2_space.h',
-             'codes/NestedAttrVectorRetrieval/third_party/hnswlib/hnswalg.h',
-             'codes/NestedAttrVectorRetrieval/third_party/hnswlib/space_l2.h',
-             'codes/NestedAttrVectorRetrieval/build/attr_skeleton','codes/NestedAttrVectorRetrieval/build/nodeann_measured','datasets/ccs-sift-dag/orig.bin',
+             'codes/NodeANN/src/nodeann_bench.cpp',
+             'codes/shared/raw_l2_space.h', 'codes/shared/native_graph_audit.h',
+             'codes/third_party/hnswlib/hnswalg.h',
+             'codes/third_party/hnswlib/space_l2.h',
+             'codes/NestedAttrVectorRetrieval/build/attr_skeleton',
+             'codes/NodeANN/build/nodeann_measured','datasets/ccs-sift-dag/orig.bin',
              'datasets/ccs-sift-dag/recon.bin','datasets/ccs-sift-dag/queries.bin',f'datasets/ccs-sift-dag/gt_{K}.txt',
              'datasets/ccs-sift-dag/objects.txt','datasets/ccs-sift-dag/edges.tsv',
              'datasets/ccs-sift-dag/queries.tsv']
@@ -159,7 +160,7 @@ def measure_entry(args):
             '--work','datasets/ccs-sift-dag','--vec','recon.bin','--k',str(K),
             '--M','16','--efC','200','--queries','200','--repeat','100',
             '--p','50','--ef2','16','--efs','5,10,20,40,100,200,400']
-    node = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
+    node = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
             '--work','datasets/ccs-sift-dag','--vec','recon.bin','--k',str(K),
             '--mode','nodeann','--M','16','--efC','200','--queries','200',
             '--repeat','100','--nosimd','--index-dir',str(index)]

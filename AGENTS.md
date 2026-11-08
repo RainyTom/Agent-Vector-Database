@@ -26,18 +26,41 @@
 - `papers/papers.jsonl`：结构化论文记录，字段约定见同目录 README。
 - `papers/relations.jsonl`：有方向、有证据的引用、比较、方法继承等边；作者关系与研究者推断分开。
 - `papers/changelog.md`：新增、修订、去重和分类变化。
-- `researches/nested-attr-vector-search/literature-search-log.md`：检索词、来源、覆盖限制、未完成候选与补查项。
-- `researches/nested-attr-vector-search/approaches.md`：研究假设、方法边界、新颖性排查与最小实验。
+- 检索结论写入 `papers/papers.jsonl`、`papers/relations.jsonl` 与 `papers/changelog.md`，不另建检索日志文件。
+- 研究假设与方法边界写入 `researches/nested-attr-vector-search/approaches.md` 与 `problem_def.md`。
 - PDF/Markdown/图片沿用已有目录，不为标题更新重命名目录；旧的元数据快照不覆盖成无日期的新快照。
 
 每条论文至少包含书目信息/版本/链接、标签与等级、输入输出、join 类型/度量/假设、方法/组件、理论/复杂度/误差、实验/基线/指标/结果、局限、关系、项目启发与证据。论文未给理论保证写“未提供”；尚未核查写“未核实”，二者有区别。
 
 ## 研究进展记录
 
-- 每个方向的相关文档（协议、基线调研、方案、实验记录）统一放在 `researches/<方向>/` 内，不新增顶层独立文件；`researches/nested-attr-vector-search/index.md` 只做导航。
-- 每轮研究结束前，在 `researches/<方向>/<YYYY-MM-DD>-exps/` 写 `report.md`：当日目标、实验设置、结果数字、结论、局限、下一步。
+`researches/<方向>/` 只允许三类内容：
+
+- `approaches.md`：方案观测文档。
+- `problem_def.md`：问题定义与评测口径。
+- `<YYYY-MM-DD>-exps/`：当日研究记录，含 `report.md`、`data/`、`figures/`、`experiments/`。
+
+不得保留导航/索引页、文献检索日志、历史归档、独立分析报告、代码复查记录或旧论文笔记。这些内容确需留存时写入 `papers/` 或每日记录，以 git 历史为准。
+
+`approaches.md` 的写法（供宏观调控，不做论证）：
+
+- 只写**当前正在执行的方案**：数据与工作负载、索引构建步骤、查询流程、全部参数与开关、输出字段含义、当前实测工作点、可调方向与当前判断、运行命令。
+- 不写理论推导与证明、新颖性与前序论证、代码审查或缺陷清单、分析过程与长篇否定论证。
+- 负结果只留一行结论加数据位置，不展开论证。
+- 参数表要标当前取值与作用；实测表要标口径（查询数、重复次数、召回定义）。
+
+每日记录：
+
+- 每轮研究结束前在 `researches/<方向>/<YYYY-MM-DD>-exps/` 写 `report.md`：当日目标、实验设置、结果数字、结论、局限、下一步。
 - 同目录 `data/` 存汇总数据（CSV/JSON/原始日志），`experiments/` 存命令、构建记录与复现说明。
 - 只写已运行的实验；未完成、未核实或失败的结论必须标注。每日目录只追加，不覆盖历史记录。
+
+## 代码目录
+
+- 每个方案一个目录：`codes/<方案名>/`，内含 `build.sh` 与 `src/`；测量与绘图脚本放该方案的 `scripts/`。
+- 基线同样按方案建目录（如 `codes/NodeANN/`），不放进主方案的 `src/`。
+- 共享头文件放 `codes/shared/`；第三方源码放 `codes/third_party/`，固定版本、不修改。
+- 构建产物放 `codes/<方案名>/build/`，不入库。
 
 ## 比较与研究问题
 
