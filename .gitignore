@@ -137,8 +137,7 @@ perf.data.old
 # Datasets, downloaded dependencies, and scratch files stay local.
 # Keep download scripts and research summaries outside these directories.
 /datasets/
-/deps/
-/work/
+codes/*/build/
 datasets/**/*.f32
 datasets/**/*.f64
 datasets/**/*.fvecs

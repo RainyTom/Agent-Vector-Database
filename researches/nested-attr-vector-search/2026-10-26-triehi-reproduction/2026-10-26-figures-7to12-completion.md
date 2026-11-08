@@ -1,4 +1,5 @@
 # Fig 7–12 补全与全量复现环境搭建（2026-10-26 晚）
+> 归档记录：文中引用的 `codes/directory-aware-vector-attr-search/` 与 `codes/dag-composition-methods/` 已在 2026-11-09 目录重组中删除，原始代码见 git 历史；当前代码与数据路径见 `approaches.md` §11 的路径映射。
 
 ## 目标
 

@@ -1,4 +1,5 @@
 # 实验协议(复现命令)
+> 归档记录：文中引用的 `codes/directory-aware-vector-attr-search/` 与 `codes/dag-composition-methods/` 已在 2026-11-09 目录重组中删除，原始代码见 git 历史；当前代码与数据路径见 `approaches.md` §11 的路径映射。
 
 日期:2026-10-26。代码:`codes/directory-aware-vector-attr-search/`
 (`src/repro.cpp`、`scripts/gen_workload.py`、`scripts/plot_repro.py`)。

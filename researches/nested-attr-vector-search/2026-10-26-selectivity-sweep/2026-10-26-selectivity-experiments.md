@@ -382,7 +382,7 @@ python3 production/nested-attr-vector-search/src/selectivity_harness.py \
    fixtures 不在仓库（`work/` 按约定不入库），重建命令（2026-10-26 另一台机器复现验证）：
    ```
    production/nested-attr-vector-search/work/venv/bin/python \
-     production/nested-attr-vector-search/src/export_sift1m.py   # datasets/sift-128-euclidean.hdf5 → work/fixtures_1m
+     production/nested-attr-vector-search/src/export_sift1m.py   # datasets/sift-128-euclidean/sift-128-euclidean.hdf5 → work/fixtures_1m
    production/nested-attr-vector-search/work/venv/bin/python \
      production/nested-attr-vector-search/src/prep_ccs.py \
      --fixtures production/nested-attr-vector-search/work/fixtures_1m \

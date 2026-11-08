@@ -1,4 +1,5 @@
 # 复现报告:Directory-Aware Query and Maintenance in Vector Databases
+> 归档记录：文中引用的 `codes/directory-aware-vector-attr-search/` 与 `codes/dag-composition-methods/` 已在 2026-11-09 目录重组中删除，原始代码见 git 历史；当前代码与数据路径见 `approaches.md` §11 的路径映射。
 
 - 论文:arXiv:2606.16903v1(Wang et al.,2026-06-15);本地全文`papers/prefix-vector-search/2606.16903-directory-aware/`
 - 复现代码:`codes/directory-aware-vector-attr-search/`(本目录)

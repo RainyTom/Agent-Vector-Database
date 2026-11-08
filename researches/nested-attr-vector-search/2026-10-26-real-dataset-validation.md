@@ -1,4 +1,5 @@
 # 真实数据集验证：WIKI-Dir / ARXIV-Dir（2026-10-26）
+> 归档记录：文中引用的 `codes/directory-aware-vector-attr-search/` 与 `codes/dag-composition-methods/` 已在 2026-11-09 目录重组中删除，原始代码见 git 历史；当前代码与数据路径见 `approaches.md` §11 的路径映射。
 
 > 本方向此前因 alphaXiv 查重收束（见 README 与 ../alphaxiv-novelty-audit.md）。
 > 本轮不是重提独立立项，而是**验证性实验**：拿到论文发布的数据，在其声明的

@@ -1,4 +1,7 @@
 # 项目移交手册：语义时空 Episode 检索（planner–executor）
+- 历史快照：本文件记录 2026-10 的项目移交状态。2026-11-09 目录重组后，`researches/` 只保留
+  `nested-attr-vector-search/`，代码只保留 `codes/NestedAttrVectorRetrieval/`，`work/`、`deps/`、
+  `production/` 已删除；文中对应路径不再存在，当前布局见 `README.md`。
 
 更新：2026-10-25。仓库根目录。
 

@@ -1,4 +1,5 @@
 # 分层属性向量混合搜索：问题定义、方案对比与优化路线
+> 归档记录：文中引用的 `codes/directory-aware-vector-attr-search/` 与 `codes/dag-composition-methods/` 已在 2026-11-09 目录重组中删除，原始代码见 git 历史；当前代码与数据路径见 `approaches.md` §11 的路径映射。
 
 日期：2026-10-27。范围：`researches/nested-attr-vector-search/01-directory-aware-acceleration/` 的 TrieHI 复现、选择率测量与属性分区索引 baseline。数据与图均来自本地实测，未核实处单独标注。
 

@@ -2,7 +2,7 @@
 
 本文说明 **ASI（Attribute-Skeleton Index，属性骨架索引）** 如何把属性内近邻图、跨属性网关和属性闭包组合起来，以及 **DQS（Dual-Queue Search，双队列检索）** 如何在一次查询中使用它们。实验图中的 `Ours (ASI)` 指当前 ASI+DQS；`NodeANN` 指每非空属性一张独立 HNSW 的对照基线。阅读不要求预先了解 HNSW；关键是分清两张图：属性之间的包含关系，以及对象之间用于搜索的近邻关系。
 
-**实现依据**：[活跃源码 `attr_skeleton_bench.cpp`](../../codes/dag-ann-search/src/attr_skeleton_bench.cpp)。问题口径见 [problem_def.md](problem_def.md)，数据准备见 [prepare_pq.py](../../codes/dag-ann-search/scripts/prepare_pq.py) 与 [prepare_large.py](../../codes/dag-ann-search/scripts/prepare_large.py)。下文将当前实现与目标设计分开陈述，实验图使用 [2026-11-08 当日目录](2026-11-08-exps/)。历史实现与旧实验不能替代当前代码的证据。
+**实现依据**：[活跃源码 `attr_skeleton_bench.cpp`](../../codes/NestedAttrVectorRetrieval/src/attr_skeleton_bench.cpp)。问题口径见 [problem_def.md](problem_def.md)，数据准备见 [prepare_pq.py](../../codes/NestedAttrVectorRetrieval/scripts/prepare_pq.py) 与 [prepare_large.py](../../codes/NestedAttrVectorRetrieval/scripts/prepare_large.py)。下文将当前实现与目标设计分开陈述，实验图使用 [2026-11-08 当日目录](2026-11-08-exps/)。历史实现与旧实验不能替代当前代码的证据。
 
 §9.1 使用本轮同原生图、同计时协议的新对照，Ours 固定为 `--entry-mode hnsw`；源码默认仍为代表点入口，避免静默替换历史调用。§9.2–9.5 保留早期实测背景。`work-removal-*` 与 `navigation-*` 分别保存工作削减和入口控制结果，不与旧 NodeANN 点混接。
 
@@ -38,16 +38,16 @@ $$D=\operatorname{Desc}^{+}(U),\qquad E(U)=\{o\in O:own(o)\in D\}.$$
 
 当前工作负载将 CCS（ACM Computing Classification System）分类结构及 SciHTC 的直属标签，与 SIFT 128 维向量按对象序号绑定。CCS 是计算机文献的分类体系，SIFT 是图像局部描述子。**本实验没有把论文摘要编码为 SIFT，也没有证明 SIFT 的几何距离与 CCS 的语义层级相关。** 它检验真实层级形状、标签分布与多父闭包下的检索机制，不能据此声称已完成真实论文语义检索。
 
-原始结构与标签出处可从 [CCS 官方页面](https://dl.acm.org/ccs)、[SciHTC 仓库](https://github.com/msadat3/SciHTC) 和 [本地数据背景记录](2026-10-27-ccs-background-and-data.md)追溯。活跃工作负载的本地元数据为 `work/dag-scope/workload-run1/meta.json`：1,929 个属性、2,040 条父边、103 个多父属性、168,937 个对象；每个保留下来的标签对象贡献一个直属终端属性。早期背景记录使用过不同的解析与清洗口径，不能把其中节点数、对象数直接拼入本轮实验。
+原始结构与标签出处可从 [CCS 官方页面](https://dl.acm.org/ccs)、[SciHTC 仓库](https://github.com/msadat3/SciHTC) 和 [本地数据背景记录](2026-10-27-ccs-background-and-data.md)追溯。活跃工作负载的本地元数据为 `datasets/ccs-sift-dag/meta.json`：1,929 个属性、2,040 条父边、103 个多父属性、168,937 个对象；每个保留下来的标签对象贡献一个直属终端属性。早期背景记录使用过不同的解析与清洗口径，不能把其中节点数、对象数直接拼入本轮实验。
 
 数据准备有两条需要区分的操作：
 
-1. [prepare_large.py](../../codes/dag-ann-search/scripts/prepare_large.py) 读取原标签列表和 SIFT 的 `train`/`test`。对象数不超过标签数时沿用标签前缀；扩展到更大规模时，使用固定种子 20261105 从原标签列表有放回抽样，保留经验频率分布。该扩展不引入向量与标签的语义相关性。
-2. [prepare_pq.py](../../codes/dag-ann-search/scripts/prepare_pq.py) 在原始向量上训练 PQ，并从原始 FP32 向量生成 GT。默认 PQ 为 $m=16$ 个子空间、每个子空间 256 个码字，训练抽样上限 100,000、k-means 12 轮；抽样种子 7，各子空间种子为 $100+j$。实际调用参数仍以本轮运行记录为准。
+1. [prepare_large.py](../../codes/NestedAttrVectorRetrieval/scripts/prepare_large.py) 读取原标签列表和 SIFT 的 `train`/`test`。对象数不超过标签数时沿用标签前缀；扩展到更大规模时，使用固定种子 20261105 从原标签列表有放回抽样，保留经验频率分布。该扩展不引入向量与标签的语义相关性。
+2. [prepare_pq.py](../../codes/NestedAttrVectorRetrieval/scripts/prepare_pq.py) 在原始向量上训练 PQ，并从原始 FP32 向量生成 GT。默认 PQ 为 $m=16$ 个子空间、每个子空间 256 个码字，训练抽样上限 100,000、k-means 12 轮；抽样种子 7，各子空间种子为 $100+j$。实际调用参数仍以本轮运行记录为准。
 
 PQ 码为每对象 16 字节，原始 128 维 FP32 为 512 字节，二者的**向量载荷**之比为 32。活跃 C++ 直接加载 PQ 还原后的 128 维 float32，并用普通平方 L2 建图和搜索，没有在 PQ 码上执行查表距离。因此 32 倍不能描述为该可执行程序的实际驻留内存压缩比，图边、位图、码本与还原缓冲区也不能省略。
 
-向量文件为本地 `datasets/sift-128-euclidean.hdf5`；其公开格式与数据说明见 [ANN-Benchmarks 的 SIFT 数据条目](https://github.com/erikbern/ann-benchmarks#data-sets)。准备脚本将第 $i$ 个直属标签与 `train[i]` 绑定，查询向量取 `test[j]`；该序号配对仅构成实验工作负载，不表达语义对应。实际搜索用的 `orig.bin`、`recon.bin`、`queries.bin` 与标签文件哈希见当日协议，本文不把公开无过滤的近邻真值直接用于属性约束查询。
+向量文件为本地 `datasets/sift-128-euclidean/sift-128-euclidean.hdf5`；其公开格式与数据说明见 [ANN-Benchmarks 的 SIFT 数据条目](https://github.com/erikbern/ann-benchmarks#data-sets)。准备脚本将第 $i$ 个直属标签与 `train[i]` 绑定，查询向量取 `test[j]`；该序号配对仅构成实验工作负载，不表达语义对应。实际搜索用的 `orig.bin`、`recon.bin`、`queries.bin` 与标签文件哈希见当日协议，本文不把公开无过滤的近邻真值直接用于属性约束查询。
 
 ### 1.4 查询谓词的规模与选择率
 
@@ -367,24 +367,20 @@ $$\mathrm{recall}_{\mathrm{ID}}=\frac{\sum_i |T_i\cap R_i|}{\sum_i\min(k,|T_i|)}
 
 ## 11. 复现与检查
 
-下列是仓库根目录下的历史主曲线命令记录，ASI 使用工作削减前的源码（提交 `aba0491`，文件哈希见 `scheme-protocol.json`）。不要用当前源码覆盖其原始计时数据；本轮前后对照使用独立的 `work-removal-*` 文件，命令和原版本插桩补丁均见 `work-removal-protocol.json`。[top-10 真值文件](2026-11-08-exps/data/gt_10.txt) 随数据保留，不依赖其他 $k$ 的文件。
+下列是仓库根目录下的命令记录，ASI 的历史主曲线使用工作削减前的源码（提交 `aba0491`，文件哈希见 `scheme-protocol.json`）。不要用当前源码覆盖其原始计时数据；本轮前后对照使用独立的 `work-removal-*` 文件，命令和原版本插桩补丁均见 `work-removal-protocol.json`。top-10 真值已随数据集放在 `datasets/ccs-sift-dag/gt_10.txt`，不依赖其他 $k$ 的文件。
+
+**2026-11-09 目录重组后的路径映射**：`codes/dag-ann-search/{src,scripts}` → `codes/NestedAttrVectorRetrieval/{src,scripts}`；`codes/directory-aware-vector-attr-search/src/raw_l2_space.h` 与 `codes/dag-composition-methods/nodeann/hnswlib/hnswlib/*` → `codes/NestedAttrVectorRetrieval/{src,third_party/hnswlib}`；`work/dag-ann` 与 `work/dag-scope/workload-run1` → `datasets/ccs-sift-dag`；`work/asi-evidence` → `datasets/ccs-sift-dag/runs`；`work/{attr_skeleton,nodeann_measured}` → `codes/NestedAttrVectorRetrieval/build/`。归档的 `data/*.json`、`data/*.jsonl` 仍是重组前实际执行记录，其中的路径与哈希保持原样，不据此判断当前布局。
 
 ```bash
-cp researches/nested-attr-vector-search/2026-11-08-exps/data/gt_10.txt work/dag-ann/gt_10.txt
-g++ -std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION \
-  -I codes/directory-aware-vector-attr-search/src -I codes/dag-composition-methods/nodeann/hnswlib \
-  codes/dag-ann-search/src/attr_skeleton_bench.cpp -o work/attr_skeleton
-g++ -std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION \
-  -I codes/directory-aware-vector-attr-search/src -I codes/dag-composition-methods/nodeann/hnswlib \
-  codes/dag-ann-search/src/nodeann_bench.cpp -o work/nodeann_measured
-python3 codes/dag-ann-search/scripts/illustrate_asi.py measure --k 10 --out 2026-11-08-exps --runs 3
-mkdir -p work/asi-evidence
-taskset -c 2 ./work/attr_skeleton --dir work/dag-ann --work work/dag-scope/workload-run1 \
+./codes/NestedAttrVectorRetrieval/build.sh
+python3 codes/NestedAttrVectorRetrieval/scripts/illustrate_asi.py measure --k 10 --out 2026-11-08-exps --runs 3
+mkdir -p datasets/ccs-sift-dag/runs
+taskset -c 2 ./codes/NestedAttrVectorRetrieval/build/attr_skeleton --dir datasets/ccs-sift-dag --work datasets/ccs-sift-dag \
   --vec recon.bin --k 10 --M 16 --efC 200 --p 50 --ef2 16 --efs 10,40,200 --queries 200 \
-  --repeat 1 --trace-file work/asi-evidence/trace-k10-ef-10-40-200.jsonl
-python3 codes/dag-ann-search/scripts/illustrate_asi.py attribute --k 10 --out 2026-11-08-exps \
-  --trace work/asi-evidence/trace-k10-ef-10-40-200.jsonl
-python3 codes/dag-ann-search/scripts/illustrate_asi.py render --k 10 --out 2026-11-08-exps
+  --repeat 1 --trace-file datasets/ccs-sift-dag/runs/trace-k10-ef-10-40-200.jsonl
+python3 codes/NestedAttrVectorRetrieval/scripts/illustrate_asi.py attribute --k 10 --out 2026-11-08-exps \
+  --trace datasets/ccs-sift-dag/runs/trace-k10-ef-10-40-200.jsonl
+python3 codes/NestedAttrVectorRetrieval/scripts/illustrate_asi.py render --k 10 --out 2026-11-08-exps
 ```
 
 `scheme-measurements.jsonl` 保存全部配置及命令，`scheme-summary.json` 保存聚合值，`pareto-selection.json` 保存支配筛选与 `capacity_limited` 标记。归因诊断单独执行，其 QPS 不纳入性能图。每档均校验 `hits + 六类 misses = 1951`，并核对原始 FP32 精确扫描与保存 GT 一致。图形导出为 SVG，结构示意不使用虚构实验距离。
@@ -392,7 +388,7 @@ python3 codes/dag-ann-search/scripts/illustrate_asi.py render --k 10 --out 2026-
 全部图的可见文字均导出为字形路径，不依赖阅读器安装中文字体；四张结构图的 83 个文字节点保存在 `metadata#editable-svg-source`，可提取编辑。新入口对照图也遵守这一约定。检查记录见 [figure-validation.json](2026-11-08-exps/data/figure-validation.json)。可用下列命令提取结构图到标准输出：
 
 ```bash
-python3 codes/dag-ann-search/scripts/svg_labels.py \
+python3 codes/NestedAttrVectorRetrieval/scripts/svg_labels.py \
   researches/nested-attr-vector-search/2026-11-08-exps/figures/asi-build.svg --extract-source
 ```
 
@@ -527,8 +523,8 @@ $$\|q-x_i\|_2^2\ge L_i=\max(0,\sqrt{\hat d_i}-e_i)^2.$$
 复现入口如下，依赖现有工作数据与按协议编译的两个可执行程序。测量追加新批次，不覆盖原计时文件；绘图只选择同一完整三组批次：
 
 ```bash
-python3 codes/dag-ann-search/scripts/illustrate_asi.py measure-entry --k 10 --out 2026-11-08-exps --runs 3
-python3 codes/dag-ann-search/scripts/illustrate_asi.py render-entry --k 10 --out 2026-11-08-exps
+python3 codes/NestedAttrVectorRetrieval/scripts/illustrate_asi.py measure-entry --k 10 --out 2026-11-08-exps --runs 3
+python3 codes/NestedAttrVectorRetrieval/scripts/illustrate_asi.py render-entry --k 10 --out 2026-11-08-exps
 python3 -c 'import json; exec(json.load(open("researches/nested-attr-vector-search/2026-11-08-exps/data/navigation-protocol.json"))["verification_code"])'
 ```
 

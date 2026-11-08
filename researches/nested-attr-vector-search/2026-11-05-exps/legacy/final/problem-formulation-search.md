@@ -64,7 +64,7 @@ R = argmin_k^{o ∈ Eligible_c(A) ∩ Eligible_φ} ‖q − v_o‖²
 
 ## 8. 数据与待测
 
-- 结构：`work/dag-scope/workload-run1/edges.tsv`（1,929 / 2,040 / 103 多父）。
+- 结构：`datasets/ccs-sift-dag/edges.tsv`（1,929 / 2,040 / 103 多父）。
 - 对象：同一目录下 `objects.txt` 有 168,937 条（768 个非空概念），向量可与 SIFT 前 168,937 行绑定（随机绑定，非真实语义标注）。
 - 查询：`queries.tsv` 1,234 条。
 - **待测**：在 1,929 节点 DAG 上重测"树化会丢掉多少查询/对象"（旧数 0.73% 查询 / 0.24% item 是 830 节点树上的，不可沿用）。

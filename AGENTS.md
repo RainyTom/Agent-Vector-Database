@@ -26,8 +26,8 @@
 - `papers/papers.jsonl`：结构化论文记录，字段约定见同目录 README。
 - `papers/relations.jsonl`：有方向、有证据的引用、比较、方法继承等边；作者关系与研究者推断分开。
 - `papers/changelog.md`：新增、修订、去重和分类变化。
-- `researches/vector-join/search-log.md`：检索词、来源、覆盖限制、未完成候选与补查项。
-- `researches/vector-join/research-questions.md`：研究假设、新颖性排查与最小实验。
+- `researches/nested-attr-vector-search/literature-search-log.md`：检索词、来源、覆盖限制、未完成候选与补查项。
+- `researches/nested-attr-vector-search/approaches.md`：研究假设、方法边界、新颖性排查与最小实验。
 - PDF/Markdown/图片沿用已有目录，不为标题更新重命名目录；旧的元数据快照不覆盖成无日期的新快照。
 
 每条论文至少包含书目信息/版本/链接、标签与等级、输入输出、join 类型/度量/假设、方法/组件、理论/复杂度/误差、实验/基线/指标/结果、局限、关系、项目启发与证据。论文未给理论保证写“未提供”；尚未核查写“未核实”，二者有区别。
@@ -51,6 +51,6 @@
 
 ## Git 提交与推送
 
-- 每轮研究结束自动提交源码、文档与小体积实测 CSV/JSON；不提交 `work/`、`deps/`、大索引或数据集。
+- 每轮研究结束自动提交源码、文档与小体积实测 CSV/JSON；不提交 `datasets/`、`codes/*/build/`、大索引或构建产物。
 - 提交后 `git fetch`，再推送当前分支；同步 `main` 前先确认 `origin/main` 是 `HEAD` 的祖先（`git merge-base --is-ancestor origin/main HEAD`），满足时用 `git branch -f main HEAD` 快进。
 - 禁止强推；历史分叉时先 merge/rebase 并报告，由用户决定。
