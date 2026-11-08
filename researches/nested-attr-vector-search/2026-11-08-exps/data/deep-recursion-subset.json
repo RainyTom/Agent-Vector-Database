@@ -1,0 +1,4076 @@
+{
+ "kind": "constructed deep-recursion subset (recursion depth >= 3)",
+ "definition": "recursion depth = longest child-edge path from the query attributes into their descendant closure; only queries with depth>=3 are kept",
+ "n_queries": 300,
+ "seed": 20261109,
+ "buckets": {
+  "2": 60,
+  "3-5": 60,
+  "6-10": 60,
+  "11-20": 60,
+  "21+": 60
+ },
+ "source_queries": "48 of the 1234 queries in work/dag-scope/workload-run1/queries.tsv already have depth>=3; they are kept with their original SIFT test[qi] vectors",
+ "constructed": "252 further queries were built from the 37 depth>=3 attributes, adding partner attributes so each closure lands in a target nonempty-attribute bucket and |U| covers 1-4; vectors use SIFT test[1234+j]",
+ "regeneration": "queries.tsv = first column |U| then attributes; queries.bin row j = test[vec_src]; gt_10.txt computed by exact FP32 top-10 over the closure",
+ "caveats": [
+  "Depth is structural: empty intermediate attributes count as recursion levels but contribute no objects.",
+  "Same predicate may recur with a different query vector; each vector is a distinct query.",
+  "Only 37 attributes reach depth>=3, so buckets 2 and 3-5 reuse few scopes with different vectors."
+ ],
+ "queries": [
+  {
+   "kind": "file",
+   "attrs": [
+    6
+   ],
+   "U": 1,
+   "depth": 5,
+   "NE": 59,
+   "eligible": 4502,
+   "vec_src": 6,
+   "bucket": "21+",
+   "qi": 6
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    7
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 94,
+   "eligible": 29642,
+   "vec_src": 7,
+   "bucket": "21+",
+   "qi": 7
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    8
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 25,
+   "eligible": 3130,
+   "vec_src": 8,
+   "bucket": "21+",
+   "qi": 8
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    18
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 23,
+   "eligible": 4838,
+   "vec_src": 14,
+   "bucket": "21+",
+   "qi": 14
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    67
+   ],
+   "U": 1,
+   "depth": 5,
+   "NE": 28,
+   "eligible": 10447,
+   "vec_src": 34,
+   "bucket": "21+",
+   "qi": 34
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    116
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 50,
+   "bucket": "6-10",
+   "qi": 50
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 54,
+   "bucket": "2",
+   "qi": 54
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    151
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 41,
+   "eligible": 32051,
+   "vec_src": 63,
+   "bucket": "21+",
+   "qi": 63
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    172
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 1440,
+   "vec_src": 79,
+   "bucket": "11-20",
+   "qi": 79
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    255
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 2342,
+   "vec_src": 112,
+   "bucket": "11-20",
+   "qi": 112
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    306
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 124,
+   "bucket": "11-20",
+   "qi": 124
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    419
+   ],
+   "U": 1,
+   "depth": 5,
+   "NE": 55,
+   "eligible": 10818,
+   "vec_src": 160,
+   "bucket": "21+",
+   "qi": 160
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    420
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 41,
+   "eligible": 8289,
+   "vec_src": 161,
+   "bucket": "21+",
+   "qi": 161
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    425
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 11,
+   "eligible": 1728,
+   "vec_src": 164,
+   "bucket": "11-20",
+   "qi": 164
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    481
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 199,
+   "bucket": "6-10",
+   "qi": 199
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    584
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 21,
+   "eligible": 1190,
+   "vec_src": 244,
+   "bucket": "21+",
+   "qi": 244
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    645
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 21,
+   "eligible": 1286,
+   "vec_src": 272,
+   "bucket": "21+",
+   "qi": 272
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 274,
+   "bucket": "3-5",
+   "qi": 274
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    682
+   ],
+   "U": 1,
+   "depth": 5,
+   "NE": 76,
+   "eligible": 8461,
+   "vec_src": 295,
+   "bucket": "21+",
+   "qi": 295
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    734
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 17,
+   "eligible": 3470,
+   "vec_src": 323,
+   "bucket": "11-20",
+   "qi": 323
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    781
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 629,
+   "vec_src": 336,
+   "bucket": "6-10",
+   "qi": 336
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    849
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 127,
+   "eligible": 25231,
+   "vec_src": 364,
+   "bucket": "21+",
+   "qi": 364
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    879
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 54,
+   "eligible": 11193,
+   "vec_src": 377,
+   "bucket": "21+",
+   "qi": 377
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    958
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 16,
+   "eligible": 3288,
+   "vec_src": 430,
+   "bucket": "11-20",
+   "qi": 430
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1091
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 80,
+   "eligible": 12397,
+   "vec_src": 488,
+   "bucket": "21+",
+   "qi": 488
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1126
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 1779,
+   "vec_src": 502,
+   "bucket": "6-10",
+   "qi": 502
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1176
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 14,
+   "eligible": 1026,
+   "vec_src": 533,
+   "bucket": "11-20",
+   "qi": 533
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1197
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 38,
+   "eligible": 5722,
+   "vec_src": 546,
+   "bucket": "21+",
+   "qi": 546
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1228
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1702,
+   "vec_src": 568,
+   "bucket": "6-10",
+   "qi": 568
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1252
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 62,
+   "eligible": 9113,
+   "vec_src": 582,
+   "bucket": "21+",
+   "qi": 582
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1427
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 642,
+   "bucket": "3-5",
+   "qi": 642
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1554
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 46,
+   "eligible": 6332,
+   "vec_src": 672,
+   "bucket": "21+",
+   "qi": 672
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1555
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 24,
+   "eligible": 1443,
+   "vec_src": 673,
+   "bucket": "21+",
+   "qi": 673
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1618
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 55,
+   "eligible": 10046,
+   "vec_src": 708,
+   "bucket": "21+",
+   "qi": 708
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1619
+   ],
+   "U": 1,
+   "depth": 5,
+   "NE": 127,
+   "eligible": 24403,
+   "vec_src": 709,
+   "bucket": "21+",
+   "qi": 709
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1684
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 26,
+   "eligible": 6985,
+   "vec_src": 757,
+   "bucket": "21+",
+   "qi": 757
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1928
+   ],
+   "U": 1,
+   "depth": 6,
+   "NE": 768,
+   "eligible": 168937,
+   "vec_src": 833,
+   "bucket": "21+",
+   "qi": 833
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    683,
+    707,
+    734,
+    772
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 34,
+   "eligible": 5253,
+   "vec_src": 853,
+   "bucket": "21+",
+   "qi": 853
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1091,
+    1197,
+    1619
+   ],
+   "U": 3,
+   "depth": 5,
+   "NE": 239,
+   "eligible": 42242,
+   "vec_src": 877,
+   "bucket": "21+",
+   "qi": 877
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    8,
+    172,
+    226,
+    306
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 76,
+   "eligible": 26383,
+   "vec_src": 1091,
+   "bucket": "21+",
+   "qi": 1091
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1554,
+    1618,
+    1684
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 126,
+   "eligible": 23316,
+   "vec_src": 1100,
+   "bucket": "21+",
+   "qi": 1100
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    560,
+    584,
+    640,
+    643
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 36,
+   "eligible": 3073,
+   "vec_src": 1113,
+   "bucket": "21+",
+   "qi": 1113
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    879,
+    1030,
+    1060,
+    1535
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 96,
+   "eligible": 19596,
+   "vec_src": 1125,
+   "bucket": "21+",
+   "qi": 1125
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1257,
+    1375,
+    1405,
+    1427
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 24,
+   "eligible": 4062,
+   "vec_src": 1161,
+   "bucket": "21+",
+   "qi": 1161
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1554,
+    1618,
+    1684
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 126,
+   "eligible": 23316,
+   "vec_src": 1168,
+   "bucket": "21+",
+   "qi": 1168
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    8,
+    226,
+    306
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 63,
+   "eligible": 24943,
+   "vec_src": 1176,
+   "bucket": "21+",
+   "qi": 1176
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    1198,
+    1228,
+    1240,
+    1245
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 37,
+   "eligible": 5400,
+   "vec_src": 1187,
+   "bucket": "21+",
+   "qi": 1187
+  },
+  {
+   "kind": "file",
+   "attrs": [
+    584,
+    640
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 23,
+   "eligible": 1462,
+   "vec_src": 1229,
+   "bucket": "21+",
+   "qi": 1229
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1234,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1437,
+    588,
+    966
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1235,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1483,
+    1425
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1236,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1921
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1237,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1238,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    805,
+    750,
+    1098
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1239,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1539,
+    609
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1240,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1538
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1241,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1242,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1839,
+    1764,
+    1483
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1243,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1377,
+    1848
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1244,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    591
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1245,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1246,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1475,
+    903,
+    66
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1247,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    109,
+    1731
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1248,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    963
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1249,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1250,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    776,
+    1764,
+    1384
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1251,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1383,
+    115
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1252,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1654
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1253,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1254,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1411,
+    726,
+    1464
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1255,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1166,
+    968
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1256,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1553
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1257,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1258,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    681,
+    1898,
+    1559
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1259,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    986,
+    995
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1260,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    388
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1261,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1262,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1153,
+    1108,
+    681
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1263,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    495,
+    317
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1264,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1022
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1265,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1266,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    20,
+    242,
+    618
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1267,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1253,
+    1898
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1268,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    854
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1269,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1270,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    111,
+    630,
+    211
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1271,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1331,
+    784
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1272,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1362
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1273,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1274,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    95,
+    235,
+    515
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1275,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    611,
+    749
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1276,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1331
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1277,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1278,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    257,
+    222,
+    899
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1279,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    655,
+    34
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1280,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1331
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1281,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1282,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    129,
+    1783,
+    602
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1283,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    676,
+    1470
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1284,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    382
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1285,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1286,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1861,
+    24,
+    111
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1287,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    695,
+    717
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1288,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1765
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1289,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1290,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    228,
+    551,
+    346
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1291,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    123,
+    1268,
+    361
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 2,
+   "eligible": 325,
+   "vec_src": 1292,
+   "bucket": "2"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1293,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1401,
+    166,
+    1712
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 586,
+   "vec_src": 1294,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    831,
+    97
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1295,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    256
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 632,
+   "vec_src": 1296,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1297,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    344,
+    971,
+    835
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 559,
+   "vec_src": 1298,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    24,
+    125
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1299,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    909
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1300,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1301,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1202,
+    468,
+    735
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 699,
+   "vec_src": 1302,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    409,
+    359
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1303,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1840
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1304,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1305,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1357,
+    716,
+    297
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 547,
+   "vec_src": 1306,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    1310,
+    1592
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1307,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    695
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1308,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1309,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1059,
+    1353,
+    1287
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 644,
+   "vec_src": 1310,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    886,
+    1339
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1311,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1728
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 1270,
+   "vec_src": 1312,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1313,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    467,
+    1847,
+    730
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1314,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    787,
+    1420
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1315,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1489
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1316,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1317,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1277,
+    1026,
+    33
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 729,
+   "vec_src": 1318,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    388,
+    111
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1319,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1650
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 568,
+   "vec_src": 1320,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1321,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1034,
+    1447,
+    1037
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1322,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    1606,
+    937
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1323,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    594
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1324,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1325,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    422,
+    1357,
+    773
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 562,
+   "vec_src": 1326,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    1735,
+    1317
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1327,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1481
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1328,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1329,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    279,
+    922,
+    1300
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 1085,
+   "vec_src": 1330,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    1431,
+    24
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1331,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    112
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 575,
+   "vec_src": 1332,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1333,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1388,
+    1136,
+    549
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1334,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    546,
+    1459
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1335,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    499
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1336,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1337,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    213,
+    1909,
+    1454
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1338,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    809,
+    317
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1339,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1762
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1340,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1341,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1389,
+    1796,
+    1013
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1342,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    1001,
+    1130
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1343,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    1424
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 3,
+   "eligible": 541,
+   "vec_src": 1344,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1345,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    33,
+    699,
+    938
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 739,
+   "vec_src": 1346,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647,
+    631,
+    344
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1347,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    461
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 973,
+   "vec_src": 1348,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    647
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 5,
+   "eligible": 737,
+   "vec_src": 1349,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1427,
+    777,
+    65,
+    3
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 4,
+   "eligible": 673,
+   "vec_src": 1350,
+   "bucket": "3-5"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1351,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    891,
+    809,
+    1471
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 10,
+   "eligible": 649,
+   "vec_src": 1352,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    998,
+    1089
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 1779,
+   "vec_src": 1353,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    1010
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 1751,
+   "vec_src": 1354,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1355,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    1445,
+    1365,
+    261
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1356,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    77,
+    166
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 629,
+   "vec_src": 1357,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    437
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 2025,
+   "vec_src": 1358,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1702,
+   "vec_src": 1359,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    1323,
+    1023,
+    1598
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1360,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    87,
+    739
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1361,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    1086
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 10,
+   "eligible": 807,
+   "vec_src": 1362,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 1779,
+   "vec_src": 1363,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    1650,
+    1177,
+    625
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 1729,
+   "vec_src": 1364,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    859,
+    600
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1365,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    217
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 4453,
+   "vec_src": 1366,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 629,
+   "vec_src": 1367,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    970,
+    283,
+    1074
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1963,
+   "vec_src": 1368,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    1108,
+    1525
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1702,
+   "vec_src": 1369,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    1406
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 7,
+   "eligible": 1080,
+   "vec_src": 1370,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1371,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    493,
+    1425,
+    808
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 10,
+   "eligible": 671,
+   "vec_src": 1372,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    1575,
+    1162
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1788,
+   "vec_src": 1373,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    1718
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1702,
+   "vec_src": 1374,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1375,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    1923,
+    1785,
+    1425
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1376,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    149,
+    267
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 10,
+   "eligible": 668,
+   "vec_src": 1377,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    1556
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1826,
+   "vec_src": 1378,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1702,
+   "vec_src": 1379,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    165,
+    1463,
+    55
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 7,
+   "eligible": 1125,
+   "vec_src": 1380,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    548,
+    1147
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1381,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    791
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 629,
+   "vec_src": 1382,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 1779,
+   "vec_src": 1383,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    1324,
+    190,
+    1759
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1702,
+   "vec_src": 1384,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    1371,
+    1423
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1385,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    1124
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 4454,
+   "vec_src": 1386,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 629,
+   "vec_src": 1387,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    4,
+    750,
+    491
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1787,
+   "vec_src": 1388,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    1035,
+    284
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 10,
+   "eligible": 1919,
+   "vec_src": 1389,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    717
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1390,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1391,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    387,
+    69,
+    1393
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 10,
+   "eligible": 656,
+   "vec_src": 1392,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    1740,
+    839
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 1779,
+   "vec_src": 1393,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    1157
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 1714,
+   "vec_src": 1394,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1395,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    275,
+    1877,
+    130
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1396,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    1742,
+    1848
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 629,
+   "vec_src": 1397,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126,
+    1748
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1786,
+   "vec_src": 1398,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 8,
+   "eligible": 1702,
+   "vec_src": 1399,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    225,
+    1177,
+    1179
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 8,
+   "eligible": 1115,
+   "vec_src": 1400,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    481,
+    149,
+    719
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 4388,
+   "vec_src": 1401,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    781,
+    423
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 629,
+   "vec_src": 1402,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1126
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 7,
+   "eligible": 1779,
+   "vec_src": 1403,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1228,
+    12,
+    1184,
+    364
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 9,
+   "eligible": 1717,
+   "vec_src": 1404,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    116,
+    1110,
+    1058
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 6,
+   "eligible": 1072,
+   "vec_src": 1405,
+   "bucket": "6-10"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 1440,
+   "vec_src": 1406,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255,
+    1442,
+    1804,
+    452
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 2342,
+   "vec_src": 1407,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306,
+    1892,
+    491
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1408,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425,
+    657
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 1780,
+   "vec_src": 1409,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    734
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 17,
+   "eligible": 3470,
+   "vec_src": 1410,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    958,
+    1042,
+    1742,
+    1123
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 17,
+   "eligible": 3348,
+   "vec_src": 1411,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1176,
+    393,
+    876
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 14,
+   "eligible": 1026,
+   "vec_src": 1412,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172,
+    77
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 1440,
+   "vec_src": 1413,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 2342,
+   "vec_src": 1414,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306,
+    1672,
+    171,
+    545
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1415,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425,
+    1742,
+    592
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 11,
+   "eligible": 1728,
+   "vec_src": 1416,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    734,
+    1513
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 17,
+   "eligible": 3470,
+   "vec_src": 1417,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    958
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 16,
+   "eligible": 3288,
+   "vec_src": 1418,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1176,
+    1739,
+    344,
+    196
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 15,
+   "eligible": 1041,
+   "vec_src": 1419,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172,
+    572,
+    1249
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 16,
+   "eligible": 1654,
+   "vec_src": 1420,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255,
+    912
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 2342,
+   "vec_src": 1421,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1422,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425,
+    1367,
+    1126,
+    371
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 3507,
+   "vec_src": 1423,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    734,
+    962,
+    555
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 18,
+   "eligible": 3520,
+   "vec_src": 1424,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    958,
+    943
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 17,
+   "eligible": 3320,
+   "vec_src": 1425,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1176
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 14,
+   "eligible": 1026,
+   "vec_src": 1426,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172,
+    525,
+    1678,
+    1105
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 14,
+   "eligible": 1445,
+   "vec_src": 1427,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255,
+    1634,
+    1591
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 19,
+   "eligible": 2450,
+   "vec_src": 1428,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306,
+    859
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1429,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 11,
+   "eligible": 1728,
+   "vec_src": 1430,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    734,
+    1872,
+    621,
+    1479
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 17,
+   "eligible": 3470,
+   "vec_src": 1431,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    958,
+    1146,
+    1177
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 16,
+   "eligible": 3288,
+   "vec_src": 1432,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1176,
+    1876
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 15,
+   "eligible": 1045,
+   "vec_src": 1433,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 1440,
+   "vec_src": 1434,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255,
+    120,
+    597,
+    954
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 19,
+   "eligible": 2429,
+   "vec_src": 1435,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306,
+    1878,
+    118
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1436,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425,
+    736
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 12,
+   "eligible": 1788,
+   "vec_src": 1437,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    734
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 17,
+   "eligible": 3470,
+   "vec_src": 1438,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    958,
+    1190,
+    887,
+    61
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 17,
+   "eligible": 3554,
+   "vec_src": 1439,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1176,
+    795,
+    1465
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 14,
+   "eligible": 1026,
+   "vec_src": 1440,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172,
+    1517
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 1440,
+   "vec_src": 1441,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 2342,
+   "vec_src": 1442,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306,
+    1553,
+    1558,
+    480
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1443,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425,
+    648,
+    1300
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 12,
+   "eligible": 1737,
+   "vec_src": 1444,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    734,
+    1885
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 17,
+   "eligible": 3470,
+   "vec_src": 1445,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    958
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 16,
+   "eligible": 3288,
+   "vec_src": 1446,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1176,
+    45,
+    1419,
+    512
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 15,
+   "eligible": 2228,
+   "vec_src": 1447,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172,
+    72,
+    789
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 14,
+   "eligible": 1453,
+   "vec_src": 1448,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255,
+    1925
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 2342,
+   "vec_src": 1449,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1450,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425,
+    118,
+    997,
+    640
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 2000,
+   "vec_src": 1451,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    734,
+    35,
+    1710
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 17,
+   "eligible": 3470,
+   "vec_src": 1452,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    958,
+    240
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 17,
+   "eligible": 3408,
+   "vec_src": 1453,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1176
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 14,
+   "eligible": 1026,
+   "vec_src": 1454,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    172,
+    566,
+    1323,
+    1602
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 13,
+   "eligible": 1440,
+   "vec_src": 1455,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    255,
+    396,
+    799
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 18,
+   "eligible": 2342,
+   "vec_src": 1456,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    306,
+    391
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 20,
+   "eligible": 10918,
+   "vec_src": 1457,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    425
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 11,
+   "eligible": 1728,
+   "vec_src": 1458,
+   "bucket": "11-20"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    6
+   ],
+   "U": 1,
+   "depth": 5,
+   "NE": 59,
+   "eligible": 4502,
+   "vec_src": 1459,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    7,
+    1104,
+    1164,
+    1269
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 97,
+   "eligible": 29860,
+   "vec_src": 1460,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    8,
+    1708,
+    737
+   ],
+   "U": 3,
+   "depth": 3,
+   "NE": 26,
+   "eligible": 4898,
+   "vec_src": 1461,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    18,
+    1828
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 24,
+   "eligible": 4874,
+   "vec_src": 1462,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    67
+   ],
+   "U": 1,
+   "depth": 5,
+   "NE": 28,
+   "eligible": 10447,
+   "vec_src": 1463,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    151,
+    1834,
+    1236,
+    1687
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 41,
+   "eligible": 32051,
+   "vec_src": 1464,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    419,
+    1725,
+    311
+   ],
+   "U": 3,
+   "depth": 5,
+   "NE": 55,
+   "eligible": 10818,
+   "vec_src": 1465,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    420,
+    949
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 42,
+   "eligible": 8466,
+   "vec_src": 1466,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    584
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 21,
+   "eligible": 1190,
+   "vec_src": 1467,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    645,
+    193,
+    1496,
+    362
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 23,
+   "eligible": 2567,
+   "vec_src": 1468,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    682,
+    1808,
+    1389
+   ],
+   "U": 3,
+   "depth": 5,
+   "NE": 77,
+   "eligible": 9303,
+   "vec_src": 1469,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    849,
+    1217
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 127,
+   "eligible": 25231,
+   "vec_src": 1470,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    879
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 54,
+   "eligible": 11193,
+   "vec_src": 1471,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1091,
+    568,
+    1431,
+    1662
+   ],
+   "U": 4,
+   "depth": 4,
+   "NE": 81,
+   "eligible": 12422,
+   "vec_src": 1472,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1197,
+    1736,
+    30
+   ],
+   "U": 3,
+   "depth": 4,
+   "NE": 42,
+   "eligible": 5791,
+   "vec_src": 1473,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1252,
+    1080
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 63,
+   "eligible": 9156,
+   "vec_src": 1474,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1554
+   ],
+   "U": 1,
+   "depth": 4,
+   "NE": 46,
+   "eligible": 6332,
+   "vec_src": 1475,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1618,
+    30,
+    1244,
+    477
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 57,
+   "eligible": 10061,
+   "vec_src": 1476,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1619,
+    1309,
+    870
+   ],
+   "U": 3,
+   "depth": 5,
+   "NE": 127,
+   "eligible": 24403,
+   "vec_src": 1477,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1684,
+    1065
+   ],
+   "U": 2,
+   "depth": 3,
+   "NE": 27,
+   "eligible": 7019,
+   "vec_src": 1478,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1555
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 24,
+   "eligible": 1443,
+   "vec_src": 1479,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    1928,
+    1191,
+    468,
+    1825
+   ],
+   "U": 4,
+   "depth": 6,
+   "NE": 768,
+   "eligible": 168937,
+   "vec_src": 1480,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    6,
+    1309,
+    1360
+   ],
+   "U": 3,
+   "depth": 5,
+   "NE": 60,
+   "eligible": 4777,
+   "vec_src": 1481,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    7,
+    119
+   ],
+   "U": 2,
+   "depth": 4,
+   "NE": 95,
+   "eligible": 29712,
+   "vec_src": 1482,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    8
+   ],
+   "U": 1,
+   "depth": 3,
+   "NE": 25,
+   "eligible": 3130,
+   "vec_src": 1483,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    18,
+    1356,
+    1084,
+    468
+   ],
+   "U": 4,
+   "depth": 3,
+   "NE": 28,
+   "eligible": 6010,
+   "vec_src": 1484,
+   "bucket": "21+"
+  },
+  {
+   "kind": "constructed",
+   "attrs": [
+    67,
+    879,
+    1379
+   ],
+   "U": 3,
+   "depth": 5,
+   "NE": 82,
+   "eligible": 21640,
+   "vec_src": 1485,
+   "bucket": "21+"
+  }
+ ]
+}

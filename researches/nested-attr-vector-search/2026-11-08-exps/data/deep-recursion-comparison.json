@@ -1,0 +1,69 @@
+{
+  "rule": "identical inclusive 2% band applied to both methods at each fixed target recall",
+  "rows": [
+    {
+      "target": 0.746667,
+      "ours_ef": 100,
+      "nodeann_N": 10,
+      "ours_recall": 0.737,
+      "nodeann_recall": 0.746667,
+      "rel_recall_gap": 1.2946869220147645,
+      "ours_qps": 4149.776725162885,
+      "nodeann_qps": 4233.955949525284,
+      "qps_change": -1.9881932019589765,
+      "pairs": [
+        2.2701363073110326,
+        0.3648033986746846,
+        -8.267255050679168
+      ]
+    },
+    {
+      "target": 0.749333,
+      "ours_ef": 100,
+      "nodeann_N": 10,
+      "ours_recall": 0.737,
+      "nodeann_recall": 0.746667,
+      "rel_recall_gap": 1.6458637214696321,
+      "ours_qps": 4149.776725162885,
+      "nodeann_qps": 4233.955949525284,
+      "qps_change": -1.9881932019589765,
+      "pairs": [
+        2.2701363073110326,
+        0.3648033986746846,
+        -8.267255050679168
+      ]
+    },
+    {
+      "target": 0.750667,
+      "ours_ef": 100,
+      "nodeann_N": 10,
+      "ours_recall": 0.737,
+      "nodeann_recall": 0.746667,
+      "rel_recall_gap": 1.8206475041529713,
+      "ours_qps": 4149.776725162885,
+      "nodeann_qps": 4233.955949525284,
+      "qps_change": -1.9881932019589765,
+      "pairs": [
+        2.2701363073110326,
+        0.3648033986746846,
+        -8.267255050679168
+      ]
+    },
+    {
+      "target": 0.751,
+      "ours_ef": 100,
+      "nodeann_N": 10,
+      "ours_recall": 0.737,
+      "nodeann_recall": 0.746667,
+      "rel_recall_gap": 1.8641810918774984,
+      "ours_qps": 4149.776725162885,
+      "nodeann_qps": 4233.955949525284,
+      "qps_change": -1.9881932019589765,
+      "pairs": [
+        2.2701363073110326,
+        0.3648033986746846,
+        -8.267255050679168
+      ]
+    }
+  ]
+}
