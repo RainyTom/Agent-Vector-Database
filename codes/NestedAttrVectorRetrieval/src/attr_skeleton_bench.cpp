@@ -144,7 +144,7 @@ static bool readf(const std::string& p, std::vector<float>& v) {
 }
 
 int main(int argc, char** argv) {
-    std::string dir = "datasets/ccs-sift-dag", work = "datasets/ccs-sift-dag", vec = "recon.bin";
+    std::string dir = "datasets/sift1m/ccs-attr", work = "datasets/sift1m/ccs-attr", vec = "base.bin";
     int k = 50, M = 16, efC = 200, nq_max = 200, Kcap = 8, repeat = 1, pdiv = 50, ef2 = 16;
     bool skip_links = true;
     bool do_merge = true;
@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
     }
 
     std::vector<float> base, queries;
-    if (!readf(dir + "/" + vec, base) || !readf(dir + "/queries.bin", queries)) return 2;
+    if (!readf(dir + "/" + vec, base) || !readf(work + "/queries.bin", queries)) return 2;
     const size_t n = base.size() / DIM;
     const int nq = std::min<int>(int(queries.size() / DIM), nq_max);
 
@@ -199,12 +199,14 @@ int main(int argc, char** argv) {
       while (std::getline(in, l) && int(qc.size()) < nq) { if (l.empty()) continue;
         std::stringstream ss(l); int cnt; ss >> cnt; std::vector<int> v(cnt); for (int i = 0; i < cnt; ++i) ss >> v[i]; qc.push_back(v); } }
     std::vector<int> gt(size_t(nq) * k, -1);
-    { FILE* f = std::fopen((dir + "/gt_" + std::to_string(k) + ".txt").c_str(), "rb");
+    { FILE* f = std::fopen((work + "/gt_" + std::to_string(k) + ".txt").c_str(), "rb");
       if (f) { if (std::fread(gt.data(), sizeof(int32_t), gt.size(), f) != gt.size()) {} std::fclose(f); } }
     std::vector<float> original;
     FILE* trace = nullptr;
     if (!trace_file.empty() || rerank_fp32) {
-        if (!readf(dir + "/orig.bin", original) || original.size() != base.size()) {
+        // orig.bin 存在则用原始 FP32；缺省时与搜索向量同源（无量化误差）。
+        if (!readf(dir + "/orig.bin", original)) original = base;
+        if (original.size() != base.size()) {
             std::fprintf(stderr, "original vector dimensions do not match search vectors\n");
             return 2;
         }

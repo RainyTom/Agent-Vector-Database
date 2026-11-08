@@ -5,9 +5,9 @@ import numpy as np, h5py
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--work', default='datasets/ccs-sift-dag')
+    ap.add_argument('--work', default='datasets/sift1m/ccs-attr')
     ap.add_argument('--sift', default='datasets/sift-128-euclidean/sift-128-euclidean.hdf5')
-    ap.add_argument('--out', default='datasets/ccs-sift-dag-1m')
+    ap.add_argument('--out', default='datasets/sift1m/ccs-attr-1m')
     ap.add_argument('--n', type=int, default=1000000)
     ap.add_argument('--queries', type=int, default=200)
     ap.add_argument('--k', type=int, default=50)

@@ -51,7 +51,7 @@ struct Timer {
 };
 
 int main(int argc, char** argv) {
-    std::string dir = "datasets/ccs-sift-dag", work = "datasets/ccs-sift-dag";
+    std::string dir = "datasets/sift1m/ccs-attr", work = "datasets/sift1m/ccs-attr";
     std::string mode = "nodeann", vecfile = "recon.bin";
     bool nosimd = false;
     int repeat = 1;
@@ -187,7 +187,7 @@ int main(int argc, char** argv) {
     // 查询向量
     std::vector<float> qv;
     {
-        FILE* f = std::fopen((dir + "/queries.bin").c_str(), "rb");
+        FILE* f = std::fopen((work + "/queries.bin").c_str(), "rb");
         if (!f) { std::fprintf(stderr, "missing queries.bin (run prepare)\n"); return 2; }
         std::fseek(f, 0, SEEK_END);
         long b = std::ftell(f);
@@ -204,7 +204,7 @@ int main(int argc, char** argv) {
     // GT
     std::vector<int> gt(size_t(nq) * k, -1);
     {
-        FILE* f = std::fopen((dir + "/gt_" + std::to_string(k) + ".txt").c_str(), "rb");
+        FILE* f = std::fopen((work + "/gt_" + std::to_string(k) + ".txt").c_str(), "rb");
         if (!f) { std::fprintf(stderr, "missing ground truth\n"); return 2; }
         const size_t got = std::fread(gt.data(), sizeof(int32_t), gt.size(), f);
         std::fclose(f);

@@ -12,11 +12,16 @@
 
 | 项 | 值 |
 |---|---|
-| 数据集 | `datasets/ccs-sift-dag/`（CCS 层级 + SIFT 128 维） |
-| 规模 | 1,929 个属性（768 个有直属对象）、168,937 个对象 |
-| 向量 | 建图与搜索用 PQ 还原后的 float32（`recon.bin`）；真值用原始 FP32（`orig.bin`） |
-| 查询文件 | `queries.tsv` 共 1,234 条，`queries.bin` 与 `gt_10.txt` 只覆盖前 200 条 |
-| 前 200 条统计 | 全部 $\lvert U\rvert=1$；闭包非空属性均值 4.2；$\lvert E(U)\rvert$ 均值 1,140、中位 130 |
+| 数据集 | `datasets/sift1m/`（SIFT1M 原始向量 + 基于 CCS 层级构造的属性） |
+| 对象 | 1,000,000（`base/base.bin`） |
+| 属性 | 1,929 个 CCS 节点，2,040 条父子边，1,516 个叶子，最长 6 层；无多父 |
+| 对象归属 | 每个对象挂到一个叶子属性；叶子权重 Zipf(α=0.8)，叶子规模中位 291、最大 58,116 |
+| 查询 | 200 条，按递归深度分层生成（深度 0–6 各 36/35/35/35/35/20/4 条） |
+| 查询规模 | 合格对象 $\lvert E(U)\rvert$ 中位 6,844、均值 41,487、最大 1,000,000 |
+| 距离 | 用 SIFT 原始 float32（无量化误差）；真值为闭包内精确 FP32 top-10 |
+| 参数 | $k=10$，$M=16$，$efC=200$，$K=8$，$p=50$，$ef_2=16$ |
+
+目录约定：原始语料在 `raw/`；任务数据在 `ccs-attr/`（`edges.tsv`、`nodes.tsv`、`objects.txt`、`queries.tsv`、`queries.bin`、`gt_10.txt`、`meta.json`）；向量在 `base/`。程序用 `--dir datasets/sift1m/base` 读向量、`--work datasets/sift1m/ccs-attr` 读任务数据，两者分开，便于其他研究问题复用同一份 1M 向量。
 
 ## 3. 索引构建
 
@@ -52,12 +57,12 @@ offer(v):
     弹出两堆中较近的堆头
     该节点本查询已展开 → 继续弹
     标记已展开，扫描 layer0 邻接与跨属性边，对每个目标 offer
-输出 ← 合并 q1.keep 与 q2.keep，按对象 ID 去重，按重构距离排序取 top-k
+输出 ← 合并 q1.keep 与 q2.keep，按对象 ID 去重，按距离排序取 top-k
 ```
 
 已做的两处保结果工作削减：同一对象只展开一次（弹出后按代号跳过）；种子评分在查询内缓存复用（不设首次接触标记）。
 
-可选 `--rerank-fp32`：对最后保留的候选按原始 FP32 重排，重排距离计入查询成本；`--rerank-pool` 限制重排条数，便于两侧同预算比较。默认关闭。
+可选 `--rerank-fp32`：对最后保留的候选按原始 FP32 重排，重排距离计入查询成本；`--rerank-pool` 限制重排条数。默认关闭。
 
 ## 5. 参数与开关
 
@@ -68,10 +73,12 @@ offer(v):
 | `--K` | 8 | 代表点数量上限 $K_{cap}$ |
 | `--p` | 50 | 代表点密度，值越小代表点越多 |
 | `--ef2` | 16 | 第二通道（代表点/网关）keep 容量 |
-| `--efs` | `5,10,20,40,100,200,400` | 主通道 keep 容量，可一次跑多档 |
+| `--efs` | `10,40,200,800` | 主通道 keep 容量，可一次跑多档 |
 | `--entry-mode` | `representative` | 种子入口：`representative` 或 `hnsw` |
 | `--rerank-fp32` / `--rerank-pool` | 关 / 0 | 最终 FP32 重排与重排预算 |
 | `--queries` / `--repeat` | 200 / 1–100 | 查询前缀长度与重复轮数 |
+| `--dir` / `--work` | `datasets/sift1m/base` / `datasets/sift1m/ccs-attr` | 向量目录 / 任务数据目录 |
+| `--vec` | `base.bin` | 搜索向量文件名 |
 | `--trace-file` | — | 写逐查询诊断 JSONL |
 | `--graph-audit-file` | — | 导出原生 HNSW 拓扑，用于与 NodeANN 逐项对账 |
 | `--diag` | 关 | 打印属性级 BFS 可达性 |
@@ -99,56 +106,43 @@ trace 文件额外给出逐查询的 `returned`、`evaluated`、`admitted`、`se
 
 ## 7. 当前实测工作点
 
-3 组进程、每组 100 轮 × 200 查询，CPU 2、scalar 距离、$k=10$：
+单进程、单轮（`--repeat 1`）、CPU 2、$k=10$，未做多进程置信区间：
 
-| 原 200 条查询 | Recall@10 | QPS | 距离/查询 |
+| Ours 代表点入口 | Recall@10 | QPS | 距离/查询 |
 |---|---:|---:|---:|
-| 代表点入口 `ef=5` | 0.528447 | 36,883 | 179 |
-| 代表点入口 `ef=10` | 0.811379 | 31,584 | 205 |
-| 代表点入口 `ef=40` | 0.828806 | 19,625 | 291 |
-| 代表点入口 `ef=400` | 0.839057 | 7,565 | 547 |
-| 高层入口 `ef=5` | 0.535623 | 32,341 | 199 |
-| 高层入口 `ef=10` | 0.823680 | 28,002 | 225 |
-| 高层入口 `ef=20` | 0.830343 | 22,290 | 258 |
-| 高层入口 `ef=40` | 0.834956 | 17,104 | 300 |
-| 高层入口 `ef=100` | 0.837007 | 12,479 | 376 |
-| 高层入口 `ef=200` | 0.843157 | 9,531 | 454 |
-| 高层入口 `ef=400` | 0.843670 | 7,408 | 544 |
-| NodeANN `N=10` | 0.838032 | 23,049 | 258 |
-| NodeANN `N=20` | 0.842645 | 18,067 | 329 |
+| `ef=10` | 0.4625 | 2,430 | 1,218 |
+| `ef=40` | 0.5850 | — | — |
+| `ef=200` | 0.7400 | — | — |
+| `ef=800` | 0.8645 | — | — |
 
-深递归子集（递归深度 ≥3、300 条、闭包非空属性均值 22.6）：
+| NodeANN | Recall@10 | QPS | 距离/查询 |
+|---|---:|---:|---:|
+| `N=10` | 0.9665 | 524 | 9,665 |
 
-| 方法 | Recall@10 | QPS |
-|---|---:|---:|
-| 高层入口 `ef=10` | 0.680 | 8,069 |
-| 高层入口 `ef=100` | 0.737 | 4,150 |
-| 高层入口 `ef=400` | 0.747 | 2,480 |
-| NodeANN `N=10` | 0.747 | 4,234 |
-| NodeANN `N=20` | 0.751 | 3,254 |
+当前格局（一行结论）：**1M 规模、闭包均值 4 万对象时，NodeANN 召回 0.9665 远高于本方案 `ef=10` 的 0.4625；本方案要到 `ef=800` 才接近 0.86，仍低于 NodeANN。** 距离成本本方案低得多（1,218 vs 9,665），但 `miss_item_not_visited` 0.34、`miss_attr_not_entered` 0.20 说明漏访是主因，不是排序。
 
-当前格局（一行结论）：**低中召回区本方案更快，高召回区被 NodeANN 追上并反超；拐点在 0.84（一般查询）/ 0.73（深递归）。** 原因是一句话：本方案保留集容量是 `ef+ef2`，与属性数无关；NodeANN 的池随属性数线性增长，因而在深闭包上反超。同 $ef$ 换高层入口，召回只提升 0.4–1.5 个百分点，吞吐下降 2–13%，不构成有效改进。
+上一轮 168,937 对象的 CCS+SIFT 实验因对象规模与闭包结构不同，结论已作废，不再引用。
 
 ## 8. 可调方向与当前判断
 
 | 方向 | 状态 |
 |---|---|
-| 把 keep 容量与 `ef` 解耦（多留候选、不加展开） | 尚未实现；唯一能同时改善高召回与成本的改动 |
-| 提高 `ef2`（16→32） | 已测：召回 +0.46pp、吞吐 −19%，不划算 |
-| 调 `p`（10/25/50/100） | 已测：召回差 ≤0.1pp，吞吐不单调，不敏感 |
-| 高层入口作为默认 | 已实现；仅在"目标召回 ≈0.838 且容差 2%"时吞吐占优，高目标下无优势 |
-| 最终 FP32 重排 | 已实现，可选；两侧同预算下吞吐比 0.71–1.10，优势被抹平 |
-| 网关选边 / 绕行调度 | 已有工作覆盖，暂停投入 |
+| 提高 `ef` | 已测 10→800：召回 0.4625→0.8645，距离随之增长；未见拐点 |
+| 合并数据规模差异 | 新数据集闭包均值 4 万（旧数据集 1,140），需重测全部参数敏感性 |
+| 把 keep 容量与 `ef` 解耦 | 尚未实现；当前 `miss_item_not_visited` 高，优先验证是否由保留集不足导致 |
+| 高层入口 | 已实现；旧数据集上仅小幅提升召回，新数据集未测 |
+| 最终 FP32 重排 | 已实现，可选；新数据集无量化误差，重排无意义，默认关闭 |
 
 ## 9. 运行与观测
 
 ```bash
 ./codes/NestedAttrVectorRetrieval/build.sh
-./codes/NestedAttrVectorRetrieval/build/attr_skeleton --k 10 --efs 10,40,200 --repeat 1
-./codes/NestedAttrVectorRetrieval/build/attr_skeleton --k 10 --efs 10 --entry-mode hnsw --trace-file datasets/ccs-sift-dag/runs/trace.jsonl
 ./codes/NodeANN/build.sh
-./codes/NodeANN/build/nodeann_measured --k 10 --ef 10 --N 10
-python3 codes/NestedAttrVectorRetrieval/scripts/illustrate_asi.py measure --k 10 --out 2026-11-08-exps --runs 3
+D=datasets/sift1m
+./codes/NestedAttrVectorRetrieval/build/attr_skeleton --dir $D/base --work $D/ccs-attr --vec base.bin \
+  --k 10 --efs 10,40,200,800 --repeat 1
+./codes/NodeANN/build/nodeann_measured --dir $D/base --work $D/ccs-attr --vec base.bin \
+  --k 10 --ef 10 --N 10
 ```
 
-默认读 `datasets/ccs-sift-dag/`。当日数字与数据文件见 [2026-11-08-exps/report.md](2026-11-08-exps/report.md)；目录内不再保留独立分析报告，历史记录以 `data/` 与 git 历史为准。
+数据集由 `codes/NestedAttrVectorRetrieval/scripts/build_ccs_sift_dataset.py` 生成（`--alpha 0.8 --seed 20261109`），参数与统计见 `datasets/sift1m/ccs-attr/meta.json`。当日数字见 [2026-11-09-exps/report.md](2026-11-09-exps/report.md)。

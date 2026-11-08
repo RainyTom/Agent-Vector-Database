@@ -38,10 +38,10 @@ import time
 
 ROOT = Path(__file__).resolve().parents[3]
 ROI = ROOT / 'researches/nested-attr-vector-search'
-OUT = ROI / '2026-11-08-exps'
+OUT = ROI / '2026-11-09-exps'
 DATA = OUT / 'data'
 FIG = OUT / 'figures'
-WORK = ROOT / 'datasets/ccs-sift-dag/runs'
+WORK = ROOT / 'datasets/sift1m/ccs-attr/runs'
 K = 10
 
 
@@ -72,13 +72,13 @@ def measure(args):
     N_values = [4,6,8,10,15,20,30,40,60]
     sweep_full = [20,40,80]
     sweep_coupled = [2,4,6,8,10,15,20,30]
-    base = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/attr_skeleton', '--dir','datasets/ccs-sift-dag',
-            '--work','datasets/ccs-sift-dag','--vec','recon.bin',
+    base = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/attr_skeleton', '--dir','datasets/sift1m/ccs-attr',
+            '--work','datasets/sift1m/ccs-attr','--vec','recon.bin',
             '--k',str(K),'--M','16','--efC','200','--queries','200', '--repeat','3']
-    nb = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
-          '--work','datasets/ccs-sift-dag','--vec','recon.bin', '--mode','nodeann',
+    nb = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/sift1m/ccs-attr',
+          '--work','datasets/sift1m/ccs-attr','--vec','recon.bin', '--mode','nodeann',
           '--k',str(K),'--M','16','--efC','200','--ef',str(K),'--queries','200','--repeat','3',
-          '--index-dir','datasets/ccs-sift-dag/idx','--nosimd']
+          '--index-dir','datasets/sift1m/ccs-attr/idx','--nosimd']
     runs = []
     raw_path = DATA / 'scheme-measurements.jsonl'
     with raw_path.open('w') as f:
@@ -115,8 +115,8 @@ def measure(args):
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
                 print(kind_n, ef, perN, [(r['recall'], r['qps_avg_pass'], r['dist_calls_per_q'])
                                          for r in rec['result']], flush=True)
-        pf = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
-              '--work','datasets/ccs-sift-dag','--vec','recon.bin','--mode','exact',
+        pf = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/sift1m/ccs-attr',
+              '--work','datasets/sift1m/ccs-attr','--vec','recon.bin','--mode','exact',
               '--k',str(K),'--M','16','--efC','200','--ef',str(K),'--queries','200',
               '--repeat','3','--nosimd']
         with (DATA/'prefilter-matched.jsonl').open('w') as pf_out:
@@ -130,10 +130,10 @@ def measure(args):
              'codes/third_party/hnswlib/hnswalg.h',
              'codes/third_party/hnswlib/space_l2.h',
              'codes/NestedAttrVectorRetrieval/build/attr_skeleton',
-             'codes/NodeANN/build/nodeann_measured','datasets/ccs-sift-dag/orig.bin',
-             'datasets/ccs-sift-dag/recon.bin','datasets/ccs-sift-dag/queries.bin',f'datasets/ccs-sift-dag/gt_{K}.txt',
-             'datasets/ccs-sift-dag/objects.txt','datasets/ccs-sift-dag/edges.tsv',
-             'datasets/ccs-sift-dag/queries.tsv']
+             'codes/NodeANN/build/nodeann_measured','datasets/sift1m/ccs-attr/orig.bin',
+             'datasets/sift1m/ccs-attr/recon.bin','datasets/sift1m/ccs-attr/queries.bin',f'datasets/sift1m/ccs-attr/gt_{K}.txt',
+             'datasets/sift1m/ccs-attr/objects.txt','datasets/sift1m/ccs-attr/edges.tsv',
+             'datasets/sift1m/ccs-attr/queries.tsv']
     meta = dict(k=K, cpu=2, repeats_per_process=3, independent_process_runs=args.runs,
                 flags='-std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION',
                 distance='RawL2Space for both methods; manual vectorization disabled',
@@ -144,7 +144,7 @@ def measure(args):
     meta['python'] = sys.version
     meta['ablation_process_runs'] = 1
     index_hash = hashlib.sha256()
-    for path in sorted((ROOT/'datasets/ccs-sift-dag/idx').glob('*.bin')):
+    for path in sorted((ROOT/'datasets/sift1m/ccs-attr/idx').glob('*.bin')):
         index_hash.update(path.name.encode()); index_hash.update(path.read_bytes())
     meta['baseline_cached_index_digest'] = index_hash.hexdigest()
     save(DATA/'scheme-protocol.json',meta)
@@ -156,12 +156,12 @@ def measure_entry(args):
     WORK.mkdir(parents=True, exist_ok=True)
     index = WORK / 'navigation-index'
     index.mkdir(exist_ok=True)
-    base = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/attr_skeleton','--dir','datasets/ccs-sift-dag',
-            '--work','datasets/ccs-sift-dag','--vec','recon.bin','--k',str(K),
+    base = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/attr_skeleton','--dir','datasets/sift1m/ccs-attr',
+            '--work','datasets/sift1m/ccs-attr','--vec','recon.bin','--k',str(K),
             '--M','16','--efC','200','--queries','200','--repeat','100',
             '--p','50','--ef2','16','--efs','5,10,20,40,100,200,400']
-    node = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/ccs-sift-dag',
-            '--work','datasets/ccs-sift-dag','--vec','recon.bin','--k',str(K),
+    node = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/sift1m/ccs-attr',
+            '--work','datasets/sift1m/ccs-attr','--vec','recon.bin','--k',str(K),
             '--mode','nodeann','--M','16','--efC','200','--queries','200',
             '--repeat','100','--nosimd','--index-dir',str(index)]
     jobs = [('representative',base+['--entry-mode','representative']),
@@ -239,8 +239,8 @@ def render_entry(args):
 
 def attribution(args):
     import numpy as np
-    owner = np.loadtxt(ROOT/'datasets/ccs-sift-dag/objects.txt',dtype=np.int32)
-    legacy = np.fromfile(ROOT/f'datasets/ccs-sift-dag/gt_{K}.txt',dtype=np.int32).reshape(-1,K)
+    owner = np.loadtxt(ROOT/'datasets/sift1m/ccs-attr/objects.txt',dtype=np.int32)
+    legacy = np.fromfile(ROOT/f'datasets/sift1m/ccs-attr/gt_{K}.txt',dtype=np.int32).reshape(-1,K)
     rows = []
     labels = ['quantization','attribute_unentered','not_navigated',
               'rejected','entry_score_only','lost_after_admission']
@@ -417,7 +417,7 @@ if __name__=='__main__':
     ap.add_argument('action',choices=['measure','measure-entry','attribute','render','render-entry'])
     ap.add_argument('--runs',type=int,default=3)
     ap.add_argument('--k',type=int,choices=[10],default=K)
-    ap.add_argument('--out',default='2026-11-08-exps',help='experiment directory under researches/nested-attr-vector-search')
+    ap.add_argument('--out',default='2026-11-09-exps',help='experiment directory under researches/nested-attr-vector-search')
     ap.add_argument('--trace',default=None)
     args=ap.parse_args()
     K = args.k

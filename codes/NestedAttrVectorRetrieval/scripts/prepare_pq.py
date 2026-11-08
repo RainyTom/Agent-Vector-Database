@@ -2,7 +2,7 @@
 """统一量化：PQ(m=16,k=256)。幂等：已有 codes/recon/GT 则跳过（--force 可强制重建）。
 
 训练用抽样（默认 10 万），编码全量；GT 在原始 FP32 上算，k 默认 50。
-用法: prepare_pq.py --data datasets/ccs-sift-dag-1m
+用法: prepare_pq.py --data datasets/sift1m/ccs-attr-1m
 """
 import argparse
 import json

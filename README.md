@@ -8,7 +8,7 @@
 |---|---|
 | 问题定义 | [researches/nested-attr-vector-search/problem_def.md](researches/nested-attr-vector-search/problem_def.md) |
 | **方案说明与观测面板**（构建、查询、参数、实测点、可调方向） | [researches/nested-attr-vector-search/approaches.md](researches/nested-attr-vector-search/approaches.md) |
-| 最新实验记录（top-10） | [researches/nested-attr-vector-search/2026-11-08-exps/report.md](researches/nested-attr-vector-search/2026-11-08-exps/report.md) |
+| 最新实验记录 | [researches/nested-attr-vector-search/2026-11-09-exps/report.md](researches/nested-attr-vector-search/2026-11-09-exps/report.md) |
 | 论文索引 | [papers/papers.jsonl](papers/papers.jsonl)、[papers/relations.jsonl](papers/relations.jsonl) |
 | 研究规则 | [AGENTS.md](AGENTS.md) |
 
@@ -23,7 +23,10 @@
 │   ├── shared/                    # 共享头文件：raw_l2_space.h、native_graph_audit.h
 │   └── third_party/hnswlib/       # 固定版本 hnswlib
 ├── datasets/                      # 数据集，按名称分目录（gitignored）
-│   └── ccs-sift-dag/              # CCS 层级 DAG + SIFT 向量工作负载
+│   └── sift1m/                    # SIFT1M 原始语料 + 各研究问题派生的数据
+│       ├── raw/                   # sift_base/learn/query/groundtruth
+│       ├── base/base.bin          # 1M × 128 float32
+│       └── ccs-attr/              # 本问题的层级属性数据与查询/真值
 ├── researches/
 │   └── nested-attr-vector-search/ # 每日实验记录与数据
 ├── papers/                        # 论文库：索引、全文与关系
@@ -35,11 +38,12 @@
 ```bash
 ./codes/NestedAttrVectorRetrieval/build.sh
 ./codes/NodeANN/build.sh
-./codes/NestedAttrVectorRetrieval/build/attr_skeleton --k 10 --efs 10,200 --repeat 1
-./codes/NodeANN/build/nodeann_measured --k 10 --ef 10 --N 10
+D=datasets/sift1m
+./codes/NestedAttrVectorRetrieval/build/attr_skeleton --dir $D/base --work $D/ccs-attr --vec base.bin --k 10 --efs 10,200 --repeat 1
+./codes/NodeANN/build/nodeann_measured --dir $D/base --work $D/ccs-attr --vec base.bin --k 10 --ef 10 --N 10
 ```
 
-默认读取 `datasets/ccs-sift-dag/`：`objects.txt`（对象→直属属性）、`edges.tsv`（子→父）、`queries.tsv`（首列为属性个数）、`orig.bin`（原始 FP32）、`recon.bin`（PQ 还原向量）、`queries.bin`、`gt_10.txt`。`scripts/prepare_large.py` 与 `scripts/prepare_pq.py` 可从 `datasets/sift-128-euclidean/` 与上述标签文件重建派生数据。
+向量读 `--dir datasets/sift1m/base`（`base.bin`），任务数据读 `--work datasets/sift1m/ccs-attr`（`objects.txt`、`edges.tsv`、`queries.tsv`、`queries.bin`、`gt_10.txt`）。数据集由 `scripts/build_ccs_sift_dataset.py` 生成，参数与统计见 `ccs-attr/meta.json`。
 
 ## 约定
 
