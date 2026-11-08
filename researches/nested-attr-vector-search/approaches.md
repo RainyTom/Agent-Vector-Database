@@ -67,7 +67,7 @@ PQ 码为每对象 16 字节，原始 128 维 FP32 为 512 字节，二者的**�
 
 两点直接决定结果的适用边界：
 
-1. **实验 200 条查询全部只有 1 个输入属性。** 多属性 OR 的闭包与归并逻辑虽已实现，其性能未被本轮任何测量覆盖。
+1. **原 200 条查询全部只有 1 个输入属性。** 多属性 OR 的闭包与归并逻辑虽已实现，在这 200 条上未被覆盖；§12.12 的深递归子集另行构造了 $\lvert U\rvert=1$–$4$ 的查询，多属性 OR 只在那个子集内有测量。
 2. 中位 $\lvert E(U)\rvert=130$、均值 1,140 说明分布长尾：多数查询很小，少数闭包覆盖上万对象。$\lvert D\rvert$ 均值 11.59 而中位仅 4，同样由长尾拉动。
 
 统计口径、分桶、源文件哈希与可复现命令见 [workload-selectivity.json](2026-11-08-exps/data/workload-selectivity.json)。选择率是对象数占比，既不是查询命中率，也不是召回分母；召回分母为逐查询 $\min(k,\lvert E(U)\rvert)$，$\lvert E(U)\rvert=0$ 的查询在执行前被跳过。
@@ -532,7 +532,7 @@ python3 codes/dag-ann-search/scripts/illustrate_asi.py render-entry --k 10 --out
 python3 -c 'import json; exec(json.load(open("researches/nested-attr-vector-search/2026-11-08-exps/data/navigation-protocol.json"))["verification_code"])'
 ```
 
-当前决定：保留显式高层入口，将 $ef=10$ 作为目标约 0.838 的容差对照点；较高目标暂不宣称胜过已调参 NodeANN。$ef=20$ 仅保留为高目标负结果对照，不按范围大小切换索引，不继续追逐低于 2% 的 recall 数字。跨数据、构建种子与多属性 OR 性能仍未验证。
+当前决定：保留显式高层入口，将 $ef=10$ 作为目标约 0.838 的容差对照点；较高目标暂不宣称胜过已调参 NodeANN。$ef=20$ 仅保留为高目标负结果对照，不按范围大小切换索引，不继续追逐低于 2% 的 recall 数字。跨数据与构建种子性能仍未验证；多属性 OR 仅在 §12.12 的构造子集（$\lvert U\rvert\le4$）内测过。
 
 ### 12.9 差距主要来自排序度量，而非漏访
 
