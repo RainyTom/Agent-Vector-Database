@@ -1,0 +1,168 @@
+{
+  "kind": "workload predicate selectivity and size statistics; no query execution",
+  "source_files": {
+    "work/dag-scope/workload-run1/objects.txt": "9ab116887f0d96d2b536ff92637a593cbb2148b964479b86fffe663064ef691c",
+    "work/dag-scope/workload-run1/edges.tsv": "a2d919b35122fcd91c52c71b4dbb186d71eba84ac3185f67fff17f08f13e7cdc",
+    "work/dag-scope/workload-run1/queries.tsv": "80dcbc27fc0b1f774fb9889fe138510dad5115c156e900be982f8369b6b8f976"
+  },
+  "objects": 168937,
+  "attributes_with_members": 768,
+  "n_queries_in_file": 1234,
+  "n_queries_used": 200,
+  "definitions": {
+    "U": "number of input attributes in the query (first column of queries.tsv)",
+    "closure_attrs": "|D| = number of attributes in the OR descendant closure of U",
+    "nonempty_attrs": "attributes in D that own at least one object (the C++ attrs_in_D field)",
+    "eligible": "|E(U)| = number of objects whose unique owner attribute lies in D",
+    "selectivity": "|E(U)| / total objects; not a query hit rate and not the recall denominator",
+    "recall_denominator": "sum over queries of min(k, |E(U)|); queries with |E(U)|=0 are skipped before timing"
+  },
+  "stats": {
+    "used200": {
+      "n": 200,
+      "U": {
+        "mean": 1.0,
+        "median": 1.0,
+        "min": 1,
+        "max": 1,
+        "p90": 1.0
+      },
+      "closure_attrs": {
+        "mean": 11.585,
+        "median": 4.0,
+        "min": 1,
+        "max": 317,
+        "p90": 21.099999999999994
+      },
+      "nonempty_attrs": {
+        "mean": 4.195,
+        "median": 1.0,
+        "min": 1,
+        "max": 94,
+        "p90": 7.0
+      },
+      "eligible": {
+        "mean": 1140.18,
+        "median": 130.0,
+        "min": 5,
+        "max": 32051,
+        "p90": 2255.5999999999995
+      },
+      "selectivity_dict_selected": null,
+      "selectivity": {
+        "mean": 0.0067491431717149,
+        "median": 0.0007695176308327957,
+        "min": 2.9596831955107527e-05,
+        "max": 0.18972161219863026,
+        "p90": 0.013351722831588104
+      },
+      "eligible_below_k": 17,
+      "eligible_zero": 0
+    },
+    "all": {
+      "n": 1234,
+      "U": {
+        "mean": 1.5656401944894651,
+        "median": 1.0,
+        "min": 1,
+        "max": 4,
+        "p90": 3.0
+      },
+      "closure_attrs": {
+        "mean": 10.1709886547812,
+        "median": 2.0,
+        "min": 1,
+        "max": 1929,
+        "p90": 15.0
+      },
+      "nonempty_attrs": {
+        "mean": 4.354132901134522,
+        "median": 1.0,
+        "min": 0,
+        "max": 768,
+        "p90": 6.0
+      },
+      "eligible": {
+        "mean": 815.853322528363,
+        "median": 78.0,
+        "min": 0,
+        "max": 168937,
+        "p90": 1112.1000000000001
+      },
+      "selectivity_dict_selected": null,
+      "selectivity": {
+        "mean": 0.004829334737377621,
+        "median": 0.00046171057849967736,
+        "min": 0.0,
+        "max": 1.0,
+        "p90": 0.006582927363455017
+      },
+      "eligible_below_k": 241,
+      "eligible_zero": 156
+    }
+  },
+  "buckets": {
+    "used200": {
+      "eligible": {
+        "0": 0,
+        "1-9": 17,
+        "10-99": 63,
+        "100-999": 81,
+        "1k-9.9k": 32,
+        "10k+": 7
+      },
+      "nonempty_attrs": {
+        "0": 0,
+        "1": 128,
+        "2": 19,
+        "3-4": 22,
+        "5-9": 14,
+        "10-19": 7,
+        "20-49": 7,
+        "50+": 3
+      }
+    },
+    "all": {
+      "eligible": {
+        "0": 156,
+        "1-9": 85,
+        "10-99": 444,
+        "100-999": 414,
+        "1k-9.9k": 115,
+        "10k+": 20
+      },
+      "nonempty_attrs": {
+        "0": 156,
+        "1": 698,
+        "2": 113,
+        "3-4": 101,
+        "5-9": 85,
+        "10-19": 35,
+        "20-49": 29,
+        "50+": 17
+      }
+    }
+  },
+  "cross_checks": {
+    "eligible_per_q_200_vs_cpp": {
+      "python": 1140.2,
+      "cpp": 1140.2
+    },
+    "attrs_in_D_200_vs_cpp": {
+      "python": 4.2,
+      "cpp": 4.2
+    },
+    "eligible_below_k_matches_gt_padding": {
+      "queries_below_k": 17,
+      "report_expected": 17
+    }
+  },
+  "command": "python3 - <<'PY'\nimport json, collections\nimport numpy as np\nfrom pathlib import Path\nwork = Path(\"work/dag-scope/workload-run1\")\nowner = np.loadtxt(work / \"objects.txt\", dtype=np.int32)\nchildren = collections.defaultdict(list)\nfor line in (work / \"edges.tsv\").read_text().splitlines():\n    if line.strip():\n        c, p = map(int, line.split()); children[p].append(c)\nmembers = collections.Counter(int(c) for c in owner)\nlines = [l for l in (work / \"queries.tsv\").read_text().splitlines() if l.strip()]\ndef closure(attrs):\n    out, st = set(), list(attrs)\n    while st:\n        c = st.pop()\n        if c not in out: out.add(c); st.extend(children[c])\n    return out\ndef summarize(subset):\n    U, D, NE, E = [], [], [], []\n    for line in subset:\n        v = list(map(int, line.split())); cnt = v[0]; attrs = v[1:1+cnt]\n        clo = closure(attrs)\n        U.append(cnt); D.append(len(clo))\n        NE.append(sum(1 for a in clo if members[a] > 0))\n        E.append(sum(members[a] for a in clo))\n    return dict(U=np.array(U), D=np.array(D), NE=np.array(NE), E=np.array(E))\ndef block(s):\n    f = lambda a: dict(mean=float(a.mean()), median=float(np.median(a)), min=int(a.min()),\n                       max=int(a.max()), p90=float(np.percentile(a, 90)))\n    sel = s[\"E\"] / len(owner)\n    return dict(n=len(s[\"U\"]), U=f(s[\"U\"]), closure_attrs=f(s[\"D\"]),\n                nonempty_attrs=f(s[\"NE\"]), eligible=f(s[\"E\"]),\n                selectivity_dict_selected=None,\n                selectivity=dict(mean=float(sel.mean()), median=float(np.median(sel)),\n                                 min=float(sel.min()), max=float(sel.max()),\n                                 p90=float(np.percentile(sel, 90))),\n                eligible_below_k=int((s[\"E\"] < 10).sum()), eligible_zero=int((s[\"E\"] == 0).sum()))\nused = block(summarize(lines[:200]))\nallq = block(summarize(lines))\nprint(json.dumps({\"used200\": used, \"all\": allq}, indent=2))\nPY",
+  "caveats": [
+    "Experiments use only the first 200 queries; the 1234-query file statistics must not be quoted as the experimental setting.",
+    "Queries with |E(U)|=0 exist only in the full file (156); the 200 experimental queries all have |E(U)|>=5.",
+    "Selectivity is an object-count fraction; per-query recall denominators are min(k,|E(U)|).",
+    "Only 1 input attribute in all 200 experimental queries; multi-attribute OR is unmeasured."
+  ],
+  "utc": "2026-11-08T16:00:58Z"
+}
