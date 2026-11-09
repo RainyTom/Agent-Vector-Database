@@ -35,6 +35,22 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
     std::vector<float> seed_score(node_count, 0.0f);
     uint32_t query_token = 0;
     std::vector<uint64_t> predicate_bitmap(size_t(index.closure_words), 0);
+    std::vector<uint64_t> navigable_bitmap(size_t(index.closure_words), 0);
+    std::vector<uint64_t> ancestor_bitmap(size_t(index.closure_words), 0);
+
+    // attribute position lookup for walking up the DAG
+    std::unordered_map<int, int> attribute_position;
+    for (int a = 0; a < index.attribute_count; ++a)
+        attribute_position.emplace(index.attribute_ids[size_t(a)], a);
+
+    // root entries: attributes with no parent in the DAG
+    std::vector<int> root_attributes;
+    for (int a = 0; a < index.attribute_count; ++a) {
+        int external = index.attribute_ids[size_t(a)];
+        const auto found = dataset.parents_of.find(external);
+        if (found == dataset.parents_of.end() || found->second.empty())
+            root_attributes.push_back(a);
+    }
 
     FILE* trace = nullptr;
     if (!options.trace_path.empty()) {
@@ -79,6 +95,37 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                 return ((predicate_bitmap[attribute / 64] >> (attribute % 64)) & 1ull) != 0;
             };
 
+            // 2. navigable set A = Desc+(U) u Anc+(U): every node on a root-to-target
+            //    path may be traversed, but only D members may be returned.
+            std::fill(ancestor_bitmap.begin(), ancestor_bitmap.end(), 0ull);
+            {
+                std::vector<int> frontier;
+                for (int attribute_id : dataset.query_attributes[qi]) {
+                    const auto found = attribute_position.find(attribute_id);
+                    if (found != attribute_position.end()) frontier.push_back(found->second);
+                }
+                std::unordered_set<int> seen(frontier.begin(), frontier.end());
+                while (!frontier.empty()) {
+                    std::vector<int> next;
+                    for (int a : frontier) {
+                        ancestor_bitmap[size_t(a) / 64] |= 1ull << (size_t(a) % 64);
+                        const auto up = dataset.parents_of.find(index.attribute_ids[size_t(a)]);
+                        if (up == dataset.parents_of.end()) continue;
+                        for (int parent : up->second) {
+                            const auto position = attribute_position.find(parent);
+                            if (position == attribute_position.end()) continue;
+                            if (seen.insert(position->second).second) next.push_back(position->second);
+                        }
+                    }
+                    frontier.swap(next);
+                }
+            }
+            for (int w = 0; w < index.closure_words; ++w)
+                navigable_bitmap[size_t(w)] = predicate_bitmap[size_t(w)] | ancestor_bitmap[size_t(w)];
+            auto navigable_attribute = [&](uint32_t attribute) {
+                return ((navigable_bitmap[attribute / 64] >> (attribute % 64)) & 1ull) != 0;
+            };
+
             std::vector<int> in_scope_attributes;
             for (int w = 0; w < index.closure_words; ++w) {
                 uint64_t bits = predicate_bitmap[size_t(w)];
@@ -107,7 +154,6 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
             };
 
             std::priority_queue<std::pair<float, uint32_t>> keep_heap;       // max-heap of kept results
-            std::priority_queue<std::pair<float, uint32_t>> candidate_heap;  // (-distance, node)
             std::unordered_set<uint32_t> entered_attributes, touched_attributes;
 
             // cached score: seeds may be scored several times per query
@@ -123,11 +169,17 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                 return d;
             };
 
+            // Two bounded sets with distinct roles:
+            //   keep_heap  : capacity ef, holds ONLY returnable (D) nodes -> the result set
+            //   frontier   : capacity ef, holds every traversable (A) node -> the beam
+            // Ancestors therefore never evict a candidate result.
+            std::priority_queue<std::pair<float, uint32_t>> frontier;  // max-heap on (-d, node)
             auto offer = [&](uint32_t node) {
                 if (visited_stamp[node] == query_token) return;   // first touch, once per query
                 visited_stamp[node] = query_token;
-                if (!in_scope_attribute(index.node_attribute[node])) return;
-                touched_attributes.insert(index.node_attribute[node]);
+                if (!navigable_attribute(index.node_attribute[node])) return;
+                const bool returnable = in_scope_attribute(index.node_attribute[node]);
+                if (returnable) touched_attributes.insert(index.node_attribute[node]);
                 float d;
                 if (seed_score_stamp[node] == query_token) {
                     d = seed_score[node];
@@ -137,20 +189,27 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     ++distances;
                 }
                 if (trace && repeat_index == 0) evaluated_objects.push_back(index.node_object[node]);
-                bool admitted = false;
-                if (int(keep_heap.size()) < ef) {
-                    keep_heap.push({d, node});
-                    candidate_heap.push({-d, node});
-                    admitted = true;
-                } else if (d < keep_heap.top().first) {
-                    keep_heap.pop();
-                    keep_heap.push({d, node});
-                    candidate_heap.push({-d, node});
-                    admitted = true;
+                if (returnable) {
+                    bool admitted = false;
+                    if (int(keep_heap.size()) < ef) {
+                        keep_heap.push({d, node});
+                        admitted = true;
+                    } else if (d < keep_heap.top().first) {
+                        keep_heap.pop();
+                        keep_heap.push({d, node});
+                        admitted = true;
+                    }
+                    if (admitted) {
+                        entered_attributes.insert(index.node_attribute[node]);
+                        if (trace && repeat_index == 0) admitted_objects.push_back(index.node_object[node]);
+                    }
                 }
-                if (admitted) entered_attributes.insert(index.node_attribute[node]);
-                if (admitted && trace && repeat_index == 0)
-                    admitted_objects.push_back(index.node_object[node]);
+                // the beam is bounded by ef as well and accepts ancestors
+                const float worst = frontier.empty() ? kInfinity : -frontier.top().first;
+                if (int(frontier.size()) < ef || d < worst) {
+                    if (int(frontier.size()) >= ef) frontier.pop();
+                    frontier.push({-d, node});
+                }
             };
 
             auto expand = [&](uint32_t node) {
@@ -166,56 +225,43 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     offer(index.bridge_edge_targets[j]);
             };
 
-            // entry lookup: one nearest representative per in-scope attribute
-            for (int attribute : in_scope_attributes) {
-                const uint32_t begin = index.node_begin[size_t(attribute)];
-                const uint32_t member_count = index.node_begin[size_t(attribute) + 1] - begin;
-                auto score_local = [&](uint32_t local) {
-                    if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[begin + local]);
-                    return cached_distance(begin + local);
-                };
-                uint32_t chosen_local = index.entry_node[size_t(attribute)];
-                float best_distance = score_local(chosen_local);
-                const bool use_upper_layers = options.entry_mode == "hnsw" &&
-                    index.top_level[size_t(attribute)] > 0;
-                if (use_upper_layers) {
-                    // greedy descent over the retained upper layers, entry mode "hnsw"
-                    uint32_t current = index.hnsw_entry_node[size_t(attribute)];
+            // entry: a single start point per root attribute. Representatives play no
+            // part in entry lookup; they only carry the cross-attribute bridge edges
+            // that merge attribute subgraphs during traversal.
+            for (int root : root_attributes) {
+                if (index.node_begin[size_t(root) + 1] <= index.node_begin[size_t(root)]) continue;
+                uint32_t start = index.node_begin[size_t(root)];
+                if (options.entry_mode == "hnsw" && index.top_level[size_t(root)] > 0) {
+                    const uint32_t begin = index.node_begin[size_t(root)];
+                    auto score_local = [&](uint32_t local) {
+                        if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[begin + local]);
+                        return cached_distance(begin + local);
+                    };
+                    uint32_t current = index.hnsw_entry_node[size_t(root)];
                     float current_distance = score_local(current);
-                    for (int level = index.top_level[size_t(attribute)]; level > 0; --level) {
+                    for (int level = index.top_level[size_t(root)]; level > 0; --level) {
                         bool moved = true;
                         while (moved) {
                             moved = false;
-                            const size_t row = size_t(index.upper_row_begin[size_t(attribute)][current]) +
-                                               size_t(level - 1);
-                            for (uint32_t j = index.upper_row_offset[size_t(attribute)][row];
-                                 j < index.upper_row_offset[size_t(attribute)][row + 1]; ++j) {
-                                const uint32_t neighbour = index.upper_targets[size_t(attribute)][j];
+                            const size_t row = size_t(index.upper_row_begin[size_t(root)][current]) + size_t(level - 1);
+                            for (uint32_t j = index.upper_row_offset[size_t(root)][row];
+                                 j < index.upper_row_offset[size_t(root)][row + 1]; ++j) {
+                                const uint32_t neighbour = index.upper_targets[size_t(root)][j];
                                 const float d = score_local(neighbour);
-                                if (d < current_distance) {
-                                    current_distance = d;
-                                    current = neighbour;
-                                    moved = true;
-                                }
+                                if (d < current_distance) { current_distance = d; current = neighbour; moved = true; }
                             }
                         }
                     }
-                    if (current_distance < best_distance) { best_distance = current_distance; chosen_local = current; }
+                    start = begin + current;
                 }
-                if (!use_upper_layers)
-                    for (uint32_t local : index.representative_nodes[size_t(attribute)]) {
-                        const float d = score_local(local);
-                        if (d < best_distance) { best_distance = d; chosen_local = local; }
-                    }
-                if (chosen_local >= member_count) continue;
-                if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[begin + chosen_local]);
-                offer(begin + chosen_local);
+                if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[start]);
+                offer(start);
             }
-        
+
             // single shared beam search
-            while (!candidate_heap.empty()) {
-                const uint32_t node = candidate_heap.top().second;
-                candidate_heap.pop();
+            while (!frontier.empty()) {
+                const uint32_t node = frontier.top().second;
+                frontier.pop();
                 expand(node);
             }
 
