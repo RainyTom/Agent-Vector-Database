@@ -1,0 +1,1 @@
+{"method":"acorn","ef":60,"two_hop":1,"k":20,"queries":100,"recall":0.997500,"qps":312.5,"per_query_ms":3.200,"dists_per_q":9979.3,"visited_per_q":9868.6,"eligible_per_q":69964.6,"avg_returned":20.0,"predicate_build_ms_per_q":0.0018,"repeat":1}

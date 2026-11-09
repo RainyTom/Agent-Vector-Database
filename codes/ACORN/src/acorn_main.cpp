@@ -99,9 +99,11 @@ int run_build(const Flags& flags) {
 }
 
 int run_search(const Flags& flags) {
+    // Ground truth depth follows the requested k; datasets carry gt_10.txt and,
+    // for the top-20 runs, gt_20.txt. Both are exact filtered top-k files.
     Dataset dataset;
     std::string error;
-    if (!dataset.load(flags.data_directory, 10, &error)) {
+    if (!dataset.load(flags.data_directory, std::max(flags.k, 10), &error)) {
         std::fprintf(stderr, "dataset load failed: %s\n", error.c_str());
         return 2;
     }

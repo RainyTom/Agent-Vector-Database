@@ -177,6 +177,7 @@ def main():
             kind='fixed-selectivity slice of a hierarchical-attribute dataset',
             source=str(source.relative_to(ROOT)),
             dim=args.dim, objects=int(base.shape[0]), queries=int(args.queries), k=int(args.k),
+            gt_depths=sorted(int(p.stem.split('_')[1]) for p in out.glob('gt_*.txt')),
             selectivity_target=selectivity,
             selectivity_achieved_mean=float(eligible_counts.mean() / base.shape[0]),
             eligible_mean=float(eligible_counts.mean()),

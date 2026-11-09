@@ -59,7 +59,10 @@ def main():
     parser.add_argument('--data-root', default=str(ROOT / 'datasets/sift1m'))
     parser.add_argument('--run-dir', required=True)
     parser.add_argument('--out-dir', default=str(ROOT / 'researches/nested-attr-vector-search/2026-11-09-exps'))
+    parser.add_argument('--suffix', default='', help="run/file suffix, e.g. -top20 for the k=20 runs")
     parser.add_argument('--recall-k-ef', type=int, default=10, help='ef shown in the recall@k figure')
+    parser.add_argument('--fixed-ef', type=int, default=0,
+                        help='when >0, also draw recall and QPS against selectivity at this ef')
     parser.add_argument('--k', type=int, default=10)
     args = parser.parse_args()
 
@@ -77,8 +80,8 @@ def main():
         if not match:
             continue
         label = match.group(1)
-        summary_path = run_dir / f'acorn-sel-{label}pct.jsonl'
-        trace_path = run_dir / f'acorn-sel-{label}pct-trace.jsonl'
+        summary_path = run_dir / f'acorn-sel-{label}pct{args.suffix}.jsonl'
+        trace_path = run_dir / f'acorn-sel-{label}pct{args.suffix}-trace.jsonl'
         if not summary_path.exists() or not trace_path.exists():
             continue
         summary = sorted(load_jsonl(summary_path), key=lambda row: row['ef'])
@@ -92,9 +95,9 @@ def main():
     if not slices:
         raise SystemExit(f'no sel-*pct slice with both a summary and a trace under {data_root} / {run_dir}')
 
-    with (data_dir / 'acorn-selectivity.csv').open('w', newline='') as sink:
+    with (data_dir / f'acorn-selectivity{args.suffix}.csv').open('w', newline='') as sink:
         writer = csv.writer(sink)
-        writer.writerow(['selectivity', 'achieved_selectivity', 'ef', 'recall_at_10', 'qps', 'per_query_ms',
+        writer.writerow(['selectivity', 'achieved_selectivity', 'ef', f'recall_at_{args.k}', 'qps', 'per_query_ms',
                          'dists_per_q', 'visited_per_q', 'eligible_per_q', 'visited_over_eligible', 'avg_returned'])
         for item in slices:
             for row in item['summary']:
@@ -103,9 +106,9 @@ def main():
                                  f"{row['dists_per_q']:.1f}", f"{row['visited_per_q']:.1f}",
                                  f"{row['eligible_per_q']:.1f}",
                                  f"{row['visited_per_q'] / row['eligible_per_q']:.4f}", f"{row['avg_returned']:.2f}"])
-    print(f'wrote {data_dir / "acorn-selectivity.csv"}')
+    print(f'wrote {data_dir / f"acorn-selectivity{args.suffix}.csv"}')
 
-    with (data_dir / 'acorn-recall-at-k.csv').open('w', newline='') as sink:
+    with (data_dir / f'acorn-recall-at-k{args.suffix}.csv').open('w', newline='') as sink:
         writer = csv.writer(sink)
         writer.writerow(['selectivity', 'ef', 'k', 'recall'])
         for item in slices:
@@ -114,7 +117,7 @@ def main():
                 for k in range(1, args.k + 1):
                     writer.writerow([f"{item['selectivity']:.2f}", ef, k,
                                      f"{recall_at_k(rows, item['ground_truth'], k):.6f}"])
-    print(f'wrote {data_dir / "acorn-recall-at-k.csv"}')
+    print(f'wrote {data_dir / f"acorn-recall-at-k{args.suffix}.csv"}')
 
     plt.rcParams.update({'font.size': 9, 'axes.grid': True, 'grid.alpha': 0.3,
                          'axes.spines.top': False, 'axes.spines.right': False})
@@ -129,12 +132,12 @@ def main():
                 label=f"{item['selectivity'] * 100:g}%")
     ax.set_xscale('log')
     ax.set_xlabel('QPS (100 queries, single core)')
-    ax.set_ylabel('Recall@10')
+    ax.set_ylabel(f'Recall@{args.k}')
     ax.set_ylim(0.55, 1.02)
     ax.legend(frameon=False, fontsize=6.5, ncol=2, title='selectivity', title_fontsize=6.5)
     fig.tight_layout()
-    for suffix in ('pdf', 'svg'):
-        fig.savefig(figures / f'acorn-selectivity-recall-qps.{suffix}')
+    for fmt in ('pdf', 'svg'):
+        fig.savefig(figures / f'acorn-selectivity-recall-qps{args.suffix}.{fmt}')
     plt.close(fig)
 
     ef_values = sorted({ef for item in slices for ef in item['ef_list']})
@@ -156,8 +159,8 @@ def main():
     ax.set_ylabel('visited nodes / |E(U)|')
     ax.legend(frameon=False, fontsize=6.5, ncol=2)
     fig.tight_layout()
-    for suffix in ('pdf', 'svg'):
-        fig.savefig(figures / f'acorn-selectivity-visited-ratio.{suffix}')
+    for fmt in ('pdf', 'svg'):
+        fig.savefig(figures / f'acorn-selectivity-visited-ratio{args.suffix}.{fmt}')
     plt.close(fig)
 
     fig, ax = plt.subplots(figsize=(4.4, 3.3))
@@ -175,9 +178,35 @@ def main():
     ax.set_ylim(0.55, 1.02)
     ax.legend(frameon=False, fontsize=6.5, ncol=2, title='selectivity', title_fontsize=6.5)
     fig.tight_layout()
-    for suffix in ('pdf', 'svg'):
-        fig.savefig(figures / f'acorn-recall-at-k.{suffix}')
+    for fmt in ('pdf', 'svg'):
+        fig.savefig(figures / f'acorn-recall-at-k{args.suffix}.{fmt}')
     plt.close(fig)
+    if args.fixed_ef:
+        x = [item['selectivity'] * 100 for item in slices]
+        recall, qps = [], []
+        for item in slices:
+            row = next((record for record in item['summary'] if record['ef'] == args.fixed_ef), None)
+            if row is None:
+                raise SystemExit(f'ef={args.fixed_ef} missing from the {item["label"]}pct run')
+            recall.append(row['recall'])
+            qps.append(row['qps'])
+        fig, (left, right) = plt.subplots(1, 2, figsize=(7.4, 3.0))
+        for ax, values, ylabel, decimals in ((left, recall, f'recall@{args.k}', 3), (right, qps, 'QPS', 0)):
+            ax.plot(x, values, marker='o', markersize=4, linewidth=1.4, color='#1f77b4')
+            for xi, yi in zip(x, values):
+                ax.annotate(f'{yi:.{decimals}f}', (xi, yi), textcoords='offset points',
+                            xytext=(0, 6), ha='center', fontsize=5.8)
+            ax.set_xlabel('selectivity (%)')
+            ax.set_ylabel(ylabel)
+            ax.set_xticks(x)
+        left.set_ylim(min(recall) - 0.02, 1.01)
+        right.set_ylim(0, max(qps) * 1.12)
+        fig.suptitle(f'ACORN, ef={args.fixed_ef}, k={args.k}, 100 queries, single core', fontsize=9)
+        fig.tight_layout()
+        for fmt in ('pdf', 'svg'):
+            fig.savefig(figures / f'acorn-selectivity-curves{args.suffix}.{fmt}')
+        plt.close(fig)
+
     print(f'wrote figures under {figures}')
     return 0
 
