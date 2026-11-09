@@ -53,6 +53,7 @@ CPU 2、单进程、单轮（`--repeat 1`）、$k=10$、$M=16$、$efC=200$、$K=
 ## 下一步
 
 按两层归因分别处理：属性层看种子配额（`ef2`、代表点数 `p`），item 层看每属性展开深度（共享队列的预算分配），两者都不是单纯提高 `ef` 能解决的。
+
 ## 精度损失归因：属性层 vs item 层
 
 按 trace 对未命中 GT 分两层判定（`data/miss-layers.json`，trace 在 `datasets/sift1m/runs/`）：
