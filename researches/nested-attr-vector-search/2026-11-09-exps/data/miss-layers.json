@@ -1,0 +1,66 @@
+{
+ "kind": "two-layer miss attribution on datasets/sift1m",
+ "trace_dir": "datasets/sift1m/runs",
+ "points": [
+  {
+   "ef": 10,
+   "recall": 0.4625,
+   "loss": 1075,
+   "attr_not_entered": 398,
+   "pct_attr_not_entered": 37.02325581395349,
+   "attr_entered_not_expanded": 0,
+   "attr_expanded_item_unscored": 677,
+   "pct_item_level": 62.97674418604651,
+   "item_scored_not_returned": 0,
+   "entered_attrs": 4595,
+   "expanded_attrs": 4595,
+   "expansions_per_entered_attr": {
+    "mean": 2.7192600652883567,
+    "median": 1.0,
+    "p90": 4.0,
+    "max": 75
+   },
+   "share_entered_attrs_expanded_at_most_once": 0.7323177366702938
+  },
+  {
+   "ef": 40,
+   "recall": 0.585,
+   "loss": 830,
+   "attr_not_entered": 178,
+   "pct_attr_not_entered": 21.44578313253012,
+   "attr_entered_not_expanded": 0,
+   "attr_expanded_item_unscored": 652,
+   "pct_item_level": 78.55421686746988,
+   "item_scored_not_returned": 0,
+   "entered_attrs": 7107,
+   "expanded_attrs": 7107,
+   "expansions_per_entered_attr": {
+    "mean": 4.640776699029126,
+    "median": 1.0,
+    "p90": 9.0,
+    "max": 182
+   },
+   "share_entered_attrs_expanded_at_most_once": 0.6662445476290981
+  },
+  {
+   "ef": 200,
+   "recall": 0.74,
+   "loss": 520,
+   "attr_not_entered": 26,
+   "pct_attr_not_entered": 5.0,
+   "attr_entered_not_expanded": 0,
+   "attr_expanded_item_unscored": 494,
+   "pct_item_level": 95.0,
+   "item_scored_not_returned": 0,
+   "entered_attrs": 11415,
+   "expanded_attrs": 11415,
+   "expansions_per_entered_attr": {
+    "mean": 10.828120893561104,
+    "median": 1.0,
+    "p90": 23.0,
+    "max": 467
+   },
+   "share_entered_attrs_expanded_at_most_once": 0.5828296101620675
+  }
+ ]
+}
