@@ -1,10 +1,9 @@
 #pragma once
 // Query side of the attribute-skeleton index (DQS: one queue, one keep heap).
 //
-// Two entry strategies, both feeding the same single search state:
-//   * representative queue (recommended): score every in-scope representative,
-//     keep the nearest `representative_queue_size`, expand each of them once;
-//   * representative entry: one nearest representative per in-scope attribute.
+// Entry: one nearest representative per in-scope attribute. Scoring every
+// representative of an attribute to pick its nearest one is the entry lookup;
+// all chosen entries feed the same single search state.
 
 #include <cstdint>
 #include <string>
@@ -15,8 +14,7 @@
 
 struct QueryOptions {
     int ef = 10;                        // keep-heap capacity of the single channel
-    int representative_queue_size = 32; // L: 0 disables the queue, falling back to seeds
-    std::string entry_mode = "representative";  // seed strategy when L = 0: representative | hnsw
+    std::string entry_mode = "representative";  // entry lookup: representative | hnsw
     int repeats = 1;
     int max_queries = 0;                // 0 = all queries
     bool rerank_fp32 = false;           // optional final rerank of the kept candidates
@@ -26,7 +24,6 @@ struct QueryOptions {
 
 struct QueryStats {
     int ef = 0;
-    int representative_queue_size = 0;
     long long ground_truth_entries = 0;
     long long hits = 0;
     double recall = 0.0;
@@ -37,7 +34,6 @@ struct QueryStats {
     double expanded_per_query = 0.0;
     double adjacency_slots_per_query = 0.0;
     double representative_scores_per_query = 0.0;
-    double representatives_expanded_per_query = 0.0;
     double eligible_per_query = 0.0;
     double attributes_in_scope_per_query = 0.0;
     double attributes_entered_per_query = 0.0;

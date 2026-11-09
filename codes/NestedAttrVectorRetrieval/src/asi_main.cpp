@@ -28,7 +28,7 @@ void print_usage() {
     std::fprintf(stderr,
         "usage:\n"
         "  asi build  --data DIR --index PATH [--M 16] [--efC 200] [--K 8] [--p 50]\n"
-        "  asi search --data DIR --index PATH --efs 10,40,200 [--reps-topL 32]\n"
+        "  asi search --data DIR --index PATH --efs 10,40,200 [--entry-mode representative|hnsw]\n"
         "             [--entry-mode representative|hnsw] [--k 10] [--queries N]\n"
         "             [--repeat 1] [--trace-file PATH] [--rerank-fp32] [--rerank-pool N]\n");
 }
@@ -76,7 +76,6 @@ int run_search(int argc, char** argv) {
         if (flag == "--data") data_directory = next();
         else if (flag == "--index") index_path = next();
         else if (flag == "--efs") ef_values = parse_int_list(next());
-        else if (flag == "--reps-topL") options.representative_queue_size = std::atoi(next().c_str());
         else if (flag == "--entry-mode") options.entry_mode = next();
         else if (flag == "--k") { ground_truth_k = std::atoi(next().c_str()); }
         else if (flag == "--queries") options.max_queries = std::atoi(next().c_str());
@@ -98,18 +97,18 @@ int run_search(int argc, char** argv) {
         QueryOptions per_point = options;
         per_point.ef = ef;
         const QueryStats stats = run_queries(dataset, index, per_point);
-        std::printf("{\"stage\":\"search\",\"ef\":%d,\"reps_topL\":%d,\"entry_mode\":\"%s\",\"k\":%d,"
+        std::printf("{\"stage\":\"search\",\"ef\":%d,\"entry_mode\":\"%s\",\"k\":%d,"
                     "\"queries\":%zu,\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.1f,"
                     "\"distance_cache_hits_per_q\":%.1f,\"expanded_per_q\":%.1f,"
                     "\"adjacency_slots_per_q\":%.1f,\"reps_scored_per_q\":%.1f,"
-                    "\"reps_expanded_per_q\":%.1f,\"eligible_per_q\":%.1f,"
+                    "\"eligible_per_q\":%.1f,"
                     "\"attrs_in_scope\":%.2f,\"attrs_entered\":%.2f,\"rerank_calls_per_q\":%.1f}\n",
-                    stats.ef, stats.representative_queue_size, per_point.entry_mode.c_str(), ground_truth_k,
+                    stats.ef, per_point.entry_mode.c_str(), ground_truth_k,
                     stats.ground_truth_entries ? size_t(dataset.num_queries()) : size_t(0),
                     stats.recall, stats.qps, stats.distances_per_query,
                     stats.distance_cache_hits_per_query, stats.expanded_per_query,
                     stats.adjacency_slots_per_query, stats.representative_scores_per_query,
-                    stats.representatives_expanded_per_query, stats.eligible_per_query,
+                    stats.eligible_per_query,
                     stats.attributes_in_scope_per_query, stats.attributes_entered_per_query,
                     stats.rerank_calls_per_query);
         std::fflush(stdout);

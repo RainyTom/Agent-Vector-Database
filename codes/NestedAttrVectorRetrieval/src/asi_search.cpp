@@ -44,7 +44,7 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
 
     long long hits = 0, ground_truth_entries = 0;
     long long distances = 0, cache_hits = 0, expansions = 0, adjacency_slots = 0;
-    long long representative_scores = 0, representatives_expanded = 0, rerank_calls = 0;
+    long long representative_scores = 0, rerank_calls = 0;
     long long eligible_sum = 0, attributes_in_scope_sum = 0, attributes_entered_sum = 0;
     double seconds = 0.0;
     const size_t timed_queries = query_count * size_t(options.repeats);
@@ -57,7 +57,7 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
             std::vector<uint32_t> evaluated_objects, admitted_objects, seed_scored_objects,
                 expanded_objects, seed_nodes;
             long long query_expansions = 0, query_slots = 0, query_cache_hits = 0;
-            long long query_representative_scores = 0, query_representatives_expanded = 0;
+            long long query_representative_scores = 0;
             long long query_rerank_calls = 0;
 
             // 1. predicate = OR of the descendant closures of the query attributes
@@ -166,84 +166,52 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     offer(index.bridge_edge_targets[j]);
             };
 
-            if (options.representative_queue_size > 0) {
-                // strategy A: score all in-scope representatives, expand the nearest L of them
-                std::priority_queue<std::pair<float, uint32_t>> nearest_representatives;
-                for (int attribute : in_scope_attributes) {
-                    const uint32_t begin = index.node_begin[size_t(attribute)];
-                    for (uint32_t local : index.representative_nodes[size_t(attribute)]) {
-                        const uint32_t node = begin + local;
-                        const float d = cached_distance(node);
-                        ++query_representative_scores;
-                        if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[node]);
-                        if (int(nearest_representatives.size()) < options.representative_queue_size)
-                            nearest_representatives.push({d, node});
-                        else if (d < nearest_representatives.top().first) {
-                            nearest_representatives.pop();
-                            nearest_representatives.push({d, node});
-                        }
-                    }
-                }
-                std::vector<std::pair<float, uint32_t>> representative_queue;
-                while (!nearest_representatives.empty()) {
-                    representative_queue.push_back(nearest_representatives.top());
-                    nearest_representatives.pop();
-                }
-                std::sort(representative_queue.begin(), representative_queue.end());
-                for (const auto& entry : representative_queue) {
-                    if (expanded_stamp[entry.second] == query_token) continue;
-                    expand(entry.second);
-                    ++query_representatives_expanded;
-                    if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[entry.second]);
-                }
-            } else {
-                // strategy B: one nearest representative per in-scope attribute
-                for (int attribute : in_scope_attributes) {
-                    const uint32_t begin = index.node_begin[size_t(attribute)];
-                    const uint32_t member_count = index.node_begin[size_t(attribute) + 1] - begin;
-                    auto score_local = [&](uint32_t local) {
-                        if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[begin + local]);
-                        return cached_distance(begin + local);
-                    };
-                    uint32_t chosen_local = index.entry_node[size_t(attribute)];
-                    float best_distance = score_local(chosen_local);
-                    const bool use_upper_layers = options.entry_mode == "hnsw" &&
-                        index.top_level[size_t(attribute)] > 0;
-                    if (use_upper_layers) {
-                        // greedy descent over the retained upper layers, entry mode "hnsw"
-                        uint32_t current = index.hnsw_entry_node[size_t(attribute)];
-                        float current_distance = score_local(current);
-                        for (int level = index.top_level[size_t(attribute)]; level > 0; --level) {
-                            bool moved = true;
-                            while (moved) {
-                                moved = false;
-                                const size_t row = size_t(index.upper_row_begin[size_t(attribute)][current]) +
-                                                   size_t(level - 1);
-                                for (uint32_t j = index.upper_row_offset[size_t(attribute)][row];
-                                     j < index.upper_row_offset[size_t(attribute)][row + 1]; ++j) {
-                                    const uint32_t neighbour = index.upper_targets[size_t(attribute)][j];
-                                    const float d = score_local(neighbour);
-                                    if (d < current_distance) {
-                                        current_distance = d;
-                                        current = neighbour;
-                                        moved = true;
-                                    }
+            // entry lookup: one nearest representative per in-scope attribute
+            for (int attribute : in_scope_attributes) {
+                const uint32_t begin = index.node_begin[size_t(attribute)];
+                const uint32_t member_count = index.node_begin[size_t(attribute) + 1] - begin;
+                auto score_local = [&](uint32_t local) {
+                    if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[begin + local]);
+                    return cached_distance(begin + local);
+                };
+                uint32_t chosen_local = index.entry_node[size_t(attribute)];
+                float best_distance = score_local(chosen_local);
+                const bool use_upper_layers = options.entry_mode == "hnsw" &&
+                    index.top_level[size_t(attribute)] > 0;
+                if (use_upper_layers) {
+                    // greedy descent over the retained upper layers, entry mode "hnsw"
+                    uint32_t current = index.hnsw_entry_node[size_t(attribute)];
+                    float current_distance = score_local(current);
+                    for (int level = index.top_level[size_t(attribute)]; level > 0; --level) {
+                        bool moved = true;
+                        while (moved) {
+                            moved = false;
+                            const size_t row = size_t(index.upper_row_begin[size_t(attribute)][current]) +
+                                               size_t(level - 1);
+                            for (uint32_t j = index.upper_row_offset[size_t(attribute)][row];
+                                 j < index.upper_row_offset[size_t(attribute)][row + 1]; ++j) {
+                                const uint32_t neighbour = index.upper_targets[size_t(attribute)][j];
+                                const float d = score_local(neighbour);
+                                if (d < current_distance) {
+                                    current_distance = d;
+                                    current = neighbour;
+                                    moved = true;
                                 }
                             }
                         }
-                        if (current_distance < best_distance) { best_distance = current_distance; chosen_local = current; }
                     }
-                    if (!use_upper_layers)
-                        for (uint32_t local : index.representative_nodes[size_t(attribute)]) {
-                            const float d = score_local(local);
-                            if (d < best_distance) { best_distance = d; chosen_local = local; }
-                        }
-                    if (chosen_local >= member_count) continue;
-                    if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[begin + chosen_local]);
-                    offer(begin + chosen_local);
+                    if (current_distance < best_distance) { best_distance = current_distance; chosen_local = current; }
                 }
+                if (!use_upper_layers)
+                    for (uint32_t local : index.representative_nodes[size_t(attribute)]) {
+                        const float d = score_local(local);
+                        if (d < best_distance) { best_distance = d; chosen_local = local; }
+                    }
+                if (chosen_local >= member_count) continue;
+                if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[begin + chosen_local]);
+                offer(begin + chosen_local);
             }
-
+        
             // single shared beam search
             while (!candidate_heap.empty()) {
                 const uint32_t node = candidate_heap.top().second;
@@ -301,7 +269,6 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
             expansions += query_expansions;
             adjacency_slots += query_slots;
             representative_scores += query_representative_scores;
-            representatives_expanded += query_representatives_expanded;
             rerank_calls += query_rerank_calls;
             attributes_entered_sum += (long long)entered_attributes.size();
             (void)distances_before;
@@ -320,14 +287,13 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     entered_ids.push_back(uint32_t(index.attribute_ids[attribute]));
                 for (uint32_t attribute : touched_attributes)
                     touched_ids.push_back(uint32_t(index.attribute_ids[attribute]));
-                std::fprintf(trace, "{\"ef\":%d,\"reps_topL\":%d,\"qi\":%zu,\"eligible\":%lld"
+                std::fprintf(trace, "{\"ef\":%d,\"qi\":%zu,\"eligible\":%lld"
                                     ",\"distance_calls\":%lld,\"distance_cache_hits\":%lld"
                                     ",\"adjacency_slots\":%lld,\"expanded\":%lld"
-                                    ",\"reps_scored\":%lld,\"reps_expanded\":%lld",
-                             ef, options.representative_queue_size, qi, eligible,
+                                    ",\"reps_scored\":%lld",
+                             ef, qi, eligible,
                              distances - distances_before, query_cache_hits, query_slots,
-                             query_expansions, query_representative_scores,
-                             query_representatives_expanded);
+                             query_expansions, query_representative_scores);
                 write_ids("returned", returned_objects);
                 write_ids("evaluated", evaluated_objects);
                 write_ids("admitted", admitted_objects);
@@ -344,7 +310,6 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
 
     QueryStats stats;
     stats.ef = ef;
-    stats.representative_queue_size = options.representative_queue_size;
     stats.ground_truth_entries = ground_truth_entries;
     stats.hits = hits;
     stats.recall = double(hits) / double(std::max<long long>(1, ground_truth_entries));
@@ -355,7 +320,6 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
     stats.expanded_per_query = double(expansions) / double(std::max<size_t>(1, timed_queries));
     stats.adjacency_slots_per_query = double(adjacency_slots) / double(std::max<size_t>(1, timed_queries));
     stats.representative_scores_per_query = double(representative_scores) / double(std::max<size_t>(1, timed_queries));
-    stats.representatives_expanded_per_query = double(representatives_expanded) / double(std::max<size_t>(1, timed_queries));
     stats.eligible_per_query = double(eligible_sum) / double(std::max<size_t>(1, timed_queries));
     stats.attributes_in_scope_per_query = double(attributes_in_scope_sum) / double(std::max<size_t>(1, timed_queries));
     stats.attributes_entered_per_query = double(attributes_entered_sum) / double(std::max<size_t>(1, timed_queries));

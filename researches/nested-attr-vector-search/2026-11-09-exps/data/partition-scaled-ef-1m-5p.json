@@ -1,0 +1,26 @@
+{
+  "kind": "single_graph_vs_partitions_scaled_ef",
+  "dataset": {"base": "datasets/sift1m/raw/sift_base.fvecs", "n": 1000000, "dim": 128, "queries": 300, "k": 100},
+  "partitions": 5,
+  "seed": 20261101,
+  "graph": {"M": 16, "efConstruction": 200},
+  "build_seconds": {"single": 725.737, "partitioned": 464.239},
+  "threads": 1,
+  "single": {
+    "40": {"queries":300,"mean_us":498.45,"p50_us":509.63,"p95_us":632.379,"recall_at_k":0.915833,"hits":27475,"denominator":30000,"distance_calls_per_query":1823.08},
+    "64": {"queries":300,"mean_us":468.536,"p50_us":472.08,"p95_us":613.273,"recall_at_k":0.915833,"hits":27475,"denominator":30000,"distance_calls_per_query":1823.08},
+    "96": {"queries":300,"mean_us":468.154,"p50_us":480.365,"p95_us":588.567,"recall_at_k":0.915833,"hits":27475,"denominator":30000,"distance_calls_per_query":1823.08},
+    "128": {"queries":300,"mean_us":536.784,"p50_us":555.555,"p95_us":662.696,"recall_at_k":0.9427,"hits":28281,"denominator":30000,"distance_calls_per_query":2220.21},
+    "192": {"queries":300,"mean_us":756.718,"p50_us":787.438,"p95_us":953.478,"recall_at_k":0.971167,"hits":29135,"denominator":30000,"distance_calls_per_query":3078.4},
+    "256": {"queries":300,"mean_us":965.835,"p50_us":1000.79,"p95_us":1219.22,"recall_at_k":0.9837,"hits":29511,"denominator":30000,"distance_calls_per_query":3887.48}
+  },
+  "partitioned": {
+    "k25_ef10": {"queries":300,"mean_us":665.05,"p50_us":671.652,"p95_us":855.114,"recall_at_k":0.861533,"hits":25846,"denominator":30000,"distance_calls_per_query":2890.57},
+    "k25_ef16": {"queries":300,"mean_us":672.229,"p50_us":677.262,"p95_us":848.071,"recall_at_k":0.861533,"hits":25846,"denominator":30000,"distance_calls_per_query":2890.57},
+    "k25_ef20": {"queries":300,"mean_us":663.885,"p50_us":669.689,"p95_us":823.405,"recall_at_k":0.861533,"hits":25846,"denominator":30000,"distance_calls_per_query":2890.57},
+    "k25_ef25": {"queries":300,"mean_us":649.456,"p50_us":656.033,"p95_us":839.765,"recall_at_k":0.861533,"hits":25846,"denominator":30000,"distance_calls_per_query":2890.57},
+    "k25_ef32": {"queries":300,"mean_us":774.214,"p50_us":794.32,"p95_us":933.12,"recall_at_k":0.8942,"hits":26826,"denominator":30000,"distance_calls_per_query":3414.76},
+    "k25_ef40": {"queries":300,"mean_us":911.957,"p50_us":929.943,"p95_us":1150.1,"recall_at_k":0.9199,"hits":27597,"denominator":30000,"distance_calls_per_query":4003.11},
+    "k25_ef64": {"queries":300,"mean_us":1284.28,"p50_us":1327.33,"p95_us":1585.72,"recall_at_k":0.958933,"hits":28768,"denominator":30000,"distance_calls_per_query":5670.08}
+  }
+}

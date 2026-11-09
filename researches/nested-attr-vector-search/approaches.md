@@ -103,12 +103,10 @@ offer(v):
     d ← 种子分数缓存命中 ? 复用 : 计算
     keep_heap 满且 d ≥ 最差 → 丢弃；否则写入 candidate_heap 与 keep_heap
 
-代表点队列（默认，--reps-topL L）：
-    对 inD 的全部代表点评分
-    取距离最近的 L 个放进独立队列
-    队列里每个代表点都强制展开一次（不看 keep 阈值）
-对照入口（--reps-topL 0）：
-    inD 每个属性选一个代表点作种子，offer 后进入普通 beam
+入口（每属性一个代表点）：
+    对 inD 的每个属性，给它的全部代表点评分
+    取该属性内离查询最近的那个代表点作为入口
+    offer 后进入唯一的普通 beam
 
 当 candidate_heap 非空：
     弹出最近节点
@@ -133,8 +131,7 @@ offer(v):
 | `--K` | 8 | 代表点数量上限 $K_{cap}$ |
 | `--p` | 50 | 代表点密度，值越小代表点越多 |
 | `--efs` | `10,20,40,80,160,320` | 唯一通道 keep 容量，可一次跑多档 |
-| `--reps-topL` | 32 | 代表点独立队列宽度；0 关闭，退回每属性一个种子 |
-| `--entry-mode` | `representative` | `--reps-topL 0` 时的入口：`representative` 或 `hnsw` |
+| `--entry-mode` | `representative` | 入口查找方式：`representative`（给代表点评分选最近）或 `hnsw`（上层贪心下降） |
 | `--queries` / `--repeat` | 200 / 1 | 查询数与前缀重复轮数 |
 | `--trace-file` | — | 逐查询诊断 JSONL |
 | `--rerank-fp32` / `--rerank-pool` | 关 / 0 | 保留集 FP32 重排（本数据集无量化误差，默认关） |
