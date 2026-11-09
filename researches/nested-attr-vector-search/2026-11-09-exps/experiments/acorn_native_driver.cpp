@@ -1,15 +1,22 @@
 // Driver for the official ACORN implementation (guestrin-lab/ACORN, a faiss fork).
-// It loads our unified dataset, builds faiss::IndexACORN with per-object attribute
-// metadata, and runs the query grid so the native implementation can be compared
-// against the hnswlib port on the same workload.
 //
-// Build (after `make -C /tmp/acorn-official/build -j faiss`):
-//   g++ -std=c++17 -O3 -mavx2 -I /tmp/acorn-official \
-//       acorn_native_driver.cpp -o /tmp/acorn_native \
-//       /tmp/acorn-official/build/faiss/libfaiss.a -lgomp -lblas -llapack -lpthread
+// Predicate handling follows the paper: ACORN's construction is metadata-agnostic,
+// so the attribute semantics never enter the graph. Everything is decided by the
+// filter_id_map passed to search():
+//
+//   * every item owns a bitset over the attribute vocabulary, holding its own
+//     attribute plus all of its DAG ancestors;
+//   * every attribute keeps an inverted bitmap postings[a] = items whose bitset
+//     contains a, built by propagating owner bitmaps up the DAG;
+//   * a query on attribute a is mask = postings[a] (containment: item contains a);
+//   * all queries are packed into one (nq x N) char mask and handed over in a
+//     single search() call;
+//   * queries whose passing count falls below 1/gamma are answered by brute force
+//     over the mask, which is the paper's selective fallback.
 #include <faiss/IndexACORN.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstdint>
 #include <cstdio>
@@ -20,6 +27,8 @@
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <thread>
+#include <unordered_map>
 #include <unordered_set>
 #include <vector>
 
@@ -61,6 +70,8 @@ int main(int argc, char** argv) {
     size_t M = 16, gamma = 2, M_beta = 8, ef_construction = 200;
     int k = 10;
     size_t queries = 200;
+    size_t build_threads = 1;
+    bool use_fallback = true;
     std::string ef_list = "10,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800";
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
@@ -73,47 +84,83 @@ int main(int argc, char** argv) {
         else if (arg == "--efC") ef_construction = std::stoul(next());
         else if (arg == "--k") k = std::stoi(next());
         else if (arg == "--queries") queries = std::stoul(next());
+        else if (arg == "--build-threads") build_threads = std::stoul(next());
         else if (arg == "--efs") ef_list = next();
+        else if (arg == "--no-fallback") use_fallback = false;
         else { std::fprintf(stderr, "unknown flag %s\n", arg.c_str()); return 2; }
     }
 
     Matrix base = load_float_bin(data + "/base.bin", 128);
     Matrix query_vectors = load_float_bin(data + "/queries.bin", 128);
     const std::vector<long long> owner = load_int_lines(data + "/objects.txt");
+    const size_t n = size_t(base.rows);
 
-    // attribute id -> dense index, and the child/parent relation of the DAG
-    std::vector<int> attribute_ids;
+    // dense attribute ids over sorted vocabulary
+    std::vector<int> vocabulary;
     {
         std::unordered_set<int> ids;
         for (long long value : owner) ids.insert(int(value));
-        attribute_ids.assign(ids.begin(), ids.end());
-        std::sort(attribute_ids.begin(), attribute_ids.end());
-    }
-    const int attribute_count = int(attribute_ids.size());
-    std::vector<int> dense_of_attribute{std::vector<int>(size_t(attribute_count), -1)};
-    {
-        std::vector<int> max_id{std::vector<int>(attribute_ids.empty() ? size_t(0) : size_t(attribute_ids.back()) + 1, -1)};
-        for (int i = 0; i < attribute_count; ++i) {
-            if (attribute_ids[size_t(i)] >= int(max_id.size()))
-                max_id.resize(size_t(attribute_ids[size_t(i)]) + 1, -1);
-            max_id[size_t(attribute_ids[size_t(i)])] = i;
+        {
+            std::ifstream in(data + "/edges.tsv");
+            int child = 0, parent = 0;
+            while (in >> child >> parent) { ids.insert(child); ids.insert(parent); }
         }
-        dense_of_attribute = std::move(max_id);
+        vocabulary.assign(ids.begin(), ids.end());
+        std::sort(vocabulary.begin(), vocabulary.end());
     }
-    // dense edges
-    std::vector<std::vector<int>> dense_children{std::vector<std::vector<int>>(size_t(attribute_count))};
+    const size_t attribute_count = vocabulary.size();
+    std::unordered_map<long long, int> dense;
+    dense.reserve(attribute_count * 2);
+    for (size_t i = 0; i < attribute_count; ++i) dense.emplace(vocabulary[i], int(i));
+
+    std::vector<std::vector<int>> children(attribute_count);
+    std::vector<std::vector<int>> parents(attribute_count);
     {
         std::ifstream in(data + "/edges.tsv");
         int child = 0, parent = 0;
         while (in >> child >> parent) {
-            if (child >= int(dense_of_attribute.size()) || parent >= int(dense_of_attribute.size())) continue;
-            const int c = dense_of_attribute[size_t(child)];
-            const int p = dense_of_attribute[size_t(parent)];
-            if (c >= 0 && p >= 0) dense_children[size_t(p)].push_back(c);
+            const auto c = dense.find(child);
+            const auto p = dense.find(parent);
+            if (c == dense.end() || p == dense.end()) continue;
+            children[size_t(p->second)].push_back(c->second);
+            parents[size_t(c->second)].push_back(p->second);
         }
     }
 
-    // query predicates: "1 <attribute>" per line (or several)
+    // ---- inverted postings: postings[a] = items whose attribute set contains a ----
+    const size_t words = (attribute_count + 63) / 64;
+    const size_t bitmap_words = (n + 63) / 64;
+    std::vector<uint64_t> postings(attribute_count * bitmap_words, 0);
+    auto posting_bit = [&](size_t attribute, size_t item) {
+        postings[attribute * bitmap_words + item / 64] |= uint64_t(1) << (item % 64);
+    };
+    for (size_t item = 0; item < n; ++item) {
+        const auto found = dense.find(owner[item]);
+        if (found != dense.end()) posting_bit(size_t(found->second), item);
+    }
+    {
+        // propagate owner bitmaps up the DAG: postings[parent] |= postings[child]
+        std::vector<int> in_degree(attribute_count, 0);
+        for (size_t a = 0; a < attribute_count; ++a) in_degree[a] = int(children[a].size());
+        std::vector<int> ready;
+        for (size_t a = 0; a < attribute_count; ++a)
+            if (in_degree[a] == 0) ready.push_back(int(a));
+        std::vector<char> done(attribute_count, 0);
+        while (!ready.empty()) {
+            const int a = ready.back();
+            ready.pop_back();
+            if (done[size_t(a)]) continue;
+            done[size_t(a)] = 1;
+            for (int parent : parents[size_t(a)]) {
+                uint64_t* dst = &postings[size_t(parent) * bitmap_words];
+                const uint64_t* src = &postings[size_t(a) * bitmap_words];
+                for (size_t w = 0; w < bitmap_words; ++w) dst[w] |= src[w];
+                if (--in_degree[size_t(parent)] == 0) ready.push_back(parent);
+            }
+        }
+    }
+
+    // ---- queries: "<count> <attribute>..." = union of the listed attributes ----
     std::vector<std::vector<int>> query_attributes;
     {
         std::ifstream in(data + "/queries.tsv");
@@ -127,15 +174,13 @@ int main(int argc, char** argv) {
             for (int i = 0; i < count; ++i) {
                 int value = 0;
                 stream >> value;
-                const int dense = value < int(dense_of_attribute.size())
-                    ? dense_of_attribute[size_t(value)] : -1;
-                if (dense >= 0) list.push_back(dense);
+                const auto found = dense.find(value);
+                if (found != dense.end()) list.push_back(found->second);
             }
             query_attributes.push_back(list);
         }
     }
 
-    // ground truth gt_<k>.txt, int32, m x k with -1 padding
     std::vector<int32_t> gt;
     {
         std::ifstream in(data + "/gt_" + std::to_string(k) + ".txt", std::ios::binary);
@@ -148,21 +193,54 @@ int main(int argc, char** argv) {
     }
     const size_t gt_rows = gt.size() / size_t(k);
 
-    // metadata: dense attribute id per object, exactly what IndexACORN expects
-    std::vector<int> metadata(size_t(base.rows));
-    for (size_t i = 0; i < size_t(base.rows); ++i) {
-        const long long attribute = owner[i];
-        metadata[i] = attribute < int64_t(dense_of_attribute.size())
-            ? dense_of_attribute[size_t(attribute)] : -1;
-    }
+    // metadata is irrelevant to ACORN's construction (metadata-agnostic), so a
+    // constant is a correct choice; the predicate lives entirely in the mask.
+    std::vector<int> metadata(n, 0);
 
     faiss::IndexACORNFlat index(int(base.cols), int(M), int(gamma), metadata, int(M_beta),
                                 faiss::METRIC_L2);
     index.acorn.efConstruction = int(ef_construction);
-    index.add(faiss::idx_t(base.rows), base.data.data());
-    std::printf("{\"stage\":\"build\",\"objects\":%zu,\"attributes\":%d,\"M\":%zu,\"gamma\":%zu,\"M_beta\":%zu}\n",
-                size_t(base.rows), attribute_count, M, gamma, M_beta);
-    std::fflush(stdout);
+    {
+        const auto started = std::chrono::steady_clock::now();
+        const size_t threads = std::max<size_t>(1, build_threads);
+        if (threads <= 1) {
+            index.add(faiss::idx_t(n), base.data.data());
+        } else {
+            // faiss's add is itself parallel; keep the same knob for reporting
+            index.add(faiss::idx_t(n), base.data.data());
+        }
+        const double seconds = std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - started).count();
+        std::printf("{\"stage\":\"build\",\"objects\":%zu,\"attributes\":%zu,\"words\":%zu,"
+                    "\"M\":%zu,\"gamma\":%zu,\"M_beta\":%zu,\"build_s\":%.1f}\n",
+                    n, attribute_count, words, M, gamma, M_beta, seconds);
+        std::fflush(stdout);
+    }
+
+    const size_t nq = std::min({queries, query_vectors.rows, query_attributes.size(), gt_rows});
+
+    // ---- pack every query's mask once: nq x N bytes ----
+    std::vector<char> mask(nq * n, 0);
+    std::vector<size_t> passed_per_query(nq, 0);
+    for (size_t qi = 0; qi < nq; ++qi) {
+        std::vector<uint64_t> bits(bitmap_words, 0);
+        for (int attribute : query_attributes[qi]) {
+            const uint64_t* src = &postings[size_t(attribute) * bitmap_words];
+            for (size_t w = 0; w < bitmap_words; ++w) bits[w] |= src[w];
+        }
+        char* row = mask.data() + qi * n;
+        size_t passed = 0;
+        for (size_t w = 0; w < bitmap_words; ++w) {
+            uint64_t word = bits[w];
+            while (word) {
+                const size_t bit = size_t(__builtin_ctzll(word));
+                word &= word - 1;
+                const size_t item = w * 64 + bit;
+                if (item < n) { row[item] = 1; ++passed; }
+            }
+        }
+        passed_per_query[qi] = passed;
+    }
 
     std::vector<int> efs;
     {
@@ -177,62 +255,85 @@ int main(int argc, char** argv) {
         }
     }
 
-    const size_t nq = std::min({queries, query_vectors.rows, query_attributes.size(), gt_rows});
-    std::vector<char> filter_map(size_t(base.rows), 0);
-    std::vector<float> distances{std::vector<float>(size_t(k))};
-    std::vector<faiss::idx_t> labels{std::vector<faiss::idx_t>(size_t(k))};
     std::ofstream out_file;
     std::ostream* out = &std::cout;
-    if (!out_path.empty()) {
-        out_file.open(out_path);
-        out = &out_file;
-    }
+    if (!out_path.empty()) { out_file.open(out_path); out = &out_file; }
+
+    std::vector<float> distances(nq * size_t(k));
+    std::vector<faiss::idx_t> labels(nq * size_t(k));
 
     for (int ef : efs) {
         index.acorn.efSearch = ef;
-        double total_ms = 0.0;
+        std::fill(distances.begin(), distances.end(), 0.0f);
+        std::fill(labels.begin(), labels.end(), faiss::idx_t(-1));
+        const auto started = std::chrono::steady_clock::now();
+        index.search(faiss::idx_t(nq), query_vectors.data.data(), k, distances.data(),
+                     labels.data(), mask.data());
+        const double graph_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - started).count();
+        double elapsed_ms = graph_ms;   // extended below when the fallback runs
+
+        // selective fallback: queries below 1/gamma are answered exactly
+        size_t fallback_queries = 0;
+        if (use_fallback) {
+            const size_t threshold = n / std::max<size_t>(1, gamma);
+            for (size_t qi = 0; qi < nq; ++qi) {
+                if (passed_per_query[qi] >= threshold) continue;
+                ++fallback_queries;
+                const float* qv = query_vectors.data.data() + qi * size_t(base.cols);
+                std::vector<std::pair<float, faiss::idx_t>> best;
+                best.reserve(k);
+                for (size_t item = 0; item < n; ++item) {
+                    if (!mask[qi * n + item]) continue;
+                    const float* v = base.data.data() + item * size_t(base.cols);
+                    float d = 0.0f;
+                    for (int dim = 0; dim < int(base.cols); ++dim) {
+                        const float diff = qv[dim] - v[dim];
+                        d += diff * diff;
+                    }
+                    if (best.size() < size_t(k)) {
+                        best.emplace_back(d, faiss::idx_t(item));
+                        std::push_heap(best.begin(), best.end());
+                    } else if (d < best.front().first) {
+                        std::pop_heap(best.begin(), best.end());
+                        best.back() = {d, faiss::idx_t(item)};
+                        std::push_heap(best.begin(), best.end());
+                    }
+                }
+                std::sort(best.begin(), best.end());
+                for (size_t slot = 0; slot < best.size(); ++slot) {
+                    distances[qi * size_t(k) + slot] = best[slot].first;
+                    labels[qi * size_t(k) + slot] = best[slot].second;
+                }
+            }
+        }
+
+        elapsed_ms = std::chrono::duration<double, std::milli>(
+            std::chrono::steady_clock::now() - started).count();
+
         size_t hits = 0, relevant = 0, returned_total = 0;
         for (size_t qi = 0; qi < nq; ++qi) {
-            // filter_map: objects whose owner attribute is in the descendant closure
-            std::fill(filter_map.begin(), filter_map.end(), 0);
-            std::vector<int> pending = query_attributes[qi];
-            std::vector<char> in_scope(size_t(attribute_count), 0);
-            while (!pending.empty()) {
-                const int attribute = pending.back();
-                pending.pop_back();
-                if (in_scope[size_t(attribute)]) continue;
-                in_scope[size_t(attribute)] = 1;
-                for (int child : dense_children[size_t(attribute)]) pending.push_back(child);
+            std::unordered_set<faiss::idx_t> found;
+            for (int slot = 0; slot < k; ++slot) {
+                const faiss::idx_t value = labels[qi * size_t(k) + size_t(slot)];
+                if (value >= 0) found.insert(value);
             }
-            for (size_t object = 0; object < size_t(base.rows); ++object)
-                if (metadata[object] >= 0 && in_scope[size_t(metadata[object])]) filter_map[object] = 1;
-
-            const auto started = std::chrono::steady_clock::now();
-            index.search(1, query_vectors.data.data() + qi * size_t(base.cols), k,
-                         distances.data(), labels.data(), filter_map.data());
-            total_ms += std::chrono::duration<double, std::milli>(
-                std::chrono::steady_clock::now() - started).count();
-
-            std::unordered_set<faiss::idx_t> found(labels.begin(), labels.end());
-            size_t local_hits = 0, local_relevant = 0;
+            returned_total += found.size();
             for (int rank = 0; rank < k; ++rank) {
                 const int32_t truth = gt[qi * size_t(k) + size_t(rank)];
                 if (truth < 0) continue;
-                ++local_relevant;
-                if (found.count(faiss::idx_t(truth))) ++local_hits;
+                ++relevant;
+                if (found.count(faiss::idx_t(truth))) ++hits;
             }
-            hits += local_hits;
-            relevant += local_relevant;
-            returned_total += size_t(std::count_if(labels.begin(), labels.end(),
-                                                   [](faiss::idx_t v) { return v >= 0; }));
-            (void)total_ms;
         }
         const double recall = relevant ? double(hits) / double(relevant) : 0.0;
-        const double qps = total_ms > 0.0 ? double(nq) * 1000.0 / total_ms : 0.0;
         *out << "{\"method\":\"acorn_native\",\"ef\":" << ef << ",\"k\":" << k
              << ",\"queries\":" << nq << ",\"recall\":" << recall
-             << ",\"qps\":" << qps
+             << ",\"qps\":" << (elapsed_ms > 0.0 ? double(nq) * 1000.0 / elapsed_ms : 0.0)
              << ",\"avg_returned\":" << (nq ? double(returned_total) / double(nq) : 0.0)
+             << ",\"graph_ms\":" << graph_ms << ",\"fallback_queries\":" << fallback_queries
+             << ",\"mean_passed\":" << (nq ? double(std::accumulate(passed_per_query.begin(),
+                                                                    passed_per_query.end(), size_t(0))) / double(nq) : 0.0)
              << "}\n";
         out->flush();
     }
