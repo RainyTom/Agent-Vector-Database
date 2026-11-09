@@ -3,9 +3,12 @@
 //
 // The graph is built by ACORN's own insertion procedure (candidate collection of
 // 2*M*gamma edges, then ACORN's predicate-agnostic pruning), but every distance
-// goes through hnswlib's pinned L2Space, and the vectors live in the same
-// contiguous layout hnswlib uses. This keeps the engine and the distance kernel
-// identical to the other schemes while reproducing ACORN's mechanism exactly.
+// goes through hnswlib's pinned L2Space.
+//
+// Storage: level 0 is a flat CSR (offset array + concatenated targets), which is
+// what the search touches on every expansion. Levels >= 1 cover only ~6% of the
+// nodes, so they keep a per-node vector and are traversed once per query during
+// the entry descent.
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -15,10 +18,10 @@
 #include "raw_l2_space.h"
 
 struct AcornBuildConfig {
-    size_t M = 16;
-    size_t ef_construction = 200;
-    size_t M_beta = 8;
-    size_t gamma = 2;
+    size_t M = 32;
+    size_t ef_construction = 40;
+    size_t M_beta = 64;
+    size_t gamma = 12;
     unsigned seed = 100;
     size_t build_threads = 1;   // accepted for API symmetry; construction is sequential
 };
@@ -27,6 +30,7 @@ struct AcornBuildStats {
     double build_s = 0.0;
     size_t object_count = 0;
     int dimension = 0;
+    double level0_degree = 0.0;
 };
 
 class AcornIndex {
@@ -37,7 +41,6 @@ public:
                AcornBuildStats* stats, std::string* error);
     bool save(const std::string& path, std::string* error) const;
     bool load(const std::string& path, int dimension, std::string* error);
-    // vectors are not stored in the index file; re-attach them after load()
     void attach_vectors(const Dataset& dataset) {
         base_ = dataset.base.data();
         dimension_ = dataset.dim;
@@ -55,25 +58,34 @@ public:
     int max_level() const { return max_level_; }
     int level_of(uint32_t id) const { return level_[size_t(id)]; }
 
-    const uint32_t* neighbors_at_level(uint32_t id, int level, size_t* count) const {
-        const std::vector<uint32_t>& list = adjacency_[size_t(id)][size_t(level)];
-        *count = list.size();
-        return list.data();
-    }
+    // Level 0 is CSR: neighbours of `id` live in one contiguous run.
     const uint32_t* neighbors_of(uint32_t id, size_t* count) const {
-        return neighbors_at_level(id, 0, count);
+        *count = size_t(level0_offset_[size_t(id) + 1] - level0_offset_[size_t(id)]);
+        return level0_target_.data() + level0_offset_[size_t(id)];
+    }
+    const uint32_t* neighbors_at_level(uint32_t id, int level, size_t* count) const {
+        if (level == 0) return neighbors_of(id, count);
+        const std::vector<std::vector<uint32_t>>& per_node = upper_adjacency_[size_t(id)];
+        const size_t slot = size_t(level - 1);
+        if (slot >= per_node.size()) { *count = 0; return nullptr; }
+        *count = per_node[slot].size();
+        return per_node[slot].data();
     }
     int object_id_of(uint32_t id) const { return int(id); }
 
-    // exposed for the build statistics
     size_t level0_capacity() const { return level0_capacity_; }
     size_t upper_capacity() const { return upper_capacity_; }
+    size_t level0_edge_count() const { return level0_target_.size(); }
 
 private:
-    std::vector<std::vector<std::vector<uint32_t>>> adjacency_;  // node -> level -> neighbours
+    // level 0, flattened
+    std::vector<uint32_t> level0_offset_;   // size n + 1
+    std::vector<uint32_t> level0_target_;
+    // levels >= 1, sparse
+    std::vector<std::vector<std::vector<uint32_t>>> upper_adjacency_;   // node -> (level-1) -> neighbours
+
     std::vector<int> level_;
-    const float* base_ = nullptr;      // borrowed from the dataset during build/search
-    std::vector<float> owned_vectors_;  // used after load(), when the dataset is gone
+    const float* base_ = nullptr;
     std::unique_ptr<RawL2Space> space_;
     uint32_t entry_point_ = 0;
     int max_level_ = 0;

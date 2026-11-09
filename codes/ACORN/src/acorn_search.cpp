@@ -175,6 +175,14 @@ AcornQueryResult acorn_search_query(const AcornIndex& index,
     const size_t result_capacity = size_t(std::max(k, 0));
     if (ef == 0 || result_capacity == 0 || index.object_count() == 0) return result;
 
+    // hoist the predicate so the per-neighbour loop is a plain array read
+    const char* mask = predicate_space.external_mask();
+    const size_t mask_size = predicate_space.external_mask_size();
+    auto passes_fast = [&](uint32_t id) -> bool {
+        if (mask) return id < mask_size && mask[id] != 0;
+        return predicate_space.passes(size_t(id), predicate_bits);
+    };
+
     std::vector<uint8_t>& visited = scratch->visited;
     if (visited.size() != index.object_count()) visited.assign(index.object_count(), 0);
     else std::memset(visited.data(), 0, visited.size());
@@ -302,8 +310,7 @@ AcornQueryResult acorn_search_query(const AcornIndex& index,
         bool keep_expanding = true;
         for (size_t j = 0; j < degree; ++j) {
             const hnswlib::tableint neighbour = neighbours[j];
-            const bool passing = predicate_space.passes(
-                static_cast<size_t>(index.object_id_of(neighbour)), predicate_bits);
+            const bool passing = passes_fast(neighbour);
             if (passing) {
                 ++num_found;
                 if (!visited[neighbour]) {
@@ -321,9 +328,7 @@ AcornQueryResult acorn_search_query(const AcornIndex& index,
                 const hnswlib::tableint* second = index.neighbors_of(neighbour, &second_degree);
                 for (size_t j2 = 0; j2 < second_degree; ++j2) {
                     const hnswlib::tableint reached = second[j2];
-                    if (!predicate_space.passes(
-                            static_cast<size_t>(index.object_id_of(reached)), predicate_bits))
-                        continue;
+                    if (!passes_fast(reached)) continue;
                     ++num_found;
                     if (visited[reached]) continue;
                     visited[reached] = 1;

@@ -30,6 +30,8 @@ public:
         external_count_ = object_count;
     }
     void clear_external_mask() { external_mask_ = nullptr; external_count_ = 0; }
+    const char* external_mask() const { return external_mask_; }
+    size_t external_mask_size() const { return external_count_; }
 
     bool passes(size_t object_id, const std::vector<uint64_t>& bits) const {
         if (external_mask_) return object_id < external_count_ && external_mask_[object_id] != 0;
