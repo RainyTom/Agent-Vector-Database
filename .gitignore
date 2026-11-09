@@ -193,3 +193,6 @@ datasets/**/*.jsonl
 
 # downloaded real-dataset raw materials (GB-scale, see datasets/SOURCES.md)
 data/real_fixtures/
+
+# research scratch: indexes, masks, run artifacts
+work/
