@@ -101,6 +101,7 @@ int main(int argc, char** argv) {
     int ef = 60;
     int queries = 100;
     bool build_only = false;
+    bool no_filter = false;
     for (int i = 1; i < argc; ++i) {
         const std::string flag = argv[i];
         auto next = [&](std::string* value) {
@@ -115,6 +116,7 @@ int main(int argc, char** argv) {
         else if (flag == "--ef") { if (!next(&value)) return 2; ef = std::atoi(value.c_str()); }
         else if (flag == "--queries") { if (!next(&value)) return 2; queries = std::atoi(value.c_str()); }
         else if (flag == "--build-only") { build_only = true; }
+        else if (flag == "--no-filter") { no_filter = true; }
         else { std::fprintf(stderr, "unknown flag: %s\n", flag.c_str()); return 2; }
     }
     if (index_path.empty() || slices.empty()) {
@@ -176,7 +178,11 @@ int main(int argc, char** argv) {
             return 2;
         }
         if (static_cast<size_t>(queries) > dataset.num_queries()) queries = static_cast<int>(dataset.num_queries());
-        const Masks masks = build_masks(dataset, static_cast<size_t>(queries));
+        Masks masks = build_masks(dataset, static_cast<size_t>(queries));
+        if (no_filter) {
+            for (auto& mask : masks.per_query) std::fill(mask.begin(), mask.end(), uint8_t(1));
+            std::fill(masks.eligible.begin(), masks.eligible.end(), dataset.num_objects());
+        }
         const size_t gt_depth = static_cast<size_t>(k);
 
         unsigned long long hits = 0, calls_total = 0, returned_total = 0;

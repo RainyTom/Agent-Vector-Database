@@ -404,7 +404,66 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
     long repaired_edge_count = 0;
     {
         RawL2Space space{size_t(dim)};
-        if (options.representative_rule == 2) {
+        if (options.representative_rule == 2 && !options.merge_structure_path.empty()) {
+            // Precomputed skeleton (scripts/build_merge_structure.py + faiss k-means):
+            // one stored entry point per attribute and the proxy links between merged
+            // components. The builder only installs the edges here.
+            FILE* in = std::fopen(options.merge_structure_path.c_str(), "rb");
+            if (!in) {
+                std::fprintf(stderr, "[merge] cannot open %s\n", options.merge_structure_path.c_str());
+                std::exit(2);
+            }
+            uint32_t magic = 0, stored_attributes = 0;
+            if (std::fread(&magic, sizeof(magic), 1, in) != 1 ||
+                std::fread(&stored_attributes, sizeof(stored_attributes), 1, in) != 1 ||
+                magic != 0x41534D47u || int(stored_attributes) != attribute_count) {
+                std::fprintf(stderr, "[merge] bad merge structure header\n");
+                std::exit(2);
+            }
+            std::vector<uint32_t> entry_of_attribute(size_t(attribute_count), UINT32_MAX);
+            if (std::fread(entry_of_attribute.data(), sizeof(uint32_t), size_t(attribute_count), in) !=
+                size_t(attribute_count)) {
+                std::fprintf(stderr, "[merge] truncated entry table\n");
+                std::exit(2);
+            }
+            uint32_t link_count = 0;
+            if (std::fread(&link_count, sizeof(link_count), 1, in) != 1) {
+                std::fprintf(stderr, "[merge] truncated link count\n");
+                std::exit(2);
+            }
+            long installed = 0;
+            for (uint32_t i = 0; i < link_count; ++i) {
+                uint32_t left = 0, right = 0;
+                if (std::fread(&left, sizeof(left), 1, in) != 1 ||
+                    std::fread(&right, sizeof(right), 1, in) != 1) {
+                    std::fprintf(stderr, "[merge] truncated link table\n");
+                    std::exit(2);
+                }
+                if (left >= total_nodes || right >= total_nodes) continue;
+                bridge_edges[size_t(left)].push_back(right);
+                bridge_edges[size_t(right)].push_back(left);
+                index.is_gateway[size_t(left)] = 1;
+                index.is_gateway[size_t(right)] = 1;
+                ++installed;
+            }
+            std::fclose(in);
+            for (int a = 0; a < attribute_count; ++a) {
+                const uint32_t node = entry_of_attribute[size_t(a)];
+                if (node == UINT32_MAX || node >= total_nodes) continue;
+                if (int(index.node_attribute[size_t(node)]) != a) continue;
+                index.entry_node[size_t(a)] = node - index.node_begin[size_t(a)];
+                index.is_representative[size_t(node)] = 1;
+                if (index.representative_nodes[size_t(a)].empty())
+                    index.representative_nodes[size_t(a)].push_back(index.entry_node[size_t(a)]);
+            }
+            std::fprintf(stderr, "[merge] merge structure: %u links installed, entries %u\n",
+                         link_count, stored_attributes);
+        } else if (options.representative_rule == 2) {
+            // Linear merge sequence in reverse topological order. Two components are
+            // merged at a time: each side is clustered on its own into
+            // round(sqrt(size)) proxies, and the proxies of the two sides are linked.
+            // Every attribute is clustered exactly once as its own component; one of
+            // those cluster centres becomes the attribute's stored entry point.
             std::vector<std::vector<int>> children{std::vector<std::vector<int>>(size_t(attribute_count))};
             std::vector<int> parent_count(size_t(attribute_count), 0);
             for (int a = 0; a < attribute_count; ++a) {
@@ -418,106 +477,100 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
                 }
             }
 
-            // post-order (reverse topological): every child before its parent
-            std::vector<int> order;
-            order.reserve(size_t(attribute_count));
+            // reverse topological sequence: every child appears before its parent
+            std::vector<int> sequence;
+            sequence.reserve(size_t(attribute_count));
             {
                 std::vector<char> state(size_t(attribute_count), 0);
                 std::function<void(int)> visit = [&](int a) {
                     if (state[size_t(a)]) return;
                     state[size_t(a)] = 1;
                     for (int c : children[size_t(a)]) visit(c);
-                    order.push_back(a);
+                    sequence.push_back(a);
                 };
                 for (int a = 0; a < attribute_count; ++a)
                     if (parent_count[size_t(a)] == 0) visit(a);
                 for (int a = 0; a < attribute_count; ++a) visit(a);
             }
 
-            std::vector<std::vector<uint32_t>> subtree_nodes{std::vector<std::vector<uint32_t>>(size_t(attribute_count))};
-            std::vector<std::vector<uint32_t>> subtree_reps{std::vector<std::vector<uint32_t>>(size_t(attribute_count))};
+            const int m = std::max(1, options.bridge_receivers);
+            std::vector<uint32_t> accumulated;   // nodes merged so far
+            std::vector<uint32_t> previous_proxies;
             long cluster_steps = 0;
             long linked_edges = 0;
 
-            for (int a : order) {
-                std::vector<uint32_t> accumulated;
-                for (uint32_t node = index.node_begin[size_t(a)]; node < index.node_begin[size_t(a) + 1]; ++node)
-                    accumulated.push_back(node);
-
-                std::vector<uint32_t> previous_level;
-                if (children[size_t(a)].empty()) {
-                    if (!accumulated.empty()) {
-                        const int cells = std::max(1, int(std::lround(std::sqrt(double(accumulated.size())))));
-                        previous_level = kmeans_representatives(dataset.base.data(), dim, accumulated,
-                                                                cells, 1000003ull * uint64_t(a + 1), space);
-                        ++cluster_steps;
-                    }
-                }
-                for (int c : children[size_t(a)]) {
-                    accumulated.insert(accumulated.end(), subtree_nodes[size_t(c)].begin(),
-                                       subtree_nodes[size_t(c)].end());
-                    if (accumulated.empty()) continue;
-                    const int cells = std::max(1, int(std::lround(std::sqrt(double(accumulated.size())))));
-                    std::vector<uint32_t> level = kmeans_representatives(
-                        dataset.base.data(), dim, accumulated, cells,
-                        1000003ull * uint64_t(a + 1) * 31ull + uint64_t(c + 7), space);
-                    ++cluster_steps;
-
-                    // the pool a coarser representative may descend through:
-                    // the previous level plus the representatives of the child
-                    // that was just absorbed
-                    std::vector<uint32_t> pool = previous_level;
-                    pool.insert(pool.end(), subtree_reps[size_t(c)].begin(), subtree_reps[size_t(c)].end());
-                    if (!pool.empty()) {
-                        for (uint32_t from : level) {
-                            const float* from_vector =
-                                dataset.base.data() + size_t(index.node_object[from]) * size_t(dim);
-                            // nearest m pool nodes
-                            const int m = std::max(1, options.bridge_receivers);
-                            std::vector<std::pair<float, uint32_t>> best;
-                            best.reserve(size_t(m));
-                            for (uint32_t to : pool) {
-                                const float d = space.dist(
-                                    from_vector,
-                                    dataset.base.data() + size_t(index.node_object[to]) * size_t(dim));
-                                if (int(best.size()) < m) {
-                                    best.push_back({d, to});
-                                } else {
-                                    size_t worst = 0;
-                                    for (size_t j = 1; j < best.size(); ++j)
-                                        if (best[j].first > best[worst].first) worst = j;
-                                    if (d < best[worst].first) best[worst] = {d, to};
-                                }
-                            }
-                            for (const auto& edge : best) {
-                                bridge_edges[size_t(from)].push_back(edge.second);
-                                bridge_edges[size_t(edge.second)].push_back(from);
-                                index.is_gateway[size_t(from)] = 1;
-                                index.is_gateway[size_t(edge.second)] = 1;
-                                ++linked_edges;
-                            }
+            auto link_proxies = [&](const std::vector<uint32_t>& from_level,
+                                    const std::vector<uint32_t>& to_level) {
+                if (from_level.empty() || to_level.empty()) return;
+                for (uint32_t from : from_level) {
+                    const float* from_vector =
+                        dataset.base.data() + size_t(index.node_object[from]) * size_t(dim);
+                    std::vector<std::pair<float, uint32_t>> best;
+                    best.reserve(size_t(m));
+                    for (uint32_t to : to_level) {
+                        const float d = space.dist(
+                            from_vector,
+                            dataset.base.data() + size_t(index.node_object[to]) * size_t(dim));
+                        if (int(best.size()) < m) best.push_back({d, to});
+                        else {
+                            size_t worst = 0;
+                            for (size_t j = 1; j < best.size(); ++j)
+                                if (best[j].first > best[worst].first) worst = j;
+                            if (d < best[worst].first) best[worst] = {d, to};
                         }
                     }
-                    previous_level = std::move(level);
-                }
-                subtree_reps[size_t(a)] = previous_level;
-                subtree_nodes[size_t(a)] = std::move(accumulated);
-            }
-            for (int a = 0; a < attribute_count; ++a) {
-                const uint32_t begin = index.node_begin[size_t(a)];
-                const uint32_t end = index.node_begin[size_t(a) + 1];
-                for (uint32_t node : subtree_reps[size_t(a)])
-                    if (node >= begin && node < end) {
-                        index.representative_nodes[size_t(a)].push_back(node - begin);
-                        index.is_representative[node] = 1;
+                    for (const auto& edge : best) {
+                        bridge_edges[size_t(from)].push_back(edge.second);
+                        bridge_edges[size_t(edge.second)].push_back(from);
+                        index.is_gateway[size_t(from)] = 1;
+                        index.is_gateway[size_t(edge.second)] = 1;
+                        ++linked_edges;
                     }
+                }
+            };
+
+            for (int a : sequence) {
+                std::vector<uint32_t> own;
+                for (uint32_t node = index.node_begin[size_t(a)]; node < index.node_begin[size_t(a) + 1]; ++node)
+                    own.push_back(node);
+                if (own.empty()) continue;
+
+                // this attribute is clustered exactly once as its own component
+                const int own_cells = std::max(1, int(std::lround(std::sqrt(double(own.size())))));
+                std::vector<uint32_t> own_proxies = kmeans_representatives(
+                    dataset.base.data(), dim, own, own_cells,
+                    1000003ull * uint64_t(a + 1), space);
+                ++cluster_steps;
+                if (!own_proxies.empty()) {
+                    std::mt19937_64 pick(90001ull * uint64_t(a + 1));
+                    std::uniform_int_distribution<size_t> choose(0, own_proxies.size() - 1);
+                    const uint32_t entry = own_proxies[choose(pick)];
+                    if (entry >= index.node_begin[size_t(a)] && entry < index.node_begin[size_t(a) + 1])
+                        index.entry_node[size_t(a)] = entry - index.node_begin[size_t(a)];
+                }
+
+                if (accumulated.empty()) {
+                    accumulated = own;
+                    previous_proxies = own_proxies;
+                    continue;
+                }
+
+                // merge: re-cluster the accumulated component, keep the new one as is
+                const int acc_cells = std::max(1, int(std::lround(std::sqrt(double(accumulated.size())))));
+                std::vector<uint32_t> acc_proxies = kmeans_representatives(
+                    dataset.base.data(), dim, accumulated, acc_cells,
+                    1000003ull * uint64_t(a + 1) * 31ull, space);
+                ++cluster_steps;
+                link_proxies(acc_proxies, own_proxies);
+                accumulated.insert(accumulated.end(), own.begin(), own.end());
+                previous_proxies = std::move(acc_proxies);
+                (void)previous_proxies;
             }
-            for (int a = 0; a < attribute_count; ++a)
-                if (parent_count[size_t(a)] == 0 && index.skeleton_top.empty())
-                    index.skeleton_top = subtree_reps[size_t(a)];
-            std::fprintf(stderr, "[merge] clustered: %ld clusterings, %ld skeleton edges, %zu top representatives\n",
-                         cluster_steps, linked_edges, index.skeleton_top.size());
+            index.skeleton_top = previous_proxies;
+            std::fprintf(stderr, "[merge] sequence %zu attributes, %ld clusterings, %ld proxy links\n",
+                         sequence.size(), cluster_steps, linked_edges);
         } else {
+
             // gateway merge (rules 0/1), unchanged
             std::vector<int> attribute_order;
             long gateway_edge_count = 0;
@@ -684,6 +737,11 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
     index.local_edge_begin.assign(total_nodes + 1, 0);
     index.bridge_edge_begin.assign(total_nodes + 1, 0);
     {
+        for (size_t node = 0; node < total_nodes; ++node) {
+            auto& list = bridge_edges[node];
+            std::sort(list.begin(), list.end());
+            list.erase(std::unique(list.begin(), list.end()), list.end());
+        }
         uint32_t local_total = 0, bridge_total = 0;
         for (size_t node = 0; node < total_nodes; ++node) {
             index.local_edge_begin[node] = local_total;

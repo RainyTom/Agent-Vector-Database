@@ -195,7 +195,7 @@ def main():
             label, path = spec.split('=', 1)
             records = []
             for row in load_jsonl(path):
-                match = SLICE.search(str(row.get('slice', '')))
+                match = SLICE.match(Path(str(row.get('slice', ''))).name)
                 if not match:
                     continue
                 records.append((float(match.group(1)) / 100.0, row))

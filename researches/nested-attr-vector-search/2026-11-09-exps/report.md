@@ -607,3 +607,89 @@ $\sqrt{n}$ 规则同区间：0.1460 / 0.1930 / 0.2290 / 0.2480 / 0.2690 / 0.2780
 `ef=100` 时仍只进入 **6.30 / 94.4** 个闭包属性，展开 78.7 个节点。原因：入口从查询属性自身开始，该属性的对象很快填满保留集，停止规则（候选劣于保留集最差即停）随即终止波束，**下钻到后代属性之前就停了**。
 
 对照：NodeANN `perN=10, ef=10`（$1\times k$）召回 0.9830，距离 15,599。本方案 `ef=10×k` 用 395 次距离拿到 0.3810。
+
+## 对照：acorn-hnswlib 复现（同 k=20、ef=60、同切片）
+
+`codes/acorn-hnswlib/` 是另一份 ACORN 在 hnswlib 上的复现（M=32、efC=40、γ∈{12,1}）。用它的 `port::Acorn` 类加上一个薄驱动 `selectivity_driver.cpp`，读取同一批 `sel-{1..10}pct` 切片，逐查询用叶子并集生成的 mask 过滤，跑 100 查询、`ef=60`、`top_k=20`：
+
+```bash
+g++ -std=c++17 -O3 -fno-tree-vectorize -fno-tree-slp-vectorize -DNO_MANUAL_VECTORIZATION \
+    -I codes/acorn-hnswlib -I codes/acorn-hnswlib/upstream -I codes/shared \
+    codes/acorn-hnswlib/acorn_index.cpp codes/shared/dataset.cpp \
+    codes/acorn-hnswlib/selectivity_driver.cpp -o codes/acorn-hnswlib/build/selectivity_driver
+SLICES=$(for S in 1 2 3 4 5 6 7 8 9 10; do printf -- "--slice datasets/sift1m/sel-%spct " $S; done)
+for G in 12 1; do taskset -c 2 codes/acorn-hnswlib/build/selectivity_driver \
+  --index datasets/sift1m/runs/acorn-hnswlib-gamma$G.index $SLICES --gamma $G --ef 60 --queries 100; done
+```
+
+- `acorn_index.h` 的 `top_k` 由 10 改为 20（编译期常量，测 top-20 必须改），其余未动。
+- 构建：γ=12 986.7 s（`maxM0=64+3M/2=112`，索引 1.03 GB），γ=1 264.9 s（索引 852 MB）；索引落 `datasets/sift1m/runs/`。
+
+| 选择率 | codes/ACORN Recall@20 / QPS / 距离 | acorn-hnswlib γ12 Recall@20 / QPS / 距离 | acorn-hnswlib γ1 Recall@20 / QPS / 距离 |
+|---:|---|---|---|
+| 1% | 0.9990 / 68.7 / 41,927 | 0.3685 / 1,987 / 188 | 0.8485 / 912 / 481 |
+| 2% | 1.0000 / 121.0 / 24,987 | 0.5575 / 1,622 / 360 | 0.9190 / 658 / 814 |
+| 3% | 0.9985 / 150.9 / 18,392 | 0.7030 / 1,706 / 485 | 0.9510 / 723 / 1,111 |
+| 4% | 0.9980 / 194.4 / 15,008 | 0.7525 / 1,429 / 585 | 0.9625 / 572 / 1,383 |
+| 5% | 1.0000 / 247.1 / 12,764 | 0.8115 / 1,494 / 668 | 0.9520 / 666 / 1,568 |
+| 6% | 0.9980 / 271.4 / 10,957 | 0.8280 / 1,585 / 764 | 0.9590 / 600 / 1,762 |
+| 7% | 0.9975 / 312.5 / 9,979 | 0.8340 / 1,588 / 832 | 0.9545 / 721 / 1,917 |
+| 8% | 0.9990 / 311.5 / 8,889 | 0.8255 / 1,589 / 884 | 0.9550 / 679 / 2,032 |
+| 9% | 0.9960 / 330.3 / 8,152 | 0.8745 / 1,458 / 946 | 0.9460 / 684 / 2,128 |
+| 10% | 0.9970 / 403.4 / 7,446 | 0.8485 / 1,554 / 997 | 0.9485 / 717 / 2,227 |
+
+图：[三方 recall 与 QPS 对选择率](figures/acorn-selectivity-curves-top20.svg)。数据：[data/acorn-selectivity-curves-top20.csv](data/acorn-selectivity-curves-top20.csv)，原始行 `data/acorn-hnswlib-gamma{12,1}-ef60-top20.jsonl`。
+
+### 读数
+
+1. **同一 k/ef/切片下两份实现的预算差 1–2 个数量级**：1% 时 codes/ACORN 用 41,927 次距离换 0.999，acorn-hnswlib γ1 用 481 次换 0.849，γ12 用 188 次换 0.369。acorn-hnswlib 的遍历只展开通过谓词的节点（γ1 额外两跳），所以随机谓词下几乎找不到足够的合格邻居。
+2. **γ12 的召回主要受连通性限制**：1% 时 `avg_returned` 恒为 18.73（20 个槽填不满），`ef` 从 60 提到 200、800，召回 0.369 → 0.492 → 0.584，距离只从 188 涨到 1,369；ef 不再增加到达的合格节点。γ1 同条件 0.849 → 0.913 → 0.955。
+3. **召回随选择率上升**（γ12 从 0.369 到 0.849，γ1 从 0.849 到 0.949），与「随机过滤下通过谓词的邻居比例 = σ×度数」一致；γ12 在 4%–8% 出现平台（0.75–0.83），9%–10% 反而略高。
+4. **QPS 不再随选择率单调**：acorn-hnswlib 的 QPS 在 570–2,000 之间波动，1% 时最高（距离最少），10% 时 γ12 的 QPS 反而低于 9%。这与 codes/ACORN 的单调上升不同：codes/ACORN 用「通过谓词的结果堆填满 ef」触发距离截断，acorn-hnswlib 用「队列中比当前节点更近的条目数 ≥ ef」触发截断，两者对 σ 的响应方向不同。
+5. 两套实现的图参数不同（M=32/efC=40 vs M=16/efC=200），这条对照定位为实现级，不可当作同一构造下的算法差异。
+
+## 代码级核验：acorn-hnswlib 复现 vs 官方 ACORN
+
+官方实现：`guestrin-lab/ACORN` @ `c259f11`（2025-03-06），Faiss fork，`faiss::IndexACORNFlat`。本机克隆在 `/tmp/ACORN-official`，为编译通过只改了一行 CMake（`target_include_directories(faiss PUBLIC ...)` → `PRIVATE`，CMake 4 不允许把 FetchContent 源目录放进导出的 INTERFACE include；ACORN 自身并不 include json.hpp）。
+
+### 检索路径：逐条对齐，语义一致
+
+| 环节 | 官方 `faiss/impl/ACORN.cpp` | 复现 `codes/acorn-hnswlib/acorn_index.cpp` | 结论 |
+|---|---|---|---|
+| 候选堆容量 | `MinimaxHeap(ef = max(efSearch, k))`，1620 行 `push` 满时按最远淘汰 | `queue_.reset(max(ef, top_k))`，`push` 同规则 | 一致 |
+| 停止条件 | `candidates.count_below(d0) >= efSearch`，1251 行 | `queue_.count_below(next.distance) >= ef`，198 行 | 一致（两边 `count_below` 都统计已弹出槽位） |
+| 结果堆 | k 大小 maxheap，k 名之后按 `d < D[0]` 替换 | `best` 同规则 | 一致 |
+| 上层贪心 | 非通过谓词的邻居直接 `continue`；当前点不合格时允许换到合格的更远点 | `consider` 同规则 | 一致 |
+| level-0 第一跳 | 仅通过谓词的节点入队并标记 visited | 同 | 一致 |
+| level-0 第二跳（γ 机制） | 邻居槽位 `j - begin >= M_beta` 时展开该邻居的邻居，只接纳通过谓词的 `v2` | 槽位 `j >= prefix_` 时同样展开 | **参数不同，见下** |
+| 2M 截断 | `num_found >= M*2` 时停止继续展开 | `found >= 2*m_` | 一致 |
+
+### 建图路径：三处参数不一致（这是召回差距的来源）
+
+| 参数 | 官方 | 复现 γ12 | 复现 γ1 | 位置 |
+|---|---|---|---|---|
+| 构图候选池上限 | `efConstruction = M·γ = 384` | `construction_ = 40`（构造默认值） | 40 | ACORN.cpp:129,770 / acorn_index.h:107,118 |
+| level-0 度 | `M_beta + 1.5M = 80` | `prefix + 3M/2 = 112` | 80 | ACORN.cpp:167 / acorn_index.h:119 |
+| 上层度 | `M·γ = 384` | `m·γ = 384` | 32 | 同上 |
+| 剪枝启用阈值 | `node_num > M_beta = 32` | `rank > prefix_ = 64` | 32 | ACORN.cpp:555 / acorn_index.cpp:75 |
+| level-0 目标候选数 | `2·M·γ = 768` | `2·m·γ = 768` | 64 | ACORN.cpp:729 / acorn_index.cpp:37 |
+| 搜索第二跳起点 | 槽位 32 | 槽位 64 | 槽位 32 | ACORN.cpp:1327 / acorn_index.cpp:211 |
+
+构图候选池 40 vs 384 是主因：两边外层循环都跑到候选耗尽，但 40 的池意味着只允许「比第 40 名更近」的节点进入 frontier，实际是 40 宽的构图 beam；官方是 384。
+
+### 证据：无过滤时的图质量
+
+不看过滤，mask 全 1（`--no-filter`），100 条官方 SIFT 查询、精确 top-20：
+
+| 索引 | ef=60 | ef=200 | ef=800 |
+|---|---|---|---|
+| acorn-hnswlib γ12 | 0.9240 | 0.9865 | 0.9975 |
+| acorn-hnswlib γ1 | 0.6570 | 0.8470 | — |
+
+M=32 的 HNSW 级图在 ef=60 时应接近 0.99；复现 γ12 要到 ef=800 才补齐，γ1 在 ef=200 只有 0.847。说明差距在**建图质量**，不在过滤逻辑：过滤只是把本来就不足的邻居覆盖放大成低召回。
+
+### 结论
+
+- 检索代码是与官方等价的移植（上面 7 条逐项对齐），γ12 在 1% 选择率下 0.369 不是检索逻辑写错。
+- 建图参数没有对齐官方：`construction=40`（应为 384）、γ12 的 `prefix=64`（应为 `M_beta=32`、level-0 度 80）、γ1 的 `prefix=32`（官方 ACORN-1 用 `M_beta=2M=64`、level-0 度 112）。因此复现结果不能当作 ACORN-γ 的行为。
+- 要让两者可比，需按上表重建复现索引（γ12 一次约 16 min）；官方 1M 建图在 48 min 时被我中止，尚无官方检索数字。

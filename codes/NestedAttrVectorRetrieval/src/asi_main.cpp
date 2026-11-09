@@ -27,7 +27,7 @@ std::vector<int> parse_int_list(const std::string& text) {
 void print_usage() {
     std::fprintf(stderr,
         "usage:\n"
-        "  asi build  --data DIR --index PATH [--M 16] [--efC 200] [--K 8] [--K-rule linear|sqrt|cluster] [--bridge-receivers 1]\n"
+        "  asi build  --data DIR --index PATH [--M 16] [--efC 200] [--K 8] [--K-rule linear|sqrt|cluster] [--bridge-receivers 1] [--merge-file PATH]\n"
         "  asi search --data DIR --index PATH --efs 10,40,200 [--entry-mode representative|hnsw]\n"
         "             [--entry-mode representative|hnsw] [--k 10] [--queries N]\n"
         "             [--repeat 1] [--trace-file PATH] [--rerank-fp32] [--rerank-pool N]\n");
@@ -45,6 +45,7 @@ int run_build(int argc, char** argv) {
         else if (flag == "--efC") options.construction_width = std::atoi(next().c_str());
         else if (flag == "--K") options.representative_cap = std::atoi(next().c_str());
         else if (flag == "--bridge-receivers") options.bridge_receivers = std::atoi(next().c_str());
+        else if (flag == "--merge-file") options.merge_structure_path = next();
         else if (flag == "--K-rule") {
             const std::string rule = next();
             if (rule == "sqrt") options.representative_rule = 1;

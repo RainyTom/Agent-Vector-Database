@@ -23,6 +23,7 @@ struct BuildOptions {
     int construction_width = 200;      // hnswlib efConstruction
     int representative_cap = 8;        // upper bound on representatives per attribute
     int representative_rule = 0;       // 0 = min(Kcap, n); 1 = round(sqrt(n)); 2 = clustered merge
+    std::string merge_structure_path;  // precomputed merge skeleton (Python + faiss k-means)
     int bridge_receivers = 1;          // how many scattered child members each bridge attaches to
     bool merge_attributes = true;      // add cross-attribute gateway edges
 };
