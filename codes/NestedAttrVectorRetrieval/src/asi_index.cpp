@@ -664,6 +664,22 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
         }
     }
 
+    // 5b. inverted index: attribute index -> one entry node (global id).
+    // Chosen from the attribute's own block, preferring one of its representatives,
+    // so entry lookup is a single array read instead of scoring representatives.
+    index.attribute_entry.assign(size_t(attribute_count), UINT32_MAX);
+    for (int a = 0; a < attribute_count; ++a) {
+        if (index.node_begin[size_t(a) + 1] <= index.node_begin[size_t(a)]) continue;
+        uint32_t chosen = index.node_begin[size_t(a)];
+        const auto& reps = index.representative_nodes[size_t(a)];
+        if (!reps.empty()) {
+            // representative_nodes holds local ids inside this block
+            chosen += reps.front();
+            index.is_representative[chosen] = 1;
+        }
+        index.attribute_entry[size_t(a)] = chosen;
+    }
+
     // 6. flatten adjacency into CSR
     index.local_edge_begin.assign(total_nodes + 1, 0);
     index.bridge_edge_begin.assign(total_nodes + 1, 0);
@@ -736,6 +752,7 @@ bool save_index(const AsiIndex& index, const std::string& path, std::string* err
     write_vector(out, index.is_representative);
     write_vector(out, index.is_gateway);
     write_vector(out, index.skeleton_top);
+    write_vector(out, index.attribute_entry);
     write_vector(out, index.entry_node);
     write_vector(out, index.hnsw_entry_node);
     write_vector(out, index.top_level);
@@ -776,6 +793,7 @@ bool load_index(AsiIndex& index, const std::string& path, std::string* error) {
     if (!read_vector(in, index.is_representative)) return fail("representative flags");
     if (!read_vector(in, index.is_gateway)) return fail("gateway flags");
     if (!read_vector(in, index.skeleton_top)) return fail("skeleton top");
+    if (!read_vector(in, index.attribute_entry)) return fail("attribute entry");
     if (!read_vector(in, index.entry_node)) return fail("entry nodes");
     if (!read_vector(in, index.hnsw_entry_node)) return fail("hnsw entry nodes");
     if (!read_vector(in, index.top_level)) return fail("top levels");

@@ -54,6 +54,7 @@ struct AsiIndex {
     std::vector<std::vector<uint32_t>> upper_targets;     // per attribute
 
     std::vector<uint32_t> skeleton_top;      // global nodes of the outermost merge level
+    std::vector<uint32_t> attribute_entry;   // inverted index: attribute index -> entry global node
 
     std::vector<char> is_representative;
     std::vector<char> is_gateway;

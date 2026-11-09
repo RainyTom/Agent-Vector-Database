@@ -63,6 +63,8 @@ def main():
     parser.add_argument('--recall-k-ef', type=int, default=10, help='ef shown in the recall@k figure')
     parser.add_argument('--fixed-ef', type=int, default=0,
                         help='when >0, also draw recall and QPS against selectivity at this ef')
+    parser.add_argument('--overlay', action='append', default=[],
+                        help='label=jsonl of another implementation, records carry slice/recall/qps')
     parser.add_argument('--k', type=int, default=10)
     args = parser.parse_args()
 
@@ -182,26 +184,49 @@ def main():
         fig.savefig(figures / f'acorn-recall-at-k{args.suffix}.{fmt}')
     plt.close(fig)
     if args.fixed_ef:
-        x = [item['selectivity'] * 100 for item in slices]
-        recall, qps = [], []
-        for item in slices:
-            row = next((record for record in item['summary'] if record['ef'] == args.fixed_ef), None)
-            if row is None:
-                raise SystemExit(f'ef={args.fixed_ef} missing from the {item["label"]}pct run')
-            recall.append(row['recall'])
-            qps.append(row['qps'])
-        fig, (left, right) = plt.subplots(1, 2, figsize=(7.4, 3.0))
-        for ax, values, ylabel, decimals in ((left, recall, f'recall@{args.k}', 3), (right, qps, 'QPS', 0)):
-            ax.plot(x, values, marker='o', markersize=4, linewidth=1.4, color='#1f77b4')
-            for xi, yi in zip(x, values):
-                ax.annotate(f'{yi:.{decimals}f}', (xi, yi), textcoords='offset points',
-                            xytext=(0, 6), ha='center', fontsize=5.8)
+        series = [('ACORN-1 (codes/ACORN)', [item['selectivity'] * 100 for item in slices],
+                   [next((record['recall'] for record in item['summary'] if record['ef'] == args.fixed_ef),
+                         None) for item in slices],
+                   [next((record['qps'] for record in item['summary'] if record['ef'] == args.fixed_ef),
+                         None) for item in slices])]
+        if None in series[0][2] or None in series[0][3]:
+            raise SystemExit(f'ef={args.fixed_ef} missing from the codes/ACORN runs')
+        for spec in args.overlay:
+            label, path = spec.split('=', 1)
+            records = []
+            for row in load_jsonl(path):
+                match = SLICE.search(str(row.get('slice', '')))
+                if not match:
+                    continue
+                records.append((float(match.group(1)) / 100.0, row))
+            records.sort(key=lambda pair: pair[0])
+            series.append((label, [pair[0] * 100 for pair in records],
+                           [pair[1]['recall'] for pair in records],
+                           [pair[1]['qps'] for pair in records]))
+
+        with (data_dir / f'acorn-selectivity-curves{args.suffix}.csv').open('w', newline='') as sink:
+            writer = csv.writer(sink)
+            writer.writerow(['implementation', 'selectivity', 'recall', 'qps'])
+            for label, x, recall, qps in series:
+                for xi, ri, qi in zip(x, recall, qps):
+                    writer.writerow([label, f'{xi:g}', f'{ri:.6f}', f'{qi:.1f}'])
+        markers = ['o', 's', '^', 'D', 'v']
+        colors = ['#1f77b4', '#d62728', '#2ca02c', '#9467bd', '#8c564b']
+        fig, (left, right) = plt.subplots(1, 2, figsize=(7.6, 3.1))
+        for index, (label, x, recall, qps) in enumerate(series):
+            marker = markers[index % len(markers)]
+            color = colors[index % len(colors)]
+            left.plot(x, recall, marker=marker, markersize=4, linewidth=1.4, color=color, label=label)
+            right.plot(x, qps, marker=marker, markersize=4, linewidth=1.4, color=color, label=label)
+        for ax, ylabel in ((left, f'recall@{args.k}'), (right, 'QPS')):
             ax.set_xlabel('selectivity (%)')
             ax.set_ylabel(ylabel)
-            ax.set_xticks(x)
-        left.set_ylim(min(recall) - 0.02, 1.01)
-        right.set_ylim(0, max(qps) * 1.12)
-        fig.suptitle(f'ACORN, ef={args.fixed_ef}, k={args.k}, 100 queries, single core', fontsize=9)
+            ax.set_xticks(sorted({xi for _, x, _, _ in series for xi in x}))
+        low = min(min(recall) for _, _, recall, _ in series)
+        left.set_ylim(low - 0.02, 1.01)
+        right.set_ylim(0, max(max(qps) for _, _, _, qps in series) * 1.12)
+        left.legend(frameon=False, fontsize=6.5)
+        fig.suptitle(f'ef={args.fixed_ef}, k={args.k}, 100 queries, single core', fontsize=9)
         fig.tight_layout()
         for fmt in ('pdf', 'svg'):
             fig.savefig(figures / f'acorn-selectivity-curves{args.suffix}.{fmt}')

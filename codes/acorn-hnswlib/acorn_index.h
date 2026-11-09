@@ -13,7 +13,7 @@ namespace port {
 using Node = hnswlib::tableint;
 using Id = int64_t;
 constexpr Node missing = hnswlib::kInvalidInternalId;
-constexpr int top_k = 10;
+constexpr int top_k = 20;
 constexpr float infinity = std::numeric_limits<float>::infinity();
 
 struct Result {

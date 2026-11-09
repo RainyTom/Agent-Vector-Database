@@ -225,42 +225,18 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     offer(index.bridge_edge_targets[j]);
             };
 
-            // entry: the outermost merge level when the index has one (clustered
-            // merge), otherwise a single start point per root attribute.
-            if (!index.skeleton_top.empty()) {
-                for (uint32_t node : index.skeleton_top) {
-                    if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[node]);
-                    offer(node);
-                }
-            } else
-            for (int root : root_attributes) {
-                if (index.node_begin[size_t(root) + 1] <= index.node_begin[size_t(root)]) continue;
-                uint32_t start = index.node_begin[size_t(root)];
-                if (options.entry_mode == "hnsw" && index.top_level[size_t(root)] > 0) {
-                    const uint32_t begin = index.node_begin[size_t(root)];
-                    auto score_local = [&](uint32_t local) {
-                        if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[begin + local]);
-                        return cached_distance(begin + local);
-                    };
-                    uint32_t current = index.hnsw_entry_node[size_t(root)];
-                    float current_distance = score_local(current);
-                    for (int level = index.top_level[size_t(root)]; level > 0; --level) {
-                        bool moved = true;
-                        while (moved) {
-                            moved = false;
-                            const size_t row = size_t(index.upper_row_begin[size_t(root)][current]) + size_t(level - 1);
-                            for (uint32_t j = index.upper_row_offset[size_t(root)][row];
-                                 j < index.upper_row_offset[size_t(root)][row + 1]; ++j) {
-                                const uint32_t neighbour = index.upper_targets[size_t(root)][j];
-                                const float d = score_local(neighbour);
-                                if (d < current_distance) { current_distance = d; current = neighbour; moved = true; }
-                            }
-                        }
-                    }
-                    start = begin + current;
-                }
-                if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[start]);
-                offer(start);
+            // entry: one stored entry point per query attribute (the root R of the
+            // search tree), read straight from the inverted index. No representative
+            // is scored at entry.
+            for (int attribute_id : dataset.query_attributes[qi]) {
+                const auto found = attribute_position.find(attribute_id);
+                if (found == attribute_position.end()) continue;
+                const uint32_t slot = uint32_t(found->second);
+                if (slot >= index.attribute_entry.size()) continue;
+                const uint32_t entry = index.attribute_entry[slot];
+                if (entry == UINT32_MAX) continue;
+                if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[entry]);
+                offer(entry);
             }
 
             // single shared beam search; stop once the nearest unexplored candidate
