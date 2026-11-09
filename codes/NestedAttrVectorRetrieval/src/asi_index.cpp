@@ -156,6 +156,21 @@ uint32_t nearest_member(const float* base, int dim, const AttributeGraph& graph,
     return best_local;
 }
 
+// `k` nearest members of `graph` to `from_vector`, as local ids.
+std::vector<uint32_t> nearest_members(const float* base, int dim, const AttributeGraph& graph,
+                                      const float* from_vector, const RawL2Space& space, int k) {
+    std::priority_queue<std::pair<float, uint32_t>> best;   // max-heap
+    for (size_t j = 0; j < graph.members.size(); ++j) {
+        const float d = space.dist(from_vector, base + size_t(graph.members[j]) * size_t(dim));
+        if (int(best.size()) < k) best.push({d, uint32_t(j)});
+        else if (d < best.top().first) { best.pop(); best.push({d, uint32_t(j)}); }
+    }
+    std::vector<uint32_t> out;
+    out.reserve(best.size());
+    while (!best.empty()) { out.push_back(best.top().second); best.pop(); }
+    return out;
+}
+
 void write_raw(FILE* out, const void* data, size_t bytes) {
     if (bytes) std::fwrite(data, 1, bytes, out);
 }
@@ -344,13 +359,16 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
                     const uint32_t parent_node = index.node_begin[size_t(parent)] + parent_rep;
                     const float* parent_vector =
                         dataset.base.data() + size_t(attribute_graphs[size_t(parent)].members[parent_rep]) * size_t(dim);
-                    const uint32_t child_local = nearest_member(dataset.base.data(), dim,
-                        attribute_graphs[size_t(child)], parent_vector, space);
-                    const uint32_t child_node = index.node_begin[size_t(child)] + child_local;
-                    bridge_edges[parent_node].push_back(child_node);
-                    bridge_edges[child_node].push_back(parent_node);
-                    index.is_gateway[child_node] = 1;
-                    ++gateway_edge_count;
+                    const auto receivers = nearest_members(dataset.base.data(), dim,
+                        attribute_graphs[size_t(child)], parent_vector, space,
+                        std::max(1, options.bridge_receivers));
+                    for (uint32_t child_local : receivers) {
+                        const uint32_t child_node = index.node_begin[size_t(child)] + child_local;
+                        bridge_edges[parent_node].push_back(child_node);
+                        bridge_edges[child_node].push_back(parent_node);
+                        index.is_gateway[child_node] = 1;
+                        ++gateway_edge_count;
+                    }
                 }
             }
         }

@@ -23,6 +23,7 @@ struct BuildOptions {
     int construction_width = 200;      // hnswlib efConstruction
     int representative_cap = 8;        // upper bound on representatives per attribute
     int objects_per_representative = 50;  // p: one representative per p objects
+    int bridge_receivers = 1;          // how many scattered child members each bridge attaches to
     bool merge_attributes = true;      // add cross-attribute gateway edges
 };
 
