@@ -30,6 +30,35 @@ BeamEntry beam_pop(std::vector<BeamEntry>& beam) {
     return entry;
 }
 
+// Result heap of capacity k (the official search sizes its result heap by k).
+class ResultHeap {
+public:
+    explicit ResultHeap(size_t capacity) : capacity_(capacity) {}
+    void offer(float distance, int object_id) {
+        if (size_ < capacity_) {
+            entries_.emplace_back(distance, object_id);
+            std::push_heap(entries_.begin(), entries_.end());
+            ++size_;
+        } else if (capacity_ && distance < entries_.front().first) {
+            std::pop_heap(entries_.begin(), entries_.end());
+            entries_.back() = {distance, object_id};
+            std::push_heap(entries_.begin(), entries_.end());
+        }
+    }
+    std::vector<int> sorted_ids() const {
+        std::vector<std::pair<float, int>> copy = entries_;
+        std::sort(copy.begin(), copy.end());
+        std::vector<int> ids;
+        ids.reserve(copy.size());
+        for (const auto& entry : copy) ids.push_back(entry.second);
+        return ids;
+    }
+private:
+    std::vector<std::pair<float, int>> entries_;
+    size_t capacity_ = 0;
+    size_t size_ = 0;
+};
+
 // Result heap: max-heap by distance, at most `ef` predicate-passing objects.
 void best_offer(std::vector<BestEntry>& best, size_t ef, float distance, int object_id) {
     if (best.size() < ef) {
@@ -106,31 +135,55 @@ size_t AcornPredicateSpace::exact_eligible_count(const Dataset& dataset,
     return total;
 }
 
+AcornQueryResult acorn_prefilter_query(const AcornIndex& index,
+                                       const AcornPredicateSpace& predicate_space,
+                                       const std::vector<uint64_t>& predicate_bits,
+                                       const float* query_vector, int k) {
+    AcornQueryResult result;
+    const auto query_start = std::chrono::steady_clock::now();
+    ResultHeap results(size_t(std::max(k, 0)));
+    for (size_t object_id = 0; object_id < index.object_count(); ++object_id) {
+        if (!predicate_space.passes(object_id, predicate_bits)) continue;
+        ++result.distance_calls;
+        results.offer(index.distance(query_vector, index.vector_of(hnswlib::tableint(object_id))),
+                      static_cast<int>(object_id));
+    }
+    result.object_ids = results.sorted_ids();
+    result.visited_nodes = result.distance_calls;
+    result.query_ms = elapsed_ms(query_start);
+    return result;
+}
+
 AcornQueryResult acorn_search_query(const AcornIndex& index,
                                     const AcornPredicateSpace& predicate_space,
                                     const std::vector<uint64_t>& predicate_bits,
                                     const float* query_vector, size_t ef, int k,
                                     size_t M_beta, size_t M,
                                     AcornSearchScratch* scratch) {
+    // Faithful port of faiss/impl/ACORN.cpp hybrid_search_from_candidates
+    // (L1194-1360) onto the hnswlib graph:
+    //   * the result heap holds k entries, not ef (L1237);
+    //   * the candidate queue holds ef = max(efSearch, k) entries (L1445-1448);
+    //   * termination is count_below(d0) >= efSearch (L1262-1268), which is the
+    //     relative-distance rule ACORN inherits from faiss HNSW;
+    //   * level-0 expansion: the first M_beta neighbours are taken as stored,
+    //     neighbours past that index are expanded to their own lists, and the
+    //     expansion stops once 2*M predicate-passing neighbours were seen
+    //     (L1319-1330).
     AcornQueryResult result;
     const auto query_start = std::chrono::steady_clock::now();
-    if (ef == 0 || index.object_count() == 0) return result;
+    const size_t result_capacity = size_t(std::max(k, 0));
+    if (ef == 0 || result_capacity == 0 || index.object_count() == 0) return result;
 
-    std::vector<BeamEntry>& beam = scratch->beam;   // min-heap: candidate set C
-    std::vector<BestEntry>& best = scratch->best;   // max-heap: result list W
     std::vector<uint8_t>& visited = scratch->visited;
-    beam.clear();
-    best.clear();
-    // a 1 MB clear per query is cheaper than tracking which stamps were touched
     if (visited.size() != index.object_count()) visited.assign(index.object_count(), 0);
     else std::memset(visited.data(), 0, visited.size());
-    auto mark_visited = [&](hnswlib::tableint node) {
-        if (visited[node]) return false;
-        visited[node] = 1;
-        return true;
-    };
 
-    // HNSW entry: greedy descent over the upper layers, distance only.
+    std::vector<BeamEntry>& candidates = scratch->beam;   // min-heap: (distance, node)
+    candidates.clear();
+    ResultHeap results(result_capacity);
+
+    // greedy descent over the upper layers, distance only (no predicate)
     hnswlib::tableint entry = index.entry_point();
     float entry_distance = index.distance(query_vector, index.vector_of(entry));
     ++result.distance_calls;
@@ -153,74 +206,80 @@ AcornQueryResult acorn_search_query(const AcornIndex& index,
             }
         }
     }
-    mark_visited(entry);
+    visited[entry] = 1;
     ++result.visited_nodes;
+    candidates.push_back({entry_distance, entry});
+    std::push_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
 
-    // GET-NEIGHBORS(c, p_q): first M_beta stored neighbours filtered by the
-    // predicate, then the remaining ones expanded to their neighbours.
-    std::vector<hnswlib::tableint> neighbourhood;
-    std::unordered_set<hnswlib::tableint> in_neighbourhood;
-    auto expand_and_filter = [&](hnswlib::tableint candidate) {
-        if (in_neighbourhood.size() >= M) return;
-        if (!mark_visited(candidate)) return;
-        ++result.visited_nodes;
-        ++result.distance_calls;
-        const float distance = index.distance(query_vector, index.vector_of(candidate));
-        const int object_id = index.object_id_of(candidate);
-        if (!predicate_space.passes(static_cast<size_t>(object_id), predicate_bits)) return;
-        if (!in_neighbourhood.insert(candidate).second) return;
-        neighbourhood.push_back(candidate);
-        // result list W: at most ef passing objects
-        if (best.size() < ef) {
-            best.push_back({distance, object_id});
-            std::push_heap(best.begin(), best.end());
-        } else if (distance < best.front().first) {
-            std::pop_heap(best.begin(), best.end());
-            best.back() = {distance, object_id};
-            std::push_heap(best.begin(), best.end());
-        }
-        // candidate set C holds passing nodes only
-        beam.push_back({-distance, candidate});
-        std::push_heap(beam.begin(), beam.end());
-        (void)object_id;
-    };
-
-    auto neighborhood_of = [&](hnswlib::tableint node) {
-        neighbourhood.clear();
-        in_neighbourhood.clear();
-        size_t count = 0;
-        const hnswlib::tableint* neighbours = index.neighbors_of(node, &count);
-        const size_t head = std::min(M_beta, count);
-        for (size_t i = 0; i < head; ++i) expand_and_filter(neighbours[i]);
-        for (size_t i = head; i < count; ++i) {
-            size_t second_count = 0;
-            const hnswlib::tableint* second = index.neighbors_of(neighbours[i], &second_count);
-            for (size_t j = 0; j < second_count; ++j) expand_and_filter(second[j]);
+    auto consider = [&](hnswlib::tableint node, float distance) {
+        const int object_id = index.object_id_of(node);
+        results.offer(distance, object_id);
+        // bounded candidate queue, exactly like MinimaxHeap(ef)
+        if (candidates.size() < ef) {
+            candidates.push_back({distance, node});
+            std::push_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
+        } else if (distance < candidates.front().first) {
+            std::pop_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
+            candidates.back() = {distance, node};
+            std::push_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
         }
     };
+    consider(entry, entry_distance);
 
-    // seed the search from the entry point's own neighbourhood
-    if (predicate_space.passes(static_cast<size_t>(index.object_id_of(entry)), predicate_bits)) {
-        best.push_back({entry_distance, index.object_id_of(entry)});
-        std::push_heap(best.begin(), best.end());
-        beam.push_back({-entry_distance, entry});
-        std::push_heap(beam.begin(), beam.end());
+    while (!candidates.empty()) {
+        std::pop_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
+        const BeamEntry current = candidates.back();
+        candidates.pop_back();
+        const float current_distance = current.first;
+
+        // count_below(d0) >= efSearch -> stop
+        size_t below = 0;
+        for (const BeamEntry& other : candidates)
+            if (other.first < current_distance) ++below;
+        if (below >= ef) break;
+
+        size_t degree = 0;
+        const hnswlib::tableint* neighbours = index.neighbors_of(current.second, &degree);
+        size_t num_found = 0;
+        bool keep_expanding = true;
+        for (size_t j = 0; j < degree; ++j) {
+            const hnswlib::tableint neighbour = neighbours[j];
+            const bool passing = predicate_space.passes(
+                static_cast<size_t>(index.object_id_of(neighbour)), predicate_bits);
+            if (passing) {
+                ++num_found;
+                if (!visited[neighbour]) {
+                    visited[neighbour] = 1;
+                    ++result.visited_nodes;
+                    ++result.distance_calls;
+                    consider(neighbour, index.distance(query_vector, index.vector_of(neighbour)));
+                    if (num_found >= M * 2) { keep_expanding = false; break; }
+                }
+            }
+            // expansion of the tail of the neighbour list, regardless of whether
+            // this particular neighbour passes the predicate
+            if (j >= M_beta && keep_expanding) {
+                size_t second_degree = 0;
+                const hnswlib::tableint* second = index.neighbors_of(neighbour, &second_degree);
+                for (size_t j2 = 0; j2 < second_degree; ++j2) {
+                    const hnswlib::tableint reached = second[j2];
+                    if (!predicate_space.passes(
+                            static_cast<size_t>(index.object_id_of(reached)), predicate_bits))
+                        continue;
+                    ++num_found;
+                    if (visited[reached]) continue;
+                    visited[reached] = 1;
+                    ++result.visited_nodes;
+                    ++result.distance_calls;
+                    consider(reached, index.distance(query_vector, index.vector_of(reached)));
+                    if (num_found >= M * 2) { keep_expanding = false; break; }
+                }
+                if (!keep_expanding) break;
+            }
+        }
     }
 
-    while (!beam.empty()) {
-        std::pop_heap(beam.begin(), beam.end());
-        const BeamEntry current = beam.back();
-        beam.pop_back();
-        const float current_distance = -current.first;
-        // HNSW stopping rule (line 7 of Algorithm 2)
-        if (best.size() >= ef && current_distance > best.front().first) break;
-        neighborhood_of(current.second);
-    }
-
-    std::sort(best.begin(), best.end());
-    const size_t returned = std::min(best.size(), static_cast<size_t>(std::max(k, 0)));
-    result.object_ids.reserve(returned);
-    for (size_t i = 0; i < returned; ++i) result.object_ids.push_back(best[i].second);
+    result.object_ids = results.sorted_ids();
     result.query_ms = elapsed_ms(query_start);
     return result;
 }

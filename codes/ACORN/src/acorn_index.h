@@ -16,6 +16,7 @@ struct AcornBuildConfig {
     size_t M_beta = 8;      // neighbours kept verbatim before pruning (ACORN's M_beta)
     size_t gamma = 2;       // neighbour-list expansion factor
     unsigned seed = 100;
+    size_t build_threads = 1;
 };
 
 struct AcornBuildStats {

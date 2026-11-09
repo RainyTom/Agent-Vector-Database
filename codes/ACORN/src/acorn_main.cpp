@@ -52,6 +52,8 @@ struct Flags {
     size_t ef_construction = 200;
     size_t M_beta = 8;
     size_t gamma = 2;
+    size_t build_threads = 1;
+    double prefilter_threshold = 0.5;   // 1/gamma for gamma = 2
 };
 
 bool parse_flags(int argc, char** argv, Flags* flags) {
@@ -71,7 +73,9 @@ bool parse_flags(int argc, char** argv, Flags* flags) {
         else if (name == "--queries") { if (!next(&value)) return false; flags->query_count = std::atoi(value.c_str()); }
         else if (name == "--repeat") { if (!next(&value)) return false; flags->repeat = std::atoi(value.c_str()); }
         else if (name == "--two-hop") { if (!next(&value)) return false; flags->two_hop = std::atoi(value.c_str()) != 0; }
+        else if (name == "--prefilter-threshold") { if (!next(&value)) return false; flags->prefilter_threshold = std::atof(value.c_str()); }
         else if (name == "--M-beta") { if (!next(&value)) return false; flags->M_beta = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
+        else if (name == "--build-threads") { if (!next(&value)) return false; flags->build_threads = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--gamma") { if (!next(&value)) return false; flags->gamma = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--M") { if (!next(&value)) return false; flags->M = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--efC") { if (!next(&value)) return false; flags->ef_construction = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
@@ -90,6 +94,7 @@ int run_build(const Flags& flags) {
     config.seed = 100;
     config.M_beta = flags.M_beta;
     config.gamma = flags.gamma;
+    config.build_threads = flags.build_threads;
 
     AcornBuildStats stats;
     std::string error;
@@ -182,14 +187,22 @@ int run_search(const Flags& flags) {
 
     for (size_t ef : ef_values) {
         unsigned long long hit = 0, denominator = 0, distance_total = 0, visited_total = 0, returned_total = 0;
+        size_t prefilter_queries = 0;
         double best_pass_ms = 1e18;
         double sum_pass_ms = 0.0;
         for (size_t rep = 0; rep < repeat; ++rep) {
             double pass_ms = 0.0;
             for (size_t qi = 0; qi < query_count; ++qi) {
-                const AcornQueryResult result = acorn_search_query(
-                    index, predicate_space, predicate_bits[qi], dataset.query_vector(qi),
-                    ef, flags.k, flags.M_beta, flags.M, &scratch);
+                const double selectivity = double(eligible_per_query[qi]) /
+                                           double(index.object_count());
+                const bool use_prefilter = selectivity < flags.prefilter_threshold;
+                const AcornQueryResult result = use_prefilter
+                    ? acorn_prefilter_query(index, predicate_space, predicate_bits[qi],
+                                            dataset.query_vector(qi), flags.k)
+                    : acorn_search_query(index, predicate_space, predicate_bits[qi],
+                                         dataset.query_vector(qi), ef, flags.k,
+                                         flags.M_beta, flags.M, &scratch);
+                if (use_prefilter) ++prefilter_queries;
                 pass_ms += result.query_ms;
                 if (rep != 0) continue;
                 distance_total += result.distance_calls;
@@ -226,13 +239,13 @@ int run_search(const Flags& flags) {
         std::printf("{\"method\":\"acorn\",\"ef\":%zu,\"two_hop\":%d,\"k\":%zu,\"queries\":%zu,"
                     "\"recall\":%.6f,\"qps\":%.1f,\"per_query_ms\":%.3f,"
                     "\"dists_per_q\":%.1f,\"visited_per_q\":%.1f,\"eligible_per_q\":%.1f,"
-                    "\"avg_returned\":%.1f,\"predicate_build_ms_per_q\":%.4f,\"repeat\":%zu}\n",
+                    "\"avg_returned\":%.1f,\"predicate_build_ms_per_q\":%.4f,\"prefilter_queries\":%zu,\"repeat\":%zu}\n",
                     ef, int(flags.two_hop), k, query_count, recall, qps,
                     sum_pass_ms / double(repeat) / double(query_count),
                     double(distance_total) / double(query_count),
                     double(visited_total) / double(query_count), eligible_per_q,
                     double(returned_total) / double(query_count),
-                    predicate_ms_total / double(query_count), repeat);
+                    predicate_ms_total / double(query_count), prefilter_queries, repeat);
     }
 
     if (trace) std::fclose(trace);

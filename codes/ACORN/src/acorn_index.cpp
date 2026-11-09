@@ -9,7 +9,9 @@
 #include "acorn_index.h"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
+#include <thread>
 #include <cstring>
 #include <exception>
 #include <unordered_set>
@@ -40,24 +42,49 @@ bool acorn_build_index(const std::string& data_directory, const std::string& ind
     const auto build_start = std::chrono::steady_clock::now();
     hnswlib::HierarchicalNSW<float> graph(space.get(), object_count, config.M,
                                           config.ef_construction, config.seed);
-    for (size_t object_id = 0; object_id < object_count; ++object_id) {
-        graph.addPoint(dataset.object_vector(object_id), static_cast<hnswlib::labeltype>(object_id));
+    // hnswlib's addPoint is safe for concurrent insertion (per-node locks), and the
+    // official ACORN builder is parallel too (omp). Same thread count as every other
+    // scheme in this harness so build time stays comparable.
+    const size_t build_threads = std::max<size_t>(1, config.build_threads);
+    if (build_threads <= 1) {
+        for (size_t object_id = 0; object_id < object_count; ++object_id)
+            graph.addPoint(dataset.object_vector(object_id), static_cast<hnswlib::labeltype>(object_id));
+    } else {
+        std::atomic<size_t> next_object{0};
+        std::vector<std::thread> pool;
+        pool.reserve(build_threads);
+        for (size_t thread = 0; thread < build_threads; ++thread) {
+            pool.emplace_back([&]() {
+                for (;;) {
+                    const size_t object_id = next_object.fetch_add(1);
+                    if (object_id >= object_count) return;
+                    graph.addPoint(dataset.object_vector(object_id),
+                                   static_cast<hnswlib::labeltype>(object_id));
+                }
+            });
+        }
+        for (auto& worker : pool) worker.join();
     }
-    // ACORN-gamma construction (Section 5.2 of the paper). Candidate edges are
-    // already collected during insertion: hnswlib keeps up to maxM0 = 2M edges at
-    // level 0, which is M*gamma for gamma = 2. What ACORN adds on top is its
-    // predicate-agnostic pruning, applied here to that candidate list:
-    //   * keep the nearest M_beta candidates verbatim,
-    //   * walk the rest in distance order and drop any candidate already covered
-    //     as a two-hop neighbour of an already kept candidate,
-    //   * stop once |kept| + |covered| reaches M*gamma.
-    // The pruned neighbours stay recoverable at search time because the search
-    // expands the neighbours past index M_beta to their own lists.
-    if (config.gamma > 1) {
+    // ACORN-gamma construction (Section 5.2 of the paper, ported onto hnswlib).
+    // The graph is still built by hnswlib so every scheme shares the same engine
+    // and the same distance kernel; what ACORN adds is its own pruning rule over
+    // the candidate edges, applied here to each node's level-0 list.
+    //
+    // Official rule (faiss/impl/ACORN.cpp shrink_neighbor_list, L530-590):
+    //   * candidates are visited from FARTHEST to nearest;
+    //   * the first M_beta candidates are kept unconditionally;
+    //   * past that point a candidate is dropped when it already appears in
+    //     neigh_of_neigh; otherwise it is kept and both the candidate itself and
+    //     all of its neighbours join neigh_of_neigh;
+    //   * the walk stops once |neigh_of_neigh| >= max_size or max_size edges are
+    //     kept, where max_size = nb_neighbors(0) = M.
+    // Level 0 capacity follows the paper: M_beta + 1.5*M (ACORN.cpp L167).
+    if (config.gamma >= 1) {
         const auto prune_start = std::chrono::steady_clock::now();
-        const size_t capacity = graph.maxM0_;
-        const size_t target = std::min(capacity, config.M * config.gamma);
-        const size_t M_beta = std::min(config.M_beta, target);
+        const size_t capacity = std::min<size_t>(graph.maxM0_,
+            size_t(double(config.M_beta) + 1.5 * double(config.M)));
+        const size_t max_size = std::min(capacity, config.M);
+        const size_t M_beta = std::min(config.M_beta, max_size);
         std::vector<std::vector<hnswlib::tableint>> original(object_count);
         for (size_t node = 0; node < object_count; ++node) {
             const auto id = static_cast<hnswlib::tableint>(node);
@@ -68,7 +95,7 @@ bool acorn_build_index(const std::string& data_directory, const std::string& ind
         }
         std::vector<std::pair<float, hnswlib::tableint>> ranked;
         std::vector<hnswlib::tableint> kept;
-        std::unordered_set<hnswlib::tableint> covered;
+        std::unordered_set<hnswlib::tableint> neigh_of_neigh;
         for (size_t node = 0; node < object_count; ++node) {
             const auto id = static_cast<hnswlib::tableint>(node);
             const std::vector<hnswlib::tableint>& candidates = original[node];
@@ -79,27 +106,31 @@ bool acorn_build_index(const std::string& data_directory, const std::string& ind
             for (hnswlib::tableint candidate : candidates)
                 ranked.emplace_back(space->dist(base, dataset.object_vector(size_t(candidate))),
                                     candidate);
-            std::sort(ranked.begin(), ranked.end());
+            // farthest first, matching the official priority queue
+            std::sort(ranked.begin(), ranked.end(), std::greater<>());
             kept.clear();
-            kept.reserve(target);
-            for (size_t i = 0; i < ranked.size() && kept.size() < M_beta; ++i)
-                kept.push_back(ranked[i].second);
-            covered.clear();
-            for (size_t i = M_beta; i < ranked.size(); ++i) {
-                const hnswlib::tableint candidate = ranked[i].second;
-                if (covered.count(candidate)) continue;
+            neigh_of_neigh.clear();
+            size_t examined = 0;
+            for (const auto& entry : ranked) {
+                ++examined;
+                const hnswlib::tableint candidate = entry.second;
+                if (examined > M_beta && neigh_of_neigh.count(candidate)) continue;
                 kept.push_back(candidate);
-                for (hnswlib::tableint second : original[size_t(candidate)])
-                    covered.insert(second);
-                if (kept.size() + covered.size() >= target) break;
+                if (kept.size() >= max_size) break;
+                neigh_of_neigh.insert(candidate);
+                if (examined > M_beta) {
+                    for (hnswlib::tableint second : original[size_t(candidate)])
+                        neigh_of_neigh.insert(second);
+                }
+                if (neigh_of_neigh.size() >= max_size) break;
             }
             hnswlib::linklistsizeint* list = graph.get_linklist0(id);
             *list = static_cast<hnswlib::linklistsizeint>(kept.size());
             std::memcpy(list + 1, kept.data(), kept.size() * sizeof(hnswlib::tableint));
         }
-        std::fprintf(stderr, "[acorn] hnsw base %.1fs, acorn pruning %.1fs\n",
+        std::fprintf(stderr, "[acorn] hnsw base %.1fs, acorn pruning %.1fs (max_size %zu, M_beta %zu)\n",
                      elapsed_ms(build_start) / 1000.0 - elapsed_ms(prune_start) / 1000.0,
-                     elapsed_ms(prune_start) / 1000.0);
+                     elapsed_ms(prune_start) / 1000.0, max_size, M_beta);
     }
 
     if (stats) {

@@ -12,13 +12,13 @@
 
 namespace {
 
-constexpr int ground_truth_depth = 20;  // layout file is gt_<k>.txt
+constexpr int default_ground_truth_depth = 10;  // layout file is gt_<k>.txt
 
 void print_usage() {
     std::fprintf(stderr,
                  "usage:\n"
                  "  nodeann build  --data DIR --index-dir DIR [--M 16] [--ef-construction 200]\n"
-                 "  nodeann search --data DIR --index-dir DIR [--per-n N[,N...]] [--ef E] [--repeat R]"
+                 "  nodeann search --data DIR --index-dir DIR [--per-n N[,N...]] [--ef E] [--k K] [--repeat R]"
                  " [--queries Q]\n");
 }
 
@@ -39,7 +39,7 @@ int run_build(const std::string& data_directory, const std::string& index_direct
               int ef_construction) {
     Dataset dataset;
     std::string error;
-    if (!dataset.load(data_directory, ground_truth_depth, &error)) {
+    if (!dataset.load(data_directory, default_ground_truth_depth, &error)) {
         std::fprintf(stderr, "load failed: %s\n", error.c_str());
         return 2;
     }
@@ -62,7 +62,7 @@ int run_build(const std::string& data_directory, const std::string& index_direct
 
 int run_search(const std::string& data_directory, const std::string& index_directory,
                const std::vector<int>& per_n_values, const std::vector<int>& ef_values,
-               int repeat, int query_limit) {
+               int repeat, int query_limit, int ground_truth_depth) {
     Dataset dataset;
     std::string error;
     if (!dataset.load(data_directory, ground_truth_depth, &error)) {
@@ -107,6 +107,7 @@ int main(int argc, char** argv) {
     int M = NodeANNIndex::default_M;
     int ef_construction = NodeANNIndex::default_ef_construction;
     std::vector<int> ef_values;
+    int ground_truth_depth = default_ground_truth_depth;
     int repeat = 1;
     int query_limit = -1;
 
@@ -123,6 +124,7 @@ int main(int argc, char** argv) {
         else if (flag == "--index-dir") index_directory = next_value();
         else if (flag == "--M") M = std::atoi(next_value().c_str());
         else if (flag == "--ef-construction") ef_construction = std::atoi(next_value().c_str());
+        else if (flag == "--k") { ground_truth_depth = std::atoi(next_value().c_str()); }
         else if (flag == "--ef") {
             const std::string list = next_value();
             std::size_t start = 0;
@@ -152,7 +154,9 @@ int main(int argc, char** argv) {
     if (command == "build") return run_build(data_directory, index_directory, M, ef_construction);
     if (per_n_values.empty()) per_n_values.push_back(ground_truth_depth);
     if (ef_values.empty()) ef_values.push_back(ground_truth_depth);
-    if (command == "search") return run_search(data_directory, index_directory, per_n_values, ef_values, repeat, query_limit);
+    if (command == "search")
+        return run_search(data_directory, index_directory, per_n_values, ef_values, repeat,
+                          query_limit, ground_truth_depth);
     std::fprintf(stderr, "unknown command: %s\n", command.c_str());
     print_usage();
     return 2;

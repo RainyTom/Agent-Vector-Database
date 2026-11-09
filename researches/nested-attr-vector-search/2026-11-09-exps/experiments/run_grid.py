@@ -56,7 +56,8 @@ def main():
         for record in run(prefix + [
                 f'{args.root}/codes/NodeANN/build/nodeann', 'search',
                 '--data', args.data, '--index-dir', args.nodeann_index,
-                '--per-n', str(args.k), '--ef', ef_text, '--queries', str(args.queries)]):
+                '--per-n', str(args.k), '--k', str(args.k), '--ef', ef_text,
+                '--queries', str(args.queries)]):
             rows.append(dict(method=f'nodeann_n{record["per_n"]}', ef=record['ef'],
                              recall=record['recall'], qps=record['qps'],
                              dists=record['dists_per_q'], expanded='',
