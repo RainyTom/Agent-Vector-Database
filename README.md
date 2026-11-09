@@ -17,10 +17,11 @@
 ```text
 .
 ├── AGENTS.md                      # 研究约定
-├── codes/                         # 每个方案一个目录
-│   ├── NestedAttrVectorRetrieval/ # 本方案：build.sh、src/、scripts/
-│   ├── NodeANN/                   # 基线：每属性一张 HNSW 再归并，build.sh、src/
-│   ├── shared/                    # 共享头文件：raw_l2_space.h、native_graph_audit.h
+├── codes/                         # 每个方案一个目录，build / search 分离
+│   ├── NestedAttrVectorRetrieval/ # 本方案：index 构建、search、脚本
+│   ├── NodeANN/                   # 基线：每属性一张 HNSW 再归并
+│   ├── ACORN/                     # 基线：单张全局 HNSW + 谓词感知遍历
+│   ├── shared/                    # dataset.h/.cpp 统一加载器、raw_l2_space.h
 │   └── third_party/hnswlib/       # 固定版本 hnswlib
 ├── datasets/                      # 数据集，按名称分目录（gitignored）
 │   └── sift1m/                    # SIFT1M 原始语料 + 各研究问题派生的数据
@@ -36,14 +37,18 @@
 ## 复现
 
 ```bash
-./codes/NestedAttrVectorRetrieval/build.sh
-./codes/NodeANN/build.sh
-D=datasets/sift1m
-./codes/NestedAttrVectorRetrieval/build/attr_skeleton --dir $D/base --work $D/ccs-attr --vec base.bin --k 10 --efs 10,200 --repeat 1
-./codes/NodeANN/build/nodeann_measured --dir $D/base --work $D/ccs-attr --vec base.bin --k 10 --ef 10 --N 10
+./codes/NestedAttrVectorRetrieval/build.sh && ./codes/NodeANN/build.sh && ./codes/ACORN/build.sh
+D=datasets/sift1m/ccs-attr
+./codes/NestedAttrVectorRetrieval/build/asi build  --data $D --index $D/index/asi.bin
+./codes/NestedAttrVectorRetrieval/build/asi search --data $D --index $D/index/asi.bin --efs 10,40,160
+python3 codes/NestedAttrVectorRetrieval/scripts/run_experiments.py --data $D \
+  --out researches/nested-attr-vector-search/2026-11-09-exps --methods asi,nodeann,acorn
+python3 codes/NestedAttrVectorRetrieval/scripts/plot_pareto.py \
+  --measurements researches/nested-attr-vector-search/2026-11-09-exps/data/measurements.jsonl \
+  --out researches/nested-attr-vector-search/2026-11-09-exps/figures/pareto.svg
 ```
 
-向量读 `--dir datasets/sift1m/base`（`base.bin`），任务数据读 `--work datasets/sift1m/ccs-attr`（`objects.txt`、`edges.tsv`、`queries.tsv`、`queries.bin`、`gt_10.txt`）。数据集由 `scripts/build_ccs_sift_dataset.py` 生成，参数与统计见 `ccs-attr/meta.json`。
+所有方案只认一个 `--data` 目录，格式固定：`base.bin`、`edges.tsv`、`objects.txt`、`queries.tsv`、`queries.bin`、`gt_<k>.txt`、`meta.json`。数据集由 `codes/NestedAttrVectorRetrieval/scripts/build_dataset.py` 生成，参数与统计见 `ccs-attr/meta.json`。
 
 ## 约定
 

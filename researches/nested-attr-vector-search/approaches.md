@@ -1,151 +1,197 @@
 # NestedAttrVectorRetrieval：方案说明与观测面板
 
-本文只描述**当前正在执行的方案**：它怎么建、怎么查、有哪些参数和开关、跑出来是什么、下一步能拧哪个旋钮。不写理论推导、不写代码审查、不写文献与新颖性论证。
+只描述**当前正在执行的方案**：怎么建索引、怎么查、有哪些参数和开关、跑出什么、下一步拧哪个旋钮。不写理论推导、不写代码审查、不写文献论证。
 
 ## 1. 方案与输出
 
-在层级属性 DAG（多父、OR 闭包）上做向量 top-k 检索。对象有唯一直属属性；查询给定属性集合 $U$ 与向量 $q$，在闭包 $D=\mathrm{Desc}^{+}(U)$ 的合格对象中按距离返回 $k$ 个。
+在层级属性 DAG（OR 闭包）上做向量 top-k 检索。每个对象有唯一直属属性；查询给定属性集合 $U$ 与向量 $q$，在闭包 $D=\mathrm{Desc}^{+}(U)$ 的合格对象中返回距离最近的 $k$ 个。
 
-与基线 NodeANN 的区别：NodeANN 对 $D$ 中每个非空属性各搜一次再归并；本方案把这些属性图接成**一张全局对象图**，整条查询只用**一份搜索状态、一份结果保留集**。
+与基线 NodeANN 的区别：NodeANN 对 $D$ 中每个非空属性各搜一次再归并；本方案把属性内图接成**一张全局对象图**，整条查询只用**一份搜索状态、一份保留集**。
 
-## 2. 工作负载
+## 2. 代码与数据集组织
+
+```text
+codes/
+├── NestedAttrVectorRetrieval/     # 本方案
+│   ├── build.sh                   # 编译出 build/asi
+│   ├── src/
+│   │   ├── asi_index.h/.cpp       # 索引结构；build_index / save_index / load_index
+│   │   ├── asi_search.h/.cpp      # 查询：run_queries
+│   │   └── asi_main.cpp           # 子命令 build | search
+│   └── scripts/
+│       ├── build_dataset.py       # 任意向量集 + 任意层级 → 统一数据集
+│       ├── run_experiments.py     # 建索引(缺则建) + 跑网格 → measurements.jsonl
+│       └── plot_pareto.py         # measurements.jsonl → Pareto 图
+├── NodeANN/                       # 基线：每属性一张 HNSW 再归并（build|search 同样分离）
+├── ACORN/                         # 基线：单张全局 HNSW + 谓词感知遍历
+├── shared/                        # dataset.h/.cpp（统一加载器）、raw_l2_space.h、native_graph_audit.h
+└── third_party/hnswlib/           # 固定版本 hnswlib
+```
+
+两条约定：
+
+- **索引构建与查询分离。** 每个方案都是 `build` + `search` 两次独立进程，中间落盘一个索引文件；查询网格不需要重建索引。
+- **数据集格式统一。** 任何数据集都是同一个扁平目录，`--data DIR` 一个参数，不存在按数据集分支的代码：
+
+```text
+<dataset>/base.bin       float32, n × dim       对象向量
+<dataset>/edges.tsv      "child parent"          属性层级
+<dataset>/objects.txt    每行一个属性 ID          对象归属
+<dataset>/queries.bin    float32, m × dim        查询向量
+<dataset>/queries.tsv    "<属性个数> <属性>..."   查询谓词
+<dataset>/gt_<k>.txt     int32, m × k            FP32 精确 top-k
+<dataset>/meta.json      维度、规模、种子、统计
+```
+
+## 3. 当前数据集
+
+`datasets/sift1m/ccs-attr`，由 `scripts/build_dataset.py` 生成（`--alpha 0.8 --internal-share 0.2 --seed 20261109`）：
 
 | 项 | 值 |
 |---|---|
-| 数据集 | `datasets/sift1m/`（SIFT1M 原始向量 + 基于 CCS 层级构造的属性） |
-| 对象 | 1,000,000（`base/base.bin`） |
-| 属性 | 1,929 个 CCS 节点，2,040 条父子边，1,516 个叶子，最长 6 层；无多父 |
-| 对象归属 | 每个对象挂到一个叶子属性；叶子权重 Zipf(α=0.8)，叶子规模中位 291、最大 58,116 |
-| 查询 | 200 条，按递归深度分层生成（深度 0–6 各 36/35/35/35/35/20/4 条） |
-| 查询规模 | 合格对象 $\lvert E(U)\rvert$ 中位 6,844、均值 41,487、最大 1,000,000 |
-| 距离 | 用 SIFT 原始 float32（无量化误差）；真值为闭包内精确 FP32 top-10 |
-| 参数 | $k=10$，$M=16$，$efC=200$，$K=8$，$p=50$，$ef_2=16$ |
+| 对象 | 1,000,000（SIFT1M 原始 float32） |
+| 属性 | CCS 层级：1,929 属性、2,040 边、1,516 叶子、最长 6 层、无多父 |
+| 对象归属 | 80% 挂叶子（Zipf α=0.8），20% 均匀挂内部属性 |
+| 叶子规模 | 中位 234，最大 46,400 |
+| 查询 | 200 条，按属性递归深度分层：深度 0–6 各 36/35/35/35/35/20/4 条 |
+| 合格集 $\lvert E(U)\rvert$ | 中位 7,242、均值 44,888、最大 1,000,000 |
+| 闭包非空属性数 | 平均 94.4 |
+| 距离 / 真值 | 建图与搜索用 SIFT 原始 float32，真值为闭包内精确 FP32 top-10 |
 
-目录约定：原始语料在 `raw/`；任务数据在 `ccs-attr/`（`edges.tsv`、`nodes.tsv`、`objects.txt`、`queries.tsv`、`queries.bin`、`gt_10.txt`、`meta.json`）；向量在 `base/`。程序用 `--dir datasets/sift1m/base` 读向量、`--work datasets/sift1m/ccs-attr` 读任务数据，两者分开，便于其他研究问题复用同一份 1M 向量。
+对象挂在内部属性上是必需的：若全部挂在叶子上，父属性没有对象就没有代表点，跨属性网关边会恒为 0，单图退化成 1,516 个孤立子图。
 
-## 3. 索引构建
+## 4. 索引结构
 
-对每个非空直属属性 $S_a$：
+对每个有对象的属性 $S_a$：
 
-1. **属性内 HNSW**：用 hnswlib 构建完整多层图，插入顺序为对象 ID 递增，随机种子 `100 + concept_id`（与 NodeANN 一致）。$M=16$，$efConstruction=200$。
-2. **导出 layer 0** 为有向邻接表，作为全局图的局部边。原样保留，不补无向边。
-3. **导出上层邻接**为紧凑数组（节点→行→邻居），仅供 `--entry-mode hnsw` 选入口，查询的展开仍在 layer 0。
-4. **代表点与 MST**：farthest-first 选代表点，数量 $K_a=\max(1,\min(K_{cap},\lfloor n_a/p\rfloor+1))$；同一属性的代表点之间加双向 MST 边。
-5. **跨属性网关**：按逆拓扑序，把父属性代表点连到子属性中距其最近的对象，边双向冻结；`repair` 给零入边的代表点连一个非空祖先。
-6. **闭包位图**：为完整 DAG（含无对象的中间属性）计算后代位图。
+1. **属性内 HNSW**：hnswlib 多层图，按对象 ID 递增插入，种子 `100 + attribute_id`。$M=16$，$efConstruction=200$。
+2. **layer 0** 导出为有向邻接表，作为全局图的局部边；不补无向边。
+3. **上层邻接**导出为紧凑数组，仅供 `--entry-mode hnsw` 选入口。
+4. **代表点**：farthest-first，数量 $\max(1,\min(K_{cap},\lfloor n_a/p\rfloor+1))$；同属性代表点之间加双向 MST 边。
+5. **跨属性网关**：自底向上遍历属性；对每个属性和它有成员的祖先，把祖先的每个代表点连到该属性中距其最近的对象，双向、冻结、不剪枝。
+6. **repair**：没有任何跨属性入边的属性，把它的代表点与最近有成员祖先的代表点两两相连。
+7. **闭包位图**：为完整 DAG（含无对象的中间属性）计算后代位图。
 
-关键事实：上层与属性层级是两张不同的图；全局图出度不设硬上限；repair 不保证任意闭包内对象级连通。
+当前规模：1,000,000 节点、14,142,953 条局部边（14.1/节点）、16,320 条网关边 + 53,144 条 repair 边（138,928 个跨属性槽位）；建索引约 107 s。
 
-## 4. 查询流程（DQS）
+## 5. 查询流程
 
 ```
 D ← OR(desc[u] for u in U)
 inD ← D 中有直属对象的属性
-建 q1.cand/keep、q2.cand/keep 与三个查询内代号数组
+建唯一通道的 candidate_heap 与 keep_heap（容量 ef），清查询代号
 
 offer(v):
     已带本查询代号 → 返回
     写首次接触代号
     own(v) ∉ D → 返回（不算距离、不入队、不展开）
     d ← 种子分数缓存命中 ? 复用 : 计算
-    q1: keep 满且 d ≥ 最差 → 丢弃；否则写入 q1.cand 与 q1.keep
-    v 是代表点或网关 → q2 同样独立尝试
-    任一通道成功 → 记 entered
+    keep_heap 满且 d ≥ 最差 → 丢弃；否则写入 candidate_heap 与 keep_heap
 
-对 inD 每属性：按 entry-mode 选一个种子（representative: 最近代表点；hnsw: 上层贪心下降），offer 它
-当任一 cand 非空：
-    弹出两堆中较近的堆头
-    该节点本查询已展开 → 继续弹
-    标记已展开，扫描 layer0 邻接与跨属性边，对每个目标 offer
-输出 ← 合并 q1.keep 与 q2.keep，按对象 ID 去重，按距离排序取 top-k
+代表点队列（默认，--reps-topL L）：
+    对 inD 的全部代表点评分
+    取距离最近的 L 个放进独立队列
+    队列里每个代表点都强制展开一次（不看 keep 阈值）
+对照入口（--reps-topL 0）：
+    inD 每个属性选一个代表点作种子，offer 后进入普通 beam
+
+当 candidate_heap 非空：
+    弹出最近节点
+    本查询已展开 → 继续弹
+    标记已展开，扫描 layer-0 邻接 + 跨属性边，对每个目标 offer
+
+输出 ← keep_heap 按距离排序取前 k（可选 --rerank-fp32 重排保留集）
 ```
 
-已做的两处保结果工作削减：同一对象只展开一次（弹出后按代号跳过）；代表点/种子评分在查询内缓存复用（不设首次接触标记）。
+两处保结果的工作削减：同一对象只展开一次；代表点/种子评分在查询内缓存复用。
 
-**已移除第二通道与 `ef2`。** 现在只有一条 q1 通道（容量 `ef`），结果只来自它。代表点走独立队列：闭包内全部代表点评分后取最近 L 个，逐个强制展开，展开得到的邻居再进入 q1。`L=0` 时退回“每个非空属性选一个最近代表点作种子”的旧入口方式。
+**第二通道与 `ef2` 已移除**：只有一条通道，结果只来自它的 keep。
 
-可选 `--rerank-fp32`：对最后保留的候选按原始 FP32 重排，重排距离计入查询成本；`--rerank-pool` 限制重排条数。默认关闭。
-
-## 5. 参数与开关
+## 6. 参数与开关
 
 | 参数 | 常用值 | 作用 |
 |---|---|---|
+| `--data` | 数据集目录 | 统一数据集路径 |
+| `--index` | 索引文件 | build 写出、search 读取 |
 | `--k` | 10 | 返回条数、真值口径 |
-| `--M` / `--efC` | 16 / 200 | 属性内 HNSW 的度数上限与构建宽度 |
+| `--M` / `--efC` | 16 / 200 | 属性内 HNSW 度数上限与构建宽度 |
 | `--K` | 8 | 代表点数量上限 $K_{cap}$ |
 | `--p` | 50 | 代表点密度，值越小代表点越多 |
-| `--reps-topL` | 32 | 代表点独立队列宽度：闭包内全部代表点取距离最近 L 个，逐个强制展开；0 = 关闭，退回每属性一个种子 |
-| `--efs` | `10,40,200,800` | 主通道（唯一通道）keep 容量，可一次跑多档 |
-| `--entry-mode` | `representative` | 种子入口：`representative` 或 `hnsw` |
-| `--rerank-fp32` / `--rerank-pool` | 关 / 0 | 最终 FP32 重排与重排预算 |
-| `--queries` / `--repeat` | 200 / 1–100 | 查询前缀长度与重复轮数 |
-| `--dir` / `--work` | `datasets/sift1m/base` / `datasets/sift1m/ccs-attr` | 向量目录 / 任务数据目录 |
-| `--vec` | `base.bin` | 搜索向量文件名 |
-| `--trace-file` | — | 写逐查询诊断 JSONL |
-| `--graph-audit-file` | — | 导出原生 HNSW 拓扑，用于与 NodeANN 逐项对账 |
-| `--diag` | 关 | 打印属性级 BFS 可达性 |
+| `--efs` | `10,20,40,80,160,320` | 唯一通道 keep 容量，可一次跑多档 |
+| `--reps-topL` | 32 | 代表点独立队列宽度；0 关闭，退回每属性一个种子 |
+| `--entry-mode` | `representative` | `--reps-topL 0` 时的入口：`representative` 或 `hnsw` |
+| `--queries` / `--repeat` | 200 / 1 | 查询数与前缀重复轮数 |
+| `--trace-file` | — | 逐查询诊断 JSONL |
+| `--rerank-fp32` / `--rerank-pool` | 关 / 0 | 保留集 FP32 重排（本数据集无量化误差，默认关） |
 
-注意：`ef` 同时控制**保留集容量**和**队列宽度**，两者目前不能分开调。
+注意：`ef` 同时控制**保留集容量**和**队列宽度**。
 
-## 6. 输出字段
+## 7. 输出字段
 
 单行 JSON，每档 `ef` 一条：
 
 | 字段 | 含义 |
 |---|---|
-| `recall` | 对原始 FP32 GT 的严格 ID 命中率，按有效 GT 条目聚合 |
-| `qps` | 计时区间内查询数/查询秒（不含建图、GT 计分、参考扫描） |
-| `dists_per_q` | 实际距离调用/查询，含种子与高层定位 |
-| `adjacency_slots_per_q` | 实际扫描的邻接槽位/查询，含高层 |
+| `recall` | 对 FP32 GT 的严格 ID 命中率，按有效 GT 条目聚合 |
+| `qps` | 计时区间内查询数/查询秒（不含建图、GT 计分） |
+| `dists_per_q` | 实际距离调用/查询，含代表点评分 |
+| `adjacency_slots_per_q` | 实际扫描的邻接槽位/查询 |
 | `expanded_per_q` | 实际展开节点数/查询（已去重） |
-| `upper_dists_per_q` / `upper_slots_per_q` | 高层入口的花费，是上面两项的子集 |
-| `attrs_in_D` / `attrs_entered` / `attrs_touched` | 闭包非空属性数 / 至少准入一个对象的属性数 / 至少算过距离的属性数 |
-| `miss_attr_not_entered` 等四个 `miss_*` | 未命中按阶段的操作性归因（互斥、按优先序） |
+| `reps_scored_per_q` / `reps_expanded_per_q` | 代表点评分数 / 强制展开数 |
+| `eligible_per_q` / `attrs_in_scope` / `attrs_entered` | 合格对象数 / 闭包非空属性数 / 至少准入一个对象的属性数 |
 | `distance_cache_hits_per_q` | 复用种子分数省下的距离 |
-| `rerank_calls_per_q` | FP32 重排距离数 |
 
-trace 文件额外给出逐查询的 `returned`、`evaluated`、`admitted`、`seed_evaluated`、`seed_nodes`、`expanded` 与实体计数，可离线复核任意结论。
+trace 文件另给逐查询的 `returned`、`evaluated`、`admitted`、`seed_nodes`、`expanded_objects`、`entered_attrs`。
 
-## 7. 当前实测工作点
+## 8. 当前实测工作点
 
-单进程、单轮（`--repeat 1`）、CPU 2、$k=10$，未做多进程置信区间：
+单进程、单轮、200 查询、$k=10$；QPS 随机器负载波动，只作量级参考。三方案同一数据集、同一预算口径。
 
-| Ours 代表点入口 | Recall@10 | QPS | 距离/查询 |
-|---|---:|---:|---:|
-| `ef=10` | 0.4625 | 2,430 | 1,218 |
-| `ef=40` | 0.5850 | — | — |
-| `ef=200` | 0.7400 | — | — |
-| `ef=800` | 0.8645 | — | — |
+| 方法 | 配置 | Recall@10 | QPS | 距离/查询 |
+|---|---|---:|---:|---:|
+| Ours | `ef=10, L=32` | 0.5710 | 2,225 | 1,282 |
+| Ours | `ef=40, L=32` | 0.6930 | 1,258 | 1,962 |
+| Ours | `ef=160, L=32` | 0.7790 | 718 | 3,673 |
+| Ours | `ef=10, L=128` | 0.6025 | 1,394 | 2,005 |
+| Ours | `ef=160, L=128` | 0.8660 | 620 | 4,564 |
+| Ours | `ef=320, L=128` | 0.9105 | 457 | 6,281 |
+| Ours | `ef=640, L=128` | 0.9380 | 311 | 8,630 |
+| Ours | `ef=1280, L=128` | 0.9530 | 229 | 11,454 |
+| NodeANN | `N=10` | 0.9830 | 489 | 9,868 |
+| NodeANN | `N=20` | 0.9985 | 380 | 13,197 |
+| NodeANN | `N=40` | 1.0000 | 286 | 17,476 |
+| ACORN | `ef=10` | 0.9775 | 62 | 42,691 |
+| ACORN | `ef=320` | 1.0000 | 1 | 296,693 |
 
-| NodeANN | Recall@10 | QPS | 距离/查询 |
-|---|---:|---:|---:|
-| `N=10` | 0.9665 | 524 | 9,665 |
+Pareto 前沿见 [figures/pareto.svg](2026-11-09-exps/figures/pareto.svg)：Ours `0.5710/2,225` → `0.9530/229`；NodeANN `0.9830/489` → `1.0000/286`；ACORN `0.9775/62` → `1.0000/6`。
 
-当前格局（一行结论）：**代表点强制展开把召回从 `ef=200` 的 0.7365 提到 0.8820；仍低于 NodeANN `N=10` 的 0.9665，但距离少 44%（5,418 vs 9,665）。** 剩余损失约一半来自“部分属性完全没被展开”，一半来自“展开了但没遍历到”。
+当前格局：**NodeANN 最强**（0.983 时 QPS 489，并支配 ACORN 全部点）。本方案只在低召回段更快（0.571 时 2,225 QPS），要到 `ef=1280` 才到 0.953 且只剩 229 QPS。合格集均值 44,888：NodeANN 用 22%、本方案用 10–26% 的距离完成检索，**都没有退化成 pre-filter**；ACORN 在 `ef=10` 已用掉 95% 合格集距离，属退化。
 
-上一轮 168,937 对象的 CCS+SIFT 实验因对象规模与闭包结构不同，结论已作废，不再引用。
-
-## 8. 可调方向与当前判断
+## 9. 可调方向与当前判断
 
 | 方向 | 状态 |
 |---|---|
-| 代表点队列宽度 `L` | 已测：`ef=200` 时 L=0→128 召回 0.7365→0.8820；收益随 `ef` 放大 |
-| 代表点选取兼顾属性覆盖 | 未实现；当前纯按距离取 L，导致约一半损失是“属性完全没被展开” |
-| 提高 `ef` | 已测 10→200：召回 0.44→0.74（L=0）或 0.58→0.88（L=128） |
-| 高层入口 | 已实现，可与代表点队列叠加；新数据集未测 |
-| `ef2` / 第二通道 | 已移除，不再使用 |
-| 最终 FP32 重排 | 已实现，可选；新数据集无量化误差，重排无意义，默认关闭 |
+| 代表点队列宽度 `L` | 已测：同等 `ef` 下 L=128 比 L=32 召回 +3–13pp，代价是距离约 1.5 倍 |
+| `ef` 与保留集解耦 | 未实现；`ef` 同时放大队列与保留集，高召回段成本陡增，是追上 NodeANN 的关键 |
+| 入口覆盖 | 闭包平均 94 个属性，`ef=320` 时只有约 50 个被展开；扩展开关口与 L 的选取规则都影响高召回段 |
+| 跨属性网关接入质量 | 现在按“父代表点最近的单个子对象”接入，每属性只有一个入口 |
+| 高层入口 | 已实现，未在新数据集测试 |
+| FP32 重排 | 本数据集无量化误差，重排无收益，默认关闭 |
+| ACORN 对照 | 在本工作负载退化（visited 常超过合格集），只能作为“未退化失败”的负例 |
 
-## 9. 运行与观测
+## 10. 运行
 
 ```bash
 ./codes/NestedAttrVectorRetrieval/build.sh
-./codes/NodeANN/build.sh
-D=datasets/sift1m
-./codes/NestedAttrVectorRetrieval/build/attr_skeleton --dir $D/base --work $D/ccs-attr --vec base.bin \
-  --k 10 --efs 10,40,200,800 --repeat 1
-./codes/NodeANN/build/nodeann_measured --dir $D/base --work $D/ccs-attr --vec base.bin \
-  --k 10 --ef 10 --N 10
+D=datasets/sift1m/ccs-attr
+./codes/NestedAttrVectorRetrieval/build/asi build  --data $D --index $D/index/asi.bin
+./codes/NestedAttrVectorRetrieval/build/asi search --data $D --index $D/index/asi.bin \
+  --efs 10,40,160,320 --reps-topL 32
+
+python3 codes/NestedAttrVectorRetrieval/scripts/run_experiments.py --data $D --out researches/nested-attr-vector-search/2026-11-09-exps --methods asi,nodeann,acorn
+python3 codes/NestedAttrVectorRetrieval/scripts/plot_pareto.py \
+  --measurements researches/nested-attr-vector-search/2026-11-09-exps/data/measurements.jsonl \
+  --out researches/nested-attr-vector-search/2026-11-09-exps/figures/pareto.svg
 ```
 
-数据集由 `codes/NestedAttrVectorRetrieval/scripts/build_ccs_sift_dataset.py` 生成（`--alpha 0.8 --seed 20261109`），参数与统计见 `datasets/sift1m/ccs-attr/meta.json`。当日数字见 [2026-11-09-exps/report.md](2026-11-09-exps/report.md)。
+当日数字与数据文件见 [2026-11-09-exps/report.md](2026-11-09-exps/report.md)。
