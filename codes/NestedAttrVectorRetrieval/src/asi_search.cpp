@@ -225,9 +225,14 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     offer(index.bridge_edge_targets[j]);
             };
 
-            // entry: a single start point per root attribute. Representatives play no
-            // part in entry lookup; they only carry the cross-attribute bridge edges
-            // that merge attribute subgraphs during traversal.
+            // entry: the outermost merge level when the index has one (clustered
+            // merge), otherwise a single start point per root attribute.
+            if (!index.skeleton_top.empty()) {
+                for (uint32_t node : index.skeleton_top) {
+                    if (trace && repeat_index == 0) seed_scored_objects.push_back(index.node_object[node]);
+                    offer(node);
+                }
+            } else
             for (int root : root_attributes) {
                 if (index.node_begin[size_t(root) + 1] <= index.node_begin[size_t(root)]) continue;
                 uint32_t start = index.node_begin[size_t(root)];
@@ -258,9 +263,12 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                 offer(start);
             }
 
-            // single shared beam search
+            // single shared beam search; stop once the nearest unexplored candidate
+            // is worse than the worst kept result (hnswlib termination rule)
             while (!frontier.empty()) {
-                const uint32_t node = frontier.top().second;
+                const std::pair<float, uint32_t>& closest = frontier.top();
+                if (int(keep_heap.size()) >= ef && -closest.first > keep_heap.top().first) break;
+                const uint32_t node = closest.second;
                 frontier.pop();
                 expand(node);
             }

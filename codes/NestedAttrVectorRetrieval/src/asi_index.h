@@ -22,7 +22,7 @@ struct BuildOptions {
     int max_degree = 16;               // hnswlib M
     int construction_width = 200;      // hnswlib efConstruction
     int representative_cap = 8;        // upper bound on representatives per attribute
-    int objects_per_representative = 50;  // p: one representative per p objects
+    int representative_rule = 0;       // 0 = min(Kcap, n); 1 = round(sqrt(n)); 2 = clustered merge
     int bridge_receivers = 1;          // how many scattered child members each bridge attaches to
     bool merge_attributes = true;      // add cross-attribute gateway edges
 };
@@ -52,6 +52,8 @@ struct AsiIndex {
     std::vector<std::vector<uint32_t>> upper_row_begin;   // per attribute, local node -> row
     std::vector<std::vector<uint32_t>> upper_row_offset;  // per attribute, row -> target start
     std::vector<std::vector<uint32_t>> upper_targets;     // per attribute
+
+    std::vector<uint32_t> skeleton_top;      // global nodes of the outermost merge level
 
     std::vector<char> is_representative;
     std::vector<char> is_gateway;

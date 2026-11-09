@@ -7,7 +7,10 @@
 #include <cstring>
 #include <fstream>
 #include <functional>
+#include <limits>
+#include <numeric>
 #include <queue>
+#include <random>
 #include <sstream>
 #include <unordered_map>
 #include <unordered_set>
@@ -89,10 +92,15 @@ void build_attribute_graph(const float* base, int dim, const std::vector<uint32_
         }
     }
 
-    // representatives: farthest-first from local id 0
-    const int wanted = std::max(1, std::min(member_count,
-        int(member_count) / std::max(1, options.objects_per_representative) + 1));
-    const int representative_target = std::max(1, std::min(options.representative_cap, wanted));
+    // representatives: farthest-first from local id 0.
+    // rule 0: one per p objects, capped by Kcap.  rule 1: round(sqrt(n)), uncapped.
+    const int representative_target = [&]() {
+        if (options.representative_rule == 1) {
+            const int root = int(std::lround(std::sqrt(double(member_count))));
+            return std::max(1, std::min(member_count, root));
+        }
+        return std::max(1, std::min({options.representative_cap, member_count}));
+    }();
     graph.representative_nodes.clear();
     graph.representative_nodes.push_back(0);
     std::vector<float> nearest_representative_distance(size_t(member_count), INFINITY);
@@ -196,6 +204,95 @@ bool read_raw(FILE* in, void* data, size_t bytes) {
 
 }  // namespace
 
+
+// k-means over a set of global node ids. Returns one global node id per centroid:
+// the original vector nearest to that centroid, so representatives are real nodes.
+// Centroids are trained on a bounded sample to keep the build linear in k*|sample|.
+std::vector<uint32_t> kmeans_representatives(const float* base, int dim,
+                                             const std::vector<uint32_t>& nodes,
+                                             int k, uint64_t seed, const RawL2Space& space) {
+    std::vector<uint32_t> reps;
+    if (nodes.empty() || k <= 0) return reps;
+    if (int(nodes.size()) <= k) {
+        reps = nodes;
+        std::sort(reps.begin(), reps.end());
+        reps.erase(std::unique(reps.begin(), reps.end()), reps.end());
+        return reps;
+    }
+
+    std::mt19937_64 rng(seed);
+    const size_t sample_target = std::min(nodes.size(), std::max<size_t>(2048, size_t(k) * 16));
+    std::vector<uint32_t> sample;
+    if (sample_target >= nodes.size()) {
+        sample = nodes;
+    } else {
+        std::vector<uint32_t> index(nodes.size());
+        std::iota(index.begin(), index.end(), 0u);
+        for (size_t i = 0; i < sample_target; ++i) {
+            std::uniform_int_distribution<size_t> pick(i, index.size() - 1);
+            std::swap(index[i], index[pick(rng)]);
+            sample.push_back(nodes[index[i]]);
+        }
+    }
+    const size_t s_count = sample.size();
+
+    std::vector<std::vector<float>> centroid(size_t(k), std::vector<float>(size_t(dim), 0.0f));
+    {
+        std::vector<size_t> pick_idx(s_count);
+        std::iota(pick_idx.begin(), pick_idx.end(), 0u);
+        for (int c = 0; c < k; ++c) {
+            std::uniform_int_distribution<size_t> pick(size_t(c), s_count - 1);
+            const size_t chosen = pick(rng);
+            std::swap(pick_idx[size_t(c)], pick_idx[chosen]);
+            const float* v = base + size_t(sample[pick_idx[size_t(c)]]) * size_t(dim);
+            std::copy(v, v + dim, centroid[size_t(c)].begin());
+        }
+    }
+
+    std::vector<int> assignment(s_count, 0);
+    const int iterations = 4;
+    for (int it = 0; it < iterations; ++it) {
+        for (size_t i = 0; i < s_count; ++i) {
+            const float* v = base + size_t(sample[i]) * size_t(dim);
+            float best = std::numeric_limits<float>::infinity();
+            int best_c = 0;
+            for (int c = 0; c < k; ++c) {
+                const float d = space.dist(v, centroid[size_t(c)].data());
+                if (d < best) { best = d; best_c = c; }
+            }
+            assignment[i] = best_c;
+        }
+        std::vector<std::vector<double>> sum(size_t(k), std::vector<double>(size_t(dim), 0.0));
+        std::vector<size_t> count(size_t(k), 0);
+        for (size_t i = 0; i < s_count; ++i) {
+            const float* v = base + size_t(sample[i]) * size_t(dim);
+            const int c = assignment[i];
+            for (int d = 0; d < dim; ++d) sum[size_t(c)][size_t(d)] += double(v[d]);
+            ++count[size_t(c)];
+        }
+        for (int c = 0; c < k; ++c) {
+            if (!count[size_t(c)]) continue;
+            for (int d = 0; d < dim; ++d)
+                centroid[size_t(c)][size_t(d)] = float(sum[size_t(c)][size_t(d)] / double(count[size_t(c)]));
+        }
+    }
+
+    reps.reserve(size_t(k));
+    for (int c = 0; c < k; ++c) {
+        float best = std::numeric_limits<float>::infinity();
+        uint32_t best_node = sample[0];
+        for (size_t i = 0; i < s_count; ++i) {
+            const float d = space.dist(centroid[size_t(c)].data(),
+                                       base + size_t(sample[i]) * size_t(dim));
+            if (d < best) { best = d; best_node = sample[i]; }
+        }
+        reps.push_back(best_node);
+    }
+    std::sort(reps.begin(), reps.end());
+    reps.erase(std::unique(reps.begin(), reps.end()), reps.end());
+    return reps;
+}
+
 AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
     const size_t object_count = dataset.num_objects();
     const int dim = dataset.dim;
@@ -226,11 +323,10 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
                               100 + index.attribute_ids[size_t(a)], index.attribute_ids[size_t(a)],
                               nullptr, attribute_graphs[size_t(a)]);
     }
-    std::fprintf(stderr, "[build] %d attribute graphs in %.1fs (M=%d efC=%d p=%d Kcap=%d)\n",
+    std::fprintf(stderr, "[build] %d attribute graphs in %.1fs (M=%d efC=%d Kcap=%d)\n",
                  attribute_count,
                  std::chrono::duration<double>(std::chrono::steady_clock::now() - build_started).count(),
-                 options.max_degree, options.construction_width,
-                 options.objects_per_representative, options.representative_cap);
+                 options.max_degree, options.construction_width, options.representative_cap);
 
     // 2. global node numbering
     index.node_begin.assign(size_t(attribute_count) + 1, 0);
@@ -287,148 +383,286 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
                                                        graph.upper_targets.size());
     }
 
-    // 4. cross-attribute gateway edges, bottom-up over the attribute DAG
+    // 4. merge the attribute subgraphs into one object graph.
+    //
+    //   representative_rule == 2 (clustered merge):
+    //     attributes are processed in reverse topological order. A parent
+    //     accumulates its own members plus one child subtree at a time; after
+    //     each merge the accumulated set is re-clustered into
+    //     round(sqrt(N)) cells, and every cell contributes the original vector
+    //     nearest to its centroid as a representative. Representatives are
+    //     therefore real nodes. Consecutive levels are linked, which forms the
+    //     merge skeleton: coarse representatives of a larger accumulated set
+    //     point at the finer representatives of the sets they were built from.
+    //
+    //   representative_rule == 0/1 (gateway merge):
+    //     each parent representative connects to the nearest m members of the
+    //     child attribute, and a repair pass gives every attribute at least one
+    //     cross-attribute in-edge.
     std::vector<std::vector<uint32_t>> bridge_edges(total_nodes);
     long gateway_edge_count = 0;
-    if (options.merge_attributes) {
-        std::vector<int> children_processed(size_t(attribute_count), 0);
-        for (int a = 0; a < attribute_count; ++a) {
-            const auto found = dataset.children_of.find(index.attribute_ids[size_t(a)]);
-            children_processed[size_t(a)] = found == dataset.children_of.end() ? 0 : int(found->second.size());
-        }
-        // topological order (parents first), then reversed to process children first
-        std::vector<int> order;
-        {
-            std::vector<int> remaining_parents(size_t(attribute_count), 0);
+    long repaired_edge_count = 0;
+    {
+        RawL2Space space{size_t(dim)};
+        if (options.representative_rule == 2) {
+            std::vector<std::vector<int>> children{std::vector<std::vector<int>>(size_t(attribute_count))};
+            std::vector<int> parent_count(size_t(attribute_count), 0);
             for (int a = 0; a < attribute_count; ++a) {
                 const auto found = dataset.parents_of.find(index.attribute_ids[size_t(a)]);
                 if (found == dataset.parents_of.end()) continue;
-                for (int parent : found->second)
-                    if (attribute_position.count(parent)) ++remaining_parents[size_t(a)];
-            }
-            std::vector<int> ready;
-            for (int a = 0; a < attribute_count; ++a)
-                if (remaining_parents[size_t(a)] == 0) ready.push_back(a);
-            for (size_t head = 0; head < ready.size(); ++head) {
-                const int a = ready[head];
-                order.push_back(a);
-                const auto found = dataset.children_of.find(index.attribute_ids[size_t(a)]);
-                if (found == dataset.children_of.end()) continue;
-                for (int child : found->second) {
-                    const auto position = attribute_position.find(child);
+                for (int parent : found->second) {
+                    const auto position = attribute_position.find(parent);
                     if (position == attribute_position.end()) continue;
-                    if (--remaining_parents[size_t(position->second)] == 0)
-                        ready.push_back(position->second);
+                    children[size_t(position->second)].push_back(a);
+                    ++parent_count[size_t(a)];
                 }
             }
-        }
-        std::reverse(order.begin(), order.end());
 
-        RawL2Space space{size_t(dim)};
-        for (int child : order) {
-            if (attribute_graphs[size_t(child)].members.empty()) continue;
-            // candidate parents: nearest ancestors that actually own objects
-            std::vector<int> candidate_parents;
+            // post-order (reverse topological): every child before its parent
+            std::vector<int> order;
+            order.reserve(size_t(attribute_count));
             {
-                std::vector<int> frontier;
-                const auto found = dataset.parents_of.find(index.attribute_ids[size_t(child)]);
-                if (found != dataset.parents_of.end())
-                    for (int parent : found->second)
-                        if (attribute_position.count(parent))
-                            frontier.push_back(attribute_position[parent]);
-                std::unordered_set<int> visited;
-                for (int level = 0; level < 8 && !frontier.empty(); ++level) {
-                    std::vector<int> next;
-                    for (int a : frontier) {
-                        if (!visited.insert(a).second) continue;
-                        if (!attribute_graphs[size_t(a)].members.empty()) {
-                            candidate_parents.push_back(a);
-                            continue;
+                std::vector<char> state(size_t(attribute_count), 0);
+                std::function<void(int)> visit = [&](int a) {
+                    if (state[size_t(a)]) return;
+                    state[size_t(a)] = 1;
+                    for (int c : children[size_t(a)]) visit(c);
+                    order.push_back(a);
+                };
+                for (int a = 0; a < attribute_count; ++a)
+                    if (parent_count[size_t(a)] == 0) visit(a);
+                for (int a = 0; a < attribute_count; ++a) visit(a);
+            }
+
+            std::vector<std::vector<uint32_t>> subtree_nodes{std::vector<std::vector<uint32_t>>(size_t(attribute_count))};
+            std::vector<std::vector<uint32_t>> subtree_reps{std::vector<std::vector<uint32_t>>(size_t(attribute_count))};
+            long cluster_steps = 0;
+            long linked_edges = 0;
+
+            for (int a : order) {
+                std::vector<uint32_t> accumulated;
+                for (uint32_t node = index.node_begin[size_t(a)]; node < index.node_begin[size_t(a) + 1]; ++node)
+                    accumulated.push_back(node);
+
+                std::vector<uint32_t> previous_level;
+                if (children[size_t(a)].empty()) {
+                    if (!accumulated.empty()) {
+                        const int cells = std::max(1, int(std::lround(std::sqrt(double(accumulated.size())))));
+                        previous_level = kmeans_representatives(dataset.base.data(), dim, accumulated,
+                                                                cells, 1000003ull * uint64_t(a + 1), space);
+                        ++cluster_steps;
+                    }
+                }
+                for (int c : children[size_t(a)]) {
+                    accumulated.insert(accumulated.end(), subtree_nodes[size_t(c)].begin(),
+                                       subtree_nodes[size_t(c)].end());
+                    if (accumulated.empty()) continue;
+                    const int cells = std::max(1, int(std::lround(std::sqrt(double(accumulated.size())))));
+                    std::vector<uint32_t> level = kmeans_representatives(
+                        dataset.base.data(), dim, accumulated, cells,
+                        1000003ull * uint64_t(a + 1) * 31ull + uint64_t(c + 7), space);
+                    ++cluster_steps;
+
+                    // the pool a coarser representative may descend through:
+                    // the previous level plus the representatives of the child
+                    // that was just absorbed
+                    std::vector<uint32_t> pool = previous_level;
+                    pool.insert(pool.end(), subtree_reps[size_t(c)].begin(), subtree_reps[size_t(c)].end());
+                    if (!pool.empty()) {
+                        for (uint32_t from : level) {
+                            const float* from_vector =
+                                dataset.base.data() + size_t(index.node_object[from]) * size_t(dim);
+                            // nearest m pool nodes
+                            const int m = std::max(1, options.bridge_receivers);
+                            std::vector<std::pair<float, uint32_t>> best;
+                            best.reserve(size_t(m));
+                            for (uint32_t to : pool) {
+                                const float d = space.dist(
+                                    from_vector,
+                                    dataset.base.data() + size_t(index.node_object[to]) * size_t(dim));
+                                if (int(best.size()) < m) {
+                                    best.push_back({d, to});
+                                } else {
+                                    size_t worst = 0;
+                                    for (size_t j = 1; j < best.size(); ++j)
+                                        if (best[j].first > best[worst].first) worst = j;
+                                    if (d < best[worst].first) best[worst] = {d, to};
+                                }
+                            }
+                            for (const auto& edge : best) {
+                                bridge_edges[size_t(from)].push_back(edge.second);
+                                bridge_edges[size_t(edge.second)].push_back(from);
+                                index.is_gateway[size_t(from)] = 1;
+                                index.is_gateway[size_t(edge.second)] = 1;
+                                ++linked_edges;
+                            }
                         }
-                        const auto up = dataset.parents_of.find(index.attribute_ids[size_t(a)]);
-                        if (up == dataset.parents_of.end()) continue;
-                        for (int grand_parent : up->second)
-                            if (attribute_position.count(grand_parent))
-                                next.push_back(attribute_position[grand_parent]);
                     }
-                    frontier.swap(next);
+                    previous_level = std::move(level);
+                }
+                subtree_reps[size_t(a)] = previous_level;
+                subtree_nodes[size_t(a)] = std::move(accumulated);
+            }
+            for (int a = 0; a < attribute_count; ++a) {
+                const uint32_t begin = index.node_begin[size_t(a)];
+                const uint32_t end = index.node_begin[size_t(a) + 1];
+                for (uint32_t node : subtree_reps[size_t(a)])
+                    if (node >= begin && node < end) {
+                        index.representative_nodes[size_t(a)].push_back(node - begin);
+                        index.is_representative[node] = 1;
+                    }
+            }
+            for (int a = 0; a < attribute_count; ++a)
+                if (parent_count[size_t(a)] == 0 && index.skeleton_top.empty())
+                    index.skeleton_top = subtree_reps[size_t(a)];
+            std::fprintf(stderr, "[merge] clustered: %ld clusterings, %ld skeleton edges, %zu top representatives\n",
+                         cluster_steps, linked_edges, index.skeleton_top.size());
+        } else {
+            // gateway merge (rules 0/1), unchanged
+            std::vector<int> attribute_order;
+            long gateway_edge_count = 0;
+            if (options.merge_attributes) {
+                std::vector<int> children_processed(size_t(attribute_count), 0);
+                for (int a = 0; a < attribute_count; ++a) {
+                    const auto found = dataset.children_of.find(index.attribute_ids[size_t(a)]);
+                    children_processed[size_t(a)] = found == dataset.children_of.end() ? 0 : int(found->second.size());
+                }
+                // topological order (parents first), then reversed to process children first
+                std::vector<int> order;
+                {
+                    std::vector<int> remaining_parents(size_t(attribute_count), 0);
+                    for (int a = 0; a < attribute_count; ++a) {
+                        const auto found = dataset.parents_of.find(index.attribute_ids[size_t(a)]);
+                        if (found == dataset.parents_of.end()) continue;
+                        for (int parent : found->second)
+                            if (attribute_position.count(parent)) ++remaining_parents[size_t(a)];
+                    }
+                    std::vector<int> ready;
+                    for (int a = 0; a < attribute_count; ++a)
+                        if (remaining_parents[size_t(a)] == 0) ready.push_back(a);
+                    for (size_t head = 0; head < ready.size(); ++head) {
+                        const int a = ready[head];
+                        order.push_back(a);
+                        const auto found = dataset.children_of.find(index.attribute_ids[size_t(a)]);
+                        if (found == dataset.children_of.end()) continue;
+                        for (int child : found->second) {
+                            const auto position = attribute_position.find(child);
+                            if (position == attribute_position.end()) continue;
+                            if (--remaining_parents[size_t(position->second)] == 0)
+                                ready.push_back(position->second);
+                        }
+                    }
+                }
+                std::reverse(order.begin(), order.end());
+
+                RawL2Space space{size_t(dim)};
+                for (int child : order) {
+                    if (attribute_graphs[size_t(child)].members.empty()) continue;
+                    // candidate parents: nearest ancestors that actually own objects
+                    std::vector<int> candidate_parents;
+                    {
+                        std::vector<int> frontier;
+                        const auto found = dataset.parents_of.find(index.attribute_ids[size_t(child)]);
+                        if (found != dataset.parents_of.end())
+                            for (int parent : found->second)
+                                if (attribute_position.count(parent))
+                                    frontier.push_back(attribute_position[parent]);
+                        std::unordered_set<int> visited;
+                        for (int level = 0; level < 8 && !frontier.empty(); ++level) {
+                            std::vector<int> next;
+                            for (int a : frontier) {
+                                if (!visited.insert(a).second) continue;
+                                if (!attribute_graphs[size_t(a)].members.empty()) {
+                                    candidate_parents.push_back(a);
+                                    continue;
+                                }
+                                const auto up = dataset.parents_of.find(index.attribute_ids[size_t(a)]);
+                                if (up == dataset.parents_of.end()) continue;
+                                for (int grand_parent : up->second)
+                                    if (attribute_position.count(grand_parent))
+                                        next.push_back(attribute_position[grand_parent]);
+                            }
+                            frontier.swap(next);
+                        }
+                    }
+                    for (int parent : candidate_parents) {
+                        for (uint32_t parent_rep : attribute_graphs[size_t(parent)].representative_nodes) {
+                            const uint32_t parent_node = index.node_begin[size_t(parent)] + parent_rep;
+                            const float* parent_vector =
+                                dataset.base.data() + size_t(attribute_graphs[size_t(parent)].members[parent_rep]) * size_t(dim);
+                            const auto receivers = nearest_members(dataset.base.data(), dim,
+                                attribute_graphs[size_t(child)], parent_vector, space,
+                                std::max(1, options.bridge_receivers));
+                            for (uint32_t child_local : receivers) {
+                                const uint32_t child_node = index.node_begin[size_t(child)] + child_local;
+                                bridge_edges[parent_node].push_back(child_node);
+                                bridge_edges[child_node].push_back(parent_node);
+                                index.is_gateway[child_node] = 1;
+                                ++gateway_edge_count;
+                            }
+                        }
+                    }
                 }
             }
-            for (int parent : candidate_parents) {
-                for (uint32_t parent_rep : attribute_graphs[size_t(parent)].representative_nodes) {
-                    const uint32_t parent_node = index.node_begin[size_t(parent)] + parent_rep;
-                    const float* parent_vector =
-                        dataset.base.data() + size_t(attribute_graphs[size_t(parent)].members[parent_rep]) * size_t(dim);
-                    const auto receivers = nearest_members(dataset.base.data(), dim,
-                        attribute_graphs[size_t(child)], parent_vector, space,
-                        std::max(1, options.bridge_receivers));
-                    for (uint32_t child_local : receivers) {
-                        const uint32_t child_node = index.node_begin[size_t(child)] + child_local;
-                        bridge_edges[parent_node].push_back(child_node);
-                        bridge_edges[child_node].push_back(parent_node);
-                        index.is_gateway[child_node] = 1;
-                        ++gateway_edge_count;
+
+            // 5. repair: an attribute with no cross-attribute in-edge gets one to a parent representative
+            long repaired_edge_count = 0;
+            if (options.merge_attributes) {
+                std::vector<uint32_t> representative_attribute(total_nodes, UINT32_MAX);
+                for (int a = 0; a < attribute_count; ++a)
+                    for (uint32_t local : attribute_graphs[size_t(a)].representative_nodes)
+                        representative_attribute[index.node_begin[size_t(a)] + local] = uint32_t(a);
+
+                std::vector<long> cross_in_edges(size_t(attribute_count), 0);
+                for (size_t node = 0; node < total_nodes; ++node) {
+                    if (representative_attribute[node] == UINT32_MAX) continue;
+                    for (uint32_t target : bridge_edges[node])
+                        if (representative_attribute[target] != UINT32_MAX &&
+                            representative_attribute[target] != representative_attribute[node])
+                            ++cross_in_edges[representative_attribute[target]];
+                }
+                for (int a = 0; a < attribute_count; ++a) {
+                    if (attribute_graphs[size_t(a)].members.empty() || cross_in_edges[size_t(a)] > 0) continue;
+                    int ancestor = -1;
+                    {
+                        std::vector<int> frontier;
+                        const auto found = dataset.parents_of.find(index.attribute_ids[size_t(a)]);
+                        if (found != dataset.parents_of.end())
+                            for (int parent : found->second)
+                                if (attribute_position.count(parent)) frontier.push_back(attribute_position[parent]);
+                        std::unordered_set<int> visited;
+                        for (int level = 0; level < 8 && !frontier.empty() && ancestor < 0; ++level) {
+                            std::vector<int> next;
+                            for (int candidate : frontier) {
+                                if (!visited.insert(candidate).second) continue;
+                                if (!attribute_graphs[size_t(candidate)].members.empty()) { ancestor = candidate; break; }
+                                const auto up = dataset.parents_of.find(index.attribute_ids[size_t(candidate)]);
+                                if (up == dataset.parents_of.end()) continue;
+                                for (int grand_parent : up->second)
+                                    if (attribute_position.count(grand_parent))
+                                        next.push_back(attribute_position[grand_parent]);
+                            }
+                            frontier.swap(next);
+                        }
+                    }
+                    if (ancestor < 0) continue;
+                    for (uint32_t local : attribute_graphs[size_t(a)].representative_nodes) {
+                        for (uint32_t ancestor_rep : attribute_graphs[size_t(ancestor)].representative_nodes) {
+                            const uint32_t node = index.node_begin[size_t(a)] + local;
+                            const uint32_t ancestor_node = index.node_begin[size_t(ancestor)] + ancestor_rep;
+                            bridge_edges[ancestor_node].push_back(node);
+                            bridge_edges[node].push_back(ancestor_node);
+                            index.is_gateway[node] = 1;
+                            ++repaired_edge_count;
+                        }
                     }
                 }
             }
+            std::fprintf(stderr, "[merge] %ld cross-attribute edges (+%ld repaired)\n",
+                         gateway_edge_count, repaired_edge_count);
+
         }
     }
-
-    // 5. repair: an attribute with no cross-attribute in-edge gets one to a parent representative
-    long repaired_edge_count = 0;
-    if (options.merge_attributes) {
-        std::vector<uint32_t> representative_attribute(total_nodes, UINT32_MAX);
-        for (int a = 0; a < attribute_count; ++a)
-            for (uint32_t local : attribute_graphs[size_t(a)].representative_nodes)
-                representative_attribute[index.node_begin[size_t(a)] + local] = uint32_t(a);
-
-        std::vector<long> cross_in_edges(size_t(attribute_count), 0);
-        for (size_t node = 0; node < total_nodes; ++node) {
-            if (representative_attribute[node] == UINT32_MAX) continue;
-            for (uint32_t target : bridge_edges[node])
-                if (representative_attribute[target] != UINT32_MAX &&
-                    representative_attribute[target] != representative_attribute[node])
-                    ++cross_in_edges[representative_attribute[target]];
-        }
-        for (int a = 0; a < attribute_count; ++a) {
-            if (attribute_graphs[size_t(a)].members.empty() || cross_in_edges[size_t(a)] > 0) continue;
-            int ancestor = -1;
-            {
-                std::vector<int> frontier;
-                const auto found = dataset.parents_of.find(index.attribute_ids[size_t(a)]);
-                if (found != dataset.parents_of.end())
-                    for (int parent : found->second)
-                        if (attribute_position.count(parent)) frontier.push_back(attribute_position[parent]);
-                std::unordered_set<int> visited;
-                for (int level = 0; level < 8 && !frontier.empty() && ancestor < 0; ++level) {
-                    std::vector<int> next;
-                    for (int candidate : frontier) {
-                        if (!visited.insert(candidate).second) continue;
-                        if (!attribute_graphs[size_t(candidate)].members.empty()) { ancestor = candidate; break; }
-                        const auto up = dataset.parents_of.find(index.attribute_ids[size_t(candidate)]);
-                        if (up == dataset.parents_of.end()) continue;
-                        for (int grand_parent : up->second)
-                            if (attribute_position.count(grand_parent))
-                                next.push_back(attribute_position[grand_parent]);
-                    }
-                    frontier.swap(next);
-                }
-            }
-            if (ancestor < 0) continue;
-            for (uint32_t local : attribute_graphs[size_t(a)].representative_nodes) {
-                for (uint32_t ancestor_rep : attribute_graphs[size_t(ancestor)].representative_nodes) {
-                    const uint32_t node = index.node_begin[size_t(a)] + local;
-                    const uint32_t ancestor_node = index.node_begin[size_t(ancestor)] + ancestor_rep;
-                    bridge_edges[ancestor_node].push_back(node);
-                    bridge_edges[node].push_back(ancestor_node);
-                    index.is_gateway[node] = 1;
-                    ++repaired_edge_count;
-                }
-            }
-        }
-    }
-    std::fprintf(stderr, "[merge] %ld cross-attribute edges (+%ld repaired)\n",
-                 gateway_edge_count, repaired_edge_count);
 
     // 6. flatten adjacency into CSR
     index.local_edge_begin.assign(total_nodes + 1, 0);
@@ -501,6 +735,7 @@ bool save_index(const AsiIndex& index, const std::string& path, std::string* err
     write_vector(out, index.closure_bits);
     write_vector(out, index.is_representative);
     write_vector(out, index.is_gateway);
+    write_vector(out, index.skeleton_top);
     write_vector(out, index.entry_node);
     write_vector(out, index.hnsw_entry_node);
     write_vector(out, index.top_level);
@@ -540,6 +775,7 @@ bool load_index(AsiIndex& index, const std::string& path, std::string* error) {
     if (!read_vector(in, index.closure_bits)) return fail("closure bits");
     if (!read_vector(in, index.is_representative)) return fail("representative flags");
     if (!read_vector(in, index.is_gateway)) return fail("gateway flags");
+    if (!read_vector(in, index.skeleton_top)) return fail("skeleton top");
     if (!read_vector(in, index.entry_node)) return fail("entry nodes");
     if (!read_vector(in, index.hnsw_entry_node)) return fail("hnsw entry nodes");
     if (!read_vector(in, index.top_level)) return fail("top levels");
