@@ -71,11 +71,22 @@ public:
     }
 
     // Object id recorded as the node's external label at build time.
+    // Cached as a flat array: getExternalLabel() is a hash lookup and dominated
+    // the per-distance cost when called for every neighbour.
     int object_id_of(hnswlib::tableint internal_id) const {
-        return static_cast<int>(graph_->getExternalLabel(internal_id));
+        return object_of_internal_.empty()
+            ? static_cast<int>(graph_->getExternalLabel(internal_id))
+            : object_of_internal_[size_t(internal_id)];
+    }
+    void cache_labels() {
+        object_of_internal_.resize(object_count_);
+        for (size_t i = 0; i < object_count_; ++i)
+            object_of_internal_[i] = static_cast<int>(
+                graph_->getExternalLabel(static_cast<hnswlib::tableint>(i)));
     }
 
 private:
+    std::vector<int> object_of_internal_;
     std::unique_ptr<RawL2Space> space_;
     std::unique_ptr<hnswlib::HierarchicalNSW<float>> graph_;
     int dimension_ = 0;

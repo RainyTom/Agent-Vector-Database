@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <chrono>
 #include <cstdio>
+#include <fstream>
 #include <cstdlib>
 #include <string>
 #include <unordered_set>
@@ -44,6 +45,8 @@ struct Flags {
     std::string index_path;
     std::string ef_list = "10,40,200";
     std::string trace_file;
+    std::string mask_file;
+    std::string gt_file;
     int k = 10;
     int query_count = 200;
     int repeat = 1;
@@ -70,6 +73,8 @@ bool parse_flags(int argc, char** argv, Flags* flags) {
         else if (name == "--index") { if (!next(&flags->index_path)) return false; }
         else if (name == "--efs") { if (!next(&flags->ef_list)) return false; }
         else if (name == "--trace-file") { if (!next(&flags->trace_file)) return false; }
+        else if (name == "--mask-file") { if (!next(&flags->mask_file)) return false; }
+        else if (name == "--gt-file") { if (!next(&flags->gt_file)) return false; }
         else if (name == "--k") { if (!next(&value)) return false; flags->k = std::atoi(value.c_str()); }
         else if (name == "--queries") { if (!next(&value)) return false; flags->query_count = std::atoi(value.c_str()); }
         else if (name == "--repeat") { if (!next(&value)) return false; flags->repeat = std::atoi(value.c_str()); }
@@ -133,8 +138,30 @@ int run_search(const Flags& flags) {
         return 2;
     }
 
+    // optional ground-truth override (same int32 layout as gt_<k>.txt)
+    if (!flags.gt_file.empty()) {
+        std::ifstream gt_in(flags.gt_file, std::ios::binary);
+        if (!gt_in) { std::fprintf(stderr, "cannot open %s\n", flags.gt_file.c_str()); return 2; }
+        gt_in.seekg(0, std::ios::end);
+        const size_t bytes = size_t(gt_in.tellg());
+        gt_in.seekg(0, std::ios::beg);
+        dataset.ground_truth.resize(bytes / sizeof(int32_t));
+        gt_in.read(reinterpret_cast<char*>(dataset.ground_truth.data()), std::streamsize(bytes));
+    }
+
     AcornPredicateSpace predicate_space;
     predicate_space.build(dataset);
+
+    // optional external masks: file holds nq * object_count bytes, one row per query
+    std::vector<char> mask_storage;
+    if (!flags.mask_file.empty()) {
+        std::ifstream mask_in(flags.mask_file, std::ios::binary);
+        if (!mask_in) { std::fprintf(stderr, "cannot open %s\n", flags.mask_file.c_str()); return 2; }
+        mask_in.seekg(0, std::ios::end);
+        mask_storage.resize(size_t(mask_in.tellg()));
+        mask_in.seekg(0, std::ios::beg);
+        mask_in.read(mask_storage.data(), std::streamsize(mask_storage.size()));
+    }
 
     const size_t query_count = std::min<size_t>(
         std::max(flags.query_count, 0), std::min(dataset.num_queries(), dataset.query_vectors.size() / size_t(dataset.dim)));
@@ -199,12 +226,21 @@ int run_search(const Flags& flags) {
                 const double selectivity = double(eligible_per_query[qi]) /
                                            double(index.object_count());
                 const bool use_prefilter = selectivity < flags.prefilter_threshold;
+                if (!mask_storage.empty()) {
+                    const size_t objects = index.object_count();
+                    if ((qi + 1) * objects > mask_storage.size()) {
+                        std::fprintf(stderr, "mask file too short\n");
+                        return 2;
+                    }
+                    predicate_space.set_external_mask(mask_storage.data() + qi * objects, objects);
+                }
                 const AcornQueryResult result = use_prefilter
                     ? acorn_prefilter_query(index, predicate_space, predicate_bits[qi],
                                             dataset.query_vector(qi), flags.k)
                     : acorn_search_query(index, predicate_space, predicate_bits[qi],
                                          dataset.query_vector(qi), ef, flags.k,
                                          flags.M_beta, flags.M, &scratch);
+                predicate_space.clear_external_mask();
                 if (use_prefilter) ++prefilter_queries;
                 pass_ms += result.query_ms;
                 if (rep != 0) continue;

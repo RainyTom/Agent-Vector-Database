@@ -67,6 +67,8 @@ std::vector<long long> load_int_lines(const std::string& path) {
 int main(int argc, char** argv) {
     std::string data = "datasets/sift1m/ccs-attr";
     std::string out_path;
+    std::string mask_file;
+    std::string gt_file;
     size_t M = 16, gamma = 2, M_beta = 8, ef_construction = 200;
     int k = 10;
     size_t queries = 200;
@@ -78,6 +80,8 @@ int main(int argc, char** argv) {
         auto next = [&]() { return std::string(argv[++i]); };
         if (arg == "--data") data = next();
         else if (arg == "--out") out_path = next();
+        else if (arg == "--mask-file") mask_file = next();
+        else if (arg == "--gt-file") gt_file = next();
         else if (arg == "--M") M = std::stoul(next());
         else if (arg == "--gamma") gamma = std::stoul(next());
         else if (arg == "--M-beta") M_beta = std::stoul(next());
@@ -183,7 +187,9 @@ int main(int argc, char** argv) {
 
     std::vector<int32_t> gt;
     {
-        std::ifstream in(data + "/gt_" + std::to_string(k) + ".txt", std::ios::binary);
+        const std::string gt_path = gt_file.empty()
+            ? data + "/gt_" + std::to_string(k) + ".txt" : gt_file;
+        std::ifstream in(gt_path, std::ios::binary);
         if (!in) { std::fprintf(stderr, "missing gt file\n"); return 2; }
         in.seekg(0, std::ios::end);
         const size_t bytes = size_t(in.tellg());
@@ -222,6 +228,20 @@ int main(int argc, char** argv) {
     // ---- pack every query's mask once: nq x N bytes ----
     std::vector<char> mask(nq * n, 0);
     std::vector<size_t> passed_per_query(nq, 0);
+    if (!mask_file.empty()) {
+        std::ifstream in(mask_file, std::ios::binary);
+        if (!in) { std::fprintf(stderr, "cannot open %s\n", mask_file.c_str()); return 2; }
+        in.seekg(0, std::ios::end);
+        const size_t bytes = size_t(in.tellg());
+        in.seekg(0, std::ios::beg);
+        if (bytes < nq * n) { std::fprintf(stderr, "mask file too small\n"); return 2; }
+        in.read(mask.data(), std::streamsize(nq * n));
+        for (size_t qi = 0; qi < nq; ++qi) {
+            size_t passed = 0;
+            for (size_t item = 0; item < n; ++item) passed += mask[qi * n + item] != 0;
+            passed_per_query[qi] = passed;
+        }
+    } else
     for (size_t qi = 0; qi < nq; ++qi) {
         std::vector<uint64_t> bits(bitmap_words, 0);
         for (int attribute : query_attributes[qi]) {

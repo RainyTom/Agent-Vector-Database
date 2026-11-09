@@ -23,7 +23,16 @@ public:
     void closure_bitmap(const Dataset& dataset, const std::vector<int>& query_attributes,
                         std::vector<uint64_t>* bits, std::vector<int>* closed_attributes) const;
 
+    // Optional override: when a mask file is supplied the predicate is read from it
+    // directly, so both implementations can consume byte-identical predicates.
+    void set_external_mask(const char* mask, size_t object_count) {
+        external_mask_ = mask;
+        external_count_ = object_count;
+    }
+    void clear_external_mask() { external_mask_ = nullptr; external_count_ = 0; }
+
     bool passes(size_t object_id, const std::vector<uint64_t>& bits) const {
+        if (external_mask_) return object_id < external_count_ && external_mask_[object_id] != 0;
         const int attribute = owner_attribute_dense_[object_id];
         if (attribute < 0) return false;
         return (bits[static_cast<size_t>(attribute) >> 6] >> (attribute & 63)) & 1u;
@@ -40,6 +49,8 @@ private:
     std::vector<int> owner_attribute_dense_;   // per object, -1 if its owner was not mapped
     std::vector<size_t> attribute_member_count_;
     int attribute_count_ = 0;
+    const char* external_mask_ = nullptr;
+    size_t external_count_ = 0;
 };
 
 // Reusable per-process buffers so queries do not reallocate.

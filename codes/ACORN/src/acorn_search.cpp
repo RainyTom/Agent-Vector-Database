@@ -186,46 +186,71 @@ AcornQueryResult acorn_search_query(const AcornIndex& index,
     //     therefore grows with the number of pops -- that is what stops the search
     //     after roughly ef expansions.
     struct Minimax {
+        // faiss ACORN::MinimaxHeap: a max-heap over the ef smallest distances seen
+        // plus lazy deletion (popped entries keep their distance so count_below
+        // keeps growing). push/pop are O(log k), matching the reference cost.
         int capacity = 0;
         std::vector<float> dis;
         std::vector<int> ids;
-        int used = 0;    // slots ever written; dead slots keep their distance
-        int live = 0;
-        explicit Minimax(int n) : capacity(n), dis(size_t(n)), ids(size_t(n), -1) {}
+        int k = 0;        // slots in the heap
+        int nvalid = 0;   // live entries
+        explicit Minimax(int n) : capacity(n), dis(size_t(n)), ids(size_t(n), 0) {}
+
+        void sift_up(int index) {
+            while (index > 0) {
+                const int parent = (index - 1) / 2;
+                if (dis[size_t(parent)] >= dis[size_t(index)]) break;
+                std::swap(dis[size_t(parent)], dis[size_t(index)]);
+                std::swap(ids[size_t(parent)], ids[size_t(index)]);
+                index = parent;
+            }
+        }
+        void sift_down(int index) {
+            for (;;) {
+                const int left = 2 * index + 1;
+                const int right = left + 1;
+                int largest = index;
+                if (left < k && dis[size_t(left)] > dis[size_t(largest)]) largest = left;
+                if (right < k && dis[size_t(right)] > dis[size_t(largest)]) largest = right;
+                if (largest == index) break;
+                std::swap(dis[size_t(index)], dis[size_t(largest)]);
+                std::swap(ids[size_t(index)], ids[size_t(largest)]);
+                index = largest;
+            }
+        }
         void push(float distance, int id) {
-            if (used == capacity) {
-                // heap is full: replace the current maximum unless the new one is worse
-                std::size_t worst = 0;
-                for (int i = 1; i < capacity; ++i)
-                    if (dis[size_t(i)] > dis[worst]) worst = std::size_t(i);
-                if (distance >= dis[worst]) return;
-                dis[worst] = distance;
-                ids[worst] = id;
+            if (k == capacity) {
+                if (distance >= dis[0]) return;
+                // replace the max (root) in place
+                dis[0] = distance;
+                ids[0] = id;
+                sift_down(0);
                 return;
             }
-            dis[size_t(used)] = distance;
-            ids[size_t(used)] = id;
-            ++used;
-            ++live;
+            dis[size_t(k)] = distance;
+            ids[size_t(k)] = id;
+            ++k;
+            ++nvalid;
+            sift_up(k - 1);
         }
         int pop_min(float* out) {
             int best = -1;
-            for (int i = 0; i < capacity; ++i)
+            for (int i = 0; i < k; ++i)
                 if (ids[size_t(i)] >= 0 && (best < 0 || dis[size_t(i)] < dis[size_t(best)])) best = i;
             if (best < 0) return -1;
             *out = dis[size_t(best)];
             const int id = ids[size_t(best)];
-            ids[size_t(best)] = -1;
-            --live;
+            ids[size_t(best)] = -1;   // lazy delete: distance stays for count_below
+            --nvalid;
             return id;
         }
         int count_below(float threshold) const {
             int below = 0;
-            for (int i = 0; i < capacity; ++i)
+            for (int i = 0; i < k; ++i)
                 if (dis[size_t(i)] < threshold) ++below;
             return below;
         }
-        int size() const { return live; }
+        int size() const { return nvalid; }
     } candidates{int(ef)};
     ResultHeap results(result_capacity);
 

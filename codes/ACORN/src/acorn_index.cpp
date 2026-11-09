@@ -168,5 +168,6 @@ bool AcornIndex::load(const std::string& index_path, int dimension, std::string*
         return false;
     }
     object_count_ = static_cast<size_t>(graph_->cur_element_count.load());
+    cache_labels();
     return true;
 }

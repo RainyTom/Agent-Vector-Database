@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 mkdir -p codes/NodeANN/build
-FLAGS="-std=c++17 -O3"
+FLAGS="-std=c++17 -O3 -march=native"
 INC="-I codes/shared -I codes/third_party -I codes/NodeANN/src"
 g++ $FLAGS $INC \
     codes/NodeANN/src/nodeann_index.cpp \
