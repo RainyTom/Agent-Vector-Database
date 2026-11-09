@@ -135,25 +135,6 @@ size_t AcornPredicateSpace::exact_eligible_count(const Dataset& dataset,
     return total;
 }
 
-AcornQueryResult acorn_prefilter_query(const AcornIndex& index,
-                                       const AcornPredicateSpace& predicate_space,
-                                       const std::vector<uint64_t>& predicate_bits,
-                                       const float* query_vector, int k) {
-    AcornQueryResult result;
-    const auto query_start = std::chrono::steady_clock::now();
-    ResultHeap results(size_t(std::max(k, 0)));
-    for (size_t object_id = 0; object_id < index.object_count(); ++object_id) {
-        if (!predicate_space.passes(object_id, predicate_bits)) continue;
-        ++result.distance_calls;
-        results.offer(index.distance(query_vector, index.vector_of(hnswlib::tableint(object_id))),
-                      static_cast<int>(object_id));
-    }
-    result.object_ids = results.sorted_ids();
-    result.visited_nodes = result.distance_calls;
-    result.query_ms = elapsed_ms(query_start);
-    return result;
-}
-
 AcornQueryResult acorn_search_query(const AcornIndex& index,
                                     const AcornPredicateSpace& predicate_space,
                                     const std::vector<uint64_t>& predicate_bits,

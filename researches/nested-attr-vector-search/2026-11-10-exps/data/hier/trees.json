@@ -1,0 +1,34 @@
+{
+  "uniform": {
+    "tree": "uniform",
+    "nodes": 11111,
+    "leaves": 10000,
+    "leaves_nonempty": 10000,
+    "max_depth": 4,
+    "rows": 1000000,
+    "leaf_size_p50": 100.0,
+    "leaf_size_p99": 123.01000000000022,
+    "leaf_size_max": 147,
+    "leaf_size_min": 66,
+    "leaf_std_over_mean": 0.10006198079190717,
+    "ancestor_chain_p50": 5.0,
+    "ancestor_chain_p99": 5.0,
+    "ancestor_chain_max": 5
+  },
+  "skewed": {
+    "tree": "skewed",
+    "nodes": 100213,
+    "leaves": 89396,
+    "leaves_nonempty": 83670,
+    "max_depth": 5,
+    "rows": 1000000,
+    "leaf_size_p50": 3.0,
+    "leaf_size_p99": 64.0,
+    "leaf_size_max": 50000,
+    "leaf_size_min": 1,
+    "leaf_std_over_mean": 32.005301909234035,
+    "ancestor_chain_p50": 6.0,
+    "ancestor_chain_p99": 6.0,
+    "ancestor_chain_max": 6
+  }
+}

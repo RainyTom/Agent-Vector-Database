@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 430" width="980" height="430" font-family="ui-sans-serif, system-ui, sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)" />
+    </marker>
+  </defs>
+
+  <text x="20" y="26" font-size="15" fill="var(--fg)" font-weight="600">层级作用域 S 与三种表示：MOVE(S) 时各自动多少字节</text>
+
+  <!-- tree -->
+  <g fill="none" stroke="var(--muted)" stroke-width="1.4">
+    <path d="M120,70 L60,120 M120,70 L120,120 M120,70 L180,120"/>
+    <path d="M60,120 L30,175 M60,120 L90,175"/>
+    <path d="M120,120 L120,175"/>
+    <path d="M180,120 L150,175 M180,120 L210,175"/>
+  </g>
+  <g>
+    <circle cx="120" cy="70" r="15" fill="var(--surface)" stroke="var(--border)"/>
+    <circle cx="60" cy="120" r="15" fill="var(--surface)" stroke="var(--border)"/>
+    <circle cx="120" cy="120" r="15" fill="var(--accent)" stroke="var(--accent)"/>
+    <circle cx="180" cy="120" r="15" fill="var(--surface)" stroke="var(--border)"/>
+    <circle cx="30" cy="175" r="12" fill="var(--surface)" stroke="var(--border)"/>
+    <circle cx="90" cy="175" r="12" fill="var(--surface)" stroke="var(--border)"/>
+    <circle cx="120" cy="175" r="12" fill="var(--surface)" stroke="var(--border)"/>
+    <circle cx="150" cy="175" r="12" fill="var(--surface)" stroke="var(--border)"/>
+    <circle cx="210" cy="175" r="12" fill="var(--surface)" stroke="var(--border)"/>
+  </g>
+  <text x="120" y="75" font-size="11" text-anchor="middle" fill="var(--surface)" font-weight="700">R</text>
+  <text x="120" y="125" font-size="11" text-anchor="middle" fill="var(--surface)" font-weight="700">S</text>
+  <text x="120" y="210" font-size="11" text-anchor="middle" fill="var(--fg)">|S| 行 = 作用域行集合</text>
+  <text x="120" y="228" font-size="11" text-anchor="middle" fill="var(--muted)">A = 从 S 到根的祖先链（|A| 层）</text>
+
+  <!-- three representations -->
+  <g>
+    <rect x="290" y="52" width="205" height="150" rx="8" fill="none" stroke="var(--c1)" stroke-width="1.5"/>
+    <text x="300" y="72" font-size="12.5" fill="var(--c1)" font-weight="600">A. 行内路径</text>
+    <text x="300" y="92" font-size="11" fill="var(--fg)">每行: path 字符串 + level ids</text>
+    <text x="300" y="110" font-size="11" fill="var(--muted)">MOVE → 重写 |S| 行</text>
+    <text x="300" y="128" font-size="11" fill="var(--fg)">字节 ≈ |S| · (path + 2·depth)</text>
+    <text x="300" y="150" font-size="11" fill="var(--muted)">查询 → 前缀扫描 O(N)</text>
+    <text x="300" y="172" font-size="11" fill="var(--c1)">实测 1k: 20 ms / 170 KB</text>
+    <text x="300" y="190" font-size="11" fill="var(--c1)">实测 331k: 142 ms / 56.9 MB</text>
+
+    <rect x="515" y="52" width="205" height="150" rx="8" fill="none" stroke="var(--c2)" stroke-width="1.5"/>
+    <text x="525" y="72" font-size="12.5" fill="var(--c2)" font-weight="600">B. 节点位图</text>
+    <text x="525" y="92" font-size="11" fill="var(--fg)">每内部节点: N 位行位图</text>
+    <text x="525" y="110" font-size="11" fill="var(--muted)">MOVE → 重算 |A| 个祖先位图</text>
+    <text x="525" y="128" font-size="11" fill="var(--fg)">字节 ≈ |A| · ⌈N/8⌉</text>
+    <text x="525" y="150" font-size="11" fill="var(--muted)">查询 → 解包一条位图 O(N/8)</text>
+    <text x="525" y="172" font-size="11" fill="var(--c2)">实测: 1.2–3.0 ms / 0.25–0.63 MB</text>
+    <text x="525" y="190" font-size="11" fill="var(--c2)">与 |S| 无关</text>
+
+    <rect x="740" y="52" width="215" height="150" rx="8" fill="none" stroke="var(--c3)" stroke-width="1.5"/>
+    <text x="750" y="72" font-size="12.5" fill="var(--c3)" font-weight="600">C. 前缀树 + 行 id 表</text>
+    <text x="750" y="92" font-size="11" fill="var(--fg)">目录名 trie + 每叶行 id 列表</text>
+    <text x="750" y="110" font-size="11" fill="var(--muted)">MOVE → 改一个父指针</text>
+    <text x="750" y="128" font-size="11" fill="var(--fg)">字节 = 16 B（常量）</text>
+    <text x="750" y="150" font-size="11" fill="var(--muted)">查询 → DFS 收集行 id O(|S|)</text>
+    <text x="750" y="172" font-size="11" fill="var(--c3)">实测: 0.001–0.007 ms / 16 B</text>
+    <text x="750" y="190" font-size="11" fill="var(--c3)">与 |S|、N 均无关</text>
+  </g>
+
+  <!-- DSM primitives -->
+  <g>
+    <rect x="290" y="230" width="665" height="88" rx="8" fill="none" stroke="var(--border)" stroke-dasharray="4 3"/>
+    <text x="300" y="250" font-size="12.5" fill="var(--fg)" font-weight="600">DSM 原语（索引层零写入，只动元数据）</text>
+    <text x="300" y="272" font-size="11.5" fill="var(--fg)">MOVE(S,P)  S 挂到新父 P</text>
+    <text x="470" y="272" font-size="11.5" fill="var(--fg)">MERGE(S₁,S₂,P)  两者合并到新父</text>
+    <text x="700" y="272" font-size="11.5" fill="var(--fg)">SPLIT(T,P)  孙目录 T 提到兄弟位</text>
+    <text x="300" y="296" font-size="11.5" fill="var(--fg)">SUBTREE-DELETE(S)  软删整棵子树</text>
+    <text x="530" y="296" font-size="11" fill="var(--muted)">四种原语都不触碰 hnswlib 索引文件：sha256 前后一致，index_bytes_written = 0</text>
+  </g>
+
+  <!-- bottom: the invariant -->
+  <g>
+    <rect x="290" y="336" width="665" height="66" rx="8" fill="none" stroke="var(--success)" stroke-width="1.5"/>
+    <text x="300" y="358" font-size="12" fill="var(--success)" font-weight="600">不变量</text>
+    <text x="300" y="378" font-size="11.5" fill="var(--fg)">mask = resolve(S) 先于检索；索引只接受 per-query 布尔掩码</text>
+    <text x="300" y="396" font-size="11.5" fill="var(--muted)">实测：DSM 前后同 scope 检索结果逐位相同，作用域内 recall 1.0 → 1.0</text>
+  </g>
+
+  <!-- costs arrow -->
+  <g stroke="var(--muted)" stroke-width="1.2" fill="none" marker-end="url(#arrow)">
+    <path d="M120,246 L120,206"/>
+  </g>
+  <text x="20" y="268" font-size="11" fill="var(--muted)">树形结构</text>
+  <text x="20" y="286" font-size="11" fill="var(--muted)">与表不变量</text>
+</svg>

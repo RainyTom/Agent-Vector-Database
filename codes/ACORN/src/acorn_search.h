@@ -80,14 +80,17 @@ struct AcornQueryResult {
 //     neighbours (the compression heuristic the construction relies on);
 //   * termination follows HNSW: stop once the nearest candidate is farther than
 //     the ef-th best passing result.
+// Faithful ACORN-gamma level-0 search (Algorithm 2 of the paper):
+//   * the candidate set and the result list contain ONLY predicate-passing
+//     nodes, so the search never wanders through the wrong predicate region;
+//   * the neighbourhood of a visited node is recovered by scanning the first
+//     M_beta stored neighbours, then expanding the remaining ones to their own
+//     neighbours (the compression heuristic the construction relies on);
+//   * termination follows HNSW: stop once the nearest candidate is farther than
+//     the ef-th best passing result.
 // Paper cost model (Section 5.2): a query whose predicate selectivity is below
 // 1/gamma is served by pre-filtering instead of the graph, because the predicate
 // subgraph would be disconnected. The released code has no such fallback; this is
-// the paper's described behaviour implemented explicitly.
-AcornQueryResult acorn_prefilter_query(const AcornIndex& index,
-                                       const AcornPredicateSpace& predicate_space,
-                                       const std::vector<uint64_t>& predicate_bits,
-                                       const float* query_vector, int k);
 
 AcornQueryResult acorn_search_query(const AcornIndex& index,
                                     const AcornPredicateSpace& predicate_space,
