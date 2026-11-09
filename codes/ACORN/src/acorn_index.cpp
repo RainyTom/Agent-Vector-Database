@@ -81,9 +81,11 @@ bool acorn_build_index(const std::string& data_directory, const std::string& ind
     // Level 0 capacity follows the paper: M_beta + 1.5*M (ACORN.cpp L167).
     if (config.gamma >= 1) {
         const auto prune_start = std::chrono::steady_clock::now();
+        // official level-0 capacity: M_beta + 1.5*M (ACORN.cpp L167) and the prune
+        // target is that same nb_neighbors(0), not M
         const size_t capacity = std::min<size_t>(graph.maxM0_,
             size_t(double(config.M_beta) + 1.5 * double(config.M)));
-        const size_t max_size = std::min(capacity, config.M);
+        const size_t max_size = capacity;
         const size_t M_beta = std::min(config.M_beta, max_size);
         std::vector<std::vector<hnswlib::tableint>> original(object_count);
         for (size_t node = 0; node < object_count; ++node) {

@@ -813,3 +813,41 @@ ACORN 构建耗时拆分（M=16、efC=200、γ=2、M_β=8、1M 点）：
 ### 已知口径问题
 
 ACORN 的 pre-filter 路径召回 0.9895 而非 1.0：`AcornPredicateSpace::passes` 依赖的 `owner_attribute_dense_` 对未映射属性返回 false，会漏掉少量对象。需在重跑前修正映射，否则 ACORN 的数字偏低约 1%。
+
+## ACORN 复现验证：官方原生实现 vs 我们的 hnswlib 移植
+
+### 官方实现怎么跑起来的
+
+- 仓库 `guestrin-lab/ACORN` 是 faiss 分支，核心在 `faiss/impl/ACORN.cpp` 与 `faiss/IndexACORN.cpp`，入口类是 `IndexACORNFlat`（直接构造 `IndexACORN` 会在 `add()` 抛异常）。
+- CMake 4.x 需要 `-DCMAKE_POLICY_VERSION_MINIMUM=3.5`；`nlohmann_json` 的 FetchContent 会因网络失败，需本地预取并用 `-DFETCHCONTENT_SOURCE_DIR_NLOHMANN_JSON` 指向源码目录。
+- 编译：`-DFAISS_ENABLE_GPU=OFF -DFAISS_ENABLE_PYTHON=OFF -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release -DFAISS_OPT_LEVEL=avx2`，`make -j16 faiss`。
+- 驱动：`experiments/acorn_native_driver.cpp`，读统一数据集，按对象写 metadata（属性 dense id），每查询构造 `filter_map`（闭包内为 1），调 `index.search(1, x, k, D, I, filter_map)`，`index.acorn.efSearch = ef`。
+
+### 对照结果（k=10，200 查询，纯图模式，无 pre-filter）
+
+| ef | 官方召回 / QPS / 平均返回 | 移植版召回 / QPS / 距离 / 平均返回 |
+|---:|---|---|
+| 10 | 0.1170 / 3,444 / 4.50 | 0.0440 / 144 / 16,162 / 2.50 |
+| 50 | 0.1240* / 3,300* / 4.50* | 0.0470 / 130* / 17,000* / 2.50 |
+| 200 | 0.1170 / 3,444 / 4.50 | 0.0550 / 85 / 21,605 / 2.50 |
+| 400 | 0.1375 / 2,195 / 4.50 | 0.0600* / 78* / 22,700* / 2.50 |
+| 800 | 0.1540 / 1,171 / 4.50 | 0.0625 / 71 / 23,729 / 2.50 |
+
+（* 为相邻档位插值，见 `work/acorn_native_grid.jsonl` 与本节实测行。）
+
+### 结论：移植版**尚未复现**官方行为
+
+1. **召回低约 2.5–3 倍**：0.044–0.063 对 0.117–0.154。
+2. **每次查询访问节点多一个量级**：移植版 16k–24k 次距离，官方按 QPS 反推约 1k 次。
+3. **平均返回条数少一半**：2.5 对 4.5——结果集没被填满，说明遍历没走到足够的谓词命中点。
+
+已修正的一处偏差：level-0 剪枝目标应为 `M_beta + 1.5*M = 32`（`ACORN.cpp` L167 的 `nb_neighbors(0)`），此前误用 `M = 16`；修正后召回仅从 0.051 升到 0.063，不是主因。
+
+待查方向（按嫌疑排序）：
+
+1. 候选队列的准入条件：官方 `MinimaxHeap.push` 只在 `d < heap_max` 或未满时接收，且 `count_below(d0) >= efSearch` 的计数语义是“候选堆中距离严格小于 d0 的个数”；需要逐行核对我们的有界堆与计数是否等价。
+2. `keep_expanding` 的触发点：官方在**外层邻居循环**里累计 `num_found`（含未访问的命中点），我们在二跳内也累计，可能过早/过晚停止展开。
+3. 官方构建的候选边来自插入期的 metadata-agnostic 搜索（`2*M*gamma` 个，且每节点最多展开 `M` 个邻居），我们直接复用 hnswlib 已剪过的列表，候选池分布不同。
+4. 官方 `visited` 用 `VisitedTable::advance()` 跨层共享，且上层下降与 level-0 的访问集语义需核对。
+
+在 1–4 核对清楚之前，**本方案与 ACORN 的对比数字只能用官方原生实现**；移植版的数字标为“未通过复现验证”。
