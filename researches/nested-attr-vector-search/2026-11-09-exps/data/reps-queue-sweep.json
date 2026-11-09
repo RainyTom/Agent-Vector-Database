@@ -1,0 +1,154 @@
+{
+ "kind": "representative-queue sweep; ef2 removed",
+ "dataset": "datasets/sift1m",
+ "baseline_dual_channel_ef2_16": [
+  {
+   "ef": 10,
+   "recall": 0.4625,
+   "qps": 2026.6,
+   "dists": 1217.9,
+   "expanded": 62.5
+  },
+  {
+   "ef": 40,
+   "recall": 0.585,
+   "qps": 1272.7,
+   "dists": 1963.2,
+   "expanded": 164.9
+  },
+  {
+   "ef": 200,
+   "recall": 0.74,
+   "qps": 650.6,
+   "dists": 4135.1,
+   "expanded": 618.0
+  }
+ ],
+ "points": [
+  {
+   "ef": 10,
+   "L": 0,
+   "recall": 0.4405,
+   "qps": 2574,
+   "dists": 1070,
+   "expanded": 51
+  },
+  {
+   "ef": 10,
+   "L": 16,
+   "recall": 0.5155,
+   "qps": 2529,
+   "dists": 1104,
+   "expanded": 62
+  },
+  {
+   "ef": 10,
+   "L": 32,
+   "recall": 0.547,
+   "qps": 2436,
+   "dists": 1294,
+   "expanded": 75
+  },
+  {
+   "ef": 10,
+   "L": 64,
+   "recall": 0.565,
+   "qps": 2009,
+   "dists": 1580,
+   "expanded": 96
+  },
+  {
+   "ef": 10,
+   "L": 128,
+   "recall": 0.5795,
+   "qps": 1390,
+   "dists": 2007,
+   "expanded": 130
+  },
+  {
+   "ef": 40,
+   "L": 0,
+   "recall": 0.5755,
+   "qps": 1607,
+   "dists": 1928,
+   "expanded": 160
+  },
+  {
+   "ef": 40,
+   "L": 32,
+   "recall": 0.678,
+   "qps": 1473,
+   "dists": 2038,
+   "expanded": 188
+  },
+  {
+   "ef": 40,
+   "L": 64,
+   "recall": 0.719,
+   "qps": 1246,
+   "dists": 2387,
+   "expanded": 214
+  },
+  {
+   "ef": 40,
+   "L": 128,
+   "recall": 0.7405,
+   "qps": 956,
+   "dists": 2834,
+   "expanded": 249
+  },
+  {
+   "ef": 200,
+   "L": 0,
+   "recall": 0.7365,
+   "qps": 728,
+   "dists": 4112,
+   "expanded": 613
+  },
+  {
+   "ef": 200,
+   "L": 32,
+   "recall": 0.7495,
+   "qps": 716,
+   "dists": 3945,
+   "expanded": 626
+  },
+  {
+   "ef": 200,
+   "L": 64,
+   "recall": 0.8345,
+   "qps": 631,
+   "dists": 4724,
+   "expanded": 687
+  },
+  {
+   "ef": 200,
+   "L": 128,
+   "recall": 0.882,
+   "qps": 508,
+   "dists": 5418,
+   "expanded": 741
+  }
+ ],
+ "layers": [
+  {
+   "config": "ef=200 L=0",
+   "recall": 0.74,
+   "loss": 520,
+   "attr_never_expanded": 26,
+   "attr_expanded_item_unscored": 494,
+   "expanded_attrs": 11415,
+   "median_expansions_per_attr": 1
+  },
+  {
+   "config": "ef=200 L=128",
+   "recall": 0.882,
+   "loss": 236,
+   "attr_never_expanded": 112,
+   "attr_expanded_item_unscored": 124,
+   "expanded_attrs": 7671,
+   "median_expansions_per_attr": 10
+  }
+ ],
+ "note": "single process, repeat=1, 200 queries; QPS only indicative"
+}

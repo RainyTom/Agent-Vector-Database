@@ -17,9 +17,9 @@ FIGURE_ACCESSIBILITY = {
     'miss-attribution': (
         'Operational attribution of missed FP32 top-10 results',
         'Stacked percentages of all FP32 ground-truth pairs by PQ rank displacement, attribute admission, navigation, queue admission and final output; precedence is operational, not a causal intervention.'),
-    'ablation-ef2': (
-        'ASI representative reserve ablation at k=10',
-        'Measured recall and throughput against representative reserve ef2 with the other displayed parameters fixed.'),
+    'ablation-repsL': (
+        'Representative queue width ablation at k=10',
+        'Measured recall and throughput against the representative queue width L with the other displayed parameters fixed.'),
     'ablation-p': (
         'ASI sampling denominator ablation at k=10',
         'Measured recall and throughput against sampling denominator p with the other displayed parameters fixed.'),
@@ -84,7 +84,7 @@ def measure(args):
     with raw_path.open('w') as f:
         for outer in range(args.runs):
             # Swap method order across runs to reduce consistent warmup bias.
-            jobs = [('ASI', base + ['--p','50','--ef2','16','--efs',','.join(map(str,ef_values))])]
+            jobs = [('ASI', base + ['--p','50','--reps-topL','32','--efs',','.join(map(str,ef_values))])]
             jobs += [('NodeANN',nb+['--N',str(n)]) for n in N_values]
             if outer % 2:
                 jobs.reverse()
@@ -93,10 +93,10 @@ def measure(args):
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
                 print(method, outer, [(r['recall'],r.get('qps',r.get('qps_avg_pass'))) for r in rec['result']],flush=True)
         ab_ef = 40
-        for kind_main, values in [('ef2',[8,16,32,64]), ('p',[10,25,50,100])]:
+        for kind_main, values in [('repsL',[0,16,32,64,128]), ('p',[10,25,50,100])]:
             for value in values:
                 cmd = base + ['--p',str(value if kind_main=='p' else 50),
-                              '--ef2',str(value if kind_main=='ef2' else 16),'--efs',str(ab_ef)]
+                              '--reps-topL',str(value if kind_main=='repsL' else 32),'--efs',str(ab_ef)]
                 rec = dict(method='ASI', outer=0, suite='ablation_'+kind_main, ef=ab_ef,
                            value=value, **run(cmd))
                 runs.append(rec); f.write(json.dumps(rec)+'\n'); f.flush()
@@ -159,7 +159,7 @@ def measure_entry(args):
     base = ['taskset','-c','2','./codes/NestedAttrVectorRetrieval/build/attr_skeleton','--dir','datasets/sift1m/ccs-attr',
             '--work','datasets/sift1m/ccs-attr','--vec','recon.bin','--k',str(K),
             '--M','16','--efC','200','--queries','200','--repeat','100',
-            '--p','50','--ef2','16','--efs','5,10,20,40,100,200,400']
+            '--p','50','--reps-topL','32','--efs','10,20,40,100,200,400']
     node = ['taskset','-c','2','./codes/NodeANN/build/nodeann_measured','--dir','datasets/sift1m/ccs-attr',
             '--work','datasets/sift1m/ccs-attr','--vec','recon.bin','--k',str(K),
             '--mode','nodeann','--M','16','--efC','200','--queries','200',
@@ -260,7 +260,7 @@ def attribution(args):
         assert sum(c.values()) == len(F-R)
         assert R <= I
         assert F == set(legacy[t['qi']][legacy[t['qi']]>=0]), 'stored GT differs from fresh FP32 oracle'
-        row = dict(ef=t['ef'],ef2=t['ef2'],p=t['p'],qi=t['qi'],gt=len(F),
+        row = dict(ef=t['ef'],reps_topL=t.get('reps_topL',0),p=t['p'],qi=t['qi'],gt=len(F),
                    hits=len(F&R),pq_overlap=len(F&P),pq_recovered=len((F-P)&R),
                    pq_reference_missed=len(P-R),eligible=t['eligible'],
                    entered_attrs=len(A),touched_attrs=len(touched),
@@ -303,13 +303,13 @@ def summaries():
     for (method,param,ef,perN),rr in groups.items():
         qps=[r.get('qps',r.get('qps_avg_pass')) for r in rr]
         assert len({r['recall'] for r in rr})==1, 'recall changed across process runs'
-        # Distinct results are bounded by the union of both keep heaps: ef + ef2 for
+        # Distinct results are bounded by the single keep heap of size ef for
         # ASI, and the per-attribute reserve N for NodeANN.
-        reserve = (ef + rr[0].get('ef2', 0)) if method=='ASI' else perN
+        reserve = ef if method=='ASI' else perN
         rows.append(dict(method=method,param=param,recall=rr[0]['recall'],
                          qps=len(qps)/sum(1/x for x in qps), qps_min=min(qps),qps_max=max(qps),
                          runs=len(rr),distances=statistics.mean(r.get('dists_per_q',r.get('dist_calls_per_q',0)) for r in rr),
-                         k=K,ef=ef,perN=(perN or None),ef2=rr[0].get('ef2'),output_reserve=reserve,
+                         k=K,ef=ef,perN=(perN or None),reps_topL=rr[0].get('reps_topL'),output_reserve=reserve,
                          fixed_k_capacity=reserve>=K,
                          effective_ef=max(ef,perN) if method=='NodeANN' else ef))
     return rows,ablations
@@ -398,14 +398,14 @@ def render(args):
     ax.set_ylim(0,max(bottom)*1.22);ax.grid(axis='y',alpha=.2);ax.set_axisbelow(True)
     ax.legend(frameon=False,ncol=2,fontsize=7,loc='upper center',bbox_to_anchor=(.5,-.13))
     fig.tight_layout();export(fig,'miss-attribution')
-    for key,xlabel in [('ef2','Representative reserve ef2'),('p','Sampling denominator p')]:
+    for key,xlabel in [('repsL','Representative queue top-L'),('p','Sampling denominator p')]:
         aa=sorted(ablations['ablation_'+key],key=lambda r:r['value'])
         fig,axes=plt.subplots(1,2,figsize=(7.1,2.85))
         for ax,y,title,color in zip(axes,['recall','qps'],[f'Recall@{K}','Throughput (k queries/s)'],['#009E73','#0072B2']):
             vals=[r[y]/(1000 if y=='qps' else 1) for r in aa]
             ax.plot([r['value'] for r in aa],vals,'o-',color=color,lw=1.5,ms=4)
             ax.set(xlabel=xlabel,ylabel=title);ax.set_xticks([r['value'] for r in aa]);ax.grid(alpha=.2)
-        fig.suptitle(f'ef={aa[0].get("ef",K)}; '+('p=50' if key=='ef2' else 'ef2=16'),fontsize=9)
+        fig.suptitle(f'ef={aa[0].get("ef",K)}; '+('p=50' if key=='repsL' else 'reps-topL=32'),fontsize=9)
         fig.tight_layout();export(fig,'ablation-'+key)
     for name in ['asi-build', 'asi-merge', 'dqs-search', 'toy-dag']:
         self_contained_svg(FIG/(name+'.svg'))

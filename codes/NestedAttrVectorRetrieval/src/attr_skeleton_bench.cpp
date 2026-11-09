@@ -145,7 +145,7 @@ static bool readf(const std::string& p, std::vector<float>& v) {
 
 int main(int argc, char** argv) {
     std::string dir = "datasets/sift1m/ccs-attr", work = "datasets/sift1m/ccs-attr", vec = "base.bin";
-    int k = 50, M = 16, efC = 200, nq_max = 200, Kcap = 8, repeat = 1, pdiv = 50, ef2 = 16;
+    int k = 50, M = 16, efC = 200, nq_max = 200, Kcap = 8, repeat = 1, pdiv = 50, reps_topL = 32;
     bool skip_links = true;
     bool do_merge = true;
     bool diag = false;
@@ -164,13 +164,13 @@ int main(int argc, char** argv) {
         else if (a == "--efC") efC = std::stoi(nx());
         else if (a == "--K") Kcap = std::stoi(nx());
         else if (a == "--p") pdiv = std::max(1, std::stoi(nx()));
-        else if (a == "--ef2") ef2 = std::max(1, std::stoi(nx()));
         else if (a == "--no-skip") skip_links = false;
         else if (a == "--no-merge") do_merge = false;
         else if (a == "--diag") diag = true;
         else if (a == "--queries") nq_max = std::stoi(nx());
         else if (a == "--trace-file") trace_file = nx();
         else if (a == "--entry-mode") entry_mode = nx();
+        else if (a == "--reps-topL") reps_topL = std::max(0, std::stoi(nx()));
         else if (a == "--graph-audit-file") graph_audit_file = nx();
         else if (a == "--rerank-fp32") rerank_fp32 = true;
         else if (a == "--rerank-pool") rerank_pool = std::stoi(nx());
@@ -516,6 +516,7 @@ int main(int argc, char** argv) {
         long miss_attr_not_entered = 0, miss_item_not_visited = 0, miss_ranked_out = 0, gt_total = 0, miss_rejected = 0, touched_sum = 0;
         long expanded_sum = 0, adjacency_slots_sum = 0, distance_cache_hits_sum = 0;
         long upper_distances_sum = 0, upper_slots_sum = 0, rerank_calls_sum = 0;
+        long reps_scored_sum = 0, reps_expanded_sum = 0;
         double query_seconds = 0;
         const auto t1 = std::chrono::steady_clock::now();
         for (int round = 0; round < repeat; ++round)
@@ -525,6 +526,7 @@ int main(int argc, char** argv) {
             const long distances_before = dists;
             long query_expanded = 0, query_adjacency_slots = 0, query_cache_hits = 0;
             long query_upper_distances = 0, query_upper_slots = 0, query_rerank_calls = 0;
+            long query_reps_scored = 0, query_reps_expanded = 0;
             std::fill(bm.begin(), bm.end(), 0ull);
             for (int c : qc[qi]) {
                 auto it = apos.find(c);
@@ -552,7 +554,7 @@ int main(int argc, char** argv) {
             const float* q = queries.data() + size_t(qi) * DIM;
             ++token;
 
-            std::priority_queue<std::pair<float,uint32_t>> q1_cand, q1_keep, q2_cand, q2_keep;
+            std::priority_queue<std::pair<float,uint32_t>> q1_cand, q1_keep;
             std::unordered_set<uint32_t> entered, touched;
             // 缓存评分不设置 first-touch：未选中的代表点仍须正常 offer。
             auto seed_distance = [&](uint32_t gi) {
@@ -583,14 +585,44 @@ int main(int argc, char** argv) {
                 bool any = false;
                 if (int(q1_keep.size()) < ef) { q1_keep.push({d, gi}); q1_cand.push({-d, gi}); any = true; }
                 else if (d < q1_keep.top().first) { q1_keep.pop(); q1_keep.push({d, gi}); q1_cand.push({-d, gi}); any = true; }
-                if (is_rep[gi] || is_gw[gi]) {
-                    if (int(q2_keep.size()) < ef2) { q2_keep.push({d, gi}); q2_cand.push({-d, gi}); any = true; }
-                    else if (d < q2_keep.top().first) { q2_keep.pop(); q2_keep.push({d, gi}); q2_cand.push({-d, gi}); any = true; }
-                }
                 if (any) entered.insert(attr_of[gi]);
                 if (any && trace && round == 0) admitted.push_back(obj_of[gi]);
             };
-            // 每个非空直属属性只选一个入口，底层仍共享 DQS 状态与结果。
+            auto expand = [&](uint32_t gi) {
+                if (expanded_stamp[gi] == token) return;
+                expanded_stamp[gi] = token;
+                ++query_expanded;
+                query_adjacency_slots += long(adj_off[gi + 1] - adj_off[gi]);
+                query_adjacency_slots += long(br_off[gi + 1] - br_off[gi]);
+                if (trace && round == 0) expanded.push_back(obj_of[gi]);
+                for (uint32_t j = adj_off[gi]; j < adj_off[gi + 1]; ++j) offer(adj_dat[j]);
+                for (uint32_t j = br_off[gi]; j < br_off[gi + 1]; ++j) offer(br_dat[j]);
+            };
+            // 代表点独立检索：对闭包内全部代表点评分取 top-L，逐个放入独立队列并强制展开。
+            if (reps_topL > 0) {
+                std::priority_queue<std::pair<float,uint32_t>> top;
+                for (int a : inD) {
+                    const uint32_t off = abase[size_t(a)];
+                    for (uint32_t r : ag[size_t(a)].reps) {
+                        const uint32_t gi = off + r;
+                        const float d = seed_distance(gi);
+                        ++query_reps_scored;
+                        if (trace && round == 0) seed_evaluated.push_back(obj_of[gi]);
+                        if (int(top.size()) < reps_topL) top.push({d, gi});
+                        else if (d < top.top().first) { top.pop(); top.push({d, gi}); }
+                    }
+                }
+                std::vector<std::pair<float,uint32_t>> repq;
+                while (!top.empty()) { repq.push_back(top.top()); top.pop(); }
+                std::sort(repq.begin(), repq.end());
+                for (const auto& pr : repq) {
+                    if (expanded_stamp[pr.second] == token) continue;
+                    expand(pr.second);
+                    ++query_reps_expanded;
+                    if (trace && round == 0) seed_nodes.push_back(obj_of[pr.second]);
+                }
+            } else
+            // 对照：每个非空直属属性只选一个入口。
             for (int a : inD) {
                 const auto& graph = ag[size_t(a)];
                 const uint32_t offset = abase[size_t(a)];
@@ -629,21 +661,10 @@ int main(int argc, char** argv) {
                 if (trace && round == 0) seed_nodes.push_back(obj_of[offset + bi]);
                 offer(offset + bi);
             }
-            while (!q1_cand.empty() || !q2_cand.empty()) {
-                const float d1 = q1_cand.empty() ? INFINITY : -q1_cand.top().first;
-                const float d2 = q2_cand.empty() ? INFINITY : -q2_cand.top().first;
-                uint32_t gi;
-                if (d1 <= d2) { gi = q1_cand.top().second; q1_cand.pop(); }
-                else { gi = q2_cand.top().second; q2_cand.pop(); }
-                // 仅在 pop 后去重，不改变双通道准入或队列弹出顺序。
-                if (expanded_stamp[gi] == token) continue;
-                expanded_stamp[gi] = token;
-                ++query_expanded;
-                query_adjacency_slots += long(adj_off[gi + 1] - adj_off[gi]);
-                query_adjacency_slots += long(br_off[gi + 1] - br_off[gi]);
-                if (trace && round == 0) expanded.push_back(obj_of[gi]);
-                for (uint32_t j = adj_off[gi]; j < adj_off[gi + 1]; ++j) offer(adj_dat[j]);
-                for (uint32_t j = br_off[gi]; j < br_off[gi + 1]; ++j) offer(br_dat[j]);
+            while (!q1_cand.empty()) {
+                const uint32_t gi = q1_cand.top().second;
+                q1_cand.pop();
+                expand(gi);   // pop 后去重，同一对象只展开一次
             }
 
             // 结果：合并两队列保留集，按距离取 top-k（只收合格对象）
@@ -656,7 +677,6 @@ int main(int argc, char** argv) {
                     }
                 };
                 dump(q1_keep);
-                dump(q2_keep);
             }
             std::sort(out.begin(), out.end());
             out.erase(std::unique(out.begin(), out.end(),
@@ -675,6 +695,8 @@ int main(int argc, char** argv) {
                 std::sort(out.begin(), out.end());
             }
             rerank_calls_sum += query_rerank_calls;
+            reps_scored_sum += query_reps_scored;
+            reps_expanded_sum += query_reps_expanded;
             expanded_sum += query_expanded;
             adjacency_slots_sum += query_adjacency_slots;
             distance_cache_hits_sum += query_cache_hits;
@@ -702,8 +724,8 @@ int main(int argc, char** argv) {
                         std::fprintf(trace, "%s%u", j ? "," : "", values[j]);
                     std::fprintf(trace, "]");
                 };
-                std::fprintf(trace, "{\"ef\":%d,\"ef2\":%d,\"p\":%d,\"qi\":%d,\"eligible\":%zu,\"pq_kth\":%.9g,\"fp_kth\":%.9g",
-                             ef, ef2, pdiv, qi, pq_exact.size(), pq_kth, fp_kth);
+                std::fprintf(trace, "{\"ef\":%d,\"reps_topL\":%d,\"p\":%d,\"qi\":%d,\"eligible\":%zu,\"pq_kth\":%.9g,\"fp_kth\":%.9g",
+                             ef, reps_topL, pdiv, qi, pq_exact.size(), pq_kth, fp_kth);
                 std::vector<uint32_t> pq_ids, fp_ids, result_ids, entered_attrs, touched_attrs;
                 for (size_t j = 0; j < ref_k; ++j) {
                     pq_ids.push_back(pq_exact[j].second);
@@ -720,8 +742,10 @@ int main(int argc, char** argv) {
                 std::fprintf(trace, ",\"distance_calls\":%ld,\"distance_cache_hits\":%ld,\"adjacency_slots\":%ld",
                              dists - distances_before, query_cache_hits, query_adjacency_slots + query_upper_slots);
                 ids_json("seed_nodes", seed_nodes);
-                std::fprintf(trace, ",\"entry_mode\":\"%s\",\"upper_distance_calls\":%ld,\"upper_adjacency_slots\":%ld",
-                             entry_mode.c_str(), query_upper_distances, query_upper_slots);
+                std::fprintf(trace, ",\"entry_mode\":\"%s\",\"upper_distance_calls\":%ld,\"upper_adjacency_slots\":%ld"
+                             ",\"reps_scored\":%ld,\"reps_expanded\":%ld",
+                             entry_mode.c_str(), query_upper_distances, query_upper_slots,
+                             query_reps_scored, query_reps_expanded);
                 std::fprintf(trace, ",\"missing_reference_distances\":[");
                 bool first = true;
                 std::unordered_set<uint32_t> result_set(result_ids.begin(), result_ids.end());
@@ -754,12 +778,12 @@ int main(int argc, char** argv) {
             touched_sum += long(touched.size());
         }
         const double s = std::chrono::duration<double>(std::chrono::steady_clock::now() - t1).count();
-        std::printf("{\"ef\":%d,\"ef2\":%d,\"p\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"skip\":%d,\"queries\":%d,\"repeat\":%d,"
+        std::printf("{\"ef\":%d,\"reps_topL\":%d,\"p\":%d,\"k\":%d,\"M\":%d,\"efC\":%d,\"skip\":%d,\"queries\":%d,\"repeat\":%d,"
                     "\"recall\":%.6f,\"qps\":%.1f,\"dists_per_q\":%.1f,\"eligible_per_q\":%.1f,"
                     "\"dist_over_eligible\":%.3f,\"attrs_entered\":%.2f,\"attrs_in_D\":%.2f,\"miss_attr_not_entered\":%.4f,\"miss_item_not_visited\":%.4f,\"miss_ranked_out\":%.4f,\"miss_rejected\":%.4f,\"attrs_touched\":%.2f,"
                     "\"expanded_per_q\":%.3f,\"adjacency_slots_per_q\":%.3f,\"distance_cache_hits_per_q\":%.3f,"
-                    "\"entry_mode\":\"%s\",\"upper_dists_per_q\":%.3f,\"upper_slots_per_q\":%.3f,\"upper_index_bytes\":%zu,\"rerank_fp32\":%d,\"rerank_calls_per_q\":%.3f}\n",
-                    ef, ef2, pdiv, k, M, efC, int(skip_links), nq, repeat,
+                    "\"entry_mode\":\"%s\",\"upper_dists_per_q\":%.3f,\"upper_slots_per_q\":%.3f,\"upper_index_bytes\":%zu,\"rerank_fp32\":%d,\"rerank_calls_per_q\":%.3f,\"reps_scored_per_q\":%.3f,\"reps_expanded_per_q\":%.3f}\n",
+                    ef, reps_topL, pdiv, k, M, efC, int(skip_links), nq, repeat,
                     double(hit) / double(std::max<long>(denom, 1)),
                     double(nq) * repeat / query_seconds,
                     double(dists) / (double(nq) * repeat),
@@ -777,7 +801,9 @@ int main(int argc, char** argv) {
                     double(distance_cache_hits_sum) / (double(nq) * repeat),
                     entry_mode.c_str(), double(upper_distances_sum) / (double(nq) * repeat),
                     double(upper_slots_sum) / (double(nq) * repeat), upper_index_bytes,
-                    int(rerank_fp32), double(rerank_calls_sum) / (double(nq) * repeat));
+                    int(rerank_fp32), double(rerank_calls_sum) / (double(nq) * repeat),
+                    double(reps_scored_sum) / (double(nq) * repeat),
+                    double(reps_expanded_sum) / (double(nq) * repeat));
         std::fflush(stdout);
     }
     if (trace) std::fclose(trace);
