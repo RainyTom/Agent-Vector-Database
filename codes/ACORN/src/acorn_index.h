@@ -13,6 +13,8 @@
 struct AcornBuildConfig {
     size_t M = 16;
     size_t ef_construction = 200;
+    size_t M_beta = 8;      // neighbours kept verbatim before pruning (ACORN's M_beta)
+    size_t gamma = 2;       // neighbour-list expansion factor
     unsigned seed = 100;
 };
 
@@ -60,6 +62,10 @@ public:
     // Level-0 neighbours of a node.
     const hnswlib::tableint* neighbors_of(hnswlib::tableint internal_id, size_t* count) const {
         return neighbors_at_level(internal_id, 0, count);
+    }
+    size_t level0_capacity() const { return graph_->maxM0_; }
+    hnswlib::linklistsizeint* level0_list(hnswlib::tableint internal_id) const {
+        return graph_->get_linklist0(internal_id);
     }
 
     // Object id recorded as the node's external label at build time.

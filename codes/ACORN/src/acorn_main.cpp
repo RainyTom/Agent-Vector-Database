@@ -50,6 +50,8 @@ struct Flags {
     bool two_hop = true;
     size_t M = 16;
     size_t ef_construction = 200;
+    size_t M_beta = 8;
+    size_t gamma = 2;
 };
 
 bool parse_flags(int argc, char** argv, Flags* flags) {
@@ -69,6 +71,8 @@ bool parse_flags(int argc, char** argv, Flags* flags) {
         else if (name == "--queries") { if (!next(&value)) return false; flags->query_count = std::atoi(value.c_str()); }
         else if (name == "--repeat") { if (!next(&value)) return false; flags->repeat = std::atoi(value.c_str()); }
         else if (name == "--two-hop") { if (!next(&value)) return false; flags->two_hop = std::atoi(value.c_str()) != 0; }
+        else if (name == "--M-beta") { if (!next(&value)) return false; flags->M_beta = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
+        else if (name == "--gamma") { if (!next(&value)) return false; flags->gamma = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--M") { if (!next(&value)) return false; flags->M = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--efC") { if (!next(&value)) return false; flags->ef_construction = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else {
@@ -84,6 +88,8 @@ int run_build(const Flags& flags) {
     config.M = flags.M;
     config.ef_construction = flags.ef_construction;
     config.seed = 100;
+    config.M_beta = flags.M_beta;
+    config.gamma = flags.gamma;
 
     AcornBuildStats stats;
     std::string error;
@@ -183,7 +189,7 @@ int run_search(const Flags& flags) {
             for (size_t qi = 0; qi < query_count; ++qi) {
                 const AcornQueryResult result = acorn_search_query(
                     index, predicate_space, predicate_bits[qi], dataset.query_vector(qi),
-                    ef, flags.k, flags.two_hop, &scratch);
+                    ef, flags.k, flags.M_beta, flags.M, &scratch);
                 pass_ms += result.query_ms;
                 if (rep != 0) continue;
                 distance_total += result.distance_calls;

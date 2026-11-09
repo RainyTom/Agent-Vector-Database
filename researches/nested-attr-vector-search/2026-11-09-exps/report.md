@@ -743,3 +743,36 @@ $t=2$ 召回最高，$t=1$ 性价比最好；$t=8$ 反而更差（预算被远�
 - 入口覆盖不再是瓶颈（94.36/94.36）。
 - 约束区间 $ef\le 10\times k$ 内召回 0.508（$t=1$），要 0.96 需要 `ef≈5120`。
 - 原因不是入口缺失，而是**单一保留集要在 94 个属性之间分配**：`ef` 是保留集容量，也是终止门槛，属性越多、每属性能分到的深度越浅。
+
+## ACORN 实现审计（对照 guestrin-lab/ACORN 官方源码）
+
+官方仓库是 faiss 的一个分支，ACORN 实现在 `faiss/impl/ACORN.cpp`（1,693 行）与 `faiss/IndexACORN.cpp`（491 行）。逐条核对后，**本地 `codes/ACORN` 与官方不是同一个算法**，不能作为 ACORN 基线。
+
+### 搜索侧
+
+| 项 | 官方（`faiss/impl/ACORN.cpp`） | 本地实现 |
+|---|---|---|
+| 结果堆容量 | **k**（`nres < k`，`maxheap_replace_top`，L1237） | **ef** |
+| 候选队列容量 | `MinimaxHeap candidates(ef)`，其中 `ef = max(efSearch, k)`（L1445-1448）；`efSearch` 默认 **16**（`ACORN.h:40`） | 无独立候选队列容量，用 ef |
+| 终止条件 | `n_dis_below = candidates.count_below(d0); if (n_dis_below >= efSearch) break;`（L1262-1268），且仅当 `check_relative_distance` 为真；关闭时**不终止**直到候选清空 | `候选距离 > 保留集最差` 即停 |
+| 二跳展开上限 | `num_found >= M*2` 时 `keep_expanding = false`，停止展开（L1319-1320） | **无上限**，每个访问节点的第 $M_\beta$ 位之后全部展开 |
+| 二跳展开触发 | 邻居序号 `j-begin >= M_beta` 且 `keep_expanding`（L1327）；与中间节点是否通过谓词无关 | 同位置触发，但无 `keep_expanding` 控制 |
+| 过滤位置 | 只有 `filter_map[v1]` 为真的邻居才算距离、才进候选与结果 | 相同 |
+
+### 构建侧
+
+| 项 | 官方 | 本地实现 |
+|---|---|---|
+| layer-0 邻居容量 | `M_beta + 1.5*M`（`set_default_probas`，L167）；上层 `M*gamma` | 沿用 hnswlib 的 `2M` |
+| 候选数量 | level 0 收集 **`2*M*gamma`** 个候选（L731），上层用 `nb_neighbors(level)` | 直接拿 hnswlib 已存的 ≤2M 条 |
+| 构建遍历限制 | 每个节点最多检查 `M` 个邻居（`numIters > hnsw.M` 即 break，L762-766） | 无此限制 |
+| 剪枝顺序 | `shrink_neighbor_list` 从**最远**到最近弹出（L530-590） | 从最近到最远 |
+| 剪枝规模 | 剪到 `max_size = M`（`nb_neighbors(level)`，L995） | 剪到 `M*gamma` |
+| 剪枝判据 | `node_num > M_beta` 且在 `neigh_of_neigh` 中则丢弃；保留时把该候选**自身**与其邻居加入 `neigh_of_neigh`；`|neigh_of_neigh| >= max_size` 提前结束 | 只把被保留候选的邻居加入 covered，无“自身加入”、无提前结束 |
+| 预过滤回退 | 选择性低于 $s_{min}$ 时走 pre-filter | 未实现 |
+
+### 结论
+
+- 本地 ACORN 的召回/延迟数字**不可用于对照**，尤其它的结果堆按 `ef` 而不是 `k` 分配，等价于一个不同算法。
+- 构建耗时差距也有了来源：官方在插入时收集 `2*M*gamma` 个候选并对 `M` 条列表做剪枝，代价与 HNSW 构建同阶（论文报 <3 分钟，使用 SIMD + 多线程）；本地早期版本对最终图做全量二跳展开，代价高一个量级。
+- 正确做法是直接用官方 faiss 分支作为基线，本文档其它章节中的 ACORN 数字（0.9775 @ ef=10 等）应视为**待重测**。

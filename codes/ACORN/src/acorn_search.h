@@ -59,8 +59,17 @@ struct AcornQueryResult {
 // one_query: beam search from the entry point; non-passing nodes may be
 // traversed (one hop) but never enter the result heap; two-hop expansion of
 // the current best node runs while the passing-result heap is below ef.
+// Faithful ACORN-gamma level-0 search (Algorithm 2 of the paper):
+//   * the candidate set and the result list contain ONLY predicate-passing
+//     nodes, so the search never wanders through the wrong predicate region;
+//   * the neighbourhood of a visited node is recovered by scanning the first
+//     M_beta stored neighbours, then expanding the remaining ones to their own
+//     neighbours (the compression heuristic the construction relies on);
+//   * termination follows HNSW: stop once the nearest candidate is farther than
+//     the ef-th best passing result.
 AcornQueryResult acorn_search_query(const AcornIndex& index,
                                     const AcornPredicateSpace& predicate_space,
                                     const std::vector<uint64_t>& predicate_bits,
-                                    const float* query_vector, size_t ef, int k, bool two_hop,
+                                    const float* query_vector, size_t ef, int k,
+                                    size_t M_beta, size_t M,
                                     AcornSearchScratch* scratch);
