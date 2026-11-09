@@ -230,6 +230,7 @@ int run_search(const Flags& flags) {
     for (size_t ef : ef_values) {
         unsigned long long hit = 0, denominator = 0, distance_total = 0, visited_total = 0, returned_total = 0;
         size_t prefilter_queries = 0;
+        size_t short_results = 0;
         double best_pass_ms = 1e18;
         double sum_pass_ms = 0.0;
         for (size_t rep = 0; rep < repeat; ++rep) {
@@ -260,6 +261,7 @@ int run_search(const Flags& flags) {
                 visited_total += result.visited_nodes;
                 returned_total += result.object_ids.size();
 
+                if (result.object_ids.size() < k) ++short_results;
                 const size_t compare_depth = std::min(k, gt_depth);
                 size_t valid = 0;
                 for (size_t j = 0; j < gt_depth; ++j)
@@ -296,7 +298,7 @@ int run_search(const Flags& flags) {
                     double(distance_total) / double(query_count),
                     double(visited_total) / double(query_count), eligible_per_q,
                     double(returned_total) / double(query_count),
-                    predicate_ms_total / double(query_count), prefilter_queries, repeat);
+                    predicate_ms_total / double(query_count), prefilter_queries, short_results, repeat);
     }
 
     if (trace) std::fclose(trace);

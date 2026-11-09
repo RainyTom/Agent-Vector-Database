@@ -331,7 +331,7 @@ int main(int argc, char** argv) {
         elapsed_ms = std::chrono::duration<double, std::milli>(
             std::chrono::steady_clock::now() - started).count();
 
-        size_t hits = 0, relevant = 0, returned_total = 0;
+        size_t hits = 0, relevant = 0, returned_total = 0, short_results = 0;
         for (size_t qi = 0; qi < nq; ++qi) {
             std::unordered_set<faiss::idx_t> found;
             for (int slot = 0; slot < k; ++slot) {
@@ -339,6 +339,7 @@ int main(int argc, char** argv) {
                 if (value >= 0) found.insert(value);
             }
             returned_total += found.size();
+            if (found.size() < size_t(k)) ++short_results;
             for (int rank = 0; rank < k; ++rank) {
                 const int32_t truth = gt[qi * size_t(k) + size_t(rank)];
                 if (truth < 0) continue;
@@ -351,7 +352,7 @@ int main(int argc, char** argv) {
              << ",\"queries\":" << nq << ",\"recall\":" << recall
              << ",\"qps\":" << (elapsed_ms > 0.0 ? double(nq) * 1000.0 / elapsed_ms : 0.0)
              << ",\"avg_returned\":" << (nq ? double(returned_total) / double(nq) : 0.0)
-             << ",\"graph_ms\":" << graph_ms << ",\"fallback_queries\":" << fallback_queries
+             << ",\"graph_ms\":" << graph_ms << ",\"short_results\":" << short_results << ",\"fallback_queries\":" << fallback_queries
              << ",\"mean_passed\":" << (nq ? double(std::accumulate(passed_per_query.begin(),
                                                                     passed_per_query.end(), size_t(0))) / double(nq) : 0.0)
              << "}\n";
