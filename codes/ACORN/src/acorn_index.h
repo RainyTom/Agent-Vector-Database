@@ -1,94 +1,84 @@
 #pragma once
-// One global HNSW over every object of the unified dataset (no per-attribute
-// graphs). This translation unit owns index construction and index loading;
-// predicate-aware traversal lives in acorn_search.cpp.
+// ACORN construction and storage implemented on hnswlib's primitives.
+//
+// The graph is built by ACORN's own insertion procedure (candidate collection of
+// 2*M*gamma edges, then ACORN's predicate-agnostic pruning), but every distance
+// goes through hnswlib's pinned L2Space, and the vectors live in the same
+// contiguous layout hnswlib uses. This keeps the engine and the distance kernel
+// identical to the other schemes while reproducing ACORN's mechanism exactly.
 #include <cstddef>
 #include <cstdint>
-#include <memory>
 #include <string>
+#include <vector>
 
-#include "hnswlib/hnswlib.h"
+#include "dataset.h"
 #include "raw_l2_space.h"
 
 struct AcornBuildConfig {
     size_t M = 16;
     size_t ef_construction = 200;
-    size_t M_beta = 8;      // neighbours kept verbatim before pruning (ACORN's M_beta)
-    size_t gamma = 2;       // neighbour-list expansion factor
+    size_t M_beta = 8;
+    size_t gamma = 2;
     unsigned seed = 100;
-    size_t build_threads = 1;
-    size_t hnsw_M = 0;      // graph degree for the hnswlib base; 0 means use M
+    size_t build_threads = 1;   // accepted for API symmetry; construction is sequential
 };
 
 struct AcornBuildStats {
-    double build_ms = 0.0;
+    double build_s = 0.0;
     size_t object_count = 0;
     int dimension = 0;
 };
 
-// Builds the graph in ascending object-id order and writes it to `index_path`.
-bool acorn_build_index(const std::string& data_directory, const std::string& index_path,
-                       const AcornBuildConfig& config, AcornBuildStats* stats, std::string* error);
-
-// A saved HNSW index reloaded for search, exposing the level-0 traversal
-// surface ACORN traversal needs: vectors, neighbours, entry point, labels.
 class AcornIndex {
 public:
-    AcornIndex();
-    ~AcornIndex();
-    AcornIndex(const AcornIndex&) = delete;
-    AcornIndex& operator=(const AcornIndex&) = delete;
+    AcornIndex() = default;
 
-    bool load(const std::string& index_path, int dimension, std::string* error);
+    bool build(const Dataset& dataset, const AcornBuildConfig& config,
+               AcornBuildStats* stats, std::string* error);
+    bool save(const std::string& path, std::string* error) const;
+    bool load(const std::string& path, int dimension, std::string* error);
+    // vectors are not stored in the index file; re-attach them after load()
+    void attach_vectors(const Dataset& dataset) {
+        base_ = dataset.base.data();
+        dimension_ = dataset.dim;
+        space_ = std::make_unique<RawL2Space>(size_t(dimension_));
+    }
 
     size_t object_count() const { return object_count_; }
     int dimension() const { return dimension_; }
-    float distance(const float* first, const float* second) const {
-        return space_->dist(first, second);
-    }
-    const float* vector_of(hnswlib::tableint internal_id) const {
-        return reinterpret_cast<const float*>(graph_->getDataByInternalId(internal_id));
-    }
-    hnswlib::tableint entry_point() const { return graph_->enterpoint_node_; }
-    int max_level() const { return graph_->maxlevel_; }
-    int level_of(hnswlib::tableint internal_id) const { return graph_->element_levels_[internal_id]; }
 
-    // Neighbours of a node at one layer; `count` receives the edge count.
-    const hnswlib::tableint* neighbors_at_level(hnswlib::tableint internal_id, int level,
-                                                size_t* count) const {
-        const hnswlib::linklistsizeint* list = graph_->get_linklist_at_level(internal_id, level);
-        *count = graph_->getListCount(const_cast<hnswlib::linklistsizeint*>(list));
-        return reinterpret_cast<const hnswlib::tableint*>(list + 1);
+    float distance(const float* a, const float* b) const { return space_->dist(a, b); }
+    const float* vector_of(uint32_t id) const {
+        return base_ + size_t(id) * size_t(dimension_);
     }
+    uint32_t entry_point() const { return entry_point_; }
+    int max_level() const { return max_level_; }
+    int level_of(uint32_t id) const { return level_[size_t(id)]; }
 
-    // Level-0 neighbours of a node.
-    const hnswlib::tableint* neighbors_of(hnswlib::tableint internal_id, size_t* count) const {
-        return neighbors_at_level(internal_id, 0, count);
+    const uint32_t* neighbors_at_level(uint32_t id, int level, size_t* count) const {
+        const std::vector<uint32_t>& list = adjacency_[size_t(id)][size_t(level)];
+        *count = list.size();
+        return list.data();
     }
-    size_t level0_capacity() const { return graph_->maxM0_; }
-    hnswlib::linklistsizeint* level0_list(hnswlib::tableint internal_id) const {
-        return graph_->get_linklist0(internal_id);
+    const uint32_t* neighbors_of(uint32_t id, size_t* count) const {
+        return neighbors_at_level(id, 0, count);
     }
+    int object_id_of(uint32_t id) const { return int(id); }
 
-    // Object id recorded as the node's external label at build time.
-    // Cached as a flat array: getExternalLabel() is a hash lookup and dominated
-    // the per-distance cost when called for every neighbour.
-    int object_id_of(hnswlib::tableint internal_id) const {
-        return object_of_internal_.empty()
-            ? static_cast<int>(graph_->getExternalLabel(internal_id))
-            : object_of_internal_[size_t(internal_id)];
-    }
-    void cache_labels() {
-        object_of_internal_.resize(object_count_);
-        for (size_t i = 0; i < object_count_; ++i)
-            object_of_internal_[i] = static_cast<int>(
-                graph_->getExternalLabel(static_cast<hnswlib::tableint>(i)));
-    }
+    // exposed for the build statistics
+    size_t level0_capacity() const { return level0_capacity_; }
+    size_t upper_capacity() const { return upper_capacity_; }
 
 private:
-    std::vector<int> object_of_internal_;
+    std::vector<std::vector<std::vector<uint32_t>>> adjacency_;  // node -> level -> neighbours
+    std::vector<int> level_;
+    const float* base_ = nullptr;      // borrowed from the dataset during build/search
+    std::vector<float> owned_vectors_;  // used after load(), when the dataset is gone
     std::unique_ptr<RawL2Space> space_;
-    std::unique_ptr<hnswlib::HierarchicalNSW<float>> graph_;
+    uint32_t entry_point_ = 0;
+    int max_level_ = 0;
     int dimension_ = 0;
     size_t object_count_ = 0;
+    size_t level0_capacity_ = 0;
+    size_t upper_capacity_ = 0;
 };

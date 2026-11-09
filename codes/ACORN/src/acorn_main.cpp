@@ -102,18 +102,29 @@ int run_build(const Flags& flags) {
     config.M_beta = flags.M_beta;
     config.gamma = flags.gamma;
     config.build_threads = flags.build_threads;
-    config.hnsw_M = flags.hnsw_M;
 
-    AcornBuildStats stats;
+    Dataset dataset;
     std::string error;
-    if (!acorn_build_index(flags.data_directory, flags.index_path, config, &stats, &error)) {
+    if (!dataset.load(flags.data_directory, std::max(flags.k, 10), &error)) {
+        std::fprintf(stderr, "load failed: %s\n", error.c_str());
+        return 2;
+    }
+    AcornBuildStats stats;
+    AcornIndex index;
+    if (!index.build(dataset, config, &stats, &error)) {
         std::fprintf(stderr, "build failed: %s\n", error.c_str());
         return 2;
     }
+    if (!index.save(flags.index_path, &error)) {
+        std::fprintf(stderr, "save failed: %s\n", error.c_str());
+        return 2;
+    }
     std::printf("{\"method\":\"acorn\",\"action\":\"build\",\"dataset\":\"%s\",\"index\":\"%s\","
-                "\"objects\":%zu,\"dim\":%d,\"M\":%zu,\"efC\":%zu,\"seed\":%u,\"build_ms\":%.1f}\n",
+                "\"objects\":%zu,\"dim\":%d,\"M\":%zu,\"gamma\":%zu,\"M_beta\":%zu,"
+                "\"efC\":%zu,\"seed\":%u,\"build_s\":%.1f}\n",
                 flags.data_directory.c_str(), flags.index_path.c_str(), stats.object_count,
-                stats.dimension, config.M, config.ef_construction, config.seed, stats.build_ms);
+                stats.dimension, config.M, config.gamma, config.M_beta,
+                config.ef_construction, config.seed, stats.build_s);
     return 0;
 }
 
@@ -132,6 +143,7 @@ int run_search(const Flags& flags) {
         std::fprintf(stderr, "index load failed: %s\n", error.c_str());
         return 2;
     }
+    index.attach_vectors(dataset);
     if (index.object_count() != dataset.num_objects()) {
         std::fprintf(stderr, "index holds %zu nodes but dataset has %zu objects\n",
                      index.object_count(), dataset.num_objects());
