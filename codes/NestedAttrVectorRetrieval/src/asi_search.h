@@ -14,6 +14,7 @@
 
 struct QueryOptions {
     int ef = 10;                        // keep-heap capacity of the single channel
+    int entry_expand_per_attribute = 2;  // force-expand the t nearest stored entries per attribute
     std::string entry_mode = "representative";  // entry lookup: representative | hnsw
     int repeats = 1;
     int max_queries = 0;                // 0 = all queries

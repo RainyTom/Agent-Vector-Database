@@ -27,7 +27,7 @@ std::vector<int> parse_int_list(const std::string& text) {
 void print_usage() {
     std::fprintf(stderr,
         "usage:\n"
-        "  asi build  --data DIR --index PATH [--M 16] [--efC 200] [--K 8] [--K-rule linear|sqrt|cluster] [--bridge-receivers 1] [--merge-file PATH]\n"
+        "  asi build  --data DIR --index PATH [--M 16] [--efC 200] [--K 8] [--K-rule linear|sqrt|cluster] [--bridge-receivers 1] [--merge-file PATH] [--entries-per-attribute 8] [--entry-expand 2]\n"
         "  asi search --data DIR --index PATH --efs 10,40,200 [--entry-mode representative|hnsw]\n"
         "             [--entry-mode representative|hnsw] [--k 10] [--queries N]\n"
         "             [--repeat 1] [--trace-file PATH] [--rerank-fp32] [--rerank-pool N]\n");
@@ -46,6 +46,7 @@ int run_build(int argc, char** argv) {
         else if (flag == "--K") options.representative_cap = std::atoi(next().c_str());
         else if (flag == "--bridge-receivers") options.bridge_receivers = std::atoi(next().c_str());
         else if (flag == "--merge-file") options.merge_structure_path = next();
+        else if (flag == "--entries-per-attribute") options.entries_per_attribute = std::atoi(next().c_str());
         else if (flag == "--K-rule") {
             const std::string rule = next();
             if (rule == "sqrt") options.representative_rule = 1;
@@ -85,6 +86,7 @@ int run_search(int argc, char** argv) {
         else if (flag == "--index") index_path = next();
         else if (flag == "--efs") ef_values = parse_int_list(next());
         else if (flag == "--entry-mode") options.entry_mode = next();
+        else if (flag == "--entry-expand") options.entry_expand_per_attribute = std::atoi(next().c_str());
         else if (flag == "--k") { ground_truth_k = std::atoi(next().c_str()); }
         else if (flag == "--queries") options.max_queries = std::atoi(next().c_str());
         else if (flag == "--repeat") options.repeats = std::max(1, std::atoi(next().c_str()));

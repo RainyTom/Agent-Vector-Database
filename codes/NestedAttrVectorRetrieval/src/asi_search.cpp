@@ -225,18 +225,63 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     offer(index.bridge_edge_targets[j]);
             };
 
-            // entry: one stored entry point per query attribute (the root R of the
-            // search tree), read straight from the inverted index. No representative
-            // is scored at entry.
-            for (int attribute_id : dataset.query_attributes[qi]) {
-                const auto found = attribute_position.find(attribute_id);
-                if (found == attribute_position.end()) continue;
-                const uint32_t slot = uint32_t(found->second);
-                if (slot >= index.attribute_entry.size()) continue;
-                const uint32_t entry = index.attribute_entry[slot];
-                if (entry == UINT32_MAX) continue;
-                if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[entry]);
-                offer(entry);
+            // entry: every in-scope attribute contributes its stored entry points,
+            // and each of them is expanded once regardless of the keep threshold.
+            // This is what guarantees the beam touches the whole closure; the
+            // inverted index makes the lookup O(entries) instead of scoring all
+            // representatives of the attribute.
+            auto seed_entry = [&](uint32_t node) {
+                if (expanded_stamp[node] == query_token) return;   // already expanded once
+                if (!navigable_attribute(index.node_attribute[node])) return;
+                const bool fresh = visited_stamp[node] != query_token;
+                if (!fresh) { expand(node); return; }               // scored already, still expand
+                visited_stamp[node] = query_token;
+                const float d = distance_to_node(node);
+                ++distances;
+                if (trace && repeat_index == 0) evaluated_objects.push_back(index.node_object[node]);
+                if (in_scope_attribute(index.node_attribute[node])) {
+                    touched_attributes.insert(index.node_attribute[node]);
+                    if (int(keep_heap.size()) < ef) {
+                        keep_heap.push({d, node});
+                    } else if (d < keep_heap.top().first) {
+                        keep_heap.pop();
+                        keep_heap.push({d, node});
+                    }
+                    entered_attributes.insert(index.node_attribute[node]);
+                    if (trace && repeat_index == 0) admitted_objects.push_back(index.node_object[node]);
+                }
+                expand(node);
+            };
+
+            const int entry_expand = std::max(1, options.entry_expand_per_attribute);
+            for (int attribute : in_scope_attributes) {
+                if (size_t(attribute) >= index.attribute_entries.size()) continue;
+                const auto& candidates = index.attribute_entries[size_t(attribute)];
+                if (candidates.empty()) continue;
+                // score every stored entry of this attribute, expand only the nearest t
+                std::vector<std::pair<float, uint32_t>> scored;
+                scored.reserve(candidates.size());
+                for (uint32_t node : candidates) {
+                    if (!navigable_attribute(index.node_attribute[node])) continue;
+                    float d;
+                    if (seed_score_stamp[node] == query_token) {
+                        d = seed_score[node];
+                        ++query_cache_hits;
+                    } else {
+                        d = distance_to_node(node);
+                        ++distances;
+                        seed_score_stamp[node] = query_token;
+                        seed_score[node] = d;
+                    }
+                    if (trace && repeat_index == 0) evaluated_objects.push_back(index.node_object[node]);
+                    scored.emplace_back(d, node);
+                }
+                std::sort(scored.begin(), scored.end());
+                const size_t take = std::min<size_t>(size_t(entry_expand), scored.size());
+                for (size_t j = 0; j < take; ++j) {
+                    if (trace && repeat_index == 0) seed_nodes.push_back(index.node_object[scored[j].second]);
+                    seed_entry(scored[j].second);
+                }
             }
 
             // single shared beam search; stop once the nearest unexplored candidate

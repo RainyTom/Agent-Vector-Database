@@ -406,32 +406,41 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
         RawL2Space space{size_t(dim)};
         if (options.representative_rule == 2 && !options.merge_structure_path.empty()) {
             // Precomputed skeleton (scripts/build_merge_structure.py + faiss k-means):
-            // one stored entry point per attribute and the proxy links between merged
-            // components. The builder only installs the edges here.
+            // per-attribute entry points and the proxy links between merged components.
             FILE* in = std::fopen(options.merge_structure_path.c_str(), "rb");
             if (!in) {
                 std::fprintf(stderr, "[merge] cannot open %s\n", options.merge_structure_path.c_str());
                 std::exit(2);
             }
-            uint32_t magic = 0, stored_attributes = 0;
+            uint32_t magic = 0, stored_attributes = 0, stored_cap = 0;
             if (std::fread(&magic, sizeof(magic), 1, in) != 1 ||
                 std::fread(&stored_attributes, sizeof(stored_attributes), 1, in) != 1 ||
-                magic != 0x41534D47u || int(stored_attributes) != attribute_count) {
+                std::fread(&stored_cap, sizeof(stored_cap), 1, in) != 1 ||
+                magic != 0x41534D48u || int(stored_attributes) != attribute_count) {
                 std::fprintf(stderr, "[merge] bad merge structure header\n");
                 std::exit(2);
             }
-            std::vector<uint32_t> entry_of_attribute(size_t(attribute_count), UINT32_MAX);
-            if (std::fread(entry_of_attribute.data(), sizeof(uint32_t), size_t(attribute_count), in) !=
-                size_t(attribute_count)) {
-                std::fprintf(stderr, "[merge] truncated entry table\n");
-                std::exit(2);
+            index.attribute_entries.assign(size_t(attribute_count), {});
+            for (int a = 0; a < attribute_count; ++a) {
+                uint32_t count = 0;
+                if (std::fread(&count, sizeof(count), 1, in) != 1) {
+                    std::fprintf(stderr, "[merge] truncated entry table\n");
+                    std::exit(2);
+                }
+                index.attribute_entries[size_t(a)].resize(size_t(count));
+                if (count && std::fread(index.attribute_entries[size_t(a)].data(), sizeof(uint32_t),
+                                        size_t(count), in) != size_t(count)) {
+                    std::fprintf(stderr, "[merge] truncated entry list\n");
+                    std::exit(2);
+                }
+                for (uint32_t node : index.attribute_entries[size_t(a)])
+                    if (node < total_nodes) index.is_representative[size_t(node)] = 1;
             }
             uint32_t link_count = 0;
             if (std::fread(&link_count, sizeof(link_count), 1, in) != 1) {
                 std::fprintf(stderr, "[merge] truncated link count\n");
                 std::exit(2);
             }
-            long installed = 0;
             for (uint32_t i = 0; i < link_count; ++i) {
                 uint32_t left = 0, right = 0;
                 if (std::fread(&left, sizeof(left), 1, in) != 1 ||
@@ -444,20 +453,10 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
                 bridge_edges[size_t(right)].push_back(left);
                 index.is_gateway[size_t(left)] = 1;
                 index.is_gateway[size_t(right)] = 1;
-                ++installed;
             }
             std::fclose(in);
-            for (int a = 0; a < attribute_count; ++a) {
-                const uint32_t node = entry_of_attribute[size_t(a)];
-                if (node == UINT32_MAX || node >= total_nodes) continue;
-                if (int(index.node_attribute[size_t(node)]) != a) continue;
-                index.entry_node[size_t(a)] = node - index.node_begin[size_t(a)];
-                index.is_representative[size_t(node)] = 1;
-                if (index.representative_nodes[size_t(a)].empty())
-                    index.representative_nodes[size_t(a)].push_back(index.entry_node[size_t(a)]);
-            }
-            std::fprintf(stderr, "[merge] merge structure: %u links installed, entries %u\n",
-                         link_count, stored_attributes);
+            std::fprintf(stderr, "[merge] merge structure: %u links, up to %u entries per attribute\n",
+                         link_count, stored_cap);
         } else if (options.representative_rule == 2) {
             // Linear merge sequence in reverse topological order. Two components are
             // merged at a time: each side is clustered on its own into
@@ -717,20 +716,22 @@ AsiIndex build_index(const Dataset& dataset, const BuildOptions& options) {
         }
     }
 
-    // 5b. inverted index: attribute index -> one entry node (global id).
-    // Chosen from the attribute's own block, preferring one of its representatives,
-    // so entry lookup is a single array read instead of scoring representatives.
-    index.attribute_entry.assign(size_t(attribute_count), UINT32_MAX);
+    // 5b. inverted index: attribute -> entry nodes, filled from the attribute's own
+    // representatives when the merge structure did not supply them.
+    index.attribute_entries.resize(size_t(attribute_count));
     for (int a = 0; a < attribute_count; ++a) {
         if (index.node_begin[size_t(a) + 1] <= index.node_begin[size_t(a)]) continue;
-        uint32_t chosen = index.node_begin[size_t(a)];
+        if (!index.attribute_entries[size_t(a)].empty()) continue;
         const auto& reps = index.representative_nodes[size_t(a)];
-        if (!reps.empty()) {
-            // representative_nodes holds local ids inside this block
-            chosen += reps.front();
-            index.is_representative[chosen] = 1;
+        const size_t take = std::min<size_t>(size_t(std::max(1, options.entries_per_attribute)),
+                                            reps.size());
+        for (size_t j = 0; j < take; ++j) {
+            const uint32_t node = index.node_begin[size_t(a)] + reps[j];
+            index.attribute_entries[size_t(a)].push_back(node);
+            index.is_representative[size_t(node)] = 1;
         }
-        index.attribute_entry[size_t(a)] = chosen;
+        if (index.attribute_entries[size_t(a)].empty())
+            index.attribute_entries[size_t(a)].push_back(index.node_begin[size_t(a)]);
     }
 
     // 6. flatten adjacency into CSR
@@ -810,7 +811,8 @@ bool save_index(const AsiIndex& index, const std::string& path, std::string* err
     write_vector(out, index.is_representative);
     write_vector(out, index.is_gateway);
     write_vector(out, index.skeleton_top);
-    write_vector(out, index.attribute_entry);
+    for (int a = 0; a < index.attribute_count; ++a)
+        write_vector(out, index.attribute_entries[size_t(a)]);
     write_vector(out, index.entry_node);
     write_vector(out, index.hnsw_entry_node);
     write_vector(out, index.top_level);
@@ -851,7 +853,9 @@ bool load_index(AsiIndex& index, const std::string& path, std::string* error) {
     if (!read_vector(in, index.is_representative)) return fail("representative flags");
     if (!read_vector(in, index.is_gateway)) return fail("gateway flags");
     if (!read_vector(in, index.skeleton_top)) return fail("skeleton top");
-    if (!read_vector(in, index.attribute_entry)) return fail("attribute entry");
+    index.attribute_entries.assign(size_t(index.attribute_count), {});
+    for (int a = 0; a < index.attribute_count; ++a)
+        if (!read_vector(in, index.attribute_entries[size_t(a)])) return fail("attribute entries");
     if (!read_vector(in, index.entry_node)) return fail("entry nodes");
     if (!read_vector(in, index.hnsw_entry_node)) return fail("hnsw entry nodes");
     if (!read_vector(in, index.top_level)) return fail("top levels");

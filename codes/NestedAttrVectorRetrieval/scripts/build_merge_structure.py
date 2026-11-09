@@ -47,6 +47,8 @@ def main():
     parser.add_argument('--dim', type=int, default=128)
     parser.add_argument('--links-per-proxy', type=int, default=1)
     parser.add_argument('--seed', type=int, default=20261101)
+    parser.add_argument('--entries-per-attribute', type=int, default=8,
+                        help='entry points stored per attribute in the inverted index')
     parser.add_argument('--sample-cap', type=int, default=64,
                         help='k-means training sample size is max(4096, cap*k)')
     parser.add_argument('--iterations', type=int, default=10)
@@ -89,6 +91,7 @@ def main():
     for a in attributes:
         visit(a)
 
+    cap_entries = max(1, args.entries_per_attribute)
     gpu = faiss.StandardGpuResources()
 
     def cluster(nodes, seed):
@@ -120,7 +123,7 @@ def main():
         proxies = train[nearest[:, 0]]
         return np.unique(proxies)
 
-    entry = {}
+    entries = {}
     links = set()
     accumulated = []
     previous_proxies = np.empty(0, dtype=np.int64)
@@ -130,7 +133,11 @@ def main():
         if own.size == 0:
             continue
         own_proxies = cluster(own, args.seed + 1000003 * (a + 1))
-        entry[a] = int(own_proxies[0]) if own_proxies.size else int(own[0])
+        if own_proxies.size:
+            picks = np.linspace(0, own_proxies.size - 1, num=min(cap_entries, own_proxies.size))
+            entries[a] = [int(own_proxies[int(round(p))]) for p in picks]
+        else:
+            entries[a] = [int(own[0])]
         if not accumulated:
             accumulated = own.tolist()
             previous_proxies = own_proxies
@@ -153,9 +160,12 @@ def main():
         previous_proxies = acc_proxies
 
     with open(args.out, 'wb') as handle:
-        handle.write(struct.pack('<II', 0x41534D47, len(attributes)))
+        handle.write(struct.pack('<III', 0x41534D48, len(attributes), cap_entries))
         for a in attributes:
-            handle.write(struct.pack('<I', entry.get(a, 0xFFFFFFFF)))
+            chosen = entries.get(a, [])
+            handle.write(struct.pack('<I', len(chosen)))
+            for node in chosen:
+                handle.write(struct.pack('<I', int(node)))
         handle.write(struct.pack('<I', len(links)))
         for left, right in sorted(links):
             handle.write(struct.pack('<II', left, right))

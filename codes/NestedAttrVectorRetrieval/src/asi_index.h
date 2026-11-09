@@ -24,6 +24,7 @@ struct BuildOptions {
     int representative_cap = 8;        // upper bound on representatives per attribute
     int representative_rule = 0;       // 0 = min(Kcap, n); 1 = round(sqrt(n)); 2 = clustered merge
     std::string merge_structure_path;  // precomputed merge skeleton (Python + faiss k-means)
+    int entries_per_attribute = 8;     // stored entry points per attribute
     int bridge_receivers = 1;          // how many scattered child members each bridge attaches to
     bool merge_attributes = true;      // add cross-attribute gateway edges
 };
@@ -55,7 +56,7 @@ struct AsiIndex {
     std::vector<std::vector<uint32_t>> upper_targets;     // per attribute
 
     std::vector<uint32_t> skeleton_top;      // global nodes of the outermost merge level
-    std::vector<uint32_t> attribute_entry;   // inverted index: attribute index -> entry global node
+    std::vector<std::vector<uint32_t>> attribute_entries;  // inverted index: attribute -> entry nodes
 
     std::vector<char> is_representative;
     std::vector<char> is_gateway;
