@@ -17,6 +17,7 @@ struct AcornBuildConfig {
     size_t gamma = 2;       // neighbour-list expansion factor
     unsigned seed = 100;
     size_t build_threads = 1;
+    size_t hnsw_M = 0;      // graph degree for the hnswlib base; 0 means use M
 };
 
 struct AcornBuildStats {

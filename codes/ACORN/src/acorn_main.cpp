@@ -53,6 +53,7 @@ struct Flags {
     size_t M_beta = 8;
     size_t gamma = 2;
     size_t build_threads = 1;
+    size_t hnsw_M = 0;
     double prefilter_threshold = 0.5;   // 1/gamma for gamma = 2
 };
 
@@ -75,6 +76,7 @@ bool parse_flags(int argc, char** argv, Flags* flags) {
         else if (name == "--two-hop") { if (!next(&value)) return false; flags->two_hop = std::atoi(value.c_str()) != 0; }
         else if (name == "--prefilter-threshold") { if (!next(&value)) return false; flags->prefilter_threshold = std::atof(value.c_str()); }
         else if (name == "--M-beta") { if (!next(&value)) return false; flags->M_beta = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
+        else if (name == "--hnsw-M") { if (!next(&value)) return false; flags->hnsw_M = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--build-threads") { if (!next(&value)) return false; flags->build_threads = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--gamma") { if (!next(&value)) return false; flags->gamma = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--M") { if (!next(&value)) return false; flags->M = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
@@ -95,6 +97,7 @@ int run_build(const Flags& flags) {
     config.M_beta = flags.M_beta;
     config.gamma = flags.gamma;
     config.build_threads = flags.build_threads;
+    config.hnsw_M = flags.hnsw_M;
 
     AcornBuildStats stats;
     std::string error;

@@ -40,7 +40,10 @@ bool acorn_build_index(const std::string& data_directory, const std::string& ind
 
     auto space = std::make_unique<RawL2Space>(static_cast<size_t>(dataset.dim));
     const auto build_start = std::chrono::steady_clock::now();
-    hnswlib::HierarchicalNSW<float> graph(space.get(), object_count, config.M,
+    // ACORN collects 2*M*gamma candidates per node before pruning, so the base
+    // graph has to be built wide enough for that pool to exist.
+    const size_t hnsw_degree = config.hnsw_M ? config.hnsw_M : config.M;
+    hnswlib::HierarchicalNSW<float> graph(space.get(), object_count, hnsw_degree,
                                           config.ef_construction, config.seed);
     // hnswlib's addPoint is safe for concurrent insertion (per-node locks), and the
     // official ACORN builder is parallel too (omp). Same thread count as every other

@@ -179,8 +179,54 @@ AcornQueryResult acorn_search_query(const AcornIndex& index,
     if (visited.size() != index.object_count()) visited.assign(index.object_count(), 0);
     else std::memset(visited.data(), 0, visited.size());
 
-    std::vector<BeamEntry>& candidates = scratch->beam;   // min-heap: (distance, node)
-    candidates.clear();
+    // Faithful clone of faiss ACORN::MinimaxHeap (ACORN.cpp L1629-1690):
+    //   * fixed capacity ef holding the ef smallest distances seen;
+    //   * push rejects when the new distance is not smaller than the current max;
+    //   * pop_min marks the entry dead but KEEPS its distance, and count_below
+    //     therefore grows with the number of pops -- that is what stops the search
+    //     after roughly ef expansions.
+    struct Minimax {
+        int capacity = 0;
+        std::vector<float> dis;
+        std::vector<int> ids;
+        int used = 0;    // slots ever written; dead slots keep their distance
+        int live = 0;
+        explicit Minimax(int n) : capacity(n), dis(size_t(n)), ids(size_t(n), -1) {}
+        void push(float distance, int id) {
+            if (used == capacity) {
+                // heap is full: replace the current maximum unless the new one is worse
+                std::size_t worst = 0;
+                for (int i = 1; i < capacity; ++i)
+                    if (dis[size_t(i)] > dis[worst]) worst = std::size_t(i);
+                if (distance >= dis[worst]) return;
+                dis[worst] = distance;
+                ids[worst] = id;
+                return;
+            }
+            dis[size_t(used)] = distance;
+            ids[size_t(used)] = id;
+            ++used;
+            ++live;
+        }
+        int pop_min(float* out) {
+            int best = -1;
+            for (int i = 0; i < capacity; ++i)
+                if (ids[size_t(i)] >= 0 && (best < 0 || dis[size_t(i)] < dis[size_t(best)])) best = i;
+            if (best < 0) return -1;
+            *out = dis[size_t(best)];
+            const int id = ids[size_t(best)];
+            ids[size_t(best)] = -1;
+            --live;
+            return id;
+        }
+        int count_below(float threshold) const {
+            int below = 0;
+            for (int i = 0; i < capacity; ++i)
+                if (dis[size_t(i)] < threshold) ++below;
+            return below;
+        }
+        int size() const { return live; }
+    } candidates{int(ef)};
     ResultHeap results(result_capacity);
 
     // greedy descent over the upper layers, distance only (no predicate)
@@ -208,38 +254,25 @@ AcornQueryResult acorn_search_query(const AcornIndex& index,
     }
     visited[entry] = 1;
     ++result.visited_nodes;
-    candidates.push_back({entry_distance, entry});
-    std::push_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
+    candidates.push(entry_distance, int(entry));
 
     auto consider = [&](hnswlib::tableint node, float distance) {
-        const int object_id = index.object_id_of(node);
-        results.offer(distance, object_id);
-        // bounded candidate queue, exactly like MinimaxHeap(ef)
-        if (candidates.size() < ef) {
-            candidates.push_back({distance, node});
-            std::push_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
-        } else if (distance < candidates.front().first) {
-            std::pop_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
-            candidates.back() = {distance, node};
-            std::push_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
-        }
+        results.offer(distance, index.object_id_of(node));
+        candidates.push(distance, int(node));
     };
     consider(entry, entry_distance);
 
-    while (!candidates.empty()) {
-        std::pop_heap(candidates.begin(), candidates.end(), std::greater<BeamEntry>());
-        const BeamEntry current = candidates.back();
-        candidates.pop_back();
-        const float current_distance = current.first;
+    while (candidates.size() > 0) {
+        float current_distance = 0.0f;
+        const int popped = candidates.pop_min(&current_distance);
+        if (popped < 0) break;
+        const hnswlib::tableint current = hnswlib::tableint(popped);
 
-        // count_below(d0) >= efSearch -> stop
-        size_t below = 0;
-        for (const BeamEntry& other : candidates)
-            if (other.first < current_distance) ++below;
-        if (below >= ef) break;
+        // count_below(d0) >= efSearch -> stop (dead entries still count)
+        if (candidates.count_below(current_distance) >= int(ef)) break;
 
         size_t degree = 0;
-        const hnswlib::tableint* neighbours = index.neighbors_of(current.second, &degree);
+        const hnswlib::tableint* neighbours = index.neighbors_of(current, &degree);
         size_t num_found = 0;
         bool keep_expanding = true;
         for (size_t j = 0; j < degree; ++j) {
