@@ -92,7 +92,7 @@ std::vector<std::vector<int>> load_queries(const std::string& path) {
 int main(int argc, char** argv) {
     std::string data;
     std::string efs = "16,32,64,128";
-    int k = 10, M = 32, gamma = 12, M_beta = 32;
+    int k = 10, M = 32, gamma = 12, M_beta = 32, dim = 128;
     size_t query_limit = 0;
 
     for (int i = 1; i < argc; ++i) {
@@ -105,6 +105,7 @@ int main(int argc, char** argv) {
         else if (a == "--gamma") gamma = std::atoi(next().c_str());
         else if (a == "--M-beta") M_beta = std::atoi(next().c_str());
         else if (a == "--queries") query_limit = size_t(std::atoi(next().c_str()));
+        else if (a == "--dim") dim = std::atoi(next().c_str());
         else { std::fprintf(stderr, "unknown flag %s\n", a.c_str()); return 2; }
     }
     if (data.empty()) { std::fprintf(stderr, "--data required\n"); return 2; }
@@ -115,8 +116,11 @@ int main(int argc, char** argv) {
     const auto edges = load_edges(data + "/edges.tsv");
     const auto query_attributes = load_queries(data + "/queries.tsv");
 
-    if (base.data.size() % queries.dim) { std::fprintf(stderr, "bad dims\n"); return 2; }
-    const int d = int(queries.dim);
+    const int d = dim;
+    if (base.data.size() % size_t(d) || queries.data.size() % size_t(d)) {
+        std::fprintf(stderr, "vector buffers are not a multiple of dim %d\n", d);
+        return 2;
+    }
     const size_t nb = base.data.size() / size_t(d);
     const size_t nq = query_limit ? std::min(query_limit, queries.data.size() / size_t(d))
                                   : queries.data.size() / size_t(d);
@@ -225,6 +229,10 @@ int main(int argc, char** argv) {
     for (size_t ef : ef_values) {
         faiss::SearchParametersACORN params;
         params.efSearch = int(ef);
+        // The upstream hybrid_search() sizes its candidate heap from the member
+        // ACORN::efSearch (default 16) rather than from params->efSearch, so the
+        // parameter is set on both to make the sweep actually take effect.
+        index.acorn.efSearch = int(ef);
         const auto start = std::chrono::steady_clock::now();
         index.search(faiss::idx_t(nq), queries.data.data(), k, distances.data(), neighbors.data(),
                      filter.data(), &params);

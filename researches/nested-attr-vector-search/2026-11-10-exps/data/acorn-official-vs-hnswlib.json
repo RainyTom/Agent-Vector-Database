@@ -1,0 +1,18 @@
+{
+  "kind": "acorn_official_vs_hnswlib_same_workload",
+  "dataset": "datasets/sift1m/ccs-attr",
+  "objects": 1000000, "dim": 128, "attributes": 1929, "edges": 2040,
+  "queries": 200, "k": 10, "selectivity_mean": 0.0449,
+  "params": {"M": 32, "gamma": 12, "M_beta": 32},
+  "build_seconds": {"official": 624.2, "hnswlib_reproduction": 222.2},
+  "official": {"10": [0.2395, 34649], "20": [0.3810, 14955], "40": [0.4725, 10598],
+               "80": [0.5290, 6818], "160": [0.5645, 4578], "320": [0.5865, 2586],
+               "640": [0.6025, 1499], "800": [0.6045, 1319]},
+  "hnswlib_reproduction": {"10": [0.3530, 4120], "20": [0.4465, 2603], "40": [0.5400, 1656],
+               "80": [0.5920, 918], "160": [0.6305, 530], "320": [0.6420, 289],
+               "640": [0.6470, 152], "800": [0.6500, 118]},
+  "sanity_1pct_flat": {"n": 200000, "attributes": 100, "eligible_per_attribute": 2000,
+               "ef": [10, 20, 40, 80, 160],
+               "recall": [0.351, 0.603, 0.765, 0.841, 0.884]},
+  "upstream_note": "ACORN::hybrid_search sizes the candidate heap from ACORN::efSearch (default 16); params->efSearch only gates the inner break. The driver sets both."
+}
