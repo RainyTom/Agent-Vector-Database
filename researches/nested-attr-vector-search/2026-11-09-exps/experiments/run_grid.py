@@ -54,7 +54,7 @@ def main():
 
     if 'nodeann' in methods:
         for record in run(prefix + [
-                f'{args.root}/codes/NodeANN/build/nodeann', 'search',
+                f'{args.root}/codes/OraclePartition/build/nodeann', 'search',
                 '--data', args.data, '--index-dir', args.nodeann_index,
                 '--per-n', str(args.k), '--k', str(args.k), '--ef', ef_text,
                 '--queries', str(args.queries)]):

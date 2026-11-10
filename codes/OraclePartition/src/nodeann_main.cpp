@@ -1,4 +1,4 @@
-// NodeANN CLI: `build` writes one HNSW graph per attribute, `search` queries
+// OraclePartition CLI: `build` writes one HNSW graph per attribute, `search` queries
 // them and merges. Build and search are separate runs over a saved index.
 
 #include <cstdio>
@@ -43,7 +43,7 @@ int run_build(const std::string& data_directory, const std::string& index_direct
         std::fprintf(stderr, "load failed: %s\n", error.c_str());
         return 2;
     }
-    NodeANNIndex index(dataset.dim, M, ef_construction);
+    OraclePartitionIndex index(dataset.dim, M, ef_construction);
     const double build_ms = index.build(dataset, &error);
     if (build_ms < 0.0) {
         std::fprintf(stderr, "build failed: %s\n", error.c_str());
@@ -69,7 +69,7 @@ int run_search(const std::string& data_directory, const std::string& index_direc
         std::fprintf(stderr, "load failed: %s\n", error.c_str());
         return 2;
     }
-    NodeANNIndex index(dataset.dim, NodeANNIndex::default_M, NodeANNIndex::default_ef_construction);
+    OraclePartitionIndex index(dataset.dim, OraclePartitionIndex::default_M, OraclePartitionIndex::default_ef_construction);
     if (!index.load(index_directory, dataset, &error)) {
         std::fprintf(stderr, "load failed: %s\n", error.c_str());
         return 2;
@@ -104,8 +104,8 @@ int main(int argc, char** argv) {
     std::string data_directory;
     std::string index_directory;
     std::vector<int> per_n_values;
-    int M = NodeANNIndex::default_M;
-    int ef_construction = NodeANNIndex::default_ef_construction;
+    int M = OraclePartitionIndex::default_M;
+    int ef_construction = OraclePartitionIndex::default_ef_construction;
     std::vector<int> ef_values;
     int ground_truth_depth = default_ground_truth_depth;
     int repeat = 1;

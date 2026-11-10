@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 BINARIES = {
     'asi': ROOT / 'codes/NestedAttrVectorRetrieval/build/asi',
-    'nodeann': ROOT / 'codes/NodeANN/build/nodeann',
+    'nodeann': ROOT / 'codes/OraclePartition/build/nodeann',
     'acorn': ROOT / 'codes/acorn-hnswlib/build/acorn_main',
 }
 
@@ -80,14 +80,14 @@ def main():
     parser.add_argument('--methods', default='asi,nodeann,acorn')
     parser.add_argument('--efs', default='10,20,40,80,160,320')
     parser.add_argument('--reps-topL', default='32', help='comma separated representative queue widths')
-    parser.add_argument('--per-n', default='10,20,40', help='NodeANN per-attribute widths')
-    parser.add_argument('--nodeann-ef', default='', help='optional explicit ef for NodeANN; default = per_n')
+    parser.add_argument('--per-n', default='10,20,40', help='OraclePartition per-attribute widths')
+    parser.add_argument('--nodeann-ef', default='', help='optional explicit ef for OraclePartition; default = per_n')
     parser.add_argument('--acorn-two-hop', default='1')
     parser.add_argument('--queries', type=int, default=200)
     parser.add_argument('--k', type=int, default=10)
     parser.add_argument('--repeat', type=int, default=1)
     parser.add_argument('--index-dir', default='', help='where to keep index files (default: <data>/index)')
-    parser.add_argument('--nodeann-index-dir', default='', help='NodeANN per-attribute index directory (default: <data>/idx-nodeann)')
+    parser.add_argument('--nodeann-index-dir', default='', help='OraclePartition per-attribute index directory (default: <data>/idx-nodeann)')
     parser.add_argument('--skip-build', action='store_true')
     args = parser.parse_args()
 
@@ -130,7 +130,7 @@ def main():
                                    '--queries', str(args.queries), '--repeat', str(args.repeat)]
                         points, seconds, _ = search(method, data, index_path, options)
                         for point in points:
-                            point.update(method='NodeANN', wall_s=round(seconds, 2))
+                            point.update(method='OraclePartition', wall_s=round(seconds, 2))
                             sink.write(json.dumps(point) + '\n')
                             print('nodeann', per_n, candidate, f"recall={point['recall']:.4f}",
                                   f"qps={point['qps']:.0f}", flush=True)
@@ -140,7 +140,7 @@ def main():
                                '--queries', str(args.queries), '--repeat', str(args.repeat)]
                     points, seconds, _ = search(method, data, index_path, options)
                     for point in points:
-                        point.update(method='NodeANN', wall_s=round(seconds, 2))
+                        point.update(method='OraclePartition', wall_s=round(seconds, 2))
                         sink.write(json.dumps(point) + '\n')
                         print('nodeann', per_n, node_ef, f"recall={point['recall']:.4f}",
                               f"qps={point['qps']:.0f}", flush=True)

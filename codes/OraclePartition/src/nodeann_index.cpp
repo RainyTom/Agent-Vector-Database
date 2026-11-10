@@ -18,33 +18,33 @@ double milliseconds_since(std::chrono::steady_clock::time_point start) {
 
 }  // namespace
 
-float NodeANNSpace::counted_distance(const void* left, const void* right, const void* param) {
-    const auto* space = static_cast<const NodeANNSpace*>(param);
+float OraclePartitionSpace::counted_distance(const void* left, const void* right, const void* param) {
+    const auto* space = static_cast<const OraclePartitionSpace*>(param);
     ++space->distance_calls;
     return space->RawL2Space::dist(static_cast<const float*>(left), static_cast<const float*>(right));
 }
 
-NodeANNIndex::NodeANNIndex(int dimension, int M, int ef_construction)
+OraclePartitionIndex::OraclePartitionIndex(int dimension, int M, int ef_construction)
     : space(static_cast<size_t>(dimension)),
       dimension_(dimension),
       M_(M),
       ef_construction_(ef_construction) {}
 
-NodeANNIndex::~NodeANNIndex() { clear_graphs(); }
+OraclePartitionIndex::~OraclePartitionIndex() { clear_graphs(); }
 
-void NodeANNIndex::clear_graphs() {
+void OraclePartitionIndex::clear_graphs() {
     for (auto& entry : attribute_graphs) delete entry.second;
     attribute_graphs.clear();
 }
 
-void NodeANNIndex::rebuild_member_lists(const Dataset& dataset) {
+void OraclePartitionIndex::rebuild_member_lists(const Dataset& dataset) {
     attribute_members.clear();
     // Objects are visited in ascending id order, so every member list is ascending.
     for (size_t object = 0; object < dataset.owner.size(); ++object)
         attribute_members[dataset.owner[object]].push_back(static_cast<int>(object));
 }
 
-double NodeANNIndex::build(const Dataset& dataset, std::string* error) {
+double OraclePartitionIndex::build(const Dataset& dataset, std::string* error) {
     if (dataset.dim != dimension_) {
         if (error) *error = "dataset dimension does not match the index dimension";
         return -1.0;
@@ -67,7 +67,7 @@ double NodeANNIndex::build(const Dataset& dataset, std::string* error) {
     return milliseconds_since(start);
 }
 
-bool NodeANNIndex::save(const std::string& index_directory, std::string* error) const {
+bool OraclePartitionIndex::save(const std::string& index_directory, std::string* error) const {
     std::error_code directory_error;
     std::filesystem::create_directories(index_directory, directory_error);
     if (directory_error) {
@@ -86,7 +86,7 @@ bool NodeANNIndex::save(const std::string& index_directory, std::string* error) 
     return true;
 }
 
-bool NodeANNIndex::load(const std::string& index_directory, const Dataset& dataset, std::string* error) {
+bool OraclePartitionIndex::load(const std::string& index_directory, const Dataset& dataset, std::string* error) {
     if (dataset.dim != dimension_) {
         if (error) *error = "dataset dimension does not match the index dimension";
         return false;
@@ -110,11 +110,11 @@ bool NodeANNIndex::load(const std::string& index_directory, const Dataset& datas
     return true;
 }
 
-void NodeANNIndex::set_ef(int ef) {
+void OraclePartitionIndex::set_ef(int ef) {
     for (auto& entry : attribute_graphs) entry.second->setEf(size_t(ef));
 }
 
-size_t NodeANNIndex::total_nodes() const {
+size_t OraclePartitionIndex::total_nodes() const {
     size_t nodes = 0;
     for (const auto& entry : attribute_members) nodes += entry.second.size();
     return nodes;

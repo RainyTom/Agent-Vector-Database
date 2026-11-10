@@ -159,7 +159,7 @@ def fig_pareto(paths, out):
     axes.set_xscale("log")
     axes.set_xlabel("QPS (1 thread)")
     axes.set_ylabel("recall@10")
-    axes.set_title("NodeANN vs ACORN on SIFT1M (M=32, efC=40)")
+    axes.set_title("OraclePartition vs ACORN on SIFT1M (M=32, efC=40)")
     axes.grid(alpha=0.3, which="both")
     axes.legend()
     figure.tight_layout()

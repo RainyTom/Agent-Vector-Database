@@ -20,7 +20,7 @@ from svg_labels import self_contained_svg
 
 STYLE = {
     'NestedAttrVectorRetrieval': dict(color='#009E73', marker='D', label='NestedAttrVectorRetrieval'),
-    'NodeANN': dict(color='#0072B2', marker='o', label='NodeANN'),
+    'OraclePartition': dict(color='#0072B2', marker='o', label='OraclePartition'),
     'ACORN': dict(color='#D55E00', marker='s', label='ACORN'),
     'PreFilter': dict(color='#666666', marker='x', label='Pre-filter (exact)'),
 }

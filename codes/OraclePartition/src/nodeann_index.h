@@ -1,5 +1,5 @@
 #pragma once
-// NodeANN index: one HNSW graph per non-empty attribute, built over that
+// OraclePartition index: one HNSW graph per non-empty attribute, built over that
 // attribute's object ids in ascending object-id order.
 //
 // Graph label j of attribute a is the j-th object of `attribute_members[a]`,
@@ -12,38 +12,40 @@
 #include <vector>
 
 #include "dataset.h"
+#include <atomic>
+
 #include "hnswlib/hnswlib.h"
 #include "raw_l2_space.h"
 
 // Squared-L2 space that counts every distance evaluation. Every attribute graph
 // shares one space object, so search cost per query is one counter delta.
-class NodeANNSpace : public RawL2Space {
+class OraclePartitionSpace : public RawL2Space {
 public:
-    explicit NodeANNSpace(size_t dimension) : RawL2Space(dimension) {}
+    explicit OraclePartitionSpace(size_t dimension) : RawL2Space(dimension) {}
 
     float dist(const float* left, const float* right) const {
-        ++distance_calls;
+        distance_calls.fetch_add(1, std::memory_order_relaxed);
         return RawL2Space::dist(left, right);
     }
     hnswlib::DISTFUNC<float> get_dist_func() override { return counted_distance; }
     void* get_dist_func_param() override { return this; }
 
-    mutable unsigned long long distance_calls = 0;
+    mutable std::atomic<unsigned long long> distance_calls{0};
 
 private:
     static float counted_distance(const void* left, const void* right, const void* param);
 };
 
-class NodeANNIndex {
+class OraclePartitionIndex {
 public:
     static constexpr int default_M = 16;
     static constexpr int default_ef_construction = 200;
 
-    NodeANNIndex(int dimension, int M, int ef_construction);
-    ~NodeANNIndex();
+    OraclePartitionIndex(int dimension, int M, int ef_construction);
+    ~OraclePartitionIndex();
 
-    NodeANNIndex(const NodeANNIndex&) = delete;
-    NodeANNIndex& operator=(const NodeANNIndex&) = delete;
+    OraclePartitionIndex(const OraclePartitionIndex&) = delete;
+    OraclePartitionIndex& operator=(const OraclePartitionIndex&) = delete;
 
     // Builds a graph for every non-empty attribute of `dataset`.
     // Returns elapsed build time in milliseconds.
@@ -62,7 +64,7 @@ public:
 
     int dimension() const { return dimension_; }
 
-    NodeANNSpace space;
+    OraclePartitionSpace space;
     std::unordered_map<int, std::vector<int>> attribute_members;  // ascending object ids
     std::unordered_map<int, hnswlib::HierarchicalNSW<float>*> attribute_graphs;
 

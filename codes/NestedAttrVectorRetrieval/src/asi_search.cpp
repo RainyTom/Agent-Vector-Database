@@ -28,15 +28,6 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
         : dataset.num_queries();
     const size_t node_count = index.num_objects();
 
-    // per-query scratch, reused across queries through monotonically growing stamps
-    std::vector<uint32_t> visited_stamp(node_count, 0);
-    std::vector<uint32_t> expanded_stamp(node_count, 0);
-    std::vector<uint32_t> seed_score_stamp(node_count, 0);
-    std::vector<float> seed_score(node_count, 0.0f);
-    uint32_t query_token = 0;
-    std::vector<uint64_t> predicate_bitmap(size_t(index.closure_words), 0);
-    std::vector<uint64_t> navigable_bitmap(size_t(index.closure_words), 0);
-    std::vector<uint64_t> ancestor_bitmap(size_t(index.closure_words), 0);
 
     // attribute position lookup for walking up the DAG
     std::unordered_map<int, int> attribute_position;
@@ -66,9 +57,24 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
     const size_t timed_queries = query_count * size_t(options.repeats);
 
     for (int repeat_index = 0; repeat_index < options.repeats; ++repeat_index) {
-        for (size_t qi = 0; qi < query_count; ++qi) {
-            const auto query_started = std::chrono::steady_clock::now();
-            const long long distances_before = distances;
+        const auto pass_started = std::chrono::steady_clock::now();
+#pragma omp parallel
+        {
+            std::vector<uint32_t> visited_stamp(node_count, 0);
+            std::vector<uint32_t> expanded_stamp(node_count, 0);
+            std::vector<uint32_t> seed_score_stamp(node_count, 0);
+            std::vector<float> seed_score(node_count, 0.0f);
+            uint32_t query_token = 0;
+            std::vector<uint64_t> predicate_bitmap(size_t(index.closure_words), 0);
+            std::vector<uint64_t> navigable_bitmap(size_t(index.closure_words), 0);
+            std::vector<uint64_t> ancestor_bitmap(size_t(index.closure_words), 0);
+            long long t_hits = 0, t_ground_truth_entries = 0;
+            long long t_distances = 0, t_cache_hits = 0, t_expansions = 0, t_adjacency_slots = 0;
+            long long t_representative_scores = 0, t_rerank_calls = 0;
+            long long t_eligible_sum = 0, t_attributes_in_scope_sum = 0, t_attributes_entered_sum = 0;
+#pragma omp for schedule(dynamic, 1)
+            for (size_t qi = 0; qi < query_count; ++qi) {
+            const long long distances_before = t_distances;
 
             std::vector<uint32_t> evaluated_objects, admitted_objects, seed_scored_objects,
                 expanded_objects, seed_nodes;
@@ -141,12 +147,12 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
             if (in_scope_attributes.empty()) continue;
 
             ++query_token;
-            attributes_in_scope_sum += (long long)in_scope_attributes.size();
+            t_attributes_in_scope_sum += (long long)in_scope_attributes.size();
             long long eligible = 0;
             for (int attribute : in_scope_attributes)
                 eligible += (long long)(index.node_begin[size_t(attribute) + 1] -
                                         index.node_begin[size_t(attribute)]);
-            eligible_sum += eligible;
+            t_eligible_sum += eligible;
 
             const float* query_vector = dataset.query_vector(qi);
             auto distance_to_node = [&](uint32_t node) {
@@ -163,7 +169,7 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     return seed_score[node];
                 }
                 const float d = distance_to_node(node);
-                ++distances;
+                ++t_distances;
                 seed_score_stamp[node] = query_token;
                 seed_score[node] = d;
                 return d;
@@ -186,7 +192,7 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     ++query_cache_hits;
                 } else {
                     d = distance_to_node(node);
-                    ++distances;
+                    ++t_distances;
                 }
                 if (trace && repeat_index == 0) evaluated_objects.push_back(index.node_object[node]);
                 if (returnable) {
@@ -237,7 +243,7 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                 if (!fresh) { expand(node); return; }               // scored already, still expand
                 visited_stamp[node] = query_token;
                 const float d = distance_to_node(node);
-                ++distances;
+                ++t_distances;
                 if (trace && repeat_index == 0) evaluated_objects.push_back(index.node_object[node]);
                 if (in_scope_attribute(index.node_attribute[node])) {
                     touched_attributes.insert(index.node_attribute[node]);
@@ -269,7 +275,7 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                         ++query_cache_hits;
                     } else {
                         d = distance_to_node(node);
-                        ++distances;
+                        ++t_distances;
                         seed_score_stamp[node] = query_token;
                         seed_score[node] = d;
                     }
@@ -319,14 +325,13 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     results.resize(size_t(options.rerank_pool));
                 for (auto& entry : results) {
                     entry.first = space.dist(query_vector, dataset.object_vector(size_t(entry.second)));
-                    ++distances;
+                    ++t_distances;
                     ++query_rerank_calls;
                 }
                 std::sort(results.begin(), results.end());
             }
 
             const size_t returned = std::min<size_t>(size_t(k), results.size());
-            seconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - query_started).count();
 
             // recall against the stored ground truth
             size_t valid_gt = 0, query_hits = 0;
@@ -337,15 +342,15 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                 for (size_t r = 0; r < returned; ++r)
                     if (results[r].second == int(gt_object)) { ++query_hits; break; }
             }
-            ground_truth_entries += (long long)std::min<size_t>(size_t(valid_gt), size_t(k));
-            hits += (long long)query_hits;
-            distances += 0;
-            cache_hits += query_cache_hits;
-            expansions += query_expansions;
-            adjacency_slots += query_slots;
-            representative_scores += query_representative_scores;
-            rerank_calls += query_rerank_calls;
-            attributes_entered_sum += (long long)entered_attributes.size();
+            t_ground_truth_entries += (long long)std::min<size_t>(size_t(valid_gt), size_t(k));
+            t_hits += (long long)query_hits;
+            t_distances += 0;
+            t_cache_hits += query_cache_hits;
+            t_expansions += query_expansions;
+            t_adjacency_slots += query_slots;
+            t_representative_scores += query_representative_scores;
+            t_rerank_calls += query_rerank_calls;
+            t_attributes_entered_sum += (long long)entered_attributes.size();
             (void)distances_before;
 
             if (trace && repeat_index == 0) {
@@ -364,10 +369,10 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                     touched_ids.push_back(uint32_t(index.attribute_ids[attribute]));
                 std::fprintf(trace, "{\"ef\":%d,\"qi\":%zu,\"eligible\":%lld"
                                     ",\"distance_calls\":%lld,\"distance_cache_hits\":%lld"
-                                    ",\"adjacency_slots\":%lld,\"expanded\":%lld"
+                                    ",\"t_adjacency_slots\":%lld,\"expanded\":%lld"
                                     ",\"reps_scored\":%lld",
                              ef, qi, eligible,
-                             distances - distances_before, query_cache_hits, query_slots,
+                             t_distances - distances_before, query_cache_hits, query_slots,
                              query_expansions, query_representative_scores);
                 write_ids("returned", returned_objects);
                 write_ids("evaluated", evaluated_objects);
@@ -379,7 +384,25 @@ QueryStats run_queries(const Dataset& dataset, const AsiIndex& index, const Quer
                 write_ids("touched_attrs", touched_ids);
                 std::fprintf(trace, "}\n");
             }
+            }
+
+#pragma omp critical
+            {
+                hits += t_hits;
+                ground_truth_entries += t_ground_truth_entries;
+                distances += t_distances;
+                cache_hits += t_cache_hits;
+                expansions += t_expansions;
+                adjacency_slots += t_adjacency_slots;
+                representative_scores += t_representative_scores;
+                rerank_calls += t_rerank_calls;
+                eligible_sum += t_eligible_sum;
+                attributes_in_scope_sum += t_attributes_in_scope_sum;
+                attributes_entered_sum += t_attributes_entered_sum;
+            }
         }
+        seconds += std::chrono::duration<double>(
+            std::chrono::steady_clock::now() - pass_started).count();
     }
     if (trace) std::fclose(trace);
 

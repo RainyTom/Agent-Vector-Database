@@ -30,7 +30,7 @@ struct QueryResult {
     unsigned long long graph_searches = 0;
 };
 
-QueryResult search_one(const Dataset& dataset, NodeANNIndex& index, size_t query_id, int per_n) {
+QueryResult search_one(const Dataset& dataset, OraclePartitionIndex& index, size_t query_id, int per_n) {
     QueryResult result;
     const std::vector<int> scope =
         expand_attribute_closure(dataset, dataset.query_attributes[query_id]);
@@ -71,7 +71,7 @@ QueryResult search_one(const Dataset& dataset, NodeANNIndex& index, size_t query
 
 }  // namespace
 
-SearchStats run_search(const Dataset& dataset, NodeANNIndex& index, int per_n, int ef, int repeat,
+SearchStats run_search(const Dataset& dataset, OraclePartitionIndex& index, int per_n, int ef, int repeat,
                        int query_limit) {
     index.set_ef(ef);
     const size_t query_count =
@@ -90,30 +90,34 @@ SearchStats run_search(const Dataset& dataset, NodeANNIndex& index, int per_n, i
 
     for (int pass = 0; pass < std::max(repeat, 1); ++pass) {
         const auto pass_start = std::chrono::steady_clock::now();
-        const unsigned long long distance_calls_before = index.space.distance_calls;
+        const unsigned long long distance_calls_before = index.space.distance_calls.load();
 
-        for (size_t query_id = 0; query_id < query_count; ++query_id) {
-            const QueryResult result = search_one(dataset, index, query_id, per_n);
-            graph_searches += result.graph_searches;
-            eligible_total += static_cast<unsigned long long>(result.eligible);
+#pragma omp parallel reduction(+ : hits, relevant, graph_searches, eligible_total)
+        {
+#pragma omp for schedule(dynamic, 4)
+            for (size_t query_id = 0; query_id < query_count; ++query_id) {
+                const QueryResult result = search_one(dataset, index, query_id, per_n);
+                graph_searches += result.graph_searches;
+                eligible_total += static_cast<unsigned long long>(result.eligible);
 
-            if (pass != 0) continue;
-            const std::unordered_set<int> returned(result.object_ids.begin(), result.object_ids.end());
-            int relevant_for_query = 0;
-            int hits_for_query = 0;
-            for (int rank = 0; rank < dataset.k; ++rank) {
-                const int32_t object_id = dataset.ground_truth[query_id * size_t(dataset.k) + size_t(rank)];
-                if (object_id < 0) continue;
-                ++relevant_for_query;
-                if (returned.count(int(object_id))) ++hits_for_query;
+                if (pass != 0) continue;
+                const std::unordered_set<int> returned(result.object_ids.begin(), result.object_ids.end());
+                int relevant_for_query = 0;
+                int hits_for_query = 0;
+                for (int rank = 0; rank < dataset.k; ++rank) {
+                    const int32_t object_id = dataset.ground_truth[query_id * size_t(dataset.k) + size_t(rank)];
+                    if (object_id < 0) continue;
+                    ++relevant_for_query;
+                    if (returned.count(int(object_id))) ++hits_for_query;
+                }
+                hits += static_cast<unsigned long long>(hits_for_query);
+                relevant += static_cast<unsigned long long>(relevant_for_query);
             }
-            hits += static_cast<unsigned long long>(hits_for_query);
-            relevant += static_cast<unsigned long long>(relevant_for_query);
         }
 
         const double pass_ms =
             std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - pass_start).count();
-        distance_calls += index.space.distance_calls - distance_calls_before;
+        distance_calls += index.space.distance_calls.load() - distance_calls_before;
         if (pass == 0 || pass_ms < fastest_pass_ms) fastest_pass_ms = pass_ms;
     }
 

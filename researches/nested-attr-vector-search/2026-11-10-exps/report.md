@@ -86,3 +86,32 @@ SIFT1M（128 维、1M base、10k query、L2、精确真值来自原始 ivecs）�
 ### 结论
 
 ACORN 在本工作负载（DAG 后代闭包、$\sigma \approx 4.5\%$、子树内合格条目跨越 3–4 个数量级）上的召回上限约 0.60–0.65，与论文中在低选择率平坦属性上的表现不同。官方实现与我们的复现处于同一量级，复现没有系统性缺陷。
+
+## SIFT1M-CCS 四方案对照（prefilter / postfilter / ACORN / Oracle Partition）
+
+### 设置
+
+- 数据集：`datasets/sift1m-ccs-concepts-simulate`，SIFT1M 1,000,000 × 128；层级为 CCS 2012 本体（1,929 节点 / 2,040 边 / 103 个多父 / 1,516 叶 / 最深 6 层），对象按 Zipf(α=0.8) 挂叶、20% 挂内部节点；200 查询、$k=10$、闭包内精确真值；合格集中位 7,258、均值 44,884（$\sigma\approx4.5\%$）。
+- 图参数：$M=32$、`efConstruction=40`（三个图方案一致）。
+- 并行：全部 OpenMP 按查询并行，8 线程（`taskset -c 0-7`），距离走 hnswlib SIMD 核。
+- ef 网格：10、50、100 … 800（步长 50）。
+- PQ 未启用：五个实现都不支持统一的 PQ 编码，强制加入会改变距离近似从而破坏同召回比较。
+- 原始数据：`results/sift1m-ccs/{prefilter,postfilter,acorn-hnswlib,oracle-partition}.csv`，列为 `ef,qps,recall`。
+
+### 结果
+
+| 方案 | Recall@10 | QPS | 备注 |
+|---|---|---|---|
+| Prefilter（精确扫描） | **1.0000** | 757 | 单点，无 ef；每查询扫 44,884 个合格点 |
+| Postfilter（1/s 过采样） | 0.697–0.721 | 164–183 | ef 从 10 到 800 几乎不变 |
+| ACORN-hnswlib | 0.353–0.650 | 35,038–930 | ef=10 最快，ef≥320 后召回饱和 |
+| Oracle Partition（每属性一图） | 0.984–**1.0000** | 1,343–256 | ef=50 即达 1.0，QPS 774 |
+
+关键点：
+
+1. **Oracle Partition 在召回 1.0 时 774 QPS，比精确扫描的 757 QPS 还略快**：它把作用域裁剪（每属性一张图）和图搜索结合起来，工作量与合格集规模同阶但常数略低。
+2. **Postfilter 的召回被几何分布封顶在 0.72**：过采样 1/s 后仍拿不到闭包内的真近邻，`ef` 增大只是让全局候选更准，闭包内的相对位置不会因此改善。这正是"查询与谓词负相关时后过滤失效"的实测形态。
+3. **ACORN 在本负载上召回上限 0.65**，与官方实现一致（见上一节），低召回段极快（ef=10 时 35k QPS）。
+4. 四个方案的召回-QPS 前沿几乎没有交叉：Oracle Partition 单调支配其余三者。
+
+![qps-recall](figures/sift1m-ccs-qps-recall.svg)

@@ -1,4 +1,4 @@
-// Shared raw FP32 squared-L2 distance for the NodeANN hnswlib research runner.
+// Shared raw FP32 squared-L2 distance for the OraclePartition hnswlib research runner.
 //
 // Contract (2026-10-29 plan, section 3.2): every raw FP32 squared-L2 distance
 // in this project MUST go through hnswlib's L2Space::get_dist_func() from the

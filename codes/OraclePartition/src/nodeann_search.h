@@ -1,5 +1,5 @@
 #pragma once
-// NodeANN search: expand each query's attribute set to its OR-descendant
+// OraclePartition search: expand each query's attribute set to its OR-descendant
 // closure, search every in-scope attribute graph, merge the candidates and keep
 // the k nearest objects.
 
@@ -25,5 +25,5 @@ std::vector<int> expand_attribute_closure(const Dataset& dataset,
 
 // Runs every query `repeat` times; recall is measured on the first pass, qps on
 // the fastest pass, distance calls and graph searches over all passes.
-SearchStats run_search(const Dataset& dataset, NodeANNIndex& index, int per_n, int ef, int repeat,
+SearchStats run_search(const Dataset& dataset, OraclePartitionIndex& index, int per_n, int ef, int repeat,
                        int query_limit);
