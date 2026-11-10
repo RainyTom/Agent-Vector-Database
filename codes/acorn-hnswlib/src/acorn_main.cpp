@@ -51,6 +51,7 @@ struct Flags {
     int query_count = 200;
     int repeat = 1;
     bool two_hop = true;
+    bool recursive = true;
     size_t M = 16;
     size_t ef_construction = 200;
     size_t M_beta = 8;
@@ -78,6 +79,7 @@ bool parse_flags(int argc, char** argv, Flags* flags) {
         else if (name == "--queries") { if (!next(&value)) return false; flags->query_count = std::atoi(value.c_str()); }
         else if (name == "--repeat") { if (!next(&value)) return false; flags->repeat = std::atoi(value.c_str()); }
         else if (name == "--two-hop") { if (!next(&value)) return false; flags->two_hop = std::atoi(value.c_str()) != 0; }
+        else if (name == "--mode") { if (!next(&value)) return false; flags->recursive = value != "nonrecursive"; }
         else if (name == "--M-beta") { if (!next(&value)) return false; flags->M_beta = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--hnsw-M") { if (!next(&value)) return false; flags->hnsw_M = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
         else if (name == "--build-threads") { if (!next(&value)) return false; flags->build_threads = static_cast<size_t>(std::strtoul(value.c_str(), nullptr, 10)); }
@@ -161,6 +163,7 @@ int run_search(const Flags& flags) {
 
     AcornPredicateSpace predicate_space;
     predicate_space.build(dataset);
+    predicate_space.recursive = flags.recursive;
 
     // optional external masks: file holds nq * object_count bytes, one row per query
     std::vector<char> mask_storage;

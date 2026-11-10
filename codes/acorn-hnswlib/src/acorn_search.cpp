@@ -114,6 +114,7 @@ void AcornPredicateSpace::closure_bitmap(const Dataset& dataset,
         if ((*bits)[static_cast<size_t>(dense) >> 6] & mask) continue;   // already closed over
         (*bits)[static_cast<size_t>(dense) >> 6] |= mask;
         closed_attributes->push_back(dense);
+        if (!recursive) continue;
         const auto children = dataset.children_of.find(attribute);
         if (children != dataset.children_of.end())
             for (int child : children->second) pending.push_back(child);

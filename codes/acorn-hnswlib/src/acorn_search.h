@@ -14,6 +14,7 @@
 
 class AcornPredicateSpace {
 public:
+    bool recursive = true;   // false: predicate is the listed attributes only
     void build(const Dataset& dataset);
 
     int attribute_count() const { return attribute_count_; }
