@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 mkdir -p codes/acorn-hnswlib/build
-FLAGS="-std=c++17 -O3 -march=native"
+FLAGS="-std=c++17 -O3 -march=native -fopenmp"
 INC="-I codes/shared -I codes/third_party"
 g++ $FLAGS $INC -pthread \
     codes/acorn-hnswlib/src/acorn_index.cpp \

@@ -231,49 +231,80 @@ int run_search(const Flags& flags) {
         double best_pass_ms = 1e18;
         double sum_pass_ms = 0.0;
         for (size_t rep = 0; rep < repeat; ++rep) {
-            double pass_ms = 0.0;
-            for (size_t qi = 0; qi < query_count; ++qi) {
-                if (!mask_storage.empty()) {
+            const auto pass_started = std::chrono::steady_clock::now();
+            if (!mask_storage.empty()) {
+                // external masks are installed on the shared predicate space, so this
+                // path stays serial; the closure path below is query-parallel.
+                for (size_t qi = 0; qi < query_count; ++qi) {
                     const size_t objects = index.object_count();
                     if ((qi + 1) * objects > mask_storage.size()) {
                         std::fprintf(stderr, "mask file too short\n");
                         return 2;
                     }
                     predicate_space.set_external_mask(mask_storage.data() + qi * objects, objects);
+                    const AcornQueryResult result = acorn_search_query(
+                        index, predicate_space, predicate_bits[qi], dataset.query_vector(qi),
+                        ef, flags.k, flags.M_beta, flags.M, &scratch);
+                    predicate_space.clear_external_mask();
+                    if (rep != 0) continue;
+                    distance_total += result.distance_calls;
+                    visited_total += result.visited_nodes;
+                    returned_total += result.object_ids.size();
                 }
-                const AcornQueryResult result = acorn_search_query(
-                    index, predicate_space, predicate_bits[qi], dataset.query_vector(qi),
-                    ef, flags.k, flags.M_beta, flags.M, &scratch);
-                predicate_space.clear_external_mask();
-                pass_ms += result.query_ms;
-                if (rep != 0) continue;
-                distance_total += result.distance_calls;
-                visited_total += result.visited_nodes;
-                returned_total += result.object_ids.size();
-
-                if (result.object_ids.size() < k) ++short_results;
-                const size_t compare_depth = std::min(k, gt_depth);
-                size_t valid = 0;
-                for (size_t j = 0; j < gt_depth; ++j)
-                    if (dataset.ground_truth[qi * gt_depth + j] >= 0) ++valid;
-                std::unordered_set<int> found(result.object_ids.begin(), result.object_ids.end());
-                size_t query_hit = 0;
-                for (size_t j = 0; j < compare_depth; ++j) {
-                    const int truth = dataset.ground_truth[qi * gt_depth + j];
-                    if (truth >= 0 && found.count(truth)) ++query_hit;
+            } else {
+                unsigned long long pass_hit = 0, pass_denominator = 0, pass_distance = 0,
+                                   pass_visited = 0, pass_returned = 0;
+                size_t pass_short = 0;
+#pragma omp parallel reduction(+ : pass_hit, pass_denominator, pass_distance, pass_visited, pass_returned, pass_short)
+                {
+                    AcornSearchScratch local_scratch;
+#pragma omp for schedule(dynamic, 8)
+                    for (size_t qi = 0; qi < query_count; ++qi) {
+                        const AcornQueryResult result = acorn_search_query(
+                            index, predicate_space, predicate_bits[qi], dataset.query_vector(qi),
+                            ef, flags.k, flags.M_beta, flags.M, &local_scratch);
+                        if (rep != 0) continue;
+                        pass_distance += result.distance_calls;
+                        pass_visited += result.visited_nodes;
+                        pass_returned += result.object_ids.size();
+                        if (result.object_ids.size() < k) ++pass_short;
+                        const size_t compare_depth = std::min(k, gt_depth);
+                        size_t valid = 0;
+                        for (size_t j = 0; j < gt_depth; ++j)
+                            if (dataset.ground_truth[qi * gt_depth + j] >= 0) ++valid;
+                        std::unordered_set<int> found(result.object_ids.begin(), result.object_ids.end());
+                        size_t query_hit = 0;
+                        for (size_t j = 0; j < compare_depth; ++j) {
+                            const int truth = dataset.ground_truth[qi * gt_depth + j];
+                            if (truth >= 0 && found.count(truth)) ++query_hit;
+                        }
+                        pass_hit += query_hit;
+                        pass_denominator += std::min(k, valid);
+                        if (trace) {
+#pragma omp critical
+                            {
+                                std::fprintf(trace, "{\"qi\":%zu,\"ef\":%zu,\"two_hop\":%d,\"visited\":%llu,"
+                                                    "\"distance_calls\":%llu,\"returned\":[",
+                                             qi, ef, int(flags.two_hop), result.visited_nodes, result.distance_calls);
+                                for (size_t i = 0; i < result.object_ids.size(); ++i)
+                                    std::fprintf(trace, "%s%d", i ? "," : "", result.object_ids[i]);
+                                std::fprintf(trace, "]}\n");
+                            }
+                        }
+                    }
                 }
-                hit += query_hit;
-                denominator += std::min(k, valid);
-
-                if (trace) {
-                    std::fprintf(trace, "{\"qi\":%zu,\"ef\":%zu,\"two_hop\":%d,\"visited\":%llu,"
-                                        "\"distance_calls\":%llu,\"returned\":[",
-                                 qi, ef, int(flags.two_hop), result.visited_nodes, result.distance_calls);
-                    for (size_t i = 0; i < result.object_ids.size(); ++i)
-                        std::fprintf(trace, "%s%d", i ? "," : "", result.object_ids[i]);
-                    std::fprintf(trace, "]}\n");
+                if (rep == 0) {
+                    distance_total += pass_distance;
+                    visited_total += pass_visited;
+                    returned_total += pass_returned;
+                    short_results += pass_short;
+                    hit += pass_hit;
+                    denominator += pass_denominator;
                 }
+                (void)0;
             }
+            const double pass_ms = std::chrono::duration<double, std::milli>(
+                std::chrono::steady_clock::now() - pass_started).count();
             best_pass_ms = std::min(best_pass_ms, pass_ms);
             sum_pass_ms += pass_ms;
         }
