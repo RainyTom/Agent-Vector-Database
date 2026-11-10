@@ -65,7 +65,7 @@ def main():
 
     if 'acorn' in methods:
         for record in run(prefix + [
-                f'{args.root}/codes/ACORN/build/acorn_main', 'search',
+                f'{args.root}/codes/acorn-hnswlib/build/acorn_main', 'search',
                 '--data', args.data, '--index', args.acorn_index,
                 '--k', str(args.k), '--efs', ef_text, '--queries', str(args.queries)]):
             rows.append(dict(method='acorn', ef=record['ef'], recall=record['recall'],

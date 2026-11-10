@@ -10,7 +10,7 @@
 |---|---|
 | `codes/NestedAttrVectorRetrieval/` | `src/asi_index.*`（索引结构与 build/save/load）、`src/asi_search.*`（run_queries）、`src/asi_main.cpp`（子命令 `build` / `search`）；脚本 `build_dataset.py`、`run_experiments.py`、`plot_pareto.py` |
 | `codes/NodeANN/` | 同样拆成 `nodeann_index.*` / `nodeann_search.*` / `nodeann_main.cpp`（`build` / `search`） |
-| `codes/ACORN/` | `acorn_index.*` / `acorn_search.*` / `acorn_main.cpp`（`build` / `search`） |
+| `codes/acorn-hnswlib/` | `acorn_index.*` / `acorn_search.*` / `acorn_main.cpp`（`build` / `search`） |
 | `codes/shared/` | `dataset.h/.cpp` 统一加载器、`raw_l2_space.h`、`native_graph_audit.h` |
 
 约定：每个方案 `build` 一次落盘索引，`search` 只读索引跑网格；所有方案只认 `--data DIR` 一个数据集参数，不存在按数据集分支的代码。
@@ -373,12 +373,12 @@ Pareto 前沿（`figures/pareto.svg`，只连实测非支配点）：
 ```bash
 python3 codes/NestedAttrVectorRetrieval/scripts/build_selectivity_dataset.py \
   --selectivities 0.01,0.02,0.03,0.04,0.05,0.06,0.07,0.08,0.09,0.10
-for S in 1 2 3 4 5 6 7 8 9 10; do taskset -c 2 codes/ACORN/build/acorn_main search \
+for S in 1 2 3 4 5 6 7 8 9 10; do taskset -c 2 codes/acorn-hnswlib/build/acorn_main search \
   --data datasets/sift1m/sel-$S\pct --index datasets/sift1m/ccs-attr/index/acorn.bin \
   --efs 10,20,40,80,160,320,640 --k 10 --queries 100 --repeat 1 \
   --trace-file researches/nested-attr-vector-search/2026-11-09-exps/data/acorn-sel-$S\pct-trace.jsonl \
   > researches/nested-attr-vector-search/2026-11-09-exps/data/acorn-sel-$S\pct.jsonl; done
-python3 codes/ACORN/scripts/plot_selectivity.py \
+python3 codes/acorn-hnswlib/scripts/plot_selectivity.py \
   --data-root datasets/sift1m \
   --run-dir researches/nested-attr-vector-search/2026-11-09-exps/data \
   --out-dir researches/nested-attr-vector-search/2026-11-09-exps
@@ -454,7 +454,7 @@ Recall@k（`ef=10`，k 从 1 到 10；QPS 与 k 无关，只由 `ef` 决定）�
 - 本数据集的属性对对象是随机分配（叶子是随机对象集合），过滤器与几何无关，属对 ACORN 最不利的情形；真实语义标签下过滤器与向量相关，代价会低一些。
 - 单轮 100 查询，QPS 只作量级参考，不与其他轮次做 2% 容差比较；`ef=20/80/160/320` 的点只出现在 CSV 与图中。
 - recall@k 由 trace 里的有序返回列表对 `gt_10.txt` 前 k 项计算，分母为 100×k；k>10 无法从本轮 trace 恢复。
-- 检索路径没有回退到 pre-filter：`codes/ACORN/src` 中不存在枚举合格集再排序的分支，`exact_eligible_count` 只在计时循环外做 \|E(U)\| 的计数核对（`acorn_main.cpp:150`）。
+- 检索路径没有回退到 pre-filter：`codes/acorn-hnswlib/src` 中不存在枚举合格集再排序的分支，`exact_eligible_count` 只在计时循环外做 \|E(U)\| 的计数核对（`acorn_main.cpp:150`）。
 
 ## ACORN 固定 ef=60、top-20 的选择率曲线
 
@@ -625,7 +625,7 @@ for G in 12 1; do taskset -c 2 codes/acorn-hnswlib/build/selectivity_driver \
 - `acorn_index.h` 的 `top_k` 由 10 改为 20（编译期常量，测 top-20 必须改），其余未动。
 - 构建：γ=12 986.7 s（`maxM0=64+3M/2=112`，索引 1.03 GB），γ=1 264.9 s（索引 852 MB）；索引落 `datasets/sift1m/runs/`。
 
-| 选择率 | codes/ACORN Recall@20 / QPS / 距离 | acorn-hnswlib γ12 Recall@20 / QPS / 距离 | acorn-hnswlib γ1 Recall@20 / QPS / 距离 |
+| 选择率 | codes/acorn-hnswlib Recall@20 / QPS / 距离 | acorn-hnswlib γ12 Recall@20 / QPS / 距离 | acorn-hnswlib γ1 Recall@20 / QPS / 距离 |
 |---:|---|---|---|
 | 1% | 0.9990 / 68.7 / 41,927 | 0.3685 / 1,987 / 188 | 0.8485 / 912 / 481 |
 | 2% | 1.0000 / 121.0 / 24,987 | 0.5575 / 1,622 / 360 | 0.9190 / 658 / 814 |
@@ -642,10 +642,10 @@ for G in 12 1; do taskset -c 2 codes/acorn-hnswlib/build/selectivity_driver \
 
 ### 读数
 
-1. **同一 k/ef/切片下两份实现的预算差 1–2 个数量级**：1% 时 codes/ACORN 用 41,927 次距离换 0.999，acorn-hnswlib γ1 用 481 次换 0.849，γ12 用 188 次换 0.369。acorn-hnswlib 的遍历只展开通过谓词的节点（γ1 额外两跳），所以随机谓词下几乎找不到足够的合格邻居。
+1. **同一 k/ef/切片下两份实现的预算差 1–2 个数量级**：1% 时 codes/acorn-hnswlib 用 41,927 次距离换 0.999，acorn-hnswlib γ1 用 481 次换 0.849，γ12 用 188 次换 0.369。acorn-hnswlib 的遍历只展开通过谓词的节点（γ1 额外两跳），所以随机谓词下几乎找不到足够的合格邻居。
 2. **γ12 的召回主要受连通性限制**：1% 时 `avg_returned` 恒为 18.73（20 个槽填不满），`ef` 从 60 提到 200、800，召回 0.369 → 0.492 → 0.584，距离只从 188 涨到 1,369；ef 不再增加到达的合格节点。γ1 同条件 0.849 → 0.913 → 0.955。
 3. **召回随选择率上升**（γ12 从 0.369 到 0.849，γ1 从 0.849 到 0.949），与「随机过滤下通过谓词的邻居比例 = σ×度数」一致；γ12 在 4%–8% 出现平台（0.75–0.83），9%–10% 反而略高。
-4. **QPS 不再随选择率单调**：acorn-hnswlib 的 QPS 在 570–2,000 之间波动，1% 时最高（距离最少），10% 时 γ12 的 QPS 反而低于 9%。这与 codes/ACORN 的单调上升不同：codes/ACORN 用「通过谓词的结果堆填满 ef」触发距离截断，acorn-hnswlib 用「队列中比当前节点更近的条目数 ≥ ef」触发截断，两者对 σ 的响应方向不同。
+4. **QPS 不再随选择率单调**：acorn-hnswlib 的 QPS 在 570–2,000 之间波动，1% 时最高（距离最少），10% 时 γ12 的 QPS 反而低于 9%。这与 codes/acorn-hnswlib 的单调上升不同：codes/acorn-hnswlib 用「通过谓词的结果堆填满 ef」触发距离截断，acorn-hnswlib 用「队列中比当前节点更近的条目数 ≥ ef」触发截断，两者对 σ 的响应方向不同。
 5. 两套实现的图参数不同（M=32/efC=40 vs M=16/efC=200），这条对照定位为实现级，不可当作同一构造下的算法差异。
 
 ## 代码级核验：acorn-hnswlib 复现 vs 官方 ACORN
@@ -746,7 +746,7 @@ $t=2$ 召回最高，$t=1$ 性价比最好；$t=8$ 反而更差（预算被远�
 
 ## ACORN 实现审计（对照 guestrin-lab/ACORN 官方源码）
 
-官方仓库是 faiss 的一个分支，ACORN 实现在 `faiss/impl/ACORN.cpp`（1,693 行）与 `faiss/IndexACORN.cpp`（491 行）。逐条核对后，**本地 `codes/ACORN` 与官方不是同一个算法**，不能作为 ACORN 基线。
+官方仓库是 faiss 的一个分支，ACORN 实现在 `faiss/impl/ACORN.cpp`（1,693 行）与 `faiss/IndexACORN.cpp`（491 行）。逐条核对后，**本地 `codes/acorn-hnswlib` 与官方不是同一个算法**，不能作为 ACORN 基线。
 
 ### 搜索侧
 
@@ -980,7 +980,7 @@ ACORN 的构造与元数据无关，属性语义只进 `filter_id_map`，因此�
 
 ## ACORN 机制在 hnswlib 上的完整复现
 
-### 实现内容（`codes/ACORN/src/acorn_index.cpp`）
+### 实现内容（`codes/acorn-hnswlib/src/acorn_index.cpp`）
 
 不再复用 hnswlib 建好的邻接，改为**完整实现 ACORN 的构建**，只把距离计算固定在 hnswlib 的 `L2Space`：
 
@@ -1119,7 +1119,7 @@ ACORN 的构造与元数据无关，属性语义只进 `filter_id_map`，因此�
 
 ### 改动
 
-- `codes/ACORN/src/acorn_index.{h,cpp}`：level 0 换成 **CSR**（`level0_offset_` 长度 n+1 + `level0_target_` 连续数组），level ≥1 只占 6% 节点，保留 per-node vector。
+- `codes/acorn-hnswlib/src/acorn_index.{h,cpp}`：level 0 换成 **CSR**（`level0_offset_` 长度 n+1 + `level0_target_` 连续数组），level ≥1 只占 6% 节点，保留 per-node vector。
 - 构建期仍用可变结构（插入/剪枝要改长度），建完一次压平成 CSR；索引文件格式改为 `ACRS`（CSR 布局），加载直接读扁平数组。
 - 检索期只读 `neighbors_of()` 返回的区间，接口签名不变。
 - 顺带把谓词掩码提到查询函数的局部指针（去掉每次邻居检查的成员间接与空检查）。

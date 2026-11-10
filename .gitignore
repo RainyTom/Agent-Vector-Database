@@ -196,3 +196,7 @@ data/real_fixtures/
 
 # research scratch: indexes, masks, run artifacts
 work/
+
+# Large binary experiment artifacts (masks, hierarchies) stay local
+researches/**/data/*.bin
+researches/**/data/*.npz

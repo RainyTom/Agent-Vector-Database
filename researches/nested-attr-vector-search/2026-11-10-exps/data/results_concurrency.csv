@@ -1,3 +1,3 @@
 atomic,qps,queries,violations,violation_rate,window_ms
-False,248.0,21,0,0.0,84.7
-True,36.3,2,0,0.0,55.2
+False,1030.1,88,0,0.0,85.4
+True,123.7,3,0,0.0,24.3

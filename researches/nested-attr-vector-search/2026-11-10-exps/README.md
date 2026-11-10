@@ -32,7 +32,7 @@
 ```bash
 cd /home/daihua/projs/2026040404-yiming/Agent-Vector-Database
 bash codes/hnswlib-runner/build.sh
-bash codes/ACORN/build.sh
+bash codes/acorn-hnswlib/build.sh
 bash codes/NodeANN/build.sh
 ```
 
@@ -143,7 +143,7 @@ D=datasets/synth-uniform
 ./codes/NodeANN/build/nodeann build --data $D --index-dir work/synth-nodeann \
   --M 32 --ef-construction 40 | tee work/synth_nodeann_build.log
 
-./codes/ACORN/build/acorn_main build --data $D --index work/synth-acorn.bin \
+./codes/acorn-hnswlib/build/acorn_main build --data $D --index work/synth-acorn.bin \
   --M 32 --gamma 12 --M-beta 64 --efC 40 | tee work/synth_acorn_build.log
 ```
 
@@ -156,7 +156,7 @@ EFS=10,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800
 ./codes/NodeANN/build/nodeann search --data $D --index-dir work/synth-nodeann \
   --per-n 10 --k 10 --ef $EFS --queries 200 > $H/data/pareto_nodeann.jsonl
 
-./codes/ACORN/build/acorn_main search --data $D --index work/synth-acorn.bin \
+./codes/acorn-hnswlib/build/acorn_main search --data $D --index work/synth-acorn.bin \
   --k 10 --efs $EFS --queries 200 --M-beta 64 --M 32 > $H/data/pareto_acorn.jsonl
 ```
 

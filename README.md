@@ -37,7 +37,7 @@
 ## 复现
 
 ```bash
-./codes/NestedAttrVectorRetrieval/build.sh && ./codes/NodeANN/build.sh && ./codes/ACORN/build.sh
+./codes/NestedAttrVectorRetrieval/build.sh && ./codes/NodeANN/build.sh && ./codes/acorn-hnswlib/build.sh
 D=datasets/sift1m/ccs-attr
 ./codes/NestedAttrVectorRetrieval/build/asi build  --data $D --index $D/index/asi.bin
 ./codes/NestedAttrVectorRetrieval/build/asi search --data $D --index $D/index/asi.bin --efs 10,40,160

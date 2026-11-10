@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BINARIES = {
     'asi': ROOT / 'codes/NestedAttrVectorRetrieval/build/asi',
     'nodeann': ROOT / 'codes/NodeANN/build/nodeann',
-    'acorn': ROOT / 'codes/ACORN/build/acorn_main',
+    'acorn': ROOT / 'codes/acorn-hnswlib/build/acorn_main',
 }
 
 
