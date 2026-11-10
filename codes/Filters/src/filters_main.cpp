@@ -136,13 +136,22 @@ double hit_rate(const Dataset& dataset, size_t query_id, const std::vector<int>&
 }  // namespace
 
 int main(int argc, char** argv) {
-    std::string mode, data;
+    if (argc < 2) {
+        std::fprintf(stderr,
+            "usage:\n"
+            "  filters build  --data DIR --index DIR [--M 32] [--efC 40]\n"
+            "  filters search --data DIR [--index DIR] --mode prefilter|postfilter [--efs ...]\n");
+        return 2;
+    }
+    const std::string command = argv[1];
+    std::string mode, data, index;
     size_t k = 10, M = 32, ef_construction = 40, query_limit = 0;
     std::string ef_list = "10,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800";
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 2; i < argc; ++i) {
         const std::string a = argv[i];
         auto next = [&]() { return std::string(argv[++i]); };
         if (a == "--mode") mode = next();
+        else if (a == "--index") index = next();
         else if (a == "--data") data = next();
         else if (a == "--efs") ef_list = next();
         else if (a == "--k") k = size_t(std::atoi(next().c_str()));
@@ -151,7 +160,9 @@ int main(int argc, char** argv) {
         else if (a == "--queries") query_limit = size_t(std::atoi(next().c_str()));
         else { std::fprintf(stderr, "unknown flag %s\n", a.c_str()); return 2; }
     }
-    if (data.empty() || (mode != "prefilter" && mode != "postfilter")) {
+    if (data.empty()) { std::fprintf(stderr, "--data required\n"); return 2; }
+    if (command == "build" && index.empty()) { std::fprintf(stderr, "--index required for build\n"); return 2; }
+    if (command == "search" && (mode != "prefilter" && mode != "postfilter")) {
         std::fprintf(stderr, "usage: filters --mode prefilter|postfilter --data DIR [--efs ...]\n");
         return 2;
     }
@@ -182,6 +193,18 @@ int main(int argc, char** argv) {
 
     RawL2Space space(size_t(dataset.dim));
     const std::vector<size_t> efs = parse_list(ef_list);
+
+    if (command == "build") {
+        if (std::system(("mkdir -p '" + index + "'").c_str()) != 0) return 2;
+        const auto started = now_ms();
+        hnswlib::HierarchicalNSW<float> graph(&space, n, M, ef_construction, 100);
+        for (size_t i = 0; i < n; ++i)
+            graph.addPoint(dataset.object_vector(i), hnswlib::labeltype(i));
+        graph.saveIndex(index + "/graph.bin");
+        std::printf("{\"stage\":\"build\",\"n\":%zu,\"M\":%zu,\"efC\":%zu,\"seconds\":%.1f,"
+                    "\"index\":\"%s\"}\n", n, M, ef_construction, (now_ms() - started) / 1000.0, index.c_str());
+        return 0;
+    }
 
     if (mode == "prefilter") {
         // Exact scan over the eligible set: recall is 1 by construction.
@@ -220,9 +243,8 @@ int main(int argc, char** argv) {
     }
 
     // postfilter: one global graph, 1/s over-sampling with doubling on shortfall.
-    hnswlib::HierarchicalNSW<float> graph(&space, n, M, ef_construction, 100);
-    for (size_t i = 0; i < n; ++i)
-        graph.addPoint(dataset.object_vector(i), hnswlib::labeltype(i));
+    if (index.empty()) { std::fprintf(stderr, "--index required for postfilter\n"); return 2; }
+    hnswlib::HierarchicalNSW<float> graph(&space, index + "/graph.bin", false, 0);
 
     for (size_t ef : efs) {
         graph.setEf(std::max<size_t>(ef, k));

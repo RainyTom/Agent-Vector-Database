@@ -174,15 +174,15 @@ ACORN 在本工作负载（DAG 后代闭包、$\sigma \approx 4.5\%$、子树内
 
 | 方案 | 最高召回 | 该点 QPS | 备注 |
 |---|---|---|---|
-| Directory-Aware | **0.770** | 22.7 | `ef=800`；每查询 42 万次距离 |
-| ACORN-hnswlib | 0.650 | 982 | `ef=800`；每查询 2,850 次距离 |
+| Directory-Aware | **0.770** | 28 | `ef=800`；每查询 42 万次距离 |
+| ACORN-hnswlib | 0.650 | 845 | `ef=800`；每查询 2,850 次距离 |
 
 非递归（σ≈0.05%，`directory-aware-nonrecursive.csv` / `acorn-nonrecursive.csv`）：
 
 | 方案 | 最高召回 | 该点 QPS | 备注 |
 |---|---|---|---|
-| Directory-Aware | **1.000** | 14.2 | `ef=200`；每查询 62.8 万次距离 |
-| ACORN-hnswlib | 0.058 | 12,503 | 平均只返回 **2.0** 条，195/200 查询结果不足 |
+| Directory-Aware | **1.000** | 15 | `ef=200`；每查询 62.8 万次距离 |
+| ACORN-hnswlib | 0.058 | 13,743 | 平均只返回 **2.0** 条，195/200 查询结果不足 |
 
 ### 读数
 
@@ -194,3 +194,24 @@ ACORN 在本工作负载（DAG 后代闭包、$\sigma \approx 4.5\%$、子树内
 ![recursive](figures/directory-aware-recursive.svg)
 
 ![non-recursive](figures/directory-aware-nonrecursive.svg)
+
+
+## 代码组织：方案与实验分离
+
+每个方案只做两件事，且是两次独立进程：
+
+| 方案 | 构建 | 查询 | 索引产物 |
+|---|---|---|---|
+| `codes/acorn-hnswlib` | `build --index FILE` | `search --index FILE` | 单文件 |
+| `codes/DirectoryAware` | `build --index DIR` | `search --index DIR --mode …` | `graph.bin` + `trie.bin` |
+| `codes/OraclePartition`（per-own） | `build --index-dir DIR` | `search --index-dir DIR` | 每属性一文件 |
+| `codes/OraclePartition`（subtree） | `build --index DIR` | `search --index DIR` | 每属性一图 + `members.bin` |
+| `codes/Filters` | `build --index DIR` | `search --mode prefilter\|postfilter` | 全局图 `graph.bin` |
+| `codes/NestedAttrVectorRetrieval` | `build --index FILE` | `search --index FILE` | 单文件 |
+
+实验侧只有两个脚本，不含任何方案逻辑：
+
+- `experiments/run_sift1m_ccs.py`：按需调用各方案的 `build`，再调用 `search`，把 JSON 行转成 `results/sift1m-ccs/<scheme>.csv`。
+- `experiments/plot_sift1m_ccs.py`：只读 CSV 出图。
+
+重建索引后的一次完整重跑（8 线程）耗时：Directory-Aware 154 s、全局图 162 s、subtree 342 s、ACORN 385 s；查询阶段按 ef 网格串行执行。

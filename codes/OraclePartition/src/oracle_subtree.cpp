@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <map>
 #include <memory>
 #include <set>
@@ -51,13 +52,23 @@ double now_ms() {
 }  // namespace
 
 int main(int argc, char** argv) {
+    if (argc < 2) {
+        std::fprintf(stderr,
+            "usage:\n"
+            "  oracle_subtree build  --data DIR --index DIR [--M 32] [--efC 40]\n"
+            "  oracle_subtree search --data DIR --index DIR [--efs 10,50,...] [--k 10]\n");
+        return 2;
+    }
+    const std::string command = argv[1];
+    std::string index;
     std::string data = "datasets/sift1m-ccs-concepts-simulate";
     std::string ef_list = "10,50,100,150,200,250,300,350,400,450,500,550,600,650,700,750,800";
     int M = 32, ef_construction = 40, k = 10, query_limit = 0;
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 2; i < argc; ++i) {
         const std::string a = argv[i];
         auto next = [&]() { return std::string(argv[++i]); };
         if (a == "--data") data = next();
+        else if (a == "--index") index = next();
         else if (a == "--efs") ef_list = next();
         else if (a == "--M") M = std::atoi(next().c_str());
         else if (a == "--efC") ef_construction = std::atoi(next().c_str());
@@ -112,24 +123,69 @@ int main(int argc, char** argv) {
         instances += members[a].size();
     }
 
-    CountedSpace space{size_t(dim)};
-    std::printf("{\"stage\":\"prepare\",\"n\":%zu,\"attributes\":%zu,\"instances\":%zu,"
-                "\"duplication\":%.3f}\n", n, attributes, instances, double(instances) / double(n));
+    if (command == "build") {
+        if (index.empty()) { std::fprintf(stderr, "--index required for build\n"); return 2; }
+        if (std::system(("mkdir -p '" + index + "'").c_str()) != 0) return 2;
+        RawL2Space build_space{size_t(dim)};
+        const auto build_start = now_ms();
+        size_t built = 0;
+        for (size_t a = 0; a < attributes; ++a) {
+            if (members[a].empty()) continue;
+            hnswlib::HierarchicalNSW<float> graph(&build_space, members[a].size(), size_t(M),
+                                                 size_t(ef_construction), 100 + int(a));
+            for (size_t j = 0; j < members[a].size(); ++j)
+                graph.addPoint(dataset.object_vector(size_t(members[a][j])), hnswlib::labeltype(j));
+            graph.saveIndex(index + "/attribute_" + std::to_string(dense[a]) + ".bin");
+            ++built;
+        }
+        std::ofstream table(index + "/members.bin", std::ios::binary);
+        const uint64_t magic = 0x4F52435542545231ull;   // "ORCUBTR1"
+        const uint64_t count = attributes;
+        table.write(reinterpret_cast<const char*>(&magic), sizeof(magic));
+        table.write(reinterpret_cast<const char*>(&count), sizeof(count));
+        for (size_t a = 0; a < attributes; ++a) {
+            const int32_t id = dense[a];
+            const uint32_t size = uint32_t(members[a].size());
+            table.write(reinterpret_cast<const char*>(&id), sizeof(id));
+            table.write(reinterpret_cast<const char*>(&size), sizeof(size));
+            table.write(reinterpret_cast<const char*>(members[a].data()),
+                        std::streamsize(size * sizeof(int)));
+        }
+        table.close();
+        std::printf("{\"stage\":\"build\",\"graphs\":%zu,\"instances\":%zu,\"seconds\":%.1f,"
+                    "\"index\":\"%s\"}\n", built, instances, (now_ms() - build_start) / 1000.0, index.c_str());
+        return 0;
+    }
+    if (command != "search") { std::fprintf(stderr, "unknown command %s\n", command.c_str()); return 2; }
+    if (index.empty()) { std::fprintf(stderr, "--index required for search\n"); return 2; }
 
-    const auto build_start = now_ms();
+    std::ifstream table(index + "/members.bin", std::ios::binary);
+    if (!table) { std::fprintf(stderr, "cannot open %s/members.bin\n", index.c_str()); return 2; }
+    uint64_t magic = 0, count = 0;
+    table.read(reinterpret_cast<char*>(&magic), sizeof(magic));
+    table.read(reinterpret_cast<char*>(&count), sizeof(count));
+    if (magic != 0x4F52435542545231ull || count != attributes) {
+        std::fprintf(stderr, "members.bin header mismatch\n"); return 2;
+    }
+    for (size_t a = 0; a < attributes; ++a) {
+        int32_t id = 0; uint32_t size = 0;
+        table.read(reinterpret_cast<char*>(&id), sizeof(id));
+        table.read(reinterpret_cast<char*>(&size), sizeof(size));
+        members[size_t(position[id])].resize(size);
+        table.read(reinterpret_cast<char*>(members[size_t(position[id])].data()),
+                   std::streamsize(size * sizeof(int)));
+    }
+    table.close();
+
+    CountedSpace space{size_t(dim)};
     std::vector<std::unique_ptr<hnswlib::HierarchicalNSW<float>>> graphs(attributes);
     std::vector<size_t> nonempty;
     for (size_t a = 0; a < attributes; ++a) {
         if (members[a].empty()) continue;
-        nonempty.push_back(a);
         graphs[a] = std::make_unique<hnswlib::HierarchicalNSW<float>>(
-            &space, members[a].size(), size_t(M), size_t(ef_construction), 100 + int(a));
-        for (size_t j = 0; j < members[a].size(); ++j)
-            graphs[a]->addPoint(dataset.object_vector(size_t(members[a][j])), hnswlib::labeltype(j));
+            &space, index + "/attribute_" + std::to_string(dense[a]) + ".bin", false, 0);
+        nonempty.push_back(a);
     }
-    const double build_ms = now_ms() - build_start;
-    std::printf("{\"stage\":\"build\",\"graphs\":%zu,\"seconds\":%.1f}\n",
-                nonempty.size(), build_ms / 1000.0);
 
     // ef grid
     std::vector<size_t> efs;
@@ -150,7 +206,7 @@ int main(int argc, char** argv) {
     for (size_t ef : efs) {
         for (size_t a : nonempty) graphs[a]->setEf(std::max(ef, size_t(k)));
         const unsigned long long calls_before = space.calls.load();
-        const auto start = now_ms();
+        const auto start_ms = now_ms();
         unsigned long long hits = 0, relevant = 0;
 #pragma omp parallel for schedule(dynamic, 1) reduction(+ : hits, relevant)
         for (size_t q = 0; q < nq; ++q) {
@@ -177,7 +233,7 @@ int main(int argc, char** argv) {
                 if (got.count(truth)) ++hits;
             }
         }
-        const double seconds = (now_ms() - start) / 1000.0;
+        const double seconds = (now_ms() - start_ms) / 1000.0;
         std::printf("{\"stage\":\"search\",\"ef\":%zu,\"recall\":%.6f,\"qps\":%.1f,"
                     "\"dists_per_q\":%.1f,\"queries\":%zu}\n",
                     ef, relevant ? double(hits) / double(relevant) : 0.0, double(nq) / seconds,
@@ -186,3 +242,4 @@ int main(int argc, char** argv) {
     }
     return 0;
 }
+
